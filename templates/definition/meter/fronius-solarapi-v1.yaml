@@ -76,20 +76,22 @@ render: |
           user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
-    - case: 3 # charge
+    - case: 3 # charge (not implemented -> normal)
       set:
-        source: http
-        uri: http://{{ .host }}/config/timeofuse
-        method: POST
-        headers:
-        - content-type: application/json
-        auth:
-          type: digest
-          user: {{ .user }}
-          password: {{ .password }}
-        body: '{"timeofuse":[]}'
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/config/timeofuse
+          method: POST
+          headers:
+          - content-type: application/json
+          auth:
+            type: digest
+            user: {{ .user }}
+            password: {{ .password }}
+          body: '{"timeofuse":[]}'
+        - source: error
+          error: ErrNotAvailable
   {{- end }}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

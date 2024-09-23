@@ -8,13 +8,13 @@
 		>
 			<strong :style="{ color: entry.color }" class="fs-6">{{ entry.name }}</strong>
 			<div class="fs-6">{{ fmtPercentage(entry.percent) }}</div>
-			<div class="fs-6">{{ fmtKWh(entry.energy * 1e3) }}</div>
+			<div class="fs-6">{{ fmtWh(entry.energy * 1e3, POWER_UNIT.AUTO) }}</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 
 export default {
 	name: "EnergyAggregateEntries",
@@ -22,6 +22,11 @@ export default {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: "loadpoint" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+	},
+	data() {
+		return {
+			POWER_UNIT,
+		};
 	},
 	mixins: [formatter],
 	computed: {

@@ -91,7 +91,7 @@ export default {
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
-								return this.fmtKWh(value * 1e3);
+								return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 							},
 						},
 						backgroundColor: "#000",

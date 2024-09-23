@@ -8,7 +8,7 @@ import (
 
 func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error)) api.Charger {
 	switch {
-	case identifier == nil && phaseGetter == nil && phaseSwitcher == nil:
+	case identifier == nil && phaseSwitcher == nil:
 		return base
 
 	case identifier == nil && phaseGetter == nil && phaseSwitcher != nil:
@@ -19,17 +19,6 @@ func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (i
 			KSE: base,
 			PhaseSwitcher: &decorateKSEPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*KSE
-			api.PhaseGetter
-		}{
-			KSE: base,
-			PhaseGetter: &decorateKSEPhaseGetterImpl{
-				phaseGetter: phaseGetter,
 			},
 		}
 
@@ -48,7 +37,7 @@ func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (i
 			},
 		}
 
-	case identifier != nil && phaseGetter == nil && phaseSwitcher == nil:
+	case identifier != nil && phaseSwitcher == nil:
 		return &struct {
 			*KSE
 			api.Identifier
@@ -71,21 +60,6 @@ func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (i
 			},
 			PhaseSwitcher: &decorateKSEPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier != nil && phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*KSE
-			api.Identifier
-			api.PhaseGetter
-		}{
-			KSE: base,
-			Identifier: &decorateKSEIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseGetter: &decorateKSEPhaseGetterImpl{
-				phaseGetter: phaseGetter,
 			},
 		}
 

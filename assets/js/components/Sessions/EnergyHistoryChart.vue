@@ -15,7 +15,7 @@ import {
 	Legend,
 	Tooltip,
 } from "chart.js";
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import colors, { dimColor, fullColor } from "../../colors";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip);
@@ -172,7 +172,7 @@ export default {
 										(acc, curr) => acc + curr,
 										0
 									);
-									label.text = `${label.text} ${this.fmtKWh(sum * 1e3)}`;
+									label.text = `${label.text} ${this.fmtWh(sum * 1e3, POWER_UNIT.AUTO)}`;
 								});
 								return labels;
 							},
@@ -232,7 +232,9 @@ export default {
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw || 0;
-								return datasetLabel + ": " + this.fmtKWh(value * 1e3);
+								return (
+									datasetLabel + ": " + this.fmtWh(value * 1e3, POWER_UNIT.AUTO)
+								);
 							},
 							labelColor: (item) => {
 								const { backgroundColor } = item.element.options;
@@ -270,7 +272,9 @@ export default {
 						},
 						ticks: {
 							callback: (value, index) =>
-								index % 2 === 0 ? this.fmtKWh(value * 1e3, true, false, 0) : null,
+								index % 2 === 0
+									? this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0)
+									: null,
 							color: colors.muted,
 						},
 						position: "right",

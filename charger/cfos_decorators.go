@@ -8,7 +8,7 @@ import (
 
 func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
+	case meter == nil && phaseSwitcher == nil:
 		return base
 
 	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
@@ -19,17 +19,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			CfosPowerBrain: base,
 			Meter: &decorateCfosMeterImpl{
 				meter: meter,
-			},
-		}
-
-	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterEnergy
-		}{
-			CfosPowerBrain: base,
-			MeterEnergy: &decorateCfosMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 		}
 
@@ -48,17 +37,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
-		return &struct {
-			*CfosPowerBrain
-			api.PhaseCurrents
-		}{
-			CfosPowerBrain: base,
-			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
 	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*CfosPowerBrain
@@ -68,21 +46,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			CfosPowerBrain: base,
 			Meter: &decorateCfosMeterImpl{
 				meter: meter,
-			},
-			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			CfosPowerBrain: base,
-			MeterEnergy: &decorateCfosMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -108,7 +71,7 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+	case meter == nil && phaseSwitcher != nil:
 		return &struct {
 			*CfosPowerBrain
 			api.PhaseSwitcher
@@ -134,21 +97,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			},
 		}
 
-	case meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterEnergy
-			api.PhaseSwitcher
-		}{
-			CfosPowerBrain: base,
-			MeterEnergy: &decorateCfosMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCfosPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
 	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
 		return &struct {
 			*CfosPowerBrain
@@ -168,21 +116,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
-		return &struct {
-			*CfosPowerBrain
-			api.PhaseCurrents
-			api.PhaseSwitcher
-		}{
-			CfosPowerBrain: base,
-			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCfosPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
 	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
 		return &struct {
 			*CfosPowerBrain
@@ -193,25 +126,6 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			CfosPowerBrain: base,
 			Meter: &decorateCfosMeterImpl{
 				meter: meter,
-			},
-			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCfosPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-		}{
-			CfosPowerBrain: base,
-			MeterEnergy: &decorateCfosMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateCfosPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,

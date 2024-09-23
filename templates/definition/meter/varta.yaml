@@ -52,7 +52,5 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

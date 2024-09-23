@@ -11,7 +11,7 @@ import (
 // timestampValid returns false if status timestamps are outdated
 func (conn *Connector) timestampValid(t time.Time) bool {
 	// reject if expired
-	if conn.clock.Since(t) > messageExpiry {
+	if conn.clock.Since(t) > Timeout {
 		return false
 	}
 
@@ -24,7 +24,7 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
-func (conn *Connector) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
+func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -35,6 +35,14 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 		conn.status = request
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
+	}
+
+	if conn.isWaitingForAuth() {
+		if conn.remoteIdTag != "" {
+			conn.RemoteStartTransactionRequest(conn.remoteIdTag)
+		} else {
+			conn.log.DEBUG.Printf("waiting for local authentication")
+		}
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
@@ -48,7 +56,7 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	return s.Measurand
 }
 
-func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
+func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -56,7 +64,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
-		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
+		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
 
@@ -79,23 +87,11 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	return new(core.MeterValuesConfirmation), nil
 }
 
-func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
+func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
-		res := &core.StartTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
-
-	conn.txnCount++
-	conn.txnId = conn.txnCount
+	conn.txnId = int(instance.txnId.Add(1))
 	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
@@ -128,20 +124,9 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
-func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
+func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
-		res := &core.StopTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
 
 	conn.txnId = 0
 	conn.idTag = ""

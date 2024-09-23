@@ -24,7 +24,7 @@ type connTestSuite struct {
 
 func (suite *connTestSuite) SetupTest() {
 	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
-	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, time.Minute)
+	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, "")
 
 	suite.clock = clock.NewMock()
 	suite.conn.clock = suite.clock

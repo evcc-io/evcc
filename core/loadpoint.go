@@ -427,6 +427,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
+	// charge status
+	lp.publish(keys.ChargerStatusReason, api.ReasonUnknown)
+
 	lp.stopWakeUpTimer()
 
 	// soc update reset
@@ -508,6 +511,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.sessionEnergy.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
+
+	// charge status
+	lp.publish(keys.ChargerStatusReason, api.ReasonUnknown)
 
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
@@ -1482,9 +1488,6 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			{ // TODO remove
-				lp.log.DEBUG.Printf("!! session: chargeRater.chargedEnergy=%.1f - chargedAtStartup=%.1f", f, lp.chargedAtStartup)
-			}
 			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
@@ -1516,7 +1519,10 @@ func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
 
 	// guard for socEstimator removed by api
-	if lp.socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
+	// also keep a local copy in order to avoid race conditions
+	// https://github.com/evcc-io/evcc/issues/16180
+	socEstimator := lp.socEstimator
+	if socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
 		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
 		// We need to check if the charger can provide soc and use it if available.
 		if err == nil {
@@ -1530,7 +1536,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
-		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
+		f, err := socEstimator.Soc(lp.getChargedEnergy())
 		if err != nil {
 			if loadpoint.AcceptableError(err) {
 				lp.socUpdated = time.Time{}
@@ -1564,11 +1570,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		var d time.Duration
 		if lp.charging() {
-			d = lp.socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+			d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(limitSoc))
+		lp.SetRemainingEnergy(1e3 * socEstimator.RemainingChargeEnergy(limitSoc))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
@@ -1674,7 +1680,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok {
+	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
 			lp.publish(keys.ChargerStatusReason, r)
 		} else {

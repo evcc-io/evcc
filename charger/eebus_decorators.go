@@ -8,7 +8,7 @@ import (
 
 func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
-	case chargeRater == nil && meter == nil && phaseCurrents == nil:
+	case chargeRater == nil && meter == nil:
 		return base
 
 	case chargeRater == nil && meter != nil && phaseCurrents == nil:
@@ -19,17 +19,6 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			EEBus: base,
 			Meter: &decorateEEBusMeterImpl{
 				meter: meter,
-			},
-		}
-
-	case chargeRater == nil && meter == nil && phaseCurrents != nil:
-		return &struct {
-			*EEBus
-			api.PhaseCurrents
-		}{
-			EEBus: base,
-			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
 			},
 		}
 
@@ -48,7 +37,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			},
 		}
 
-	case chargeRater != nil && meter == nil && phaseCurrents == nil:
+	case chargeRater != nil && meter == nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater
@@ -71,21 +60,6 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			},
 			Meter: &decorateEEBusMeterImpl{
 				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && phaseCurrents != nil:
-		return &struct {
-			*EEBus
-			api.ChargeRater
-			api.PhaseCurrents
-		}{
-			EEBus: base,
-			ChargeRater: &decorateEEBusChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
 			},
 		}
 

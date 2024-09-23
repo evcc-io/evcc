@@ -388,10 +388,7 @@ presets:
       - name: timeout
         advanced: true
         type: duration
-        default: 30s
-        description:
-          de: Zeitlimit für die Beantwortung von einzelnen OCPP-Nachrichten
-          en: Timeout for individual OCPP messages
+        deprecated: true
       - name: meterinterval
         advanced: true
         type: duration

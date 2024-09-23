@@ -69,7 +69,7 @@ export default {
 		},
 		fmtPower() {
 			if (this.duration > 0 && this.power > 0) {
-				return `@ ${this.fmtKw(this.power)}`;
+				return `@ ${this.fmtW(this.power)}`;
 			}
 			return null;
 		},

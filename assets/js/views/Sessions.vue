@@ -129,7 +129,7 @@ import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/sun";
-import formatter from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
 import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue";
@@ -201,7 +201,7 @@ export default {
 			);
 			const solarPercentage = (100 / totalEnergy) * selfEnergy;
 			console.log({ totalEnergy, selfEnergy, solarPercentage });
-			return `${this.fmtKWh(totalEnergy * 1e3)} geladen · ${this.fmtPercentage(solarPercentage)} Sonne`;
+			return `${this.fmtWh(totalEnergy * 1e3, POWER_UNIT.AUTO)} geladen · ${this.fmtPercentage(solarPercentage)} Sonne`;
 		},
 		topNavigation: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};

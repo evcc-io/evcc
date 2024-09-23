@@ -8,8 +8,12 @@ requirements:
 params:
   - preset: ocpp
   - name: meter
-    deprecated: true
+    type: bool
+    default: true
   - name: meterinterval
     deprecated: true
 render: |
   {{ include "ocpp" . }}
+  {{- if eq .meter "false" }}
+  metervalues: Current.Offered
+  {{- end }}

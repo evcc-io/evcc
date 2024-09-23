@@ -6,9 +6,23 @@ products:
   - brand: ESPHome
     description:
       generic: DSMR
+  - brand: mhendriks
+    description:
+      generic: P1 dongle
 params:
   - name: usage
     choice: ["grid"]
+  - name: scale
+    example: 1 | 10 | 100 | 1000
+    default: 1000
+    required: true
+    advanced: true
+    description:
+      de: Skalierungsfaktor
+      en: Scale factor
+    help:
+      de: Verwenden Skala von 1000 für Zuidwijk Slimmelezer. Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
+      en: Use scale of 1000 for Zuidwijk Slimmelezer. Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
   - name: host
 render: |
   type: custom
@@ -20,13 +34,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_returned
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}
   energy:
     source: calc
     add:
@@ -64,13 +78,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l1
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}
   - source: calc
     add:
     - source: http
@@ -78,13 +92,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l2
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}
   - source: calc
     add:
     - source: http
@@ -92,10 +106,10 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l3
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}

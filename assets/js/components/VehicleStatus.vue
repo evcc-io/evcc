@@ -214,7 +214,7 @@ export default {
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,
 		smartCostDisabled: Boolean,
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
 		tariffCo2: Number,
@@ -422,7 +422,7 @@ export default {
 			});
 		},
 		smartCostVisible() {
-			return !!this.smartCostLimit;
+			return this.smartCostLimit !== null;
 		},
 		smartCostTooltipContent() {
 			if (!this.smartCostVisible) {
@@ -626,12 +626,13 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
+			let newInstance = instance;
+			if (!newInstance) {
 				const trigger = hoverOnly ? "hover" : "hover focus";
-				instance = new Tooltip(ref, { title: " ", trigger });
+				newInstance = new Tooltip(ref, { title: " ", trigger });
 			}
-			instance.setContent({ ".tooltip-inner": content });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": content });
+			return newInstance;
 		},
 	},
 };
