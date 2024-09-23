@@ -161,17 +161,15 @@ render: |
     switch:
     - case: 1 # normal 
       set:
-        source: sequence
+        source: const
+        value: 0
         set:
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 2127 # 0x84F Time period control flag
-              type: writemultiple
-              decode: uint16
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 2127 # 0x84F Time period control flag
+            type: writemultiple
+            decode: uint16
     - case: 2 # hold -> Enable grid charging with 10% target soc -> will not start charging but will prevent uncharging of battery 
       set:
         source: sequence
