@@ -67,7 +67,7 @@ func init() {
 		return NewEm2GoFromConfig(other, true)
 	})
 	registry.Add("em2go-home", func(other map[string]any) (api.Charger, error) {
-		return NewEm2GoFromConfig(other, false)
+		return NewEm2GoFromConfig(other, true)
 	})
 }
 
@@ -115,16 +115,12 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 		chargerCurrent float64
 	)
 
-	if milli {
-		maxCurrent = wb.maxCurrentMillis
-	}
-
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
 
-	// Test if workaround is needed (fw <1.3)
+	// Test if workaround is needed (Home fw <1.3)
 	if wb.maxCurrentMillis(6.1) != nil {
 		return nil, err
 	}
@@ -134,7 +130,9 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 		wb.workaround = true
 	} else {
 		wb.workaround = false
-		maxCurrent = wb.maxCurrentMillis
+		if milli {
+			maxCurrent = wb.maxCurrentMillis
+		}
 	}
 
 	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
