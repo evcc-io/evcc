@@ -21,9 +21,9 @@ params:
     type: number
     advanced: true
 render: |
-  {{- if eq .usage "grid" }}
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
+  {{- if eq .usage "grid" }}
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
@@ -99,7 +99,6 @@ render: |
     value: 103:WH
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: custom
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}

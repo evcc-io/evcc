@@ -126,10 +126,8 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 		c.ev = nil
 
 	case evcem.DataUpdateCurrentPerPhase:
-		// if there was a limit change before this measurement, set its update time to zero, as we got what we needed
-		if !c.limitUpdated.IsZero() {
-			c.limitUpdated = time.Time{}
-		}
+		// acknowledge limit change
+		c.limitUpdated = time.Time{}
 	}
 }
 
@@ -574,14 +572,14 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	}
 
 	c.mux.Lock()
-	lu := c.limitUpdated
+	ts := c.limitUpdated
 	c.mux.Unlock()
 
 	// if the last limit update is not zero (meaning no measurement was provided yet)
 	// only consider this an error, if the last limit update is older than 15 seconds
 	// this covers the case where this function may be called shortly after setting a limit
 	// but too short for a measurement can even be received
-	if d := time.Now().Sub(lu); d > 15*time.Second && !lu.IsZero() {
+	if d := time.Now().Sub(ts); d > 15*time.Second && !ts.IsZero() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
