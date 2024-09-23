@@ -953,7 +953,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	if lp.vehicleSoc != 0 {
 		active := lp.vehicleSoc < float64(minSoc)
 		if active {
-			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
+			lp.log.DEBUG.Printf("forced charging at vehicle soc %.2f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
 		}
 		return active
 	}
@@ -1547,7 +1547,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		lp.vehicleSoc = f
-		lp.log.DEBUG.Printf("vehicle soc: %.1f%%", lp.vehicleSoc)
+		lp.log.DEBUG.Printf("vehicle soc: %.2f%%", lp.vehicleSoc)
 		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 		// vehicle target soc
