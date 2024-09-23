@@ -5,13 +5,27 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// cp actions - global handlers
+// cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
 		},
+	}
+
+	return res, nil
+}
+
+func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnBootNotification(request)
+	}
+
+	res := &core.BootNotificationConfirmation{
+		CurrentTime: types.Now(),
+		Interval:    60,
+		Status:      core.RegistrationStatusPending, // not accepted during startup
 	}
 
 	return res, nil
@@ -28,22 +42,6 @@ func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*cor
 func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.Now(),
-	}
-
-	return res, nil
-}
-
-// cp actions - local handlers
-
-func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
-	if cp, err := cs.ChargepointByID(id); err == nil {
-		return cp.OnBootNotification(request)
-	}
-
-	res := &core.BootNotificationConfirmation{
-		CurrentTime: types.Now(),
-		Interval:    60,
-		Status:      core.RegistrationStatusPending, // not accepted during startup
 	}
 
 	return res, nil
