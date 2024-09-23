@@ -94,8 +94,6 @@ render: |
     value:
       - 101:W
       - 111:W
-      - 102:W
-      - 112:W
       - 103:W
       - 113:W
   energy:
