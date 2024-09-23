@@ -102,8 +102,6 @@ render: |
     value:
       - 101:WH
       - 111:WH
-      - 102:WH
-      - 112:WH
       - 103:WH
       - 113:WH
     scale: 0.001
