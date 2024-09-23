@@ -3,7 +3,7 @@ products:
   - brand: EM2GO
     description:
       generic: Home
-capabilities: ["1p3p","mA"]
+capabilities: ["1p3p", "mA"]
 requirements:
   description:
     de: "Benötigt FW version >= E3C_V1.1. mA Regelung benötigt FW version >= E3C_V1.3."
