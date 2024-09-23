@@ -99,11 +99,13 @@ func (c Influx) Redacted() any {
 		Database string `json:"database"`
 		Org      string `json:"org"`
 		User     string `json:"user"`
+		Insecure bool   `json:"insecure"`
 	}{
 		URL:      c.URL,
 		Database: c.Database,
 		Org:      c.Org,
 		User:     c.User,
+		Insecure: c.Insecure,
 	}
 }
 
