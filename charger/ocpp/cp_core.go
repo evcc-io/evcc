@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -13,16 +12,6 @@ var (
 	ErrInvalidConnector   = errors.New("invalid connector")
 	ErrInvalidTransaction = errors.New("invalid transaction")
 )
-
-func (cp *CP) OnAuthorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
-	res := &core.AuthorizeConfirmation{
-		IdTagInfo: &types.IdTagInfo{
-			Status: types.AuthorizationStatusAccepted,
-		},
-	}
-
-	return res, nil
-}
 
 func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
@@ -38,14 +27,6 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	return res, nil
 }
 
-func (cp *CP) OnDiagnosticStatusNotification(request *firmware.DiagnosticsStatusNotificationRequest) (*firmware.DiagnosticsStatusNotificationConfirmation, error) {
-	return new(firmware.DiagnosticsStatusNotificationConfirmation), nil
-}
-
-func (cp *CP) OnFirmwareStatusNotification(request *firmware.FirmwareStatusNotificationRequest) (*firmware.FirmwareStatusNotificationConfirmation, error) {
-	return new(firmware.FirmwareStatusNotificationConfirmation), nil
-}
-
 func (cp *CP) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	if request == nil {
 		return nil, ErrInvalidRequest
@@ -56,22 +37,6 @@ func (cp *CP) OnStatusNotification(request *core.StatusNotificationRequest) (*co
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
-}
-
-func (cp *CP) OnDataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
-	res := &core.DataTransferConfirmation{
-		Status: core.DataTransferStatusAccepted,
-	}
-
-	return res, nil
-}
-
-func (cp *CP) OnHeartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	res := &core.HeartbeatConfirmation{
-		CurrentTime: types.Now(),
-	}
-
-	return res, nil
 }
 
 func (cp *CP) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
