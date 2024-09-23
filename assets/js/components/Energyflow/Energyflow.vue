@@ -20,6 +20,8 @@
 				:batterySoc="batterySoc"
 				:powerUnit="powerUnit"
 				:vehicleIcons="vehicleIcons"
+				:inPower="inPower"
+				:outPower="outPower"
 			/>
 		</div>
 		<div
