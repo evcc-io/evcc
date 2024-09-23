@@ -8,6 +8,8 @@ import (
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
+	// no cp handler
+
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
@@ -32,6 +34,8 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 }
 
 func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
+	// no cp handler
+
 	res := &core.DataTransferConfirmation{
 		Status: core.DataTransferStatusAccepted,
 	}
@@ -40,6 +44,8 @@ func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*cor
 }
 
 func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
+	// no cp handler
+
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.Now(),
 	}
