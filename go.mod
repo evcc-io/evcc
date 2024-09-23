@@ -36,7 +36,7 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/go-sprout/sprout v0.6.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
-	github.com/go-viper/mapstructure/v2 v2.2.0
+	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33
 	github.com/golang-jwt/jwt/v5 v5.2.1
