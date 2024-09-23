@@ -183,8 +183,10 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		switch typ {
 		case typelabel.Float32:
 			point.SetFloat32(float32(val))
+		case typelabel.Uint16:
+			point.SetUint16(uint16(val))
 		default:
-			return fmt.Errorf("invalid point type: %s", typ)
+			return fmt.Errorf("invalid point type: %s, tried to write float value %f", typ, val)
 		}
 
 		return block.Write(m.op.Point)

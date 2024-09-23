@@ -13,6 +13,13 @@ params:
     choice: ["tcpip", "rs485"]
   - name: capacity
     advanced: true
+  # battery control (model 802)
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   {{- if eq .usage "grid" }}
   type: custom
@@ -80,50 +87,37 @@ render: |
         - 213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
+  # sunspec model 103 Inverter (Three-Phase)
   type: custom
   power:
-    source: calc
-    add:
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:1:DCW # mppt 1
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:2:DCW # mppt 2
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:DCW
   energy:
-    source: calc
-    add:
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:1:DCWH # mppt 1
-        scale: 0.001
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:2:DCWH # mppt 2
-        scale: 0.001
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:WH
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
   power:
-    source: calc
-    add:
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:3:DCW # mppt 3 (charge)
-        scale: -1
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:4:DCW # mppt 4 (discharge)
-  energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 160:4:DCWH # mppt 4 (discharge)
-    scale: 0.001
+    value: 802:W
+    scale: -1
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value:
-      - 124:ChaState
-      - 802:SoC
+    value: 802:SoC
+  limitsoc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCRsvMin
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   capacity: {{ .capacity }} # kWh
+  #   source: sunspec
+  #   { {- include "modbus" . | indent 2 }}
+  #   value: 802:WHRtg
+  #   scale: 0.001
   {{- end }}
