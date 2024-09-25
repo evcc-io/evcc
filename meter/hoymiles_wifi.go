@@ -71,8 +71,6 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 
 // CurrentPower implements the api.Meter interface
 func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
-	hmWifi.log.TRACE.Printf("Start HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
-
 	var value float64
 	request := &models.RealDataNewReqDTO{}
 	// int32 would not be Year 2038 safe
