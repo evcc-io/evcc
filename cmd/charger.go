@@ -3,6 +3,7 @@ package cmd
 import (
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -121,14 +122,29 @@ func runCharger(cmd *cobra.Command, args []string) {
 		d := dumper{len: len(chargers)}
 		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
-		for _, dev := range chargers {
-			v := dev.Instance()
+		var wg sync.WaitGroup
+		wg.Add(len(chargers))
 
-			d.DumpWithHeader(dev.Config().Name, v)
-			if flag {
-				d.DumpDiagnosis(v)
-			}
+		for _, dev := range chargers {
+			go func() {
+				v := dev.Instance()
+
+			REPEAT:
+				d.DumpWithHeader(dev.Config().Name, v)
+				if flag {
+					d.DumpDiagnosis(v)
+				}
+
+				if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
+					goto REPEAT
+				}
+				wg.Done()
+			}()
+
+			wg.Done()
 		}
+
+		wg.Wait()
 	}
 
 	// wait for shutdown

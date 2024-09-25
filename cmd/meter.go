@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -69,15 +70,25 @@ func runMeter(cmd *cobra.Command, args []string) {
 
 	if !flagUsed {
 		d := dumper{len: len(meters)}
-	REPEAT:
-		for _, dev := range meters {
-			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+		var wg sync.WaitGroup
+		wg.Add(len(meters))
+
+		for _, dev := range meters {
+			go func() {
+				v := dev.Instance()
+
+			REPEAT:
+				d.DumpWithHeader(dev.Config().Name, v)
+				if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
+					goto REPEAT
+				}
+
+				wg.Done()
+			}()
 		}
-		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
-			goto REPEAT
-		}
+
+		wg.Wait()
 	}
 
 	// wait for shutdown
