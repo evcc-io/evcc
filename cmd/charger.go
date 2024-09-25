@@ -28,6 +28,7 @@ func init() {
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
+	chargerCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -138,10 +139,9 @@ func runCharger(cmd *cobra.Command, args []string) {
 				if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
 					goto REPEAT
 				}
+
 				wg.Done()
 			}()
-
-			wg.Done()
 		}
 
 		wg.Wait()
