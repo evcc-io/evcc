@@ -7,5 +7,10 @@ import (
 )
 
 func AcceptableError(err error) bool {
-	return errors.Is(err, api.ErrAsleep) || errors.Is(err, api.ErrMustRetry)
+	for _, e := range []error{api.ErrAsleep, api.ErrMustRetry, api.ErrNotAvailable} {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+	return false
 }

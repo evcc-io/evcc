@@ -7,15 +7,20 @@ import (
 	"go/format"
 	"io"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 	"text/template"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/go-sprout/sprout/sprigin"
 	combinations "github.com/mxschmitt/golang-combinations"
+	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
 )
+
+//go:generate go run ./decorate.go -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -27,6 +32,42 @@ type dynamicType struct {
 type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName, ReturnTypes string
 	Params                                                     []string
+}
+
+var a struct {
+	api.Meter
+	api.MeterEnergy
+	api.PhaseCurrents
+	api.PhaseVoltages
+	api.PhasePowers
+
+	api.PhaseSwitcher
+	api.PhaseGetter
+
+	api.Battery
+	api.BatteryCapacity
+	api.BatteryController
+}
+
+func typ(i any) string {
+	return reflect.TypeOf(i).Elem().String()
+}
+
+var dependents = map[string][]string{
+	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers)},
+	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
+	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},
+}
+
+// hasIntersection returns if the slices intersect
+func hasIntersection[T comparable](a, b []T) bool {
+	for _, el := range a {
+		if slices.Contains(b, el) {
+			return true
+		}
+	}
+	return false
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -45,6 +86,21 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 			return ordered
 		},
+		"requiredType": func(c []string, typ string) bool {
+			for master, details := range dependents {
+				// exclude combinations where ...
+				// - master is part of the decorators
+				// - master is not part of the currently evaluated combination
+				// - details are part of the currently evaluated combination
+				if slices.Contains(combos, master) && !slices.Contains(c, master) && slices.Contains(details, typ) {
+					return false
+				}
+			}
+			return true
+		},
+		"empty": func() []string {
+			return nil
+		},
 	}).Parse(srcTmpl)
 	if err != nil {
 		return err
@@ -52,28 +108,25 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
+		lastPart := parts[len(parts)-1]
 
 		openingBrace := strings.Index(dt.signature, "(")
 		closingBrace := strings.Index(dt.signature, ")")
 		paramsStr := dt.signature[openingBrace+1 : closingBrace]
 
-		paramsStr = strings.TrimSpace(paramsStr)
-
 		var params []string
-		if len(paramsStr) > 0 {
+		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
 			params = strings.Split(paramsStr, ",")
 		}
 
-		returnValuesStr := dt.signature[closingBrace+1:]
-
 		types[dt.typ] = typeStruct{
 			Type:        dt.typ,
-			ShortType:   parts[1],
-			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
+			ShortType:   lastPart,
+			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
 			Signature:   dt.signature,
 			Function:    dt.function,
 			Params:      params,
-			ReturnTypes: returnValuesStr,
+			ReturnTypes: dt.signature[closingBrace+1:],
 		}
 
 		combos = append(combos, dt.typ)
@@ -87,6 +140,34 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	shortBase := strings.TrimLeft(baseType, "*")
 	if baseTypeParts := strings.SplitN(baseType, ".", 2); len(baseTypeParts) > 1 {
 		shortBase = baseTypeParts[1]
+	}
+
+	validCombos := make([][]string, 0)
+COMBO:
+	for _, c := range combinations.All(combos) {
+		for master, details := range dependents {
+			// prune combinations where ...
+			// - master is part of the decorators
+			// - master is not part of the currently evaluated combination
+			// - details are part of the currently evaluated combination
+			// ... and remove details from the combination
+			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
+				c = lo.Without(c, details...)
+
+				if len(c) == 0 {
+					continue COMBO
+				}
+			}
+		}
+
+		// prune duplicates
+		for _, v := range validCombos {
+			if slices.Equal(v, c) {
+				continue COMBO
+			}
+		}
+
+		validCombos = append(validCombos, c)
 	}
 
 	vars := struct {
@@ -104,7 +185,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		ShortBase:    shortBase,
 		ReturnType:   returnType,
 		Types:        types,
-		Combinations: combinations.All(combos),
+		Combinations: validCombos,
 	}
 
 	return tmpl.Execute(out, vars)

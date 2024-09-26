@@ -53,8 +53,9 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	// assume RTU if not set and this is a known RS485 meter model
 	if cc.RTU == nil {
-		b := modbus.IsRS485(cc.Model)
-		cc.RTU = &b
+		if rtu := modbus.IsRS485(cc.Model); rtu {
+			cc.RTU = &rtu
+		}
 	}
 
 	modbus.Lock()

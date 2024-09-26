@@ -104,15 +104,15 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		phasesS = c.phases1p3p
 	}
 
-	// var currentG func() (float64, error)
-	// if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
-	// 	currentG = c.conn.GetMaxCurrent
-	// }
+	var currentG func() (float64, error)
+	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
+		currentG = c.conn.GetMaxCurrent
+	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, phasesS, socG), nil
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idTag string,
@@ -120,34 +120,26 @@ func NewOCPP(id string, connector int, idTag string,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
-	unit := "ocpp"
-	if id != "" {
-		unit = id
-	}
-	unit = fmt.Sprintf("%s-%d", unit, connector)
+	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	log := util.NewLogger(unit)
+	cp, err := ocpp.Instance().RegisterChargepoint(id,
+		func() *ocpp.CP {
+			return ocpp.NewChargePoint(log, id)
+		},
+		func(cp *ocpp.CP) error {
+			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
-	cp, err := ocpp.Instance().ChargepointByID(id)
+			select {
+			case <-time.After(connectTimeout):
+				return api.ErrTimeout
+			case <-cp.HasConnected():
+			}
+
+			return cp.Setup(meterValues, meterInterval)
+		},
+	)
 	if err != nil {
-		cp = ocpp.NewChargePoint(log, id)
-
-		// should not error
-		if err := ocpp.Instance().Register(id, cp); err != nil {
-			return nil, err
-		}
-
-		log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
-
-		select {
-		case <-time.After(connectTimeout):
-			return nil, api.ErrTimeout
-		case <-cp.HasConnected():
-		}
-
-		if err := cp.Setup(meterValues, meterInterval); err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
@@ -170,13 +162,7 @@ func NewOCPP(id string, connector int, idTag string,
 		stackLevelZero: stackLevelZero,
 	}
 
-	if cp.HasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
-			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
-		}
-
-		go conn.WatchDog(10 * time.Second)
-	}
+	go conn.WatchDog(10 * time.Second)
 
 	return c, conn.Initialized()
 }
@@ -290,7 +276,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.conn.SetChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
+	err := c.conn.SetChargingProfileRequest(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -381,7 +367,7 @@ func (c *OCPP) Diagnose() {
 	}
 
 	fmt.Printf("\tConfiguration:\n")
-	if resp, err := c.cp.GetConfiguration(); err == nil {
+	if resp, err := c.cp.GetConfigurationRequest(); err == nil {
 		// sort configuration keys for printing
 		slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
 			return cmp.Compare(i.Key, j.Key)

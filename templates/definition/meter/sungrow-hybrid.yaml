@@ -245,7 +245,5 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

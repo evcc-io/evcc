@@ -109,7 +109,7 @@ export default {
 			return this.fmtWh(this.planEnergy * 1e3);
 		},
 		costLimitExists: function () {
-			return this.smartCostLimit !== 0;
+			return this.smartCostLimit !== null;
 		},
 		costLimitText: function () {
 			if (this.isCo2) {
