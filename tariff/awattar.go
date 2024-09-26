@@ -64,8 +64,8 @@ func (t *Awattar) run(done chan error) {
 
 		// Awattar publishes prices for next day around 13:00 CET/CEST, so up to 35h of price data are available
 		// To be on the safe side request a window of -2h and +48h, the API doesn't mind requesting more than available
-		start := time.Now().Add(-time.Hour * 2).UnixMilli()
-		end := time.Now().Add(time.Hour * 48).UnixMilli()
+		start := time.Now().Add(-2 * time.Hour).UnixMilli()
+		end := time.Now().Add(48 * time.Hour).UnixMilli()
 		uri := fmt.Sprintf("%s?start=%d&end=%d", t.uri, start, end)
 
 		if err := backoff.Retry(func() error {
