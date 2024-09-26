@@ -12,8 +12,8 @@ const (
 	URI_API_PRODUCTION  = "https://production.ostrom-api.io"
 	URI_AUTH_SANDBOX    = "https://auth.sandbox.ostrom-api.io"
 	URI_API_SANDBOX     = "https://sandbox.ostrom-api.io"
-	URI_AUTH            = URI_AUTH_SANDBOX
-	URI_API             = URI_API_SANDBOX
+	URI_AUTH            = URI_AUTH_PRODUCTION
+	URI_API             = URI_API_PRODUCTION
 )
 
 const (
@@ -44,7 +44,7 @@ type Address struct {
 }
 
 type Contract struct {
-	Id        string  `json:"id"`                          //"100523456",
+	Id        int64   `json:"id"`                          //"100523456",
 	Type      string  `json:"type"`                        //"ELECTRICITY",
 	Product   string  `json:"productCode"`                 //"SIMPLY_DYNAMIC",
 	Status    string  `json:"status"`                      //"ACTIVE",

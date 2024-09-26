@@ -16,6 +16,7 @@ func EnsureElementEx[T any](
 	var zero T
 
 	objects, err := list()
+
 	if err != nil {
 		return zero, fmt.Errorf("cannot get Objects: %w", err)
 	}
@@ -32,7 +33,7 @@ func EnsureElementEx[T any](
 			}
 		}
 	} else if len(objects) == 1 {
-		// vin empty and exactly one vehicle
+		// vin empty and exactly one object
 		return objects[0], nil
 	}
 

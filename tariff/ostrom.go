@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,6 +28,7 @@ type Ostrom struct {
 	log          *util.Logger
 	zip          string
 	contractType string
+	price        float64 // Required for the Fair tariff types
 	basic        string
 	data         *util.Monitor[api.Rates]
 }
@@ -42,6 +44,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		ClientId     string
 		ClientSecret string
 		Contract     string
+		Price        float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -60,6 +63,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		basic:        basic,
 		contractType: ostrom.PRODUCT_DYNAMIC,
 		zip:          "",
+		price:        0.0,
 		Helper:       request.NewHelper(log),
 		data:         util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -71,20 +75,39 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	contract, err := util.EnsureElementEx(cc.Contract, t.GetContracts,
 		func(c ostrom.Contract) (string, error) {
-			return c.Id, nil
+			return strconv.FormatInt(c.Id, 10), nil
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	t.contractType = contract.Type
-	t.zip = contract.Address.Zip
-
 	done := make(chan error)
-	go t.run(done)
+
+	t.contractType = contract.Product
+	t.zip = contract.Address.Zip
+	if t.Type() == api.TariffTypePriceStatic {
+		log.DEBUG.Printf("Static Price is %f\n", cc.Price)
+		if cc.Price == 0.0 {
+			return nil, errors.New("You have to define a price for SIMPLY FAIR tariffs")
+		}
+		t.price = cc.Price * 100
+		go t.runStatic(done)
+	} else {
+		go t.run(done)
+	}
 	err = <-done
 
 	return t, err
+}
+
+func addPrice(entry ostrom.ForecastInfo, rates api.Rates) api.Rates {
+	ts := entry.StartTimestamp.Local()
+	ar := api.Rate{
+		Start: ts,
+		End:   ts.Add(time.Hour),
+		Price: (entry.Marketprice + entry.AdditionalCost) / 100.0, // Both values include VAT
+	}
+	return append(rates, ar)
 }
 
 func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
@@ -113,9 +136,34 @@ func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 
 	contractsURL := ostrom.URI_API + "/contracts"
 	err := t.GetJSON(contractsURL, &res)
+	t.log.DEBUG.Println(res.Data)
 	return res.Data, err
 }
 
+// This function is used to calculate the prices for the Simplay Fair tarrifs
+// using the price given in the configuration
+// Unfortunately, the API does not allow to query the price for these yet.
+func (t *Ostrom) runStatic(done chan error) {
+	var once sync.Once
+	var val ostrom.ForecastInfo
+	val.AdditionalCost = 0
+	val.Marketprice = t.price
+
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
+		val.StartTimestamp = now.BeginningOfDay()
+		data := make(api.Rates, 0, 48)
+		for i := 0; i < 48; i++ {
+			data = addPrice(val, data)
+			val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
+		}
+		mergeRates(t.data, data)
+		once.Do(func() { close(done) })
+	}
+}
+
+// This function calls th ostrom API to query the
+// dynamic prices
 func (t *Ostrom) run(done chan error) {
 	var once sync.Once
 
@@ -145,30 +193,10 @@ func (t *Ostrom) run(done chan error) {
 
 		data := make(api.Rates, 0, 48)
 		count := len(res.Data)
-		if count > 0 {
-			count--
-			r := res.Data[0]
-			n := res.Data[1]
-			for i := 0; i < count; i++ {
-				for ts := r.StartTimestamp.Local(); ts.Before(n.StartTimestamp); ts = ts.Add(time.Hour) {
-					ar := api.Rate{
-						Start: ts,
-						End:   ts.Add(time.Hour),
-						Price: r.Marketprice + r.AdditionalCost, // Both values include VAT
-					}
-					data = append(data, ar)
-				}
-				r = n
-				n = res.Data[i]
-			}
-			// And now the last one
-			ar := api.Rate{
-				Start: n.StartTimestamp.Local(),
-				End:   n.StartTimestamp.Add(time.Hour).Local(),
-				Price: n.Marketprice + n.AdditionalCost, // Both values include VAT
-			}
-			data = append(data, ar)
+		for i := 0; i < count; i++ {
+			data = addPrice(res.Data[i], data)
 		}
+
 		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
