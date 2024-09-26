@@ -7,33 +7,26 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. 
-      (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00, 
-      Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. 
-      Der Entladestopp wird über eine geplante Netzladung mit einem Ziel-SoC von 10% realisiert. 
-      Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte
-      `0,0,23,0,23,0,0,0` setzen.
+      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00,   Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. Der Entladestopp wird über eine geplante Netzladung mit einem Ziel-SoC von 10% realisiert. Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte `0,0,23,0,23,0,0,0` setzen.
     en: |
-      To use active battery control, times for grid charging must be defined once via the web interface or app. 
-      (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, 
-      Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. 
-      The discharge stop is realized via a scheduled grid charge with a target SoC of 10%. 
-      Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values
-      `0,0,23,0,23,0,0,0,0`.
+      To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via a scheduled grid charge with a target SoC of 10%. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,0,23,0,0,0,0`.
 params:
   - name: usage
-    choice:
-      - grid
-      - pv
-      - battery
+    choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice:
-      - rs485
-      - tcpip
+    choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 85
   - name: capacity
+    advanced: true
+  - name: minsoc
+    default: 10
+    type: number
+    advanced: true
+  - name: maxsoc
+    default: 100
+    type: number
     advanced: true
 render: |
   type: custom
@@ -170,7 +163,7 @@ render: |
             address: 2127 # 0x84F Time period control flag
             type: writemultiple
             decode: uint16
-    - case: 2 # hold -> Enable grid charging with 10% target soc -> will not start charging but will prevent uncharging of battery 
+    - case: 2 # hold -> Enable grid charging with 10% (default) target soc -> will not start charging but will prevent uncharging of battery 
       set:
         source: sequence
         set:
@@ -184,7 +177,7 @@ render: |
                 type: writemultiple
                 decode: uint16
         - source: const
-          value: 10
+          value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -206,7 +199,7 @@ render: |
                   type: writemultiple
                   decode: uint16
         - source: const
-          value: 100
+          value: {{ .maxsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
