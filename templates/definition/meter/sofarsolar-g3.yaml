@@ -17,6 +17,7 @@ requirements:
   description:
     de: Es wird empfohlen die Verbindung über einen LSE-3 Logger Stick mittels ModBus TCP herzustellen (LSW-3 WLAN Stick wird nicht unterstützt). Bei seriellem Anschluss via RS485 mit entsprechendem Adapter am COM Port ist zu beachten, dass wechselrichterseitig für eine Terminierung des RS485 Busses zu sorgen ist.
     en: It is recommended to establish the connection via a LSE-3 logger stick using ModBus TCP (LSW-3 WiFi stick is not supported). If you are connecting via serial RS485 using the inverter's COM port and a proper adapter note that on the inverter's side you have to take care of a proper termination of the RS485 bus.
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -32,9 +33,11 @@ params:
   - name: minsoc
     type: number
     advanced: true
+    deprecated: true
   - name: maxsoc
     type: number
     advanced: true
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -141,21 +144,74 @@ render: |
       address: 0x0608 # SOC_Bat1
       type: holding
       decode: uint16
-  # limitsoc:
-  #   source: go
-  #   script:
-  #     int(100-limitSoc)
-  #   out:
-  #   - name: dod
-  #     type: int
-  #     config:
-  #       source: modbus
-  #       {- include "modbus" . | indent 6 }
-  #       register:
-  #         address: 0x104D # BatConfig_Depth_of_Discharge
-  #         type: writemultiple
-  #         decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 0 # self-use
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 0x1110
+            type: writemultiple
+            decode: int16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # passive
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x1110
+              type: writemultiple
+              decode: int16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x1187
+              type: writemultiple
+              decode: int32
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x1189
+              type: writemultiple
+              decode: int32
+        - source: const
+          value: 0x7FFFFFFF
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x118B
+              type: writemultiple
+              decode: int32
+    - case: 3 # charge (not implemented -> normal)
+      set:
+        source: const
+        value: 0 # self-use
+        set:
+          source: sequence
+          set:
+          - source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x1110
+              type: writemultiple
+              decode: int16
+          - source: error
+            error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
-  # minsoc: {{ .minsoc }} # %
-  # maxsoc: {{ .maxsoc }} # %
   {{- end }}

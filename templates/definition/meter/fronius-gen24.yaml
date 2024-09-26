@@ -124,6 +124,13 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
+        - source: const
+          value: 0 # s
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InOutWRte_RvrtTms
     - case: 3 # charge
       set:
         source: sequence
@@ -149,7 +156,12 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-  {{- if .capacity }}
+        - source: const
+          value: 0 # s
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InOutWRte_RvrtTms
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
