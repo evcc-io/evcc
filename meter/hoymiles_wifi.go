@@ -49,8 +49,6 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 
 // CurrentPower implements the api.Meter interface
 func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
-	hmWifi.log.TRACE.Printf("Start HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
-
 	var value float64
 	request := &models.RealDataNewReqDTO{}
 	// int32 would not be Year 2038 safe
@@ -89,9 +87,6 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 
 	hmWifi.lastValue = value
 	hmWifi.lastValueUpdated = time.Now()
-
-	hmWifi.log.TRACE.Printf("Get HoymilesWifi CurrentPower: %10.2f watt for Host: %s", value, hmWifi.cc.Host)
-	hmWifi.log.TRACE.Printf("End HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
 
 	return value, nil
 }
