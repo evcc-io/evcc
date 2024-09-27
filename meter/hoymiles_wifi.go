@@ -88,5 +88,5 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 	hmWifi.lastValue = value
 	hmWifi.lastValueUpdated = time.Now()
 
-	return value, nil
+	return float64(result.DtuPower) / 10, nil
 }
