@@ -19,7 +19,7 @@ func init() {
 type HoymilesWifi struct {
 	client           *hoymiles_wifi.ClientData
 	log              *util.Logger
-	cc               struct{ Host string }
+	host string
 	lastValue        float64
 	lastValueUpdated time.Time
 }
