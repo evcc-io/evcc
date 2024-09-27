@@ -1,3 +1,5 @@
+version: 2
+
 dist: release
 release:
   disable: true
@@ -72,6 +74,9 @@ nfpms:
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service

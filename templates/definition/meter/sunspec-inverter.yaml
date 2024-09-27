@@ -14,29 +14,35 @@ params:
 render: |
   type: custom
   {{- if eq .usage "grid" }}
-  # sunspec model 203 (int+sf)/ 213 (float) meter
+  # sunspec model 20x (int+sf)/ 21x (float) meter
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 
+    value:
+      - 201:W
+      - 211:W
       - 203:W
       - 213:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 
+    value:
+      - 201:TotWhImp
+      - 211:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
+        - 201:AphA
+        - 211:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:AphB
         - 213:AphB
     - source: sunspec
@@ -47,12 +53,14 @@ render: |
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
+        - 201:PhVphA
+        - 211:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
@@ -63,12 +71,14 @@ render: |
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
+        - 201:WphA
+        - 211:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:WphB
         - 213:WphB
     - source: sunspec
@@ -83,21 +93,17 @@ render: |
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:W
-      - 103:W
       - 111:W
+      - 103:W
       - 113:W
-      - 102:W
-      - 112:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:WH
-      - 103:WH
       - 111:WH
+      - 103:WH
       - 113:WH
-      - 102:WH
-      - 112:WH
     scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -106,11 +112,9 @@ render: |
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:W
-      - 103:W
       - 111:W
+      - 103:W
       - 113:W
-      - 102:W
-      - 112:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
