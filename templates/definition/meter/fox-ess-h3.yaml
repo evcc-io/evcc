@@ -88,15 +88,12 @@ render: |
       type: holding
       decode: int16
   limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 41009 # limit soc
-        type: writesingle
-        decode: uint16
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 41009 # limit soc
+      type: writesingle
+      decode: uint16
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
