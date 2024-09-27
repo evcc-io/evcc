@@ -1,4 +1,3 @@
-<!-- DateNavigator.vue -->
 <template>
 	<div
 		class="d-sm-flex justify-content-lg-end gap-lg-4"
@@ -26,7 +25,9 @@
 				:selected="month"
 				@change="emitMonthYear($event.target.value)"
 			>
-				<button class="btn btn-sm border-0 h-100 text-truncate">{{ headline }}</button>
+				<button class="btn btn-sm border-0 h-100 text-truncate">
+					{{ monthYearName }}
+				</button>
 			</CustomSelect>
 			<DateNavigatorButton next :disabled="!hasNextMonth" :onClick="emitNextMonth" />
 		</div>
@@ -42,7 +43,9 @@
 				:selected="year"
 				@change="emitYear($event.target.value)"
 			>
-				<button class="btn btn-sm border-0 h-100" style="width: 4em">{{ year }}</button>
+				<button class="btn btn-sm border-0 h-100" style="width: 4em">
+					{{ year }}
+				</button>
 			</CustomSelect>
 			<DateNavigatorButton next :disabled="!hasNextYear" :onClick="emitNextYear" />
 		</div>
@@ -52,6 +55,7 @@
 <script>
 import CustomSelect from "../CustomSelect.vue";
 import DateNavigatorButton from "./DateNavigatorButton.vue";
+import formatter from "../../mixins/formatter";
 
 export default {
 	name: "DateNavigator",
@@ -66,6 +70,7 @@ export default {
 		showMonth: Boolean,
 		showYear: Boolean,
 	},
+	mixins: [formatter],
 	emits: ["update-date"],
 	computed: {
 		hasPrevMonth() {
@@ -120,7 +125,7 @@ export default {
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date);
 		},
-		headline() {
+		monthYearName() {
 			const date = new Date();
 			date.setMonth(this.month - 1, 1);
 			date.setFullYear(this.year);
@@ -158,12 +163,12 @@ export default {
 		emitYear(year) {
 			this.$emit("update-date", { year, month: undefined });
 		},
-		fmtMonth(date) {
-			return date.toLocaleString("default", { month: "long" });
-		},
-		fmtMonthYear(date) {
-			return `${this.fmtMonth(date)} ${date.getFullYear()}`;
-		},
 	},
 };
 </script>
+
+<style scoped>
+.btn {
+	color: inherit;
+}
+</style>

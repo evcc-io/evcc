@@ -1,6 +1,11 @@
 <template>
-	<div v-if="chartData.labels.length > 1">
-		<PolarArea :data="chartData" :options="options" />
+	<div v-if="chartData.labels.length > 1" class="row">
+		<div class="col-12 col-md-6 mb-3">
+			<PolarArea :data="chartData" :options="options" />
+		</div>
+		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
+			<LegendList :legends="legends" extra-class="flex-md-column" />
+		</div>
 	</div>
 </template>
 
@@ -9,6 +14,7 @@ import { PolarArea } from "vue-chartjs";
 import { Chart, RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
 import formatter from "../../mixins/formatter";
 import colors, { dimColor } from "../../colors";
+import LegendList from "./LegendList.vue";
 
 Chart.register(RadialLinearScale, ArcElement, Legend, Tooltip);
 Chart.defaults.font.family = window
@@ -18,11 +24,9 @@ Chart.defaults.font.family = window
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
-const { generateLabels } = Chart.overrides.polarArea.plugins.legend.labels;
-
 export default {
 	name: "SolarChart",
-	components: { PolarArea },
+	components: { PolarArea, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: "loadpoint" },
@@ -70,38 +74,26 @@ export default {
 				],
 			};
 		},
+		legends() {
+			return this.chartData.labels.map((label, index) => ({
+				label: label,
+				color: this.chartData.datasets[0].borderColor[index],
+				value: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
+			}));
+		},
 		options() {
 			return {
 				locale: this.$i18n?.locale,
 				responsive: true,
+				aspectRatio: 1,
 				maintainAspectRatio: false,
 				borderRadius: 8,
 				borderWidth: 3,
 				color: colors.text,
 				spacing: 0,
 				plugins: {
-					legend: {
-						position: "right",
-						align: "start",
-						boxWidth: 300,
-						labels: {
-							usePointStyle: true,
-							pointStyle: "circle",
-							padding: 20,
-							generateLabels: (chart) => {
-								const labels = generateLabels(chart);
-								labels.forEach((label, dataIndex) => {
-									console.log(label);
-									const value = chart.data.datasets[0].data[dataIndex];
-									label.text = `${label.text} ${this.fmtPercentage(value, 1)}`;
-									label.fillStyle = label.strokeStyle;
-									label.strokeStyle = colors.background;
-								});
-								return labels;
-							},
-						},
-						onClick: () => {},
-					},
+					legend: { display: false },
+					tooltip: { enabled: false },
 				},
 				scales: {
 					r: {

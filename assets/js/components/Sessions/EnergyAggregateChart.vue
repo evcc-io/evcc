@@ -1,13 +1,19 @@
 <template>
-	<div v-if="chartData.labels.length > 1">
-		<Doughnut :data="chartData" :options="options" />
+	<div class="row" v-if="chartData.labels.length > 1">
+		<div class="col-12 col-md-6 mb-3">
+			<Doughnut :data="chartData" :options="options" />
+		</div>
+		<div class="col-12 col-md-6 d-flex align-items-center">
+			<LegendList :legends="legends" extra-class="flex-md-column" />
+		</div>
 	</div>
 </template>
 
 <script>
 import { Doughnut } from "vue-chartjs";
 import { Chart, DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import LegendList from "./LegendList.vue";
 import colors from "../../colors";
 
 Chart.register(DoughnutController, ArcElement, LinearScale, Legend, Tooltip);
@@ -18,11 +24,9 @@ Chart.defaults.font.family = window
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
-const { generateLabels } = Chart.overrides.doughnut.plugins.legend.labels;
-
 export default {
 	name: "EnergyAggregateChart",
-	components: { Doughnut },
+	components: { Doughnut, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: "loadpoint" },
@@ -54,36 +58,28 @@ export default {
 				datasets: [{ data, backgroundColor }],
 			};
 		},
+		legends() {
+			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
+			return this.chartData.labels.map((label, index) => ({
+				label: label,
+				color: this.chartData.datasets[0].backgroundColor[index],
+				value: this.fmtPercentage(
+					(100 / total) * this.chartData.datasets[0].data[index],
+					1
+				),
+			}));
+		},
 		options() {
 			return {
 				locale: this.$i18n?.locale,
 				responsive: true,
+				aspectRatio: 1,
 				maintainAspectRatio: false,
 				borderRadius: 6,
 				color: colors.text,
 				plugins: {
 					legend: {
-						position: "right",
-						align: "start",
-						labels: {
-							usePointStyle: true,
-							pointStyle: "circle",
-							padding: 20,
-							generateLabels: (chart) => {
-								const labels = generateLabels(chart);
-								const total = chart.data.datasets[0].data.reduce(
-									(acc, curr) => acc + curr,
-									0
-								);
-								labels.forEach((label, dataIndex) => {
-									const value = chart.data.datasets[0].data[dataIndex];
-									const percentage = (100 / total) * value;
-									label.text = `${label.text} ${this.fmtPercentage(percentage, 1)}`;
-								});
-								return labels;
-							},
-						},
-						onClick: () => {},
+						display: false,
 					},
 					tooltip: {
 						mode: "index",
@@ -100,7 +96,7 @@ export default {
 				borderWidth: 3,
 				borderColor: colors.background,
 				cutout: "70%",
-				radius: "100%",
+				radius: "95%",
 				animation: {
 					duration: 250,
 				},

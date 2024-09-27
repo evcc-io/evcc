@@ -31,3 +31,11 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.btn,
+.btn:active,
+.btn:focus {
+	color: inherit !important;
+}
+</style>

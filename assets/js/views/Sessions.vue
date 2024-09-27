@@ -25,10 +25,12 @@
 						/>
 					</div>
 				</div>
-				<div class="d-flex justify-content-between align-items-center">
-					<h3 class="fw-normal my-0 d-flex gap-2 flex-wrap">
-						<span class="d-block no-wrap">{{ energyTitle }}</span>
-						<small class="d-block no-wrap">{{ energySubTitle }}</small>
+				<div class="d-flex justify-content-between align-items-center gap-2">
+					<h3
+						class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden"
+					>
+						<span class="d-block no-wrap text-truncate">{{ energyTitle }}</span>
+						<small class="d-block no-wrap text-truncate">{{ energySubTitle }}</small>
 					</h3>
 					<IconSelectGroup>
 						<IconSelectItem
@@ -49,7 +51,7 @@
 					:period="period"
 				/>
 				<div class="row align-items-start" v-if="selectedGroup !== groups.SOLAR">
-					<div class="col-12 col-md-6 mb-5">
+					<div class="col-12 col-lg-6 mb-5">
 						<h3 class="fw-normal my-4">Sonnenanteil</h3>
 						<SolarChart
 							:sessions="currentSessions"
@@ -57,7 +59,7 @@
 							:group-by="selectedGroup"
 						/>
 					</div>
-					<div class="col-12 col-md-6 mb-5">
+					<div class="col-12 col-lg-6 mb-5">
 						<h3 class="fw-normal my-4">Energiemenge</h3>
 						<EnergyAggregateChart
 							:sessions="currentSessions"
@@ -117,7 +119,6 @@ import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue"
 import SessionTable from "../components/Sessions/SessionTable.vue";
 import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
 import EnergyAggregateChart from "../components/Sessions/EnergyAggregateChart.vue";
-import EnergyAggregateEntries from "../components/Sessions/EnergyAggregateEntries.vue";
 import SolarChart from "../components/Sessions/SolarChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
@@ -149,7 +150,6 @@ export default {
 		TopHeader,
 		EnergyHistoryChart,
 		EnergyAggregateChart,
-		EnergyAggregateEntries,
 		IconSelectGroup,
 		IconSelectItem,
 		SelectGroup,
@@ -181,13 +181,18 @@ export default {
 	},
 	computed: {
 		energyTitle() {
-			const totalEnergy = this.totalEnergy;
-			const selfEnergy = this.selfEnergy;
-			const solarPercentage = totalEnergy > 0 ? (100 / totalEnergy) * selfEnergy : 0;
-			return `${this.fmtPercentage(solarPercentage)} Sonne`;
+			if (this.selectedGroup === GROUPS.VEHICLE) {
+				return "Fahrzeuge";
+			} else if (this.selectedGroup === GROUPS.LOADPOINT) {
+				return "Ladepunkte";
+			} else {
+				const solarPercentage =
+					this.totalEnergy > 0 ? (100 / this.totalEnergy) * this.selfEnergy : 0;
+				return `${this.fmtPercentage(solarPercentage)} Sonne`;
+			}
 		},
 		energySubTitle() {
-			return `${this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO)} gesamt`;
+			return `${this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO)}`;
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({

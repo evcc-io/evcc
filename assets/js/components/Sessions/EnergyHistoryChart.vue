@@ -1,6 +1,9 @@
 <template>
-	<div style="position: relative; height: 300px">
-		<Bar :data="chartData" :options="options" />
+	<div>
+		<div style="position: relative; height: 300px" class="my-3">
+			<Bar :data="chartData" :options="options" />
+		</div>
+		<LegendList :legends="legends" />
 	</div>
 </template>
 
@@ -16,7 +19,8 @@ import {
 	Tooltip,
 } from "chart.js";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import colors, { dimColor, fullColor } from "../../colors";
+import LegendList from "./LegendList.vue"; // Import the new component
+import colors from "../../colors";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip);
 Chart.defaults.font.family = window
@@ -24,7 +28,6 @@ Chart.defaults.font.family = window
 	.getPropertyValue("--bs-font-sans-serif");
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
-const { generateLabels } = Chart.defaults.plugins.legend.labels;
 
 const GROUPS = {
 	SOLAR: "solar",
@@ -34,7 +37,7 @@ const GROUPS = {
 
 export default {
 	name: "EnergyHistoryChart",
-	components: { Bar },
+	components: { Bar, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.SOLAR },
@@ -150,6 +153,16 @@ export default {
 				datasets: datasets,
 			};
 		},
+		legends() {
+			return this.chartData.datasets.map((dataset) => ({
+				label: dataset.label,
+				color: dataset.backgroundColor,
+				value: this.fmtWh(
+					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
+					POWER_UNIT.AUTO
+				),
+			}));
+		},
 		options() {
 			return {
 				locale: this.$i18n?.locale,
@@ -159,47 +172,7 @@ export default {
 				borderSkipped: false,
 				plugins: {
 					legend: {
-						position: "bottom",
-						align: "center",
-						labels: {
-							usePointStyle: true,
-							pointStyle: "circle",
-							padding: 20,
-							generateLabels: (chart) => {
-								const labels = generateLabels(chart);
-								labels.forEach((label, datasetIndex) => {
-									const sum = chart.data.datasets[datasetIndex].data.reduce(
-										(acc, curr) => acc + curr,
-										0
-									);
-									label.text = `${label.text} ${this.fmtWh(sum * 1e3, POWER_UNIT.AUTO)}`;
-								});
-								return labels;
-							},
-						},
-						onClick: function (e, legendItem) {
-							const chartInstance = e.chart; // Get the chart instance from the event
-							const index = legendItem.datasetIndex;
-							const meta = chartInstance.getDatasetMeta(index);
-
-							const highlightAll = meta.highlight === true;
-							meta.highlight = !meta.highlight;
-
-							// Loop through all datasets
-							chartInstance.data.datasets.forEach((dataset, i) => {
-								const datasetMeta = chartInstance.getDatasetMeta(i);
-								datasetMeta.hidden = false;
-								if (i === index || highlightAll) {
-									datasetMeta.highlight = i === index && !highlightAll;
-									dataset.backgroundColor = fullColor(dataset.backgroundColor);
-								} else {
-									datasetMeta.highlight = false;
-									dataset.backgroundColor = dimColor(dataset.backgroundColor);
-								}
-							});
-
-							chartInstance.update();
-						},
+						display: false,
 					},
 					tooltip: {
 						mode: "index",
