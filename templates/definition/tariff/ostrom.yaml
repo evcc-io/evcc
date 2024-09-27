@@ -20,7 +20,7 @@ params:
       en: Only required if multiple contracts belong to the same user
   - name: price
     example: 0.263
-    help: 
+    help:
       de: Für den 'Simply Fair' Tarif muss ein Preis angegeben werden, da der nicht automatisch ermittelt werden kann.
       en: For the 'Simply Fair' tariff a price has to be defined since it can't be queried automatically.
 render: |
@@ -29,4 +29,3 @@ render: |
   ClientSecret: {{ .clientsecret }}
   Contract: {{ .contract }}
   Price: {{ .price }}
-  
