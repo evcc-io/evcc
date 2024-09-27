@@ -7,7 +7,7 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Solar API sollte nur als Fallback genutzt werden. Die Intergration über Modbus ist bevorzugt.
+      Solar API sollte nur als Fallback genutzt werden. Die Integration über Modbus ist bevorzugt.
 
       Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
 
