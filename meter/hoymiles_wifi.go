@@ -43,7 +43,6 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 		client:    client,
 		log:       log,
 		cc:        cc,
-		lastValue: 0,
 	}, nil
 }
 
