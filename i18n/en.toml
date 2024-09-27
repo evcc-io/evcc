@@ -645,6 +645,11 @@ filter = "Filter"
 grid = "Grid"
 self = "Solar"
 
+[sessions.period]
+month = "Month"
+total = "Total"
+year = "Year"
+
 [settings]
 title = "User Interface"
 

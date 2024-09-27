@@ -5,137 +5,24 @@
 			<main class="col-12">
 				<div class="row mt-2 mb-3">
 					<div
-						class="col-lg-5 d-flex"
-						:class="showMonthNavigation || showYearNavigation ? 'mb-3' : 'mb-4'"
+						class="col-lg-5 d-flex mb-sm-3"
+						:class="showDateNavigator ? 'mb-3' : 'mb-4'"
 					>
-						<SelectGroup
-							id="sessionsPeriod"
-							class="w-100"
-							:options="[
-								{ name: 'Monat', value: 'month' },
-								{ name: 'Jahr', value: 'year' },
-								{ name: 'Gesamt', value: 'total' },
-							]"
-							:modelValue="period"
-							@update:modelValue="changePeriod"
+						<PeriodSelector
+							:period="period"
+							:periodOptions="periodOptions"
+							@update:period="changePeriod"
 						/>
 					</div>
-					<div
-						v-if="showMonthNavigation || showYearNavigation"
-						class="col-lg-6 mb-3 offset-lg-1 d-sm-flex justify-content-lg-end gap-lg-4"
-						:class="
-							showMonthNavigation ? 'justify-content-between' : 'justify-content-end'
-						"
-					>
-						<div
-							v-if="showMonthNavigation"
-							class="d-none d-sm-flex mb-2 mb-lg-0 justify-content-between"
-						>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasPrevMonth"
-								@click="navigatePrevMonth"
-							>
-								<shopicon-regular-angledoubleleftsmall
-									size="s"
-									class="me-1"
-								></shopicon-regular-angledoubleleftsmall>
-							</button>
-							<CustomSelect
-								id="sessionsMonth"
-								:options="monthOptions"
-								:selected="month"
-								@change="navigateMonth($event.target.value)"
-							>
-								<button
-									class="btn btn-sm border-0 text-truncate h-100"
-									style="width: 8em"
-								>
-									{{ monthName }}
-								</button>
-							</CustomSelect>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasNextMonth"
-								@click="navigateNextMonth"
-							>
-								<shopicon-regular-angledoublerightsmall
-									size="s"
-									class="ms-1"
-								></shopicon-regular-angledoublerightsmall>
-							</button>
-						</div>
-						<div
-							v-if="showMonthNavigation"
-							class="d-flex d-sm-none mb-2 mb-lg-0 justify-content-between"
-						>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasPrevMonth"
-								@click="navigatePrevMonth"
-							>
-								<shopicon-regular-angledoubleleftsmall
-									size="s"
-									class="me-1"
-								></shopicon-regular-angledoubleleftsmall>
-							</button>
-							<CustomSelect
-								id="sessionsMonthYear"
-								:options="monthYearOptions"
-								:selected="month"
-								@change="navigateMonthYear($event.target.value)"
-							>
-								<button class="btn btn-sm border-0 h-100 text-truncate">
-									{{ headline }}
-								</button>
-							</CustomSelect>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasNextMonth"
-								@click="navigateNextMonth"
-							>
-								<shopicon-regular-angledoublerightsmall
-									size="s"
-									class="ms-1"
-								></shopicon-regular-angledoublerightsmall>
-							</button>
-						</div>
-						<div
-							v-if="showYearNavigation"
-							class="mb-2 mb-lg-0 justify-content-between"
-							:class="showMonthNavigation ? 'd-none d-sm-flex' : 'd-flex'"
-						>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasPrevYear"
-								@click="navigatePrevYear"
-							>
-								<shopicon-regular-angledoubleleftsmall
-									size="s"
-									class="me-1"
-								></shopicon-regular-angledoubleleftsmall>
-							</button>
-							<CustomSelect
-								id="sessionsYear"
-								:options="yearOptions"
-								:selected="year"
-								@change="navigateYear($event.target.value)"
-							>
-								<button class="btn btn-sm border-0 h-100" style="width: 4em">
-									{{ year }}
-								</button>
-							</CustomSelect>
-							<button
-								class="btn btn-sm border-0"
-								:disabled="!hasNextYear"
-								@click="navigateNextYear"
-							>
-								<shopicon-regular-angledoublerightsmall
-									size="s"
-									class="ms-1"
-								></shopicon-regular-angledoublerightsmall>
-							</button>
-						</div>
+					<div v-if="showDateNavigator" class="col-lg-6 mb-3 offset-lg-1">
+						<DateNavigator
+							:month="month"
+							:year="year"
+							:startDate="startDate"
+							:showMonth="showMonthNavigation"
+							:showYear="showYearNavigation"
+							@update-date="updateDate"
+						/>
 					</div>
 				</div>
 				<div class="d-flex justify-content-between align-items-center">
@@ -220,8 +107,6 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
-import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/sun";
@@ -241,6 +126,8 @@ import SelectGroup from "../components/SelectGroup.vue";
 import CustomSelect from "../components/CustomSelect.vue";
 import colors from "../colors";
 import settings from "../settings";
+import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
+import DateNavigator from "../components/Sessions/DateNavigator.vue";
 
 const GROUPS = {
 	SOLAR: "solar",
@@ -268,6 +155,8 @@ export default {
 		SelectGroup,
 		CustomSelect,
 		SolarChart,
+		PeriodSelector,
+		DateNavigator,
 	},
 	mixins: [formatter],
 	props: {
@@ -300,6 +189,12 @@ export default {
 		energySubTitle() {
 			return `${this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO)} gesamt`;
 		},
+		periodOptions() {
+			return Object.entries(PERIODS).map(([key, value]) => ({
+				name: this.$t(`sessions.period.${key.toLowerCase()}`),
+				value,
+			}));
+		},
 		totalEnergy() {
 			return this.currentSessions.reduce((acc, session) => acc + session.chargedEnergy, 0);
 		},
@@ -308,6 +203,9 @@ export default {
 				(acc, session) => acc + (session.chargedEnergy / 100) * session.solarPercentage,
 				0
 			);
+		},
+		startDate() {
+			return new Date(this.sessions[0]?.created || Date.now());
 		},
 		topNavigation: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
@@ -484,6 +382,9 @@ export default {
 		showYearNavigation() {
 			return [PERIODS.MONTH, PERIODS.YEAR].includes(this.period);
 		},
+		showDateNavigator() {
+			return this.showMonthNavigation || this.showYearNavigation;
+		},
 		yearOptions() {
 			if (this.sessions.length === 0) {
 				return [];
@@ -576,34 +477,9 @@ export default {
 			this.selectedGroup = group;
 			settings.sessionsGroup = group;
 		},
-		navigateNextYear() {
-			this.$router.push({ query: { ...this.$route.query, year: this.nextYear } });
-		},
-		navigatePrevYear() {
-			this.$router.push({ query: { ...this.$route.query, year: this.prevYear } });
-		},
-		navigateNextMonth() {
-			this.$router.push({ query: { ...this.$route.query, ...this.nextYearMonth } });
-		},
-		navigatePrevMonth() {
-			this.$router.push({ query: { ...this.$route.query, ...this.prevYearMonth } });
-		},
-		navigateYear(year) {
-			this.$router.push({ query: { ...this.$route.query, year } });
-		},
-		navigateMonth(month) {
-			this.$router.push({ query: { ...this.$route.query, month } });
-		},
-		navigateMonthYear(monthYear) {
-			const [year, month] = monthYear.split("-");
+		updateDate({ year, month }) {
 			this.$router.push({ query: { ...this.$route.query, year, month } });
 		},
 	},
 };
 </script>
-
-<style scoped>
-.month-header {
-	background-color: var(--evcc-background);
-}
-</style>
