@@ -117,7 +117,7 @@ func (wb *MyPvElwa2) heartbeat(timeout time.Duration) {
 // Status implements the api.Charger interface
 func (wb *MyPvElwa2) Status() (api.ChargeStatus, error) {
 	res := api.StatusA
-	b, err := wb.conn.ReadInputRegisters(elwaRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
 		return res, err
 	}
@@ -181,7 +181,7 @@ var _ api.Meter = (*MyPvElwa2)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPvElwa2) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(elwaRegPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -193,7 +193,7 @@ var _ api.Battery = (*MyPvElwa2)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPvElwa2) Soc() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(elwaRegTemp, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegTemp, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -205,7 +205,7 @@ var _ api.SocLimiter = (*MyPvElwa2)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (wb *MyPvElwa2) GetLimitSoc() (int64, error) {
-	b, err := wb.conn.ReadInputRegisters(elwaRegTempLimit, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegTempLimit, 1)
 	if err != nil {
 		return 0, err
 	}
