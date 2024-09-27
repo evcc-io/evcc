@@ -17,13 +17,31 @@ params:
     advanced: true
   # battery control
   - name: defaultmode
+    description:
+      de: normaler Arbeitsmodus (Backup Mode)
+      en: normal working mode (Backup Mode)
+    help:
+      de: Arbeitsmodus 2 = backup_mode, Wert bitte nicht ändern, erforderlich für die aktive Batteriesteuerung - Laden aus dem Netz
+      en: working mode 2 = backup_mode, please do not change the value, required for active battery control - charging from grid
     default: 2
     advanced: true
   - name: minsoc
+    description:
+      de: Notstromkapazität in % im Backup Mode (normaler Betriebsmodus)
+      en: emergency power capacity in % in Backup Mode (normal working mode)
+    help:
+      de: Notstromkapazität, auf diesen Wert wird der Speicher eingestellt bei "Entladesperre aus" bzw. "Entladesperre nicht aktiv"
+      en: emergency power capacity, the system is set to this value when "discharge lock off" or "discharge lock not active"  
     type: number
     default: 20
     advanced: true
   - name: maxsoc
+    description:
+      de: Notstromkapazität in % bei "Entladesperre ein"
+      en: emergency power capacity in %  when "discharge lock on"
+    help:
+      de: Notstromkapazität, ab diesem SOC-Wert und kleiner wird die Entladesperre aktiv bei "Entladesperre ein"
+      en: Emergency power capacity, from this SOC value and lower, the discharge lock becomes active with "discharge lock on"
     type: number
     default: 95
     advanced: true
