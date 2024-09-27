@@ -18,7 +18,7 @@ Chart.defaults.font.family = window
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
-const { generateLabels } = Chart.overrides.pie.plugins.legend.labels;
+const { generateLabels } = Chart.overrides.doughnut.plugins.legend.labels;
 
 export default {
 	name: "EnergyAggregateChart",
