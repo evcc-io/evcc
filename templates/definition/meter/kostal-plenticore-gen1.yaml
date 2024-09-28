@@ -4,7 +4,6 @@ products:
     description:
       generic: Plenticore Hybrid (Gen.1)
 capabilities: ["battery-control"]
-deprecated: true
 linked:
   - template: kostal-ksem-inverter
     usage: grid
