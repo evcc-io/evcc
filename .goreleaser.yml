@@ -81,6 +81,9 @@ nfpms:
     formats:
       - deb
 
+    dependencies:
+      - adduser
+
     contents:
       - src: ./packaging/init/evcc.service
         dst: /lib/systemd/system/evcc.service
