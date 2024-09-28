@@ -77,15 +77,15 @@ render: |
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # 802 battery control
   limitsoc:
-	source: watchdog
-	timeout: {{ .watchdog }} # re-write at timeout/2
-	set:
-	  source: modbus
-	  {{- include "modbus" . | indent 4 }}
-	  register:
-	    address: 1042 # limit soc
-	    type: writemultiple
-	    encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writemultiple
+        encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %  
