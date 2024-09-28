@@ -296,6 +296,7 @@ export default {
 
       let label = "";
       let weekdays = this.getWeekdaysList("short");
+      let maxWeekday = Math.max(...selectedWeekdays);
 
       for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
         if (selectedWeekdays.includes(weekdayRangeStart)) {
@@ -306,16 +307,24 @@ export default {
             weekdayRangeEnd++;
           }
 
-          if (weekdayRangeStart !== weekdayRangeEnd) {
+          if (weekdayRangeEnd - weekdayRangeStart > 1) {
+            // more than 2 consecutive weekdays selected
             label += "-" + weekdays[weekdayRangeEnd];
             weekdayRangeStart = weekdayRangeEnd;
-          }
-          if (Math.max(...selectedWeekdays) !== weekdayRangeEnd) {
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          } else if (weekdayRangeStart !== weekdayRangeEnd) {
+            // exactly 2 consecutive weekdays selected
             label += ", ";
+          } else {
+            // exactly 1 single day selected
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
           }
         }
       }
-
       return label;
     },
   },

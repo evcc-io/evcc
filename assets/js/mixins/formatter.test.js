@@ -146,12 +146,12 @@ describe("getShortenedWeekdaysLabel", () => {
     expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Do, So");
   });
   test("should format ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1])).eq("Mo-Di");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1])).eq("Mo, Di");
     expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo-So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo-Di, Do-Sa");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Di, Do-Sa");
   });
   test("should format single days and ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo-Di, Do, Sa-So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Mo, Mi-Do, Sa-So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Di, Do, Sa, So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Mo, Mi, Do, Sa, So");
   });
 });
