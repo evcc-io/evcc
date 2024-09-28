@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,6 +23,7 @@ const nrgTimeout = 10 * time.Second
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
+	mu            sync.Mutex
 	log           *util.Logger
 	timer         *time.Ticker
 	adapter       *adapter.Adapter1
@@ -107,7 +109,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		return nil, err
 	}
 
-	nrg := &NRGKickBLE{
+	wb := &NRGKickBLE{
 		log:     logger,
 		timer:   time.NewTicker(2 * time.Second),
 		device:  ainfo.AdapterID,
@@ -117,7 +119,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		agent:   ag,
 	}
 
-	return nrg, nil
+	return wb, nil
 }
 
 func (wb *NRGKickBLE) connect() (*device.Device1, error) {
