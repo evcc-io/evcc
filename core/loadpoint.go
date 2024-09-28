@@ -1194,9 +1194,9 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			lp.phaseTimer = lp.clock.Now()
 		}
 
-		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale1p)
+		lp.publishTimer(phaseTimer, lp.GetDisableDelay(), phaseScale1p)
 
-		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Disable.Delay {
+		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
 			if err := lp.scalePhases(1); err != nil {
 				lp.log.ERROR.Println(err)
 			}
@@ -1223,9 +1223,9 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			lp.phaseTimer = lp.clock.Now()
 		}
 
-		lp.publishTimer(phaseTimer, lp.Enable.Delay, phaseScale3p)
+		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
 
-		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Enable.Delay {
+		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
 			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
@@ -1307,21 +1307,21 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.Disable.Delay)
+				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
 				lp.pvTimer = lp.clock.Now()
 			}
 
-			lp.publishTimer(pvTimer, lp.Disable.Delay, pvDisable)
+			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
 
 			elapsed := lp.clock.Since(lp.pvTimer)
-			if elapsed >= lp.Disable.Delay {
+			if elapsed >= lp.GetDisableDelay() {
 				lp.log.DEBUG.Println("pv disable timer elapsed")
 				return 0
 			}
 
 			// suppress duplicate log message after timer started
 			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
+				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.GetDisableDelay() - elapsed).Round(time.Second))
 			}
 		} else {
 			// reset timer
@@ -1339,21 +1339,21 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.Enable.Delay)
+				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
 				lp.pvTimer = lp.clock.Now()
 			}
 
-			lp.publishTimer(pvTimer, lp.Enable.Delay, pvEnable)
+			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
 
 			elapsed := lp.clock.Since(lp.pvTimer)
-			if elapsed >= lp.Enable.Delay {
+			if elapsed >= lp.GetEnableDelay() {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
 				return minCurrent
 			}
 
 			// suppress duplicate log message after timer started
 			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
+				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
 			}
 		} else {
 			// reset timer
