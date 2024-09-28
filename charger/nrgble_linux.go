@@ -122,7 +122,7 @@ func (wb *NRGKickBLE) connect() (*device.Device1, error) {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
 
-	err := ble.Connect(dev, wb.agent, wb.device)
+	err = ble.Connect(dev, wb.agent, wb.device)
 	return dev, err
 }
 
