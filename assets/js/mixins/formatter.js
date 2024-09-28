@@ -309,7 +309,7 @@ export default {
 
           if (weekdayRangeEnd - weekdayRangeStart > 1) {
             // more than 2 consecutive weekdays selected
-            label += "-" + weekdays[weekdayRangeEnd];
+            label += " – " + weekdays[weekdayRangeEnd];
             weekdayRangeStart = weekdayRangeEnd;
             if (maxWeekday !== weekdayRangeEnd) {
               label += ", ";
