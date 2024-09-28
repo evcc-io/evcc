@@ -40,10 +40,10 @@ params:
     advanced: true
   - name: maxsoc
     type: number
-    advanced: true  
+    advanced: true
   - name: watchdog
     type: duration
-    default: 60s	
+    default: 60s
     advanced: true
 render: |
   {{- if eq .usage "pv" }}
@@ -88,5 +88,5 @@ render: |
         encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %  
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
