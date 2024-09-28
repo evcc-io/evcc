@@ -28,7 +28,7 @@ type Ostrom struct {
 	log          *util.Logger
 	zip          string
 	contractType string
-	price        float64 // Required for the Fair tariff types
+	cityId       int // Required for the Fair tariff types
 	basic        string
 	data         *util.Monitor[api.Rates]
 }
@@ -44,7 +44,6 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		ClientId     string
 		ClientSecret string
 		Contract     string
-		Price        float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -63,7 +62,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		basic:        basic,
 		contractType: ostrom.PRODUCT_DYNAMIC,
 		zip:          "",
-		price:        0.0,
+		cityId:       11111,
 		Helper:       request.NewHelper(log),
 		data:         util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -86,11 +85,11 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t.contractType = contract.Product
 	t.zip = contract.Address.Zip
 	if t.Type() == api.TariffTypePriceStatic {
-		log.DEBUG.Printf("Static Price is %f\n", cc.Price)
-		if cc.Price == 0.0 {
-			return nil, errors.New("You have to define a price for SIMPLY FAIR tariffs")
+		t.cityId, err = t.getCityId()
+		if err != nil {
+			log.DEBUG.Println("Cannot query cityId for static price")
+			return nil, err
 		}
-		t.price = cc.Price * 100
 		go t.runStatic(done)
 	} else {
 		go t.run(done)
@@ -108,6 +107,51 @@ func addPrice(entry ostrom.ForecastInfo, rates api.Rates) api.Rates {
 		Price: (entry.Marketprice + entry.AdditionalCost) / 100.0, // Both values include VAT
 	}
 	return append(rates, ar)
+}
+
+func (t *Ostrom) getCityId() (int, error) {
+	var city ostrom.CityId
+
+	params := url.Values{
+		"zip": {t.zip},
+	}
+
+	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_CITYID, params.Encode())
+	if err := backoff.Retry(func() error {
+		return backoffPermanentError(t.GetJSON(uri, &city))
+	}, bo()); err != nil {
+		t.log.ERROR.Println(err)
+		return 0, err
+	}
+	return city[0].Id, nil
+}
+
+func (t *Ostrom) getFixedPrice() (float64, error) {
+	var tariffs ostrom.Tariffs
+
+	params := url.Values{
+		"cityId": {strconv.Itoa(t.cityId)},
+		"usage":  {"1000"},
+	}
+
+	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_STATIC_PRICE, params.Encode())
+	t.log.DEBUG.Printf("Query: %s\n", uri)
+	if err := backoff.Retry(func() error {
+		return backoffPermanentError(t.GetJSON(uri, &tariffs))
+	}, bo()); err != nil {
+		t.log.ERROR.Println(err)
+		return 0, err
+	}
+
+	for _, tariff := range tariffs.Ostrom {
+		t.log.DEBUG.Printf("ProductCode: %s, price: %f\n", tariff.ProductCode, tariff.UnitPricePerkWH)
+		if tariff.ProductCode == ostrom.PRODUCT_BASIC {
+			return tariff.UnitPricePerkWH, nil
+		}
+	}
+
+	t.log.ERROR.Printf("%s not found in tariff response\n", ostrom.PRODUCT_BASIC)
+	return 0, errors.New("Could not find basic tariff")
 }
 
 func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
@@ -146,18 +190,23 @@ func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
 	var val ostrom.ForecastInfo
+	var err error
 	val.AdditionalCost = 0
-	val.Marketprice = t.price
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
-		val.StartTimestamp = now.BeginningOfDay()
-		data := make(api.Rates, 0, 48)
-		for i := 0; i < 48; i++ {
-			data = addPrice(val, data)
-			val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
+		val.Marketprice, err = t.getFixedPrice()
+		if err == nil {
+			val.StartTimestamp = now.BeginningOfDay()
+			data := make(api.Rates, 0, 48)
+			for i := 0; i < 48; i++ {
+				data = addPrice(val, data)
+				val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
+			}
+			mergeRates(t.data, data)
+		} else {
+			t.log.ERROR.Println(err)
 		}
-		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }
