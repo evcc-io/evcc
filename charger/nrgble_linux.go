@@ -3,7 +3,6 @@ package charger
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -70,10 +69,6 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	// set LE mode
 	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
 
-	if len(os.Getenv("DOCKER")) > 0 {
-		btmgmt.BinPath = "./docker-btmgmt"
-	}
-
 	err = btmgmt.SetPowered(false)
 	if err == nil {
 		err = btmgmt.SetLe(true)
@@ -104,8 +99,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	agent.NextAgentPath()
 
 	ag := agent.NewSimpleAgent()
-	err = agent.ExposeAgent(conn, ag, agent.CapNoInputNoOutput, true)
-	if err != nil {
+	if err := agent.ExposeAgent(conn, ag, agent.CapNoInputNoOutput, true); err != nil {
 		return nil, err
 	}
 
