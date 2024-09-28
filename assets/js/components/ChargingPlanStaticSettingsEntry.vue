@@ -67,7 +67,7 @@
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
-					data-testid="staticplan-soc"
+					data-testid="static-plan-soc"
 					@change="preview"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
