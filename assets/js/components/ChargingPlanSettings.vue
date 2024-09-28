@@ -17,7 +17,7 @@
 				<div v-if="socBasedPlanning">
 					<hr class="w-75 mx-auto mt-5" />
 					<h5>
-						<div class="inner" data-testid="plan-preview-title">
+						<div class="inner" data-testid="repeating-plan-title">
 							{{ $t("main.chargingPlan.repeatingPlan") }}
 						</div>
 					</h5>
