@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cast"
 )
 
@@ -49,5 +50,5 @@ func boolSetter(set func(bool) error) func(string) error {
 }
 
 func durationSetter(set func(time.Duration) error) func(string) error {
-	return setterFunc(time.ParseDuration, set)
+	return setterFunc(util.ParseDuration, set)
 }

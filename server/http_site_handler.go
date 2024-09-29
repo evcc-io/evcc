@@ -164,7 +164,7 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 
 // durationHandler updates duration-param api
 func durationHandler(set func(time.Duration) error, get func() time.Duration) http.HandlerFunc {
-	return handler(time.ParseDuration, set, get)
+	return handler(util.ParseDuration, set, get)
 }
 
 // updateSmartCostLimit sets the smart cost limit globally
