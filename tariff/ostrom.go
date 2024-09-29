@@ -144,7 +144,6 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	}
 
 	for _, tariff := range tariffs.Ostrom {
-		t.log.DEBUG.Printf("ProductCode: %s, price: %f\n", tariff.ProductCode, tariff.UnitPricePerkWH)
 		if tariff.ProductCode == ostrom.PRODUCT_BASIC {
 			return tariff.UnitPricePerkWH, nil
 		}
@@ -180,7 +179,6 @@ func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 
 	contractsURL := ostrom.URI_API + "/contracts"
 	err := t.GetJSON(contractsURL, &res)
-	t.log.DEBUG.Println(res.Data)
 	return res.Data, err
 }
 
