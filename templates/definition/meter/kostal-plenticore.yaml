@@ -34,10 +34,6 @@ params:
   - name: capacity
     advanced: true
   # battery control
-  - name: minsoc
-    deprecated: true
-  - name: maxsoc
-    deprecated: true
   - name: watchdog
     type: duration
     default: 60s
