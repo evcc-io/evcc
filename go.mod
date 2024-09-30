@@ -117,6 +117,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -174,6 +175,7 @@ require (
 	github.com/rickb777/plural v1.4.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
