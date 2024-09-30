@@ -47,10 +47,10 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", upd
 updateCssColors();
 
 export const dimColor = (color) => {
-  return color.replace(/FF$/, "20");
+  return color.toLowerCase().replace(/ff$/, "20");
 };
 export const fullColor = (color) => {
-  return color.replace(/20$/, "FF");
+  return color.toLowerCase().replace(/20$/, "ff");
 };
 
 export default colors;

@@ -23,9 +23,9 @@
 
 :root {
 	--evcc-green: #baffcb;
-	--evcc-dark-green: #0fde41;
-	--evcc-darker-green: #0ba631;
-	--evcc-darkest-green: #076f20;
+	--evcc-dark-green: #0fde41ff;
+	--evcc-darker-green: #0ba631ff;
+	--evcc-darkest-green: #076f20ff;
 	--evcc-darkest-green-rgb: 11, 166, 49;
 	--evcc-yellow: #faf000;
 	--evcc-dark-yellow: #bbb400;

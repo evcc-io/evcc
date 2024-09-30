@@ -9,6 +9,7 @@
 			:key="legend.label"
 		>
 			<div
+				v-if="legend.color"
 				class="legend-color align-self-center me-1"
 				:style="{ backgroundColor: legend.color }"
 			></div>

@@ -50,10 +50,16 @@
 					:group-by="selectedGroup"
 					:period="period"
 				/>
-				<div class="row align-items-start" v-if="selectedGroup !== groups.SOLAR">
+				<div class="row align-items-start">
 					<div class="col-12 col-lg-6 mb-5">
 						<h3 class="fw-normal my-4">Sonnenanteil</h3>
+						<SolarMonthChart
+							v-if="selectedGroup === groups.SOLAR"
+							:period="period"
+							:sessions="currentSessions"
+						/>
 						<SolarChart
+							v-else
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
@@ -62,6 +68,7 @@
 					<div class="col-12 col-lg-6 mb-5">
 						<h3 class="fw-normal my-4">Energiemenge</h3>
 						<EnergyAggregateChart
+							v-if="selectedGroup !== groups.SOLAR"
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
@@ -120,6 +127,7 @@ import SessionTable from "../components/Sessions/SessionTable.vue";
 import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
 import EnergyAggregateChart from "../components/Sessions/EnergyAggregateChart.vue";
 import SolarChart from "../components/Sessions/SolarChart.vue";
+import SolarMonthChart from "../components/Sessions/SolarMonthChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
@@ -155,6 +163,7 @@ export default {
 		SelectGroup,
 		CustomSelect,
 		SolarChart,
+		SolarMonthChart,
 		PeriodSelector,
 		DateNavigator,
 	},
