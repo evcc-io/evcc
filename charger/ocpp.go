@@ -303,14 +303,12 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	if phases != 0 {
 		period.NumberPhases = &phases
 	}
-	// Set ScheduleTime on timestamp 10 seconds in the past to ensure the profile is active
-	ScheduleTime := time.Now().Add(time.Second * -10)
 	res := &types.ChargingProfile{
 		ChargingProfileId:      c.cp.ChargingProfileId,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.NewDateTime(ScheduleTime),
+			StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
