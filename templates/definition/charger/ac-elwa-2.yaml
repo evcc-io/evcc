@@ -3,6 +3,8 @@ products:
   - brand: my-PV
     description:
       generic: AC ELWA 2
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
