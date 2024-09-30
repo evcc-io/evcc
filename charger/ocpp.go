@@ -303,6 +303,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	if phases != 0 {
 		period.NumberPhases = &phases
 	}
+
 	res := &types.ChargingProfile{
 		ChargingProfileId:      c.cp.ChargingProfileId,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
