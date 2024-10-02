@@ -30,7 +30,7 @@ export default {
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: "loadpoint" },
-		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
 	},
 	mixins: [formatter],
 	computed: {
@@ -38,20 +38,34 @@ export default {
 			console.log("update energy aggregate data");
 			const aggregatedData = {};
 
-			this.sessions.forEach((session) => {
-				const groupKey = session[this.groupBy];
-				if (!aggregatedData[groupKey]) {
-					aggregatedData[groupKey] = 0;
-				}
-				aggregatedData[groupKey] += session.chargedEnergy;
-			});
+			if (this.groupBy === "solar") {
+				const total = this.sessions.reduce((acc, s) => acc + s.chargedEnergy, 0);
+				const self = this.sessions.reduce(
+					(acc, s) => acc + (s.chargedEnergy / 100) * s.solarPercentage,
+					0
+				);
+				aggregatedData.self = self;
+				aggregatedData.grid = total - self;
+			} else {
+				this.sessions.forEach((session) => {
+					const groupKey = session[this.groupBy];
+					if (!aggregatedData[groupKey]) {
+						aggregatedData[groupKey] = 0;
+					}
+					aggregatedData[groupKey] += session.chargedEnergy;
+				});
+			}
 
 			// Sort the data by energy in descending order
-			const sortedEntries = Object.entries(aggregatedData).sort((a, b) => b[1] - a[1]);
+			const sortedEntries = Object.entries(aggregatedData); //.sort((a, b) => b[1] - a[1]);
 
-			const labels = sortedEntries.map(([label]) => label);
+			const labels = sortedEntries.map(([label]) =>
+				this.groupBy === "solar" ? this.$t(`sessions.group.${label}`) : label
+			);
 			const data = sortedEntries.map(([, value]) => value);
-			const backgroundColor = labels.map((label) => this.colorMappings[this.groupBy][label]);
+			const backgroundColor = sortedEntries.map(
+				([label]) => this.colorMappings[this.groupBy][label]
+			);
 
 			return {
 				labels: labels,
@@ -75,7 +89,7 @@ export default {
 				responsive: true,
 				aspectRatio: 1,
 				maintainAspectRatio: false,
-				borderRadius: 6,
+				borderRadius: 10,
 				color: colors.text,
 				plugins: {
 					legend: {
@@ -84,6 +98,7 @@ export default {
 					tooltip: {
 						mode: "index",
 						intersect: false,
+						boxPadding: 5,
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;

@@ -4,7 +4,7 @@
 	</div>
 	<div v-else class="my-5 table-outer">
 		<table class="table text-nowrap">
-			<thead class="sticky-top" style="top: 3rem">
+			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
 					<th scope="col" class="align-top ps-0">
 						{{ $t("sessions.date") }}
@@ -447,6 +447,14 @@ export default {
 .sticky-top,
 .sticky-bottom {
 	z-index: 1;
+}
+.sticky-top {
+	top: 6.5rem;
+}
+@media (min-width: 992px) {
+	.sticky-top {
+		top: 3rem;
+	}
 }
 .sticky-top th {
 	padding-top: max(0.5rem, env(safe-area-inset-top));

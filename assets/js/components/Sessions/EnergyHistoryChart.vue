@@ -170,6 +170,7 @@ export default {
 				maintainAspectRatio: false,
 				color: colors.text,
 				borderSkipped: false,
+				maxBarThickness: 40,
 				plugins: {
 					legend: {
 						display: false,
@@ -177,6 +178,7 @@ export default {
 					tooltip: {
 						mode: "index",
 						intersect: false,
+						boxPadding: 5,
 						positioner: (context) => {
 							const tooltip = context.chart.tooltip;
 							const tooltipHeight = tooltip.height;

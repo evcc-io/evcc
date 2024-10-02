@@ -25,7 +25,7 @@ Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
 export default {
-	name: "SolarChart",
+	name: "SolarGroupedChart",
 	components: { PolarArea, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
@@ -35,7 +35,7 @@ export default {
 	mixins: [formatter],
 	computed: {
 		chartData() {
-			console.log("update energy aggregate data");
+			console.log("update solar grouped data");
 			const aggregatedData = {};
 
 			this.sessions.forEach((session) => {
@@ -50,6 +50,8 @@ export default {
 				aggregatedData[groupKey].grid += grid;
 			});
 
+			console.log("solar grouped data", aggregatedData);
+
 			// Sort the data by total energy in descending order
 			const sortedEntries = Object.entries(aggregatedData).sort(
 				(a, b) => b[1].grid + b[1].self - (a[1].grid + a[1].self)
@@ -61,6 +63,7 @@ export default {
 				return selfPercentage;
 			});
 
+			console.log("solar grouped data", labels, data);
 			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {

@@ -3,7 +3,7 @@
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
-				<div class="row mt-2 mb-3">
+				<div class="row pt-2 mb-3 sticky-top evcc-background">
 					<div
 						class="col-lg-5 d-flex mb-sm-3"
 						:class="showDateNavigator ? 'mb-3' : 'mb-4'"
@@ -50,15 +50,15 @@
 					:group-by="selectedGroup"
 					:period="period"
 				/>
-				<div class="row align-items-start">
+				<div v-if="showExtraCharts" class="row align-items-start">
 					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">Sonnenanteil</h3>
-						<SolarMonthChart
-							v-if="selectedGroup === groups.SOLAR"
+						<h3 class="fw-normal my-4">{{ solarTitle }}</h3>
+						<SolarYearChart
+							v-if="showSolarYearChart"
 							:period="period"
 							:sessions="currentSessions"
 						/>
-						<SolarChart
+						<SolarGroupedChart
 							v-else
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
@@ -66,9 +66,8 @@
 						/>
 					</div>
 					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">Energiemenge</h3>
-						<EnergyAggregateChart
-							v-if="selectedGroup !== groups.SOLAR"
+						<h3 class="fw-normal my-4">{{ energyGroupedTitle }}</h3>
+						<EnergyGroupedChart
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
@@ -125,9 +124,9 @@ import store from "../store";
 import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue";
 import SessionTable from "../components/Sessions/SessionTable.vue";
 import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
-import EnergyAggregateChart from "../components/Sessions/EnergyAggregateChart.vue";
-import SolarChart from "../components/Sessions/SolarChart.vue";
-import SolarMonthChart from "../components/Sessions/SolarMonthChart.vue";
+import EnergyGroupedChart from "../components/Sessions/EnergyGroupedChart.vue";
+import SolarGroupedChart from "../components/Sessions/SolarGroupedChart.vue";
+import SolarYearChart from "../components/Sessions/SolarYearChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
@@ -157,13 +156,13 @@ export default {
 		SessionTable,
 		TopHeader,
 		EnergyHistoryChart,
-		EnergyAggregateChart,
+		EnergyGroupedChart,
 		IconSelectGroup,
 		IconSelectItem,
 		SelectGroup,
 		CustomSelect,
-		SolarChart,
-		SolarMonthChart,
+		SolarGroupedChart,
+		SolarYearChart,
 		PeriodSelector,
 		DateNavigator,
 	},
@@ -183,6 +182,7 @@ export default {
 			selectedGroup: settings.sessionsGroup || GROUPS.SOLAR,
 			selectedSessionId: undefined,
 			groups: GROUPS,
+			periods: PERIODS,
 		};
 	},
 	head() {
@@ -195,13 +195,25 @@ export default {
 			} else if (this.selectedGroup === GROUPS.LOADPOINT) {
 				return "Ladepunkte";
 			} else {
-				const solarPercentage =
-					this.totalEnergy > 0 ? (100 / this.totalEnergy) * this.selfEnergy : 0;
-				return `${this.fmtPercentage(solarPercentage)} Sonne`;
+				return `${this.solarPercentageFmt} Sonne`;
 			}
 		},
+		solarPercentageFmt() {
+			return this.fmtPercentage(
+				this.totalEnergy > 0 ? (100 / this.totalEnergy) * this.selfEnergy : 0
+			);
+		},
+		energySumFmt() {
+			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
+		},
 		energySubTitle() {
-			return `${this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO)}`;
+			return `${this.energySumFmt}`;
+		},
+		solarTitle() {
+			return `${this.solarPercentageFmt} Sonnenanteil`;
+		},
+		energyGroupedTitle() {
+			return `${this.energySumFmt} Energiemenge`;
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({
@@ -276,61 +288,6 @@ export default {
 		csvTotalLink() {
 			return this.csvHrefLink();
 		},
-		prevMonthDate() {
-			const date = new Date();
-			date.setFullYear(this.year);
-			date.setMonth(this.month - 2, 1);
-			return date;
-		},
-		prevYearMonth() {
-			return {
-				year: this.prevMonthDate.getFullYear(),
-				month: this.prevMonthDate.getMonth() + 1,
-			};
-		},
-		nextMonthDate() {
-			const date = new Date();
-			date.setFullYear(this.year);
-			date.setMonth(this.month, 1);
-			return date;
-		},
-		nextYearMonth() {
-			return {
-				year: this.nextMonthDate.getFullYear(),
-				month: this.nextMonthDate.getMonth() + 1,
-			};
-		},
-		nextYear() {
-			const date = new Date();
-			date.setFullYear(this.year + 1);
-			return date.getFullYear();
-		},
-		prevYear() {
-			const date = new Date();
-			date.setFullYear(this.year - 1);
-			return date.getFullYear();
-		},
-		hasNextMonth() {
-			const now = new Date();
-			return this.year < now.getFullYear() || this.month < now.getMonth() + 1;
-		},
-		hasPrevMonth() {
-			if (this.sessions.length === 0) {
-				return false;
-			}
-			const first = new Date(this.sessions[0].created);
-			return this.year > first.getFullYear() || this.month > first.getMonth() + 1;
-		},
-		hasNextYear() {
-			return this.year < new Date().getFullYear();
-		},
-		hasPrevYear() {
-			if (this.sessions.length === 0) {
-				return false;
-			}
-			const last = new Date(this.sessions[0].created);
-			return this.year > last.getFullYear();
-		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
 			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
@@ -378,7 +335,9 @@ export default {
 			const vehicleEnergy = aggregateEnergy("vehicle");
 			const vehicleColors = assignColors(vehicleEnergy, "vehicle");
 
-			return { loadpoint: loadpointColors, vehicle: vehicleColors };
+			const solar = { self: colors.self, grid: colors.grid };
+
+			return { loadpoint: loadpointColors, vehicle: vehicleColors, solar };
 		},
 		groupIcons() {
 			return {
@@ -435,6 +394,29 @@ export default {
 				}
 			}
 			return yearMonths;
+		},
+		groupEntriesAvailable() {
+			if (this.selectedGroup === GROUPS.SOLAR || !this.currentSessions.length) return false;
+			return new Set(this.currentSessions.map((s) => s[this.selectedGroup])).size > 1;
+		},
+		showSolarYearChart() {
+			return (
+				this.showExtraCharts &&
+				this.period !== PERIODS.MONTH &&
+				this.selectedGroup === GROUPS.SOLAR
+			);
+		},
+		showExtraCharts() {
+			if (this.period === PERIODS.MONTH && this.selectedGroup === GROUPS.SOLAR) {
+				return false;
+			}
+			if (
+				[GROUPS.LOADPOINT, GROUPS.VEHICLE].includes(this.selectedGroup) &&
+				!this.groupEntriesAvailable
+			) {
+				return false;
+			}
+			return true;
 		},
 	},
 	watch: {

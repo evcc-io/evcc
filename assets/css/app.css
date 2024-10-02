@@ -195,6 +195,10 @@ a:hover {
 	color: inherit;
 }
 
+.evcc-background {
+	background-color: var(--evcc-background);
+}
+
 .btn-primary,
 .btn-primary:focus {
 	background-color: var(--bs-primary);

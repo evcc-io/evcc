@@ -5,6 +5,7 @@
 	>
 		<li
 			class="legend-item d-flex align-items-baseline gap-2 no-wrap overflow-hidden"
+			:class="{ 'legend-item---grid': grid }"
 			v-for="legend in legends"
 			:key="legend.label"
 		>
@@ -25,6 +26,7 @@ export default {
 	props: {
 		legends: Array,
 		extraClass: { type: [String, Array, Object], default: "" },
+		grid: Boolean,
 	},
 };
 </script>
@@ -34,5 +36,9 @@ export default {
 	width: 1rem;
 	height: 1rem;
 	border-radius: 50%;
+}
+.legend-item---grid {
+	justify-content: space-between;
+	width: 100px;
 }
 </style>
