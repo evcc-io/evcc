@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePeblar(base *Peblar, phaseSwitcher func(int) error) api.Charger {
+func decoratePeblar(base *Peblar, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case phaseGetter == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Peblar
 			api.PhaseSwitcher
@@ -21,9 +21,43 @@ func decoratePeblar(base *Peblar, phaseSwitcher func(int) error) api.Charger {
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case phaseGetter != nil && phaseSwitcher == nil:
+		return &struct {
+			*Peblar
+			api.PhaseGetter
+		}{
+			Peblar: base,
+			PhaseGetter: &decoratePeblarPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+		}
+
+	case phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Peblar
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Peblar: base,
+			PhaseGetter: &decoratePeblarPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decoratePeblarPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decoratePeblarPhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decoratePeblarPhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
 }
 
 type decoratePeblarPhaseSwitcherImpl struct {

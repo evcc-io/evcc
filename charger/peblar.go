@@ -67,7 +67,7 @@ func init() {
 	registry.Add("peblar", NewPeblarFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -92,35 +92,27 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	log := util.NewLogger("peblar")
 	conn.Logger(log.TRACE)
 
-	// Register contains the physically connected phases
-	b, err := conn.ReadInputRegisters(peblarPhaseCountAddress, 1)
-	if err != nil {
-		return nil, err
-	}
-
 	wb := &Peblar{
-		log:    log,
-		conn:   conn,
-		curr:   6000,                       // assume min current
-		phases: binary.BigEndian.Uint16(b), // TODO why do we need this?
+		log:  log,
+		conn: conn,
+		curr: 6000, // assume min current
 	}
 
-	c, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
+	b, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
 	if err != nil {
 		return nil, err
 	}
-	indepRelays := binary.BigEndian.Uint16(c)
+	indepRelays := binary.BigEndian.Uint16(b)
 
 	var phasesS func(int) error
+	var phasesG func() (int, error)
 
-	if indepRelays == 0 {
-		log.DEBUG.Println("detected 1x4 or 1x2-pole relay")
-	} else {
-		log.DEBUG.Println("detected 2x2-pole relay")
+	if indepRelays == 1 {
 		phasesS = wb.phases1p3p
+		phasesG = wb.getPhases
 	}
 
-	return decoratePeblar(wb, phasesS), err
+	return decoratePeblar(wb, phasesS, phasesG), err
 }
 
 // Status implements the api.Charger interface
@@ -267,25 +259,19 @@ func (wb *Peblar) phases1p3p(phases int) error {
 	return err
 }
 
-var _ api.PhaseGetter = (*Peblar)(nil)
-
-// GetPhases implements the api.PhaseGetter interface
-func (wb *Peblar) GetPhases() (int, error) {
-	c, err := wb.conn.ReadHoldingRegisters(peblarForce1PhaseAddress, 1)
+// getPhases implements the api.PhaseGetter interface
+func (wb *Peblar) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(peblarForce1PhaseAddress, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	var force1p uint16 = binary.BigEndian.Uint16(c)
-	wb.log.DEBUG.Println("forced to 1 phase:", force1p)
-	var phases uint16 = wb.phases
-	wb.log.DEBUG.Println("connected phases:", phases)
-
-	if wb.phases > 1 && force1p == 1 {
+	phases := 3
+	if binary.BigEndian.Uint16(b) == 1 {
 		phases = 1
 	}
 
-	return int(phases), nil
+	return phases, nil
 }
 
 var _ api.Diagnosis = (*Peblar)(nil)
