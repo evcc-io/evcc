@@ -26,19 +26,19 @@ import (
 type Peblar struct {
 	log     *util.Logger
 	conn    *modbus.Connection
-	curr	uint32
+	curr    uint32
 	enabled bool
 	phases  uint16
 }
 
 const (
 	// Meter addresses
-	peblarEnergyTotalAddress = 30000
+	peblarEnergyTotalAddress   = 30000
 	peblarSessionEnergyAddress = 30004
-	peblarPowerPhase1Address = 30008
-	peblarPowerPhase2Address = 30010
-	peblarPowerPhase3Address = 30012
-	peblarPowerTotalAddress = 30014
+	peblarPowerPhase1Address   = 30008
+	peblarPowerPhase2Address   = 30010
+	peblarPowerPhase3Address   = 30012
+	peblarPowerTotalAddress    = 30014
 	peblarVoltagePhase1Address = 30016
 	peblarVoltagePhase2Address = 30018
 	peblarVoltagePhase3Address = 30020
@@ -47,17 +47,17 @@ const (
 	peblarCurrentPhase3Address = 30026
 
 	// Config addresses
-	peblarSerialNumberAddress = 30050
+	peblarSerialNumberAddress  = 30050
 	peblarProductNumberAddress = 30062
-	peblarFwIdentifierAddress = 30074
-	peblarPhaseCountAddress = 30092
-	peblarIndepRelayAddress = 30093
+	peblarFwIdentifierAddress  = 30074
+	peblarPhaseCountAddress    = 30092
+	peblarIndepRelayAddress    = 30093
 
 	// Control addresses
 	peblarCurrentLimitSourceAddress = 30112
 	peblarCurrentLimitActualAddress = 30113
 	peblarModbusCurrentLimitAddress = 40000
-	peblarForce1PhaseAddress = 40002
+	peblarForce1PhaseAddress        = 40002
 
 	// Diagnostic addresses
 	peblarCpStateAddress = 30110
@@ -72,11 +72,11 @@ func init() {
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
-			ID: 255,
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	return NewPeblar(cc.URI, cc.ID)
@@ -86,7 +86,7 @@ func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	log := util.NewLogger("peblar")
@@ -100,10 +100,10 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	log.DEBUG.Println("detected connected phases:", binary.BigEndian.Uint16(b))
 
 	wb := &Peblar{
-			log:     log,
-			conn:    conn,
-			curr:	 6000, // assume min current
-			phases:  binary.BigEndian.Uint16(b),
+		log:    log,
+		conn:   conn,
+		curr:   6000, // assume min current
+		phases: binary.BigEndian.Uint16(b),
 	}
 
 	c, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
@@ -228,7 +228,7 @@ func (wb *Peblar) TotalEnergy() (float64, error) {
 
 // getPhaseValues returns 1..3 sequential register values
 func (wb *Peblar) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, wb.phases * 2)
+	b, err := wb.conn.ReadInputRegisters(reg, wb.phases*2)
 	if err != nil {
 		return 0, 0, 0, err
 	}
