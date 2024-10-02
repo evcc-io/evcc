@@ -2,7 +2,7 @@ template: kostal-plenticore-nogridcharge
 products:
   - brand: Kostal
     description:
-      generic: Plenticore Hybrid (auch G1)
+      generic: Plenticore Hybrid (Gen.1+)
 capabilities: ["battery-control"]
 requirements:
   description:
