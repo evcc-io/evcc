@@ -97,21 +97,19 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.DEBUG.Println("detected connected phases:", binary.BigEndian.Uint16(b))
 
 	wb := &Peblar{
 		log:    log,
 		conn:   conn,
-		curr:   6000, // assume min current
-		phases: binary.BigEndian.Uint16(b),
+		curr:   6000,                       // assume min current
+		phases: binary.BigEndian.Uint16(b), // TODO why do we need this?
 	}
 
 	c, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
 	if err != nil {
-		log.DEBUG.Println("failed to read independent relays register")
 		return nil, err
 	}
-	var indepRelays uint16 = binary.BigEndian.Uint16(c)
+	indepRelays := binary.BigEndian.Uint16(c)
 
 	var phasesS func(int) error
 
@@ -187,9 +185,12 @@ func (wb *Peblar) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint32(current * 1e3)
+	err := wb.setCurrent(wb.curr)
+	if err == nil {
+		wb.curr = uint32(current * 1e3)
+	}
 
-	return wb.setCurrent(wb.curr)
+	return err
 }
 
 var _ api.Meter = (*Peblar)(nil)
@@ -257,10 +258,7 @@ func (wb *Peblar) Voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface via the decorator
 func (wb *Peblar) phases1p3p(phases int) error {
-	var b uint16 = 0
-
-	wb.log.DEBUG.Println("attempt to change phases to:", phases)
-
+	var b uint16
 	if phases == 1 {
 		b = 1
 	}
