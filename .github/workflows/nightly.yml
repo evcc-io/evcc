@@ -109,6 +109,9 @@ jobs:
           TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
       - name: Install Cloudsmith CLI
         run: pip install --upgrade cloudsmith-cli
 
