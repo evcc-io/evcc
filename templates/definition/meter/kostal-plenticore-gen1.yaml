@@ -2,7 +2,7 @@ template: kostal-plenticore-gen1
 products:
   - brand: Kostal
     description:
-      generic: Plenticore Hybrid (Gen.1)
+      generic: Plenticore Hybrid (auch G1)
 capabilities: ["battery-control"]
 linked:
   - template: kostal-ksem-inverter
@@ -13,9 +13,9 @@ linked:
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Die Netzladung steht in diesem Template nicht zur Verfügung. Kompatibel mit Gen.1/2/3 Wechselrichtern.
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Die Netzladung steht in diesem Template nicht zur Verfügung. Kompatibel auch mit Gen.1 Wechselrichtern.
     en: |
-      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is not possible with this template. Compatibilty with gen.1/2/3 inverters.
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is not possible with this template. Compatibilty also with gen.1 inverters.
 params:
   - name: usage
     choice: ["pv", "battery"]
