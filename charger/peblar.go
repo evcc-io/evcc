@@ -24,7 +24,6 @@ import (
 
 // Peblar charger implementation
 type Peblar struct {
-	log     *util.Logger
 	conn    *modbus.Connection
 	curr    uint32
 	enabled bool
@@ -89,9 +88,6 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("peblar")
-	conn.Logger(log.TRACE)
-
 	// Register contains the physically connected phases
 	b, err := conn.ReadInputRegisters(peblarPhaseCountAddress, 1)
 	if err != nil {
@@ -99,7 +95,6 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	}
 
 	wb := &Peblar{
-		log:    log,
 		conn:   conn,
 		curr:   6000,                       // assume min current
 		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
