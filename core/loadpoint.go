@@ -822,8 +822,14 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		chargeCurrent = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
 	}
 
+	// https://github.com/evcc-io/evcc/issues/16309
+	effMinCurrent := lp.effectiveMinCurrent()
+	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
+		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
+	}
+
 	// set current
-	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent() {
+	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= effMinCurrent {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
@@ -851,7 +857,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 	}
 
 	// set enabled/disabled
-	if enabled := chargeCurrent >= lp.effectiveMinCurrent(); enabled != lp.enabled {
+	if enabled := chargeCurrent >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
 			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
