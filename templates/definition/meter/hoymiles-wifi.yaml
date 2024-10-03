@@ -1,0 +1,12 @@
+template: hoymiles-wifi
+products:
+  - brand: Hoymiles
+    description:
+      generic: HMS Series with Wifi
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: hoymiles-wifi
+  host: {{ .host }}
