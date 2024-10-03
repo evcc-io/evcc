@@ -123,18 +123,8 @@ func (wb *Peblar) Status() (api.ChargeStatus, error) {
 	}
 
 	switch s := encoding.Uint16(b); s {
-	case 'A':
-		return api.StatusA, nil
-	case 'B':
-		return api.StatusB, nil
-	case 'C':
-		return api.StatusC, nil
-	case 'D':
-		return api.StatusD, nil
-	case 'E':
-		return api.StatusE, nil
-	case 'F':
-		return api.StatusF, nil
+	case 'A', 'B', 'C':
+		return api.ChargeStatus(s), nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
