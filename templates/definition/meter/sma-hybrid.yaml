@@ -14,8 +14,8 @@ params:
     port: 502
     id: 3
     help:
-      en: The Modbus TCP-Server needs to be enabled on this Smart Energy inverter
-      de: Der Modbus TCP-Server muss an diesem Smart Energy Wechselrichter aktiviert sein
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
   - name: capacity
     advanced: true
   - name: watchdog
@@ -24,6 +24,45 @@ params:
     advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
+      type: input
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30581 # SMA Modbus Profile: Metering.GridMs.TotWhIn
+      type: holding
+      decode: int32nan
+    scale: 0.001
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31435 # SMA Modbus Profile: Metering.GridMs.A.phsA
+        type: input
+        decode: int32nan
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB
+        type: input
+        decode: int32nan
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC
+        type: input
+        decode: int32nan
+      scale: 0.001
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc
@@ -143,46 +182,5 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
-  {{- end }}
-  {{- if eq .usage "grid" }}
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
-      type: input
-      decode: int32nan
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30581 # SMA Modbus Profile: Metering.GridMs.TotWhIn
-      type: holding
-      decode: int32nan
-    scale: 0.001
-  currents:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31435 # SMA Modbus Profile: Metering.GridMs.A.phsA
-        type: input
-        decode: int32nan
-      scale: 0.001
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB
-        type: input
-        decode: int32nan
-      scale: 0.001
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC
-        type: input
-        decode: int32nan
-      scale: 0.001
   {{- end }}

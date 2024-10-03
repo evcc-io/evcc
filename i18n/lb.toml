@@ -206,7 +206,7 @@ description = "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg
 descriptionToken = "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen."
 error = "De Sponsortoken ass ongülteg."
 labelToken = "Sponsor-Token"
-title = "Patronage"
+title = "Sponsoring"
 
 [config.system]
 logs = "Logge"

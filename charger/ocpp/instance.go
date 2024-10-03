@@ -24,15 +24,11 @@ func Instance() *CS {
 	once.Do(func() {
 		log := util.NewLogger("ocpp")
 
-		timeoutConfig := ws.NewServerTimeoutConfig()
-		timeoutConfig.PingWait = 90 * time.Second
-
 		server := ws.NewServer()
-		server.SetTimeoutConfig(timeoutConfig)
 		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
-		dispatcher.SetTimeout(time.Minute)
+		dispatcher.SetTimeout(Timeout)
 
 		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile)
 		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {
@@ -45,9 +41,10 @@ func Instance() *CS {
 		instance = &CS{
 			log:           log,
 			cps:           make(map[string]*CP),
+			init:          make(map[string]*sync.Mutex),
 			CentralSystem: cs,
-			timeout:       30 * time.Second,
 		}
+		instance.txnId.Store(time.Now().UTC().Unix())
 
 		ocppj.SetLogger(instance)
 

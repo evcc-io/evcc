@@ -75,7 +75,5 @@ render: |
     insecure: true
     {{- end }}
     jq: .[].devices | map(.percentFull) | add / length
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

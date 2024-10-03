@@ -167,55 +167,74 @@ func (wb *Keba) heartbeat(timeout time.Duration) {
 	}
 }
 
-// Status implements the api.Charger interface
-func (wb *Keba) Status() (api.ChargeStatus, error) {
+func (wb *Keba) isConnected() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegCableState, 2)
 	if err != nil {
-		return api.StatusNone, err
+		return false, err
 	}
 
-	switch status := binary.BigEndian.Uint32(b); status {
-	case 0, 1, 3:
-		return api.StatusA, nil
+	// 0: No cable is plugged.
+	// 1: Cable is connected to the charging station (not to the electric vehicle).
+	// 3: Cable is connected to the charging station and locked (not to the electric vehicle).
+	// 5: Cable is connected to the charging station and the electric vehicle (not locked).
+	// 7: Cable is connected to the charging station and the electric vehicle and locked (charging).
 
-	case 5:
-		return api.StatusB, nil
+	return binary.BigEndian.Uint32(b)&(1<<2) != 0, err
+}
 
-	case 7:
-		b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
-		if err != nil {
-			return api.StatusNone, err
-		}
-		if binary.BigEndian.Uint32(b) == 3 {
-			return api.StatusC, err
-		}
-		return api.StatusB, nil
-
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+func (wb *Keba) getChargingState() (uint32, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
+	if err != nil {
+		return 0, err
 	}
+
+	// 0: Start-up of the charging station
+	// 1: The charging station is not ready for charging. The charging station is not connected to an electric vehicle, it is locked by the authorization function or another mechanism.
+	// 2: The charging station is ready for charging and waits for a reaction from the electric vehicle.
+	// 3: A charging process is active.
+	// 4: An error has occurred.
+	// 5: The charging process is temporarily interrupted because the temperature is too high or the wallbox is in suspended mode.
+
+	return binary.BigEndian.Uint32(b), nil
+}
+
+// Status implements the api.Charger interface
+func (wb *Keba) Status() (api.ChargeStatus, error) {
+	if connected, err := wb.isConnected(); err != nil || !connected {
+		return api.StatusA, err
+	}
+
+	s, err := wb.getChargingState()
+	if err != nil {
+		return api.StatusA, err
+	}
+	if s == 3 {
+		return api.StatusC, nil
+	}
+	return api.StatusB, nil
 }
 
 // statusReason implements the api.StatusReasoner interface
 func (wb *Keba) statusReason() (api.Reason, error) {
-	res := api.ReasonUnknown
-
-	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
-	if err == nil && binary.BigEndian.Uint32(b) == 1 {
-		res = api.ReasonWaitingForAuthorization
+	if connected, err := wb.isConnected(); err != nil || !connected {
+		return api.ReasonUnknown, err
 	}
 
-	return res, err
+	if s, err := wb.getChargingState(); err != nil || s != 1 {
+		return api.ReasonUnknown, err
+	}
+
+	return api.ReasonWaitingForAuthorization, nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Keba) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
+	s, err := wb.getChargingState()
 	if err != nil {
 		return false, err
 	}
-	status := binary.BigEndian.Uint32(b)
-	return !(status == 5 || status == 1), nil
+
+	return !(s == 5 || s == 1), nil
 }
 
 // Enable implements the api.Charger interface

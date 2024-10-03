@@ -8,17 +8,23 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	ocppapi "github.com/lorenzodonini/ocpp-go/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/localauth"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/reservation"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/lorenzodonini/ocpp-go/ocppj"
+	"github.com/lorenzodonini/ocpp-go/ws"
 	"github.com/stretchr/testify/suite"
 )
 
 const (
 	ocppTestUrl            = "ws://localhost:8887"
 	ocppTestConnectTimeout = 10 * time.Second
-	ocppTestTimeout        = 3 * time.Second
 )
 
 func TestOcpp(t *testing.T) {
@@ -31,18 +37,30 @@ type ocppTestSuite struct {
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
+	ocpp.Timeout = 5 * time.Second
+
+	// setup cs so we can overwrite logger afterwards
+	_ = ocpp.Instance()
+	ocppj.SetLogger(&ocppLogger{suite.T()})
+
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
 }
 
-func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.ChargePoint {
+func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
 	// set a handler for all callback functions
 	handler := &ChargePointHandler{
 		triggerC: make(chan remotetrigger.MessageTrigger, 1),
 	}
 
+	// ocppj endpoint with handler
+	client := ws.NewClient()
+	client.SetRequestedSubProtocol(types.V16Subprotocol)
+	dispatcher := ocppj.NewDefaultClientDispatcher(ocppj.NewFIFOClientQueue(0))
+	endpoint := ocppj.NewClient(id, client, dispatcher, nil, core.Profile, localauth.Profile, firmware.Profile, reservation.Profile, remotetrigger.Profile, smartcharging.Profile)
+
 	// create charge point with handler
-	cp := ocpp16.NewChargePoint(id, nil, nil)
+	cp := ocpp16.NewChargePoint(id, endpoint, client)
 	cp.SetCoreHandler(handler)
 	cp.SetRemoteTriggerHandler(handler)
 	cp.SetSmartChargingHandler(handler)
@@ -54,23 +72,26 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.
 		}
 	}()
 
-	return cp
+	return cp, endpoint
 }
 
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
 	switch msg {
+	case core.BootNotificationFeatureName:
+		if _, err := cp.BootNotification("model", "vendor"); err != nil {
+			suite.T().Log("BootNotification:", err)
+		}
+
 	case core.ChangeAvailabilityFeatureName:
 		fallthrough
 
 	case core.StatusNotificationFeatureName:
-		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
+		if _, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
 			suite.T().Log("StatusNotification:", err)
-		} else {
-			suite.T().Log("StatusNotification:", res)
 		}
 
 	case core.MeterValuesFeatureName:
-		if res, err := cp.MeterValues(connectorId, []types.MeterValue{
+		if _, err := cp.MeterValues(connectorId, []types.MeterValue{
 			{
 				Timestamp: types.NewDateTime(suite.clock.Now()),
 				SampledValue: []types.SampledValue{
@@ -80,28 +101,23 @@ func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int
 			},
 		}); err != nil {
 			suite.T().Log("MeterValues:", err)
-		} else {
-			suite.T().Log("MeterValues:", res)
 		}
-
-	default:
-		suite.T().Log(msg)
 	}
 }
 
 func (suite *ocppTestSuite) TestConnect() {
 	// 1st charge point- remote
-	cp1 := suite.startChargePoint("test-1", 1)
+	cp1, _ := suite.startChargePoint("test-1", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, true, ocppTestConnectTimeout, ocppTestTimeout)
+	c1, err := NewOCPP("test-1", 1, "", "", 0, false, true, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
 	{
-		suite.clock.Add(ocppTestTimeout)
+		suite.clock.Add(ocpp.Timeout)
 		c1.conn.TestClock(suite.clock)
 
 		// status
@@ -140,16 +156,16 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	// 2nd charge point - remote
-	cp2 := suite.startChargePoint("test-2", 1)
+	cp2, _ := suite.startChargePoint("test-2", 1)
 	suite.Require().NoError(cp2.Start(ocppTestUrl))
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP("test-2", 1, "", "", 0, false, true, ocppTestConnectTimeout, ocppTestTimeout)
+	c2, err := NewOCPP("test-2", 1, "", "", 0, false, true, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	{
-		suite.clock.Add(ocppTestTimeout)
+		suite.clock.Add(ocpp.Timeout)
 		c2.conn.TestClock(suite.clock)
 
 		// status
@@ -158,7 +174,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	// error on unconfigured 2nd charge point
-	cp3 := suite.startChargePoint("unconfigured", 1)
+	cp3, _ := suite.startChargePoint("unconfigured", 1)
 	_, err = cp3.BootNotification("model", "vendor")
 	suite.Require().Error(err)
 
@@ -182,17 +198,17 @@ WAIT_DISCONNECT:
 
 func (suite *ocppTestSuite) TestAutoStart() {
 	// 1st charge point- remote
-	cp1 := suite.startChargePoint("test-3", 1)
+	cp1, _ := suite.startChargePoint("test-3", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout)
+	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
 	{
-		suite.clock.Add(ocppTestTimeout)
+		suite.clock.Add(ocpp.Timeout)
 		c1.conn.TestClock(suite.clock)
 	}
 
@@ -217,5 +233,24 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().NoError(err)
 
 	err = c1.Enable(false)
+	suite.Require().NoError(err)
+}
+
+func (suite *ocppTestSuite) TestTimeout() {
+	// 1st charge point- remote
+	cp1, ocppjClient := suite.startChargePoint("test-4", 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+	suite.Require().True(cp1.IsConnected())
+
+	handler := ocppjClient.GetRequestHandler()
+	ocppjClient.SetRequestHandler(func(request ocppapi.Request, requestId string, action string) {
+		if action != core.ChangeAvailabilityFeatureName {
+			handler(request, requestId, action)
+		}
+	})
+
+	// 1st charge point- local
+	_, err := NewOCPP("test-4", 1, "", "", 0, false, false, ocppTestConnectTimeout)
+
 	suite.Require().NoError(err)
 }

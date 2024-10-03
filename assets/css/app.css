@@ -112,6 +112,10 @@ body {
 	color: var(--evcc-default-text);
 }
 
+body:not(.modal-open) {
+	overflow-y: scroll;
+}
+
 h1,
 h2,
 h3,
