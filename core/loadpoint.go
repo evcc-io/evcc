@@ -1374,8 +1374,9 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 }
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
-func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
-	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo()); err == nil {
+func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
+	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo())
+	if err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
@@ -1390,31 +1391,34 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", power)
 		}
 	} else {
+		power = 0
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
 
 	// update charge currents
 	lp.chargeCurrents = nil
 
-	phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents)
-	if !ok {
-		return // don't guess
-	}
+	if phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents); ok {
+		if err := backoff.Retry(func() error {
+			i1, i2, i3, err := phaseMeter.Currents()
+			if err != nil {
+				return err
+			}
 
-	if err := backoff.Retry(func() error {
-		i1, i2, i3, err := phaseMeter.Currents()
-		if err != nil {
-			return err
+			lp.Lock()
+			lp.chargeCurrents = []float64{i1, i2, i3}
+			lp.Unlock()
+
+			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
+			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
+
+			return nil
+		}, bo()); err != nil {
+			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
-
-		lp.chargeCurrents = []float64{i1, i2, i3}
-		lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-		lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
-
-		return nil
-	}, bo()); err != nil {
-		lp.log.ERROR.Printf("charge currents: %v", err)
 	}
+
+	return power
 }
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
