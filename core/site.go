@@ -450,47 +450,48 @@ func (site *Site) updatePvMeters() {
 	site.pvPower = 0
 
 	mm := make([]meterMeasurement, len(site.pvMeters))
-	wg.Add(len(site.pvMeters))
 
-	for i, meter := range site.pvMeters {
-		go func() {
-			// power
-			power, err := backoff.RetryWithData(meter.CurrentPower, bo())
+	fun := func(i int, meter api.Meter) {
+		// power
+		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
+		if err == nil {
+			// ignore negative values which represent self-consumption
+			mu.Lock()
+			site.pvPower += max(0, power)
+			mu.Unlock()
+
+			if power < -500 {
+				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
+			}
+		} else {
+			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
+		}
+
+		// energy (production)
+		var energy float64
+		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+			energy, err = m.TotalEnergy()
 			if err == nil {
-				// ignore negative values which represent self-consumption
 				mu.Lock()
-				site.pvPower += max(0, power)
+				totalEnergy += energy
 				mu.Unlock()
-
-				if power < -500 {
-					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
-				}
 			} else {
-				site.log.ERROR.Printf("pv %d power: %v", i+1, err)
+				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
+		}
 
-			// energy (production)
-			var energy float64
-			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				energy, err = m.TotalEnergy()
-				if err == nil {
-					mu.Lock()
-					totalEnergy += energy
-					mu.Unlock()
-				} else {
-					site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
-				}
-			}
+		mm[i] = meterMeasurement{
+			Power:  power,
+			Energy: energy,
+		}
 
-			mm[i] = meterMeasurement{
-				Power:  power,
-				Energy: energy,
-			}
-
-			wg.Done()
-		}()
+		wg.Done()
 	}
 
+	wg.Add(len(site.pvMeters))
+	for i, meter := range site.pvMeters {
+		go fun(i, meter)
+	}
 	wg.Wait()
 
 	site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
@@ -604,10 +605,10 @@ func (site *Site) updateBatteryMeters() error {
 			batSoc, err = soc.Guard(meter.Soc())
 
 			if err == nil {
-				mu.Lock()
-
 				// weigh soc by capacity and accumulate total capacity
 				weighedSoc := batSoc
+
+				mu.Lock()
 				if m, ok := meter.(api.BatteryCapacity); ok {
 					capacity = m.Capacity()
 					totalCapacity += capacity
