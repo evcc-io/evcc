@@ -122,7 +122,7 @@ func (wb *Peblar) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := encoding.Uint16(b); s {
+	switch s := rune(encoding.Uint16(b)); s {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(s), nil
 	default:
