@@ -10,14 +10,14 @@
 {{- define "header" }}
   type: template
   template: {{ .Template }}
-  {{- if hasKey . "Usage" }}
+  {{- if . | hasKey  "Usage" }}
   usage: {{ .Usage }}
   {{- end }}
 {{- end }}
 
 {{- define "default" }}
   {{- include "header" . }}
-  {{- $usage := "" }}{{ if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
+  {{- $usage := "" }}{{ if . | hasKey "Usage" }}{{ $usage = .Usage }}{{ end }}
   {{- range .Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
@@ -29,7 +29,7 @@
 
 {{- define "advanced" }}
   {{- include "header" . }}
-  {{- $usage := "" }}{{ if hasKey . "Usage" }}{{ $usage = .Usage }}{{ end }}
+  {{- $usage := "" }}{{ if . | hasKey  "Usage" }}{{ $usage = .Usage }}{{ end }}
   {{- range .Params }}
   {{- if eq .Name "modbus" }}
   {{- $.Modbus | indent 2 }}
@@ -63,7 +63,7 @@ render:
 {{- if .Usages -}}
 {{- $content := . }}
 {{- range $usage := .Usages }}
-{{- $_ := set $content "Usage" $usage }}
+{{- $_ := $content | set "Usage" $usage }}
   - usage: {{ $usage }}
     default: |
     {{- include "default" $content | indent 4 }}
