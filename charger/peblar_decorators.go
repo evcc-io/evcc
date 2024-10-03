@@ -8,7 +8,7 @@ import (
 
 func decoratePeblar(base *Peblar, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseGetter == nil && phaseSwitcher == nil:
+	case phaseSwitcher == nil:
 		return base
 
 	case phaseGetter == nil && phaseSwitcher != nil:
@@ -19,17 +19,6 @@ func decoratePeblar(base *Peblar, phaseSwitcher func(int) error, phaseGetter fun
 			Peblar: base,
 			PhaseSwitcher: &decoratePeblarPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*Peblar
-			api.PhaseGetter
-		}{
-			Peblar: base,
-			PhaseGetter: &decoratePeblarPhaseGetterImpl{
-				phaseGetter: phaseGetter,
 			},
 		}
 
