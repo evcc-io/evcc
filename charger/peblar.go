@@ -99,16 +99,15 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
 	}
 
-	c, err := conn.ReadInputRegisters(peblarRegIndepRelay, 1)
+	b, err = conn.ReadInputRegisters(peblarRegIndepRelay, 1)
 	if err != nil {
 		return nil, err
 	}
-	indepRelays := binary.BigEndian.Uint16(c)
 
 	var phasesS func(int) error
 	var phasesG func() (int, error)
 
-	if indepRelays == 1 {
+	if binary.BigEndian.Uint16(b) == 1 {
 		phasesS = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
