@@ -92,17 +92,24 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 	log := util.NewLogger("peblar")
 	conn.Logger(log.TRACE)
 
-	wb := &Peblar{
-		log:  log,
-		conn: conn,
-		curr: 6000, // assume min current
-	}
-
-	b, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
+	// Register contains the physically connected phases
+	b, err := conn.ReadInputRegisters(peblarPhaseCountAddress, 1)
 	if err != nil {
 		return nil, err
 	}
-	indepRelays := binary.BigEndian.Uint16(b)
+
+	wb := &Peblar{
+		log:    log,
+		conn:   conn,
+		curr:   6000,                       // assume min current
+		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
+	}
+
+	c, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
+	if err != nil {
+		return nil, err
+	}
+	indepRelays := binary.BigEndian.Uint16(c)
 
 	var phasesS func(int) error
 	var phasesG func() (int, error)
