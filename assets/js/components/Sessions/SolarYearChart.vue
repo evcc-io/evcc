@@ -32,6 +32,16 @@ Chart.defaults.font.family = window
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
+Tooltip.positioners.topCenter = function () {
+	const { chart } = this;
+	return {
+		x: chart.width / 2,
+		y: chart.height / 10,
+		xAlign: "center",
+		yAlign: "center",
+	};
+};
+
 export default {
 	name: "SolarYearChart",
 	components: { Radar, LegendList },
@@ -91,8 +101,7 @@ export default {
 			});
 
 			const datasets = years.map((year) => {
-				const borderColor =
-					years.length === 1 ? colors.self : colors.palette[years.indexOf(year)];
+				const borderColor = colors.selfPalette[years.indexOf(year)];
 				const backgroundColor = years.length === 1 ? dimColor(borderColor) : "transparent";
 				return {
 					backgroundColor,
@@ -153,21 +162,31 @@ export default {
 				responsive: true,
 				aspectRatio: 1,
 				maintainAspectRatio: false,
-				borderRadius: 8,
-				borderWidth: 3,
+				borderWidth: 4,
 				color: colors.text,
 				spacing: 0,
+				elements: { line: { tension: 0.05 } },
 				plugins: {
 					legend: { display: false },
 					tooltip: {
 						intersect: false,
 						mode: "index",
+						position: "topCenter",
 						boxPadding: 5,
+						usePointStyle: true,
+						borderWidth: 0.00001,
+						labelPointStyle: "circle",
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
 								const datasetLabel = tooltipItem.dataset.label || "";
 								return datasetLabel + ": " + this.fmtPercentage(value, 1);
+							},
+							labelColor: (item) => {
+								const { borderColor } = item.element.options;
+								return {
+									backgroundColor: borderColor,
+								};
 							},
 						},
 						backgroundColor: "#000",
@@ -177,11 +196,15 @@ export default {
 					r: {
 						min: 0,
 						max: 100,
+						beginAtZero: false,
 						ticks: {
-							stepSize: 25,
+							stepSize: 20,
 							color: colors.muted,
 							backdropColor: colors.background,
+							font: { size: 10 },
+							callback: (value) => this.fmtPercentage(value, 0),
 						},
+						angleLines: { display: false },
 						grid: { color: colors.border },
 					},
 				},

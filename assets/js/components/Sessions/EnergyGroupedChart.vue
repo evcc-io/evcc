@@ -24,6 +24,16 @@ Chart.defaults.font.family = window
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
+Tooltip.positioners.center = function () {
+	const { chart } = this;
+	return {
+		x: chart.width / 2,
+		y: chart.height / 2,
+		xAlign: "center",
+		yAlign: "center",
+	};
+};
+
 export default {
 	name: "EnergyAggregateChart",
 	components: { Doughnut, LegendList },
@@ -97,8 +107,12 @@ export default {
 					},
 					tooltip: {
 						mode: "index",
+						position: "center",
 						intersect: false,
 						boxPadding: 5,
+						usePointStyle: true,
+						borderWidth: 0.00001,
+						labelPointStyle: "circle",
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
