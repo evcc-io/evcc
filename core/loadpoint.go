@@ -1402,6 +1402,9 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		if err := backoff.Retry(func() error {
 			i1, i2, i3, err := phaseMeter.Currents()
 			if err != nil {
+				if errors.Is(err, api.ErrNotAvailable) {
+					err = backoff.Permanent(err)
+				}
 				return err
 			}
 
@@ -1413,7 +1416,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 			return nil
-		}, bo()); err != nil {
+		}, bo()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}
