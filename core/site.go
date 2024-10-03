@@ -563,7 +563,7 @@ func (site *Site) updateBatteryMeters() error {
 	}
 
 	var totalCapacity, totalEnergy float64
-	var g errgroup.Group
+	var eg errgroup.Group
 	var mu sync.Mutex
 
 	site.batteryPower = 0
@@ -640,10 +640,10 @@ func (site *Site) updateBatteryMeters() error {
 	}
 
 	for i, meter := range site.batteryMeters {
-		g.Go(func() error { return fun(i, meter) })
+		eg.Go(func() error { return fun(i, meter) })
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return err
 	}
 
@@ -717,16 +717,16 @@ func (site *Site) updateGridMeter() error {
 }
 
 func (site *Site) updateMeters() error {
-	var g errgroup.Group
+	var eg errgroup.Group
 
-	g.Go(func() error { site.updatePvMeters(); return nil })
-	g.Go(func() error { site.updateAuxMeters(); return nil })
-	g.Go(func() error { site.updateExtMeters(); return nil })
+	eg.Go(func() error { site.updatePvMeters(); return nil })
+	eg.Go(func() error { site.updateAuxMeters(); return nil })
+	eg.Go(func() error { site.updateExtMeters(); return nil })
 
-	g.Go(site.updateBatteryMeters)
-	g.Go(site.updateGridMeter)
+	eg.Go(site.updateBatteryMeters)
+	eg.Go(site.updateGridMeter)
 
-	return g.Wait()
+	return eg.Wait()
 }
 
 // sitePower returns
