@@ -825,7 +825,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 }
 
-// updateLoadpoints updates all loadpoint's charge power
+// updateLoadpoints updates all loadpoints' charge power
 func (site *Site) updateLoadpoints() float64 {
 	var (
 		wg  sync.WaitGroup
