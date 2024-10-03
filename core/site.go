@@ -444,17 +444,22 @@ func (site *Site) updatePvMeters() {
 	}
 
 	var totalEnergy float64
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	site.pvPower = 0
 
 	mm := make([]meterMeasurement, len(site.pvMeters))
 
-	for i, meter := range site.pvMeters {
-		// pv power
+	fun := func(i int, meter api.Meter) {
+		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
 			// ignore negative values which represent self-consumption
+			mu.Lock()
 			site.pvPower += max(0, power)
+			mu.Unlock()
+
 			if power < -500 {
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
@@ -462,12 +467,14 @@ func (site *Site) updatePvMeters() {
 			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
-		// pv energy (production)
+		// energy (production)
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err == nil {
+				mu.Lock()
 				totalEnergy += energy
+				mu.Unlock()
 			} else {
 				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
@@ -477,7 +484,15 @@ func (site *Site) updatePvMeters() {
 			Power:  power,
 			Energy: energy,
 		}
+
+		wg.Done()
 	}
+
+	wg.Add(len(site.pvMeters))
+	for i, meter := range site.pvMeters {
+		go fun(i, meter)
+	}
+	wg.Wait()
 
 	site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 	site.publish(keys.PvPower, site.pvPower)
@@ -548,20 +563,25 @@ func (site *Site) updateBatteryMeters() error {
 	}
 
 	var totalCapacity, totalEnergy float64
+	var eg errgroup.Group
+	var mu sync.Mutex
 
 	site.batteryPower = 0
 	site.batterySoc = 0
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
 
-	for i, meter := range site.batteryMeters {
+	fun := func(i int, meter api.Meter) error {
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err != nil {
 			// power is required- return on error
 			return fmt.Errorf("battery %d power: %v", i+1, err)
 		}
 
+		mu.Lock()
 		site.batteryPower += power
+		mu.Unlock()
+
 		if len(site.batteryMeters) > 1 {
 			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
 		}
@@ -571,7 +591,9 @@ func (site *Site) updateBatteryMeters() error {
 		if m, ok := meter.(api.MeterEnergy); ok {
 			energy, err = m.TotalEnergy()
 			if err == nil {
+				mu.Lock()
 				totalEnergy += energy
+				mu.Unlock()
 			} else {
 				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 			}
@@ -585,6 +607,8 @@ func (site *Site) updateBatteryMeters() error {
 			if err == nil {
 				// weigh soc by capacity and accumulate total capacity
 				weighedSoc := batSoc
+
+				mu.Lock()
 				if m, ok := meter.(api.BatteryCapacity); ok {
 					capacity = m.Capacity()
 					totalCapacity += capacity
@@ -592,6 +616,8 @@ func (site *Site) updateBatteryMeters() error {
 				}
 
 				site.batterySoc += weighedSoc
+				mu.Unlock()
+
 				if len(site.batteryMeters) > 1 {
 					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
 				}
@@ -609,6 +635,16 @@ func (site *Site) updateBatteryMeters() error {
 			Capacity:     capacity,
 			Controllable: controllable,
 		}
+
+		return nil
+	}
+
+	for i, meter := range site.batteryMeters {
+		eg.Go(func() error { return fun(i, meter) })
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	site.publish(keys.BatteryCapacity, totalCapacity)
@@ -681,16 +717,16 @@ func (site *Site) updateGridMeter() error {
 }
 
 func (site *Site) updateMeters() error {
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
-	g.Go(func() error { site.updatePvMeters(); return nil })
-	g.Go(func() error { site.updateAuxMeters(); return nil })
-	g.Go(func() error { site.updateExtMeters(); return nil })
+	eg.Go(func() error { site.updatePvMeters(); return nil })
+	eg.Go(func() error { site.updateAuxMeters(); return nil })
+	eg.Go(func() error { site.updateExtMeters(); return nil })
 
-	g.Go(site.updateBatteryMeters)
-	g.Go(site.updateGridMeter)
+	eg.Go(site.updateBatteryMeters)
+	eg.Go(site.updateGridMeter)
 
-	return g.Wait()
+	return eg.Wait()
 }
 
 // sitePower returns
