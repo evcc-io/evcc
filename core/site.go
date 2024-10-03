@@ -570,74 +570,76 @@ func (site *Site) updateBatteryMeters() error {
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
 
+	fun := func(i int, meter api.Meter) error {
+		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
+		if err != nil {
+			// power is required- return on error
+			return fmt.Errorf("battery %d power: %v", i+1, err)
+		}
+
+		mu.Lock()
+		site.batteryPower += power
+		mu.Unlock()
+
+		if len(site.batteryMeters) > 1 {
+			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+		}
+
+		// battery energy (discharge)
+		var energy float64
+		if m, ok := meter.(api.MeterEnergy); ok {
+			energy, err = m.TotalEnergy()
+			if err == nil {
+				mu.Lock()
+				totalEnergy += energy
+				mu.Unlock()
+			} else {
+				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
+			}
+		}
+
+		// battery soc and capacity
+		var batSoc, capacity float64
+		if meter, ok := meter.(api.Battery); ok {
+			batSoc, err = soc.Guard(meter.Soc())
+
+			if err == nil {
+				mu.Lock()
+
+				// weigh soc by capacity and accumulate total capacity
+				weighedSoc := batSoc
+				if m, ok := meter.(api.BatteryCapacity); ok {
+					capacity = m.Capacity()
+					totalCapacity += capacity
+					weighedSoc *= capacity
+				}
+
+				site.batterySoc += weighedSoc
+				mu.Unlock()
+
+				if len(site.batteryMeters) > 1 {
+					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
+				}
+			} else {
+				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+			}
+		}
+
+		_, controllable := meter.(api.BatteryController)
+
+		mm[i] = batteryMeasurement{
+			Power:        power,
+			Energy:       energy,
+			Soc:          batSoc,
+			Capacity:     capacity,
+			Controllable: controllable,
+		}
+
+		return nil
+	}
+
 	for i, meter := range site.batteryMeters {
-		g.Go(func() error {
-			power, err := backoff.RetryWithData(meter.CurrentPower, bo())
-			if err != nil {
-				// power is required- return on error
-				return fmt.Errorf("battery %d power: %v", i+1, err)
-			}
-
-			mu.Lock()
-			site.batteryPower += power
-			mu.Unlock()
-
-			if len(site.batteryMeters) > 1 {
-				site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
-			}
-
-			// battery energy (discharge)
-			var energy float64
-			if m, ok := meter.(api.MeterEnergy); ok {
-				energy, err = m.TotalEnergy()
-				if err == nil {
-					mu.Lock()
-					totalEnergy += energy
-					mu.Unlock()
-				} else {
-					site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
-				}
-			}
-
-			// battery soc and capacity
-			var batSoc, capacity float64
-			if meter, ok := meter.(api.Battery); ok {
-				batSoc, err = soc.Guard(meter.Soc())
-
-				if err == nil {
-					mu.Lock()
-
-					// weigh soc by capacity and accumulate total capacity
-					weighedSoc := batSoc
-					if m, ok := meter.(api.BatteryCapacity); ok {
-						capacity = m.Capacity()
-						totalCapacity += capacity
-						weighedSoc *= capacity
-					}
-
-					site.batterySoc += weighedSoc
-					mu.Unlock()
-
-					if len(site.batteryMeters) > 1 {
-						site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
-					}
-				} else {
-					site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
-				}
-			}
-
-			_, controllable := meter.(api.BatteryController)
-
-			mm[i] = batteryMeasurement{
-				Power:        power,
-				Energy:       energy,
-				Soc:          batSoc,
-				Capacity:     capacity,
-				Controllable: controllable,
-			}
-
-			return nil
-		})
+		g.Go(func() error { return fun(i, meter) })
 	}
 
 	if err := g.Wait(); err != nil {
