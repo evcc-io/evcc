@@ -102,6 +102,15 @@ type API interface {
 	// SetDisableThreshold sets loadpoint disable threshold
 	SetDisableThreshold(threshold float64)
 
+	// GetEnableDelay gets the loadpoint enable delay
+	GetEnableDelay() time.Duration
+	// SetEnableDelay sets loadpoint enable delay
+	SetEnableDelay(delay time.Duration)
+	// GetDisableDelay gets the loadpoint disable delay
+	GetDisableDelay() time.Duration
+	// SetDisableDelay sets loadpoint disable delay
+	SetDisableDelay(delay time.Duration)
+
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
