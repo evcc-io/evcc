@@ -69,7 +69,7 @@ export default {
 		},
 		fmtPower() {
 			if (this.duration > 0 && this.power > 0) {
-				return `@ ${this.fmtKw(this.power)}`;
+				return `@ ${this.fmtW(this.power)}`;
 			}
 			return null;
 		},
@@ -92,7 +92,7 @@ export default {
 			return hourSum ? priceSum / hourSum : undefined;
 		},
 		fmtAvgPrice() {
-			if (!this.targetTime) {
+			if (!this.targetTime || this.duration === 0) {
 				return "—";
 			}
 			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;

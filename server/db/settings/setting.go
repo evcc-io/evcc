@@ -55,8 +55,7 @@ func All() []setting {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	res := slices.Clone(settings)
-	slices.SortFunc(res, func(i, j setting) int {
+	res := slices.SortedFunc(slices.Values(settings), func(i, j setting) int {
 		return cmp.Compare(i.Key, j.Key)
 	})
 

@@ -7,8 +7,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware.
-    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware.
+    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
+    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware. Older versions do not provide all required data (power, state of charge).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -38,6 +38,52 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  currents:
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5602 # Meter Phase A Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5018 # Phase A voltage, 0.1V
+        decode: uint16
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5604 # Meter Phase B Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5019 # Phase b voltage, 0.1V
+        decode: uint16
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5606 # Meter Phase C Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5020 # Phase C voltage, 0.1V
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -199,7 +245,5 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

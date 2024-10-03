@@ -196,7 +196,7 @@ func (v *Identity) appToken(token *oauth2.Token) (*oauth2.Token, string, error) 
 	})
 
 	var res struct {
-		Code    ResponseCode
+		Code    Int
 		Message string
 		Data    AppToken
 	}

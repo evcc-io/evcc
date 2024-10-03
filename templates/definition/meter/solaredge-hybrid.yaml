@@ -43,6 +43,7 @@ render: |
     timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:TotWhImp
+    scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
@@ -111,7 +112,7 @@ render: |
         register:
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
-          decode: float32s
+          decode: float32nans
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -121,7 +122,7 @@ render: |
     register:
       address: 0xE174 # Battery 1 Instantaneous Power
       type: holding
-      decode: float32s
+      decode: float32nans
     scale: -1
   soc:
     source: modbus
@@ -130,7 +131,7 @@ render: |
     register:
       address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
-      decode: float32s
+      decode: float32nans
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}
@@ -204,7 +205,5 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

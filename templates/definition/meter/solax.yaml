@@ -35,7 +35,7 @@ render: |
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
     source: calc
@@ -59,7 +59,7 @@ render: |
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -134,7 +134,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

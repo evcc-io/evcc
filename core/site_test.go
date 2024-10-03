@@ -122,7 +122,7 @@ func TestGreenShare(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		t.Logf(tc.title)
+		t.Log(tc.title)
 
 		s := &Site{
 			gridPower:    tc.grid,

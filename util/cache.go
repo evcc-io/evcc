@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/util/encode"
-	"golang.org/x/exp/maps"
 )
 
 // Cache is a data store
@@ -89,7 +90,7 @@ func (c *Cache) All() []Param {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return maps.Values(c.val)
+	return slices.Collect(maps.Values(c.val))
 }
 
 // Add entry to cache

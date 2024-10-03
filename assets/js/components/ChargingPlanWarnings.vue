@@ -100,16 +100,16 @@ export default {
 			if (this.socBasedPlanning) {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			}
-			return this.fmtKWh(this.limitEnergy * 1e3);
+			return this.fmtWh(this.limitEnergy * 1e3);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {
 				return this.fmtSoc(this.effectivePlanSoc);
 			}
-			return this.fmtKWh(this.planEnergy * 1e3);
+			return this.fmtWh(this.planEnergy * 1e3);
 		},
 		costLimitExists: function () {
-			return this.smartCostLimit !== 0;
+			return this.smartCostLimit !== null;
 		},
 		costLimitText: function () {
 			if (this.isCo2) {

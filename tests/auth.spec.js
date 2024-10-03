@@ -128,6 +128,15 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   await expect(loginNew).not.toBeVisible();
 
-  // hard stop, since password is updated
-  await stop(instance);
+  // revert to old password
+  await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
+  await modal.getByLabel("Current password").fill(newPassword);
+  await modal.getByLabel("New password").fill(oldPassword);
+  await modal.getByLabel("Repeat password").fill(oldPassword);
+  await modal.getByRole("button", { name: "Update Password" }).click();
+  await expect(
+    modal.getByRole("heading", { name: "Update Administrator Password" })
+  ).not.toBeVisible();
+
+  await stop();
 });

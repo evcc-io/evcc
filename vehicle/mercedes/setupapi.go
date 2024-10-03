@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/google/uuid"
@@ -85,10 +84,10 @@ func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token,
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, vs.region))
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err := vs.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	return (*oauth2.Token)(&res), nil
+	return util.TokenWithExpiry(&res), nil
 }
