@@ -142,7 +142,7 @@ jobs:
 
       - name: Update version
         run: |
-          sed -i -e s#\"version.*#\"version\":\ \"$(echo ${{ github.ref }} | sed -e s#refs/tags/##)\",# ./hassio/evcc/config.json
+          sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
 
       - name: Push
         run: |
