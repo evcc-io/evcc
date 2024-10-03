@@ -32,34 +32,30 @@ type Peblar struct {
 
 const (
 	// Meter addresses
-	peblarEnergyTotalAddress   = 30000
-	peblarSessionEnergyAddress = 30004
-	peblarPowerPhase1Address   = 30008
-	peblarPowerPhase2Address   = 30010
-	peblarPowerPhase3Address   = 30012
-	peblarPowerTotalAddress    = 30014
-	peblarVoltagePhase1Address = 30016
-	peblarVoltagePhase2Address = 30018
-	peblarVoltagePhase3Address = 30020
-	peblarCurrentPhase1Address = 30022
-	peblarCurrentPhase2Address = 30024
-	peblarCurrentPhase3Address = 30026
+	peblarRegEnergyTotal   = 30000
+	peblarRegSessionEnergy = 30004
+	peblarRegPowerPhase1   = 30008
+	peblarRegPowerPhase2   = 30010
+	peblarRegPowerPhase3   = 30012
+	peblarRegPowerTotal    = 30014
+	peblarRegVoltages      = 30016
+	peblarRegCurrents      = 30022
 
 	// Config addresses
-	peblarSerialNumberAddress  = 30050
-	peblarProductNumberAddress = 30062
-	peblarFwIdentifierAddress  = 30074
-	peblarPhaseCountAddress    = 30092
-	peblarIndepRelayAddress    = 30093
+	peblarRegSerialNumber  = 30050
+	peblarRegProductNumber = 30062
+	peblarRegFwIdentifier  = 30074
+	peblarRegPhaseCount    = 30092
+	peblarRegIndepRelay    = 30093
 
 	// Control addresses
-	peblarCurrentLimitSourceAddress = 30112
-	peblarCurrentLimitActualAddress = 30113
-	peblarModbusCurrentLimitAddress = 40000
-	peblarForce1PhaseAddress        = 40002
+	peblarRegCurrentLimitSource = 30112
+	peblarRegCurrentLimitActual = 30113
+	peblarRegModbusCurrentLimit = 40000
+	peblarRegForce1Phase        = 40002
 
 	// Diagnostic addresses
-	peblarCpStateAddress = 30110
+	peblarRegCpState = 30110
 )
 
 func init() {
@@ -88,8 +84,11 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
+	log := util.NewLogger("peblar")
+	conn.Logger(log.TRACE)
+
 	// Register contains the physically connected phases
-	b, err := conn.ReadInputRegisters(peblarPhaseCountAddress, 1)
+	b, err := conn.ReadInputRegisters(peblarRegPhaseCount, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +99,7 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
 	}
 
-	c, err := conn.ReadInputRegisters(peblarIndepRelayAddress, 1)
+	c, err := conn.ReadInputRegisters(peblarRegIndepRelay, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,7 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (wb *Peblar) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(peblarCpStateAddress, 1)
+	b, err := wb.conn.ReadInputRegisters(peblarRegCpState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -162,7 +161,7 @@ func (wb *Peblar) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
 
-	_, err := wb.conn.WriteMultipleRegisters(peblarModbusCurrentLimitAddress, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(peblarRegModbusCurrentLimit, 2, b)
 	return err
 }
 
@@ -191,7 +190,7 @@ var _ api.Meter = (*Peblar)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Peblar) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(peblarPowerTotalAddress, 2)
+	b, err := wb.conn.ReadInputRegisters(peblarRegPowerTotal, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -203,7 +202,7 @@ var _ api.ChargeRater = (*Peblar)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Peblar) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(peblarSessionEnergyAddress, 4)
+	b, err := wb.conn.ReadInputRegisters(peblarRegSessionEnergy, 4)
 	if err != nil {
 		return 0, err
 	}
@@ -213,7 +212,7 @@ func (wb *Peblar) ChargedEnergy() (float64, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Peblar) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(peblarEnergyTotalAddress, 4)
+	b, err := wb.conn.ReadInputRegisters(peblarRegEnergyTotal, 4)
 	if err != nil {
 		return 0, err
 	}
@@ -240,14 +239,14 @@ var _ api.PhaseCurrents = (*Peblar)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Peblar) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(peblarCurrentPhase1Address, 1e3)
+	return wb.getPhaseValues(peblarRegCurrents, 1e3)
 }
 
 var _ api.PhaseVoltages = (*Peblar)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Peblar) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(peblarVoltagePhase1Address, 1)
+	return wb.getPhaseValues(peblarRegVoltages, 1)
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface via the decorator
@@ -257,13 +256,13 @@ func (wb *Peblar) phases1p3p(phases int) error {
 		b = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(peblarForce1PhaseAddress, b)
+	_, err := wb.conn.WriteSingleRegister(peblarRegForce1Phase, b)
 	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *Peblar) getPhases() (int, error) {
-	b, err := wb.conn.ReadHoldingRegisters(peblarForce1PhaseAddress, 1)
+	b, err := wb.conn.ReadHoldingRegisters(peblarRegForce1Phase, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -280,13 +279,13 @@ var _ api.Diagnosis = (*Peblar)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Peblar) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(peblarSerialNumberAddress, 12); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(peblarRegSerialNumber, 12); err == nil {
 		fmt.Printf("\tSN:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(peblarProductNumberAddress, 12); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(peblarRegProductNumber, 12); err == nil {
 		fmt.Printf("\tPN:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(peblarFwIdentifierAddress, 12); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(peblarRegFwIdentifier, 12); err == nil {
 		fmt.Printf("\tFirmware:\t%s\n", b)
 	}
 }
