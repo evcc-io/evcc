@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -17,16 +16,8 @@ import (
 	"github.com/samber/lo"
 )
 
-type loadpointStaticConfig struct {
-	// static config
-	Charger string `json:"charger,omitempty"`
-	Meter   string `json:"meter,omitempty"`
-	Circuit string `json:"circuit,omitempty"`
-	Vehicle string `json:"vehicle,omitempty"`
-}
-
-func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
-	return loadpointStaticConfig{
+func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
+	return loadpoint.StaticConfig{
 		Charger: lp.GetChargerName(),
 		Meter:   lp.GetMeterName(),
 		Circuit: lp.GetCircuitName(),
@@ -34,22 +25,8 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
 	}
 }
 
-type loadpointDynamicConfig struct {
-	// dynamic config
-	Title          string   `json:"title"`
-	Mode           string   `json:"mode"`
-	Priority       int      `json:"priority"`
-	Phases         int      `json:"phases"`
-	MinCurrent     float64  `json:"minCurrent"`
-	MaxCurrent     float64  `json:"maxCurrent"`
-	SmartCostLimit *float64 `json:"smartCostLimit"`
-
-	Thresholds loadpoint.ThresholdsConfig `json:"thresholds"`
-	Soc        loadpoint.SocConfig        `json:"soc"`
-}
-
-func getLoadpointDynamicConfig(lp loadpoint.API) loadpointDynamicConfig {
-	return loadpointDynamicConfig{
+func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
+	return loadpoint.DynamicConfig{
 		Title:          lp.GetTitle(),
 		Mode:           string(lp.GetMode()),
 		Priority:       lp.GetPriority(),
@@ -62,62 +39,23 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpointDynamicConfig {
 	}
 }
 
-func loadpointUpdateDynamicConfig(payload loadpointDynamicConfig, lp loadpoint.API) error {
-	lp.SetTitle(payload.Title)
-	lp.SetPriority(payload.Priority)
-	lp.SetSmartCostLimit(payload.SmartCostLimit)
-	lp.SetThresholds(payload.Thresholds)
-
-	// TODO mode warning
-	lp.SetSocConfig(payload.Soc)
-
-	mode, err := api.ChargeModeString(payload.Mode)
-	if err == nil {
-		lp.SetMode(mode)
-	}
-
-	if err == nil {
-		err = lp.SetPhases(payload.Phases)
-	}
-
-	if err == nil {
-		err = lp.SetMinCurrent(payload.MinCurrent)
-	}
-
-	if err == nil {
-		err = lp.SetMaxCurrent(payload.MaxCurrent)
-	}
-
-	return err
-}
-
 type loadpointFullConfig struct {
 	ID   int    `json:"id,omitempty"` // db row id
 	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
 
 	// static config
-	loadpointStaticConfig
-	loadpointDynamicConfig
+	loadpoint.StaticConfig
+	loadpoint.DynamicConfig
 }
 
-func loadpointSplitConfig(r io.Reader) (loadpointDynamicConfig, map[string]any, error) {
+func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, error) {
 	var payload map[string]any
 
 	if err := jsonDecoder(r).Decode(&payload); err != nil {
-		return loadpointDynamicConfig{}, nil, err
+		return loadpoint.DynamicConfig{}, nil, err
 	}
 
-	// split static and dynamic config via mapstructure
-	var cc struct {
-		loadpointDynamicConfig `mapstructure:",squash"`
-		Other                  map[string]any `mapstructure:",remain"`
-	}
-
-	if err := util.DecodeOther(payload, &cc); err != nil {
-		return loadpointDynamicConfig{}, nil, err
-	}
-
-	return cc.loadpointDynamicConfig, cc.Other, nil
+	return loadpoint.SplitConfig(payload)
 }
 
 // loadpointConfig returns a single loadpoint's configuration
@@ -133,8 +71,8 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 		ID:   id,
 		Name: dev.Config().Name,
 
-		loadpointStaticConfig:  getLoadpointStaticConfig(lp),
-		loadpointDynamicConfig: getLoadpointDynamicConfig(lp),
+		StaticConfig:  getLoadpointStaticConfig(lp),
+		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
 
 	return res
@@ -180,6 +118,8 @@ func loadpointConfigHandler() http.HandlerFunc {
 func newLoadpointHandler() http.HandlerFunc {
 	h := config.Loadpoints()
 
+	// TODO revert charger, meter etc
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		dynamic, static, err := loadpointSplitConfig(r.Body)
 		if err != nil {
@@ -189,22 +129,7 @@ func newLoadpointHandler() http.HandlerFunc {
 
 		id := len(h.Devices())
 		name := "lp-" + strconv.Itoa(id+1)
-
 		log := util.NewLoggerWithLoadpoint(name, id+1)
-
-		dev := config.BlankConfigurableDevice[loadpoint.API]()
-		settings := coresettings.NewDeviceSettingsAdapter(dev)
-
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		dev.Update(static, instance)
-
-		if err := loadpointUpdateDynamicConfig(dynamic, instance); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-		}
 
 		conf, err := config.AddConfig(templates.Loadpoint, "", static)
 		if err != nil {
@@ -212,7 +137,23 @@ func newLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
+		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		if err != nil {
+			conf.Delete()
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		if err := dynamic.Apply(instance); err != nil {
+			conf.Delete()
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		if err := h.Add(dev); err != nil {
+			conf.Delete()
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -265,7 +206,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 		}
 
 		// dynamic
-		if err := loadpointUpdateDynamicConfig(dynamic, instance); err != nil {
+		if err := dynamic.Apply(instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

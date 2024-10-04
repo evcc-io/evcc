@@ -203,7 +203,7 @@ func newDevice[T any](class templates.Class, req map[string]any, newFromConf fun
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice[T](conf, instance))
+	return &conf, h.Add(config.NewConfigurableDevice[T](&conf, instance))
 }
 
 // newDeviceHandler creates a new device by class

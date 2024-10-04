@@ -257,7 +257,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
 
-			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -319,7 +319,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
 
-			if err := config.Chargers().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -410,7 +410,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			mu.Lock()
 			defer mu.Unlock()
-			devs2 = append(devs2, config.NewConfigurableDevice(conf, instance))
+			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
 
 			return nil
 		})
@@ -979,22 +979,22 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		id := len(config.Loadpoints().Devices())
 		name := "lp-" + strconv.Itoa(id+1)
-
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		dev := config.BlankConfigurableDevice[loadpoint.API]()
-		settings := coresettings.NewDeviceSettingsAdapter(dev)
+		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
 
-		// TODO: proper handling of id/name
-		delete(cc.Other, "id")
-		delete(cc.Other, "name")
+		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
+		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
 			return fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
-		dev.Update(cc.Other, instance)
 
+		if err := dynamic.Apply(instance); err != nil {
+			return err
+		}
+
+		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
 		if err := config.Loadpoints().Add(dev); err != nil {
 			return err
 		}
