@@ -280,9 +280,7 @@ export default {
 			}
 		},
 		updateRepeatingPlan: function (entries) {
-			console.log(entries);
-
-			// TODO
+			api.post(`${this.apiVehicle}plan/repeating`, entries);
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

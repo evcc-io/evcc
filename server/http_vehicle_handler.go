@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -109,6 +110,33 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
+func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetRepeatingPlanEntries(string(body)); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
 // planSocRemoveHandler removes plan soc and time
 func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -127,12 +155,5 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 
 		res := struct{}{}
 		jsonResult(w, res)
-	}
-}
-
-// addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
-func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: add code
 	}
 }

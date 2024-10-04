@@ -103,3 +103,13 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 
 	return nil
 }
+
+func (v *adapter) SetRepeatingPlanEntries(entries string) error {
+	v.log.DEBUG.Printf("update entries for %s repeating plan: %s", v.name, entries)
+
+	settings.SetJson("repeating-plan", entries)
+
+	v.publish()
+
+	return nil
+}
