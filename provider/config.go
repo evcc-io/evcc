@@ -1,9 +1,13 @@
 package provider
 
 import (
-	"errors"
+	"context"
 	"fmt"
+
+	reg "github.com/evcc-io/evcc/util/registry"
 )
+
+var registry = reg.New[Provider]("plugin")
 
 // provider types
 type (
@@ -34,28 +38,6 @@ type (
 	}
 )
 
-type providerRegistry map[string]func(map[string]interface{}) (Provider, error)
-
-func (r providerRegistry) Add(name string, factory func(map[string]interface{}) (Provider, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate plugin type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r providerRegistry) Get(name string) (func(map[string]interface{}) (Provider, error), error) {
-	if name == "" {
-		return nil, errors.New("missing configuration")
-	}
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("invalid plugin source: %s", name)
-	}
-	return factory, nil
-}
-
-var registry providerRegistry = make(map[string]func(map[string]interface{}) (Provider, error))
-
 // Config is the general provider config
 type Config struct {
 	Source string
@@ -69,7 +51,7 @@ func NewIntGetterFromConfig(config Config) (func() (int64, error), error) {
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +71,7 @@ func NewFloatGetterFromConfig(config Config) (func() (float64, error), error) {
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +91,7 @@ func NewStringGetterFromConfig(config Config) (func() (string, error), error) {
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +111,7 @@ func NewBoolGetterFromConfig(config Config) (func() (bool, error), error) {
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +131,7 @@ func NewIntSetterFromConfig(param string, config Config) (func(int64) error, err
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +151,7 @@ func NewFloatSetterFromConfig(param string, config Config) (func(float642 float6
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +171,7 @@ func NewStringSetterFromConfig(param string, config Config) (func(string) error,
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +191,7 @@ func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, err
 		return nil, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(context.TODO(), config.Other)
 	if err != nil {
 		return nil, err
 	}
