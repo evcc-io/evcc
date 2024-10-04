@@ -28,7 +28,7 @@ async function enableExperimental(page) {
 }
 
 test.describe("loadpoint", async () => {
-  test("create loadpoint, charger and charger meter", async ({ page }) => {
+  test("create, update and delete", async ({ page }) => {
     await page.goto("/#/config");
     await login(page);
     await enableExperimental(page);
@@ -59,7 +59,6 @@ test.describe("loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
-    // TODO @andig: this is broken ⤵︎
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("charging");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("11.0 kW");
@@ -74,8 +73,21 @@ test.describe("loadpoint", async () => {
     await restart(CONFIG);
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
-    // TODO @andig: this is broken ⤵︎
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport");
+
+    // update loadpoint
+    await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await lpModal.getByLabel("Title").fill("Solar Carport 2");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
+    await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport 2");
+
+    // restart
+    await restart(CONFIG);
+    await page.reload();
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport 2");
 
     // delete loadpoint
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
@@ -87,7 +99,6 @@ test.describe("loadpoint", async () => {
     // restart
     await restart(CONFIG);
     await page.reload();
-    // TODO @andig: this is broken ⤵︎
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
   });
 });
