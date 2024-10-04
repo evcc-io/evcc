@@ -33,7 +33,6 @@
 </template>
 
 <script>
-import api from "../api";
 import ChargingPlanRepeatingSettingsEntry from "./ChargingPlanRepeatingSettingsEntry.vue";
 
 const DEFAULT_WEEKDAYS = [0];
