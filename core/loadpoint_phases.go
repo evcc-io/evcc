@@ -9,6 +9,7 @@ import (
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	lp.configuredPhases = phases
 	lp.publish(keys.Phases, lp.configuredPhases)
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases) // TODO remove
 	lp.settings.SetInt(keys.Phases, int64(lp.configuredPhases))
 }
 
