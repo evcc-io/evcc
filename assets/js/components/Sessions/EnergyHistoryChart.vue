@@ -9,25 +9,13 @@
 
 <script>
 import { Bar } from "vue-chartjs";
-import {
-	Chart,
-	BarController,
-	BarElement,
-	CategoryScale,
-	LinearScale,
-	Legend,
-	Tooltip,
-} from "chart.js";
+import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
+import { registerChartComponents, commonOptions } from "./chartConfig";
+import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import LegendList from "./LegendList.vue"; // Import the new component
 import colors from "../../colors";
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip);
-Chart.defaults.font.family = window
-	.getComputedStyle(document.documentElement)
-	.getPropertyValue("--bs-font-sans-serif");
-Chart.defaults.font.size = 14;
-Chart.defaults.layout.padding = 0;
+registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
 
 const GROUPS = {
 	SOLAR: "solar",
@@ -165,39 +153,29 @@ export default {
 		},
 		options() {
 			return {
+				...commonOptions,
 				locale: this.$i18n?.locale,
-				responsive: true,
-				maintainAspectRatio: false,
 				color: colors.text,
 				borderSkipped: false,
 				maxBarThickness: 40,
+				animation: false,
 				plugins: {
-					legend: {
-						display: false,
-					},
+					...commonOptions.plugins,
 					tooltip: {
+						...commonOptions.plugins.tooltip,
 						mode: "index",
 						intersect: false,
-						boxPadding: 5,
 						positioner: (context) => {
-							const tooltip = context.chart.tooltip;
-							const tooltipHeight = tooltip.height;
-							const tooltipWidth = tooltip.width;
-							const windowWidth = window.innerWidth;
-							const windowHeight = window.innerHeight;
-							const tooltipX = context.tooltipPosition().x;
-							const tooltipY = context.tooltipPosition().y;
-							const position = {
-								x:
-									tooltipX + tooltipWidth > windowWidth
-										? windowWidth - tooltipWidth
-										: tooltipX,
-								y:
-									tooltipY + tooltipHeight > windowHeight
-										? windowHeight - tooltipHeight
-										: tooltipY,
+							const { chart, tooltipPosition } = context;
+							const { tooltip } = chart;
+							const { width, height } = tooltip;
+							const { x, y } = tooltipPosition();
+							const { innerWidth, innerHeight } = window;
+
+							return {
+								x: Math.min(x, innerWidth - width),
+								y: Math.min(y, innerHeight - height),
 							};
-							return position;
 						},
 						callbacks: {
 							title: (tooltipItem) => {
@@ -223,7 +201,6 @@ export default {
 								return !item.raw ? colors.muted : "#fff";
 							},
 						},
-						backgroundColor: "#000",
 						itemSort: function (a, b) {
 							return b.datasetIndex - a.datasetIndex;
 						},
@@ -255,7 +232,6 @@ export default {
 						position: "right",
 					},
 				},
-				animation: false,
 			};
 		},
 	},

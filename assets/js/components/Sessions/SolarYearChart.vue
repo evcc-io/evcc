@@ -19,28 +19,13 @@
 
 <script>
 import { Radar } from "vue-chartjs";
-import { Chart, RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
+import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
+import { registerChartComponents, commonOptions } from "./chartConfig";
 import formatter from "../../mixins/formatter";
 import colors, { dimColor } from "../../colors";
 import LegendList from "./LegendList.vue";
 
-Chart.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip);
-Chart.defaults.font.family = window
-	.getComputedStyle(document.documentElement)
-	.getPropertyValue("--bs-font-sans-serif");
-
-Chart.defaults.font.size = 14;
-Chart.defaults.layout.padding = 0;
-
-Tooltip.positioners.topCenter = function () {
-	const { chart } = this;
-	return {
-		x: chart.width / 2,
-		y: chart.height / 10,
-		xAlign: "center",
-		yAlign: "center",
-	};
-};
+registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
 
 export default {
 	name: "SolarYearChart",
@@ -158,23 +143,21 @@ export default {
 		},
 		options() {
 			return {
+				...commonOptions,
 				locale: this.$i18n?.locale,
-				responsive: true,
 				aspectRatio: 1,
-				maintainAspectRatio: false,
 				borderWidth: 4,
 				color: colors.text,
 				spacing: 0,
+				radius: "100%",
 				elements: { line: { tension: 0.05 } },
 				plugins: {
-					legend: { display: false },
+					...commonOptions.plugins,
 					tooltip: {
+						...commonOptions.plugins.tooltip,
 						intersect: false,
 						mode: "index",
-						position: "topCenter",
-						boxPadding: 5,
-						usePointStyle: true,
-						borderWidth: 0.00001,
+						position: "topBottomCenter",
 						labelPointStyle: "circle",
 						callbacks: {
 							label: (tooltipItem) => {
@@ -189,7 +172,6 @@ export default {
 								};
 							},
 						},
-						backgroundColor: "#000",
 					},
 				},
 				scales: {
@@ -208,7 +190,6 @@ export default {
 						grid: { color: colors.border },
 					},
 				},
-				radius: "100%",
 			};
 		},
 	},

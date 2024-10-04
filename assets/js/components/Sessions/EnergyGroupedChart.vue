@@ -11,28 +11,13 @@
 
 <script>
 import { Doughnut } from "vue-chartjs";
-import { Chart, DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import { DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
 import LegendList from "./LegendList.vue";
+import { registerChartComponents, commonOptions } from "./chartConfig";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import colors from "../../colors";
 
-Chart.register(DoughnutController, ArcElement, LinearScale, Legend, Tooltip);
-Chart.defaults.font.family = window
-	.getComputedStyle(document.documentElement)
-	.getPropertyValue("--bs-font-sans-serif");
-
-Chart.defaults.font.size = 14;
-Chart.defaults.layout.padding = 0;
-
-Tooltip.positioners.center = function () {
-	const { chart } = this;
-	return {
-		x: chart.width / 2,
-		y: chart.height / 2,
-		xAlign: "center",
-		yAlign: "center",
-	};
-};
+registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
 export default {
 	name: "EnergyAggregateChart",
@@ -95,39 +80,30 @@ export default {
 		},
 		options() {
 			return {
+				...commonOptions,
 				locale: this.$i18n?.locale,
-				responsive: true,
 				aspectRatio: 1,
-				maintainAspectRatio: false,
 				borderRadius: 10,
 				color: colors.text,
+				borderWidth: 3,
+				borderColor: colors.background,
+				cutout: "70%",
+				radius: "95%",
+				animation: { duration: 250 },
 				plugins: {
-					legend: {
-						display: false,
-					},
+					...commonOptions.plugins,
 					tooltip: {
+						...commonOptions.plugins.tooltip,
 						mode: "index",
 						position: "center",
 						intersect: false,
-						boxPadding: 5,
-						usePointStyle: true,
-						borderWidth: 0.00001,
-						labelPointStyle: "circle",
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
 								return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 							},
 						},
-						backgroundColor: "#000",
 					},
-				},
-				borderWidth: 3,
-				borderColor: colors.background,
-				cutout: "70%",
-				radius: "95%",
-				animation: {
-					duration: 250,
 				},
 			};
 		},

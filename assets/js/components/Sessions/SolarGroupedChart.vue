@@ -11,18 +11,13 @@
 
 <script>
 import { PolarArea } from "vue-chartjs";
-import { Chart, RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
+import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
+import { registerChartComponents, commonOptions } from "./chartConfig";
 import formatter from "../../mixins/formatter";
 import colors, { dimColor } from "../../colors";
 import LegendList from "./LegendList.vue";
 
-Chart.register(RadialLinearScale, ArcElement, Legend, Tooltip);
-Chart.defaults.font.family = window
-	.getComputedStyle(document.documentElement)
-	.getPropertyValue("--bs-font-sans-serif");
-
-Chart.defaults.font.size = 14;
-Chart.defaults.layout.padding = 0;
+registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
 export default {
 	name: "SolarGroupedChart",
@@ -86,17 +81,36 @@ export default {
 		},
 		options() {
 			return {
+				...commonOptions,
 				locale: this.$i18n?.locale,
-				responsive: true,
 				aspectRatio: 1,
-				maintainAspectRatio: false,
 				borderRadius: 8,
 				borderWidth: 3,
 				color: colors.text,
 				spacing: 0,
+				radius: "100%",
 				plugins: {
-					legend: { display: false },
-					tooltip: { enabled: false },
+					...commonOptions.plugins,
+					tooltip: {
+						...commonOptions.plugins.tooltip,
+						intersect: false,
+						mode: "index",
+						position: "topBottomCenter",
+						labelPointStyle: "circle",
+						callbacks: {
+							title: () => null,
+							label: (tooltipItem) => {
+								const { label, raw = 0 } = tooltipItem;
+								return label + ": " + this.fmtPercentage(raw, 1);
+							},
+							labelColor: (item) => {
+								const { borderColor } = item.element.options;
+								return {
+									backgroundColor: borderColor,
+								};
+							},
+						},
+					},
 				},
 				scales: {
 					r: {
@@ -110,7 +124,6 @@ export default {
 						grid: { color: colors.border },
 					},
 				},
-				radius: "100%",
 			};
 		},
 	},
