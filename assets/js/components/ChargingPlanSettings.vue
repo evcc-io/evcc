@@ -21,7 +21,11 @@
 							{{ $t("main.chargingPlan.repeatingPlan") }}
 						</div>
 					</h5>
-					<ChargingPlanRepeatingSettingsEntries :id="id" :rangePerSoc="rangePerSoc" />
+					<ChargingPlanRepeatingSettingsEntries
+						:id="id"
+						:rangePerSoc="rangePerSoc"
+						@repeating-plan-updated="updateRepeatingPlan"
+					/>
 				</div>
 			</div>
 		</div>
@@ -79,7 +83,11 @@ export default {
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
 	},
-	emits: ["static-plan-removed", "static-plan-updated"],
+	emits: [
+		"static-plan-removed",
+		"static-plan-updated",
+		"repeating-plan-updated",
+	],
 	data: function () {
 		return {
 			tariff: {},
@@ -188,6 +196,9 @@ export default {
 		},
 		updateStaticPlan: function (data) {
 			this.$emit("static-plan-updated", data);
+		},
+		updateRepeatingPlan: function (entries) {
+			this.$emit("repeating-plan-updated", entries);
 		},
 		previewPlan: function (data) {
 			this.fetchPlanDebounced(data);

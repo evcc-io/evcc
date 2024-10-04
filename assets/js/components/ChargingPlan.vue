@@ -77,8 +77,9 @@
 								<ChargingPlanSettings
 									v-if="departureTabActive"
 									v-bind="chargingPlanSettingsProps"
-									@static-plan-updated="updatePlan"
-									@static-plan-removed="removePlan"
+									@static-plan-updated="updateStaticPlan"
+									@static-plan-removed="removeStaticPlan"
+									@repeating-plan-updated="updateRepeatingPlan"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
@@ -263,7 +264,7 @@ export default {
 		showArrivalTab: function () {
 			this.activeTab = "arrival";
 		},
-		updatePlan: function ({ soc, time, energy }) {
+		updateStaticPlan: function ({ soc, time, energy }) {
 			const timeISO = time.toISOString();
 			if (this.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
@@ -271,12 +272,17 @@ export default {
 				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
 			}
 		},
-		removePlan: function () {
+		removeStaticPlan: function () {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
+		},
+		updateRepeatingPlan: function (entries) {
+			console.log(entries);
+			
+			// TODO
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

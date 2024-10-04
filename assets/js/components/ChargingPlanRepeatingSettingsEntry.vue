@@ -97,7 +97,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
 					data-testid="plan-delete"
-					@click="$emit('repeating-plan-removed', id)"
+					@click="$emit('repeating-plan-entry-removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -127,7 +127,7 @@ export default {
 		active: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["repeating-plan-updated", "repeating-plan-removed"],
+	emits: ["repeating-plan-entry-updated", "repeating-plan-entry-removed"],
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
@@ -168,7 +168,7 @@ export default {
 			});
 		},
 		update: function () {
-			this.$emit("repeating-plan-updated", {
+			this.$emit("repeating-plan-entry-updated", {
 				id: this.id,
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,

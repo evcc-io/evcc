@@ -6,8 +6,8 @@
 			v-bind="plan"
 			:socBasedPlanning="socBasedPlanning"
 			:rangePerSoc="rangePerSoc"
-			@repeating-plan-updated="updateRepeatingPlan"
-			@repeating-plan-removed="removeRepeatingPlan"
+			@repeating-plan-entry-updated="updateRepeatingPlanEntry"
+			@repeating-plan-entry-removed="removeRepeatingPlanEntry"
 		/>
 	</div>
 	<div class="d-flex align-items-baseline">
@@ -21,11 +21,11 @@
 			<p class="mb-0">{{ $t("main.chargingPlan.addRepeatingPlan") }}</p>
 		</button>
 		<button
-			v-if="hasDataChanged"
+			v-if="dataHasChanged"
 			type="button"
 			class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
 			data-testid="plan-apply"
-			@click="update"
+			@click="updateRepeatingPlan"
 		>
 			{{ $t("main.chargingPlan.update") }}
 		</button>
@@ -50,6 +50,7 @@ export default {
 		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
 	},
+	emits: ["repeating-plan-updated"],
 	data: function () {
 		return {
 			plans: [],
@@ -60,7 +61,7 @@ export default {
 		this.fetchRepeatingPlans();
 	},
 	computed: {
-		hasDataChanged: function () {
+		dataHasChanged: function () {
 			return JSON.stringify(this.initialPlans) !== JSON.stringify(this.plans);
 		},
 	},
@@ -78,11 +79,11 @@ export default {
 				active: false,
 			});
 		},
-		update: async function () {
-			// TODO: update data
+		updateRepeatingPlan: function () {
 			this.initialPlans = [...this.plans];
+			this.$emit("repeating-plan-updated", this.initialPlans);
 		},
-		updateRepeatingPlan: function (newData) {
+		updateRepeatingPlanEntry: function (newData) {
 			this.plans[newData.id] = {
 				weekdays: newData.weekdays,
 				time: newData.time,
@@ -90,7 +91,7 @@ export default {
 				active: newData.active,
 			};
 		},
-		removeRepeatingPlan: function (index) {
+		removeRepeatingPlanEntry: function (index) {
 			this.plans.splice(index, 1);
 		},
 	},
