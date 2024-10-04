@@ -1000,6 +1000,9 @@ func configureLoadpoints(conf globalconfig.All) error {
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
+		if err != nil {
+			return fmt.Errorf("failed configuring loadpoint: %w", err)
+		}
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
