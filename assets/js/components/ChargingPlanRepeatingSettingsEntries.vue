@@ -1,9 +1,9 @@
 <template>
-	<div v-for="(plan, index) in plans" :key="index">
+	<div v-for="(entry, index) in entries" :key="index">
 		<ChargingPlanRepeatingSettingsEntry
 			class="mb-4"
 			:id="index"
-			v-bind="plan"
+			v-bind="entry"
 			:socBasedPlanning="socBasedPlanning"
 			:rangePerSoc="rangePerSoc"
 			@repeating-plan-entry-updated="updateRepeatingPlanEntry"
@@ -53,26 +53,18 @@ export default {
 	emits: ["repeating-plan-updated"],
 	data: function () {
 		return {
-			plans: [],
-			initialPlans: [],
+			entries: [],
+			initialEntries: [],
 		};
-	},
-	mounted() {
-		this.fetchRepeatingPlans();
 	},
 	computed: {
 		dataHasChanged: function () {
-			return JSON.stringify(this.initialPlans) !== JSON.stringify(this.plans);
+			return JSON.stringify(this.initialEntries) !== JSON.stringify(this.entries);
 		},
 	},
 	methods: {
-		fetchRepeatingPlans: async function () {
-			let response = await api.get(`/loadpoints/${this.id}/plan/repeating`);
-			this.plans = response.data.result;
-			this.initialPlans = [...response.data.result]; // clone array
-		},
 		addRepeatingPlan: function () {
-			this.plans.push({
+			this.entries.push({
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
@@ -80,11 +72,11 @@ export default {
 			});
 		},
 		updateRepeatingPlan: function () {
-			this.initialPlans = [...this.plans];
-			this.$emit("repeating-plan-updated", this.initialPlans);
+			this.initialEntries = [...this.entries]; // clone array
+			this.$emit("repeating-plan-updated", this.initialEntries);
 		},
 		updateRepeatingPlanEntry: function (newData) {
-			this.plans[newData.id] = {
+			this.entries[newData.id] = {
 				weekdays: newData.weekdays,
 				time: newData.time,
 				soc: newData.soc,
@@ -92,7 +84,7 @@ export default {
 			};
 		},
 		removeRepeatingPlanEntry: function (index) {
-			this.plans.splice(index, 1);
+			this.entries.splice(index, 1);
 		},
 	},
 };
