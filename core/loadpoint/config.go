@@ -59,7 +59,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 		lp.SetMode(mode)
 	}
 
-	if err == nil && payload.Phases > 0 {
+	if err == nil {
 		err = lp.SetPhases(payload.Phases)
 	}
 

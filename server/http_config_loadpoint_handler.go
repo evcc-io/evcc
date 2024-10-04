@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -198,20 +197,14 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		// dynamic
-		if err := dynamic.Apply(instance); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		// TODO this applies a full update and sets the dynamic part of the config twice
-		if err := mergo.Merge(&static, dev.Config().Other); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
 		// static
 		if err := configurable.Update(static, instance); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// dynamic
+		if err := dynamic.Apply(instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
