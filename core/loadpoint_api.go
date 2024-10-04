@@ -383,6 +383,46 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 	}
 }
 
+// GetEnableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetEnableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Enable.Delay
+}
+
+// SetEnableDelay sets loadpoint enable delay
+func (lp *Loadpoint) SetEnableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set enable delay:", delay)
+
+	if lp.Enable.Delay != delay {
+		lp.Enable.Delay = delay
+		lp.publish(keys.EnableDelay, delay)
+	}
+}
+
+// GetDisableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetDisableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Disable.Delay
+}
+
+// SetDisableDelay sets loadpoint disable delay
+func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set disable delay:", delay)
+
+	if lp.Disable.Delay != delay {
+		lp.Disable.Delay = delay
+		lp.publish(keys.DisableDelay, delay)
+	}
+}
+
 // RemoteControl sets remote status demand
 func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()

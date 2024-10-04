@@ -72,7 +72,7 @@ export default {
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: Number,
+		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
 		battery: Array,

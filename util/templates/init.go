@@ -84,6 +84,10 @@ func load(class Class) (res []Template) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
+		if slices.ContainsFunc(res, func(t Template) bool { return t.Template == tmpl.Template }) {
+			return fmt.Errorf("duplicate template name '%s' found in file '%s'", tmpl.Template, filepath)
+		}
+
 		res = append(res, tmpl)
 
 		return nil

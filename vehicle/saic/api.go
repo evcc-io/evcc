@@ -135,14 +135,12 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 				if result.Code == 4 {
 					err = api.ErrMustRetry
 				} else {
-					err = fmt.Errorf("%d: %s\n", result.Code, result.Message)
+					err = fmt.Errorf("%d: %s", result.Code, result.Message)
 				}
-				v.Logger.DEBUG.Printf("%d: %s\n", result.Code, result.Message)
+				v.Logger.DEBUG.Printf("%d: %s", result.Code, result.Message)
 			}
 		} else {
-			if err != nil {
-				v.Logger.DEBUG.Printf("Decrypt: %s", err.Error())
-			}
+			v.Logger.DEBUG.Printf("decrypt: %s", err.Error())
 		}
 	}
 

@@ -3,7 +3,64 @@ package charger
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	registry.Add("switchsocket", NewSwitchSocketFromConfig)
+}
+
+type SwitchSocket struct {
+	enable  func(bool) error
+	enabled func() (bool, error)
+	*switchSocket
+}
+
+func NewSwitchSocketFromConfig(other map[string]interface{}) (api.Charger, error) {
+	var cc struct {
+		embed        `mapstructure:",squash"`
+		Enabled      provider.Config
+		Enable       provider.Config
+		Power        provider.Config
+		StandbyPower float64
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	enabled, err := provider.NewBoolGetterFromConfig(cc.Enabled)
+	if err != nil {
+		return nil, err
+	}
+
+	enable, err := provider.NewBoolSetterFromConfig("enable", cc.Enable)
+	if err != nil {
+		return nil, err
+	}
+
+	power, err := provider.NewFloatGetterFromConfig(cc.Power)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &SwitchSocket{
+		enabled:      enabled,
+		enable:       enable,
+		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),
+	}
+
+	return c, nil
+}
+
+func (c *SwitchSocket) Enabled() (bool, error) {
+	return c.enabled()
+}
+
+func (c *SwitchSocket) Enable(enable bool) error {
+	return c.enable(enable)
+}
 
 // switchSocket implements the api.Charger Status and CurrentPower methods
 // using basic generic switch socket functions

@@ -3,7 +3,9 @@ package charger
 import (
 	"errors"
 	"testing"
+	"time"
 
+	evcemuc "github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/mocks"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -13,6 +15,93 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// Test measurements updated after writing limits detction works
+func TestEEBusNoCurrents(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		uc: &eebus.UseCasesEVSE{
+			EvCC:  evcc,
+			EvCem: evcem,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+
+	// limit set 15:04:45, measurement receviced afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 4, 45, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.5, 10.5, 10.5}, nil).Once()
+
+	l1, l2, l3, err := eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.5, l1)
+	assert.Equal(t, 10.5, l2)
+	assert.Equal(t, 10.5, l3)
+
+	// limit set 15:05:09, measurement receviced afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 5, 9, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{6.6, 6.6, 6.6}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 6.6, l1)
+	assert.Equal(t, 6.6, l2)
+	assert.Equal(t, 6.6, l3)
+
+	// limit set 15:05:39, measurement received afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 5, 39, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.5, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.5, l2)
+	assert.Equal(t, 10.4, l3)
+
+	// limit set 15:06:09, measurement received afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 6, 9, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.4, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.4, l2)
+	assert.Equal(t, 10.4, l3)
+
+	// limit set 20 seconds ago, no measurement received yet
+	eebus.limitUpdated = time.Now().Add(-20 * time.Second)
+
+	l1, l2, l3, err = eebus.currents()
+	require.Error(t, err)
+	assert.Equal(t, 0.0, l1)
+	assert.Equal(t, 0.0, l2)
+	assert.Equal(t, 0.0, l3)
+
+	// now we got a measurement again
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.4, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.4, l2)
+	assert.Equal(t, 10.4, l3)
+}
 
 func TestEEBusIsCharging(t *testing.T) {
 	type limitStruct struct {

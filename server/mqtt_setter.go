@@ -2,7 +2,9 @@ package server
 
 import (
 	"strconv"
+	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cast"
 )
 
@@ -45,4 +47,8 @@ func boolSetter(set func(bool) error) func(string) error {
 	return setterFunc(func(v string) (bool, error) {
 		return cast.ToBoolE(v)
 	}, set)
+}
+
+func durationSetter(set func(time.Duration) error) func(string) error {
+	return setterFunc(util.ParseDuration, set)
 }

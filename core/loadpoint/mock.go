@@ -194,6 +194,20 @@ func (mr *MockAPIMockRecorder) GetDefaultVehicle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicle", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicle))
 }
 
+// GetDisableDelay mocks base method.
+func (m *MockAPI) GetDisableDelay() time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDisableDelay")
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// GetDisableDelay indicates an expected call of GetDisableDelay.
+func (mr *MockAPIMockRecorder) GetDisableDelay() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableDelay", reflect.TypeOf((*MockAPI)(nil).GetDisableDelay))
+}
+
 // GetDisableThreshold mocks base method.
 func (m *MockAPI) GetDisableThreshold() float64 {
 	m.ctrl.T.Helper()
@@ -206,6 +220,20 @@ func (m *MockAPI) GetDisableThreshold() float64 {
 func (mr *MockAPIMockRecorder) GetDisableThreshold() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).GetDisableThreshold))
+}
+
+// GetEnableDelay mocks base method.
+func (m *MockAPI) GetEnableDelay() time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnableDelay")
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// GetEnableDelay indicates an expected call of GetEnableDelay.
+func (mr *MockAPIMockRecorder) GetEnableDelay() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnableDelay", reflect.TypeOf((*MockAPI)(nil).GetEnableDelay))
 }
 
 // GetEnableThreshold mocks base method.
@@ -571,6 +599,18 @@ func (mr *MockAPIMockRecorder) RemoteControl(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoteControl", reflect.TypeOf((*MockAPI)(nil).RemoteControl), arg0, arg1)
 }
 
+// SetDisableDelay mocks base method.
+func (m *MockAPI) SetDisableDelay(arg0 time.Duration) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDisableDelay", arg0)
+}
+
+// SetDisableDelay indicates an expected call of SetDisableDelay.
+func (mr *MockAPIMockRecorder) SetDisableDelay(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDisableDelay", reflect.TypeOf((*MockAPI)(nil).SetDisableDelay), arg0)
+}
+
 // SetDisableThreshold mocks base method.
 func (m *MockAPI) SetDisableThreshold(arg0 float64) {
 	m.ctrl.T.Helper()
@@ -581,6 +621,18 @@ func (m *MockAPI) SetDisableThreshold(arg0 float64) {
 func (mr *MockAPIMockRecorder) SetDisableThreshold(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).SetDisableThreshold), arg0)
+}
+
+// SetEnableDelay mocks base method.
+func (m *MockAPI) SetEnableDelay(arg0 time.Duration) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetEnableDelay", arg0)
+}
+
+// SetEnableDelay indicates an expected call of SetEnableDelay.
+func (mr *MockAPIMockRecorder) SetEnableDelay(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableDelay", reflect.TypeOf((*MockAPI)(nil).SetEnableDelay), arg0)
 }
 
 // SetEnableThreshold mocks base method.

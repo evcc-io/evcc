@@ -35,6 +35,4 @@ render: |
   {{- if .registration }}
   registration: {{ .registration }}
   {{- end }}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
