@@ -23,12 +23,18 @@ const GROUPS = {
 	VEHICLE: "vehicle",
 };
 
+const COST_TYPES = {
+	PRICE: "price",
+	CO2: "co2",
+};
+
 export default {
 	name: "CostHistoryChart",
 	components: { Bar, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
+		costType: { type: String, default: COST_TYPES.PRICE },
 		period: { type: String, default: "total" },
 		currency: { type: String, default: "EUR" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
@@ -94,25 +100,21 @@ export default {
 						index = date.getFullYear();
 					}
 
-					if (this.groupBy === GROUPS.NONE) {
-						groups.add("grid");
-						groups.add("self");
-						const charged = session.chargedEnergy;
-						const self = (charged / 100) * session.solarPercentage;
-						const grid = charged - self;
-						result[index].self = (result[index].self || 0) + self;
-						result[index].grid = (result[index].grid || 0) + grid;
-					} else {
-						const groupKey = session[this.groupBy];
-						groups.add(groupKey);
-						result[index][groupKey] =
-							(result[index][groupKey] || 0) + session.chargedEnergy;
-					}
+					const groupKey =
+						this.groupBy === GROUPS.NONE ? this.costType : session[this.groupBy];
+					groups.add(groupKey);
+
+					const value =
+						this.costType === COST_TYPES.PRICE
+							? session.price
+							: session.co2PerKWh * session.chargedEnergy;
+
+					result[index][groupKey] = (result[index][groupKey] || 0) + value;
 				});
 			}
 
 			const datasets = Array.from(groups).map((group) => {
-				const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
+				const colorGroup = this.groupBy === GROUPS.NONE ? "cost" : this.groupBy;
 				const backgroundColor = this.colorMappings[colorGroup][group];
 				const label =
 					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
@@ -141,14 +143,18 @@ export default {
 			};
 		},
 		legends() {
-			return this.chartData.datasets.map((dataset) => ({
-				label: dataset.label,
-				color: dataset.backgroundColor,
-				value: this.fmtWh(
-					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
-					POWER_UNIT.AUTO
-				),
-			}));
+			return this.chartData.datasets.map((dataset) => {
+				const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
+				const value =
+					this.costType === COST_TYPES.PRICE
+						? this.fmtMoney(total, this.currency, true, true)
+						: this.fmtGrams(total);
+				return {
+					label: dataset.label,
+					color: dataset.backgroundColor,
+					value,
+				};
+			});
 		},
 		options() {
 			return {
@@ -184,8 +190,13 @@ export default {
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw || 0;
+
 								return (
-									datasetLabel + ": " + this.fmtWh(value * 1e3, POWER_UNIT.AUTO)
+									datasetLabel +
+									": " +
+									(this.costType === COST_TYPES.PRICE
+										? this.fmtMoney(value, this.currency, true, true)
+										: this.fmtGrams(value))
 								);
 							},
 							labelColor: (item) => {
@@ -217,14 +228,16 @@ export default {
 						border: { display: false },
 						grid: { color: colors.border },
 						title: {
-							text: this.fmtCurrencySymbol(this.currency),
-							display: true,
+							text: "kgCO₂e",
+							display: this.costType === COST_TYPES.CO2,
 							color: colors.muted,
 						},
 						ticks: {
 							callback: (value, index) =>
 								index % 2 === 0
-									? this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0)
+									? this.costType === COST_TYPES.PRICE
+										? this.fmtMoney(value, this.currency, false, true)
+										: this.fmtNumber(value / 1e3, 0)
 									: null,
 							color: colors.muted,
 						},

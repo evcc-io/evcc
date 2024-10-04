@@ -82,6 +82,24 @@ export default {
         maximumFractionDigits: decimals,
       }).format(number);
     },
+    fmtGrams: function (gramms) {
+      // handle gram, kilogram, tonne
+      let unit = "gram";
+      let value = gramms;
+      if (gramms >= 1000000) {
+        unit = "tonne";
+        value = gramms / 1000000;
+      } else if (gramms >= 1000) {
+        unit = "kilogram";
+        value = gramms / 1000;
+      }
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: "unit",
+        unit,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
+    },
     fmtCo2Short: function (gramms) {
       return `${this.fmtNumber(gramms, 0)} g`;
     },
@@ -217,16 +235,16 @@ export default {
         month: "short",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
+      const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
-        currencyDisplay: "code",
+        currencyDisplay,
         maximumFractionDigits: decimals ? undefined : 0,
-      })
-        .format(amout)
-        .replace(currency, "")
-        .trim();
+      }).format(amout);
+
+      return withSymbol ? result : result.replace(currency, "").trim();
     },
     fmtCurrencySymbol: function (currency = "EUR") {
       const symbols = { EUR: "€", USD: "$" };

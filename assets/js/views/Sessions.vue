@@ -34,10 +34,10 @@
 					</h3>
 					<IconSelectGroup>
 						<IconSelectItem
-							v-for="group in Object.values(groups)"
+							v-for="group in Object.values(solarGroups)"
 							:key="group"
-							:active="selectedGroup === group"
-							@click="updateGroup(group)"
+							:active="selectedSolarGroup === group"
+							@click="updateSolarGroup(group)"
 						>
 							<component :is="solarGroupIcons[group]"></component>
 						</IconSelectItem>
@@ -47,7 +47,7 @@
 					class="mb-5"
 					:sessions="currentSessions"
 					:color-mappings="colorMappings"
-					:group-by="selectedGroup"
+					:group-by="selectedSolarGroup"
 					:period="period"
 				/>
 				<div v-if="showExtraCharts" class="row align-items-start">
@@ -62,7 +62,7 @@
 							v-else
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
-							:group-by="selectedGroup"
+							:group-by="selectedSolarGroup"
 						/>
 					</div>
 					<div class="col-12 col-lg-6 mb-5">
@@ -70,45 +70,54 @@
 						<EnergyGroupedChart
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
-							:group-by="selectedGroup"
+							:group-by="selectedSolarGroup"
 						/>
 					</div>
 				</div>
-				<div class="d-flex justify-content-between align-items-center gap-2">
-					<h3
-						class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden"
-					>
-						<span class="d-block no-wrap text-truncate">{{ energyTitle }}</span>
-						<small class="d-block no-wrap text-truncate">{{ energySubTitle }}</small>
-					</h3>
-					<div class="d-flex gap-2">
-						<IconSelectGroup>
-							<IconSelectItem active>
-								<DynamicPriceIcon />
-							</IconSelectItem>
-							<IconSelectItem>
-								<shopicon-regular-eco1></shopicon-regular-eco1>
-							</IconSelectItem>
-						</IconSelectGroup>
-						<IconSelectGroup>
-							<IconSelectItem
-								v-for="group in Object.values(groups)"
-								:key="group"
-								:active="selectedGroup === group"
-								@click="updateGroup(group)"
-							>
-								<component :is="costGroupIcons[group]"></component>
-							</IconSelectItem>
-						</IconSelectGroup>
+				<div v-if="showCostCharts">
+					<div class="d-flex justify-content-between align-items-center gap-2">
+						<h3
+							class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden"
+						>
+							<span class="d-block no-wrap text-truncate">{{ costTitle }}</span>
+							<small class="d-block no-wrap text-truncate">{{ costSubTitle }}</small>
+						</h3>
+						<div class="d-flex gap-2">
+							<IconSelectGroup v-if="showCostTypeSelector">
+								<IconSelectItem
+									:active="selectedCostType === costTypes.PRICE"
+									@click="updateCostType(costTypes.PRICE)"
+								>
+									<DynamicPriceIcon />
+								</IconSelectItem>
+								<IconSelectItem
+									:active="selectedCostType === costTypes.CO2"
+									@click="updateCostType(costTypes.CO2)"
+								>
+									<shopicon-regular-eco1></shopicon-regular-eco1>
+								</IconSelectItem>
+							</IconSelectGroup>
+							<IconSelectGroup>
+								<IconSelectItem
+									v-for="group in Object.values(costGroups)"
+									:key="group"
+									:active="selectedCostGroup === group"
+									@click="updateCostGroup(group)"
+								>
+									<component :is="costGroupIcons[group]"></component>
+								</IconSelectItem>
+							</IconSelectGroup>
+						</div>
 					</div>
+					<CostHistoryChart
+						class="mb-5"
+						:sessions="currentCostTypeSessions"
+						:color-mappings="colorMappings"
+						:group-by="selectedCostGroup"
+						:cost-type="activeCostType"
+						:period="period"
+					/>
 				</div>
-				<EnergyHistoryChart
-					class="mb-5"
-					:sessions="currentSessions"
-					:color-mappings="colorMappings"
-					:group-by="selectedGroup"
-					:period="period"
-				/>
 				<div v-if="showTable">
 					<h3>Übersicht</h3>
 					<SessionTable
@@ -162,6 +171,7 @@ import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
 import EnergyGroupedChart from "../components/Sessions/EnergyGroupedChart.vue";
 import SolarGroupedChart from "../components/Sessions/SolarGroupedChart.vue";
 import SolarYearChart from "../components/Sessions/SolarYearChart.vue";
+import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
@@ -173,7 +183,19 @@ import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
-const GROUPS = {
+
+const COST_TYPES = {
+	PRICE: "price",
+	CO2: "co2",
+};
+
+const SOLAR_GROUPS = {
+	NONE: "none",
+	LOADPOINT: "loadpoint",
+	VEHICLE: "vehicle",
+};
+
+const COST_GROUPS = {
 	NONE: "none",
 	LOADPOINT: "loadpoint",
 	VEHICLE: "vehicle",
@@ -202,6 +224,7 @@ export default {
 		PeriodSelector,
 		DateNavigator,
 		DynamicPriceIcon,
+		CostHistoryChart,
 	},
 	mixins: [formatter],
 	props: {
@@ -216,20 +239,27 @@ export default {
 	data() {
 		return {
 			sessions: [],
-			selectedGroup: settings.sessionsGroup || GROUPS.NONE,
+			selectedSolarGroup: settings.sessionsSolarGroup || SOLAR_GROUPS.NONE,
+			selectedCostGroup: settings.sessionsCostGroup || COST_GROUPS.NONE,
+			selectedCostType: settings.sessionsCostType || COST_TYPES.PRICE,
 			selectedSessionId: undefined,
-			groups: GROUPS,
 			periods: PERIODS,
+			solarGroups: SOLAR_GROUPS,
+			costGroups: COST_GROUPS,
+			costTypes: COST_TYPES,
 		};
 	},
 	head() {
 		return { title: `${this.$t("sessions.title")} | evcc` };
 	},
 	computed: {
+		currency() {
+			return store.state.currency || "EUR";
+		},
 		energyTitle() {
-			if (this.selectedGroup === GROUPS.VEHICLE) {
+			if (this.selectedSolarGroup === SOLAR_GROUPS.VEHICLE) {
 				return "Fahrzeuge";
-			} else if (this.selectedGroup === GROUPS.LOADPOINT) {
+			} else if (this.selectedSolarGroup === SOLAR_GROUPS.LOADPOINT) {
 				return "Ladepunkte";
 			} else {
 				return `${this.solarPercentageFmt} Sonne`;
@@ -266,6 +296,66 @@ export default {
 				(acc, session) => acc + (session.chargedEnergy / 100) * session.solarPercentage,
 				0
 			);
+		},
+		currentSessionsWithPrice() {
+			return this.currentSessions.filter((s) => s.price !== null);
+		},
+		currentCostTypeSessions() {
+			if (this.activeCostType === COST_TYPES.PRICE) {
+				return this.currentSessionsWithPrice;
+			} else {
+				return this.currentSessionsWithCo2;
+			}
+		},
+		totalPrice() {
+			return this.currentSessionsWithPrice.reduce((acc, s) => acc + s.price, 0);
+		},
+		pricePerKWh() {
+			const list = this.currentSessionsWithPrice;
+			const energy = list.reduce((acc, s) => acc + s.chargedEnergy, 0);
+			return energy ? this.totalPrice / energy : null;
+		},
+		currentSessionsWithCo2() {
+			return this.currentSessions.filter((s) => s.co2PerKWh !== null);
+		},
+		totalCo2() {
+			const list = this.currentSessionsWithCo2;
+			return list.reduce((acc, s) => acc + s.co2PerKWh * s.chargedEnergy, 0);
+		},
+		co2PerKWh() {
+			const list = this.currentSessionsWithCo2;
+			const energy = list.reduce((acc, s) => acc + s.chargedEnergy, 0);
+			return energy ? this.totalCo2 / energy : null;
+		},
+		costTitle() {
+			return this.activeCostType === COST_TYPES.PRICE
+				? `${this.fmtPricePerKWh(this.pricePerKWh, this.currency)} Ladepreis`
+				: `${this.fmtCo2Medium(this.co2PerKWh)} CO₂-Emission`;
+		},
+		costSubTitle() {
+			return this.activeCostType === COST_TYPES.PRICE
+				? `${this.fmtMoney(this.totalPrice, this.currency, true, true)}`
+				: `${this.fmtGrams(this.totalCo2)} gesamt`;
+		},
+		activeCostType() {
+			if (this.selectedCostType === COST_TYPES.PRICE && this.costTypePriceAvailable) {
+				return COST_TYPES.PRICE;
+			} else if (this.selectedCostType === COST_TYPES.CO2 && this.costTypeCo2Available) {
+				return COST_TYPES.CO2;
+			}
+			return null;
+		},
+		showCostCharts() {
+			return this.costTypePriceAvailable || this.costTypeCo2Available;
+		},
+		costTypePriceAvailable() {
+			return this.currentSessionsWithPrice.length > 0;
+		},
+		costTypeCo2Available() {
+			return this.currentSessionsWithCo2.length > 0;
+		},
+		showCostTypeSelector() {
+			return this.costTypePriceAvailable && this.costTypeCo2Available;
 		},
 		startDate() {
 			return new Date(this.sessions[0]?.created || Date.now());
@@ -304,9 +394,6 @@ export default {
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
-		},
-		currency() {
-			return store.state.currency;
 		},
 		monthName() {
 			const date = new Date();
@@ -373,27 +460,37 @@ export default {
 			const vehicleColors = assignColors(vehicleEnergy, "vehicle");
 
 			const solar = { self: colors.self, grid: colors.grid };
+			const cost = { price: colors.price, co2: colors.co2 };
 
-			return { loadpoint: loadpointColors, vehicle: vehicleColors, solar };
+			return {
+				loadpoint: loadpointColors,
+				vehicle: vehicleColors,
+				solar,
+				cost,
+			};
 		},
 		solarGroupIcons() {
 			return {
-				[GROUPS.NONE]: "shopicon-regular-sun",
-				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
-				[GROUPS.VEHICLE]: "shopicon-regular-car3",
+				[SOLAR_GROUPS.NONE]: "shopicon-regular-sun",
+				[SOLAR_GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
+				[SOLAR_GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
 		},
 		costTypeIcons() {
 			return {
-				[GROUPS.PRICE]: DynamicPriceIcon,
-				[GROUPS.CO2]: "shopicon-regular-eco1",
+				[COST_TYPES.PRICE]: DynamicPriceIcon,
+				[COST_TYPES.CO2]: "shopicon-regular-eco1",
 			};
 		},
 		costGroupIcons() {
 			return {
-				[GROUPS.NONE]: TotalIcon,
-				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
-				[GROUPS.VEHICLE]: "shopicon-regular-car3",
+				[COST_GROUPS.NONE]: this.showCostTypeSelector
+					? TotalIcon
+					: this.costTypePriceAvailable
+						? DynamicPriceIcon
+						: "shopicon-regular-eco1",
+				[COST_GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
+				[COST_GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
 		},
 		showTable() {
@@ -446,22 +543,23 @@ export default {
 			return yearMonths;
 		},
 		groupEntriesAvailable() {
-			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
-			return new Set(this.currentSessions.map((s) => s[this.selectedGroup])).size > 1;
+			if (this.selectedSolarGroup === SOLAR_GROUPS.NONE || !this.currentSessions.length)
+				return false;
+			return new Set(this.currentSessions.map((s) => s[this.selectedSolarGroup])).size > 1;
 		},
 		showSolarYearChart() {
 			return (
 				this.showExtraCharts &&
 				this.period !== PERIODS.MONTH &&
-				this.selectedGroup === GROUPS.NONE
+				this.selectedSolarGroup === SOLAR_GROUPS.NONE
 			);
 		},
 		showExtraCharts() {
-			if (this.period === PERIODS.MONTH && this.selectedGroup === GROUPS.NONE) {
+			if (this.period === PERIODS.MONTH && this.selectedSolarGroup === SOLAR_GROUPS.NONE) {
 				return false;
 			}
 			if (
-				[GROUPS.LOADPOINT, GROUPS.VEHICLE].includes(this.selectedGroup) &&
+				[SOLAR_GROUPS.LOADPOINT, SOLAR_GROUPS.VEHICLE].includes(this.selectedSolarGroup) &&
 				!this.groupEntriesAvailable
 			) {
 				return false;
@@ -519,9 +617,17 @@ export default {
 			}
 			return `./api/sessions?${params.toString()}`;
 		},
-		updateGroup(group) {
-			this.selectedGroup = group;
-			settings.sessionsGroup = group;
+		updateSolarGroup(group) {
+			this.selectedSolarGroup = group;
+			settings.sessionsSolarGroup = group;
+		},
+		updateCostType(costType) {
+			this.selectedCostType = costType;
+			settings.sessionsCostType = costType;
+		},
+		updateCostGroup(group) {
+			this.selectedCostGroup = group;
+			settings.sessionsCostGroup = group;
 		},
 		updateDate({ year, month }) {
 			this.$router.push({ query: { ...this.$route.query, year, month } });
