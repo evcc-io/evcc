@@ -19,12 +19,18 @@ import colors from "../../colors";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
+const GROUPS = {
+	NONE: "none",
+	LOADPOINT: "loadpoint",
+	VEHICLE: "vehicle",
+};
+
 export default {
-	name: "EnergyAggregateChart",
+	name: "EnergyGroupedChart",
 	components: { Doughnut, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: "loadpoint" },
+		groupBy: { type: String, default: GROUPS.NONE },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
 	},
 	mixins: [formatter],
@@ -33,7 +39,7 @@ export default {
 			console.log("update energy aggregate data");
 			const aggregatedData = {};
 
-			if (this.groupBy === "solar") {
+			if (this.groupBy === GROUPS.NONE) {
 				const total = this.sessions.reduce((acc, s) => acc + s.chargedEnergy, 0);
 				const self = this.sessions.reduce(
 					(acc, s) => acc + (s.chargedEnergy / 100) * s.solarPercentage,
@@ -55,11 +61,12 @@ export default {
 			const sortedEntries = Object.entries(aggregatedData); //.sort((a, b) => b[1] - a[1]);
 
 			const labels = sortedEntries.map(([label]) =>
-				this.groupBy === "solar" ? this.$t(`sessions.group.${label}`) : label
+				this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${label}`) : label
 			);
 			const data = sortedEntries.map(([, value]) => value);
+			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
 			const backgroundColor = sortedEntries.map(
-				([label]) => this.colorMappings[this.groupBy][label]
+				([label]) => this.colorMappings[colorGroup][label]
 			);
 
 			return {

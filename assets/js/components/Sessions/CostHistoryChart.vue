@@ -24,12 +24,13 @@ const GROUPS = {
 };
 
 export default {
-	name: "EnergyHistoryChart",
+	name: "CostHistoryChart",
 	components: { Bar, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
 		period: { type: String, default: "total" },
+		currency: { type: String, default: "EUR" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	mixins: [formatter],
@@ -216,7 +217,7 @@ export default {
 						border: { display: false },
 						grid: { color: colors.border },
 						title: {
-							text: "kWh",
+							text: this.fmtCurrencySymbol(this.currency),
 							display: true,
 							color: colors.muted,
 						},

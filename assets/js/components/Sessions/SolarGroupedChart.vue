@@ -19,6 +19,12 @@ import LegendList from "./LegendList.vue";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
+const GROUPS = {
+	NONE: "none",
+	LOADPOINT: "loadpoint",
+	VEHICLE: "vehicle",
+};
+
 export default {
 	name: "SolarGroupedChart",
 	components: { PolarArea, LegendList },
@@ -59,7 +65,8 @@ export default {
 			});
 
 			console.log("solar grouped data", labels, data);
-			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
+			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
+			const borderColors = labels.map((label) => this.colorMappings[colorGroup][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {
 				labels: labels,

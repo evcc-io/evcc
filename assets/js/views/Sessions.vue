@@ -39,7 +39,7 @@
 							:active="selectedGroup === group"
 							@click="updateGroup(group)"
 						>
-							<component :is="groupIcons[group]"></component>
+							<component :is="solarGroupIcons[group]"></component>
 						</IconSelectItem>
 					</IconSelectGroup>
 				</div>
@@ -74,6 +74,41 @@
 						/>
 					</div>
 				</div>
+				<div class="d-flex justify-content-between align-items-center gap-2">
+					<h3
+						class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden"
+					>
+						<span class="d-block no-wrap text-truncate">{{ energyTitle }}</span>
+						<small class="d-block no-wrap text-truncate">{{ energySubTitle }}</small>
+					</h3>
+					<div class="d-flex gap-2">
+						<IconSelectGroup>
+							<IconSelectItem active>
+								<DynamicPriceIcon />
+							</IconSelectItem>
+							<IconSelectItem>
+								<shopicon-regular-eco1></shopicon-regular-eco1>
+							</IconSelectItem>
+						</IconSelectGroup>
+						<IconSelectGroup>
+							<IconSelectItem
+								v-for="group in Object.values(groups)"
+								:key="group"
+								:active="selectedGroup === group"
+								@click="updateGroup(group)"
+							>
+								<component :is="costGroupIcons[group]"></component>
+							</IconSelectItem>
+						</IconSelectGroup>
+					</div>
+				</div>
+				<EnergyHistoryChart
+					class="mb-5"
+					:sessions="currentSessions"
+					:color-mappings="colorMappings"
+					:group-by="selectedGroup"
+					:period="period"
+				/>
 				<div v-if="showTable">
 					<h3>Übersicht</h3>
 					<SessionTable
@@ -136,9 +171,10 @@ import colors from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
-
+import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
+import TotalIcon from "../components/MaterialIcon/Total.vue";
 const GROUPS = {
-	SOLAR: "solar",
+	NONE: "none",
 	LOADPOINT: "loadpoint",
 	VEHICLE: "vehicle",
 };
@@ -165,6 +201,7 @@ export default {
 		SolarYearChart,
 		PeriodSelector,
 		DateNavigator,
+		DynamicPriceIcon,
 	},
 	mixins: [formatter],
 	props: {
@@ -179,7 +216,7 @@ export default {
 	data() {
 		return {
 			sessions: [],
-			selectedGroup: settings.sessionsGroup || GROUPS.SOLAR,
+			selectedGroup: settings.sessionsGroup || GROUPS.NONE,
 			selectedSessionId: undefined,
 			groups: GROUPS,
 			periods: PERIODS,
@@ -339,9 +376,22 @@ export default {
 
 			return { loadpoint: loadpointColors, vehicle: vehicleColors, solar };
 		},
-		groupIcons() {
+		solarGroupIcons() {
 			return {
-				[GROUPS.SOLAR]: "shopicon-regular-sun",
+				[GROUPS.NONE]: "shopicon-regular-sun",
+				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
+				[GROUPS.VEHICLE]: "shopicon-regular-car3",
+			};
+		},
+		costTypeIcons() {
+			return {
+				[GROUPS.PRICE]: DynamicPriceIcon,
+				[GROUPS.CO2]: "shopicon-regular-eco1",
+			};
+		},
+		costGroupIcons() {
+			return {
+				[GROUPS.NONE]: TotalIcon,
 				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
 				[GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
@@ -396,18 +446,18 @@ export default {
 			return yearMonths;
 		},
 		groupEntriesAvailable() {
-			if (this.selectedGroup === GROUPS.SOLAR || !this.currentSessions.length) return false;
+			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
 			return new Set(this.currentSessions.map((s) => s[this.selectedGroup])).size > 1;
 		},
 		showSolarYearChart() {
 			return (
 				this.showExtraCharts &&
 				this.period !== PERIODS.MONTH &&
-				this.selectedGroup === GROUPS.SOLAR
+				this.selectedGroup === GROUPS.NONE
 			);
 		},
 		showExtraCharts() {
-			if (this.period === PERIODS.MONTH && this.selectedGroup === GROUPS.SOLAR) {
+			if (this.period === PERIODS.MONTH && this.selectedGroup === GROUPS.NONE) {
 				return false;
 			}
 			if (
