@@ -83,11 +83,7 @@ export default {
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
 	},
-	emits: [
-		"static-plan-removed",
-		"static-plan-updated",
-		"repeating-plan-updated",
-	],
+	emits: ["static-plan-removed", "static-plan-updated", "repeating-plan-updated"],
 	data: function () {
 		return {
 			tariff: {},

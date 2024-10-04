@@ -281,7 +281,7 @@ export default {
 		},
 		updateRepeatingPlan: function (entries) {
 			console.log(entries);
-			
+
 			// TODO
 		},
 		setMinSoc: function (soc) {
