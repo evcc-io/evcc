@@ -10,16 +10,16 @@ const (
 	MinSoc           = "minSoc"      // min soc
 	LimitSoc         = "limitSoc"    // limit soc
 	LimitEnergy      = "limitEnergy" // limit energy
-	SocPoll          = "socPoll"
+	Soc              = "soc"
 	Thresholds       = "thresholds"
 	EnableThreshold  = "enableThreshold"
 	DisableThreshold = "disableThreshold"
 	EnableDelay      = "enableDelay"
 	DisableDelay     = "disableDelay"
 
-	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
-	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+	Phases        = "phases"        // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
+	PhasesEnabled = "phasesEnabled" // enabled phases (1/3)
+	PhasesActive  = "phasesActive"  // active phases as used by vehicle (1/2/3)
 
 	ChargerIcon           = "chargerIcon"           // charger icon for ui
 	ChargerFeature        = "chargerFeature"        // charger feature

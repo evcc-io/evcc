@@ -160,15 +160,7 @@ func newLoadpointHandler() http.HandlerFunc {
 
 		setConfigDirty()
 
-		res := struct {
-			ID   int    `json:"id"`
-			Name string `json:"name"`
-		}{
-			ID:   conf.ID,
-			Name: config.NameForID(conf.ID),
-		}
-
-		jsonResult(w, res)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -217,7 +209,8 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		// TODO dirty handling
+		setConfigDirty()
+
 		w.WriteHeader(http.StatusOK)
 	}
 }

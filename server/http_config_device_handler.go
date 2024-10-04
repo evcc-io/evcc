@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -37,6 +38,12 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	class, err := templates.ClassString(vars["class"])
+
+	// TODO exclude loadpoints here
+	if err == nil && class == templates.Loadpoint {
+		err = fmt.Errorf("invalid class %s", class)
+	}
+
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return

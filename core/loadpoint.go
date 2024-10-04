@@ -90,13 +90,13 @@ type Loadpoint struct {
 	Enable, Disable loadpoint.ThresholdConfig
 
 	// TODO deprecated
-	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
-	Title_            string         `mapstructure:"title"`         // UI title
-	Priority_         int            `mapstructure:"priority"`      // Priority
-	GuardDuration_    time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
-	ConfiguredPhases_ int            `mapstructure:"phases"`
-	MinCurrent_       float64        `mapstructure:"minCurrent"`
-	MaxCurrent_       float64        `mapstructure:"maxCurrent"`
+	Mode_          api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
+	Title_         string         `mapstructure:"title"`         // UI title
+	Priority_      int            `mapstructure:"priority"`      // Priority
+	GuardDuration_ time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
+	Phases_        int            `mapstructure:"phases"`
+	MinCurrent_    float64        `mapstructure:"minCurrent"`
+	MaxCurrent_    float64        `mapstructure:"maxCurrent"`
 
 	title            string   // UI title
 	priority         int      // Priority
@@ -304,16 +304,16 @@ func (lp *Loadpoint) migrateSettings() {
 			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
 		}
 	}
-	if lp.ConfiguredPhases_ > 0 {
+	if lp.Phases_ > 0 {
 		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
-		if _, err := lp.settings.Int(keys.PhasesConfigured); err != nil {
-			lp.settings.SetInt(keys.PhasesConfigured, int64(lp.ConfiguredPhases_))
+		if _, err := lp.settings.Int(keys.Phases); err != nil {
+			lp.settings.SetInt(keys.Phases, int64(lp.Phases_))
 		}
 	}
 	if lp.Soc.Estimate != nil || lp.Soc.Poll.Mode != loadpoint.PollCharging || lp.Soc.Poll.Interval != 0 {
 		lp.log.WARN.Println("deprecated: soc setting is ignored, please remove")
-		if _, err := lp.settings.String(keys.SocPoll); err != nil {
-			lp.settings.SetJson(keys.SocPoll, lp.Soc)
+		if _, err := lp.settings.String(keys.Soc); err != nil {
+			lp.settings.SetJson(keys.Soc, lp.Soc)
 		}
 	}
 }
@@ -332,7 +332,7 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
 		lp.setPriority(int(v))
 	}
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+	if v, err := lp.settings.Int(keys.Phases); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
 		lp.phases = lp.configuredPhases
 	}
@@ -358,7 +358,7 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 
 	var socConfig loadpoint.SocConfig
-	if err := lp.settings.Json(keys.SocPoll, &socConfig); err == nil {
+	if err := lp.settings.Json(keys.Soc, &socConfig); err == nil {
 		lp.setSocConfig(socConfig)
 	}
 
@@ -632,7 +632,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.publish(keys.Phases, lp.configuredPhases)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())

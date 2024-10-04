@@ -8,8 +8,8 @@ import (
 // setConfiguredPhases sets the default phase configuration
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	lp.configuredPhases = phases
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
+	lp.publish(keys.Phases, lp.configuredPhases)
+	lp.settings.SetInt(keys.Phases, int64(lp.configuredPhases))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger

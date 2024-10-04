@@ -290,7 +290,7 @@ func (lp *Loadpoint) GetSocConfig() loadpoint.SocConfig {
 
 func (lp *Loadpoint) setSocConfig(soc loadpoint.SocConfig) {
 	lp.Soc = soc
-	lp.settings.SetJson(keys.SocPoll, soc)
+	lp.settings.SetJson(keys.Soc, soc)
 	lp.requestUpdate()
 }
 
