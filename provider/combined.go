@@ -1,17 +1,19 @@
 package provider
 
+import "context"
+
 type combinedProvider struct {
 	status func() (string, error)
 }
 
 func init() {
-	registry.Add("combined", NewCombinedFromConfig)
-	registry.Add("openwb", NewCombinedFromConfig)
+	registry.AddCtx("combined", NewCombinedFromConfig)
+	registry.AddCtx("openwb", NewCombinedFromConfig)
 }
 
 // NewCombinedFromConfig creates combined provider
-func NewCombinedFromConfig(other map[string]interface{}) (Provider, error) {
-	status, err := NewOpenWBStatusProviderFromConfig(other)
+func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+	status, err := NewOpenWBStatusProviderFromConfig(ctx, other)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +25,5 @@ func NewCombinedFromConfig(other map[string]interface{}) (Provider, error) {
 var _ StringProvider = (*combinedProvider)(nil)
 
 func (o *combinedProvider) StringGetter() (func() (string, error), error) {
-	return func() (string, error) {
-		return o.status()
-	}, nil
+	return o.status, nil
 }

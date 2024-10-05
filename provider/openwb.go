@@ -1,17 +1,20 @@
 package provider
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
 // OpenWBStatus implements status conversion from openWB to api.Status
 type OpenWBStatus struct {
+	ctx               context.Context
 	plugged, charging func() (bool, error)
 }
 
 // NewOpenWBStatusProviderFromConfig creates OpenWBStatus from given configuration
-func NewOpenWBStatusProviderFromConfig(other map[string]interface{}) (func() (string, error), error) {
+func NewOpenWBStatusProviderFromConfig(ctx context.Context, other map[string]interface{}) (func() (string, error), error) {
 	var cc struct {
 		Plugged, Charging Config
 	}
@@ -19,11 +22,11 @@ func NewOpenWBStatusProviderFromConfig(other map[string]interface{}) (func() (st
 		return nil, err
 	}
 
-	plugged, err := NewBoolGetterFromConfig(cc.Plugged)
+	plugged, err := NewBoolGetterFromConfig(ctx, cc.Plugged)
 
 	var charging func() (bool, error)
 	if err == nil {
-		charging, err = NewBoolGetterFromConfig(cc.Charging)
+		charging, err = NewBoolGetterFromConfig(ctx, cc.Charging)
 	}
 
 	if err != nil {
