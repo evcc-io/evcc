@@ -555,6 +555,28 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	}
 }
 
+// GetSolarShare gets the solar share
+func (lp *Loadpoint) GetSolarShare() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.solarShare
+}
+
+// SetSolarShare sets the solar share
+func (lp *Loadpoint) SetSolarShare(val float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set solar share:", "%.0f", 100*val)
+
+	if lp.solarShare != val {
+		lp.solarShare = val
+
+		lp.settings.SetFloat(keys.SolarShare, val)
+		lp.publish(keys.SolarShare, val)
+	}
+}
+
 // GetCircuit returns the assigned circuit
 func (lp *Loadpoint) GetCircuit() api.Circuit {
 	lp.RLock()
