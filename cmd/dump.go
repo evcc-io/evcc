@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/go-sprout/sprout/sprigin"
 	"github.com/spf13/cobra"
 )
 
@@ -70,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprigin.FuncMap()).
+				Funcs(sprig.FuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)
