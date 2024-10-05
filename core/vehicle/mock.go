@@ -148,3 +148,17 @@ func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
 }
+
+// SetRepeatingPlanEntries mocks base method.
+func (m *MockAPI) SetRepeatingPlanEntries(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetRepeatingPlanEntries", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetRepeatingPlanEntries indicates an expected call of SetRepeatingPlanEntries.
+func (mr *MockAPIMockRecorder) SetRepeatingPlanEntries(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlanEntries", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlanEntries), arg0)
+}
