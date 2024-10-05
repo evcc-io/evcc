@@ -91,7 +91,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	if err != nil {
 		return nil, err
 	}
-	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
+	statusG := provider.NewCombinedProvider(pluggedG, chargingG).StringGetter
 
 	// setters
 	currentTopic := openwb.SlaveChargeCurrentTopic

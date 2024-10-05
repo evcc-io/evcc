@@ -1,29 +1,73 @@
 package provider
 
-import "context"
+import (
+	"context"
 
-type combinedProvider struct {
-	status func() (string, error)
-}
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
 
 func init() {
 	registry.AddCtx("combined", NewCombinedFromConfig)
 	registry.AddCtx("openwb", NewCombinedFromConfig)
 }
 
+// combinedProvider implements status conversion from openWB to api.Status
+type combinedProvider struct {
+	plugged, charging func() (bool, error)
+}
+
 // NewCombinedFromConfig creates combined provider
 func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
-	status, err := NewOpenWBStatusProviderFromConfig(ctx, other)
+	var cc struct {
+		Plugged, Charging Config
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	plugged, err := NewBoolGetterFromConfig(ctx, cc.Plugged)
+
+	var charging func() (bool, error)
+	if err == nil {
+		charging, err = NewBoolGetterFromConfig(ctx, cc.Charging)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	o := &combinedProvider{status: status}
+	o := NewCombinedProvider(plugged, charging)
+
 	return o, nil
 }
 
-var _ StringProvider = (*combinedProvider)(nil)
+// NewCombinedProvider creates provider for OpenWB status converted from MQTT topics
+func NewCombinedProvider(plugged, charging func() (bool, error)) *combinedProvider {
+	return &combinedProvider{
+		plugged:  plugged,
+		charging: charging,
+	}
+}
 
-func (o *combinedProvider) StringGetter() (func() (string, error), error) {
-	return o.status, nil
+// StringGetter returns string from OpenWB charging/ plugged status
+func (o *combinedProvider) StringGetter() (string, error) {
+	charging, err := o.charging()
+	if err != nil {
+		return "", err
+	}
+	if charging {
+		return string(api.StatusC), nil
+	}
+
+	plugged, err := o.plugged()
+	if err != nil {
+		return "", err
+	}
+	if plugged {
+		return string(api.StatusB), nil
+	}
+
+	return string(api.StatusA), nil
 }
