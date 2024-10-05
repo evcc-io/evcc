@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"strings"
@@ -232,4 +233,36 @@ func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
 
 		return set(ival)
 	}, err
+}
+
+var _ SetBytesProvider = (*Modbus)(nil)
+
+// BytesSetter implements SetBytesProvider
+func (m *Modbus) BytesSetter(_ string) (func(string) error, error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val string) error {
+		val, _ = strings.CutPrefix(val, "0x")
+
+		b, err := hex.DecodeString(val)
+		if err != nil {
+			return err
+		}
+
+		if len(b) != 2*int(op.Length) {
+			return fmt.Errorf("invalid byte length: %d", len(b))
+		}
+
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteMultipleRegisters:
+			_, err = m.conn.WriteMultipleRegisters(op.Addr, op.Length, b)
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
 }
