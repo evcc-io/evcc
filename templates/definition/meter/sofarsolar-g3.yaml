@@ -181,23 +181,14 @@ render: |
               type: writemultiple
               decode: int32
         - source: const
-          value: 0
+          value: 0x7FFFFFFF
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x1189
               type: writemultiple
-              decode: int32
-        - source: const
-          value: 0x7FFFFFFF
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x118B
-              type: writemultiple
-              decode: int32
+              decode: uint64
     - case: 3 # charge (not implemented -> normal)
       set:
         source: const
