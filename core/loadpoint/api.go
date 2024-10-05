@@ -123,9 +123,6 @@ type API interface {
 	// SetSmartCostLimit sets the smart cost limit
 	SetSmartCostLimit(limit *float64)
 
-	SetSolarShare(float64)
-	GetSolarShare() float64
-
 	//
 	// power and energy
 	//
