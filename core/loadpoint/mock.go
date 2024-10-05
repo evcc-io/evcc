@@ -166,20 +166,6 @@ func (mr *MockAPIMockRecorder) GetDisableDelay() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableDelay", reflect.TypeOf((*MockAPI)(nil).GetDisableDelay))
 }
 
-// GetDisableThreshold mocks base method.
-func (m *MockAPI) GetDisableThreshold() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDisableThreshold")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetDisableThreshold indicates an expected call of GetDisableThreshold.
-func (mr *MockAPIMockRecorder) GetDisableThreshold() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).GetDisableThreshold))
-}
-
 // GetEnableDelay mocks base method.
 func (m *MockAPI) GetEnableDelay() time.Duration {
 	m.ctrl.T.Helper()
@@ -192,20 +178,6 @@ func (m *MockAPI) GetEnableDelay() time.Duration {
 func (mr *MockAPIMockRecorder) GetEnableDelay() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnableDelay", reflect.TypeOf((*MockAPI)(nil).GetEnableDelay))
-}
-
-// GetEnableThreshold mocks base method.
-func (m *MockAPI) GetEnableThreshold() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnableThreshold")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetEnableThreshold indicates an expected call of GetEnableThreshold.
-func (mr *MockAPIMockRecorder) GetEnableThreshold() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnableThreshold", reflect.TypeOf((*MockAPI)(nil).GetEnableThreshold))
 }
 
 // GetLimitEnergy mocks base method.
@@ -421,6 +393,20 @@ func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartCostLimit))
 }
 
+// GetSolarShare mocks base method.
+func (m *MockAPI) GetSolarShare() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSolarShare")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetSolarShare indicates an expected call of GetSolarShare.
+func (mr *MockAPIMockRecorder) GetSolarShare() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSolarShare", reflect.TypeOf((*MockAPI)(nil).GetSolarShare))
+}
+
 // GetStatus mocks base method.
 func (m *MockAPI) GetStatus() api.ChargeStatus {
 	m.ctrl.T.Helper()
@@ -513,18 +499,6 @@ func (mr *MockAPIMockRecorder) SetDisableDelay(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDisableDelay", reflect.TypeOf((*MockAPI)(nil).SetDisableDelay), arg0)
 }
 
-// SetDisableThreshold mocks base method.
-func (m *MockAPI) SetDisableThreshold(arg0 float64) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDisableThreshold", arg0)
-}
-
-// SetDisableThreshold indicates an expected call of SetDisableThreshold.
-func (mr *MockAPIMockRecorder) SetDisableThreshold(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).SetDisableThreshold), arg0)
-}
-
 // SetEnableDelay mocks base method.
 func (m *MockAPI) SetEnableDelay(arg0 time.Duration) {
 	m.ctrl.T.Helper()
@@ -535,18 +509,6 @@ func (m *MockAPI) SetEnableDelay(arg0 time.Duration) {
 func (mr *MockAPIMockRecorder) SetEnableDelay(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableDelay", reflect.TypeOf((*MockAPI)(nil).SetEnableDelay), arg0)
-}
-
-// SetEnableThreshold mocks base method.
-func (m *MockAPI) SetEnableThreshold(arg0 float64) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetEnableThreshold", arg0)
-}
-
-// SetEnableThreshold indicates an expected call of SetEnableThreshold.
-func (mr *MockAPIMockRecorder) SetEnableThreshold(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableThreshold", reflect.TypeOf((*MockAPI)(nil).SetEnableThreshold), arg0)
 }
 
 // SetLimitEnergy mocks base method.
@@ -663,6 +625,18 @@ func (m *MockAPI) SetSmartCostLimit(arg0 *float64) {
 func (mr *MockAPIMockRecorder) SetSmartCostLimit(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), arg0)
+}
+
+// SetSolarShare mocks base method.
+func (m *MockAPI) SetSolarShare(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSolarShare", arg0)
+}
+
+// SetSolarShare indicates an expected call of SetSolarShare.
+func (mr *MockAPIMockRecorder) SetSolarShare(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSolarShare", reflect.TypeOf((*MockAPI)(nil).SetSolarShare), arg0)
 }
 
 // SetVehicle mocks base method.
