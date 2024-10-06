@@ -22,7 +22,7 @@ type NRGKickBLE struct {
 	log           *util.Logger
 	timer         *time.Ticker
 	adapter       *bluetooth.Adapter
-	device        string
+	dev           *bluetooth.Device
 	mac           string
 	pin           int
 	pauseCharging bool
@@ -63,7 +63,6 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	wb := &NRGKickBLE{
 		log:     logger,
 		timer:   time.NewTicker(2 * time.Second),
-		device:  device,
 		mac:     mac,
 		pin:     pin,
 		adapter: adapter,
@@ -93,7 +92,7 @@ func (wb *NRGKickBLE) connect() (*bluetooth.Device, error) {
 
 func (wb *NRGKickBLE) close() {
 	if wb.dev != nil {
-		wb.dev.Close()
+		wb.dev.Disconnect()
 		wb.dev = nil
 	}
 }
