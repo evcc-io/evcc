@@ -111,20 +111,38 @@ func (wb *NRGKickBLE) read(service string, res interface{}) error {
 		wb.dev = dev
 	}
 
-	char, err := wb.dev.GetCharByUUID(service)
+	uuid, err := bluetooth.ParseUUID(service)
+	if err != nil {
+		return err
+	}
+
+	services, err := wb.dev.DiscoverServices(nil)
 	if err != nil {
 		wb.close()
 		return err
 	}
 
-	b, err := char.ReadValue(map[string]interface{}{})
-	if err != nil {
-		wb.close()
-		return err
-	}
-	wb.log.TRACE.Printf("read %s %0x", service, b)
+	b := make([]byte, 1024)
 
-	return struc.Unpack(bytes.NewReader(b), res)
+	for _, service := range services {
+		characteristics, err := service.DiscoverCharacteristics([]bluetooth.UUID{uuid})
+		if err != nil {
+			continue
+		}
+
+		for _, characteristic := range characteristics {
+			n, err := characteristic.Read(b)
+			if err != nil {
+				wb.close()
+				return err
+			}
+			wb.log.TRACE.Printf("read %s %0x", service, b)
+
+			return struc.Unpack(bytes.NewReader(b[:n]), res)
+		}
+	}
+
+	return fmt.Errorf("service not found: %s", service)
 }
 
 func (wb *NRGKickBLE) write(service string, val interface{}) error {
