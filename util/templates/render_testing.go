@@ -27,10 +27,12 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 		return
 	}
 
-	// actually run the instance if not on CI
-	if os.Getenv("CI") == "" {
-		cb(values)
+	// don't execute if skip test is set or on CI
+	if slices.Contains(tmpl.Requirements.EVCC, RequirementSkipTest) || os.Getenv("CI") != "" {
+		return
 	}
+
+	cb(values)
 }
 
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {

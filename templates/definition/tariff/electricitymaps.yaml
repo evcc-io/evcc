@@ -7,6 +7,7 @@ requirements:
   description:
     de: "CO₂-Daten für viele Länder von https://electricitymaps.com/. Der 'Free Personal Tier' beinhaltet leider keine Prognosedaten. Dafür benötigst du einen kommerziellen Account von https://api-portal.electricitymaps.com/. Kostenloser Testmonat verfügbar."
     en: "CO₂ data for many countries from https://electricitymaps.com/. The 'Free Personal Tier' unfortunately does not include forecast data. You'll need a commercial account from https://api-portal.electricitymaps.com/. Free trial available."
+  evcc: ["skiptest"]
 group: co2
 params:
   - name: uri
