@@ -5,6 +5,7 @@ requirements:
   description:
     en: "Get your API token from the Tibber developer portal: https://developer.tibber.com/"
     de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: https://developer.tibber.com/"
+  evcc: ["skiptest"]
 group: price
 params:
   - name: token

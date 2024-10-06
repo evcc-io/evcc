@@ -13,7 +13,7 @@ requirements:
       The charger must be equipped with a built-in meter (models HC11L/HC22L Energy or Profi).
       For the OCPP configuration, you need to access the EFR-SECC charge controller at http://host/secc.
       For login credentials, ask your dealer or the vendor EFR (www.efr.de).
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |

@@ -3,6 +3,8 @@ products:
   - brand: Volkszähler
     description:
       generic: WebSocket API
+requirements:
+  evcc: ["skiptest"]
 group: generic
 params:
   - name: usage
