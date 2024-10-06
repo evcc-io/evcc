@@ -1,8 +1,8 @@
-template: pulsarplus
+template: pulsarplus-fw5
 products:
   - brand: wallbox
     description:
-      generic: Pulsar Plus, Pulsar Max, Commander 2, Copper SB (FW 6.x)
+      generic: Pulsar Plus, Pulsar Max, Commander 2, Copper SB (FW 5.x)
 requirements:
   description:
     de: |
@@ -24,3 +24,6 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  remotestart: true 
+  stacklevelzero: true
+  metervalues: -Current.Offered
