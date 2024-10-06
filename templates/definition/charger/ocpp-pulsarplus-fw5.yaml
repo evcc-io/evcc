@@ -26,4 +26,4 @@ render: |
   {{ include "ocpp" . }}
   remotestart: true 
   stacklevelzero: true
-  metervalues: -Current.Offered
+  metervalues: -Current.Offered,-Power.Offered
