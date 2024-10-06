@@ -225,6 +225,25 @@ func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([
 
 		m, ok := conn.measurements[key]
 		if !ok {
+			if measurement == types.MeasurandCurrentImport && i > 0 { // charger reports only current for phase 1 but voltage for 1-3 shows actual usage
+				voltageKey := getPhaseKey(types.MeasurandVoltage, i+1)
+				v, ok := conn.measurements[voltageKey]
+				if !ok {
+					v, ok = conn.measurements[voltageKey+"-N"]
+					if !ok {
+						continue
+					}
+				}
+				fv, err := strconv.ParseFloat(v.Value, 64)
+				if err != nil {
+					continue
+				}
+				fv = scale(fv, v.Unit)
+				if fv > 100.0 {
+					res[i] = res[i-1]
+					continue
+				}
+			}
 			continue
 		}
 		found = true
