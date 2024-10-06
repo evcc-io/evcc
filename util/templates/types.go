@@ -56,7 +56,7 @@ const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
 	RequirementMQTT        = "mqtt"        // MQTT Setup is required
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
-	RequirementSkipTest    = "skiptest"    // Tempalte test should be rendered but not tested
+	RequirementSkipTest    = "skiptest"    // Template test should be rendered but not tested
 )
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
