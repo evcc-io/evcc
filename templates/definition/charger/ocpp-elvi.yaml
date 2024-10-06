@@ -1,10 +1,9 @@
-template: elvi
+template: ocpp-elvi
+covers: ["elvi"]
 products:
   - brand: EVBox
     description:
       generic: Elvi
-requirements:
-  evcc: ["sponsorship"]
 params:
   - preset: ocpp
   - name: meter

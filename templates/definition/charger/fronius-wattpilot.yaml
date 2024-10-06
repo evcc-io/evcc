@@ -1,4 +1,5 @@
 template: fronius-wattpilot
+protocol: localapi
 products:
   - brand: Fronius
     description:
