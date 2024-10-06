@@ -13,6 +13,7 @@ requirements:
   description:
     en: WARP Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
     de: WARP Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
+  evcc: ["skiptest"]
 params:
   - preset: mqtt
   - name: topic
