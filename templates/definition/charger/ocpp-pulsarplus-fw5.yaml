@@ -22,8 +22,9 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered,-Power.Offered
 render: |
   {{ include "ocpp" . }}
   remotestart: true 
   stacklevelzero: true
-  metervalues: -Current.Offered,-Power.Offered
