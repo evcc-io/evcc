@@ -2,7 +2,6 @@ package templates
 
 import (
 	"maps"
-	"os"
 	"slices"
 	"testing"
 
@@ -27,8 +26,8 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 		return
 	}
 
-	// don't execute if skip test is set or on CI
-	if slices.Contains(tmpl.Requirements.EVCC, RequirementSkipTest) || os.Getenv("CI") != "" {
+	// don't execute if skip test is set
+	if slices.Contains(tmpl.Requirements.EVCC, RequirementSkipTest) {
 		return
 	}
 
