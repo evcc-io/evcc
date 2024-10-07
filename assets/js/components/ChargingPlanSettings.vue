@@ -2,7 +2,7 @@
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0 mb-3">
-				<ChargingPlanStaticSettingsEntry
+				<ChargingPlanStaticSettings
 					:id="`${id}_0`"
 					class="mb-2"
 					v-bind="plans[0] || {}"
@@ -21,10 +21,10 @@
 							{{ $t("main.chargingPlan.repeatingPlan") }}
 						</div>
 					</h5>
-					<ChargingPlanRepeatingSettingsEntries
+					<ChargingPlansRepeatingSettings
 						:id="id"
 						:rangePerSoc="rangePerSoc"
-						@repeating-plan-updated="updateRepeatingPlan"
+						@repeating-plans-updated="updateRepeatingPlans"
 					/>
 				</div>
 			</div>
@@ -43,8 +43,8 @@
 <script>
 import "@h2d2/shopicons/es/regular/plus";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
-import ChargingPlanStaticSettingsEntry from "./ChargingPlanStaticSettingsEntry.vue";
-import ChargingPlanRepeatingSettingsEntries from "./ChargingPlanRepeatingSettingsEntries.vue";
+import ChargingPlanStaticSettings from "./ChargingPlanStaticSettings.vue";
+import ChargingPlansRepeatingSettings from "./ChargingPlansRepeatingSettings.vue";
 import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -58,8 +58,8 @@ export default {
 	name: "ChargingPlanSettings",
 	components: {
 		ChargingPlanPreview,
-		ChargingPlanStaticSettingsEntry,
-		ChargingPlanRepeatingSettingsEntries,
+		ChargingPlanStaticSettings,
+		ChargingPlansRepeatingSettings,
 		ChargingPlanWarnings,
 	},
 	mixins: [formatter, collector],
@@ -83,7 +83,7 @@ export default {
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
 	},
-	emits: ["static-plan-removed", "static-plan-updated", "repeating-plan-updated"],
+	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
 	data: function () {
 		return {
 			tariff: {},
@@ -193,8 +193,8 @@ export default {
 		updateStaticPlan: function (data) {
 			this.$emit("static-plan-updated", data);
 		},
-		updateRepeatingPlan: function (entries) {
-			this.$emit("repeating-plan-updated", entries);
+		updateRepeatingPlans: function (plans) {
+			this.$emit("repeating-plans-updated", plans);
 		},
 		previewPlan: function (data) {
 			this.fetchPlanDebounced(data);

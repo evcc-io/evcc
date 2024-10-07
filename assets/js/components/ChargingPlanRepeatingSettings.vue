@@ -97,7 +97,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
 					data-testid="plan-delete"
-					@click="$emit('repeating-plan-entry-removed', id)"
+					@click="$emit('repeating-plan-removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -114,7 +114,7 @@ import MultiSelect from "./MultiSelect.vue";
 import formatter from "../mixins/formatter";
 
 export default {
-	name: "ChargingPlanRepeatingSettingsEntry",
+	name: "ChargingPlanRepeatingSettings",
 	components: {
 		MultiSelect,
 	},
@@ -127,7 +127,7 @@ export default {
 		active: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["repeating-plan-entry-updated", "repeating-plan-entry-removed"],
+	emits: ["repeating-plan-updated", "repeating-plan-removed"],
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
@@ -168,7 +168,7 @@ export default {
 			});
 		},
 		update: function () {
-			this.$emit("repeating-plan-entry-updated", {
+			this.$emit("repeating-plan-updated", {
 				id: this.id,
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,

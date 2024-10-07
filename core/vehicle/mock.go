@@ -83,6 +83,20 @@ func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
 }
 
+// GetRepeatingPlans mocks base method.
+func (m *MockAPI) GetRepeatingPlans() []RepeatingPlan {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepeatingPlans")
+	ret0, _ := ret[0].([]RepeatingPlan)
+	return ret0
+}
+
+// GetRepeatingPlans indicates an expected call of GetRepeatingPlans.
+func (mr *MockAPIMockRecorder) GetRepeatingPlans() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlans))
+}
+
 // Instance mocks base method.
 func (m *MockAPI) Instance() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -149,16 +163,16 @@ func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
 }
 
-// SetRepeatingPlanEntries mocks base method.
-func (m *MockAPI) SetRepeatingPlanEntries(arg0 string) error {
+// SetRepeatingPlans mocks base method.
+func (m *MockAPI) SetRepeatingPlans(arg0 []RepeatingPlan) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetRepeatingPlanEntries", arg0)
+	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetRepeatingPlanEntries indicates an expected call of SetRepeatingPlanEntries.
-func (mr *MockAPIMockRecorder) SetRepeatingPlanEntries(arg0 any) *gomock.Call {
+// SetRepeatingPlans indicates an expected call of SetRepeatingPlans.
+func (mr *MockAPIMockRecorder) SetRepeatingPlans(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlanEntries", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlanEntries), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlans), arg0)
 }

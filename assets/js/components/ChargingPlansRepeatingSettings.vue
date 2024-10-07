@@ -1,13 +1,13 @@
 <template>
-	<div v-for="(entry, index) in entries" :key="index">
-		<ChargingPlanRepeatingSettingsEntry
+	<div v-for="(plan, index) in plans" :key="index">
+		<ChargingPlanRepeatingSettings
 			class="mb-4"
 			:id="index"
-			v-bind="entry"
+			v-bind="plan"
 			:socBasedPlanning="socBasedPlanning"
 			:rangePerSoc="rangePerSoc"
-			@repeating-plan-entry-updated="updateRepeatingPlanEntry"
-			@repeating-plan-entry-removed="removeRepeatingPlanEntry"
+			@repeating-plan-updated="updateRepeatingPlan"
+			@repeating-plan-removed="removeRepeatingPlan"
 		/>
 	</div>
 	<div class="d-flex align-items-baseline">
@@ -25,7 +25,7 @@
 			type="button"
 			class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
 			data-testid="plan-apply"
-			@click="updateRepeatingPlan"
+			@click="updateRepeatingPlans"
 		>
 			{{ $t("main.chargingPlan.update") }}
 		</button>
@@ -33,57 +33,57 @@
 </template>
 
 <script>
-import ChargingPlanRepeatingSettingsEntry from "./ChargingPlanRepeatingSettingsEntry.vue";
+import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
 
 const DEFAULT_WEEKDAYS = [0];
 const DEFAULT_TARGET_TIME = "12:00";
 const DEFAULT_TARGET_SOC = 80;
 
 export default {
-	name: "ChargingPlanRepeatingSettingsEntries",
+	name: "ChargingPlansRepeatingSettings",
 	components: {
-		ChargingPlanRepeatingSettingsEntry,
+		ChargingPlanRepeatingSettings,
 	},
 	props: {
 		id: Number,
 		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["repeating-plan-updated"],
+	emits: ["repeating-plans-updated"],
 	data: function () {
 		return {
-			entries: [],
-			initialEntries: [],
+			plans: [],
+			initialPlans: [],
 		};
 	},
 	computed: {
 		dataHasChanged: function () {
-			return JSON.stringify(this.initialEntries) !== JSON.stringify(this.entries);
+			return JSON.stringify(this.initialPlans) !== JSON.stringify(this.plans);
 		},
 	},
 	methods: {
 		addRepeatingPlan: function () {
-			this.entries.push({
+			this.plans.push({
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
 			});
 		},
-		updateRepeatingPlan: function () {
-			this.initialEntries = [...this.entries]; // clone array
-			this.$emit("repeating-plan-updated", this.initialEntries);
+		updateRepeatingPlans: function () {
+			this.initialPlans = [...this.plans]; // clone array
+			this.$emit("repeating-plans-updated", this.initialPlans);
 		},
-		updateRepeatingPlanEntry: function (newData) {
-			this.entries[newData.id] = {
+		updateRepeatingPlan: function (newData) {
+			this.plans[newData.id] = {
 				weekdays: newData.weekdays,
 				time: newData.time,
 				soc: newData.soc,
 				active: newData.active,
 			};
 		},
-		removeRepeatingPlanEntry: function (index) {
-			this.entries.splice(index, 1);
+		removeRepeatingPlan: function (index) {
+			this.plans.splice(index, 1);
 		},
 	},
 };

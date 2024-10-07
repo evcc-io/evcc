@@ -64,6 +64,9 @@ const (
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 
+	// repeating plans
+	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
+
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
 	RemoteDisabledSource = "remoteDisabledSource" // remote disabled source

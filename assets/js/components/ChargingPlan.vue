@@ -79,7 +79,7 @@
 									v-bind="chargingPlanSettingsProps"
 									@static-plan-updated="updateStaticPlan"
 									@static-plan-removed="removeStaticPlan"
-									@repeating-plan-updated="updateRepeatingPlan"
+									@repeating-plans-updated="updateRepeatingPlans"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
@@ -279,8 +279,8 @@ export default {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
 		},
-		updateRepeatingPlan: function (entries) {
-			api.post(`${this.apiVehicle}plan/repeating`, entries);
+		updateRepeatingPlans: function (plans) {
+			api.post(`${this.apiVehicle}plan/repeating`, { plans: plans });
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

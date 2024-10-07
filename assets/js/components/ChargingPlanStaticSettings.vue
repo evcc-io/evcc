@@ -138,7 +138,7 @@ const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
 export default {
-	name: "ChargingPlanStaticSettingsEntry",
+	name: "ChargingPlanStaticSettings",
 	mixins: [formatter],
 	props: {
 		id: String,

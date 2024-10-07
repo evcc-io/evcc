@@ -22,6 +22,13 @@ type adapter struct {
 	api.Vehicle // TODO handle instance updates
 }
 
+type RepeatingPlan struct {
+	Weekdays []int  `json:"weekdays"`
+	Time     string `json:"time"`
+	Soc      int    `json:"soc"`
+	Active   bool   `json:"active"`
+}
+
 func (v *adapter) key() string {
 	return fmt.Sprintf("vehicle.%s.", v.name)
 }
@@ -104,12 +111,25 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
-func (v *adapter) SetRepeatingPlanEntries(entries string) error {
-	v.log.DEBUG.Printf("update entries for %s repeating plan: %s", v.name, entries)
+func (v *adapter) SetRepeatingPlans(plans []RepeatingPlan) error {
+	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	settings.SetJson("repeatingPlan", entries)
+	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
 
 	v.publish()
 
 	return nil
+}
+
+func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
+	var plans []RepeatingPlan
+
+	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
+	if err == nil {
+		return plans
+	}
+
+	v.log.DEBUG.Printf("update repeating plans for ERROR %s", err)
+
+	return []RepeatingPlan{}
 }

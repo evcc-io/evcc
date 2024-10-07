@@ -1,12 +1,13 @@
 package server
 
 import (
-	"io"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
 
@@ -121,19 +122,22 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		body, err := io.ReadAll(r.Body)
+		var plansWrapper struct {
+			Plans []vehicle.RepeatingPlan `json:"plans"`
+		}
+
+		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetRepeatingPlanEntries(string(body)); err != nil {
+		if err := v.SetRepeatingPlans(plansWrapper.Plans); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		res := struct{}{}
-		jsonResult(w, res)
+		jsonResult(w, plansWrapper)
 	}
 }
 

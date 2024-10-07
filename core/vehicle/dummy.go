@@ -48,7 +48,11 @@ func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
-// SetRepeatingPlanEntries stores every plan-entry
-func (v *dummy) SetRepeatingPlanEntries(entries string) error {
+// SetRepeatingPlans stores every repeating plan
+func (v *dummy) SetRepeatingPlans(plans []RepeatingPlan) error {
 	return nil
+}
+
+func (v *dummy) GetRepeatingPlans() []RepeatingPlan {
+	return []RepeatingPlan{}
 }
