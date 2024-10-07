@@ -178,7 +178,6 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 	// re-set 1p if required
 	if wb.workaround && wb.phases == 1 && enable {
-		b := make([]byte, 2)
 		binary.BigEndian.PutUint16(b, uint16(wb.phases))
 		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
 			return err
