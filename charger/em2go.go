@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -36,7 +35,6 @@ type Em2Go struct {
 	log        *util.Logger
 	conn       *modbus.Connection
 	current    int64
-	lp         loadpoint.API
 	workaround bool
 	phases     int
 }
