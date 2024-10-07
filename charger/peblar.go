@@ -142,7 +142,12 @@ func (wb *Peblar) Enable(enable bool) error {
 		current = wb.curr
 	}
 
-	return wb.setCurrent(current)
+	err := wb.setCurrent(current)
+	if err == nil {
+		wb.enabled = enable
+	}
+
+	return err
 }
 
 // setCurrent writes the current limit in mA
