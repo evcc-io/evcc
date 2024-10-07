@@ -65,13 +65,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: -1000
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_1
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: 1000
   - source: calc
     add:
     - source: http
@@ -79,13 +79,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: -1000
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_2
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: 1000
   - source: calc
     add:
     - source: http
@@ -93,10 +93,10 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: -1000
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_3
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: 1000
