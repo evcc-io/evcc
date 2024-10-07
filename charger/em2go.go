@@ -38,6 +38,7 @@ type Em2Go struct {
 	current    int64
 	lp         loadpoint.API
 	workaround bool
+	phases     int
 }
 
 const (
@@ -177,27 +178,18 @@ func (wb *Em2Go) Enable(enable bool) error {
 		return err
 	}
 
-	// Workaround
-	if wb.workaround {
-		// Get wanted phases set in lp and send to charger
-		var phases int
-		if wb.lp != nil {
-			phases = wb.lp.GetPhases()
-		}
-		if phases == 0 {
-			phases = 3
-		}
-		c := make([]byte, 2)
-		binary.BigEndian.PutUint16(c, uint16(phases))
-		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, c); err != nil {
+	// re-set 1p if required
+	if wb.workaround && wb.phases == 1 && enable {
+		b := make([]byte, 2)
+		binary.BigEndian.PutUint16(b, uint16(wb.phases))
+		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
 			return err
 		}
 
-		// Send default current to charger
-		var current int64
-		current = wb.current
-		wb.MaxCurrent(current)
+		// send default current
+		return wb.MaxCurrent(wb.current)
 	}
+
 	return nil
 }
 
@@ -307,12 +299,8 @@ func (wb *Em2Go) ChargeDuration() (time.Duration, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Em2Go) phases1p3p(phases int) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(phases))
-
-	// Workaround
 	if wb.workaround {
-		// When enabled, disable, wait 10 seconds, enable and set phases
+		// when enabled, disable, wait 10 seconds, enable and set phases
 		enabled, err := wb.Enabled()
 		if err != nil {
 			return err
@@ -322,6 +310,7 @@ func (wb *Em2Go) phases1p3p(phases int) error {
 			if err := wb.Enable(false); err != nil {
 				return err
 			}
+
 			time.Sleep(10 * time.Second)
 
 			if err := wb.Enable(true); err != nil {
@@ -330,11 +319,15 @@ func (wb *Em2Go) phases1p3p(phases int) error {
 		}
 	}
 
-	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
-		return err
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b)
+	if err == nil {
+		wb.phases = phases
 	}
 
-	return nil
+	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
@@ -393,11 +386,4 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargeCommand, 1); err == nil {
 		fmt.Printf("\tCharge Command:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-}
-
-var _ loadpoint.Controller = (*Em2Go)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *Em2Go) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
