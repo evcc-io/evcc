@@ -150,15 +150,6 @@ func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return handler(strconv.Atoi, set, get)
 }
 
-// scaledIntHandler updates int-param api
-func scaledIntHandler(set func(float64) error, get func() float64, scale float64) http.HandlerFunc {
-	return intHandler(func(v int) error {
-		return set(float64(v) / scale)
-	}, func() int {
-		return int(get() * scale)
-	})
-}
-
 // boolHandler updates bool-param api
 func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	return handler(strconv.ParseBool, set, get)
@@ -205,14 +196,14 @@ func updateSolarShare(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		val, err := strconv.Atoi(vars["value"])
+		val, err := strconv.ParseFloat(vars["value"], 64)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		for _, lp := range site.Loadpoints() {
-			lp.SetSolarShare(float64(val) / 100)
+			lp.SetSolarShare(val)
 		}
 
 		jsonResult(w, val)
