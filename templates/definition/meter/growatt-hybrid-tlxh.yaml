@@ -116,7 +116,7 @@ render: |
       address: 3171 # SOC
       type: input
       decode: uint16
-   batterymode:
+  batterymode:
       source: switch
       switch:
       - case: 1 # normal -> disable "battery first" and "ac charge"
