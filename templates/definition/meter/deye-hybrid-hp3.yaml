@@ -254,7 +254,5 @@ render: |
               address: 172 
               type: writemultiple
               decode: int32s  
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

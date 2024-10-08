@@ -20,9 +20,11 @@ params:
     advanced: true
   - name: minsoc
     type: number
+    default: 20
     advanced: true
   - name: maxsoc
     type: number
+    default: 95
     advanced: true
 render: |
   type: custom
@@ -248,7 +250,5 @@ render: |
               address: 172 
               type: writemultiple
               decode: int32s  
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
