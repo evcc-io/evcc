@@ -4,7 +4,6 @@
 			class="mb-4"
 			:id="index"
 			v-bind="plan"
-			:socBasedPlanning="socBasedPlanning"
 			:rangePerSoc="rangePerSoc"
 			@repeating-plan-updated="updateRepeatingPlan"
 			@repeating-plan-removed="removeRepeatingPlan"
@@ -46,14 +45,18 @@ export default {
 	},
 	props: {
 		id: Number,
-		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
+		initialPlans: { type: Array, default: () => [] },
+	},
+	watch: {
+		initialPlans(newPlans) {
+			this.plans = [...newPlans]; // clone array
+		},
 	},
 	emits: ["repeating-plans-updated"],
 	data: function () {
 		return {
-			plans: [],
-			initialPlans: [],
+			plans: [...this.initialPlans], // clone array
 		};
 	},
 	computed: {
@@ -71,8 +74,7 @@ export default {
 			});
 		},
 		updateRepeatingPlans: function () {
-			this.initialPlans = [...this.plans]; // clone array
-			this.$emit("repeating-plans-updated", this.initialPlans);
+			this.$emit("repeating-plans-updated", this.plans);
 		},
 		updateRepeatingPlan: function (newData) {
 			this.plans[newData.id] = {

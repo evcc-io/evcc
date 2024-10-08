@@ -74,9 +74,9 @@
 								</li>
 							</ul>
 							<div v-if="isModalVisible">
-								<ChargingPlanSettings
+								<ChargingPlansSettings
 									v-if="departureTabActive"
-									v-bind="chargingPlanSettingsProps"
+									v-bind="ChargingPlansSettingsProps"
 									@static-plan-updated="updateStaticPlan"
 									@static-plan-removed="removeStaticPlan"
 									@repeating-plans-updated="updateRepeatingPlans"
@@ -99,7 +99,7 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "./LabelAndValue.vue";
-import ChargingPlanSettings from "./ChargingPlanSettings.vue";
+import ChargingPlansSettings from "./ChargingPlansSettings.vue";
 import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 
 import formatter from "../mixins/formatter";
@@ -111,7 +111,7 @@ const ONE_MINUTE = 60 * 1000;
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, ChargingPlanSettings, ChargingPlanArrival },
+	components: { LabelAndValue, ChargingPlansSettings, ChargingPlanArrival },
 	mixins: [formatter, collector],
 	props: {
 		currency: String,
@@ -172,6 +172,9 @@ export default {
 			}
 			return [];
 		},
+		repeatingPlans: function () {
+			return this.vehicle.repeatingPlans || [];
+		},
 		enabled: function () {
 			return this.effectivePlanTime;
 		},
@@ -184,8 +187,8 @@ export default {
 		arrivalTabActive: function () {
 			return this.activeTab === "arrival";
 		},
-		chargingPlanSettingsProps: function () {
-			return this.collectProps(ChargingPlanSettings);
+		ChargingPlansSettingsProps: function () {
+			return this.collectProps(ChargingPlansSettings);
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);

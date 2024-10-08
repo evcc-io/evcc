@@ -28,7 +28,8 @@
 				</label>
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
-				<MultiSelect
+				<!-- TODO: this component triggers a "Maximum recursive updates exceeded in component"-error so I commented it out-->
+				<!-- <MultiSelect
 					:id="formId('weekdays')"
 					:value="selectedWeekdays"
 					:options="dayOptions()"
@@ -36,7 +37,7 @@
 					@update:modelValue="changeSelectedWeekdays"
 				>
 					{{ weekdaysLabel }}
-				</MultiSelect>
+				</MultiSelect> -->
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
@@ -109,14 +110,14 @@
 <script>
 import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../units";
-import MultiSelect from "./MultiSelect.vue";
+// import MultiSelect from "./MultiSelect.vue";
 
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "ChargingPlanRepeatingSettings",
 	components: {
-		MultiSelect,
+		// MultiSelect,
 	},
 	mixins: [formatter],
 	props: {
@@ -128,6 +129,20 @@ export default {
 		rangePerSoc: Number,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
+	watch: {
+		weekdays(newValue) {
+			this.selectedWeekdays = newValue;
+		},
+		time(newValue) {
+			this.selectedTime = newValue;
+		},
+		soc(newValue) {
+			this.selectedSoc = newValue;
+		},
+		active(newValue) {
+			this.selectedActive = newValue;
+		},
+	},
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,

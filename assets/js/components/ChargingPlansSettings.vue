@@ -24,6 +24,7 @@
 					<ChargingPlansRepeatingSettings
 						:id="id"
 						:rangePerSoc="rangePerSoc"
+						:initialPlans="repeatingPlans"
 						@repeating-plans-updated="updateRepeatingPlans"
 					/>
 				</div>
@@ -66,6 +67,7 @@ export default {
 	props: {
 		id: [String, Number],
 		plans: { type: Array, default: () => [] },
+		repeatingPlans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
