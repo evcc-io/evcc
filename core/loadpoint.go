@@ -723,8 +723,8 @@ func (lp *Loadpoint) syncCharger() error {
 		if isCg {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
-				if math.Abs(lp.chargeCurrent-current) > 0.23 {
-					if shouldBeConsistent {
+				if delta := math.Abs(lp.chargeCurrent - current); delta > 0.23 {
+					if shouldBeConsistent && delta >= 1 {
 						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 					}
 					lp.chargeCurrent = current
@@ -1521,7 +1521,10 @@ func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
 
 	// guard for socEstimator removed by api
-	if lp.socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
+	// also keep a local copy in order to avoid race conditions
+	// https://github.com/evcc-io/evcc/issues/16180
+	socEstimator := lp.socEstimator
+	if socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
 		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
 		// We need to check if the charger can provide soc and use it if available.
 		if err == nil {
@@ -1535,7 +1538,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
-		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
+		f, err := socEstimator.Soc(lp.getChargedEnergy())
 		if err != nil {
 			if loadpoint.AcceptableError(err) {
 				lp.socUpdated = time.Time{}
@@ -1569,11 +1572,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		var d time.Duration
 		if lp.charging() {
-			d = lp.socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+			d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(limitSoc))
+		lp.SetRemainingEnergy(1e3 * socEstimator.RemainingChargeEnergy(limitSoc))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {

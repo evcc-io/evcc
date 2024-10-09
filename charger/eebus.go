@@ -39,8 +39,7 @@ type EEBus struct {
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
 
-	limitUpdated    time.Time // time of last limit change
-	currentsUpdated time.Time // time of last measurement
+	limitUpdated time.Time // time of last limit change
 
 	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
@@ -127,8 +126,8 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 		c.ev = nil
 
 	case evcem.DataUpdateCurrentPerPhase:
-		// do not use the timestamp of the measurement itself, as some devices don't provide it
-		c.currentsUpdated = time.Now()
+		// acknowledge limit change
+		c.limitUpdated = time.Time{}
 	}
 }
 
@@ -334,6 +333,9 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// if VAS VW is available, limits are completely covered by it
 	// this way evcc can fully control the charging behaviour
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		c.limitUpdated = time.Now()
 		return nil
 	}
@@ -351,6 +353,9 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// set overload protection limits
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
 	if err == nil {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		c.limitUpdated = time.Now()
 	}
 
@@ -567,19 +572,16 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	}
 
 	c.mux.Lock()
-	ts := c.currentsUpdated
+	ts := c.limitUpdated
 	c.mux.Unlock()
 
-	// if there is no measurement data available within 15 seconds after the last limit change, return an error
-	// only consider it an error, if there is no measurement data since 15 seconds after the last limit change
-	// a measurement only being available before the last limit change is not an error, because that can happen often
-	if d := ts.Sub(c.limitUpdated); d > 15*time.Second && !c.limitUpdated.IsZero() {
+	// if the last limit update is not zero (meaning no measurement was provided yet)
+	// only consider this an error, if the last limit update is older than 15 seconds
+	// this covers the case where this function may be called shortly after setting a limit
+	// but too short for a measurement can even be received
+	if d := time.Now().Sub(ts); d > 15*time.Second && !ts.IsZero() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
-
-	// we got a valid measurement, reset the limitUpdate to zero
-	// otherwise frequent measurement updates will trigger an unwanted error as the time between those is > 15 seconds
-	c.limitUpdated = time.Time{}
 
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
 	if err != nil {

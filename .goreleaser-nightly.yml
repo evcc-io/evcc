@@ -1,3 +1,5 @@
+version: 2
+
 dist: release
 release:
   disable: true
@@ -48,7 +50,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
+  version_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
@@ -72,6 +74,9 @@ nfpms:
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service

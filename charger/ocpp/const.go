@@ -20,6 +20,7 @@ const (
 	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
 
 	// Vendor specific keys
-	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
-	KeyEvBoxSupportedMeasurands     = "evb_SupportedMeasurands"
+	KeyAlfenPlugAndChargeIdentifier      = "PlugAndChargeIdentifier"
+	KeyChargeAmpsPhaseSwitchingSupported = "ACPhaseSwitchingSupported"
+	KeyEvBoxSupportedMeasurands          = "evb_SupportedMeasurands"
 )
