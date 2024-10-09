@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-sprout/sprout/sprigin"
+	"github.com/Masterminds/sprig/v3"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -207,7 +207,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprigin.FuncMap()).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}

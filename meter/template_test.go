@@ -23,12 +23,14 @@ var acceptable = []string{
 	"i/o timeout",
 	"'sma': missing uri or serial", // SMA
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
-	"can only have either uri or device",               // modbus
-	"(Client.Timeout exceeded while awaiting headers)", // http
-	"context deadline exceeded",                        // LG ESS
-	"no ping response for 192.0.2.2",                   // SMA
-	"no such network interface",                        // SMA
-	"missing config values: username, password, key",   // E3DC
+	"can only have either uri or device",                                   // modbus
+	"connection already registered with different protocol: localhost:502", // modbus
+	"(Client.Timeout exceeded while awaiting headers)",                     // http
+	"context deadline exceeded",                                            // LG ESS
+	"no ping response for 192.0.2.2",                                       // SMA
+	"no Speedwire ping response for 127.0.0.1",                             // SMA
+	"no such network interface",                                            // SMA
+	"missing config values: username, password, key",                       // E3DC
 }
 
 func TestTemplates(t *testing.T) {
