@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"cmp"
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -204,7 +203,7 @@ NEXT:
 }
 
 func configureMeters(static []config.Named, names ...string) error {
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -219,7 +218,7 @@ func configureMeters(static []config.Named, names ...string) error {
 			log.WARN.Printf("create meter %d: %v", i+1, err)
 		}
 
-		g.Go(func() error {
+		eg.Go(func() error {
 			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
@@ -240,7 +239,7 @@ func configureMeters(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		g.Go(func() error {
+		eg.Go(func() error {
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -262,11 +261,11 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	return g.Wait()
+	return eg.Wait()
 }
 
 func configureChargers(static []config.Named, names ...string) error {
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -281,7 +280,7 @@ func configureChargers(static []config.Named, names ...string) error {
 			log.WARN.Printf("create charger %d: %v", i+1, err)
 		}
 
-		g.Go(func() error {
+		eg.Go(func() error {
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
@@ -302,7 +301,7 @@ func configureChargers(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		g.Go(func() error {
+		eg.Go(func() error {
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -324,7 +323,7 @@ func configureChargers(static []config.Named, names ...string) error {
 		})
 	}
 
-	return g.Wait()
+	return eg.Wait()
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
@@ -351,7 +350,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 func configureVehicles(static []config.Named, names ...string) error {
 	var mu sync.Mutex
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
 	// stable-sort vehicles by name
 	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
@@ -369,7 +368,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create vehicle %d: %w", i+1, err)
 		}
 
-		g.Go(func() error {
+		eg.Go(func() error {
 			instance, err := vehicleInstance(cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
@@ -393,7 +392,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
 	for _, conf := range configurable {
-		g.Go(func() error {
+		eg.Go(func() error {
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -413,7 +412,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 		})
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return err
 	}
 
@@ -813,13 +812,13 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
-	g, _ := errgroup.WithContext(context.Background())
-	g.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	g.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	g.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	g.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	var eg errgroup.Group
+	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
 
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
 

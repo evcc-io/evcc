@@ -68,9 +68,6 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
         id: go
 
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
-
       - name: Patch ASN1
         run: make patch-asn1-sudo
 
@@ -105,6 +102,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
+
       - name: Publish .deb to Cloudsmith
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
@@ -138,7 +142,7 @@ jobs:
 
       - name: Update version
         run: |
-          sed -i -e s#\"version.*#\"version\":\ \"$(echo ${{ github.ref }} | sed -e s#refs/tags/##)\",# ./hassio/evcc/config.json
+          sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
 
       - name: Push
         run: |

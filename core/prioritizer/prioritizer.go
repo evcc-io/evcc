@@ -2,12 +2,14 @@ package prioritizer
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
 type Prioritizer struct {
+	mu     sync.Mutex
 	log    *util.Logger
 	demand map[loadpoint.API]float64
 }
@@ -21,7 +23,9 @@ func New(log *util.Logger) *Prioritizer {
 
 func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API) {
 	if power := lp.GetChargePowerFlexibility(); power >= 0 {
+		p.mu.Lock()
 		p.demand[lp] = power
+		p.mu.Unlock()
 	}
 }
 

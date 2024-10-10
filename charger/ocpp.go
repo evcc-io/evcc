@@ -309,7 +309,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.Now(),
+			StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
