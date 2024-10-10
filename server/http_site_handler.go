@@ -191,6 +191,25 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	}
 }
 
+// updateSolarShare sets the solar share limit globally
+func updateSolarShare(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := strconv.ParseFloat(vars["value"], 64)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		for _, lp := range site.Loadpoints() {
+			lp.SetSolarShare(val)
+		}
+
+		jsonResult(w, val)
+	}
+}
+
 // stateHandler returns the combined state
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

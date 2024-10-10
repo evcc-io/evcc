@@ -127,6 +127,7 @@ type Loadpoint struct {
 	limitSoc         int      // Session limit for soc
 	limitEnergy      float64  // Session limit for energy
 	smartCostLimit   *float64 // always charge if cost is below this value
+	solarShare       float64  // solar share for pv mode
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -1308,9 +1309,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
+
+		// lp.Disable.Threshold
+		disableThreshold := (lp.GetSolarShare() - 1) * lp.EffectiveMinPower()
+
 		// kick off disable sequence
-		if projectedSitePower >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
+		if projectedSitePower >= disableThreshold {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, disableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
@@ -1339,10 +1344,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	if mode == api.ModePV && !lp.enabled {
+		// lp.Enable.Threshold
+		enableThreshold := -lp.GetSolarShare() * lp.EffectiveMinPower()
+
 		// kick off enable sequence
-		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+		if sitePower <= enableThreshold {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, enableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())

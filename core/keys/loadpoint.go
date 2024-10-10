@@ -34,6 +34,7 @@ const (
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start
+	SolarShare         = "solarShare"         // solar share
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
