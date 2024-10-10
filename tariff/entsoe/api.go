@@ -11,6 +11,7 @@ import (
 
 	"github.com/dylanmei/iso8601"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 )
 
 const (
@@ -88,11 +89,6 @@ func ExtractPeriodPriceData(period *TimeSeriesPeriod) ([]Rate, error) {
 		return nil, err
 	}
 
-	points := make(map[int]Point)
-	for _, point := range period.Point {
-		points[point.Position] = point
-	}
-
 	var count int
 	switch period.Resolution {
 	case ResolutionHour:
@@ -106,6 +102,10 @@ func ExtractPeriodPriceData(period *TimeSeriesPeriod) ([]Rate, error) {
 	}
 
 	ts := period.TimeInterval.Start.Time
+	points := lo.SliceToMap(period.Point, func(p Point) (int, Point) {
+		return p.Position, p
+	})
+
 	for pos := 1; pos <= count; pos++ {
 		var point Point
 		for last := pos; last > 0; last-- {
