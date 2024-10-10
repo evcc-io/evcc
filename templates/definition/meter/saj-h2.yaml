@@ -205,7 +205,5 @@ render: |
               address: 13832 # First_charge_power_time 
               type: writeholding
               decode: int16
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

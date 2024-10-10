@@ -23,7 +23,8 @@ var acceptable = []string{
 	"loadpoint 1 is not configured", // openWB
 	"recv timeout",
 	"(Client.Timeout exceeded while awaiting headers)",
-	"can only have either uri or device", // modbus
+	"can only have either uri or device",                                   // modbus
+	"connection already registered with different protocol: localhost:502", // modbus
 	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
