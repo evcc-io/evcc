@@ -127,6 +127,7 @@ type Loadpoint struct {
 	limitSoc         int      // Session limit for soc
 	limitEnergy      float64  // Session limit for energy
 	smartCostLimit   *float64 // always charge if cost is below this value
+	batteryBoost     bool     // battery boost mode
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -1272,10 +1273,15 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart, batteryBoost bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
+
+	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
+	if minPower := lp.EffectiveMinPower(); lp.batteryBoost && batteryBoost {
+		sitePower -= minPower
+	}
 
 	// switch phases up/down
 	var scaledTo int
@@ -1654,7 +1660,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart, batteryBoost bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1779,7 +1785,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart, batteryBoost)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
