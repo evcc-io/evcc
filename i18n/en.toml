@@ -641,6 +641,17 @@ allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
 filter = "Filter"
 
+[sessions.group]
+co2 = "CO₂"
+grid = "Grid"
+price = "Price"
+self = "Solar"
+
+[sessions.period]
+month = "Month"
+total = "Total"
+year = "Year"
+
 [settings]
 title = "User Interface"
 

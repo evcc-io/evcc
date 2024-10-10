@@ -644,6 +644,15 @@ allLoadpoints = "Alle Ladepunkte"
 allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
+[sessions.group]
+grid = "Netz"
+self = "Sonne"
+
+[sessions.period]
+month = "Monat"
+total = "Gesamt"
+year = "Jahr"
+
 [settings]
 title = "Darstellung"
 
