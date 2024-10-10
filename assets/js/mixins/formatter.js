@@ -285,5 +285,47 @@ export default {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
     },
+    getWeekdaysList: function (weekdayFormat) {
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
+      return [...Array(7).keys()].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+    },
+    getShortenedWeekdaysLabel: function (selectedWeekdays) {
+      if (0 === selectedWeekdays.length) {
+        return this.$t("main.chargingPlan.noWeekdaysSelected");
+      }
+
+      let label = "";
+      let weekdays = this.getWeekdaysList("short");
+      let maxWeekday = Math.max(...selectedWeekdays);
+
+      for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
+        if (selectedWeekdays.includes(weekdayRangeStart)) {
+          label += weekdays[weekdayRangeStart];
+
+          let weekdayRangeEnd = weekdayRangeStart;
+          while (selectedWeekdays.includes(weekdayRangeEnd + 1)) {
+            weekdayRangeEnd++;
+          }
+
+          if (weekdayRangeEnd - weekdayRangeStart > 1) {
+            // more than 2 consecutive weekdays selected
+            label += " – " + weekdays[weekdayRangeEnd];
+            weekdayRangeStart = weekdayRangeEnd;
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          } else if (weekdayRangeStart !== weekdayRangeEnd) {
+            // exactly 2 consecutive weekdays selected
+            label += ", ";
+          } else {
+            // exactly 1 single day selected
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          }
+        }
+      }
+      return label;
+    },
   },
 };

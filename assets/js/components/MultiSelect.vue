@@ -103,7 +103,7 @@ export default {
 			},
 		},
 		internalValue(newValue) {
-			if (this.allOptionsSelected || this.noneSelected) {
+			if (this.noneSelected) {
 				this.$emit("update:modelValue", []);
 			} else {
 				this.$emit("update:modelValue", newValue);

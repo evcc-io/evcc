@@ -2,7 +2,7 @@
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0 mb-3">
-				<ChargingPlanSettingsEntry
+				<ChargingPlanStaticSettings
 					:id="`${id}_0`"
 					class="mb-2"
 					v-bind="plans[0] || {}"
@@ -10,10 +10,24 @@
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
-					@plan-updated="(data) => updatePlan({ index: 0, ...data })"
-					@plan-removed="() => removePlan(0)"
+					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
+					@static-plan-removed="() => removeStaticPlan(0)"
 					@plan-preview="previewPlan"
 				/>
+				<div v-if="socBasedPlanning">
+					<hr class="w-75 mx-auto mt-5" />
+					<h5>
+						<div class="inner" data-testid="repeating-plan-title">
+							{{ $t("main.chargingPlan.repeatingPlan") }}
+						</div>
+					</h5>
+					<ChargingPlansRepeatingSettings
+						:id="id"
+						:rangePerSoc="rangePerSoc"
+						:initialPlans="repeatingPlans"
+						@repeating-plans-updated="updateRepeatingPlans"
+					/>
+				</div>
 			</div>
 		</div>
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
@@ -28,8 +42,10 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/plus";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
-import ChargingPlanSettingsEntry from "./ChargingPlanSettingsEntry.vue";
+import ChargingPlanStaticSettings from "./ChargingPlanStaticSettings.vue";
+import ChargingPlansRepeatingSettings from "./ChargingPlansRepeatingSettings.vue";
 import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -41,11 +57,17 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "ChargingPlanSettings",
-	components: { ChargingPlanPreview, ChargingPlanSettingsEntry, ChargingPlanWarnings },
+	components: {
+		ChargingPlanPreview,
+		ChargingPlanStaticSettings,
+		ChargingPlansRepeatingSettings,
+		ChargingPlanWarnings,
+	},
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
 		plans: { type: Array, default: () => [] },
+		repeatingPlans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
@@ -63,7 +85,7 @@ export default {
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
 	},
-	emits: ["plan-removed", "plan-updated"],
+	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
 	data: function () {
 		return {
 			tariff: {},
@@ -160,18 +182,21 @@ export default {
 			}
 			return target;
 		},
-		addPlan: function () {
-			this.$emit("plan-updated", {
+		addStaticPlan: function () {
+			this.$emit("static-plan-updated", {
 				time: this.defaultDate(),
 				soc: 100,
 				energy: this.capacity || 10,
 			});
 		},
-		removePlan: function (index) {
-			this.$emit("plan-removed", index);
+		removeStaticPlan: function (index) {
+			this.$emit("static-plan-removed", index);
 		},
-		updatePlan: function (data) {
-			this.$emit("plan-updated", data);
+		updateStaticPlan: function (data) {
+			this.$emit("static-plan-updated", data);
+		},
+		updateRepeatingPlans: function (plans) {
+			this.$emit("repeating-plans-updated", plans);
 		},
 		previewPlan: function (data) {
 			this.fetchPlanDebounced(data);
