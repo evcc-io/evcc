@@ -17,106 +17,147 @@ type testCase struct {
 	// capable=0 signals 1p3p as set during loadpoint init
 	// physical/vehicle=0 signals unknown
 	// measuredPhases<>0 signals previous measurement
-	capable, physical, vehicle, measuredPhases, actExpected, maxExpected int
+	capable, physical, vehicle, measuredPhases, actExpected, maxExpected, minExpected int
 	// scaling expectation: d=down, u=up, du=both
 	scale string
 }
 
 var phaseTests = []testCase{
 	// 1p
-	{1, 1, 0, 0, 1, 1, ""},
-	{1, 1, 0, 1, 1, 1, ""},
-	{1, 1, 1, 0, 1, 1, ""},
-	{1, 1, 2, 0, 1, 1, ""},
-	{1, 1, 3, 0, 1, 1, ""},
+	{1, 1, 0, 0, 1, 1, 1, ""},
+	{1, 1, 0, 1, 1, 1, 1, ""},
+	{1, 1, 1, 0, 1, 1, 1, ""},
+	{1, 1, 2, 0, 1, 1, 1, ""},
+	{1, 1, 3, 0, 1, 1, 1, ""},
 	// 3p
-	{3, 3, 0, 0, unknownPhases, 3, ""},
-	{3, 3, 0, 1, 1, 1, ""},
-	{3, 3, 0, 2, 2, 2, ""},
-	{3, 3, 0, 3, 3, 3, ""},
-	{3, 3, 1, 0, 1, 1, ""},
-	{3, 3, 2, 0, 2, 2, ""},
-	{3, 3, 3, 0, 3, 3, ""},
+	{3, 3, 0, 0, unknownPhases, 3, 3, ""},
+	{3, 3, 0, 1, 1, 1, 1, ""},
+	{3, 3, 0, 2, 2, 2, 2, ""},
+	{3, 3, 0, 3, 3, 3, 3, ""},
+	{3, 3, 1, 0, 1, 1, 1, ""},
+	{3, 3, 2, 0, 2, 2, 2, ""},
+	{3, 3, 3, 0, 3, 3, 3, ""},
 	// 1p3p initial
-	{0, 0, 0, 0, unknownPhases, 3, "du"},
-	{0, 0, 0, 1, 1, 3, "u"},
-	{0, 0, 0, 2, 2, 3, "du"},
-	{0, 0, 0, 3, 3, 3, "du"},
-	{0, 0, 1, 0, 1, 1, ""},
-	{0, 0, 2, 0, 2, 2, "du"},
-	{0, 0, 3, 0, 3, 3, "du"},
+	{0, 0, 0, 0, unknownPhases, 3, 1, "du"},
+	{0, 0, 0, 1, 1, 3, 1, "u"},
+	{0, 0, 0, 2, 2, 3, 1, "du"},
+	{0, 0, 0, 3, 3, 3, 1, "du"},
+	{0, 0, 1, 0, 1, 1, 1, ""},
+	{0, 0, 2, 0, 2, 2, 1, "du"},
+	{0, 0, 3, 0, 3, 3, 1, "du"},
 	// 1p3p, 1 currently active
-	{0, 1, 0, 0, 1, 3, "u"},
-	{0, 1, 0, 1, 1, 3, "u"},
+	{0, 1, 0, 0, 1, 3, 1, "u"},
+	{0, 1, 0, 1, 1, 3, 1, "u"},
 	// {0, 1, 0, 2, 2,2,"u"}, // 2p active > 1p configured must not happen
 	// {0, 1, 0, 3, 3,3,"u"}, // 3p active > 1p configured must not happen
-	{0, 1, 1, 0, 1, 1, ""},
-	{0, 1, 2, 0, 1, 2, "u"},
-	{0, 1, 3, 0, 1, 3, "u"},
+	{0, 1, 1, 0, 1, 1, 1, ""},
+	{0, 1, 2, 0, 1, 2, 1, "u"},
+	{0, 1, 3, 0, 1, 3, 1, "u"},
 	// 1p3p, 3 currently active
-	{0, 3, 0, 0, unknownPhases, 3, "d"},
-	{0, 3, 0, 1, 1, 1, ""},
-	{0, 3, 0, 2, 2, 2, "d"},
-	{0, 3, 0, 3, 3, 3, "d"},
-	{0, 3, 1, 0, 1, 1, ""},
-	{0, 3, 2, 0, 2, 2, "d"},
-	{0, 3, 3, 0, 3, 3, "d"},
+	{0, 3, 0, 0, unknownPhases, 3, 1, "d"},
+	{0, 3, 0, 1, 1, 1, 1, ""},
+	{0, 3, 0, 2, 2, 2, 1, "d"},
+	{0, 3, 0, 3, 3, 3, 1, "d"},
+	{0, 3, 1, 0, 1, 1, 1, ""},
+	{0, 3, 2, 0, 2, 2, 1, "d"},
+	{0, 3, 3, 0, 3, 3, 1, "d"},
 }
 
 func TestMaxActivePhases(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
 	// 0 is auto, 1/3 are fixed
-	for _, dflt := range []int{0, 1, 3} {
+	for _, configured := range []int{0, 1, 3} {
 		for _, tc := range phaseTests {
 			// skip invalid configs (free scaling for simple charger)
-			if dflt == 0 && tc.capable != 0 {
+			if configured == 0 && tc.capable != 0 {
 				continue
 			}
 
-			t.Log(dflt, tc)
+			t.Logf("configured %d %+v", configured, tc)
 
+			ctrl := gomock.NewController(t)
 			plainCharger := api.NewMockCharger(ctrl)
-
-			// 1p3p
-			var phaseCharger *api.MockPhaseSwitcher
-			if tc.capable == 0 {
-				phaseCharger = api.NewMockPhaseSwitcher(ctrl)
-			}
 
 			vehicle := api.NewMockVehicle(ctrl)
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				configuredPhases: dflt, // fixed phases or default
+				configuredPhases: configured, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
 				measuredPhases:   tc.measuredPhases,
+				charger:          plainCharger,
 			}
 
-			if phaseCharger != nil {
+			// 1p3p
+			if tc.capable == 0 {
 				lp.charger = struct {
 					*api.MockCharger
 					*api.MockPhaseSwitcher
 				}{
-					plainCharger, phaseCharger,
-				}
-			} else {
-				lp.charger = struct {
-					*api.MockCharger
-				}{
-					plainCharger,
+					plainCharger, api.NewMockPhaseSwitcher(ctrl),
 				}
 			}
 
-			expectedPhases := tc.maxExpected
-
 			// restrict scalable charger by config
-			if tc.capable == 0 && dflt > 0 && dflt < tc.maxExpected {
-				expectedPhases = dflt
+			expectedPhases := tc.maxExpected
+			if tc.capable == 0 && configured > 0 && configured < tc.maxExpected {
+				expectedPhases = configured
 			}
 
 			require.Equal(t, expectedPhases, lp.maxActivePhases(), "expected max active phases")
+			ctrl.Finish()
+		}
+	}
+}
+
+func TestMinActivePhases(t *testing.T) {
+	// 0 is auto, 1/3 are fixed
+	for _, configured := range []int{0, 1, 3} {
+		for _, tc := range phaseTests {
+			// skip invalid configs (free scaling for simple charger)
+			if configured == 0 && tc.capable != 0 {
+				continue
+			}
+
+			// skip physical config different than configured
+			if configured != 0 && tc.capable != 0 && configured != tc.physical {
+				continue
+			}
+
+			t.Logf("configured %d %+v", configured, tc)
+
+			ctrl := gomock.NewController(t)
+			plainCharger := api.NewMockCharger(ctrl)
+
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
+
+			lp := &Loadpoint{
+				configuredPhases: configured, // fixed phases or default
+				vehicle:          vehicle,
+				phases:           tc.physical,
+				measuredPhases:   tc.measuredPhases,
+				charger:          plainCharger,
+			}
+
+			// 1p3p
+			if tc.capable == 0 {
+				lp.charger = struct {
+					*api.MockCharger
+					*api.MockPhaseSwitcher
+				}{
+					plainCharger, api.NewMockPhaseSwitcher(ctrl),
+				}
+			}
+
+			// restrict scalable charger by config
+			expectedPhases := tc.minExpected
+			if tc.capable == 0 && configured > 0 && configured < tc.minExpected {
+				expectedPhases = configured
+			}
+
+			require.Equal(t, expectedPhases, lp.minActivePhases(), "expected min active phases")
+			ctrl.Finish()
 		}
 	}
 }
