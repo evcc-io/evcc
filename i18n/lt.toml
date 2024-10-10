@@ -124,6 +124,8 @@ labelUser = "Vartotojo vardas"
 title = "InfluxDB"
 v1Support = "Reikia InfluxDB 1.x palaikymo?"
 v2Support = "Atgal į InfluxDB 2.x"
+labelCheckInsecure = "Leisti savarankiškai pasirašytus sertifikatus"
+labelInsecure = "Sertifikato patvirtinimas"
 
 [config.main]
 addLoadpoint = "Pridėti įkroviklį"

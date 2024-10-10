@@ -124,6 +124,8 @@ labelUser = "Brugernavn"
 title = "InfluxDB"
 v1Support = "Har du brug for support til InfluxDB 1.x?"
 v2Support = "Tilbage til InfluxDB 2.x"
+labelInsecure = "Certifikatvalidering"
+labelCheckInsecure = "Tillad selvsignerede certifikater"
 
 [config.main]
 addLoadpoint = "Tilføj opladningspunkt"

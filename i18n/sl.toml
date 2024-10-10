@@ -100,6 +100,7 @@ remove = "Odstrani"
 save = "Shrani"
 telemetry = "Telemetrija"
 title = "Naslov"
+readFromFile = "Preberi iz datoteke"
 
 [config.grid]
 title = "Omrežni meter"
@@ -123,6 +124,8 @@ labelUser = "Uporabniško ime"
 title = "InfluxDB"
 v1Support = "Potrebujete podporo za InfluxDB 1.x?"
 v2Support = "Nazaj na InfluxDB 2.x"
+labelInsecure = "Preverjanje certifikata"
+labelCheckInsecure = "Dovoli samopodpisane certifikate"
 
 [config.main]
 addLoadpoint = "Dodaj polnilno mesto"
@@ -165,6 +168,9 @@ labelTopic = "Topic"
 labelUser = "Uporabniško ime"
 publishing = "Objavljanje"
 title = "MQTT"
+labelClientKey = "Ključ stranke"
+labelCaCert = "Certifikat strežnika (CA)"
+labelClientCert = "Certifikat stranke"
 
 [config.network]
 descriptionHost = "Uporabite pripono .local, da omogočite mDNS. Pomembno za odkrivanje mobilne aplikacije in nekaterih polnilnikov OCPP."

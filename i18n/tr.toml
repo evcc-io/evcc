@@ -34,7 +34,7 @@ title = "Yük yönetimi"
 
 [config.control]
 description = "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir."
-descriptionInterval = "Saniye cinsinden denetim çevrimi güncelleme döngüsü. evcc'nin ölçüm verilerini ne sıklıkla okuyacağını, doldurma gücünü ayarlayacağını ve kullanıcı arayüzünü güncelleyeceğini tanımlar. Kısa aralıklar (<30s) salınımlara ve istenmeyen davranışlara yol açabilir."
+descriptionInterval = "Saniye cinsinden denetim çevrimi güncelleme döngüsü. evcc'nin ölçüm verilerini ne sıklıkla okuyacağını, doldurma gücünü ayarlayacağını ve kullanıcı arayüzünü güncelleyeceğini tanımlar. Kısa aralıklar (<30s) dalgalanmalara ve istenmeyen davranışlara yol açabilir."
 descriptionMaxGridSupply = "Sadece DC üretim gücünün tamamını AC üzerinden eve veremeyen hibrit inverterler için geçerlidir. Bu senaryo istenmeyen şebeke kullanımına yol açabilir, çünkü evcc tüm DC gücünün mevcut olduğunu varsayar. Bunu önlemek için en az 50 W'lık bir değer kullanın."
 descriptionResidualPower = "Denetim çevriminin çalışma noktasını değiştirir. Eğer bir ev bataryan varsa 100 W değerini ayarlaman önerilir. Bu şekilde batarya, şebeke kullanımına göre hafif bir önceliğe sahip olacaktır."
 labelInterval = "Güncelleme aralığı"
@@ -98,6 +98,7 @@ remove = "Kaldır"
 save = "Kaydet"
 telemetry = "Uzölçüm"
 title = "Başlık"
+readFromFile = “Dosyadan oku”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -121,6 +122,8 @@ labelUser = "Kullanıcı Adı"
 title = "InfluxDB"
 v1Support = "InfluxDB 1.x için desteğe mi ihtiyacın var?"
 v2Support = "InfluxDB 2.x'e geri dön"
+labelInsecure = “Sertifika doğrulama”
+labelCheckInsecure = “Güvensiz bağlantılara izin ver”
 
 [config.main]
 addLoadpoint = "Doldurma noktası ekle"
@@ -163,6 +166,9 @@ labelTopic = "Konu"
 labelUser = "Kullanıcı Adı"
 publishing = "Yayınla\""
 title = "MQTT"
+labelCaCert = “Sunucu sertifikası (CA)”
+labelClientCert = “Müşteri sertifikası”
+labelClientKey = “Müşteri anahtarı”
 
 [config.network]
 descriptionHost = "mDNS'yi etkinleştirmek için .local sonekini kullan. Mobil uygulamanın ve bazı OCPP doldurma cihazlarının tanınması ile ilgili."
@@ -558,6 +564,8 @@ vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
+disconnectRequired = “Oturum sonlandırıldı. Tekrar bağlan.”
+awaitingAuthorization = “İzin bekliyorum.”
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
