@@ -53,7 +53,6 @@ type Rate struct {
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
 	var res []Rate
 
-	println(len(ts))
 	for _, ts := range ts {
 		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
 			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
@@ -63,8 +62,6 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 			if period.Resolution != resolution {
 				continue
 			}
-
-			println(len(period.Point))
 
 			data, err := ExtractPeriodPriceData(&period)
 			if err != nil {
