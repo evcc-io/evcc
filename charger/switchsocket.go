@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
@@ -8,7 +10,7 @@ import (
 )
 
 func init() {
-	registry.Add("switchsocket", NewSwitchSocketFromConfig)
+	registry.AddCtx("switchsocket", NewSwitchSocketFromConfig)
 }
 
 type SwitchSocket struct {
@@ -17,7 +19,7 @@ type SwitchSocket struct {
 	*switchSocket
 }
 
-func NewSwitchSocketFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		Enabled      provider.Config
@@ -30,17 +32,17 @@ func NewSwitchSocketFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	enabled, err := provider.NewBoolGetterFromConfig(cc.Enabled)
+	enabled, err := provider.NewBoolGetterFromConfig(ctx, cc.Enabled)
 	if err != nil {
 		return nil, err
 	}
 
-	enable, err := provider.NewBoolSetterFromConfig("enable", cc.Enable)
+	enable, err := provider.NewBoolSetterFromConfig(ctx, "enable", cc.Enable)
 	if err != nil {
 		return nil, err
 	}
 
-	power, err := provider.NewFloatGetterFromConfig(cc.Power)
+	power, err := provider.NewFloatGetterFromConfig(ctx, cc.Power)
 	if err != nil {
 		return nil, err
 	}

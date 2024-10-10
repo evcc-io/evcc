@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -19,11 +20,11 @@ type Go struct {
 }
 
 func init() {
-	registry.Add("go", NewGoProviderFromConfig)
+	registry.AddCtx("go", NewGoProviderFromConfig)
 }
 
 // NewGoProviderFromConfig creates a Go provider
-func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -40,12 +41,12 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	in, err := configureInputs(cc.In)
+	in, err := configureInputs(ctx, cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := configureOutputs(cc.Out)
+	out, err := configureOutputs(ctx, cc.Out)
 	if err != nil {
 		return nil, err
 	}

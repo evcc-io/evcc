@@ -11,6 +11,7 @@ import (
 
 type watchdogProvider struct {
 	mu      sync.Mutex
+	ctx     context.Context
 	log     *util.Logger
 	reset   *string
 	set     Config
@@ -19,11 +20,11 @@ type watchdogProvider struct {
 }
 
 func init() {
-	registry.Add("watchdog", NewWatchDogFromConfig)
+	registry.AddCtx("watchdog", NewWatchDogFromConfig)
 }
 
 // NewWatchDogFromConfig creates watchDog provider
-func NewWatchDogFromConfig(other map[string]interface{}) (Provider, error) {
+func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Reset   *string
 		Set     Config
@@ -35,7 +36,8 @@ func NewWatchDogFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &watchdogProvider{
-		log:     util.NewLogger("watchdog"),
+		ctx:     ctx,
+		log:     contextLogger(ctx, util.NewLogger("watchdog")),
 		reset:   cc.Reset,
 		set:     cc.Set,
 		timeout: cc.Timeout,
@@ -90,7 +92,7 @@ func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func
 var _ SetIntProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(param, o.set)
+	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +112,7 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 var _ SetFloatProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error) {
-	set, err := NewFloatSetterFromConfig(param, o.set)
+	set, err := NewFloatSetterFromConfig(o.ctx, param, o.set)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,7 @@ func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error
 var _ SetBoolProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
-	set, err := NewBoolSetterFromConfig(param, o.set)
+	set, err := NewBoolSetterFromConfig(o.ctx, param, o.set)
 	if err != nil {
 		return nil, err
 	}

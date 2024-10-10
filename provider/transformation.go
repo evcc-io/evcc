@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -20,7 +21,7 @@ type outputTransformation struct {
 	function func(any) error
 }
 
-func configureInputs(inConfig []transformationConfig) ([]inputTransformation, error) {
+func configureInputs(ctx context.Context, inConfig []transformationConfig) ([]inputTransformation, error) {
 	var in []inputTransformation
 
 	for _, cc := range inConfig {
@@ -28,28 +29,28 @@ func configureInputs(inConfig []transformationConfig) ([]inputTransformation, er
 
 		switch strings.ToLower(cc.Type) {
 		case "bool":
-			ff, err := NewBoolGetterFromConfig(cc.Config)
+			ff, err := NewBoolGetterFromConfig(ctx, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "int":
-			ff, err := NewIntGetterFromConfig(cc.Config)
+			ff, err := NewIntGetterFromConfig(ctx, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "float":
-			ff, err := NewFloatGetterFromConfig(cc.Config)
+			ff, err := NewFloatGetterFromConfig(ctx, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "string":
-			ff, err := NewStringGetterFromConfig(cc.Config)
+			ff, err := NewStringGetterFromConfig(ctx, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -67,7 +68,7 @@ func configureInputs(inConfig []transformationConfig) ([]inputTransformation, er
 	return in, nil
 }
 
-func configureOutputs(outConfig []transformationConfig) ([]outputTransformation, error) {
+func configureOutputs(ctx context.Context, outConfig []transformationConfig) ([]outputTransformation, error) {
 	var out []outputTransformation
 
 	for _, cc := range outConfig {
@@ -75,7 +76,7 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 
 		switch strings.ToLower(cc.Type) {
 		case "bool":
-			ff, err := NewBoolSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewBoolSetterFromConfig(ctx, cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -85,7 +86,7 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 		case "int":
-			ff, err := NewIntSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewIntSetterFromConfig(ctx, cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -95,7 +96,7 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 		case "float":
-			ff, err := NewFloatSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewFloatSetterFromConfig(ctx, cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -105,7 +106,7 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 		case "string":
-			ff, err := NewStringSetterFromConfig(cc.Name, cc.Config)
+			ff, err := NewStringSetterFromConfig(ctx, cc.Name, cc.Config)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}

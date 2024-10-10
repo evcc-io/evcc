@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
@@ -21,11 +22,11 @@ type Mqtt struct {
 }
 
 func init() {
-	registry.Add("mqtt", NewMqttFromConfig)
+	registry.AddCtx("mqtt", NewMqttFromConfig)
 }
 
 // NewMqttFromConfig creates Mqtt provider
-func NewMqttFromConfig(other map[string]interface{}) (Provider, error) {
+func NewMqttFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters
@@ -41,7 +42,7 @@ func NewMqttFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("mqtt")
+	log := contextLogger(ctx, util.NewLogger("mqtt"))
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {

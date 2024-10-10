@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,11 +9,11 @@ import (
 )
 
 // BuildMeasurements returns typical meter measurement getters from config
-func BuildMeasurements(power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
+func BuildMeasurements(ctx context.Context, power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
 	var powerG func() (float64, error)
 	if power != nil {
 		var err error
-		powerG, err = provider.NewFloatGetterFromConfig(*power)
+		powerG, err = provider.NewFloatGetterFromConfig(ctx, *power)
 		if err != nil {
 			return nil, nil, fmt.Errorf("power: %w", err)
 		}
@@ -21,7 +22,7 @@ func BuildMeasurements(power, energy *provider.Config) (func() (float64, error),
 	var energyG func() (float64, error)
 	if energy != nil {
 		var err error
-		energyG, err = provider.NewFloatGetterFromConfig(*energy)
+		energyG, err = provider.NewFloatGetterFromConfig(ctx, *energy)
 		if err != nil {
 			return nil, nil, fmt.Errorf("energy: %w", err)
 		}
@@ -31,23 +32,23 @@ func BuildMeasurements(power, energy *provider.Config) (func() (float64, error),
 }
 
 // BuildPhaseMeasurements returns typical meter measurement getters from config
-func BuildPhaseMeasurements(currents, voltages, powers []provider.Config) (
+func BuildPhaseMeasurements(ctx context.Context, currents, voltages, powers []provider.Config) (
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
 	error,
 ) {
-	currentsG, err := buildPhaseProviders(currents)
+	currentsG, err := buildPhaseProviders(ctx, currents)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("currents: %w", err)
 	}
 
-	voltagesG, err := buildPhaseProviders(voltages)
+	voltagesG, err := buildPhaseProviders(ctx, voltages)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	powersG, err := buildPhaseProviders(powers)
+	powersG, err := buildPhaseProviders(ctx, powers)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("powers: %w", err)
 	}
@@ -56,7 +57,7 @@ func BuildPhaseMeasurements(currents, voltages, powers []provider.Config) (
 }
 
 // buildPhaseProviders returns phases getter for given config
-func buildPhaseProviders(providers []provider.Config) (func() (float64, float64, float64, error), error) {
+func buildPhaseProviders(ctx context.Context, providers []provider.Config) (func() (float64, float64, float64, error), error) {
 	if len(providers) == 0 {
 		return nil, nil
 	}
@@ -67,7 +68,7 @@ func buildPhaseProviders(providers []provider.Config) (func() (float64, float64,
 
 	var phases [3]func() (float64, error)
 	for idx, prov := range providers {
-		c, err := provider.NewFloatGetterFromConfig(prov)
+		c, err := provider.NewFloatGetterFromConfig(ctx, prov)
 		if err != nil {
 			return nil, fmt.Errorf("[%d] %w", idx, err)
 		}

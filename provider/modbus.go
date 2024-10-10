@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -21,11 +22,11 @@ type Modbus struct {
 }
 
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.AddCtx("modbus", NewModbusFromConfig)
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
@@ -58,7 +59,7 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)
 
-	log := util.NewLogger("modbus")
+	log := contextLogger(ctx, util.NewLogger("modbus"))
 	conn.Logger(log.TRACE)
 
 	if err := cc.Register.Error(); err != nil {

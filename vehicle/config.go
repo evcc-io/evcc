@@ -24,7 +24,7 @@ func Types() []string {
 }
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
 		Cloud bool
 		Other map[string]interface{} `mapstructure:",remain"`
@@ -44,7 +44,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	v, err := factory(context.TODO(), cc.Other)
+	v, err := factory(ctx, cc.Other)
 	if err != nil {
 		err = fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
 	}

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"math"
 	"math/rand/v2"
 
@@ -8,15 +9,16 @@ import (
 )
 
 type randomProvider struct {
+	ctx context.Context
 	set Config
 }
 
 func init() {
-	registry.Add("random", NewRandomFromConfig)
+	registry.AddCtx("random", NewRandomFromConfig)
 }
 
 // NewRandomFromConfig creates random provider
-func NewRandomFromConfig(other map[string]interface{}) (Provider, error) {
+func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Set Config
 	}
@@ -26,6 +28,7 @@ func NewRandomFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &randomProvider{
+		ctx: ctx,
 		set: cc.Set,
 	}
 
@@ -35,7 +38,7 @@ func NewRandomFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetIntProvider = (*randomProvider)(nil)
 
 func (o *randomProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(param, o.set)
+	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
 	if err != nil {
 		return nil, err
 	}

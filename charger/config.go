@@ -17,13 +17,13 @@ func Types() []string {
 }
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (api.Charger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Charger, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := factory(context.TODO(), other)
+	v, err := factory(ctx, other)
 	if err != nil {
 		err = fmt.Errorf("cannot create charger type '%s': %w", typ, err)
 	}

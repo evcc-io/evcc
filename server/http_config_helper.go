@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"slices"
 	"sync"
@@ -17,6 +18,8 @@ const (
 	// masked indicates a masked config parameter value
 	masked = "***"
 )
+
+type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 var (
 	dirty bool
@@ -86,7 +89,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -99,7 +102,7 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(typeTemplate, merged)
+	instance, err := newFromConf(context.TODO(), typeTemplate, merged)
 
 	return dev, instance, merged, err
 }

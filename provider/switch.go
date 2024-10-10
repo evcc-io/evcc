@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -13,16 +14,17 @@ type Case struct {
 }
 
 type switchProvider struct {
+	ctx   context.Context
 	cases []Case
 	dflt  *Config
 }
 
 func init() {
-	registry.Add("switch", NewSwitchFromConfig)
+	registry.AddCtx("switch", NewSwitchFromConfig)
 }
 
 // NewSwitchFromConfig creates switch provider
-func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
+func NewSwitchFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Switch  []Case
 		Default *Config
@@ -41,6 +43,7 @@ func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &switchProvider{
+		ctx:   ctx,
 		cases: cc.Switch,
 		dflt:  cc.Default,
 	}
@@ -53,7 +56,7 @@ var _ SetIntProvider = (*switchProvider)(nil)
 func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 	set := make([]func(int64) error, 0, len(o.cases))
 	for _, cc := range o.cases {
-		s, err := NewIntSetterFromConfig(param, cc.Set)
+		s, err := NewIntSetterFromConfig(o.ctx, param, cc.Set)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +66,7 @@ func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 	var dflt func(int64) error
 	if o.dflt != nil {
 		var err error
-		if dflt, err = NewIntSetterFromConfig(param, *o.dflt); err != nil {
+		if dflt, err = NewIntSetterFromConfig(o.ctx, param, *o.dflt); err != nil {
 			return nil, err
 		}
 	}

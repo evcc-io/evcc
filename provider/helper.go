@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -30,4 +31,14 @@ func knownErrors(b []byte) error {
 	default:
 		return nil
 	}
+}
+
+func contextLogger(ctx context.Context, log *util.Logger) *util.Logger {
+	if ctx != nil {
+		if l, ok := ctx.Value(util.CtxLogger).(*util.Logger); ok {
+			log = l
+		}
+	}
+
+	return log
 }

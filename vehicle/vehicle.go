@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -18,11 +19,11 @@ type Vehicle struct {
 }
 
 func init() {
-	registry.Add(api.Custom, NewConfigurableFromConfig)
+	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
-func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Soc           provider.Config
@@ -42,7 +43,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	socG, err := provider.NewFloatGetterFromConfig(cc.Soc)
+	socG, err := provider.NewFloatGetterFromConfig(ctx, cc.Soc)
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
 	}
@@ -55,7 +56,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate range
 	var limitSoc func() (int64, error)
 	if cc.LimitSoc != nil {
-		limitSoc, err = provider.NewIntGetterFromConfig(*cc.LimitSoc)
+		limitSoc, err = provider.NewIntGetterFromConfig(ctx, *cc.LimitSoc)
 		if err != nil {
 			return nil, fmt.Errorf("limitSoc: %w", err)
 		}
@@ -64,7 +65,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
-		get, err := provider.NewStringGetterFromConfig(*cc.Status)
+		get, err := provider.NewStringGetterFromConfig(ctx, *cc.Status)
 		if err != nil {
 			return nil, fmt.Errorf("status: %w", err)
 		}
@@ -80,7 +81,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate range
 	var rng func() (int64, error)
 	if cc.Range != nil {
-		rng, err = provider.NewIntGetterFromConfig(*cc.Range)
+		rng, err = provider.NewIntGetterFromConfig(ctx, *cc.Range)
 		if err != nil {
 			return nil, fmt.Errorf("range: %w", err)
 		}
@@ -89,7 +90,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate odometer
 	var odo func() (float64, error)
 	if cc.Odometer != nil {
-		odo, err = provider.NewFloatGetterFromConfig(*cc.Odometer)
+		odo, err = provider.NewFloatGetterFromConfig(ctx, *cc.Odometer)
 		if err != nil {
 			return nil, fmt.Errorf("odometer: %w", err)
 		}
@@ -98,7 +99,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate climater
 	var climater func() (bool, error)
 	if cc.Climater != nil {
-		climater, err = provider.NewBoolGetterFromConfig(*cc.Climater)
+		climater, err = provider.NewBoolGetterFromConfig(ctx, *cc.Climater)
 		if err != nil {
 			return nil, fmt.Errorf("climater: %w", err)
 		}
@@ -107,7 +108,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate maxCurrent
 	var maxCurrent func(int64) error
 	if cc.MaxCurrent != nil {
-		maxCurrent, err = provider.NewIntSetterFromConfig("maxcurrent", *cc.MaxCurrent)
+		maxCurrent, err = provider.NewIntSetterFromConfig(ctx, "maxcurrent", *cc.MaxCurrent)
 		if err != nil {
 			return nil, fmt.Errorf("maxCurrent: %w", err)
 		}
@@ -116,7 +117,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate getMaxCurrent
 	var getMaxCurrent func() (float64, error)
 	if cc.GetMaxCurrent != nil {
-		getMaxCurrent, err = provider.NewFloatGetterFromConfig(*cc.GetMaxCurrent)
+		getMaxCurrent, err = provider.NewFloatGetterFromConfig(ctx, *cc.GetMaxCurrent)
 		if err != nil {
 			return nil, fmt.Errorf("getMaxCurrent: %w", err)
 		}
@@ -125,7 +126,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate finishtime
 	var finishTime func() (time.Time, error)
 	if cc.FinishTime != nil {
-		stringG, err := provider.NewStringGetterFromConfig(*cc.FinishTime)
+		stringG, err := provider.NewStringGetterFromConfig(ctx, *cc.FinishTime)
 		if err != nil {
 			return nil, fmt.Errorf("finishTime: %w", err)
 		}
@@ -141,7 +142,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
-		set, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
+		set, err := provider.NewBoolSetterFromConfig(ctx, "wakeup", *cc.Wakeup)
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
@@ -153,7 +154,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate chargeEnable
 	var chargeEnable func(bool) error
 	if cc.ChargeEnable != nil {
-		chargeEnable, err = provider.NewBoolSetterFromConfig("chargeenable", *cc.ChargeEnable)
+		chargeEnable, err = provider.NewBoolSetterFromConfig(ctx, "chargeenable", *cc.ChargeEnable)
 		if err != nil {
 			return nil, fmt.Errorf("chargeEnable: %w", err)
 		}

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math"
@@ -32,7 +33,7 @@ type HTTP struct {
 }
 
 func init() {
-	registry.Add("http", NewHTTPProviderFromConfig)
+	registry.AddCtx("http", NewHTTPProviderFromConfig)
 }
 
 // Auth is the authorization config
@@ -41,7 +42,7 @@ type Auth struct {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewHTTPProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -63,7 +64,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("http")
+	log := contextLogger(ctx, util.NewLogger("http"))
 	http := NewHTTP(
 		log,
 		strings.ToUpper(cc.Method),

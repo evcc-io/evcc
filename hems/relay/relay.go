@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -20,7 +21,7 @@ type Relay struct {
 }
 
 // New creates an Relay HEMS from generic config
-func New(other map[string]interface{}, site site.API) (*Relay, error) {
+func New(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
 	var cc struct {
 		MaxPower float64
 		Limit    provider.Config
@@ -49,7 +50,7 @@ func New(other map[string]interface{}, site site.API) (*Relay, error) {
 	site.SetCircuit(lpc)
 
 	// limit getter
-	limitG, err := provider.NewBoolGetterFromConfig(cc.Limit)
+	limitG, err := provider.NewBoolGetterFromConfig(ctx, cc.Limit)
 	if err != nil {
 		return nil, err
 	}

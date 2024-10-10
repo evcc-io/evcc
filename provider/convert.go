@@ -1,23 +1,27 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type convertProvider struct {
+	ctx     context.Context
 	Convert string
 	Set     Config
 }
 
 func init() {
-	registry.Add("convert", NewConvertFromConfig)
+	registry.AddCtx("convert", NewConvertFromConfig)
 }
 
 // NewConvertFromConfig creates type conversion provider
-func NewConvertFromConfig(other map[string]interface{}) (Provider, error) {
-	var cc convertProvider
+func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+	cc := convertProvider{
+		ctx: ctx,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -33,7 +37,7 @@ func (o *convertProvider) FloatSetter(param string) (func(float64) error, error)
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
 
-	set, err := NewIntSetterFromConfig(param, o.Set)
+	set, err := NewIntSetterFromConfig(o.ctx, param, o.Set)
 
 	return func(val float64) error {
 		return set(int64(val))
@@ -47,7 +51,7 @@ func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
 
-	set, err := NewFloatSetterFromConfig(param, o.Set)
+	set, err := NewFloatSetterFromConfig(o.ctx, param, o.Set)
 
 	return func(val int64) error {
 		return set(float64(val))
