@@ -11,6 +11,7 @@ import (
 
 	"github.com/dylanmei/iso8601"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 )
 
 const (
@@ -53,17 +54,23 @@ type Rate struct {
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
 	var res []Rate
 
-	for _, v := range ts {
-		if v.Period.Resolution != resolution {
-			continue
+	for _, ts := range ts {
+		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
+			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 		}
 
-		data, err := ExtractTsPriceData(&v)
-		if err != nil {
-			return nil, err
-		}
+		for _, period := range ts.Period {
+			if period.Resolution != resolution {
+				continue
+			}
 
-		res = append(res, data...)
+			data, err := ExtractPeriodPriceData(&period)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, data...)
+		}
 	}
 
 	if len(res) == 0 {
@@ -73,40 +80,52 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 	return res, nil
 }
 
-// ExtractTsPriceData massages the given TimeSeries data set to provide Rate entries with associated start and end timestamps.
-func ExtractTsPriceData(timeseries *TimeSeries) ([]Rate, error) {
-	data := make([]Rate, 0, len(timeseries.Period.Point))
+// ExtractPeriodPriceData massages the given Period data set to provide Rate entries with associated start and end timestamps.
+func ExtractPeriodPriceData(period *TimeSeriesPeriod) ([]Rate, error) {
+	data := make([]Rate, 0, len(period.Point))
 
-	duration, err := iso8601.ParseDuration(string(timeseries.Period.Resolution))
+	duration, err := iso8601.ParseDuration(string(period.Resolution))
 	if err != nil {
 		return nil, err
 	}
 
-	if unit := timeseries.PriceMeasureUnitName; unit != "MWH" {
-		return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
+	var count int
+	switch period.Resolution {
+	case ResolutionHour:
+		count = 24
+	case ResolutionHalfHour:
+		count = 2 * 24
+	case ResolutionQuarterHour:
+		count = 4 * 24
+	default:
+		return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, period.Resolution)
 	}
 
-	ts := timeseries.Period.TimeInterval.Start.Time
-	for _, point := range timeseries.Period.Point {
-		d := Rate{
-			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
-			Start: ts,
+	ts := period.TimeInterval.Start.Time
+	points := lo.SliceToMap(period.Point, func(p Point) (int, Point) {
+		return p.Position, p
+	})
+
+	for pos := 1; pos <= count; pos++ {
+		var point Point
+		for last := pos; last > 0; last-- {
+			if p, ok := points[last]; ok {
+				point = p
+				break
+			}
 		}
 
-		// Nudge pointer on as required by defined data resolution
-		switch timeseries.Period.Resolution {
-		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
-			ts = ts.Add(duration)
-		case ResolutionDay:
-			ts = ts.AddDate(0, 0, 1)
-		case ResolutionWeek:
-			ts = ts.AddDate(0, 0, 7)
-		case ResolutionYear:
-			ts = ts.AddDate(1, 0, 0)
-		default:
-			return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, timeseries.Period.Resolution)
+		if point.Position == 0 {
+			return nil, fmt.Errorf("%w: missing point at position: %d", ErrInvalidData, pos)
 		}
-		d.End = ts
+
+		start := ts.Add(time.Duration(pos-1) * duration)
+
+		d := Rate{
+			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
+			Start: start,
+			End:   start.Add(duration),
+		}
 
 		data = append(data, d)
 	}
