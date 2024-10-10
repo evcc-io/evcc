@@ -53,17 +53,26 @@ type Rate struct {
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
 	var res []Rate
 
-	for _, v := range ts {
-		if v.Period.Resolution != resolution {
-			continue
+	println(len(ts))
+	for _, ts := range ts {
+		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
+			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 		}
 
-		data, err := ExtractTsPriceData(&v)
-		if err != nil {
-			return nil, err
-		}
+		for _, period := range ts.Period {
+			if period.Resolution != resolution {
+				continue
+			}
 
-		res = append(res, data...)
+			println(len(period.Point))
+
+			data, err := ExtractPeriodPriceData(&period)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, data...)
+		}
 	}
 
 	if len(res) == 0 {
@@ -73,40 +82,28 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 	return res, nil
 }
 
-// ExtractTsPriceData massages the given TimeSeries data set to provide Rate entries with associated start and end timestamps.
-func ExtractTsPriceData(timeseries *TimeSeries) ([]Rate, error) {
-	data := make([]Rate, 0, len(timeseries.Period.Point))
+// ExtractPeriodPriceData massages the given Period data set to provide Rate entries with associated start and end timestamps.
+func ExtractPeriodPriceData(period *TimeSeriesPeriod) ([]Rate, error) {
+	data := make([]Rate, 0, len(period.Point))
 
-	duration, err := iso8601.ParseDuration(string(timeseries.Period.Resolution))
+	duration, err := iso8601.ParseDuration(string(period.Resolution))
 	if err != nil {
 		return nil, err
 	}
 
-	if unit := timeseries.PriceMeasureUnitName; unit != "MWH" {
-		return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
-	}
+	ts := period.TimeInterval.Start.Time
+	for _, point := range period.Point {
+		switch period.Resolution {
+		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
+		default:
+			return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, period.Resolution)
+		}
 
-	ts := timeseries.Period.TimeInterval.Start.Time
-	for _, point := range timeseries.Period.Point {
 		d := Rate{
 			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
-			Start: ts,
+			Start: ts.Add(time.Duration(point.Position-1) * duration),
+			End:   ts.Add(time.Duration(point.Position) * duration),
 		}
-
-		// Nudge pointer on as required by defined data resolution
-		switch timeseries.Period.Resolution {
-		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
-			ts = ts.Add(duration)
-		case ResolutionDay:
-			ts = ts.AddDate(0, 0, 1)
-		case ResolutionWeek:
-			ts = ts.AddDate(0, 0, 7)
-		case ResolutionYear:
-			ts = ts.AddDate(1, 0, 0)
-		default:
-			return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, timeseries.Period.Resolution)
-		}
-		d.End = ts
 
 		data = append(data, d)
 	}
