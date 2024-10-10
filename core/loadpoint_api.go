@@ -57,6 +57,8 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
+		lp.batteryBoost = false
+
 		// reset timers
 		switch mode {
 		case api.ModeNow, api.ModeOff:
@@ -313,6 +315,27 @@ func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
 	if lp.Disable.Delay != delay {
 		lp.Disable.Delay = delay
 		lp.publish(keys.DisableDelay, delay)
+	}
+}
+
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() bool {
+	lp.Lock()
+	defer lp.Unlock()
+
+	return lp.batteryBoost
+}
+
+// SetBatteryBoost sets the battery boost
+func (lp *Loadpoint) SetBatteryBoost(enable bool) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set battery boost:", enable)
+
+	if enable != lp.batteryBoost {
+		lp.batteryBoost = enable
+		lp.publish(keys.BatteryBoost, enable)
 	}
 }
 
