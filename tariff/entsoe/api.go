@@ -90,16 +90,19 @@ func ExtractPeriodPriceData(period *TimeSeriesPeriod) ([]Rate, error) {
 
 	ts := period.TimeInterval.Start.Time
 	for _, point := range period.Point {
+		var start time.Time
+
 		switch period.Resolution {
 		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
+			start = ts.Add(time.Duration(point.Position-1) * duration)
 		default:
 			return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, period.Resolution)
 		}
 
 		d := Rate{
 			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
-			Start: ts.Add(time.Duration(point.Position-1) * duration),
-			End:   ts.Add(time.Duration(point.Position) * duration),
+			Start: start,
+			End:   start.Add(duration),
 		}
 
 		data = append(data, d)
