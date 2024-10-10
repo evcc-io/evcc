@@ -185,6 +185,10 @@ func testInstance(instance any) map[string]testResult {
 		res["chargedEnergy"] = makeResult(val, err)
 	}
 
+	if _, ok := instance.(api.PhaseSwitcher); ok {
+		res["phases1p3p"] = makeResult(true, nil)
+	}
+
 	if dev, ok := instance.(api.VehicleRange); ok {
 		val, err := dev.Range()
 		res["range"] = makeResult(val, err)
@@ -193,6 +197,11 @@ func testInstance(instance any) map[string]testResult {
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
 		res["socLimit"] = makeResult(val, err)
+	}
+
+	if dev, ok := instance.(api.Identifier); ok {
+		val, err := dev.Identify()
+		res["identifier"] = makeResult(val, err)
 	}
 
 	return res

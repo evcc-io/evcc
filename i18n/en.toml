@@ -27,6 +27,18 @@ never = "only with enough surplus."
 titleAdd = "Add Battery"
 titleEdit = "Edit Battery"
 
+[config.charge]
+titleAdd = "Add Charge Meter"
+titleEdit = "Edit Charge Meter"
+
+[config.charger]
+chargers = "EV chargers"
+generic = "Generic integrations"
+switchsockets = "Switchable sockets"
+template = "Manufacturer"
+titleAdd = "Add Charger"
+titleEdit = "Edit Charger"
+
 [config.circuits]
 description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
 title = "Load Management"
@@ -62,6 +74,7 @@ enabled = "Enabled"
 energy = "Energy"
 feedinPrice = "Feed-in price"
 gridPrice = "Grid price"
+identifier = "RFID-Identifier"
 no = "no"
 odometer = "Odometer"
 org = "Organization"
@@ -78,6 +91,14 @@ topic = "Topic"
 url = "URL"
 yes = "yes"
 
+[config.deviceValueChargeStatus]
+A = "A (not connected)"
+B = "B (connected)"
+C = "C (charging)"
+D = "D (charging with ventilation)"
+E = "E (no power)"
+F = "F (error)"
+
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
 title = "EEBus"
@@ -88,6 +109,7 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
+delete = "Delete"
 docsLink = "See documentation."
 experimental = "Experimental"
 off = "off"
@@ -98,6 +120,7 @@ remove = "Remove"
 save = "Save"
 telemetry = "Telemetry"
 title = "Title"
+validateSave = "Validate & save"
 
 [config.grid]
 title = "Grid meter"
@@ -123,6 +146,13 @@ labelUser = "Username"
 title = "InfluxDB"
 v1Support = "Need support for InfluxDB 1.x?"
 v2Support = "Back to InfluxDB 2.x"
+
+[config.loadpoint]
+cancel = "Cancel"
+delete = "Delete"
+save = "Save"
+titleAdd = "Add Charge Point"
+titleEdit = "Edit Charge Point"
 
 [config.main]
 addLoadpoint = "Add charge point"
@@ -191,6 +221,14 @@ little = "little-endian"
 [config.options.schema]
 http = "HTTP (unencrypted)"
 https = "HTTPS (encrypted)"
+
+[config.options.status]
+A = "A (not connected)"
+B = "B (connected)"
+C = "C (charging)"
+D = "D (charging with ventilation)"
+E = "E (no power)"
+F = "F (error)"
 
 [config.pv]
 titleAdd = "Add Solar Meter"

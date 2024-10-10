@@ -1,52 +1,67 @@
 <template>
 	<GenericModal
-		id="meterModal"
+		id="chargerModal"
 		:title="modalTitle"
-		data-testid="meter-modal"
+		data-testid="charger-modal"
 		:fade="fade"
 		@open="open"
 		@close="close"
 	>
-		<div v-if="!meterType">
-			<NewDeviceButton
-				title="Add solar meter"
-				class="mb-4 addButton"
-				@click="selectType('pv')"
-			/>
-			<NewDeviceButton
-				title="Add battery meter"
-				class="addButton"
-				@click="selectType('battery')"
-			/>
-		</div>
-		<form v-else ref="form" class="container mx-0 px-0">
-			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
+		<form ref="form" class="container mx-0 px-0">
+			<FormRow id="chargerTemplate" :label="$t('config.charger.template')">
 				<select
-					id="meterTemplate"
+					id="chargerTemplate"
 					v-model="templateName"
 					@change="templateChanged"
 					:disabled="!isNew"
 					class="form-select w-100"
 				>
-					<option
-						v-for="option in genericOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
-					<option v-if="genericOptions.length" disabled>──────────</option>
-					<option
-						v-for="option in templateOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
+					<option value="">---</option>
+					<optgroup :label="$t('config.charger.generic')">
+						<option
+							v-for="option in genericOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.chargers')">
+						<option
+							v-for="option in chargerOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.switchsocket')">
+						<option
+							v-for="option in switchSocketOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
 				</select>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
 			<Markdown v-if="description" :markdown="description" class="my-4" />
+			<FormRow
+				v-if="ocppUrl"
+				id="chargerOcppUrl"
+				label="OCPP-Server URL"
+				help="Copy this address into your chargers configuration."
+			>
+				<input
+					type="text"
+					class="form-control border border-success bg-transparent"
+					:value="ocppUrl"
+					readonly
+				/>
+			</FormRow>
+
 			<Modbus
 				v-if="modbus"
 				v-model:modbus="values.modbus"
@@ -65,7 +80,7 @@
 			<PropertyEntry
 				v-for="param in normalParams"
 				:key="param.Name"
-				:id="`meterParam${param.Name}`"
+				:id="`chargerParam${param.Name}`"
 				v-bind="param"
 				v-model="values[param.Name]"
 			/>
@@ -75,7 +90,7 @@
 					<PropertyEntry
 						v-for="param in advancedParams"
 						:key="param.Name"
-						:id="`meterParam${param.Name}`"
+						:id="`chargerParam${param.Name}`"
 						v-bind="param"
 						v-model="values[param.Name]"
 					/>
@@ -138,7 +153,6 @@ import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
-import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../GenericModal.vue";
 import Markdown from "./Markdown.vue";
@@ -149,17 +163,16 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const CUSTOM_FIELDS = ["usage", "modbus"];
+const CUSTOM_FIELDS = ["modbus"];
 
 export default {
-	name: "MeterModal",
+	name: "ChargerModal",
 	components: {
 		FormRow,
 		PropertyEntry,
 		GenericModal,
 		Modbus,
 		TestResult,
-		NewDeviceButton,
 		PropertyCollapsible,
 		Markdown,
 	},
@@ -167,7 +180,6 @@ export default {
 	props: {
 		id: Number,
 		name: String,
-		type: String,
 		fade: String,
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -187,32 +199,22 @@ export default {
 	computed: {
 		modalTitle() {
 			if (this.isNew) {
-				if (this.meterType) {
-					return this.$t(`config.${this.meterType}.titleAdd`);
-				} else {
-					return this.$t("config.meter.titleChoice");
-				}
+				return this.$t(`config.charger.titleAdd`);
 			}
-			return this.$t(`config.${this.meterType}.titleEdit`);
+			return this.$t(`config.charger.titleEdit`);
 		},
-		meterType() {
-			return this.type || this.selectedType;
-		},
-		templateOptions() {
-			return this.products.filter((p) => p.group !== "generic");
+		chargerOptions() {
+			return this.products.filter((p) => !p.group);
 		},
 		genericOptions() {
 			return this.products.filter((p) => p.group === "generic");
 		},
+		switchSocketOptions() {
+			return this.products.filter((p) => p.group === "switchsockets");
+		},
 		templateParams() {
-			return (this.template?.Params || [])
-				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
-				.map((p) => {
-					if (this.meterType === "battery" && p.Name === "capacity") {
-						p.Advanced = false;
-					}
-					return p;
-				});
+			const params = this.template?.Params || [];
+			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced);
@@ -226,6 +228,15 @@ export default {
 		},
 		modbusCapabilities() {
 			return this.modbus?.Choice || [];
+		},
+		ocppUrl() {
+			const isOcpp =
+				this.templateParams.some((p) => p.Name === "connector") &&
+				this.templateParams.some((p) => p.Name === "stationid");
+			if (isOcpp) {
+				return `ws://${window.location.hostname}:8887`;
+			}
+			return null;
 		},
 		modbusDefaults() {
 			const { ID, Comset, Baudrate, Port } = this.modbus || {};
@@ -244,7 +255,6 @@ export default {
 				template: this.templateName,
 				...this.modbusDefaults,
 				...this.values,
-				usage: this.meterType,
 			};
 		},
 		isNew() {
@@ -258,16 +268,12 @@ export default {
 		isModalVisible(visible) {
 			if (visible) {
 				this.templateName = null;
-				this.selectedType = null;
 				this.reset();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
 				}
 			}
-		},
-		meterType() {
-			this.loadProducts();
 		},
 		templateName() {
 			this.loadTemplate();
@@ -286,8 +292,8 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
-				this.values = meter.config;
+				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
+				this.values = charger.config;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -295,16 +301,11 @@ export default {
 			}
 		},
 		async loadProducts() {
-			if (!this.isModalVisible || !this.meterType) {
+			if (!this.isModalVisible) {
 				return;
 			}
 			try {
-				const opts = {
-					params: {
-						usage: this.meterType,
-					},
-				};
-				this.products = (await api.get("config/products/meter", opts)).data.result;
+				this.products = (await api.get("config/products/charger")).data.result;
 			} catch (e) {
 				console.error(e);
 			}
@@ -319,7 +320,7 @@ export default {
 						name: this.templateName,
 					},
 				};
-				const result = await api.get("config/templates/meter", opts);
+				const result = await api.get("config/templates/charger", opts);
 				this.template = result.data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
@@ -337,15 +338,15 @@ export default {
 		},
 		async create() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+				const success = await this.test(this.testCharger);
 				if (!success) return;
 				await sleep(100);
 			}
 			this.saving = true;
 			try {
-				const response = await api.post("config/devices/meter", this.apiData);
+				const response = await api.post("config/devices/charger", this.apiData);
 				const { name } = response.data.result;
-				this.$emit("added", this.meterType, name);
+				this.$emit("added", name);
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
@@ -355,10 +356,10 @@ export default {
 			this.saving = false;
 		},
 		async testManually() {
-			await this.test(this.testMeter);
+			await this.test(this.testCharger);
 		},
-		async testMeter() {
-			let url = "config/test/meter";
+		async testCharger() {
+			let url = "config/test/charger";
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
@@ -366,13 +367,13 @@ export default {
 		},
 		async update() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+				const success = await this.test(this.testCharger);
 				if (!success) return;
 				await sleep(250);
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				await api.put(`config/devices/charger/${this.id}`, this.apiData);
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
@@ -383,8 +384,8 @@ export default {
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/meter/${this.id}`);
-				this.$emit("removed", this.meterType, this.name);
+				await api.delete(`config/devices/charger/${this.id}`);
+				this.$emit("removed", this.name);
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
@@ -398,9 +399,6 @@ export default {
 		close() {
 			this.$emit("close");
 			this.isModalVisible = false;
-		},
-		selectType(type) {
-			this.selectedType = type;
 		},
 		templateChanged() {
 			this.reset();

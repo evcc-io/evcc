@@ -3,8 +3,7 @@
 		<div
 			:id="id"
 			ref="modal"
-			class="modal fade text-dark"
-			:class="sizeClass"
+			:class="classes"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
@@ -45,28 +44,62 @@ export default {
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
+		fade: String,
 		size: String,
 	},
-	emits: ["open", "closed"],
+	data: function () {
+		return {
+			isModalVisible: false,
+		};
+	},
+	emits: ["open", "opened", "close", "closed"],
 	mounted() {
 		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
+		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
+		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
 		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	computed: {
+		classes() {
+			return [
+				"modal",
+				"fade",
+				"text-dark",
+				{ show: this.isModalVisible },
+				this.sizeClass,
+				this.fadeClass,
+			];
+		},
 		sizeClass() {
 			return this.size ? `modal-${this.size}` : "";
+		},
+		fadeClass() {
+			if (this.fade) {
+				return `fade-${this.fade}`;
+			}
+			return "";
 		},
 	},
 	methods: {
 		handleShow() {
 			this.$emit("open");
 		},
+		handleShown() {
+			this.$emit("opened");
+			this.isModalVisible = true;
+		},
+		handleHide() {
+			this.$emit("close");
+		},
 		handleHidden() {
 			this.$emit("closed");
+			this.isModalVisible = false;
 		},
 		open() {
 			Modal.getOrCreateInstance(this.$refs.modal).show();

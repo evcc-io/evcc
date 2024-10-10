@@ -23,11 +23,28 @@ type API interface {
 	GetStatus() api.ChargeStatus
 
 	//
+	// references
+	//
+
+	// GetCharger returns the loadpoint charger
+	GetChargerName() string
+	// GetMeter returns the loadpoint meter
+	GetMeterName() string
+	// GetCircuitName returns the loadpoint circuit name
+	GetCircuitName() string
+	// GetCircuit returns the loadpoint circuit
+	GetCircuit() api.Circuit
+	// GetDefaultVehicle returns the loadpoint default vehicle
+	GetDefaultVehicle() string
+
+	//
 	// settings
 	//
 
-	// Title returns the defined loadpoint title
-	Title() string
+	// GetTitle returns the loadpoint title
+	GetTitle() string
+	// SetTitle sets the loadpoint title
+	SetTitle(string)
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority
@@ -93,6 +110,15 @@ type API interface {
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
+	// GetSocConfig returns the soc poll settings
+	GetSocConfig() SocConfig
+	// SetSocConfig sets the soc poll settings
+	SetSocConfig(soc SocConfig)
+
+	// GetThresholds returns the PV mode threshold settings
+	GetThresholds() ThresholdsConfig
+	// SetThresholds sets the PV mode threshold settings
+	SetThresholds(thresholds ThresholdsConfig)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold
@@ -157,7 +183,4 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
-
-	// GetCircuit gets the assigned circuit
-	GetCircuit() api.Circuit
 }

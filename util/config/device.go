@@ -7,16 +7,18 @@ type Device[T any] interface {
 type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
+	// Assign(T)
+	// Update1(map[string]any) error
 	Update(map[string]any, T) error
 	Delete() error
 }
 
 type configurableDevice[T any] struct {
-	config   Config
+	config   *Config
 	instance T
 }
 
-func NewConfigurableDevice[T any](config Config, instance T) ConfigurableDevice[T] {
+func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
 	return &configurableDevice[T]{
 		config:   config,
 		instance: instance,
@@ -34,6 +36,14 @@ func (d *configurableDevice[T]) Instance() T {
 func (d *configurableDevice[T]) ID() int {
 	return d.config.ID
 }
+
+// func (d *configurableDevice[T]) Assign(instance T) {
+// 	d.instance = instance
+// }
+
+//	func (d *configurableDevice[T]) Update(config map[string]any) error {
+//		return d.config.Update(config)
+//	}
 
 func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
 	if err := d.config.Update(config); err != nil {

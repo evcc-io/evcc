@@ -24,7 +24,7 @@ func TestYamlOff(t *testing.T) {
 	}
 
 	var lp core.Loadpoint
-	if err := util.DecodeOther(conf.Loadpoints[0], &lp); err != nil {
+	if err := util.DecodeOther(conf.Loadpoints[0].Other, &lp); err != nil {
 		t.Error(err)
 	}
 
