@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
@@ -43,13 +44,25 @@ func (o *convertProvider) FloatSetter(param string) (func(float64) error, error)
 var _ SetIntProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
-	if o.Convert != "int2float" {
+	switch o.Convert {
+
+	case "int2float":
+		set, err := NewFloatSetterFromConfig(param, o.Set)
+
+		return func(val int64) error {
+			return set(float64(val))
+		}, err
+
+	case "int2bytes":
+		set, err := NewBytesSetterFromConfig(param, o.Set)
+
+		return func(val int64) error {
+			b := make([]byte, 8)
+			binary.BigEndian.PutUint64(b, uint64(val))
+			return set(b)
+		}, err
+
+	default:
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
-
-	set, err := NewFloatSetterFromConfig(param, o.Set)
-
-	return func(val int64) error {
-		return set(float64(val))
-	}, err
 }

@@ -171,16 +171,18 @@ render: |
               address: 0x1110
               type: writemultiple
               decode: int16
-        - source: const
-          value: 0x00000000_00000000_7FFFFFFF
-          type: bytes
+        - source: convert
+          convert: int2bytes
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x1187
-              type: writemultiple
-              decode: bytes
+            source: const
+            value: '0x00000000_00000000_7FFFFFFF'
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x1187
+                type: writemultiple
+                decode: bytes
     - case: 3 # charge (not implemented -> normal)
       set:
         source: const
