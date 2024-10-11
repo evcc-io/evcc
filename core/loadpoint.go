@@ -799,10 +799,16 @@ func (lp *Loadpoint) syncCharger() error {
 	return nil
 }
 
+// coarseCurrent returns true if charger or vehicle require full amp steps
+func (lp *Loadpoint) coarseCurrent() bool {
+	_, ok := lp.charger.(api.ChargerEx)
+	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
+}
+
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
 func (lp *Loadpoint) roundedCurrent(chargeCurrent float64) float64 {
 	// full amps only?
-	if _, ok := lp.charger.(api.ChargerEx); !ok || lp.vehicleHasFeature(api.CoarseCurrent) {
+	if lp.coarseCurrent() {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 	return chargeCurrent
@@ -1278,9 +1284,14 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
+	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if minPower := lp.EffectiveMinPower(); lp.batteryBoost && batteryBoost {
-		sitePower -= minPower
+	if lp.batteryBoost && batteryBoost {
+		delta := lp.EffectiveMinPower()
+		if !lp.coarseCurrent() {
+			delta /= 4
+		}
+		sitePower -= delta
 	}
 
 	// switch phases up/down
