@@ -793,7 +793,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// handle priority
 	var flexStr string
 	if flexiblePower > 0 {
-		flexStr = fmt.Sprintf(" (including %.0fW priority power)", flexiblePower)
+		flexStr = fmt.Sprintf(" (including %.0fW prioritized power)", flexiblePower)
 	}
 
 	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
