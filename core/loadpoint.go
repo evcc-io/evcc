@@ -1296,6 +1296,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		if !lp.coarseCurrent() {
 			delta /= 4
 		}
+		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - %.0fW boost", sitePower, delta)
 		sitePower -= delta
 	}
 
