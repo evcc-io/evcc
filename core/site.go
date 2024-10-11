@@ -580,17 +580,20 @@ func (site *Site) updateBatteryMeters() error {
 		mu.Unlock()
 
 		var excessDC float64
+		var excessStr string
 		if m, ok := meter.(api.BatteryMaxACPower); ok {
 			if dc := power + m.MaxACPower(); dc < 0 {
 				mu.Lock()
 				excessDC = dc
 				site.batteryExcessDC += dc
 				mu.Unlock()
+
+				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", dc)
 			}
 		}
 
 		if len(site.batteryMeters) > 1 {
-			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+			site.log.DEBUG.Printf("battery %d power: %.0fW"+excessStr, i+1, power)
 		}
 
 		// battery energy (discharge)
