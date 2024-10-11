@@ -584,10 +584,10 @@ func (site *Site) updateBatteryMeters() error {
 		if m, ok := meter.(api.BatteryMaxACPower); ok {
 			if dc := power + m.MaxACPower(); dc < 0 {
 				mu.Lock()
-				excessDC = dc
 				site.batteryExcessDC += dc
 				mu.Unlock()
 
+				excessDC = dc
 				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", dc)
 			}
 		}
