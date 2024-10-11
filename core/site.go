@@ -685,10 +685,10 @@ func (site *Site) updateGridMeter() error {
 
 	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo()); err == nil {
 		site.gridPower = res
-		site.log.DEBUG.Printf("grid meter: %.0fW", res)
+		site.log.DEBUG.Printf("grid power: %.0fW", res)
 		site.publish(keys.GridPower, res)
 	} else {
-		return fmt.Errorf("grid meter: %v", err)
+		return fmt.Errorf("grid power: %v", err)
 	}
 
 	// grid phase currents (signed)
