@@ -49,11 +49,12 @@ type meterMeasurement struct {
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power        float64 `json:"power"`
-	Energy       float64 `json:"energy,omitempty"`
-	Soc          float64 `json:"soc,omitempty"`
-	Capacity     float64 `json:"capacity,omitempty"`
-	Controllable bool    `json:"controllable"`
+	Power         float64 `json:"power"`
+	ExcessDCPower float64 `json:"excessdcpower,omitempty"`
+	Energy        float64 `json:"energy,omitempty"`
+	Soc           float64 `json:"soc,omitempty"`
+	Capacity      float64 `json:"capacity,omitempty"`
+	Controllable  bool    `json:"controllable"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -99,12 +100,13 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// cached state
-	gridPower    float64         // Grid power
-	pvPower      float64         // PV power
-	auxPower     float64         // Aux power
-	batteryPower float64         // Battery charge power
-	batterySoc   float64         // Battery soc
-	batteryMode  api.BatteryMode // Battery mode (runtime only, not persisted)
+	gridPower       float64         // Grid power
+	pvPower         float64         // PV power
+	auxPower        float64         // Aux power
+	batteryPower    float64         // Battery charge power
+	batteryExcessDC float64         // Battery excess DC charge power (hybrid only)
+	batterySoc      float64         // Battery soc
+	batteryMode     api.BatteryMode // Battery mode (runtime only, not persisted)
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -561,6 +563,7 @@ func (site *Site) updateBatteryMeters() error {
 	var mu sync.Mutex
 
 	site.batteryPower = 0
+	site.batteryExcessDC = 0
 	site.batterySoc = 0
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
@@ -575,6 +578,16 @@ func (site *Site) updateBatteryMeters() error {
 		mu.Lock()
 		site.batteryPower += power
 		mu.Unlock()
+
+		var excessDC float64
+		if m, ok := meter.(api.BatteryMaxACPower); ok {
+			if dc := power + m.MaxACPower(); dc < 0 {
+				mu.Lock()
+				excessDC = dc
+				site.batteryExcessDC += dc
+				mu.Unlock()
+			}
+		}
 
 		if len(site.batteryMeters) > 1 {
 			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
@@ -623,11 +636,12 @@ func (site *Site) updateBatteryMeters() error {
 		_, controllable := meter.(api.BatteryController)
 
 		mm[i] = batteryMeasurement{
-			Power:        power,
-			Energy:       energy,
-			Soc:          batSoc,
-			Capacity:     capacity,
-			Controllable: controllable,
+			Power:         power,
+			ExcessDCPower: excessDC,
+			Energy:        energy,
+			Soc:           batSoc,
+			Capacity:      capacity,
+			Controllable:  controllable,
 		}
 
 		return nil
@@ -750,6 +764,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	// honour battery priority
 	batteryPower := site.batteryPower
+	batteryExcessDC := site.batteryExcessDC
 
 	// handed to loadpoint
 	var batteryBuffered, batteryStart bool
@@ -762,6 +777,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		if site.batterySoc < site.prioritySoc && batteryPower < 0 {
 			site.log.DEBUG.Printf("battery has priority at soc %.0f%% (< %.0f%%)", site.batterySoc, site.prioritySoc)
 			batteryPower = 0
+			batteryExcessDC = 0
 		} else {
 			// if battery is above bufferSoc allow using it for charging
 			batteryBuffered = site.bufferSoc > 0 && site.batterySoc > site.bufferSoc
@@ -769,18 +785,15 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.GetResidualPower())
-
-	// deduct smart loads
-	sitePower -= site.auxPower
+	sitePower := site.gridPower + batteryPower - batteryExcessDC + site.GetResidualPower() - site.auxPower - flexiblePower
 
 	// handle priority
+	var flexStr string
 	if flexiblePower > 0 {
-		site.log.DEBUG.Printf("giving loadpoint priority for additional: %.0fW", flexiblePower)
-		sitePower -= flexiblePower
+		flexStr = fmt.Sprintf(" (including %.0fW priority power)", flexiblePower)
 	}
 
-	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
+	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
 
 	return sitePower, batteryBuffered, batteryStart, nil
 }
