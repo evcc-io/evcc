@@ -74,9 +74,8 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	// TODO deprecated
-	CircuitRef_ string `mapstructure:"circuit"` // Circuit reference
-
-	MaxGridSupplyWhileBatteryCharging float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	CircuitRef_                        string  `mapstructure:"circuit"`                           // Circuit reference
+	MaxGridSupplyWhileBatteryCharging_ float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
 	circuit       api.Circuit // Circuit
@@ -295,11 +294,6 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	// TODO migrate from YAML
-	if v, err := settings.Float(keys.MaxGridSupplyWhileBatteryCharging); err == nil {
-		if err := site.SetMaxGridSupplyWhileBatteryCharging(v); err != nil {
-			return err
-		}
-	}
 	if v, err := settings.Float(keys.PrioritySoc); err == nil {
 		if err := site.SetPrioritySoc(v); err != nil {
 			return err
@@ -972,7 +966,6 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
-	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
