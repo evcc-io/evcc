@@ -110,6 +110,10 @@ export default {
 							: session.co2PerKWh * session.chargedEnergy;
 
 					result[index][groupKey] = (result[index][groupKey] || 0) + value;
+
+					result[index].totalCost = (result[index].totalCost || 0) + value;
+					result[index].totalKWh = (result[index].totalKWh || 0) + session.chargedEnergy;
+					result[index].avgCost = result[index].totalCost / result[index].totalKWh;
 				});
 			}
 
@@ -120,9 +124,10 @@ export default {
 					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
 
 				return {
+					type: "bar",
 					backgroundColor,
 					label,
-					data: Object.values(result).map((day) => day[group] || 0),
+					data: Object.values(result).map((index) => index[group] || 0),
 					borderRadius: (context) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
@@ -135,6 +140,15 @@ export default {
 							: { topLeft: 0, topRight: 0 };
 					},
 				};
+			});
+
+			// add average price line
+			datasets.push({
+				type: "line",
+				backgroundColor: colors.primary,
+				label: this.$t("sessions.avgPrice"),
+				data: Object.values(result).map((index) => index.avgCost || 0),
+				yAxisID: "y1",
 			});
 
 			return {
@@ -184,8 +198,16 @@ export default {
 						},
 						callbacks: {
 							title: (tooltipItem) => {
-								const date = new Date(this.year, this.month, tooltipItem[0].label);
-								return this.fmtDayMonth(date);
+								const { label } = tooltipItem[0];
+								if (this.period === "total") {
+									return label;
+								} else if (this.period === "year") {
+									const date = new Date(this.year, label - 1, 1);
+									return this.fmtMonth(date);
+								} else {
+									const date = new Date(this.year, this.month, label);
+									return this.fmtDayMonth(date);
+								}
 							},
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
@@ -225,6 +247,7 @@ export default {
 					},
 					y: {
 						stacked: true,
+						position: "left",
 						border: { display: false },
 						grid: { color: colors.border },
 						title: {
@@ -241,7 +264,25 @@ export default {
 									: null,
 							color: colors.muted,
 						},
+					},
+					y1: {
 						position: "right",
+						border: { display: false },
+						grid: {
+							drawOnChartArea: false,
+						},
+						title: {
+							text: this.pricePerKWhUnit(this.currency, false),
+							display: this.costType === COST_TYPES.PRICE,
+							color: colors.muted,
+						},
+						ticks: {
+							callback: (value, index) =>
+								this.costType === COST_TYPES.PRICE
+									? this.fmtPricePerKWh(value, this.currency, false, false)
+									: this.fmtNumber(value / 1e3, 0),
+							color: colors.muted,
+						},
 					},
 				},
 			};

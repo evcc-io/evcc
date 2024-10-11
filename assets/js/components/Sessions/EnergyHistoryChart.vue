@@ -177,8 +177,16 @@ export default {
 						},
 						callbacks: {
 							title: (tooltipItem) => {
-								const date = new Date(this.year, this.month, tooltipItem[0].label);
-								return this.fmtDayMonth(date);
+								const { label } = tooltipItem[0];
+								if (this.period === "total") {
+									return label;
+								} else if (this.period === "year") {
+									const date = new Date(this.year, label - 1, 1);
+									return this.fmtMonth(date);
+								} else {
+									const date = new Date(this.year, this.month, label);
+									return this.fmtDayMonth(date);
+								}
 							},
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";

@@ -221,6 +221,11 @@ export default {
         month: short ? "short" : "long",
       }).format(date);
     },
+    fmtYear: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        year: "numeric",
+      }).format(date);
+    },
     fmtDayMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         day: "numeric",
