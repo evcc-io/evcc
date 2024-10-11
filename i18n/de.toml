@@ -645,7 +645,9 @@ allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
 [sessions.group]
+co2 = "Emissionen"
 grid = "Netz"
+price = "Preis"
 self = "Sonne"
 
 [sessions.period]

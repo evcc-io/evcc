@@ -642,7 +642,7 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [sessions.group]
-co2 = "CO₂"
+co2 = "Emissions"
 grid = "Grid"
 price = "Price"
 self = "Solar"

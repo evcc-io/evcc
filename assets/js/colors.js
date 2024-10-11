@@ -13,8 +13,10 @@ const colors = reactive({
   border: null,
   self: null,
   grid: null,
-  price: null,
-  co2: null,
+  pricePerKWh: "#FFB900FF",
+  price: "#FF912FFF",
+  co2PerKWh: "#00C997FF",
+  co2: "#00916EFF",
   background: null,
   selfPalette: ["#0fde41ff", "#0ba631ff", "#076f20ff", "#054e18ff", "#043611ff", "#02230bff"],
   palette: [
@@ -40,8 +42,6 @@ function updateCssColors() {
   colors.border = style.getPropertyValue("--bs-border-color-translucent");
   colors.self = style.getPropertyValue("--evcc-self");
   colors.grid = style.getPropertyValue("--evcc-grid");
-  colors.price = style.getPropertyValue("--evcc-accent1");
-  colors.co2 = style.getPropertyValue("--evcc-accent2");
   colors.background = style.getPropertyValue("--evcc-background");
 }
 

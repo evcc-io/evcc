@@ -82,7 +82,7 @@ export default {
         maximumFractionDigits: decimals,
       }).format(number);
     },
-    fmtGrams: function (gramms) {
+    fmtGrams: function (gramms, withUnit = true) {
       // handle gram, kilogram, tonne
       let unit = "gram";
       let value = gramms;
@@ -94,7 +94,7 @@ export default {
         value = gramms / 1000;
       }
       return new Intl.NumberFormat(this.$i18n?.locale, {
-        style: "unit",
+        style: withUnit ? "unit" : "decimal",
         unit,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,

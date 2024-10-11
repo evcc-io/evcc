@@ -229,13 +229,12 @@ export default {
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value, index) =>
-								index % 2 === 0
-									? this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0)
-									: null,
+							callback: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
 							color: colors.muted,
+							maxTicksLimit: 6,
 						},
 						position: "right",
+						min: 0,
 					},
 				},
 			};

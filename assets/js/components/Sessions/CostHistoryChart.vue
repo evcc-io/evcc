@@ -133,6 +133,7 @@ export default {
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex];
 						const previousValuesExist = context.chart.data.datasets
+							.filter((dataset) => dataset.type === "bar")
 							.slice(datasetIndex + 1)
 							.some((dataset) => (dataset?.data[dataIndex] || 0) > threshold);
 						return currentValue > threshold && !previousValuesExist
@@ -143,12 +144,23 @@ export default {
 			});
 
 			// add average price line
+			const costColor =
+				this.costType === COST_TYPES.PRICE ? colors.pricePerKWh : colors.co2PerKWh;
 			datasets.push({
 				type: "line",
-				backgroundColor: colors.primary,
-				label: this.$t("sessions.avgPrice"),
-				data: Object.values(result).map((index) => index.avgCost || 0),
+				label:
+					this.costType === COST_TYPES.PRICE
+						? this.pricePerKWhUnit(this.currency, false)
+						: "gCO₂e/kWh",
+				data: Object.values(result).map((index) => index.avgCost || null),
 				yAxisID: "y1",
+				tension: 0.25,
+				pointRadius: 0,
+				pointHoverRadius: 6,
+				borderColor: costColor,
+				backgroundColor: costColor,
+				borderWidth: 2,
+				spanGaps: true,
 			});
 
 			return {
@@ -158,11 +170,26 @@ export default {
 		},
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
-				const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
-				const value =
-					this.costType === COST_TYPES.PRICE
-						? this.fmtMoney(total, this.currency, true, true)
-						: this.fmtGrams(total);
+				let value = null;
+
+				// line chart handling
+				if (dataset.type === "line") {
+					const items = dataset.data.filter((v) => v !== null);
+					const min = Math.min(...items);
+					const max = Math.max(...items);
+					const format = (value, withUnit) => {
+						return this.costType === COST_TYPES.PRICE
+							? this.fmtPricePerKWh(value, this.currency, true, withUnit)
+							: this.fmtGrams(value, withUnit);
+					};
+					value = `${format(min, false)} – ${format(max, true)}`;
+				} else {
+					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
+					value =
+						this.costType === COST_TYPES.PRICE
+							? this.fmtMoney(total, this.currency, true, true)
+							: this.fmtGrams(total);
+				}
 				return {
 					label: dataset.label,
 					color: dataset.backgroundColor,
@@ -211,14 +238,28 @@ export default {
 							},
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.raw || 0;
+								const value = tooltipItem.raw;
+
+								// line datasets have null values
+								if (tooltipItem.dataset.type === "line") {
+									if (value === null) {
+										return null;
+									}
+
+									return (
+										"⌀ " +
+										(this.costType === COST_TYPES.PRICE
+											? this.fmtPricePerKWh(value, this.currency, false)
+											: this.fmtCo2Medium(value))
+									);
+								}
 
 								return (
 									datasetLabel +
 									": " +
 									(this.costType === COST_TYPES.PRICE
-										? this.fmtMoney(value, this.currency, true, true)
-										: this.fmtGrams(value))
+										? this.fmtMoney(value || 0, this.currency, true, true)
+										: this.fmtGrams(value || 0))
 								);
 							},
 							labelColor: (item) => {
@@ -247,7 +288,7 @@ export default {
 					},
 					y: {
 						stacked: true,
-						position: "left",
+						position: "right",
 						border: { display: false },
 						grid: { color: colors.border },
 						title: {
@@ -256,32 +297,36 @@ export default {
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value, index) =>
-								index % 2 === 0
-									? this.costType === COST_TYPES.PRICE
-										? this.fmtMoney(value, this.currency, false, true)
-										: this.fmtNumber(value / 1e3, 0)
-									: null,
+							callback: (value) =>
+								this.costType === COST_TYPES.PRICE
+									? this.fmtMoney(value, this.currency, false, true)
+									: this.fmtNumber(value / 1e3, 0),
 							color: colors.muted,
+							maxTicksLimit: 6,
 						},
+						min: 0,
 					},
 					y1: {
-						position: "right",
+						position: "left",
 						border: { display: false },
 						grid: {
 							drawOnChartArea: false,
 						},
 						title: {
-							text: this.pricePerKWhUnit(this.currency, false),
-							display: this.costType === COST_TYPES.PRICE,
+							text:
+								this.costType === COST_TYPES.CO2
+									? "gCO₂e/kWh"
+									: this.pricePerKWhUnit(this.currency, false),
+							display: true,
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value, index) =>
+							callback: (value) =>
 								this.costType === COST_TYPES.PRICE
 									? this.fmtPricePerKWh(value, this.currency, false, false)
-									: this.fmtNumber(value / 1e3, 0),
+									: this.fmtNumber(value, 0),
 							color: colors.muted,
+							maxTicksLimit: 6,
 						},
 					},
 				},
