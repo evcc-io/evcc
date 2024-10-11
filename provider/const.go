@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"encoding/hex"
 	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
@@ -143,6 +145,26 @@ func (o *constProvider) BoolSetter(param string) (func(bool) error, error) {
 	}
 
 	return func(_ bool) error {
+		return set(val)
+	}, err
+}
+
+var _ SetBytesProvider = (*constProvider)(nil)
+
+func (o *constProvider) BytesSetter(param string) (func([]byte) error, error) {
+	set, err := NewBytesSetterFromConfig(param, o.set)
+	if err != nil {
+		return nil, err
+	}
+
+	str := strings.ReplaceAll(strings.TrimPrefix(o.str, "0x"), "_", "")
+
+	val, err := hex.DecodeString(str)
+	if err != nil {
+		err = nil
+	}
+
+	return func(_ []byte) error {
 		return set(val)
 	}, err
 }

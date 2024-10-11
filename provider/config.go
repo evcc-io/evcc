@@ -37,7 +37,7 @@ type (
 		BoolSetter(param string) (func(bool) error, error)
 	}
 	SetBytesProvider interface {
-		BytesSetter(param string) (func(string) error, error)
+		BytesSetter(param string) (func([]byte) error, error)
 	}
 )
 
@@ -149,7 +149,7 @@ func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, err
 }
 
 // NewBytesSetterFromConfig creates a BytesSetter from config
-func NewBytesSetterFromConfig(param string, config Config) (func(string) error, error) {
+func NewBytesSetterFromConfig(param string, config Config) (func([]byte) error, error) {
 	prov, err := provider[SetBytesProvider]("bytes", config)
 	if err != nil {
 		return nil, err
