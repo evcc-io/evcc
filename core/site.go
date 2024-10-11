@@ -942,7 +942,7 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		batteryBoost := site.gridPower < 100
+		batteryBoost := site.gridPower < 100 // W
 		lp.Update(
 			sitePower, rates, batteryBuffered, batteryStart, batteryBoost,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
