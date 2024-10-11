@@ -331,7 +331,7 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
+	if enable && lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
 		return errors.New("battery boost is only available in PV modes")
 	}
 

@@ -532,6 +532,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
+	// boost
+	if err := lp.SetBatteryBoost(false); err != nil {
+		lp.log.ERROR.Printf("battery boost: %v", err)
+	}
+
 	// reset session
 	lp.SetLimitSoc(0)
 	lp.SetLimitEnergy(0)
