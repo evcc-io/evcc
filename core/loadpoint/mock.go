@@ -516,9 +516,11 @@ func (mr *MockAPIMockRecorder) RemoteControl(arg0, arg1 any) *gomock.Call {
 }
 
 // SetBatteryBoost mocks base method.
-func (m *MockAPI) SetBatteryBoost(arg0 bool) {
+func (m *MockAPI) SetBatteryBoost(arg0 bool) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetBatteryBoost", arg0)
+	ret := m.ctrl.Call(m, "SetBatteryBoost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetBatteryBoost indicates an expected call of SetBatteryBoost.

@@ -327,9 +327,13 @@ func (lp *Loadpoint) GetBatteryBoost() bool {
 }
 
 // SetBatteryBoost sets the battery boost
-func (lp *Loadpoint) SetBatteryBoost(enable bool) {
+func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.Lock()
 	defer lp.Unlock()
+
+	if lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
+		return errors.New("battery boost is only available in PV modes")
+	}
 
 	lp.log.DEBUG.Println("set battery boost:", enable)
 
@@ -337,6 +341,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) {
 		lp.batteryBoost = enable
 		lp.publish(keys.BatteryBoost, enable)
 	}
+
+	return nil
 }
 
 // RemoteControl sets remote status demand

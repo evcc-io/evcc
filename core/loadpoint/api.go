@@ -114,7 +114,7 @@ type API interface {
 	// GetBatteryBoost returns the battery boost
 	GetBatteryBoost() bool
 	// SetBatteryBoost sets the battery boost
-	SetBatteryBoost(enable bool)
+	SetBatteryBoost(enable bool) error
 
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
