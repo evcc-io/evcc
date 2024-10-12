@@ -117,6 +117,19 @@
 						:cost-type="activeCostType"
 						:period="period"
 					/>
+					<div v-if="showExtraCharts" class="row align-items-start">
+						<div class="col-12 col-lg-6 mb-5">
+							<h3 class="fw-normal my-4">{{ avgCostTitle }}</h3>
+							<CostYearChart
+								:period="period"
+								:sessions="currentCostTypeSessions"
+								:cost-type="activeCostType"
+							/>
+						</div>
+						<div class="col-12 col-lg-6 mb-5">
+							<h3 class="fw-normal my-4">{{ costGroupedTitle }}</h3>
+						</div>
+					</div>
 				</div>
 				<div v-if="showTable">
 					<h3>Übersicht</h3>
@@ -172,6 +185,7 @@ import EnergyGroupedChart from "../components/Sessions/EnergyGroupedChart.vue";
 import SolarGroupedChart from "../components/Sessions/SolarGroupedChart.vue";
 import SolarYearChart from "../components/Sessions/SolarYearChart.vue";
 import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
+import CostYearChart from "../components/Sessions/CostYearChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
@@ -225,6 +239,7 @@ export default {
 		DateNavigator,
 		DynamicPriceIcon,
 		CostHistoryChart,
+		CostYearChart,
 	},
 	mixins: [formatter],
 	props: {
@@ -281,6 +296,12 @@ export default {
 		},
 		energyGroupedTitle() {
 			return `${this.energySumFmt} Energiemenge`;
+		},
+		avgCostTitle() {
+			return "Ladepreis";
+		},
+		costGroupedTitle() {
+			return "Ladepunkt";
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({
