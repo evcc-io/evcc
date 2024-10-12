@@ -245,11 +245,9 @@ func (m *Modbus) BytesSetter(_ string) (func([]byte) error, error) {
 	}
 
 	return func(val []byte) error {
-		length := uint16(len(val) / 2)
-
 		switch op.FuncCode {
 		case gridx.FuncCodeWriteMultipleRegisters:
-			_, err = m.conn.WriteMultipleRegisters(op.Addr, length, val)
+			_, err = m.conn.WriteMultipleRegisters(op.Addr, uint16(len(val)/2), val)
 			return err
 
 		default:
