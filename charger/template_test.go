@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/util/templates"
@@ -23,7 +24,8 @@ var acceptable = []string{
 	"loadpoint 1 is not configured", // openWB
 	"recv timeout",
 	"(Client.Timeout exceeded while awaiting headers)",
-	"can only have either uri or device", // modbus
+	"can only have either uri or device",                                   // modbus
+	"connection already registered with different protocol: localhost:502", // modbus
 	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
@@ -35,7 +37,7 @@ var acceptable = []string{
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Charger, func(t *testing.T, values map[string]any) {
 		t.Helper()
-		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig(context.TODO(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}
