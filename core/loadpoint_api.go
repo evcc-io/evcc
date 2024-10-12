@@ -341,7 +341,9 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 		lp.batteryBoost = enable
 		lp.publish(keys.BatteryBoost, enable)
 
-		lp.requestUpdate()
+		if enable {
+			lp.requestUpdate()
+		}
 	}
 
 	return nil
