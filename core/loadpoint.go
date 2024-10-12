@@ -1299,6 +1299,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 		adjustedSitePower := sitePower - batteryBoostPower - delta
 		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryBoostPower, delta)
 		sitePower = adjustedSitePower
+
+		// start if boosting
+		if batteryBuffered && !lp.charging() {
+			batteryStart = true
+		}
 	}
 
 	// switch phases up/down
