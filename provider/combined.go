@@ -28,12 +28,11 @@ func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (P
 	}
 
 	plugged, err := NewBoolGetterFromConfig(ctx, cc.Plugged)
-
-	var charging func() (bool, error)
-	if err == nil {
-		charging, err = NewBoolGetterFromConfig(ctx, cc.Charging)
+	if err != nil {
+		return nil, err
 	}
 
+	charging, err := NewBoolGetterFromConfig(ctx, cc.Charging)
 	if err != nil {
 		return nil, err
 	}
@@ -51,23 +50,27 @@ func NewCombinedProvider(plugged, charging func() (bool, error)) *combinedProvid
 	}
 }
 
+var _ StringProvider = (*combinedProvider)(nil)
+
 // StringGetter returns string from OpenWB charging/ plugged status
-func (o *combinedProvider) StringGetter() (string, error) {
-	charging, err := o.charging()
-	if err != nil {
-		return "", err
-	}
-	if charging {
-		return string(api.StatusC), nil
-	}
+func (o *combinedProvider) StringGetter() (func() (string, error), error) {
+	return func() (string, error) {
+		charging, err := o.charging()
+		if err != nil {
+			return "", err
+		}
+		if charging {
+			return string(api.StatusC), nil
+		}
 
-	plugged, err := o.plugged()
-	if err != nil {
-		return "", err
-	}
-	if plugged {
-		return string(api.StatusB), nil
-	}
+		plugged, err := o.plugged()
+		if err != nil {
+			return "", err
+		}
+		if plugged {
+			return string(api.StatusB), nil
+		}
 
-	return string(api.StatusA), nil
+		return string(api.StatusA), nil
+	}, nil
 }
