@@ -1291,7 +1291,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBoost && batteryBoostPower > 0 {
+	if lp.batteryBoost && batteryBoost {
+		// TODO use min power for currently active phases here (in 3p mode it does not help to increase by 1p power for switchable charger)
 		delta := lp.EffectiveMinPower()
 		if !lp.coarseCurrent() {
 			delta /= 4
