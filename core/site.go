@@ -214,7 +214,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
 	}
 
-	// Meters used only for monitoring
+	// meters used only for monitoring
 	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
@@ -230,6 +230,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev.Instance())
+	}
+
+	if site.MaxGridSupplyWhileBatteryCharging_ != 0 {
+		site.log.WARN.Println("`MaxGridSupplyWhileBatteryCharging` is deprecated- use `maxACPower` in battery configuration instead")
 	}
 
 	// revert battery mode on shutdown
