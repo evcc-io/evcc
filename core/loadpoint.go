@@ -1291,13 +1291,14 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBoost {
+	if lp.batteryBoost && batteryBoost && batteryBoostPower > 0 {
 		delta := lp.EffectiveMinPower()
 		if !lp.coarseCurrent() {
 			delta /= 4
 		}
-		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - (%.0fW battery + %.0fW boost)", sitePower, batteryBoostPower, delta)
-		sitePower -= batteryBoostPower + delta
+		adjustedSitePower := sitePower - batteryBoostPower - delta
+		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryBoostPower, delta)
+		sitePower = adjustedSitePower
 	}
 
 	// switch phases up/down

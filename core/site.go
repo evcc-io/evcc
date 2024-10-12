@@ -944,9 +944,10 @@ func (site *Site) update(lp updater) {
 
 		var batteryBoost bool
 		var batteryBoostPower float64
-		if batteryBuffered && site.gridPower < 100 { // W
+		if batteryBuffered {
 			batteryBoost = true
-			batteryBoostPower = max(0, site.batteryPower)
+			excessGridPower := site.gridPower - 100 // W
+			batteryBoostPower = max(0, site.batteryPower-excessGridPower)
 		}
 
 		lp.Update(
