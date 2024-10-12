@@ -30,22 +30,23 @@ func NewConvertFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetFloatProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) FloatSetter(param string) (func(float64) error, error) {
-	if o.Convert != "float2int" {
+	switch o.Convert {
+	case "float2int":
+		set, err := NewIntSetterFromConfig(param, o.Set)
+
+		return func(val float64) error {
+			return set(int64(val))
+		}, err
+
+	default:
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
-
-	set, err := NewIntSetterFromConfig(param, o.Set)
-
-	return func(val float64) error {
-		return set(int64(val))
-	}, err
 }
 
 var _ SetIntProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
 	switch o.Convert {
-
 	case "int2float":
 		set, err := NewFloatSetterFromConfig(param, o.Set)
 
