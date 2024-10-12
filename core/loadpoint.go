@@ -1284,20 +1284,20 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart bool, batteryBoost float64) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart, batteryBoost bool, batteryBoostPower float64) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBoost > 0 {
+	if lp.batteryBoost && batteryBoost {
 		delta := lp.EffectiveMinPower()
 		if !lp.coarseCurrent() {
 			delta /= 4
 		}
-		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - (%.0fW battery + %.0fW boost)", sitePower, batteryBoost, delta)
-		sitePower -= batteryBoost + delta
+		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - (%.0fW battery + %.0fW boost)", sitePower, batteryBoostPower, delta)
+		sitePower -= batteryBoostPower + delta
 	}
 
 	// switch phases up/down
@@ -1677,7 +1677,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, batteryBoost float64, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart, batteryBoost bool, batteryBoostPower float64, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1802,7 +1802,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart, batteryBoost)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart, batteryBoost, batteryBoostPower)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
