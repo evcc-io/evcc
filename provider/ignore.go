@@ -9,7 +9,7 @@ import (
 
 type ignoreProvider struct {
 	ctx context.Context
-	str string
+	err string
 	set Config
 }
 
@@ -30,7 +30,7 @@ func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 
 	o := &ignoreProvider{
 		ctx: ctx,
-		str: cc.Error,
+		err: cc.Error,
 		set: cc.Set,
 	}
 
@@ -41,11 +41,10 @@ var _ SetIntProvider = (*ignoreProvider)(nil)
 
 func ignoreError[T any](fun func(T) error, match string) func(T) error {
 	return func(val T) error {
-		err := fun(val)
-		if err != nil && strings.HasPrefix(err.Error(), match) {
-			err = nil
+		if err := fun(val); err != nil && !strings.HasPrefix(err.Error(), match) {
+			return err
 		}
-		return err
+		return nil
 	}
 }
 
@@ -55,7 +54,7 @@ func (o *ignoreProvider) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	return ignoreError(set, o.str), nil
+	return ignoreError(set, o.err), nil
 }
 
 var _ SetFloatProvider = (*ignoreProvider)(nil)
@@ -66,7 +65,7 @@ func (o *ignoreProvider) FloatSetter(param string) (func(float64) error, error) 
 		return nil, err
 	}
 
-	return ignoreError(set, o.str), nil
+	return ignoreError(set, o.err), nil
 }
 
 var _ SetBoolProvider = (*ignoreProvider)(nil)
@@ -77,7 +76,7 @@ func (o *ignoreProvider) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	return ignoreError(set, o.str), nil
+	return ignoreError(set, o.err), nil
 }
 
 var _ SetBytesProvider = (*ignoreProvider)(nil)
@@ -88,5 +87,5 @@ func (o *ignoreProvider) BytesSetter(param string) (func([]byte) error, error) {
 		return nil, err
 	}
 
-	return ignoreError(set, o.str), nil
+	return ignoreError(set, o.err), nil
 }
