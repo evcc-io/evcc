@@ -44,7 +44,7 @@ type Config struct {
 	Other  map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 
-func provider[T any](typ string, config Config) (T, error) {
+func provider[T any](typ string, ctx context.Context, config Config) (T, error) {
 	var zero T
 
 	factory, err := registry.Get(config.Source)
@@ -52,7 +52,7 @@ func provider[T any](typ string, config Config) (T, error) {
 		return zero, err
 	}
 
-	provider, err := factory(context.TODO(), config.Other)
+	provider, err := factory(ctx, config.Other)
 	if err != nil {
 		return zero, err
 	}
@@ -66,8 +66,8 @@ func provider[T any](typ string, config Config) (T, error) {
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config
-func NewIntGetterFromConfig(config Config) (func() (int64, error), error) {
-	prov, err := provider[IntProvider]("int", config)
+func NewIntGetterFromConfig(ctx context.Context, config Config) (func() (int64, error), error) {
+	prov, err := provider[IntProvider]("int", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func NewIntGetterFromConfig(config Config) (func() (int64, error), error) {
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
-func NewFloatGetterFromConfig(config Config) (func() (float64, error), error) {
-	prov, err := provider[FloatProvider]("float", config)
+func NewFloatGetterFromConfig(ctx context.Context, config Config) (func() (float64, error), error) {
+	prov, err := provider[FloatProvider]("float", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func NewFloatGetterFromConfig(config Config) (func() (float64, error), error) {
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(config Config) (func() (string, error), error) {
-	prov, err := provider[StringProvider]("string", config)
+func NewStringGetterFromConfig(ctx context.Context, config Config) (func() (string, error), error) {
+	prov, err := provider[StringProvider]("string", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func NewStringGetterFromConfig(config Config) (func() (string, error), error) {
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(config Config) (func() (bool, error), error) {
-	prov, err := provider[BoolProvider]("bool", config)
+func NewBoolGetterFromConfig(ctx context.Context, config Config) (func() (bool, error), error) {
+	prov, err := provider[BoolProvider]("bool", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func NewBoolGetterFromConfig(config Config) (func() (bool, error), error) {
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(param string, config Config) (func(int64) error, error) {
-	prov, err := provider[SetIntProvider]("int", config)
+func NewIntSetterFromConfig(ctx context.Context, param string, config Config) (func(int64) error, error) {
+	prov, err := provider[SetIntProvider]("int", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +116,8 @@ func NewIntSetterFromConfig(param string, config Config) (func(int64) error, err
 }
 
 // NewFloatSetterFromConfig creates a FloatSetter from config
-func NewFloatSetterFromConfig(param string, config Config) (func(float642 float64) error, error) {
-	prov, err := provider[SetFloatProvider]("float", config)
+func NewFloatSetterFromConfig(ctx context.Context, param string, config Config) (func(float642 float64) error, error) {
+	prov, err := provider[SetFloatProvider]("float", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +126,8 @@ func NewFloatSetterFromConfig(param string, config Config) (func(float642 float6
 }
 
 // NewStringSetterFromConfig creates a StringSetter from config
-func NewStringSetterFromConfig(param string, config Config) (func(string) error, error) {
-	prov, err := provider[SetStringProvider]("string", config)
+func NewStringSetterFromConfig(ctx context.Context, param string, config Config) (func(string) error, error) {
+	prov, err := provider[SetStringProvider]("string", ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +136,8 @@ func NewStringSetterFromConfig(param string, config Config) (func(string) error,
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, error) {
-	prov, err := provider[SetBoolProvider]("bool", config)
+func NewBoolSetterFromConfig(ctx context.Context, param string, config Config) (func(bool) error, error) {
+	prov, err := provider[SetBoolProvider]("bool", ctx, config)
 	if err != nil {
 		return nil, err
 	}
