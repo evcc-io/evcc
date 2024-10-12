@@ -38,7 +38,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart, batteryBoost bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, batteryBoost float64, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -942,7 +942,11 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		batteryBoost := batteryBuffered && site.gridPower < 100 // W
+		var batteryBoost float64
+		if batteryBuffered && site.gridPower < 100 { // W
+			batteryBoost = site.batteryPower
+		}
+
 		lp.Update(
 			sitePower, rates, batteryBuffered, batteryStart, batteryBoost,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),

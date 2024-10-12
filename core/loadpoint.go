@@ -1284,20 +1284,20 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart, batteryBoost bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart bool, batteryBoost float64) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBoost {
+	if lp.batteryBoost && batteryBoost > 0 {
 		delta := lp.EffectiveMinPower()
 		if !lp.coarseCurrent() {
 			delta /= 4
 		}
-		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - %.0fW boost", sitePower, delta)
-		sitePower -= delta
+		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW site - (%.0fW battery + %.0fW boost)", sitePower, batteryBoost, delta)
+		sitePower -= batteryBoost + delta
 	}
 
 	// switch phases up/down
@@ -1677,7 +1677,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart, batteryBoost bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, batteryBoost float64, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
