@@ -1284,25 +1284,25 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered, batteryStart, batteryBoost bool, batteryBoostPower float64) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBoost {
+	if lp.batteryBoost && batteryBuffered {
 		// TODO use min power for currently active phases here (in 3p mode it does not help to increase by 1p power for switchable charger)
 		delta := lp.EffectiveMinPower()
 		if !lp.coarseCurrent() {
 			delta /= 4
 		}
-		adjustedSitePower := sitePower - batteryBoostPower - delta
-		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryBoostPower, delta)
+		adjustedSitePower := sitePower - batteryPower - delta
+		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryPower, delta)
 		sitePower = adjustedSitePower
 
 		// start if boosting
-		if batteryBuffered && !lp.charging() {
+		if !lp.charging() {
 			batteryStart = true
 		}
 	}
@@ -1684,7 +1684,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart, batteryBoost bool, batteryBoostPower float64, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1809,7 +1809,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart, batteryBoost, batteryBoostPower)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
