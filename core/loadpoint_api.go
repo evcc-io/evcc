@@ -550,7 +550,7 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.2f", val))
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
@@ -570,7 +570,7 @@ func (lp *Loadpoint) SetSolarShare(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set solar share:", "%.2f", val)
+	lp.log.DEBUG.Println("set solar share:", printPtr("%.2f", val))
 
 	if !ptrValueEqual(lp.solarShare, val) {
 		lp.solarShare = val
