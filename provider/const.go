@@ -155,7 +155,7 @@ func (o *constProvider) BoolSetter(param string) (func(bool) error, error) {
 var _ SetBytesProvider = (*constProvider)(nil)
 
 func (o *constProvider) BytesSetter(param string) (func([]byte) error, error) {
-	set, err := NewBytesSetterFromConfig(param, o.set)
+	set, err := NewBytesSetterFromConfig(o.ctx, param, o.set)
 	if err != nil {
 		return nil, err
 	}

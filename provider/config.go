@@ -149,8 +149,8 @@ func NewBoolSetterFromConfig(ctx context.Context, param string, config Config) (
 }
 
 // NewBytesSetterFromConfig creates a BytesSetter from config
-func NewBytesSetterFromConfig(param string, config Config) (func([]byte) error, error) {
-	prov, err := provider[SetBytesProvider]("bytes", config)
+func NewBytesSetterFromConfig(ctx context.Context, param string, config Config) (func([]byte) error, error) {
+	prov, err := provider[SetBytesProvider]("bytes", ctx, config)
 	if err != nil {
 		return nil, err
 	}
