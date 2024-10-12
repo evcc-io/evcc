@@ -394,10 +394,10 @@ func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 }
 
 // GetSolarShare mocks base method.
-func (m *MockAPI) GetSolarShare() float64 {
+func (m *MockAPI) GetSolarShare() *float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSolarShare")
-	ret0, _ := ret[0].(float64)
+	ret0, _ := ret[0].(*float64)
 	return ret0
 }
 
@@ -628,7 +628,7 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(arg0 any) *gomock.Call {
 }
 
 // SetSolarShare mocks base method.
-func (m *MockAPI) SetSolarShare(arg0 float64) {
+func (m *MockAPI) SetSolarShare(arg0 *float64) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetSolarShare", arg0)
 }

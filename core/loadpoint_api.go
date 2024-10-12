@@ -535,6 +535,16 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	return lp.smartCostLimit
 }
 
+func (lp *Loadpoint) savePointerValue(key string, val *float64) {
+	if val == nil {
+		lp.settings.SetString(key, "")
+		lp.publish(key, nil)
+	} else {
+		lp.settings.SetFloat(key, *val)
+		lp.publish(key, *val)
+	}
+}
+
 // SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
@@ -544,36 +554,27 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
-
-		if val == nil {
-			lp.settings.SetString(keys.SmartCostLimit, "")
-			lp.publish(keys.SmartCostLimit, nil)
-		} else {
-			lp.settings.SetFloat(keys.SmartCostLimit, *val)
-			lp.publish(keys.SmartCostLimit, *val)
-		}
+		lp.savePointerValue(keys.SmartCostLimit, val)
 	}
 }
 
 // GetSolarShare gets the solar share
-func (lp *Loadpoint) GetSolarShare() float64 {
+func (lp *Loadpoint) GetSolarShare() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.solarShare
 }
 
 // SetSolarShare sets the solar share
-func (lp *Loadpoint) SetSolarShare(val float64) {
+func (lp *Loadpoint) SetSolarShare(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set solar share:", "%.0f", 100*val)
+	lp.log.DEBUG.Println("set solar share:", "%.2f", val)
 
-	if lp.solarShare != val {
+	if !ptrValueEqual(lp.solarShare, val) {
 		lp.solarShare = val
-
-		lp.settings.SetFloat(keys.SolarShare, val)
-		lp.publish(keys.SolarShare, val)
+		lp.savePointerValue(keys.SolarShare, val)
 	}
 }
 

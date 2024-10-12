@@ -94,8 +94,8 @@ type API interface {
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
 	// Solar share
-	SetSolarShare(float64)
-	GetSolarShare() float64
+	SetSolarShare(*float64)
+	GetSolarShare() *float64
 
 	// GetEnableDelay gets the loadpoint enable delay
 	GetEnableDelay() time.Duration

@@ -195,11 +195,16 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 func updateSolarShare(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		var val *float64
 
-		val, err := strconv.ParseFloat(vars["value"], 64)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if r.Method != http.MethodDelete {
+			f, err := parseFloat(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = &f
 		}
 
 		for _, lp := range site.Loadpoints() {
