@@ -201,6 +201,8 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"/minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"/maxCurrent", floatSetter(lp.SetMaxCurrent)},
 		{"/limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},
+		{"/enableThreshold", floatSetter(pass(lp.SetEnableThreshold))},
+		{"/disableThreshold", floatSetter(pass(lp.SetDisableThreshold))},
 		{"/enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"/disableDelay", durationSetter(pass(lp.SetDisableDelay))},
 		{"/smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},

@@ -93,9 +93,19 @@ type API interface {
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
-	// Solar share
-	SetSolarShare(*float64)
+	// GetEnableThreshold gets the loadpoint enable threshold
+	GetEnableThreshold() float64
+	// SetEnableThreshold sets loadpoint enable threshold
+	SetEnableThreshold(threshold float64)
+	// GetDisableThreshold gets the loadpoint disable threshold
+	GetDisableThreshold() float64
+	// SetDisableThreshold sets loadpoint disable threshold
+	SetDisableThreshold(threshold float64)
+
+	// GetSolarShare gets the solar share
 	GetSolarShare() *float64
+	// SetSolarShare sets the solar share
+	SetSolarShare(*float64)
 
 	// GetEnableDelay gets the loadpoint enable delay
 	GetEnableDelay() time.Duration
