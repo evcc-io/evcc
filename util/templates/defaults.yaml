@@ -102,6 +102,7 @@ params:
     help:
       de: Maximale AC Leistung des Hybrid-Wechselrichters
       en: Maximum AC power of the hybrid inverter
+    default: 0
     example: 5000
     type: float
     usages: ["battery"]
