@@ -183,6 +183,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"smartCostDelete":  {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"priority":         {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"solarshare":       {"POST", "/solarshare/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
+			"solarshareDelete": {"DELETE", "/solarshare", floatPtrHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
 		}
 
 		for _, r := range routes {
