@@ -234,3 +234,24 @@ func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
 		return set(ival)
 	}, err
 }
+
+var _ SetBytesProvider = (*Modbus)(nil)
+
+// BytesSetter implements SetBytesProvider
+func (m *Modbus) BytesSetter(_ string) (func([]byte) error, error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val []byte) error {
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteMultipleRegisters:
+			_, err = m.conn.WriteMultipleRegisters(op.Addr, uint16(len(val)/2), val)
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
+}

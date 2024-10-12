@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
@@ -33,27 +34,40 @@ func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Pr
 var _ SetFloatProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) FloatSetter(param string) (func(float64) error, error) {
-	if o.Convert != "float2int" {
+	switch o.Convert {
+	case "float2int":
+		set, err := NewIntSetterFromConfig(o.ctx, param, o.Set)
+
+		return func(val float64) error {
+			return set(int64(val))
+		}, err
+
+	default:
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
-
-	set, err := NewIntSetterFromConfig(o.ctx, param, o.Set)
-
-	return func(val float64) error {
-		return set(int64(val))
-	}, err
 }
 
 var _ SetIntProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
-	if o.Convert != "int2float" {
+	switch o.Convert {
+	case "int2float":
+		set, err := NewFloatSetterFromConfig(o.ctx, param, o.Set)
+
+		return func(val int64) error {
+			return set(float64(val))
+		}, err
+
+	case "int2bytes":
+		set, err := NewBytesSetterFromConfig(o.ctx, param, o.Set)
+
+		return func(val int64) error {
+			b := make([]byte, 8)
+			binary.BigEndian.PutUint64(b, uint64(val))
+			return set(b)
+		}, err
+
+	default:
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
-
-	set, err := NewFloatSetterFromConfig(o.ctx, param, o.Set)
-
-	return func(val int64) error {
-		return set(float64(val))
-	}, err
 }
