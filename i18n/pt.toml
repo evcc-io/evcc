@@ -100,6 +100,7 @@ remove = "Remover"
 save = "Guardar"
 telemetry = "Telemetria"
 title = "Título"
+readFromFile = "Ler do ficheiro"
 
 [config.grid]
 title = "Medidor de rede"
@@ -123,6 +124,8 @@ labelUser = "Nome de usuário"
 title = "InfluxDB"
 v1Support = "Apoio necessário para o InfluxDB 1.x?"
 v2Support = "Voltar ao InfluxDB 2.x"
+labelInsecure = "Validação do certificado"
+labelCheckInsecure = "Permitir certificados auto-assinados"
 
 [config.main]
 addLoadpoint = "Adicionar ponto de carga"
@@ -165,6 +168,9 @@ labelTopic = "Tema"
 labelUser = "Nome de usuário"
 publishing = "Publicação"
 title = "MQTT"
+labelCaCert = "Certificado do servidor (CA)"
+labelClientCert = "Certificado de cliente"
+labelClientKey = "Chave de cliente"
 
 [config.network]
 descriptionHost = "Use sufixo .local para permitir mDNS. Relevante para a descoberta do aplicativo móvel e alguns carregadores OCPP."

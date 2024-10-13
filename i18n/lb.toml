@@ -97,6 +97,7 @@ remove = "Ewechhuelen"
 save = "Späicheren"
 telemetry = "Telemetrie"
 title = "Titel"
+readFromFile = "Vun der Datei liesen"
 
 [config.grid]
 title = "Netzzieler"
@@ -120,6 +121,8 @@ labelUser = "Benotzer"
 title = "InfluxDB"
 v1Support = "Brauchs du Ënnerstëtzung fir InfluxDB 1.x?"
 v2Support = "Zréck op InfluxDB 2.x"
+labelInsecure = "Zertifikatiwwerpréiwung"
+labelCheckInsecure = "Onsécher Verbindungen erlaben"
 
 [config.main]
 addLoadpoint = "Luedstatioun derbäi setzen"
@@ -162,6 +165,9 @@ labelTopic = "Thema"
 labelUser = "Benotzer"
 publishing = "Verëffentlechen"
 title = "MQTT"
+labelCaCert = "Servercertifikat (CA)"
+labelClientCert = "Certificat vum Client"
+labelClientKey = "Client-Schlëssel"
 
 [config.network]
 descriptionHost = "Benotzt de Suffix .local fir mDNS z'aktivéieren. Ass relevant fir d'Entdeckung vun der mobiler App an e puer OCPP Luedstatiounen."
