@@ -55,6 +55,11 @@ const (
 
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
+
+	// battery boost states
+	boostDisabled = 0
+	boostContinue = 1
+	boostStart    = 2
 )
 
 // elapsed is the time an expired timer will be set to
@@ -127,7 +132,7 @@ type Loadpoint struct {
 	limitSoc         int      // Session limit for soc
 	limitEnergy      float64  // Session limit for energy
 	smartCostLimit   *float64 // always charge if cost is below this value
-	batteryBoost     bool     // battery boost mode
+	batteryBoost     int      // battery boost state
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -1291,20 +1296,23 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	// push demand to drain battery
 	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
-	if lp.batteryBoost && batteryBuffered {
-		// TODO use min power for currently active phases here (in 3p mode it does not help to increase by 1p power for switchable charger)
-		delta := lp.EffectiveMinPower()
-		if !lp.coarseCurrent() {
-			delta /= 4
+	if boost := lp.getBatteryBoost(); boost != boostDisabled && batteryBuffered {
+		delta := lp.effectiveStepPower()
+
+		// start boosting by setting maximum power
+		// TODO check if timers need be expired to do this
+		if boost == boostStart {
+			delta = lp.EffectiveMaxPower()
+			batteryStart = true
+
+			if lp.charging() {
+				lp.setBatteryBoost(boostContinue)
+			}
 		}
+
 		adjustedSitePower := sitePower - batteryBoostPower - delta
 		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryBoostPower, delta)
 		sitePower = adjustedSitePower
-
-		// start if boosting
-		if !lp.charging() {
-			batteryStart = true
-		}
 	}
 
 	// switch phases up/down
