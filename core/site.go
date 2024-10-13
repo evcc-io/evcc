@@ -757,7 +757,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
-	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower < 100 {
+	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
 		residualPower = 100 // W
 	}
 
