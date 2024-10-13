@@ -1313,10 +1313,10 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64, batteryBuffered bool)
 		}
 	}
 
-	boostPower := batteryBoostPower + delta
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -boostPower, batteryBoostPower, delta)
+	res := batteryBoostPower + delta
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
 
-	return boostPower
+	return res
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
