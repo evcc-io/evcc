@@ -116,6 +116,11 @@ type API interface {
 	// SetDisableDelay sets loadpoint disable delay
 	SetDisableDelay(delay time.Duration)
 
+	// GetBatteryBoost returns the battery boost
+	GetBatteryBoost() bool
+	// SetBatteryBoost sets the battery boost
+	SetBatteryBoost(enable bool) error
+
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
