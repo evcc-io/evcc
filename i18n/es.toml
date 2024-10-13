@@ -124,6 +124,8 @@ labelUser = "Nombre de usuario"
 title = "InfluxDB"
 v1Support = "¿Necesitas soporte para InfluxDB 1.x?"
 v2Support = "Volver a InfluxDB 2.x"
+labelCheckInsecure = "Permitir certificados autofirmados"
+labelInsecure = "Verificación de certificado"
 
 [config.main]
 addLoadpoint = "Añadir un punto de carga"
