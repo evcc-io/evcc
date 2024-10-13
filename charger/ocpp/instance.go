@@ -43,8 +43,8 @@ func Instance() *CS {
 			cps:           make(map[string]*CP),
 			init:          make(map[string]*sync.Mutex),
 			CentralSystem: cs,
-			txnId:         int(time.Now().UTC().Unix()),
 		}
+		instance.txnId.Store(time.Now().UTC().Unix())
 
 		ocppj.SetLogger(instance)
 

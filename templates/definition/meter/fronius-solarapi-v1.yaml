@@ -7,10 +7,14 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
+      Solar API sollte nur als Fallback genutzt werden. Die Integration über Modbus ist bevorzugt.
+
       Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
 
       **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen für die zeitabhängige Batteriesteuerung in der Wechselrichter-Konfiguration unter "Energiemanagement" - "Batteriemanagement" getätigt wurden, denn bestehende Einstellungen werden überschrieben.
     en: |
+      Solar API should only be used as fallback. Integration via Modbus is preferred.
+
       Username and password are only required for active battery control.
 
       **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten.

@@ -3,6 +3,13 @@ products:
   - brand: Alpha ESS
     description:
       generic: Storion SMILE
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00,   Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. Der Entladestopp wird über eine geplante Netzladung mit einem Ziel-SoC von 10% realisiert. Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte `0,0,23,0,23,0,0,0` setzen.
+    en: |
+      To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via a scheduled grid charge with a target SoC of 10%. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,0,23,0,0,0,0`.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -12,6 +19,14 @@ params:
     baudrate: 9600
     id: 85
   - name: capacity
+    advanced: true
+  - name: minsoc
+    default: 20
+    type: number
+    advanced: true
+  - name: maxsoc
+    default: 95
+    type: number
     advanced: true
 render: |
   type: custom
@@ -133,5 +148,63 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal 
+      set:
+        source: const
+        value: 0
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 2127 # 0x84F Time period control flag
+            type: writemultiple
+            decode: uint16
+    - case: 2 # hold -> Enable grid charging with 10% (default) target soc -> will not start charging but will prevent uncharging of battery 
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+                address: 2127 # 0x84F Time period control flag
+                type: writemultiple
+                decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2133 # 0x855 Charge Cut Soc
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge -> Enable grid charging with 100% target soc (will be stopped by evcc)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+                  address: 2127 # 0x84F Time period control flag
+                  type: writemultiple
+                  decode: uint16
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2133 # 0x855 Charge Cut Soc
+              type: writemultiple
+              decode: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}

@@ -47,7 +47,7 @@ requirements:
       * Local network connection
 
       The specific configuration and the actual usable functionality depend on the charger model and its software.
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
   - name: autostart

@@ -3,6 +3,8 @@ products:
   - brand: Tibber
     description:
       generic: Pulse
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid"]

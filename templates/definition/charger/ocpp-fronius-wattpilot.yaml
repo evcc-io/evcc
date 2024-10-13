@@ -3,6 +3,8 @@ products:
   - brand: Fronius
     description:
       generic: Wattpilot (OCPP)
+requirements:
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |

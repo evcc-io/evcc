@@ -73,6 +73,19 @@
 					autocomplete="off"
 				/>
 			</FormRow>
+			<FormRow id="influxInsecure" :label="$t('config.influx.labelInsecure')">
+				<div class="d-flex">
+					<input
+						class="form-check-input"
+						id="influxInsecure"
+						type="checkbox"
+						v-model="values.insecure"
+					/>
+					<label class="form-check-label ms-2" for="influxInsecure">
+						{{ $t("config.influx.labelCheckInsecure") }}
+					</label>
+				</div>
+			</FormRow>
 			<p>
 				<button
 					v-if="showV1(values)"

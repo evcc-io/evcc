@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/smallnest/chanx"
+	"golang.org/x/sync/errgroup"
 )
 
 const standbyPower = 10 // consider less than 10W as charger in standby
@@ -101,6 +102,7 @@ type Site struct {
 	// cached state
 	gridPower    float64         // Grid power
 	pvPower      float64         // PV power
+	auxPower     float64         // Aux power
 	batteryPower float64         // Battery charge power
 	batterySoc   float64         // Battery soc
 	batteryMode  api.BatteryMode // Battery mode (runtime only, not persisted)
@@ -442,17 +444,22 @@ func (site *Site) updatePvMeters() {
 	}
 
 	var totalEnergy float64
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	site.pvPower = 0
 
 	mm := make([]meterMeasurement, len(site.pvMeters))
 
-	for i, meter := range site.pvMeters {
-		// pv power
+	fun := func(i int, meter api.Meter) {
+		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
 			// ignore negative values which represent self-consumption
+			mu.Lock()
 			site.pvPower += max(0, power)
+			mu.Unlock()
+
 			if power < -500 {
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
@@ -460,12 +467,14 @@ func (site *Site) updatePvMeters() {
 			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
-		// pv energy (production)
+		// energy (production)
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err == nil {
+				mu.Lock()
 				totalEnergy += energy
+				mu.Unlock()
 			} else {
 				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
@@ -475,7 +484,15 @@ func (site *Site) updatePvMeters() {
 			Power:  power,
 			Energy: energy,
 		}
+
+		wg.Done()
 	}
+
+	wg.Add(len(site.pvMeters))
+	for i, meter := range site.pvMeters {
+		go fun(i, meter)
+	}
+	wg.Wait()
 
 	site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 	site.publish(keys.PvPower, site.pvPower)
@@ -483,7 +500,30 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 }
 
-// updateExtMeters updates ext meters. All measurements are optional.
+// updateAuxMeters updates aux meters
+func (site *Site) updateAuxMeters() {
+	if len(site.auxMeters) == 0 {
+		return
+	}
+
+	mm := make([]meterMeasurement, len(site.auxMeters))
+
+	for i, meter := range site.auxMeters {
+		if power, err := meter.CurrentPower(); err == nil {
+			site.auxPower += power
+			mm[i].Power = power
+			site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
+		} else {
+			site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
+		}
+	}
+
+	site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
+	site.publish(keys.AuxPower, site.auxPower)
+	site.publish(keys.Aux, mm)
+}
+
+// updateExtMeters updates ext meters
 func (site *Site) updateExtMeters() {
 	if len(site.extMeters) == 0 {
 		return
@@ -516,27 +556,32 @@ func (site *Site) updateExtMeters() {
 	// Publishing will be done in separate PR
 }
 
-// updateBatteryMeters updates battery meters. Power is retried, other measurements are optional.
+// updateBatteryMeters updates battery meters
 func (site *Site) updateBatteryMeters() error {
 	if len(site.batteryMeters) == 0 {
 		return nil
 	}
 
 	var totalCapacity, totalEnergy float64
+	var eg errgroup.Group
+	var mu sync.Mutex
 
 	site.batteryPower = 0
 	site.batterySoc = 0
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
 
-	for i, meter := range site.batteryMeters {
+	fun := func(i int, meter api.Meter) error {
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err != nil {
 			// power is required- return on error
 			return fmt.Errorf("battery %d power: %v", i+1, err)
 		}
 
+		mu.Lock()
 		site.batteryPower += power
+		mu.Unlock()
+
 		if len(site.batteryMeters) > 1 {
 			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
 		}
@@ -546,7 +591,9 @@ func (site *Site) updateBatteryMeters() error {
 		if m, ok := meter.(api.MeterEnergy); ok {
 			energy, err = m.TotalEnergy()
 			if err == nil {
+				mu.Lock()
 				totalEnergy += energy
+				mu.Unlock()
 			} else {
 				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 			}
@@ -560,6 +607,8 @@ func (site *Site) updateBatteryMeters() error {
 			if err == nil {
 				// weigh soc by capacity and accumulate total capacity
 				weighedSoc := batSoc
+
+				mu.Lock()
 				if m, ok := meter.(api.BatteryCapacity); ok {
 					capacity = m.Capacity()
 					totalCapacity += capacity
@@ -567,6 +616,8 @@ func (site *Site) updateBatteryMeters() error {
 				}
 
 				site.batterySoc += weighedSoc
+				mu.Unlock()
+
 				if len(site.batteryMeters) > 1 {
 					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
 				}
@@ -584,6 +635,16 @@ func (site *Site) updateBatteryMeters() error {
 			Capacity:     capacity,
 			Controllable: controllable,
 		}
+
+		return nil
+	}
+
+	for i, meter := range site.batteryMeters {
+		eg.Go(func() error { return fun(i, meter) })
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	site.publish(keys.BatteryCapacity, totalCapacity)
@@ -605,7 +666,7 @@ func (site *Site) updateBatteryMeters() error {
 	return nil
 }
 
-// updateGridMeter updates grid meter. Power is retried, other measurements are optional.
+// updateGridMeter updates grid meter
 func (site *Site) updateGridMeter() error {
 	if site.gridMeter == nil {
 		return nil
@@ -655,15 +716,17 @@ func (site *Site) updateGridMeter() error {
 	return nil
 }
 
-// updateMeter updates and publishes single meter
 func (site *Site) updateMeters() error {
-	// TODO parallelize once modbus supports that
-	site.updatePvMeters()
-	if err := site.updateBatteryMeters(); err != nil {
-		return err
-	}
-	site.updateExtMeters()
-	return site.updateGridMeter()
+	var eg errgroup.Group
+
+	eg.Go(func() error { site.updatePvMeters(); return nil })
+	eg.Go(func() error { site.updateAuxMeters(); return nil })
+	eg.Go(func() error { site.updateExtMeters(); return nil })
+
+	eg.Go(site.updateBatteryMeters)
+	eg.Go(site.updateGridMeter)
+
+	return eg.Wait()
 }
 
 // sitePower returns
@@ -715,27 +778,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.GetResidualPower())
 
 	// deduct smart loads
-	if len(site.auxMeters) > 0 {
-		var auxPower float64
-		mm := make([]meterMeasurement, len(site.auxMeters))
-
-		for i, meter := range site.auxMeters {
-			if power, err := meter.CurrentPower(); err == nil {
-				auxPower += power
-				mm[i].Power = power
-				site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
-			} else {
-				site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
-			}
-		}
-
-		sitePower -= auxPower
-
-		site.log.DEBUG.Printf("aux power: %.0fW", auxPower)
-		site.publish(keys.AuxPower, auxPower)
-
-		site.publish(keys.Aux, mm)
-	}
+	sitePower -= site.auxPower
 
 	// handle priority
 	if flexiblePower > 0 {
@@ -818,17 +861,37 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 }
 
+// updateLoadpoints updates all loadpoints' charge power
+func (site *Site) updateLoadpoints() float64 {
+	var (
+		wg  sync.WaitGroup
+		mu  sync.Mutex
+		sum float64
+	)
+
+	wg.Add(len(site.loadpoints))
+	for _, lp := range site.loadpoints {
+		go func() {
+			power := lp.UpdateChargePowerAndCurrents()
+			site.prioritizer.UpdateChargePowerFlexibility(lp)
+
+			mu.Lock()
+			sum += power
+			mu.Unlock()
+
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	return sum
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
-	// update all loadpoint's charge power
-	var totalChargePower float64
-	for _, lp := range site.loadpoints {
-		lp.UpdateChargePowerAndCurrents()
-		totalChargePower += lp.GetChargePower()
-
-		site.prioritizer.UpdateChargePowerFlexibility(lp)
-	}
+	// update loadpoints
+	totalChargePower := site.updateLoadpoints()
 
 	// update all circuits' power and currents
 	if site.circuit != nil {

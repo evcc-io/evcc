@@ -162,13 +162,7 @@ func NewOCPP(id string, connector int, idTag string,
 		stackLevelZero: stackLevelZero,
 	}
 
-	if cp.HasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
-			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
-		}
-
-		go conn.WatchDog(10 * time.Second)
-	}
+	go conn.WatchDog(10 * time.Second)
 
 	return c, conn.Initialized()
 }
@@ -315,7 +309,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.Now(),
+			StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
