@@ -1329,13 +1329,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
-<<<<<<< HEAD
-	// inactive if nil
-	solarShare := lp.GetSolarShare()
-=======
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryBoostPower, batteryBuffered)
->>>>>>> master
 
 	// switch phases up/down
 	var scaledTo int
@@ -1360,6 +1355,9 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	}
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
+
+	// inactive if nil
+	solarShare := lp.GetSolarShare()
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
