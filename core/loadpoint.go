@@ -58,8 +58,8 @@ const (
 
 	// battery boost states
 	boostDisabled = 0
-	boostContinue = 1
-	boostStart    = 2
+	boostStart    = 1
+	boostContinue = 2
 )
 
 // elapsed is the time an expired timer will be set to
