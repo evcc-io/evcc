@@ -1300,10 +1300,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 		delta := lp.effectiveStepPower()
 
 		// start boosting by setting maximum power
-		// TODO check if timers need be expired to do this
 		if boost == boostStart {
 			delta = lp.EffectiveMaxPower()
 			batteryStart = true
+
+			// expire timers
+			lp.phaseTimer = elapsed
+			lp.pvTimer = elapsed
 
 			if lp.charging() {
 				lp.setBatteryBoost(boostContinue)
