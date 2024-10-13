@@ -1288,6 +1288,35 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	}
 }
 
+// boostPower returns the additional power that the loadpoint should draw from the battery
+func (lp *Loadpoint) boostPower(sitePower, batteryBoostPower float64, batteryBuffered bool) float64 {
+	boost := lp.getBatteryBoost()
+	if boost == boostDisabled || !batteryBuffered {
+		return 0
+	}
+
+	// push demand to drain battery
+	delta := lp.effectiveStepPower()
+
+	// start boosting by setting maximum power
+	if boost == boostStart {
+		delta = lp.EffectiveMaxPower()
+
+		// expire timers
+		lp.phaseTimer = elapsed
+		lp.pvTimer = elapsed
+
+		if lp.charging() {
+			lp.setBatteryBoost(boostContinue)
+		}
+	}
+
+	boostPower := batteryBoostPower + delta
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", sitePower-boostPower, sitePower, batteryBoostPower, delta)
+
+	return boostPower
+}
+
 // pvMaxCurrent calculates the maximum target current for PV mode
 func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
@@ -1295,27 +1324,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	if boost := lp.getBatteryBoost(); boost != boostDisabled && batteryBuffered {
-		delta := lp.effectiveStepPower()
-
-		// start boosting by setting maximum power
-		if boost == boostStart {
-			delta = lp.EffectiveMaxPower()
-			batteryStart = true
-
-			// expire timers
-			lp.phaseTimer = elapsed
-			lp.pvTimer = elapsed
-
-			if lp.charging() {
-				lp.setBatteryBoost(boostContinue)
-			}
-		}
-
-		adjustedSitePower := sitePower - batteryBoostPower - delta
-		lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", adjustedSitePower, sitePower, batteryBoostPower, delta)
-		sitePower = adjustedSitePower
-	}
+	sitePower -= lp.boostPower(sitePower, batteryBoostPower, batteryBuffered)
 
 	// switch phases up/down
 	var scaledTo int
