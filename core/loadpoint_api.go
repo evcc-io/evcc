@@ -349,10 +349,11 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.log.DEBUG.Println("set battery boost:", enable)
 
 	if enable != (lp.batteryBoost != boostDisabled) {
-		lp.batteryBoost = boostStart
 		lp.publish(keys.BatteryBoost, enable)
 
+		lp.batteryBoost = boostDisabled
 		if enable {
+			lp.batteryBoost = boostStart
 			lp.requestUpdate()
 		}
 	}
