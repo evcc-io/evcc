@@ -1295,7 +1295,6 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	// TODO depends on https://github.com/evcc-io/evcc/pull/16274
 	if boost := lp.getBatteryBoost(); boost != boostDisabled && batteryBuffered {
 		delta := lp.effectiveStepPower()
 
