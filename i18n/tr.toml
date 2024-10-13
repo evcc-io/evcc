@@ -94,11 +94,11 @@ experimental = "Deneysel"
 off = "kapalı"
 on = "açık"
 password = "Şifre"
+readFromFile = "“Dosyadan oku”"
 remove = "Kaldır"
 save = "Kaydet"
 telemetry = "Uzölçüm"
 title = "Başlık"
-readFromFile = “Dosyadan oku”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -113,7 +113,9 @@ title = "HEMS"
 description = "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan."
 descriptionToken = "Nasıl oluşturulacağını öğrenmek için InfluxDB belgelerine göz at. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Kova"
+labelCheckInsecure = "“Güvensiz bağlantılara izin ver”"
 labelDatabase = "Veritabanı"
+labelInsecure = "“Sertifika doğrulama”"
 labelOrg = "Organizasyon"
 labelPassword = "Parola"
 labelToken = "API Jetonu"
@@ -122,8 +124,6 @@ labelUser = "Kullanıcı Adı"
 title = "InfluxDB"
 v1Support = "InfluxDB 1.x için desteğe mi ihtiyacın var?"
 v2Support = "InfluxDB 2.x'e geri dön"
-labelInsecure = “Sertifika doğrulama”
-labelCheckInsecure = “Güvensiz bağlantılara izin ver”
 
 [config.main]
 addLoadpoint = "Doldurma noktası ekle"
@@ -158,17 +158,17 @@ description = "Ağındaki diğer sistemlerle veri alışverişi yapmak için evc
 descriptionClientId = "İletilerin yazarı. Eğer boşsa `evcc-[rand]` kullanılır."
 descriptionTopic = "Yayınlamayı devre dışı bırakmak için boş bırak."
 labelBroker = "Aracı"
+labelCaCert = "“Sunucu sertifikası (CA)”"
 labelCheckInsecure = "Güvenli olmayan bağlantılara izin ver"
+labelClientCert = "“Müşteri sertifikası”"
 labelClientId = "Müşteri kimliği"
+labelClientKey = "“Müşteri anahtarı”"
 labelInsecure = "Sertifika doğrulama"
 labelPassword = "Parola"
 labelTopic = "Konu"
 labelUser = "Kullanıcı Adı"
 publishing = "Yayınla\""
 title = "MQTT"
-labelCaCert = “Sunucu sertifikası (CA)”
-labelClientCert = “Müşteri sertifikası”
-labelClientKey = “Müşteri anahtarı”
 
 [config.network]
 descriptionHost = "mDNS'yi etkinleştirmek için .local sonekini kullan. Mobil uygulamanın ve bazı OCPP doldurma cihazlarının tanınması ile ilgili."
@@ -539,6 +539,7 @@ vehicleLimit = "Araç sınırı: {soc}"
 vehicleTarget = "Araç sınırı: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "“İzin bekliyorum.”"
 charging = "doluyor…"
 cheapEnergyCharging = "Ucuz enerji mevcut."
 cheapEnergyNextStart = "{duration} içinde ucuz enerji."
@@ -548,6 +549,7 @@ cleanEnergyNextStart = "{duration} içinde temiz enerji."
 cleanEnergySet = "CO₂ sınırı belirlendi."
 climating = "Ön iklimlendirme algılandı."
 connected = "Bağlı."
+disconnectRequired = "“Oturum sonlandırıldı. Tekrar bağlan.”"
 disconnected = "Bağlantı kesildi."
 finished = "Tamamlandı."
 minCharge = "{soc} kadar asgari dolum."
@@ -564,8 +566,6 @@ vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
-disconnectRequired = “Oturum sonlandırıldı. Tekrar bağlan.”
-awaitingAuthorization = “İzin bekliyorum.”
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"

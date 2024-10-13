@@ -94,11 +94,11 @@ experimental = "Kísérleti"
 off = "ki"
 on = "be"
 password = "Jelszó"
+readFromFile = "Fájlból olvasás"
 remove = "Eltávolítás"
 save = "Mentés"
 telemetry = "Telemetria"
 title = "Cím"
-readFromFile = Fájlból olvasás
 
 [config.grid]
 title = "Hálózati mérő"
@@ -113,7 +113,9 @@ title = "HEMS"
 description = "Lementi a töltési adatokat és egyéb metrikákat az InfluxDB-be. Használd a Grafana-t vagy egyéb eszközöket az adatok vizualizálásához."
 descriptionToken = "Ellenőrizd az InfluxDB dokumentációját, ha szeretnél létrehozni egyet. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Vödör (Bucket)"
+labelCheckInsecure = "Önaláírt tanúsítványok engedélyezése"
 labelDatabase = "Adatbázis"
+labelInsecure = "Tanúsítvány hitelesítés"
 labelOrg = "Szervezet"
 labelPassword = "Jelszó"
 labelToken = "API Token"
@@ -122,8 +124,6 @@ labelUser = "Felhasználónév"
 title = "InfluxDB"
 v1Support = "Szükséged van támogatásra az InfluxDB 1.x verzióhoz?"
 v2Support = "Vissza az InfluxDB 2.x verzióhoz"
-labelInsecure = Tanúsítvány hitelesítés
-labelCheckInsecure = Önaláírt tanúsítványok engedélyezése
 
 [config.main]
 addLoadpoint = "Töltőpont hozzáadása"
@@ -158,17 +158,17 @@ description = "Csatlakozás egy MQTT brókerhez az adatok cseréjéhez egy mási
 descriptionClientId = "Az üzenetek szerzője. Ha üres, akkor az `evcc-[rand]` lesz használva."
 descriptionTopic = "Hagyd üresen a publikálás letiltásához."
 labelBroker = "Bróker"
+labelCaCert = "Szerver tanúsítvány (CA)"
 labelCheckInsecure = "Önaláírt tanúsítványok engedélyezése"
+labelClientCert = "Kliens tanúsítvány"
 labelClientId = "Kliens ID"
+labelClientKey = "Kliens kulcs"
 labelInsecure = "Tanúsítvány hitelesítés"
 labelPassword = "Jelszó"
 labelTopic = "Téma"
 labelUser = "Felhasználónév"
 publishing = "Közzététel"
 title = "MQTT"
-labelClientCert = Kliens tanúsítvány
-labelClientKey = Kliens kulcs
-labelCaCert = Szerver tanúsítvány (CA)
 
 [config.network]
 descriptionHost = "Használd a .local utótagot az mDNS engedélyezéséhez. A mobilalkalmazás és egyes OCPP-töltők felfedezése szempontjából releváns."
