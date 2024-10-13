@@ -13,6 +13,7 @@ params:
     choice: ["tcpip", "rs485"]
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -124,4 +125,5 @@ render: |
       - 124:ChaState
       - 802:SoC
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
