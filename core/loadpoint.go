@@ -1357,12 +1357,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	if mode == api.ModePV && !lp.enabled {
 		// lp.Enable.Threshold
 		enableThreshold := lp.Enable.Threshold
+		shouldEnable := (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) || (lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold)
+
 		if solarShare != nil {
 			enableThreshold = -*solarShare * lp.EffectiveMinPower()
-		}
-
-		shouldEnable := (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) || (lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold)
-		if solarShare != nil {
 			shouldEnable = sitePower <= enableThreshold
 		}
 
