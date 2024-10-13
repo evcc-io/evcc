@@ -129,10 +129,9 @@ func (lp *Loadpoint) effectiveStepPower() float64 {
 	return Voltage * float64(lp.ActivePhases())
 }
 
-// EffectiveMinPower returns the effective min power for a single phase
+// EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
-	// TODO check if 1p available
-	return Voltage * lp.effectiveMinCurrent()
+	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account

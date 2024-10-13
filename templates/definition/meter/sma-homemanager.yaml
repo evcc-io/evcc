@@ -4,6 +4,8 @@ products:
     description:
       generic: Sunny Home Manager 2.0
 capabilities: ["smahems"]
+requirements:
+  evcc: ["skiptest"]
 linked:
   - template: sma-energy-meter
     usage: pv

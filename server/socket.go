@@ -64,9 +64,7 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close(websocket.StatusInternalError, "")
 
-	if err := h.subscribe(r.Context(), conn); err != nil {
-		log.TRACE.Println("web socket upgrade:", err)
-	}
+	_ = h.subscribe(r.Context(), conn)
 }
 
 func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
