@@ -98,6 +98,7 @@ remove = "Eltávolítás"
 save = "Mentés"
 telemetry = "Telemetria"
 title = "Cím"
+readFromFile = Fájlból olvasás
 
 [config.grid]
 title = "Hálózati mérő"
@@ -121,6 +122,8 @@ labelUser = "Felhasználónév"
 title = "InfluxDB"
 v1Support = "Szükséged van támogatásra az InfluxDB 1.x verzióhoz?"
 v2Support = "Vissza az InfluxDB 2.x verzióhoz"
+labelInsecure = Tanúsítvány hitelesítés
+labelCheckInsecure = Önaláírt tanúsítványok engedélyezése
 
 [config.main]
 addLoadpoint = "Töltőpont hozzáadása"
@@ -163,6 +166,9 @@ labelTopic = "Téma"
 labelUser = "Felhasználónév"
 publishing = "Közzététel"
 title = "MQTT"
+labelClientCert = Kliens tanúsítvány
+labelClientKey = Kliens kulcs
+labelCaCert = Szerver tanúsítvány (CA)
 
 [config.network]
 descriptionHost = "Használd a .local utótagot az mDNS engedélyezéséhez. A mobilalkalmazás és egyes OCPP-töltők felfedezése szempontjából releváns."
@@ -289,7 +295,7 @@ becomeSponsor = "Legyél támogató"
 becomeSponsorExtended = "Támogass közvetlenül, hogy matricákat kapj."
 confetti = "Készen állsz a konfettire?"
 confettiPromise = "Kapsz matricákat és digitális konfettit"
-sticker = "… vagy evcc matricákat?"
+sticker = "… vagy szeretnél evcc matricákat?"
 supportUs = "A küldetésünk az, hogy a napelemes töltést normává tegyük. Segítsd az evcc-t annyival, amennyit megér neked."
 thanks = "Köszönjük, {sponsor}! A hozzájárulásod segít tovább fejleszteni az evcc-t."
 titleNoSponsor = "Támogass minket"
