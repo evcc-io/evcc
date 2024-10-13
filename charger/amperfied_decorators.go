@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateAmperfied(base *Amperfied, phaseSwitcher func(int) error) api.Charger {
+func decorateAmperfied(base *Amperfied, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
 	case phaseSwitcher == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Amperfied
 			api.PhaseSwitcher
@@ -21,9 +21,32 @@ func decorateAmperfied(base *Amperfied, phaseSwitcher func(int) error) api.Charg
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Amperfied
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Amperfied: base,
+			PhaseGetter: &decorateAmperfiedPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateAmperfiedPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateAmperfiedPhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decorateAmperfiedPhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
 }
 
 type decorateAmperfiedPhaseSwitcherImpl struct {
