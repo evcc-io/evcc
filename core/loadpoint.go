@@ -1291,7 +1291,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(sitePower, batteryBoostPower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) boostPower(batteryBoostPower float64, batteryBuffered bool) float64 {
 	boost := lp.getBatteryBoost()
 	if boost == boostDisabled || !batteryBuffered {
 		return 0
@@ -1314,7 +1314,7 @@ func (lp *Loadpoint) boostPower(sitePower, batteryBoostPower float64, batteryBuf
 	}
 
 	boostPower := batteryBoostPower + delta
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW site - %.0fW battery - %.0fW boost", sitePower-boostPower, sitePower, batteryBoostPower, delta)
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -boostPower, batteryBoostPower, delta)
 
 	return boostPower
 }
@@ -1326,7 +1326,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(sitePower, batteryBoostPower, batteryBuffered)
+	sitePower -= lp.boostPower(batteryBoostPower, batteryBuffered)
 
 	// switch phases up/down
 	var scaledTo int
