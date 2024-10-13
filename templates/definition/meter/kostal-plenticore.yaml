@@ -33,6 +33,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxacpower
   # battery control
   - name: minsoc
     type: number
@@ -86,6 +87,7 @@ render: |
         type: writemultiple
         encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}

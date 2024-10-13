@@ -248,31 +248,6 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	return nil
 }
 
-func (site *Site) GetMaxGridSupplyWhileBatteryCharging() float64 {
-	site.RLock()
-	defer site.RUnlock()
-	return site.MaxGridSupplyWhileBatteryCharging
-}
-
-func (site *Site) SetMaxGridSupplyWhileBatteryCharging(power float64) error {
-	site.Lock()
-	defer site.Unlock()
-
-	if len(site.batteryMeters) == 0 {
-		return ErrBatteryNotConfigured
-	}
-
-	site.log.DEBUG.Println("set max grid supply while battery charging:", power)
-
-	if site.MaxGridSupplyWhileBatteryCharging != power {
-		site.MaxGridSupplyWhileBatteryCharging = power
-		settings.SetFloat(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
-		site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
-	}
-
-	return nil
-}
-
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
