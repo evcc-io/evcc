@@ -132,6 +132,7 @@ export default {
 		remoteDisabledSource: String,
 		chargeDuration: Number,
 		charging: Boolean,
+		batteryBoost: Boolean,
 
 		// session
 		sessionEnergy: Number,
@@ -272,6 +273,9 @@ export default {
 		},
 		hasSmartCost: function () {
 			return smartCostAvailable(this.smartCostType);
+		},
+		batteryBoostActive: function () {
+			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
 		},
 	},
 	watch: {

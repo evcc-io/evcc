@@ -536,6 +536,7 @@ vehicleLimit = "Vehicle limit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
+batteryBoost = "Battery boost"
 charging = "Charging…"
 cheapEnergyCharging = "Cheap energy available."
 cheapEnergyNextStart = "Cheap energy in {duration}."
