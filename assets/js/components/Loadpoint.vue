@@ -29,6 +29,7 @@
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
 			@batteryboost-updated="setBatteryBoost"
+			@batteryboostlimit-updated="setBatteryBoostLimit"
 		/>
 
 		<div
@@ -134,7 +135,9 @@ export default {
 		chargeDuration: Number,
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryBoostLimit: Number,
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 
 		// session
 		sessionEnergy: Number,
@@ -280,7 +283,12 @@ export default {
 			return this.batteryConfigured && this.$hiddenFeatures();
 		},
 		batteryBoostActive: function () {
-			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+			return (
+				this.batteryBoost &&
+				this.charging &&
+				this.batterySoc > this.batteryBoostLimit &&
+				!["off", "now"].includes(this.mode)
+			);
 		},
 	},
 	watch: {
@@ -347,6 +355,9 @@ export default {
 		},
 		setBatteryBoost: function (batteryBoost) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
+		},
+		setBatteryBoostLimit: function (batteryBoostLimit) {
+			api.post(this.apiPath("batteryboostlimit") + `/${batteryBoostLimit}`);
 		},
 		fmtPower(value) {
 			return this.fmtW(value, POWER_UNIT.AUTO);

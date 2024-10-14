@@ -432,6 +432,7 @@ remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
 solar = "Sonne"
 
 [main.loadpointSettings]
+batteryUsage = "Hausbatterie"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
@@ -440,6 +441,12 @@ smartCostCheap = "günstige Netzladung"
 smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
+
+[main.loadpointSettings.batteryBoost]
+description = "Schnell aus Hausbatterie laden solange sie über {limit} ist."
+label = "Batterie Boost"
+mode = "Nur im PV- und Min+PV-Modus verfügbar."
+once = "Boost ist für diesen Ladevorgang aktiviert."
 
 [main.loadpointSettings.limitSoc]
 description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."
@@ -538,6 +545,7 @@ vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Warte auf Autorisierung."
+batteryBoost = "Batterie Boost bis {limit}."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."

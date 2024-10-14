@@ -671,7 +671,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
 	// battery boost
-	lp.publish(keys.BatteryBoost, lp.batteryBoost)
+	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
 	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
 
 	// read initial charger state to prevent immediately disabling charger
@@ -1322,7 +1322,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64, boostConditions bool)
 	}
 
 	res := batteryBoostPower + delta
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost (soc > %.0f%%", -res, batteryBoostPower, delta, lp.GetBatteryBoostLimit())
 
 	return res
 }

@@ -207,6 +207,7 @@ export default {
 	props: {
 		vehicleSoc: Number,
 		batteryBoostActive: Boolean,
+		batteryBoostLimit: Number,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
@@ -422,7 +423,8 @@ export default {
 			if (!this.batteryBoostVisible) {
 				return "";
 			}
-			return this.$t("main.vehicleStatus.batteryBoost");
+			const limit = this.fmtPercentage(this.batteryBoostLimit);
+			return this.$t("main.vehicleStatus.batteryBoost", { limit });
 		},
 		planStartTooltipContent() {
 			if (!this.planStartVisible) {
@@ -569,7 +571,6 @@ export default {
 		batteryBoostClicked() {
 			this.batteryBoostTooltip?.hide();
 			this.openLoadpointSettings();
-			alert("Work in progress");
 		},
 		updatePvTooltip() {
 			this.pvTooltip = this.updateTooltip(

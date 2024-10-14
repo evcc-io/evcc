@@ -430,7 +430,7 @@ remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
 [main.loadpointSettings]
-batteryUsage = "Home battery"
+batteryUsage = "Home Battery"
 currents = "Charging Current"
 default = "default"
 disclaimerHint = "Note:"
@@ -441,10 +441,10 @@ title = "Settings {0}"
 vehicle = "Vehicle"
 
 [main.loadpointSettings.batteryBoost]
-description = "Fast discharge home battery to charge vehicle."
+description = "Fast charge from home battery down to {limit}."
 label = "Battery Boost"
 mode = "Only available in solar and min+solar mode."
-once = "Boost activated for this charging session."
+once = "Boost active for this charging session."
 
 [main.loadpointSettings.limitSoc]
 description = "Charging limit that is used when this vehicle is connected."
@@ -543,7 +543,7 @@ vehicleLimit = "Vehicle limit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
-batteryBoost = "Battery boost"
+batteryBoost = "Battery boost until {limit}."
 charging = "Charging…"
 cheapEnergyCharging = "Cheap energy available."
 cheapEnergyNextStart = "Cheap energy in {duration}."
