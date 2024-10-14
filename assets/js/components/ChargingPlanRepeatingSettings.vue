@@ -29,15 +29,15 @@
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
 				<!-- TODO: this component triggers a "Maximum recursive updates exceeded in component"-error so I commented it out-->
-				<!-- <MultiSelect
+				<MultiSelect
 					:id="formId('weekdays')"
 					:value="selectedWeekdays"
-					:options="dayOptions()"
+					:options="dayOptions"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
 					@update:modelValue="changeSelectedWeekdays"
 				>
 					{{ weekdaysLabel }}
-				</MultiSelect> -->
+				</MultiSelect>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
@@ -110,14 +110,13 @@
 <script>
 import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../units";
-// import MultiSelect from "./MultiSelect.vue";
-
+import MultiSelect from "./MultiSelect.vue";
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "ChargingPlanRepeatingSettings",
 	components: {
-		// MultiSelect,
+		MultiSelect,
 	},
 	mixins: [formatter],
 	props: {
@@ -127,6 +126,7 @@ export default {
 		soc: Number,
 		active: Boolean,
 		rangePerSoc: Number,
+		formIdPrefix: String,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
 	watch: {
@@ -161,19 +161,6 @@ export default {
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-	},
-	methods: {
-		changeSelectedWeekdays: function (weekdays) {
-			this.selectedWeekdays = weekdays;
-			this.update();
-		},
-		formId: function (name) {
-			return `chargingplan-${this.id}-${name}`;
-		},
-		socOption: function (value) {
-			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
-			return { value, name };
-		},
 		dayOptions: function () {
 			return this.getWeekdaysList("long").map((weekday, index) => {
 				return {
@@ -181,6 +168,19 @@ export default {
 					value: index,
 				};
 			});
+		},
+	},
+	methods: {
+		changeSelectedWeekdays: function (weekdays) {
+			this.selectedWeekdays = weekdays;
+			this.update();
+		},
+		formId: function (name) {
+			return `${this.formIdPrefix}-${this.id}-${name}`;
+		},
+		socOption: function (value) {
+			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
+			return { value, name };
 		},
 		update: function () {
 			this.$emit("repeating-plan-updated", {

@@ -3,6 +3,7 @@
 		<ChargingPlanRepeatingSettings
 			class="mb-4"
 			:id="index"
+			:formIdPrefix="formIdPrefix"
 			v-bind="plan"
 			:rangePerSoc="rangePerSoc"
 			@repeating-plan-updated="updateRepeatingPlan"
@@ -33,6 +34,7 @@
 
 <script>
 import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
+import deepEqual from "../utils/deepEqual";
 
 const DEFAULT_WEEKDAYS = [0];
 const DEFAULT_TARGET_TIME = "12:00";
@@ -61,7 +63,10 @@ export default {
 	},
 	computed: {
 		dataHasChanged: function () {
-			return JSON.stringify(this.initialPlans) !== JSON.stringify(this.plans);
+			return !deepEqual(this.initialPlans, this.plans);
+		},
+		formIdPrefix: function () {
+			return `chargingplan-${this.id}`;
 		},
 	},
 	methods: {
@@ -76,13 +81,9 @@ export default {
 		updateRepeatingPlans: function () {
 			this.$emit("repeating-plans-updated", this.plans);
 		},
-		updateRepeatingPlan: function (newData) {
-			this.plans[newData.id] = {
-				weekdays: newData.weekdays,
-				time: newData.time,
-				soc: newData.soc,
-				active: newData.active,
-			};
+		updateRepeatingPlan: function (newPlan) {
+			const { id } = newPlan;
+			Object.assign(this.plans[id], newPlan);
 		},
 		removeRepeatingPlan: function (index) {
 			this.plans.splice(index, 1);
