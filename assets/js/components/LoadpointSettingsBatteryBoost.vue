@@ -2,7 +2,6 @@
 	<div>
 		<h6>
 			{{ $t("main.loadpointSettings.batteryUsage") }}
-			{{ mode }}
 		</h6>
 
 		<div class="mb-3 row">
