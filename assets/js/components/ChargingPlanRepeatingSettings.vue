@@ -28,7 +28,6 @@
 				</label>
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
-				<!-- TODO: this component triggers a "Maximum recursive updates exceeded in component"-error so I commented it out-->
 				<MultiSelect
 					:id="formId('weekdays')"
 					:value="selectedWeekdays"
