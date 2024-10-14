@@ -210,10 +210,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
 
-	if len(site.batteryMeters) > 0 && site.GetResidualPower() <= 0 {
-		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
-	}
-
 	// meters used only for monitoring
 	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
@@ -759,9 +755,15 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		site.publish(keys.GridPower, site.gridPower)
 	}
 
+	// ensure safe default for residual power
+	residualPower := site.GetResidualPower()
+	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
+		residualPower = 100 // W
+	}
+
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = totalChargePower - site.gridPower + site.GetResidualPower()
+		site.pvPower = totalChargePower - site.gridPower + residualPower
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
@@ -792,7 +794,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := site.gridPower + batteryPower - batteryExcessDC + site.GetResidualPower() - site.auxPower - flexiblePower
+	sitePower := site.gridPower + batteryPower - batteryExcessDC + residualPower - site.auxPower - flexiblePower
 
 	// handle priority
 	var flexStr string
