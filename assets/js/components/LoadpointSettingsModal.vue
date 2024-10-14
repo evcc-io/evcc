@@ -30,6 +30,60 @@
 								v-bind="smartCostLimitProps"
 								class="mt-2"
 							/>
+							<div v-if="batteryBoostAvailable">
+								<h6>
+									{{ $t("main.loadpointSettings.batteryUsage") }}
+								</h6>
+
+								<div class="mb-3 row">
+									<label
+										:for="formId('batteryBoost')"
+										class="col-sm-4 col-form-label pt-0 pt-sm-2"
+									>
+										{{ $t("main.loadpointSettings.batteryBoost.label") }} 🧪
+									</label>
+									<div class="col-sm-8 pe-0">
+										<div class="form-check form-switch my-1">
+											<input
+												:id="formId('batteryBoost')"
+												v-model="selectedBatteryBoost"
+												class="form-check-input"
+												type="checkbox"
+												role="switch"
+												:disabled="batteryBoostDisabled"
+												@change="changeBatteryBoost"
+											/>
+											<label
+												:for="formId('batteryBoost')"
+												class="form-check-label"
+											>
+												{{
+													$t(
+														"main.loadpointSettings.batteryBoost.description"
+													)
+												}}
+												<span
+													v-if="batteryBoost"
+													class="d-block text-primary"
+												>
+													{{
+														$t(
+															"main.loadpointSettings.batteryBoost.once"
+														)
+													}}
+												</span>
+												<small v-if="batteryBoostDisabled" class="d-block">
+													{{
+														$t(
+															"main.loadpointSettings.batteryBoost.mode"
+														)
+													}}
+												</small>
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
 							<h6>
 								{{ $t("main.loadpointSettings.currents") }}
 							</h6>
@@ -179,6 +233,9 @@ export default {
 		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
 		chargerPhysicalPhases: Number,
+		batteryBoost: Boolean,
+		batteryBoostAvailable: Boolean,
+		mode: String,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -189,12 +246,18 @@ export default {
 		currency: String,
 		multipleLoadpoints: Boolean,
 	},
-	emits: ["phasesconfigured-updated", "maxcurrent-updated", "mincurrent-updated"],
+	emits: [
+		"phasesconfigured-updated",
+		"maxcurrent-updated",
+		"mincurrent-updated",
+		"batteryboost-updated",
+	],
 	data: function () {
 		return {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
 			selectedPhases: this.phasesConfigured,
+			selectedBatteryBoost: this.batteryBoost,
 			isModalVisible: false,
 		};
 	},
@@ -210,6 +273,9 @@ export default {
 			}
 			// 1p or 3p possible
 			return [PHASES_3, PHASES_1];
+		},
+		batteryBoostDisabled: function () {
+			return ["off", "fast"].includes(this.mode);
 		},
 		maxPower: function () {
 			if (this.chargerPhases1p3p) {
@@ -268,6 +334,9 @@ export default {
 		minSoc: function (value) {
 			this.selectedMinSoc = value;
 		},
+		batteryBoost: function (value) {
+			this.selectedBatteryBoost = value;
+		},
 	},
 	mounted() {
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
@@ -295,6 +364,9 @@ export default {
 		},
 		changePhasesConfigured: function () {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
+		},
+		changeBatteryBoost: function () {
+			this.$emit("batteryboost-updated", this.selectedBatteryBoost);
 		},
 		currentOption: function (value, isDefault) {
 			let name = `${this.fmtNumber(value)} A`;

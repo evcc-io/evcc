@@ -28,6 +28,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 
 		<div
@@ -133,6 +134,7 @@ export default {
 		chargeDuration: Number,
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryConfigured: Boolean,
 
 		// session
 		sessionEnergy: Number,
@@ -274,6 +276,9 @@ export default {
 		hasSmartCost: function () {
 			return smartCostAvailable(this.smartCostType);
 		},
+		batteryBoostAvailable: function () {
+			return this.batteryConfigured && this.$hiddenFeatures();
+		},
 		batteryBoostActive: function () {
 			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
 		},
@@ -339,6 +344,9 @@ export default {
 		},
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
+		},
+		setBatteryBoost: function (batteryBoost) {
+			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
 		fmtPower(value) {
 			return this.fmtW(value, POWER_UNIT.AUTO);

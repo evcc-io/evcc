@@ -115,6 +115,10 @@ type API interface {
 	GetBatteryBoost() bool
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
+	// GetBatteryBoostLimit returns the battery boost limit
+	GetBatteryBoostLimit() float64
+	// SetBatteryBoostLimit sets the battery boost limit
+	SetBatteryBoostLimit(limit float64)
 
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)

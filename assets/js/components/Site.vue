@@ -31,6 +31,7 @@
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
+				:batteryConfigured="batteryConfigured"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
