@@ -23,7 +23,7 @@
 		<button
 			v-if="dataHasChanged"
 			type="button"
-			class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
+			class="btn btn-sm btn-outline-primary ms-auto me-4 border-0 text-decoration-underline"
 			data-testid="plan-apply"
 			@click="updateRepeatingPlans"
 		>

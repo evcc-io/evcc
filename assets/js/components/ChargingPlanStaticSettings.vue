@@ -92,7 +92,7 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 d-flex align-items-center justify-content-start">
+			<div class="col-7 col-lg-3 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -108,7 +108,7 @@
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline ms-auto me-4"
 					data-testid="plan-apply"
 					:disabled="timeInThePast"
 					@click="update"
