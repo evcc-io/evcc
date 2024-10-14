@@ -76,7 +76,7 @@ render: |
     id: 0
     uri: {{ .host }}:{{ .port }}
     register:
-      address: 30364 # Active power
+      address: 30354 # Active power
       type: holding
       decode: int32
     scale: 1
@@ -101,14 +101,14 @@ render: |
       address: 30360
       type: holding
       decode: int32
-    scale: 1
+    scale: -1
   energy:
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
     timeout: {{ .timeout }}
     register:
-      address: 30314 # [Energy storage unit 1] Total discharge
+      address: 30312 # [Energy storage unit 1] Total discharge
       type: holding
       decode: uint32
     scale: 0.01
@@ -121,6 +121,6 @@ render: |
       address: 30368
       type: holding
       decode: uint16
-    scale: 0.1
+    scale: .01
   capacity: {{ .capacity }} # kWh
   {{- end }}
