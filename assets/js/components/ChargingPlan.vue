@@ -76,7 +76,7 @@
 							<div v-if="isModalVisible">
 								<ChargingPlansSettings
 									v-if="departureTabActive"
-									v-bind="ChargingPlansSettingsProps"
+									v-bind="chargingPlansSettingsProps"
 									@static-plan-updated="updateStaticPlan"
 									@static-plan-removed="removeStaticPlan"
 									@repeating-plans-updated="updateRepeatingPlans"
@@ -187,7 +187,7 @@ export default {
 		arrivalTabActive: function () {
 			return this.activeTab === "arrival";
 		},
-		ChargingPlansSettingsProps: function () {
+		chargingPlansSettingsProps: function () {
 			return this.collectProps(ChargingPlansSettings);
 		},
 		chargingPlanArrival: function () {
