@@ -19,7 +19,6 @@
 			<div class="col-6 col-lg-1">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
-			<div class="col-6 col-lg-1" />
 		</div>
 		<div class="row">
 			<div class="col-5 d-lg-none col-form-label">
