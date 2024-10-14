@@ -129,7 +129,7 @@ func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
 		return plans
 	}
 
-	v.log.DEBUG.Printf("update repeating plans for ERROR %s", err)
+	v.log.DEBUG.Printf("update repeating plans triggered error: %s", err)
 
 	return []RepeatingPlan{}
 }
