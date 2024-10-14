@@ -123,7 +123,7 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 		}
 
 		var plansWrapper struct {
-			RepeatingPlans []vehicle.RepeatingPlan `json:"repeatingPlans"`
+			RepeatingPlans []vehicle.RepeatingPlan `json:"plans"`
 		}
 
 		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
