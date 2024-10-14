@@ -101,6 +101,7 @@
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
 			</div>
+			<div class="col-1"></div> <!-- Adds space to the right side which is needed due to the extra column containing the trash-icons -->
 		</div>
 	</div>
 </template>
