@@ -1,0 +1,17 @@
+
+#OCPP integration
+
+chargers:
+  - name: my_charger
+    type: template
+    template: ocpp-abb
+    stationid: AMTRON
+
+
+#EEBUS integration
+
+  - name: my_charger
+    type: template
+    template: eebus
+    ski: 1234567890abcdef # SKI (Subject Key Identifier)
+    ip: 192.168.0.15 # IP-Adresse (optional)
