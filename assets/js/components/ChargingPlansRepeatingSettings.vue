@@ -83,7 +83,7 @@ export default {
 		},
 		updateRepeatingPlan: function (newPlan) {
 			const { id } = newPlan;
-			this.plans.splice(id, 1, newPlan)
+			this.plans.splice(id, 1, newPlan);
 		},
 		removeRepeatingPlan: function (index) {
 			this.plans.splice(index, 1);
