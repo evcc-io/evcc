@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
 )
@@ -669,7 +670,15 @@ func (site *Site) updateBatteryMeters() error {
 	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 	site.publish(keys.BatterySoc, site.batterySoc)
 
-	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
+	var excessStr string
+	if lo.ContainsBy(site.batteryMeters, func(m api.Meter) bool {
+		_, ok := m.(api.BatteryMaxACPower)
+		return ok
+	}) {
+		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.batteryExcessDC)
+	}
+
+	site.log.DEBUG.Printf("battery power: %.0fW"+excessStr, site.batteryPower)
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
