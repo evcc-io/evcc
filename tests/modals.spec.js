@@ -1,18 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorConfig } from "./simulator";
+import { login } from "./utils";
 
 const BASICS_CONFIG = "basics.evcc.yaml";
 
 const UI_ROUTES = ["/", "/#/sessions", "/#/config"];
 
 test.use({ baseURL: baseUrl() });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
 
 test.describe("Basics", async () => {
   test.beforeAll(async () => {

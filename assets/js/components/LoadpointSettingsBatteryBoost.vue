@@ -4,7 +4,7 @@
 			{{ $t("main.loadpointSettings.batteryUsage") }}
 		</h6>
 
-		<div class="mb-3 row">
+		<div class="mb-3 row" data-testid="battery-boost">
 			<label :for="formId('batteryBoost')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ $t("main.loadpointSettings.batteryBoost.label") }}&nbsp;🧪
 			</label>
@@ -17,6 +17,7 @@
 						type="checkbox"
 						role="switch"
 						:disabled="disabled"
+						data-testid="battery-boost-checkbox"
 						@change="handleEnabledChange"
 					/>
 					<label :for="formId('batteryBoost')" class="form-check-label">
