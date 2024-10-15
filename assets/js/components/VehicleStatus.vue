@@ -237,6 +237,10 @@ export default {
 			vehicleLimitTooltip: null,
 			awaitingAuthorizationTooltip: null,
 			disconnectRequiredTooltip: null,
+			interval: null,
+			planProjectedEndDuration: null,
+			smartCostNextStartDuration: null,
+			planProjectedStartDuration: null,
 		};
 	},
 	mounted() {
@@ -251,6 +255,12 @@ export default {
 		this.updateVehicleLimitTooltip();
 		this.updateAwaitingAuthorizationTooltip();
 		this.updateDisconnectRequiredTooltip();
+
+		this.interval = setInterval(this.updateDurations, 1000 * 60);
+		this.updateDurations();
+	},
+	beforeUnmount() {
+		clearInterval(this.interval);
 	},
 	watch: {
 		planActiveTooltipContent() {
@@ -285,6 +295,15 @@ export default {
 		},
 		disconnectRequiredTooltipContent() {
 			this.$nextTick(this.updateDisconnectRequiredTooltip);
+		},
+		planProjectedStart() {
+			this.updateDurations();
+		},
+		planProjectedEnd() {
+			this.updateDurations();
+		},
+		smartCostNextStart() {
+			this.updateDurations();
 		},
 	},
 	computed: {
@@ -399,8 +418,9 @@ export default {
 			if (!this.planStartVisible) {
 				return "";
 			}
-			const duration = this.fmtDurationToTime(new Date(this.planProjectedStart));
-			return this.$t("main.vehicleStatus.targetChargePlanned", { duration });
+			return this.$t("main.vehicleStatus.targetChargePlanned", {
+				duration: this.planProjectedStartDuration,
+			});
 		},
 		planActiveVisible() {
 			return this.planProjectedEnd && this.planActive && !this.chargingPlanDisabled;
@@ -418,7 +438,7 @@ export default {
 				});
 			}
 			return this.$t("main.vehicleStatus.targetChargeActive", {
-				duration: this.fmtDurationToTime(new Date(this.planProjectedEnd)),
+				duration: this.planProjectedEndDuration,
 			});
 		},
 		smartCostVisible() {
@@ -434,7 +454,7 @@ export default {
 			}
 			if (this.smartCostNextStart) {
 				return this.$t(`${prefix}EnergyNextStart`, {
-					duration: this.fmtDurationToTime(new Date(this.smartCostNextStart)),
+					duration: this.smartCostNextStartDuration,
 				});
 			}
 			return this.$t(`${prefix}EnergySet`);
@@ -512,6 +532,23 @@ export default {
 		},
 	},
 	methods: {
+		updateDurations() {
+			if (this.planProjectedStart) {
+				this.planProjectedStartDuration = this.fmtDurationToTime(
+					new Date(this.planProjectedStart)
+				);
+			}
+			if (this.planProjectedEnd) {
+				this.planProjectedEndDuration = this.fmtDurationToTime(
+					new Date(this.planProjectedEnd)
+				);
+			}
+			if (this.smartCostNextStart) {
+				this.smartCostNextStartDuration = this.fmtDurationToTime(
+					new Date(this.smartCostNextStart)
+				);
+			}
+		},
 		openLoadpointSettings() {
 			this.$emit("open-loadpoint-settings");
 		},
