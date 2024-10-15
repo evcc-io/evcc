@@ -169,9 +169,11 @@ func (wb *Peblar) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	err := wb.setCurrent(wb.curr)
+	curr := uint32(current * 1e3)
+
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.curr = uint32(current * 1e3)
+		wb.curr = curr
 	}
 
 	return err
