@@ -4,6 +4,8 @@ products:
   - brand: GoodWe
     description:
       generic: GoodWe over Wifi
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
