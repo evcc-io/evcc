@@ -29,7 +29,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
 )
@@ -671,10 +670,7 @@ func (site *Site) updateBatteryMeters() error {
 	site.publish(keys.BatterySoc, site.batterySoc)
 
 	var excessStr string
-	if lo.ContainsBy(site.batteryMeters, func(m api.Meter) bool {
-		_, ok := m.(api.BatteryMaxACPower)
-		return ok
-	}) {
+	if site.batteryExcessDC > 0 {
 		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.batteryExcessDC)
 	}
 
