@@ -3,6 +3,8 @@ products:
   - brand: Solaranzeige
     description:
       generic: Solaranzeige
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid", "pv"]

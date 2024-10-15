@@ -1,9 +1,13 @@
 package provider
 
 import (
-	"errors"
+	"context"
 	"fmt"
+
+	reg "github.com/evcc-io/evcc/util/registry"
 )
+
+var registry = reg.New[Provider]("plugin")
 
 // provider types
 type (
@@ -32,29 +36,10 @@ type (
 	SetBoolProvider interface {
 		BoolSetter(param string) (func(bool) error, error)
 	}
+	SetBytesProvider interface {
+		BytesSetter(param string) (func([]byte) error, error)
+	}
 )
-
-type providerRegistry map[string]func(map[string]interface{}) (Provider, error)
-
-func (r providerRegistry) Add(name string, factory func(map[string]interface{}) (Provider, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate plugin type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r providerRegistry) Get(name string) (func(map[string]interface{}) (Provider, error), error) {
-	if name == "" {
-		return nil, errors.New("missing configuration")
-	}
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("invalid plugin source: %s", name)
-	}
-	return factory, nil
-}
-
-var registry providerRegistry = make(map[string]func(map[string]interface{}) (Provider, error))
 
 // Config is the general provider config
 type Config struct {
@@ -62,162 +47,113 @@ type Config struct {
 	Other  map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 
-// NewIntGetterFromConfig creates a IntGetter from config
-func NewIntGetterFromConfig(config Config) (func() (int64, error), error) {
+func provider[T any](typ string, ctx context.Context, config Config) (T, error) {
+	var zero T
+
 	factory, err := registry.Get(config.Source)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
-	provider, err := factory(config.Other)
+	provider, err := factory(ctx, config.Other)
+	if err != nil {
+		return zero, err
+	}
+
+	prov, ok := provider.(T)
+	if !ok {
+		return zero, fmt.Errorf("invalid plugin source for type %s: %s", typ, config.Source)
+	}
+
+	return prov, nil
+}
+
+// NewIntGetterFromConfig creates a IntGetter from config
+func NewIntGetterFromConfig(ctx context.Context, config Config) (func() (int64, error), error) {
+	prov, err := provider[IntProvider]("int", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	prov, ok := provider.(IntProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type int: %s", config.Source)
 	}
 
 	return prov.IntGetter()
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
-func NewFloatGetterFromConfig(config Config) (func() (float64, error), error) {
-	factory, err := registry.Get(config.Source)
+func NewFloatGetterFromConfig(ctx context.Context, config Config) (func() (float64, error), error) {
+	prov, err := provider[FloatProvider]("float", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(FloatProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type float: %s", config.Source)
 	}
 
 	return prov.FloatGetter()
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(config Config) (func() (string, error), error) {
-	factory, err := registry.Get(config.Source)
+func NewStringGetterFromConfig(ctx context.Context, config Config) (func() (string, error), error) {
+	prov, err := provider[StringProvider]("string", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(StringProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type string: %s", config.Source)
 	}
 
 	return prov.StringGetter()
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(config Config) (func() (bool, error), error) {
-	factory, err := registry.Get(config.Source)
+func NewBoolGetterFromConfig(ctx context.Context, config Config) (func() (bool, error), error) {
+	prov, err := provider[BoolProvider]("bool", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(BoolProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
 	}
 
 	return prov.BoolGetter()
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(param string, config Config) (func(int64) error, error) {
-	factory, err := registry.Get(config.Source)
+func NewIntSetterFromConfig(ctx context.Context, param string, config Config) (func(int64) error, error) {
+	prov, err := provider[SetIntProvider]("int", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(SetIntProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type int: %s", config.Source)
 	}
 
 	return prov.IntSetter(param)
 }
 
 // NewFloatSetterFromConfig creates a FloatSetter from config
-func NewFloatSetterFromConfig(param string, config Config) (func(float642 float64) error, error) {
-	factory, err := registry.Get(config.Source)
+func NewFloatSetterFromConfig(ctx context.Context, param string, config Config) (func(float642 float64) error, error) {
+	prov, err := provider[SetFloatProvider]("float", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(SetFloatProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type float: %s", config.Source)
 	}
 
 	return prov.FloatSetter(param)
 }
 
 // NewStringSetterFromConfig creates a StringSetter from config
-func NewStringSetterFromConfig(param string, config Config) (func(string) error, error) {
-	factory, err := registry.Get(config.Source)
+func NewStringSetterFromConfig(ctx context.Context, param string, config Config) (func(string) error, error) {
+	prov, err := provider[SetStringProvider]("string", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(SetStringProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type string: %s", config.Source)
 	}
 
 	return prov.StringSetter(param)
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, error) {
-	factory, err := registry.Get(config.Source)
+func NewBoolSetterFromConfig(ctx context.Context, param string, config Config) (func(bool) error, error) {
+	prov, err := provider[SetBoolProvider]("bool", ctx, config)
 	if err != nil {
 		return nil, err
-	}
-
-	provider, err := factory(config.Other)
-	if err != nil {
-		return nil, err
-	}
-
-	prov, ok := provider.(SetBoolProvider)
-	if !ok {
-		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
 	}
 
 	return prov.BoolSetter(param)
+}
+
+// NewBytesSetterFromConfig creates a BytesSetter from config
+func NewBytesSetterFromConfig(ctx context.Context, param string, config Config) (func([]byte) error, error) {
+	prov, err := provider[SetBytesProvider]("bytes", ctx, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return prov.BytesSetter(param)
 }

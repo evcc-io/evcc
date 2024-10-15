@@ -12,8 +12,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/api"
-	"github.com/go-sprout/sprout/sprigin"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/samber/lo"
 	"github.com/spf13/pflag"
@@ -46,6 +46,7 @@ var a struct {
 
 	api.Battery
 	api.BatteryCapacity
+	api.BatteryMaxACPower
 	api.BatteryController
 }
 
@@ -57,7 +58,7 @@ var dependents = map[string][]string{
 	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
-	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryMaxACPower), typ(&a.BatteryController)},
 }
 
 // hasIntersection returns if the slices intersect
@@ -74,7 +75,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
-	tmpl, err := template.New("gen").Funcs(sprigin.FuncMap()).Funcs(template.FuncMap{
+	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
 		// ordered returns a slice of typeStructs ordered by dynamicType

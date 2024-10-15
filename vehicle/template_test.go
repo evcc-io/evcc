@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/util/templates"
@@ -22,16 +23,16 @@ var acceptable = []string{
 	"missing credentials",    // Tesla
 	"missing credentials id", // Tronity
 	"missing access and/or refresh token, use `evcc token` to create", // Tesla
-	"login failed: code not found",                                    //Polestar
+	"login failed: code not found",                                    // Polestar
 	"empty instance type- check for missing usage",                    // Merces
-	"invalid vehicle type: tesla",                                     //Tesla
+	"invalid vehicle type: tesla",                                     // Tesla
 }
 
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Vehicle, func(t *testing.T, values map[string]any) {
 		t.Helper()
 
-		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig(context.TODO(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}

@@ -228,7 +228,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 2500 # W
+            value: 10000 # W
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}

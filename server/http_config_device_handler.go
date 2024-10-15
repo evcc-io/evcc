@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -190,8 +191,8 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, testInstance(instance))
 }
 
-func newDevice[T any](class templates.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (*config.Config, error) {
-	instance, err := newFromConf(typeTemplate, req)
+func newDevice[T any](class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(context.TODO(), typeTemplate, req)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +235,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		conf, err = newDevice(class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+		conf, err = newDevice(class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
 			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
@@ -257,7 +258,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
+func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	dev, instance, merged, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
@@ -305,7 +306,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = updateDevice(id, class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+		err = updateDevice(id, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
 			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
@@ -392,9 +393,9 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (T, error) {
+func testConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(typeTemplate, conf)
+		return newFromConf(context.TODO(), typeTemplate, conf)
 	}
 
 	_, instance, _, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
