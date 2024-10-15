@@ -84,9 +84,6 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("peblar")
-	conn.Logger(log.TRACE)
-
 	// Register contains the physically connected phases
 	b, err := conn.ReadInputRegisters(peblarRegPhaseCount, 1)
 	if err != nil {
