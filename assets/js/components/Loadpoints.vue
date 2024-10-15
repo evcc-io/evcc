@@ -25,7 +25,6 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
-					:batterySoc="batterySoc"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -74,7 +73,6 @@ export default {
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
-		batterySoc: Number,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

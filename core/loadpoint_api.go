@@ -361,26 +361,6 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
-// GetBatteryBoostLimit gets the battery boost limit
-func (lp *Loadpoint) GetBatteryBoostLimit() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.batteryBoostLimit
-}
-
-// SetBatteryBoostLimit sets the battery boost limit
-func (lp *Loadpoint) SetBatteryBoostLimit(limit float64) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	// write to settings
-	lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
-
-	// apply immediately
-	lp.batteryBoostLimit = limit
-	lp.publish(keys.BatteryBoostLimit, limit)
-}
-
 // RemoteControl sets remote status demand
 func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()

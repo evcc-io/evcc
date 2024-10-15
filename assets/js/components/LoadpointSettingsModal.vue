@@ -35,7 +35,6 @@
 								v-bind="batteryBoostProps"
 								class="mt-2"
 								@batteryboost-updated="changeBatteryBoost"
-								@batteryboostlimit-updated="changeBatteryBoostLimit"
 							/>
 							<h6>
 								{{ $t("main.loadpointSettings.currents") }}
@@ -190,8 +189,6 @@ export default {
 		batteryBoost: Boolean,
 		batteryBoostAvailable: Boolean,
 		mode: String,
-		batteryBoostLimit: Number,
-		batterySoc: Number,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -207,7 +204,6 @@ export default {
 		"maxcurrent-updated",
 		"mincurrent-updated",
 		"batteryboost-updated",
-		"batteryboostlimit-updated",
 	],
 	data() {
 		return {
@@ -330,9 +326,6 @@ export default {
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
-		},
-		changeBatteryBoostLimit(limit) {
-			this.$emit("batteryboostlimit-updated", limit);
 		},
 		changeBatteryBoost(boost) {
 			this.$emit("batteryboost-updated", boost);

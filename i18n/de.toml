@@ -443,7 +443,7 @@ title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
 [main.loadpointSettings.batteryBoost]
-description = "Schnell aus Hausbatterie laden solange sie über {limit} ist."
+description = "Schnell aus Hausbatterie laden."
 label = "Batterie Boost"
 mode = "Nur im PV- und Min+PV-Modus verfügbar."
 once = "Boost ist für diesen Ladevorgang aktiviert."
@@ -545,7 +545,7 @@ vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Warte auf Autorisierung."
-batteryBoost = "Batterie Boost bis {limit}."
+batteryBoost = "Batterie Boost aktiv."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."

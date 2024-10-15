@@ -207,7 +207,6 @@ export default {
 	props: {
 		vehicleSoc: Number,
 		batteryBoostActive: Boolean,
-		batteryBoostLimit: Number,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
@@ -423,8 +422,7 @@ export default {
 			if (!this.batteryBoostVisible) {
 				return "";
 			}
-			const limit = this.fmtPercentage(this.batteryBoostLimit);
-			return this.$t("main.vehicleStatus.batteryBoost", { limit });
+			return this.$t("main.vehicleStatus.batteryBoost");
 		},
 		planStartTooltipContent() {
 			if (!this.planStartVisible) {

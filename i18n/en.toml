@@ -441,7 +441,7 @@ title = "Settings {0}"
 vehicle = "Vehicle"
 
 [main.loadpointSettings.batteryBoost]
-description = "Fast charge from home battery down to {limit}."
+description = "Fast charge from home battery."
 label = "Battery Boost"
 mode = "Only available in solar and min+solar mode."
 once = "Boost active for this charging session."
@@ -543,7 +543,7 @@ vehicleLimit = "Vehicle limit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
-batteryBoost = "Battery boost until {limit}."
+batteryBoost = "Battery boost active."
 charging = "Charging…"
 cheapEnergyCharging = "Cheap energy available."
 cheapEnergyNextStart = "Cheap energy in {duration}."
