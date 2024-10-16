@@ -1,4 +1,5 @@
-template: pulsarplus-fw5
+template: wallbox-fw5
+covers: ["pulsarplus-fw5"]
 products:
   - brand: wallbox
     description:

@@ -1,4 +1,5 @@
 template: ocpp-abb-tac
+covers: ["ocpp-abb"]
 products:
   - brand: ABB
     description:
@@ -11,3 +12,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  stacklevelzero: true
