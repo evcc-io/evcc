@@ -669,7 +669,12 @@ func (site *Site) updateBatteryMeters() error {
 	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 	site.publish(keys.BatterySoc, site.batterySoc)
 
-	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
+	var excessStr string
+	if site.batteryExcessDC > 0 {
+		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.batteryExcessDC)
+	}
+
+	site.log.DEBUG.Printf("battery power: %.0fW"+excessStr, site.batteryPower)
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)

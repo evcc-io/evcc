@@ -17,6 +17,7 @@ params:
     baudrate: 19200
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   power:
@@ -135,4 +136,5 @@ render: |
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

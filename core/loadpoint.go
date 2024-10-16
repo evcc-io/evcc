@@ -666,6 +666,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
+	// battery boost
+	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
+
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
@@ -1291,9 +1294,9 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(batteryBoostPower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	boost := lp.getBatteryBoost()
-	if boost == boostDisabled || !batteryBuffered {
+	if boost == boostDisabled {
 		return 0
 	}
 
@@ -1326,7 +1329,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower, batteryBuffered)
+	sitePower -= lp.boostPower(batteryBoostPower)
 
 	// switch phases up/down
 	var scaledTo int
