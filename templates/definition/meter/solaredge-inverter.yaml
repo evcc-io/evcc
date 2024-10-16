@@ -94,4 +94,25 @@ render: |
     value:
       - 101:W
       - 103:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    value:
+      - 101:WH
+      - 103:WH
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      value: 103:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      value: 103:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      value: 103:AphC
   {{- end }}
