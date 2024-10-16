@@ -103,6 +103,7 @@
 				:class="smartCostClass"
 				data-testid="vehicle-status-smartcost"
 				data-bs-toggle="tooltip"
+				data-bs-trigger="hover"
 				@click="smartCostClicked"
 			>
 				<DynamicPriceIcon v-if="smartCostPrice" />
@@ -116,6 +117,18 @@
 				</div>
 			</button>
 
+			<!-- battery boost -->
+			<button
+				v-if="batteryBoostVisible"
+				ref="batteryBoost"
+				type="button"
+				class="entry"
+				data-testid="vehicle-status-batteryboost"
+				data-bs-toggle="tooltip"
+				@click="batteryBoostClicked"
+			>
+				<BatteryBoostIcon />
+			</button>
 			<!-- plan -->
 			<button
 				v-if="planActiveVisible"
@@ -170,7 +183,7 @@ import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "./MaterialIcon/Welcome.vue";
-
+import BatteryBoostIcon from "./MaterialIcon/BatteryBoost.vue";
 const REASON_AUTH = "waitingforauthorization";
 const REASON_DISCONNECT = "disconnectrequired";
 
@@ -188,10 +201,12 @@ export default {
 		VehicleLimitIcon,
 		VehicleMinSocIcon,
 		WelcomeIcon,
+		BatteryBoostIcon,
 	},
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
+		batteryBoostActive: Boolean,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
@@ -237,6 +252,7 @@ export default {
 			vehicleLimitTooltip: null,
 			awaitingAuthorizationTooltip: null,
 			disconnectRequiredTooltip: null,
+			batteryBoostTooltip: null,
 			interval: null,
 			planProjectedEndDuration: null,
 			smartCostNextStartDuration: null,
@@ -255,9 +271,10 @@ export default {
 		this.updateVehicleLimitTooltip();
 		this.updateAwaitingAuthorizationTooltip();
 		this.updateDisconnectRequiredTooltip();
-
-		this.interval = setInterval(this.updateDurations, 1000 * 60);
 		this.updateDurations();
+
+    this.interval = setInterval(this.updateDurations, 1000 * 60);
+		this.updateBatteryBoostTooltip();
 	},
 	beforeUnmount() {
 		clearInterval(this.interval);
@@ -296,6 +313,9 @@ export default {
 		disconnectRequiredTooltipContent() {
 			this.$nextTick(this.updateDisconnectRequiredTooltip);
 		},
+		batteryBoostTooltipContent() {
+			this.$nextTick(this.updateBatteryBoostTooltip);
+		},
 		planProjectedStart() {
 			this.updateDurations();
 		},
@@ -304,7 +324,7 @@ export default {
 		},
 		smartCostNextStart() {
 			this.updateDurations();
-		},
+    },
 	},
 	computed: {
 		phaseTimerActive() {
@@ -413,6 +433,15 @@ export default {
 		},
 		planStartVisible() {
 			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
+		},
+		batteryBoostVisible() {
+			return this.batteryBoostActive;
+		},
+		batteryBoostTooltipContent() {
+			if (!this.batteryBoostVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.batteryBoost");
 		},
 		planStartTooltipContent() {
 			if (!this.planStartVisible) {
@@ -574,6 +603,10 @@ export default {
 			this.openLoadpointSettings();
 			this.smartCostTooltip?.hide();
 		},
+		batteryBoostClicked() {
+			this.batteryBoostTooltip?.hide();
+			this.openLoadpointSettings();
+		},
 		updatePvTooltip() {
 			this.pvTooltip = this.updateTooltip(
 				this.pvTooltip,
@@ -617,6 +650,13 @@ export default {
 				this.vehicleClimaterTooltip,
 				this.vehicleClimaterTooltipContent,
 				this.$refs.vehicleClimater
+			);
+		},
+		updateBatteryBoostTooltip() {
+			this.batteryBoostTooltip = this.updateTooltip(
+				this.batteryBoostTooltip,
+				this.batteryBoostTooltipContent,
+				this.$refs.batteryBoost
 			);
 		},
 		updateVehicleWelcomeTooltip() {
