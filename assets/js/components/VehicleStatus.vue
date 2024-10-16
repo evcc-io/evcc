@@ -273,7 +273,7 @@ export default {
 		this.updateDisconnectRequiredTooltip();
 		this.updateDurations();
 
-    this.interval = setInterval(this.updateDurations, 1000 * 60);
+		this.interval = setInterval(this.updateDurations, 1000 * 60);
 		this.updateBatteryBoostTooltip();
 	},
 	beforeUnmount() {
@@ -324,7 +324,7 @@ export default {
 		},
 		smartCostNextStart() {
 			this.updateDurations();
-    },
+		},
 	},
 	computed: {
 		phaseTimerActive() {
