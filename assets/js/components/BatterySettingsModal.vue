@@ -337,7 +337,7 @@ export default {
 			}
 			options.push({
 				value: 0,
-				name: this.$t("batterySettings.bufferStart.never"),
+				name: this.getBufferStartName(0),
 			});
 			return options;
 		},
@@ -489,10 +489,10 @@ export default {
 				console.error(err);
 			}
 		},
-		getBufferStartName(soc) {
-			return this.$t(`batterySettings.bufferStart.${soc === 100 ? "full" : "above"}`, {
-				soc: this.fmtSoc(soc),
-			});
+		getBufferStartName(value) {
+			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
+			const soc = this.fmtSoc(value);
+			return this.$t(`batterySettings.bufferStart.${key}`, { soc });
 		},
 	},
 };
