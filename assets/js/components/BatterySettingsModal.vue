@@ -160,7 +160,7 @@
 								@change="changeBufferStart"
 							>
 								<span class="text-decoration-underline">
-									{{ bufferStartOption.name }}
+									{{ selectedBufferStartName }}
 								</span>
 							</CustomSelect>
 						</small>
@@ -272,7 +272,7 @@ export default {
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
 		battery: { type: Array, default: () => [] },
-		batteryGridChargeLimit: Number,
+		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
@@ -332,9 +332,7 @@ export default {
 			for (let i = 100; i >= this.bufferSoc; i -= 5) {
 				options.push({
 					value: i,
-					name: this.$t(`batterySettings.bufferStart.${i === 100 ? "full" : "above"}`, {
-						soc: this.fmtSoc(i),
-					}),
+					name: this.getBufferStartName(i),
 				});
 			}
 			options.push({
@@ -345,6 +343,9 @@ export default {
 		},
 		bufferStartOption() {
 			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
+		},
+		selectedBufferStartName() {
+			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
@@ -487,6 +488,11 @@ export default {
 			} catch (err) {
 				console.error(err);
 			}
+		},
+		getBufferStartName(soc) {
+			return this.$t(`batterySettings.bufferStart.${soc === 100 ? "full" : "above"}`, {
+				soc: this.fmtSoc(soc),
+			});
 		},
 	},
 };

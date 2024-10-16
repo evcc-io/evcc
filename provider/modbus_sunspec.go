@@ -47,7 +47,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.Tcp, cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +161,6 @@ func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, 
 	return block, point, err
 }
 
-// TODO scale factors
-
 var _ SetFloatProvider = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements SetFloatProvider
@@ -213,6 +211,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 		val = int64(float64(val) * m.scale)
 
+		// SetValue is used to include the scale factor when writing
 		switch typ {
 		case typelabel.Bitfield16:
 			point.SetBitfield16(sunspec.Bitfield16(val))
@@ -223,17 +222,17 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 		case typelabel.Enum32:
 			point.SetEnum32(sunspec.Enum32(val))
 		case typelabel.Int16:
-			point.SetInt16(int16(val))
+			point.SetValue(int16(val))
 		case typelabel.Int32:
-			point.SetInt32(int32(val))
+			point.SetValue(int32(val))
 		case typelabel.Int64:
-			point.SetInt64(val)
+			point.SetValue(val)
 		case typelabel.Uint16:
-			point.SetUint16(uint16(val))
+			point.SetValue(uint16(val))
 		case typelabel.Uint32:
-			point.SetUint32(uint32(val))
+			point.SetValue(uint32(val))
 		case typelabel.Uint64:
-			point.SetUint64(uint64(val))
+			point.SetValue(uint64(val))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}

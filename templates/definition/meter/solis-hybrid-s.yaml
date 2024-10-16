@@ -13,6 +13,7 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -128,7 +129,6 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

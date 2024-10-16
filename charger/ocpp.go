@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2024 premultiply, andig
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"cmp"
 	"fmt"
@@ -11,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/samber/lo"
@@ -74,6 +92,10 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return c, err
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	var (
 		powerG, totalEnergyG, socG func() (float64, error)
 		currentsG, voltagesG       func() (float64, float64, float64, error)
@@ -104,15 +126,15 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		phasesS = c.phases1p3p
 	}
 
-	// var currentG func() (float64, error)
-	// if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
-	// 	currentG = c.conn.GetMaxCurrent
-	// }
+	var currentG func() (float64, error)
+	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
+		currentG = c.conn.GetMaxCurrent
+	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, phasesS, socG), nil
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idTag string,
@@ -120,34 +142,26 @@ func NewOCPP(id string, connector int, idTag string,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
-	unit := "ocpp"
-	if id != "" {
-		unit = id
-	}
-	unit = fmt.Sprintf("%s-%d", unit, connector)
+	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	log := util.NewLogger(unit)
+	cp, err := ocpp.Instance().RegisterChargepoint(id,
+		func() *ocpp.CP {
+			return ocpp.NewChargePoint(log, id)
+		},
+		func(cp *ocpp.CP) error {
+			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
-	cp, err := ocpp.Instance().ChargepointByID(id)
+			select {
+			case <-time.After(connectTimeout):
+				return api.ErrTimeout
+			case <-cp.HasConnected():
+			}
+
+			return cp.Setup(meterValues, meterInterval)
+		},
+	)
 	if err != nil {
-		cp = ocpp.NewChargePoint(log, id)
-
-		// should not error
-		if err := ocpp.Instance().Register(id, cp); err != nil {
-			return nil, err
-		}
-
-		log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
-
-		select {
-		case <-time.After(connectTimeout):
-			return nil, api.ErrTimeout
-		case <-cp.HasConnected():
-		}
-
-		if err := cp.Setup(meterValues, meterInterval); err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
@@ -170,13 +184,7 @@ func NewOCPP(id string, connector int, idTag string,
 		stackLevelZero: stackLevelZero,
 	}
 
-	if cp.HasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
-			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
-		}
-
-		go conn.WatchDog(10 * time.Second)
-	}
+	go conn.WatchDog(10 * time.Second)
 
 	return c, conn.Initialized()
 }
@@ -290,7 +298,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.conn.SetChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
+	err := c.conn.SetChargingProfileRequest(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -323,7 +331,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.Now(),
+			StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
@@ -381,28 +389,22 @@ func (c *OCPP) Diagnose() {
 	}
 
 	fmt.Printf("\tConfiguration:\n")
-	rc := make(chan error, 1)
-	err := ocpp.Instance().GetConfiguration(c.cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err == nil {
-			// sort configuration keys for printing
-			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
-				return cmp.Compare(i.Key, j.Key)
-			})
+	if resp, err := c.cp.GetConfigurationRequest(); err == nil {
+		// sort configuration keys for printing
+		slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+			return cmp.Compare(i.Key, j.Key)
+		})
 
-			rw := map[bool]string{false: "r/w", true: "r/o"}
+		rw := map[bool]string{false: "r/w", true: "r/o"}
 
-			for _, opt := range resp.ConfigurationKey {
-				if opt.Value == nil {
-					continue
-				}
-
-				fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+		for _, opt := range resp.ConfigurationKey {
+			if opt.Value == nil {
+				continue
 			}
-		}
 
-		rc <- err
-	}, nil)
-	ocpp.Wait(err, rc)
+			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+		}
+	}
 }
 
 var _ loadpoint.Controller = (*OCPP)(nil)

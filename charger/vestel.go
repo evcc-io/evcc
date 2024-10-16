@@ -141,13 +141,6 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *Vestel) Enabled() (bool, error) {
 	return verifyEnabled(wb, wb.enabled)
-
-	// b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
-	// if err != nil {
-	// 	return false, err
-	// }
-
-	// return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -178,6 +171,18 @@ func (wb *Vestel) MaxCurrent(current int64) error {
 	}
 
 	return err
+}
+
+var _ api.CurrentGetter = (*Vestel)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *Vestel) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ api.ChargeTimer = (*Vestel)(nil)

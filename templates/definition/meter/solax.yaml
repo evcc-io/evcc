@@ -17,6 +17,7 @@ params:
     baudrate: 19200
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   power:
@@ -134,7 +135,6 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

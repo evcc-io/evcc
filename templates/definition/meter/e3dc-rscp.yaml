@@ -20,8 +20,11 @@ params:
   - name: port
     default: 5033
   - name: user
+    required: true
   - name: password
+    required: true
   - name: key
+    required: true
   - name: battery
     deprecated: true
   - name: dischargelimit

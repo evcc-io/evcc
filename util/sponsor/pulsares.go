@@ -12,7 +12,7 @@ func readSerial() (string, error) {
 		return "", nil
 	}
 
-	if _, err := f.Write([]byte{0x0E, 0x00, 0xD0, 0x05}); err != nil {
+	if _, err := f.Write([]byte{0x0E, 0x00, 0x61, 0x7C, 0xD2, 0x71}); err != nil {
 		return "", err
 	}
 

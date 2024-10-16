@@ -55,7 +55,7 @@
     "vue": "^3.2.29",
     "vue-eslint-parser": "^9.1.0",
     "vue-hot-reload-api": "^2.3.4",
-    "vue-i18n": "^9.2.2",
+    "vue-i18n": "^10.0.1",
     "vue-router": "^4.0.12",
     "wait-on": "^8.0.0"
   },

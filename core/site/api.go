@@ -37,8 +37,6 @@ type API interface {
 	SetBufferSoc(float64) error
 	GetBufferStartSoc() float64
 	SetBufferStartSoc(float64) error
-	GetMaxGridSupplyWhileBatteryCharging() float64
-	SetMaxGridSupplyWhileBatteryCharging(float64) error
 
 	// GetBatteryGridChargeLimit get the grid charge limit
 	GetBatteryGridChargeLimit() *float64

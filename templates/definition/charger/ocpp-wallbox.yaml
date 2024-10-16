@@ -31,6 +31,7 @@ requirements:
       * URL: ws://[evcc-adresse]:8887/ (local network connection)
       * Charge Point Identity: Custom value (e.g. serial number of charger) which is reused in configuration as *stationid*
       * Password: leave empty
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |

@@ -2,19 +2,19 @@ template: elliconnect
 products:
   - brand: Elli
     description:
-      generic: Charger Connect (Beta)
+      generic: Charger Connect
   - brand: Volkswagen
     description:
-      generic: ID. Charger Connect (Beta)
+      generic: ID. Charger Connect
   - brand: Skoda
     description:
-      generic: iV Charger Connect (Beta)
+      generic: iV Charger Connect
   - brand: Cupra
     description:
-      generic: Charger Connect (Beta)
+      generic: Charger Connect
   - brand: Audi
     description:
-      generic: Wallbox plus (Beta)
+      generic: Wallbox plus
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]

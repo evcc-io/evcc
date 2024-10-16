@@ -44,6 +44,11 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
+// BatteryMaxACPower provides max AC power in W
+type BatteryMaxACPower interface {
+	MaxACPower() float64
+}
+
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
