@@ -1323,7 +1323,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryStart bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
@@ -1708,7 +1708,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1833,7 +1833,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryStart)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
