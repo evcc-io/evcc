@@ -22,7 +22,7 @@ import { Radar } from "vue-chartjs";
 import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions } from "./chartConfig";
 import formatter from "../../mixins/formatter";
-import colors, { dimColor } from "../../colors";
+import colors, { dimColor, lightenColor } from "../../colors";
 import LegendList from "./LegendList.vue";
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
 
@@ -95,8 +95,9 @@ export default {
 				data.avgCost = data.totalKWh ? data.totalCost / data.totalKWh : null;
 			});
 			const datasets = years.map((year) => {
-				const borderColor =
+				let borderColor =
 					this.costType === COST_TYPES.PRICE ? colors.pricePerKWh : colors.co2PerKWh;
+				borderColor = lightenColor(borderColor, years.indexOf(year));
 				const backgroundColor = years.length === 1 ? dimColor(borderColor) : "transparent";
 				const { totalCost, totalKWh } = Object.values(result[year]).reduce(
 					(acc, { totalCost = 0, totalKWh = 0 }) => ({
@@ -196,7 +197,10 @@ export default {
 							color: colors.muted,
 							backdropColor: colors.background,
 							font: { size: 10 },
-							callback: (value) => this.fmtCo2Short(value),
+							callback: (value) =>
+								this.costType === COST_TYPES.PRICE
+									? this.fmtPricePerKWh(value, this.currency, true)
+									: this.fmtCo2Short(value),
 							maxTicksLimit: 4,
 						},
 						angleLines: { display: false },

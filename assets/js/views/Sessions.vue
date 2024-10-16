@@ -3,26 +3,27 @@
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
-				<div class="row pt-2 mb-3 sticky-top evcc-background">
-					<div
-						class="col-lg-5 d-flex mb-sm-3"
-						:class="showDateNavigator ? 'mb-3' : 'mb-4'"
-					>
-						<PeriodSelector
-							:period="period"
-							:periodOptions="periodOptions"
-							@update:period="changePeriod"
-						/>
-					</div>
-					<div v-if="showDateNavigator" class="col-lg-6 mb-3 offset-lg-1">
-						<DateNavigator
-							:month="month"
-							:year="year"
-							:startDate="startDate"
-							:showMonth="showMonthNavigation"
-							:showYear="showYearNavigation"
-							@update-date="updateDate"
-						/>
+				<div class="header-outer sticky-top mb-3">
+					<div class="container">
+						<div class="row py-2 py-sm-3 d-flex flex-column flex-sm-row gap-2 gap-lg-0">
+							<div class="col-lg-5 d-flex mb-lg-0">
+								<PeriodSelector
+									:period="period"
+									:periodOptions="periodOptions"
+									@update:period="changePeriod"
+								/>
+							</div>
+							<div v-if="showDateNavigator" class="col-lg-6 offset-lg-1">
+								<DateNavigator
+									:month="month"
+									:year="year"
+									:startDate="startDate"
+									:showMonth="showMonthNavigation"
+									:showYear="showYearNavigation"
+									@update-date="updateDate"
+								/>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="d-flex justify-content-between align-items-center gap-2">
@@ -289,7 +290,7 @@ export default {
 			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
 		},
 		energySubTitle() {
-			return `${this.energySumFmt}`;
+			return `${this.energySumFmt} gesamt`;
 		},
 		solarTitle() {
 			return `${this.solarPercentageFmt} Sonnenanteil`;
@@ -355,7 +356,7 @@ export default {
 		},
 		costSubTitle() {
 			return this.activeCostType === COST_TYPES.PRICE
-				? `${this.fmtMoney(this.totalPrice, this.currency, true, true)}`
+				? `${this.fmtMoney(this.totalPrice, this.currency, true, true)} gesamt`
 				: `${this.fmtGrams(this.totalCo2)} gesamt`;
 		},
 		activeCostType() {
@@ -656,3 +657,46 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.header-outer {
+	--vertical-shift: 0rem;
+	left: 0;
+	right: 0;
+	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
+	-webkit-backdrop-filter: blur(35px);
+	backdrop-filter: blur(35px);
+	background-color: #0000;
+	box-shadow: 0 1px 8px 0px var(--evcc-background);
+}
+
+@media (min-width: 576px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 540px) / 2);
+	}
+}
+
+@media (min-width: 768px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 720px) / 2);
+	}
+}
+
+@media (min-width: 992px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 960px) / 2);
+	}
+}
+
+@media (min-width: 1200px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 1140px) / 2);
+	}
+}
+
+@media (min-width: 1400px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 1320px) / 2);
+	}
+}
+</style>

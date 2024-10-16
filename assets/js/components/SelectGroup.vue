@@ -33,6 +33,7 @@ export default {
 	border: 2px solid var(--evcc-default-text);
 	border-radius: 17px;
 	padding: 4px;
+	background: var(--evcc-background);
 }
 
 .btn {

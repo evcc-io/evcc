@@ -52,6 +52,15 @@ updateCssColors();
 export const dimColor = (color) => {
   return color.toLowerCase().replace(/ff$/, "20");
 };
+
+export const lightenColor = (color, level = 0) => {
+  if (level === 0) return color.toLowerCase();
+  const alpha = Math.round(255 * Math.pow(0.6, level))
+    .toString(16)
+    .padStart(2, "0");
+  return color.toLowerCase().replace(/ff$/, alpha);
+};
+
 export const fullColor = (color) => {
   return color.toLowerCase().replace(/20$/, "ff");
 };

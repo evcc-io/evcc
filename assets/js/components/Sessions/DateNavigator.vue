@@ -3,7 +3,7 @@
 		class="d-sm-flex justify-content-lg-end gap-lg-4"
 		:class="showMonth ? 'justify-content-between' : 'justify-content-end'"
 	>
-		<div v-if="showMonth" class="d-none d-sm-flex mb-2 mb-lg-0 justify-content-between">
+		<div v-if="showMonth" class="d-none d-sm-flex justify-content-between">
 			<DateNavigatorButton prev :disabled="!hasPrevMonth" :onClick="emitPrevMonth" />
 			<CustomSelect
 				id="sessionsMonth"
@@ -17,7 +17,7 @@
 			</CustomSelect>
 			<DateNavigatorButton next :disabled="!hasNextMonth" :onClick="emitNextMonth" />
 		</div>
-		<div v-if="showMonth" class="d-flex d-sm-none mb-2 mb-lg-0 justify-content-between">
+		<div v-if="showMonth" class="d-flex d-sm-none justify-content-between">
 			<DateNavigatorButton prev :disabled="!hasPrevMonth" :onClick="emitPrevMonth" />
 			<CustomSelect
 				id="sessionsMonthYear"
@@ -33,7 +33,7 @@
 		</div>
 		<div
 			v-if="showYear"
-			class="mb-2 mb-lg-0 justify-content-between"
+			class="justify-content-between"
 			:class="showMonth ? 'd-none d-sm-flex' : 'd-flex'"
 		>
 			<DateNavigatorButton prev :disabled="!hasPrevYear" :onClick="emitPrevYear" />
