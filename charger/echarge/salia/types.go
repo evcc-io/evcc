@@ -37,7 +37,7 @@ type Port struct {
 		ChargeMode     string
 		PauseCharging  int `json:"pausecharging,string"`
 		PhaseSwitching struct {
-			Actual   int
+			Actual   int `json:",string"`
 			Status   string
 			SetPhase string `json:"setphase,omitempty"`
 		} `json:"phase_switching"`
