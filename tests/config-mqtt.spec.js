@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
+import { enableExperimental, login } from "./utils";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -16,22 +17,6 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async () => {
   await stop();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
-
 test.describe("mqtt", async () => {
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
