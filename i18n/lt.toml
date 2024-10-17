@@ -459,6 +459,7 @@ smartCostCheap = "Įkrovimas pigiai iš tinklo"
 smartCostClean = "Įkrovimas švariai iš tinklo"
 title = "Nustatymai {0}"
 vehicle = "Automobilis"
+batteryUsage = "Namų kaupiklis"
 
 [main.loadpointSettings.limitSoc]
 description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
@@ -586,6 +587,7 @@ vehicleLimit = "Automobilyje nustatytas limitas."
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
+batteryBoost = "Veikia paspartinimas kaupikliu."
 
 [notifications]
 dismissAll = "Išvalyti visus"
@@ -740,3 +742,10 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[main.loadpointSettings.batteryBoost]
+label = "Kaupikliu paspartintas įkrovimas"
+mode = "Galimas tik Saulė ir Min+Saulė režimuose."
+once = "Paspartinimas aktyvuotas šiai įkrovimo sesijai."
+description = "Greitas įkrovimas iš namų kaupiklio"
