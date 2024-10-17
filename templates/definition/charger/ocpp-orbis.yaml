@@ -1,8 +1,9 @@
-template: ocpp-fronius-wattpilot
+template: ocpp-orbis
+covers: ["orbis-viaris"]
 products:
-  - brand: Fronius
+  - brand: Orbis
     description:
-      generic: Wattpilot (OCPP)
+      generic: Viaris
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
