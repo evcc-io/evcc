@@ -4,7 +4,7 @@ capacity = "{energy} από {total}"
 control = "Έλεγχος Μπαταρίας"
 discharge = "Αποτροπή εκφόρτισης σε γρήγορη λειτουργία και προγραμματισμένη φόρτιση."
 disclaimerHint = "Σημείωση:"
-disclaimerText = "Αυτές οι ρυθμίσεις επηρεάζουν μόνο την ηλιακή λειτουργία. Η συμπεριφορά φόρτισης προσαρμόζεται ανάλογα."
+disclaimerText = "Αυτές οι ρυθμίσεις επηρεάζουν μόνο την ηλιακή Φ/Β λειτουργία. Η συμπεριφορά φόρτισης προσαρμόζεται ανάλογα."
 gridChargeTab = "Φόρτιση δικτύου"
 legendBottomName = "Προτεραιότητα στη φόρτιση της οικιακής μπαταρίας"
 legendBottomSubline = "μέχρι να φτάσει {soc}."
@@ -30,12 +30,17 @@ titleEdit = "Eπεξεργασία Mπαταρίας"
 
 [config.circuits]
 title = "Διαχείριση Φορτίου"
+description = "Διασφαλίζει ότι το άθροισμα όλων των σημείων φόρτισης που είναι συνδεδεμένα σε ένα κύκλωμα δεν υπερβαίνει τα οριζόμενα όρια ισχύος και έντασης ρεύματος. Τα κυκλώματα μπορούν να είναι σε ένθετες δομές για τη δημιουργία μιας ιεραρχίας."
 
 [config.control]
 labelInterval = "Διάστημα ενημέρωσης"
 labelMaxGridSupply = "Μέγιστη παροχή δικτύου κατά τη φόρτιση"
 labelResidualPower = "Υπολειπόμενη ισχύς"
 title = "Έλεγχος συμπεριφοράς"
+descriptionInterval = "Έλεγχος του κύκλου ενημέρωσης βρόχου σε δευτερόλεπτα. Καθορίζει πόσο συχνά το evcc διαβάζει τα δεδομένα του μετρητή, προσαρμόζει την ισχύ φόρτισης και ενημερώνει τη διεπαφή χρήστη. Μικρά διαστήματα (< 30 δευτερόλεπτα) μπορεί να προκαλέσουν ταλαντώσεις και ανεπιθύμητη συμπεριφορά."
+description = "Συνήθως οι προεπιλεγμένες τιμές αρκούν. Αλλάξτε τις μόνο εάν γνωρίζετε τι κάνετε."
+descriptionMaxGridSupply = "Σχετικό μόνο για υβριδικούς μετατροπείς που δεν μπορούν να παράγουν την πλήρη ισχύ παραγωγής συνεχούς ρεύματος (DC) στο σπίτι μέσω εναλλασσόμενου ρεύματος (AC). Αυτό το σενάριο μπορεί να οδηγήσει σε ανεπιθύμητη χρήση του δικτύου, καθώς το evcc υποθέτει ότι είναι διαθέσιμη η πλήρης ισχύς DC. Για να αποτραπεί κάτι τέτοιο, χρησιμοποιήστε τιμή τουλάχιστον 50 W."
+descriptionResidualPower = "Μετατοπίζει το σημείο λειτουργίας του βρόχου ελέγχου. Εάν έχετε οικιακή μπαταρία, συνιστάται να ορίσετε μια τιμή 100 W. Με αυτόν τον τρόπο η μπαταρία θα έχει μικρότερη προτεραιότητα σε σχέση με τη χρήση δικτύου."
 
 [config.deviceValue]
 broker = "Broker"
@@ -71,9 +76,12 @@ temp = "Θερμοκρασία"
 topic = "Topic"
 url = "URL"
 yes = "ναι"
+gridPrice = "Τιμή δικτύου"
+feedinPrice = "Ταρίφα Feed-in"
 
 [config.eebus]
 title = "EEBus"
+description = "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus."
 
 [config.form]
 example = "Παράδειγμα"
@@ -89,6 +97,8 @@ remove = "Αφαίρεση"
 save = "Αποθήκευση"
 telemetry = "Τηλεμετρία"
 title = "Τίτλος"
+off = "κλειστό"
+on = "ανοιχτό"
 
 [config.grid]
 title = "Μετρητής δικτύου"
@@ -108,10 +118,16 @@ labelToken = "API Token"
 labelUrl = "URL"
 labelUser = "Χρήστης"
 title = "InfluxDB"
+labelCheckInsecure = "Να επιτρέπονται τα self-signed πιστοποιητικά"
+labelInsecure = "Επικύρωση πιστοποιητικού"
+descriptionToken = "Ελέγξτε την τεκμηρίωση της InfluxDB για να μάθετε πώς να δημιουργήσετε κάποιο. https://docs.influxdata.com/influxdb/v2/admin/"
+v1Support = "Με υποστήριξη για την InfluxDB 1.x;"
+v2Support = "Επιστροφή σε InfluxDB 2.x"
+description = "Γράφει δεδομένα χρέωσης και άλλες μετρήσεις στην InfluxDB. Χρησιμοποιήστε το Grafana ή άλλα εργαλεία για οπτικοποίηση των δεδομένων."
 
 [config.main]
 addLoadpoint = "Προσθήκη σημείου φόρτισης"
-addPvBattery = "Προσθήκη ηλιακής ενέργειας ή μπαταρίας"
+addPvBattery = "Προσθήκη Φ/Β ενέργειας ή μπαταρίας"
 addVehicle = "Προσθήκη οχήματος"
 configured = "ρυθμίστηκε"
 edit = "επεξεργασία"
@@ -121,7 +137,7 @@ vehicles = "Τα Οχήματά μου"
 yaml = "Ορίζεται στο evcc.yaml. Δεν μεταβάλλεται από το UI"
 
 [config.messaging]
-description = "Λάβετε μηνύματα σχετικά με τις περιόδους φόρτισης."
+description = "Λάβετε μηνύματα σχετικά με τις συνεδρίες φόρτισης."
 title = "Ειδοποιήσεις"
 
 [config.meter]
@@ -134,6 +150,7 @@ validateSave = "Επικύρωση & αποθήκευση"
 
 [config.modbusproxy]
 title = "Modbus Proxy"
+description = "Να επιτρέπεται σε πολλούς πελάτες να έχουν πρόσβαση σε μία συσκευή Modbus."
 
 [config.mqtt]
 authentication = "Έλεγχος ταυτότητας"
@@ -143,9 +160,24 @@ labelPassword = "Κωδικός"
 labelTopic = "Topic"
 labelUser = "Χρήστης"
 title = "MQTT"
+descriptionTopic = "Αφήστε το κενό για να απενεργοποιήσετε δημοσιεύσεις."
+descriptionClientId = "Αποστολέας των μηνυμάτων. Εάν μείνει κενό θα γίνει χρήση του `evcc-[τυχαίο]`."
+description = "Συνδεθείτε σε ένα MQTT broker για ανταλλάγη δεδομένων με άλλα συστήματα στο δίκτυό σας."
+labelCheckInsecure = "Να επιτρέπονται τα πιστοποιητικά self-signed"
+labelClientId = "ID πελάτη"
+labelInsecure = "Επικύρωση πιστοποιητικού"
+publishing = "Δημοσιεύσεις"
+labelClientCert = "Πιστοποιητικό πελάτη"
+labelClientKey = "Κλειδί πελάτη"
 
 [config.network]
 title = "Δίκτυο"
+descriptionHost = "Κάντε χρήση του επιθέματος .local για να μπορεί να γίνει χρήση του mDNS. Σχετικό για την ανακάλυψη της εφαρμογής για κινητά και ορισμένων φορτιστών OCPP."
+descriptionPort = "Θύρα για τη διεπαφή ιστού (web-UI) και το API. Θα χρειαστεί να ενημερώσετε τη διεύθυνση URL του προγράμματος περιήγησής σας, εάν το αλλάξετε."
+descriptionSchema = "Επηρεάζει μόνο τον τρόπο δημιουργίας των διευθύνσεων URL. Η επιλογή HTTPS δεν θα ενεργοποιήσει την κρυπτογράφηση."
+labelHost = "Hostname"
+labelPort = "Θύρα"
+labelSchema = "Σχήμα"
 
 [config.options]
 
@@ -162,15 +194,15 @@ http = "HTTP (χωρίς κρυπτογράφηση)"
 https = "HTTPS (με κρυπτογράφηση)"
 
 [config.pv]
-titleAdd = "Προσθήκη Ηλιακού Μετρητή"
-titleEdit = "Επεξεργασία Ηλιακού Μετρητή"
+titleAdd = "Προσθήκη Μετρητή Φ/Β"
+titleEdit = "Επεξεργασία Μετρητή Φ/Β"
 
 [config.section]
 general = "Γενικά"
 grid = "Δίκτυο ενέργειας"
 integrations = "Ενσωματώσεις"
 loadpoints = "Σημεία φόρτισης"
-meter = "Ηλιακά και μπαταρία"
+meter = "Φ/Β και μπαταρία"
 system = "Σύστημα"
 vehicles = "Οχήματα"
 
@@ -184,6 +216,7 @@ restartingMessage = "Επανεκκίνηση του evcc."
 
 [config.tariffs]
 title = "Τιμολόγια"
+description = "Καθορίστε ενεργειακά τιμολόγια για να υπολογίσετε το κόστος κάθε φόρτισης."
 
 [config.title]
 description = "Προβάλλεται στην κεντρική οθόνη και στον φυλλομετρητή"
@@ -214,31 +247,33 @@ validateSave = "Επικύρωση και αποθήκευση"
 [footer]
 
 [footer.community]
-greenEnergy = "Ηλιακή"
+greenEnergy = "Φ/Β"
 greenEnergySub1 = "φόρτιση με το evcc"
 greenEnergySub2 = "από τον Οκτώβριο του 2022"
-greenShare = "Μερίδιο ηλιακών"
+greenShare = "Μερίδιο Φ/Β"
 greenShareSub1 = "παροχή ισχύος από"
-greenShareSub2 = "ηλιακή και απόθεμα μπαταρίας"
+greenShareSub2 = "Φ/Β και απόθεμα μπαταρίας"
 power = "Ισχύς φόρτισης"
 powerSub1 = "{activeClients} από {totalClients} συμμετέχοντες"
 powerSub2 = "φορτίζει..."
+tabTitle = "Κοινότητα live"
 
 [footer.savings]
 co2Saved = "{value} αποθηκεύτηκε"
 co2Title = "Εκπομπές CO₂"
-footerLong = "{percent} ηλιακή ενέργεια"
-footerShort = "{percent} ηλιακή"
+footerLong = "{percent} ενέργεια Φ/Β"
+footerShort = "{percent} Φ/Β"
 modalTitle = "Επισκόπηση Ενέργειας Φόρτισης"
 moneySaved = "εξοικονομήθηκαν {value}"
 percentGrid = "{grid} kWh δικτύου"
-percentSelf = "{self} kWh ηλιακών"
-percentTitle = "Ηλιακή Ενέργεια"
+percentSelf = "{self} kWh Φ/Β"
+percentTitle = "Ηλιακή Φ/Β Ενέργεια"
 periodLabel = "Περίοδος:"
-priceTitle = "Κόστος ενέργειας"
+priceTitle = "Τιμή ενέργειας"
 referenceGrid = "δίκτυο"
 referenceLabel = "Δεδομένα αναφοράς:"
 tabTitle = "Τα δεδομένα μου"
+configurePriceCo2 = "Μάθετε πώς να διαμορφώνετε δεδομένα τιμής και CO₂."
 
 [footer.savings.period]
 30d = "Τελευταίες 30 ημέρες"
@@ -247,9 +282,25 @@ thisYear = "φέτος"
 total = "από πάντα"
 
 [footer.sponsor]
+confettiPromise = "Παίρνετε αυτοκόλλητα και ψηφιακό κομφετί"
+becomeSponsor = "Γίνετε χορηγός"
+titleVictron = "Χορηγία της Victron Energy"
+titleTrial = "Δοκιμαστική λειτουργία"
+supportUs = "Η αποστολή μας είναι να κάνουμε κανόνα την ηλιακή φόρτιση. Βοηθήστε το evcc δίνοντας ότι νομίζετε οτι αξίζει για εσάς."
+sticker = "… ή αυτοκόλλητα evcc;"
+titleSponsor = "Είστε υποστηρικτής"
+trial = "Είστε σε δοκιμαστική λειτουργία και μπορείτε να κάνετε χρήση όλων των δυνατοτήτων. Εξετάστε το ενδεχόμενο να το στηρίξετε μέσω χορηγίας."
+victron = "Χρησιμοποιείτε το evcc με συσκευές Victron Energy και έχετε πρόσβαση σε όλες τις δυνατότητες."
+becomeSponsorExtended = "Υποστηρίξτε μας με άμεσο τρόπο και λάβετε αυτοκόλλητα."
+confetti = «Είστε έτοιμοι για κομφετί;»
+thanks = "Ευχαριστούμε, {χορηγός}! Η συνεισφορά σας βοηθά στην περαιτέρω ανάπτυξη του evcc."
+titleNoSponsor = "Στηρίξτε μας"
 
 [footer.telemetry]
 optInMoreDetailsLink = "εδώ"
+optIn = "Θέλω να συνεισφέρω τα δεδομένα μου."
+optInMoreDetails = "Περισσότερες λεπτομέρειες {0}."
+optInSponsorship = "Απαιτείται χορηγία."
 
 [footer.version]
 modalCancel = "Ακύρωση"
@@ -261,6 +312,7 @@ modalUpdate = "Εγκατάσταση"
 modalUpdateNow = "Εγκατάσταση τώρα"
 modalUpdateStarted = "Εκκίνηση της νέας έκδοσης του evcc…"
 modalUpdateStatusStart = "Ξεκίνησε η εγκατάσταση:"
+availableLong = "διαθέσιμη νέα έκδοση"
 
 [header]
 about = "Σχετικά"
@@ -282,15 +334,40 @@ logsButton = "Προβολή αρχείων καταγραφής"
 logsDescription = "Ελέγξτε τα αρχεία καταγραφής για σφάλματα."
 modalTitle = "Χρειάζεστε βοήθεια;"
 restartButton = "Επανεκκίνηση"
+primaryActions = "Κάτι δεν λειτουργεί όπως θα έπρεπε; Αυτά είναι καλά μέρη για να λάβετε βοήθεια."
+restartDescription = "Δοκιμάσατε να το απενεργοποιήσετε και να το ενεργοποιήσετε ξανά;"
+secondaryActions = "Ακόμα δε μπορείτε να λύσετε το πρόβλημά σας; Ακολουθούν ορισμένες πιο σοβαρές επιλογές."
 
 [help.restart]
 cancel = "Ακύρωση"
 confirm = "Ναι, επανεκκίνηση!"
 modalTitle = "Είστε βέβαιοι ότι θέλετε να κάνετε επανεκκίνηση;"
+description = "Υπό κανονικές συνθήκες η επανεκκίνηση δε θα πρέπει να είναι απαραίτητη. Εξετάστε το ενδεχόμενο να αναφέρετε σφάλμα εάν χρειάζεται να κάνετε επανεκκίνηση του evcc σε τακτική βάση."
+disclaimer = "Σημείωση: το evcc θα τερματιστεί και θα βασιστεί στο λειτουργικό σύστημα για την επανεκκίνηση της υπηρεσίας."
 
 [log]
+nAreas = "{count} τομείς"
+areaLabel = "Φίλτρο τομέα"
+areas = "Όλοι οι τομείς"
+showAll = "Εμφάνιση όλων των καταχωρήσεων"
+download = "Λήψη πλήρους αρχείου καταγραφής"
+levelLabel = "Φίλτρο επιπέδου αρχείου καταγραφής"
+selectAll = "επιλογή όλων"
+title = "Καταγραφές"
+update = "Αυτόματη ενημέρωση"
+noResults = "Δεν υπάρχουν αντίστοιχες εγγραφές στο ημερολόγιο."
+search = "Αναζήτηση"
 
 [loginModal]
+error = "Η σύνδεση απέτυχε:"
+cancel = "Άκυρο"
+password = "Κωδικός"
+iframeHint = "Ανοίξτε το evcc σε νέα καρτέλα."
+invalid = "Ο κωδικός πρόσβασης δεν είναι έγκυρος."
+iframeIssue = "Ο κωδικός πρόσβασής είναι σωστός, αλλά το πρόγραμμα περιήγησής φαίνεται να έχει χάσει το cookie ελέγχου ταυτότητας. Αυτό μπορεί να συμβεί εάν εκτελέσετε το evcc σε ένα iframe μέσω HTTP."
+reset = "Επαναφορά κωδικού πρόσβασης;"
+login = "Σύνδεση"
+title = "Πιστοποίηση"
 
 [main]
 vehicles = "Στάθμευση"
@@ -304,93 +381,335 @@ goal = "Επιθυμητή φόρτιση"
 modalTitle = "Πλάνο φόρτισης"
 none = "κανένα"
 remove = "Αφαίρεση"
-time = "Διάρκεια"
+time = "Ώρα"
 title = "Πλάνο"
 titleTargetCharge = "Αναχώρηση"
 unsavedChanges = "Υπάρχουν μη αποθηκευμένες αλλαγές. Υποβολή τώρα;"
 update = "Υποβολή"
+titleMinSoc = "Ελάχιστη φόρτιση"
 
 [main.energyflow]
 batteryCharge = "Φόρτιση μπαταρίας"
 batteryDischarge = "Αποφόρτιση μπαταρίας"
+loadpoints = "Φορτιστής| Φορτιστής | {count} φορτιστές"
+noEnergy = "Χωρίς δεδομένα μετρητή"
+pvProduction = "Παραγωγή"
+battery = "Μπαταρία"
+batteryHold = "Μπαταρία (κλειδωμένο)"
+cheapBatteryGridCharge = "φθηνή ενέργεια δικτύου"
+gridImport = "Χρήση δικτύου"
+pvExport = "Εξαγωγή προς δικτύο"
+selfConsumption = «Αυτοκατανάλωση»
+batteryTooltip = "{energy} από {total} ({soc})"
+homePower = "Κατανάλωση"
+cleanBatteryGridCharge = "πράσινη ενέργεια δικτύου"
 
 [main.heatingStatus]
+waitForVehicle = "Έτοιμο. Αναμονή για θερμαντήρα..."
+charging = "Θερμαίνεται…"
 
 [main.loadpoint]
 fallbackName = "Σημείο φόρτισης"
+avgPrice = "⌀ Τιμή"
+co2 = "⌀ CO₂"
+charged = "Φορτίστηκε"
+price = "Σ Τιμή"
+power = "Ισχύς"
+duration = "Διάρκεια"
+solar = "Φ/Β"
+remoteDisabledHard = "{source}: απενεργοποιημένο"
+remaining = "Απομένει"
+remoteDisabledSoft = "{source}: απενεργοποιημένη προσαρμοζόμενη ηλιακή Φ/Β φόρτιση"
 
 [main.loadpointSettings]
 currents = "Ένταση φόρτισης"
 onlyForSocBasedCharging = "Αυτές οι επιλογές είναι διαθέσιμες μόνο για οχήματα με γνωστό επίπεδο φόρτισης."
 smartCostCheap = "Φτηνή φόρτιση δικτύου"
 smartCostClean = "Περιβαλλοντική φόρτιση δικτύου"
+vehicle = "Όχημα"
+disclaimerHint = "Σημείωση:"
+default = "προεπιλογή"
+title = "Ρυθμίσεις {0}"
+batteryUsage = "Οικιακή Μπαταρία"
 
 [main.loadpointSettings.limitSoc]
 description = "Όριο φόρτισης που χρησιμοποιείται όταν αυτό το όχημα είναι συνδεδεμένο."
+label = "Προεπιλεγμένο όριο"
 
 [main.loadpointSettings.maxCurrent]
+label = "Μέγιστη Ένταση"
 
 [main.loadpointSettings.minCurrent]
+label = "Ελάχιστη Ένταση"
 
 [main.loadpointSettings.minSoc]
+label = "Ελ. % φόρτισης"
+description = "Το όχημα φορτίζεται (γρήγορα) μέχρι {0} σε λειτουργία ηλιακής Φ/Β ενέργειας. Μετά συνεχίζει μόνο με το πλεόνασμα Φ/Β ενέργειας. Χρήσιμο για να εξασφαλίσει μια ελάχιστη εμβέλεια ακόμη και για πιο συννεφιασμένες ημέρες."
 
 [main.loadpointSettings.phasesConfigured]
+label = "Φάσεις"
+no1p3pSupport = "Πώς είναι συνδεδεμένος ο φορτιστής σας;"
+phases_0 = "αυτόματη εναλλαγή"
+phases_1 = "1 φάση"
+phases_1_hint = "({min} έως {max})"
+phases_3 = "3 φάσεις"
+phases_3_hint = "({min} έως {max})"
 
 [main.mode]
+now = "Ταχύ"
+off = "Κλειστό"
+pv = "Φ/Β"
+minpv = "Ελαχ+Φ/Β"
+smart = "Έξυπνο¨"
 
 [main.provider]
+login = "σύνδεση"
+logout = "αποσύνδεση"
 
 [main.targetCharge]
-onlyInPvMode = "Το πλάνο φόρτισης λειτουργεί μόνο σε ηλιακή λειτουργία."
+onlyInPvMode = "Το πλάνο φόρτισης λειτουργεί μόνο σε ηλιακή Φ/Β λειτουργία."
 planDuration = "Χρόνος φόρτισης"
 targetIsAboveVehicleLimit = "Το όριο του οχήματος είναι χαμηλότερο από το στόχο φόρτισης."
 vehicleCapacityRequired = "Απαιτείται η χωρητικότητα της μπαταρίας του οχήματος για την εκτίμηση του χρόνου φόρτισης."
+currentPlan = "ενεργό πλάνο"
+co2Limit = "Όριο CO₂ από {co2}"
+priceLimit = "όριο τιμής του {price}"
+costLimitIgnore = "Το διαμορφωμένο {limit} θα αγνοηθεί κατά τη διάρκεια αυτής της περιόδου."
+activate = "Ενεργοποίηση"
+setTargetTime = "κανένα"
+descriptionEnergy = "Μέχρι πότε θα πρέπει το {targetEnergy} να φορτίζει το όχημα;"
+targetIsInThePast = "Διάλεξε μια στιγμή στο μέλλον, Marty."
+preview = "Προεπισκόπηση πλάνου"
+targetIsAboveLimit = "Το οριζόμενο όριο φόρτισης {limit} θα αγνοηθεί κατά τη διάρκεια αυτής της περιόδου."
+today = "σήμερα"
+planPeriodValue = "{start} έως {end}"
+tomorrow = "αύριο"
+vehicleCapacityDocs = "Μάθετε πώς να το ρυθμίσετε."
+inactiveLabel = "Στόχευση ώρας"
+notReachableInTime = "Ο στόχος θα επιτευχθεί {overrun} αργότερα."
+descriptionSoc = "Πότε πρέπει να φορτιστεί το όχημα μέχρι {targetSoc};"
+planPeriodLabel = "Περίοδος"
+remove = "Αφαίρεση"
+planUnknown = "δεν είναι γνωστό ακόμα"
+targetIsTooFarInTheFuture = "Θα αναπροσαρμόσουμε το πλάνο μόλις μάθουμε περισσότερα για το μέλλον."
+title = "Στόχευση ώρας"
+update = "Ενημέρωση"
 
 [main.targetChargePlan]
 chargeDuration = "Χρόνος φόρτισης"
+priceLabel = "Τιμή ενέργειας"
+unknownPrice = "άγνωστο ακόμα"
+co2Label = "εκπομπές CO2 ⌀"
+timeRange = "{day} {range} ω"
 
 [main.targetEnergy]
+label = "Όριο"
+noLimit = "κανένα"
 
 [main.vehicle]
+moreActions = "Περισσότερες ενέργειες"
+none = "Κανένα όχημα"
+detectionActive = "Προσδιορισμός οχήματος..."
+fallbackName = "Όχημα"
+notReachable = "Το όχημα δεν ήταν ανιχνεύσιμο. Δοκιμάστε να επανεκκινήσετε το evcc."
+tempLimit = "Θερμ. όριο"
+unknown = "Όχημα επισκέπτη"
+addVehicle = "Προσθήκη οχήματος"
+targetSoc = "Όριο"
+temp = "Θερμ."
+changeVehicle = "Αλλαγή οχήματος"
+vehicleSoc = "Φορτισμένο"
 
 [main.vehicleSoc]
 charging = "φορτίζει"
+ready = "έτοιμο"
+connected = "συνδεδεμένο"
+disconnected = "αποσυνδεδεμένο"
+vehicleLimit = "Όριο οχήματος: {soc}"
 
 [main.vehicleStatus]
 charging = "Φορτίζει..."
 cheapEnergyCharging = "Διαθέσιμη φτηνή ενέργεια."
 cleanEnergyCharging = "Διαθέσιμη καθαρή ενέργεια."
+cheapEnergySet = "Ορίστηκε το όριο τιμής."
+cleanEnergySet = "Ορίστηκε το όριο CO₂."
+unknown = "άγνωστο"
+vehicleLimitReached = "Έχει φτάσει στο όριο του οχήματος."
+waitForVehicle = "Έτοιμο. Αναμονή για όχημα..."
+awaitingAuthorization = "Αναμονή για εξουσιοδότηση."
+cheapEnergyNextStart = "Φτηνή ενέργεια σε {duration}."
+cleanEnergyNextStart = "Πράσινη ενέργεια σε {duration}."
+finished = "Τελείωσε."
+minCharge = "Ελάχιστη φόρτιση μέχρι {soc}."
+scale1p = "Σε λίγο θα γίνει μετάπτωση σε μονοφασική φόρτιση."
+targetChargePlanned = "Το πλάνο θα ξεκινήσει τη φόρτιση σε {duration}."
+targetChargeWaitForVehicle = "Το πλάνο είναι έτοιμο για φόρτιση. Αναμονή για το όχημα..."
+connected = "Συνδέθηκε."
+climating = "Εντοπίστηκε προκλιματισμός."
+disconnected = "Αποσυνδεδεμένο."
+disconnectRequired = "Η συνεδρία τερματίστηκε. Συνδεθείτε ξανά."
+pvDisable = "Δεν υπάρχει αρκετό πλεόνασμα. Σε λίγο θα σταματήσει."
+pvEnable = "Διαθέσιμο πλεόνασμα. Θα ξεκινήσει σύντομα."
+scale3p = "Σε λίγο θα γίνει επαύξηση σε τριφασική φόρτιση"
+targetChargeActive = "Ενεργό πλάνο φόρτισης. Εκτίμηση ολοκλήρωσης σε {duration}."
+vehicleLimit = "Όριο οχήματος."
+welcome = "Σύντομη αρχική φόρτιση για επιβεβαίωση της σύνδεσης."
+batteryBoost = "Ενεργή ενίσχυση από μπαταρία."
 
 [notifications]
+dismissAll = "Απόρριψη όλων"
+modalTitle = "Ειδοποιήσεις"
+logs = "Προβολή πλήρους καταγραφής"
 
 [offline]
+message = "Χωρίς σύνδεση με διακομιστή."
+restartNeeded = "Απαιτείται για την εφαρμογή των αλλαγών."
+restarting = "Ο διακομιστής θα είναι διαθέσιμος σε λίγο."
+restart = "Επανεκκίνηση"
+configurationError = "Σφάλμα κατά την εκκίνηση. Ελέγξτε τις ρυθμίσεις παραμέτρων και επανεκκινήστε."
 
 [passwordModal]
+labelCurrent = "Τρέχων κωδικός"
+updatePassword = "Ενημέρωση κωδικού"
+description = "Ορίστε έναν κωδικό πρόσβασης για την προστασία των ρυθμίσεων διαμόρφωσης. Η χρήση της κύριας οθόνης εξακολουθεί να είναι δυνατή χωρίς σύνδεση."
+titleNew = "Ορισμός Κωδικού Διαχειριστή"
+titleUpdate = "Ενημέρωση Κωδικού Διαχειριστή"
+empty = "Ο κωδικός πρόσβασης δεν πρέπει να είναι κενός"
+error = "Σφάλμα:"
+labelNew = "Νέος κωδικός"
+labelRepeat = "Επανάληψη κωδικού"
+newPassword = "Δημιουργία κωδικού"
+noMatch = "Οι κωδικοι δεν ταιριάζουν"
 
 [session]
+odometer = "Οδόμετρο"
+meterstart = "Αρχή μετρητή"
+meter = "Μετρητής"
+price = "Τιμή"
+date = "Περίοδος"
+cancel = "Άκυρο"
+finished = "Τελείωσε"
+co2 = "CO₂"
+delete = "Διαγραφή"
+meterstop = Τέλος μετρητή
+started = "Ξεκίνησε"
+title = "Συνεδρία φόρτισης"
 
 [sessions]
+energy = "Φόρτιση"
+avgPrice = "⌀ Τιμή"
+avgPower = "⌀ Ισχύς"
+price = "Σ Τιμή"
+solar = "Φ/Β"
+co2 = "⌀ CO₂"
+csvMonth = "Λήψη CSV {month}"
+csvTotal = "Λήψη CSV συνόλων"
+chargeDuration = "Διάρκεια"
+date = "Ξεκίνησε"
+downloadCsv = "Λήψη ως CSV"
+loadpoint = "Σημείο φόρτισης"
+noData = "Δεν υπάρχουν συνεδρίες φόρτισης αυτό το μήνα."
+reallyDelete = "Θέλετε πραγματικά να διαγράψετε αυτή τη συνεδρία;"
+title = "Συνεδρίες φόρτισης"
+vehicle = "Όχημα"
+total = "Σύνολο"
 
 [sessions.csv]
+priceperkwh = "Τιμή/kWh"
+price = "Τιμή"
+solarpercentage = "Φ/Β (%)"
+created = "Δημιουργήθηκε"
+vehicle = "Όχημα"
+chargeduration = "Διάρκεια"
+co2perkwh = "CO₂/kWh"
+finished = "Τελείωσε"
+meterstart = "Εκκίνηση μετρητή (kWh)"
+meterstop = "Τέλος μετρητή (kWh)"
+odometer = "Οδόμετρο (χλμ)"
+chargedenergy = "Ενέργεια (kWh)"
+identifier = "Αναγνωριστικό"
+loadpoint = "Σημείο φόρτισης"
 
 [sessions.filter]
+allLoadpoints = "όλα τα σημεία φόρτισης"
+allVehicles = "όλα τα οχήματα"
+filter = "Φίλτρο"
 
 [settings]
+title = "Διεπαφή χρήστη"
 
 [settings.fullscreen]
+enter = "Μετάπτωση σε πλήρη οθόνη"
+exit = "Έξοδος από πλήρη οθόνη"
+label = "Πλήρης οθόνη"
 
 [settings.hiddenFeatures]
+label = "Πειραματικό"
+value = "Εμφάνιση πειραματικών δυνατοτήτων διεπαφής χρήστη."
 
 [settings.language]
+label = "Γλώσσα"
+auto = "Αυτόματο"
 
 [settings.sponsorToken]
+hint = "Σημείωση: Θα το αυτοματοποιήσουμε στο μέλλον."
+expires = "Το sponsor token λήγει {inXDays}. {getNewToken} και κάντε εδώ μία ενημέρωση."
+getNew = "Πάρτε ένα φρέσκο"
 
 [settings.telemetry]
+label = "Τηλεμετρία"
 
 [settings.theme]
+auto = "συστήματος"
+dark = "σκοτεινό"
+label = Σχέδιο προβολής
+light = "φωτεινό"
 
 [settings.unit]
+km = "χλμ"
+label = "Μονάδες"
+mi = "μίλια"
 
 [smartCost]
+activeHoursLabel = "Ενεργές ώρες"
+batteryDescription = "Φορτίζει την οικιακή μπαταρία με ενέργεια από το δίκτυο."
+priceLimit = "Όριο τιμής"
+saved = "Αποθηκεύτηκε."
+cleanTitle = "Φόρτιση δικτύου πράσινης ενέργειας"
+co2Label = "εκπομπές CO2"
+co2Limit = "Όριο CO₂"
+modalTitle = "Έξυπνη φόρτιση δικτύου"
+none = "κανένα"
+priceLabel = "Τιμή ενέργειας"
+applyToAll = "Εφαρμογή παντού;"
+activeHours = "{charging} από {total}"
+loadpointDescription = "Επιτρέπει την προσωρινή γρήγορη φόρτιση σε λειτουργία ηλιακής Φ/Β ενέργειας."
+cheapTitle = "Φτηνή φόρτιση δικτύου"
 
 [startupError]
+configFile = "Αρχείο διαμόρφωσης που χρησιμοποιείται:"
+configuration = "Διαμόρφωση"
+description = "Ελέγξτε το αρχείο διαμόρφωσής. Εάν το μήνυμα σφάλματος δεν βοηθά, ελέγξτε το {0}."
+fixAndRestart = "Διορθώστε το πρόβλημα και επανεκκινήστε το διακομιστή."
+lineError = "Σφάλμα στο {0}."
+title = "Σφάλμα εκκίνησης"
+discussions = "GitHub Discussions"
+lineErrorLink = "γραμμή {0}"
+restartButton = "Επανεκκίνηση"
+hint = "Σημείωση: Μπορεί επίσης να έχετε μια ελαττωματική συσκευή (μετατροπέας, μετρητής, ...). Ελέγξτε τις συνδέσεις δικτύου σας."
+
+
+[main.loadpointSettings.batteryBoost]
+once = "Ενεργή ενίσχυση για αυτή τη συνεδρία φόρτισης."
+description = "Γρήγορη φόρτιση από οικιακή μπαταρία."
+label = "Ενίσχυση από μπαταρία"
+mode = "Διαθέσιμο μόνο σε λειτουργία Φ/Β ή Ελαχ+Φ/Β."
+
+[config.sponsor]
+labelToken = "Sponsor token"
+title = "Χορηγεία"
+description = "Το μοντέλο χορηγίας μας βοηθά να διατηρήσουμε το έργο και να δημιουργήσουμε με βιώσιμο τρόπο νέες και συναρπαστικές λειτουργίες. Ως χορηγός έχετε πρόσβαση σε όλες τις εφαρμογές φορτιστή."
+addToken = "Εισαγάγετε το sponsor token"
+descriptionToken = "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή."
+error = "Δεν είναι έγκυρο το sponsor token."
+changeToken = "Αλλαγή του sponsor token"
