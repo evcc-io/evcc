@@ -3,12 +3,15 @@ products:
   - brand: SAX
     description:
       generic: Homespeicher
+requirements:
+  description:
+    de: Ältere Versionen nutzen Modbus-Port 3600.
+    en: Older versions use Modbus port 3600.
 params:
   - name: usage
     choice: ["grid", "battery"]
   - name: modbus
     choice: ["tcpip"]
-    port: 3600
     id: 64
 render: |
   type: custom
