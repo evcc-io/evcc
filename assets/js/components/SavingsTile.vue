@@ -1,10 +1,10 @@
 <template>
 	<div class="flex-shrink-1 d-flex mb-4 mb-lg-0 align-items-center align-items-lg-start">
 		<shopicon-regular-sun v-if="icon === 'sun'" class="tile-icon"></shopicon-regular-sun>
-		<shopicon-regular-coinjar
-			v-if="icon === 'coinjar'"
+		<shopicon-regular-lightning
+			v-if="icon === 'lightning'"
 			class="tile-icon"
-		></shopicon-regular-coinjar>
+		></shopicon-regular-lightning>
 		<shopicon-regular-receivepayment
 			v-if="icon === 'receivepayment'"
 			class="tile-icon"
@@ -15,11 +15,13 @@
 			<div>
 				<p class="my-0 fw-bold text-truncate">{{ title }}</p>
 				<strong class="d-flex align-items-baseline lh-sm">
-					<span class="fs-1">
+					<span class="fs-1 value order-1">
 						<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 						<span v-else>{{ value }}</span>
 					</span>
-					<span class="ms-1 unit">{{ unit }}</span>
+					<span class="unit" :class="leadingUnit ? 'order-0 me-1' : 'order-2 ms-1'">
+						{{ unit }}
+					</span>
 				</strong>
 			</div>
 			<small class="d-block mt-0 ms-3 ms-lg-0 text-end text-lg-start">
@@ -31,16 +33,18 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/coinjar";
+import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import AnimatedNumber from "./AnimatedNumber.vue";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "SavingsTile",
 	components: { AnimatedNumber },
+	mixins: [formatter],
 	props: {
 		title: String,
 		icon: String,
@@ -49,6 +53,11 @@ export default {
 		unit: String,
 		sub1: String,
 		sub2: String,
+	},
+	computed: {
+		leadingUnit() {
+			return this.unit === "%" && this.hasLeadingPercentageSign();
+		},
 	},
 };
 </script>

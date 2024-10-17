@@ -2,7 +2,7 @@ template: em2go
 products:
   - brand: EM2GO
     description:
-      generic: Pro Power/OCPP/ONC
+      generic: Pro Power, OCPP/ONC
 capabilities: ["mA"]
 requirements:
   description:

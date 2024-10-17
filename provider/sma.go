@@ -69,8 +69,10 @@ func NewSMAFromConfig(other map[string]interface{}) (Provider, error) {
 	return provider, err
 }
 
+var _ FloatProvider = (*SMA)(nil)
+
 // FloatGetter creates handler for float64
-func (p *SMA) FloatGetter() func() (float64, error) {
+func (p *SMA) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		values, err := p.device.Values()
 		if err != nil {
@@ -78,19 +80,21 @@ func (p *SMA) FloatGetter() func() (float64, error) {
 		}
 
 		return sma.AsFloat(values[p.value]) * p.scale, nil
-	}
+	}, nil
 }
 
+var _ IntProvider = (*SMA)(nil)
+
 // IntGetter creates handler for int64
-func (p *SMA) IntGetter() func() (int64, error) {
-	fl := p.FloatGetter()
+func (p *SMA) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
-		f, err := fl()
+		f, err := g()
 		if err != nil {
 			return 0, err
 		}
 
 		return int64(f), nil
-	}
+	}, err
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -35,6 +36,11 @@ func (d *dumper) DumpWithHeader(name string, device interface{}) {
 
 func (d *dumper) Dump(name string, v interface{}) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
+	var isHeating bool
+	if fd, ok := v.(api.FeatureDescriber); ok {
+		isHeating = slices.Contains(fd.Features(), api.Heating)
+	}
 
 	// meter
 
@@ -74,7 +80,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if p1, p2, p3, err := v.Powers(); err != nil {
 			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
+			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW\n", p1, p2, p3)
 		}
 	}
 
@@ -95,15 +101,27 @@ func (d *dumper) Dump(name string, v interface{}) {
 			}
 		}
 
-		if err != nil {
-			fmt.Fprintf(w, "Soc:\t%v\n", err)
+		if isHeating {
+			if err != nil {
+				fmt.Fprintf(w, "Temp:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Temp:\t%.0f°C\n", soc)
+			}
 		} else {
-			fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
+			if err != nil {
+				fmt.Fprintf(w, "Soc:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
+			}
 		}
 	}
 
 	if v, ok := v.(api.BatteryCapacity); ok {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
+	}
+
+	if v, ok := v.(api.BatteryMaxACPower); ok {
+		fmt.Fprintf(w, "Max AC power:\t%.0fW\n", v.MaxACPower())
 	}
 
 	// charger
@@ -114,6 +132,19 @@ func (d *dumper) Dump(name string, v interface{}) {
 		} else {
 			fmt.Fprintf(w, "Charge status:\t%v\n", status)
 		}
+	}
+
+	if v, ok := v.(api.StatusReasoner); ok {
+		if status, err := v.StatusReason(); err != nil {
+			fmt.Fprintf(w, "Status reason:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Status reason:\t%v\n", status)
+		}
+	}
+
+	// controllable battery
+	if _, ok := v.(api.BatteryController); ok {
+		fmt.Fprintf(w, "Controllable:\ttrue\n")
 	}
 
 	if v, ok := v.(api.Charger); ok {
@@ -133,10 +164,18 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.ChargeTimer); ok {
-		if duration, err := v.ChargingTime(); err != nil {
+		if duration, err := v.ChargeDuration(); err != nil {
 			fmt.Fprintf(w, "Duration:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Duration:\t%v\n", duration.Truncate(time.Second))
+		}
+	}
+
+	if v, ok := v.(api.CurrentLimiter); ok {
+		if min, max, err := v.GetMinMaxCurrent(); err != nil {
+			fmt.Fprintf(w, "Mix/Max Current:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA\n", min, max)
 		}
 	}
 
@@ -183,10 +222,18 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		if targetSoc, err := v.TargetSoc(); err != nil {
-			fmt.Fprintf(w, "Target Soc:\t%v\n", err)
+		if isHeating {
+			if limitSoc, err := v.GetLimitSoc(); err != nil {
+				fmt.Fprintf(w, "Max Temp:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Max Temp:\t%d°C\n", limitSoc)
+			}
 		} else {
-			fmt.Fprintf(w, "Target Soc:\t%.0f%%\n", targetSoc)
+			if limitSoc, err := v.GetLimitSoc(); err != nil {
+				fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Limit Soc:\t%d%%\n", limitSoc)
+			}
 		}
 	}
 
@@ -196,6 +243,24 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 		if !structs.IsZero(v.OnIdentified()) {
 			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+		}
+	}
+
+	// currents and phases
+
+	if v, ok := v.(api.CurrentGetter); ok {
+		if f, err := v.GetMaxCurrent(); err != nil {
+			fmt.Fprintf(w, "Max Current:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Max Current:\t%.1fA\n", f)
+		}
+	}
+
+	if v, ok := v.(api.PhaseGetter); ok {
+		if f, err := v.GetPhases(); err != nil {
+			fmt.Fprintf(w, "Phases:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Phases:\t%d\n", f)
 		}
 	}
 
@@ -215,8 +280,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// features
 
 	if v, ok := v.(api.FeatureDescriber); ok {
-		ff := v.Features()
-		fmt.Fprintf(w, "Features:\t%v\n", ff)
+		if ff := v.Features(); len(ff) > 0 {
+			fmt.Fprintf(w, "Features:\t%v\n", ff)
+		}
 	}
 
 	w.Flush()

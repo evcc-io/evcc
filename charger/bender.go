@@ -27,7 +27,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -44,25 +43,28 @@ type BenderCC struct {
 
 const (
 	// all holding type registers
-	bendRegChargePointState       = 122  // Vehicle (Control Pilot) state
-	bendRegPhaseEnergy            = 200  // Phase energy from primary meter (Wh)
-	bendRegCurrents               = 212  // Currents from primary meter (mA)
-	bendRegTotalEnergy            = 218  // Total Energy from primary meter (Wh)
-	bendRegActivePower            = 220  // Active Power from primary meter (W)
-	bendRegVoltages               = 222  // Voltages of the ocpp meter (V)
-	bendRegChargedEnergyLegacy    = 705  // Sum of charged energy for the current session (Wh)
-	bendRegChargingDurationLegacy = 709  // Duration since beginning of charge (Seconds)
-	bendRegChargedEnergy          = 716  // Sum of charged energy for the current session (Wh)
-	bendRegChargingDuration       = 718  // Duration since beginning of charge (Seconds)
-	bendRegUserID                 = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
-	bendRegEVCCID                 = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
-	bendRegHemsCurrentLimit       = 1000 // Current limit of the HEMS module (A)
+	bendRegChargePointState = 122  // Vehicle (Control Pilot) state
+	bendRegPhaseEnergy      = 200  // Phase energy from primary meter (Wh)
+	bendRegCurrents         = 212  // Currents from primary meter (mA)
+	bendRegTotalEnergy      = 218  // Total Energy from primary meter (Wh)
+	bendRegActivePower      = 220  // Active Power from primary meter (W)
+	bendRegVoltages         = 222  // Voltages of the ocpp meter (V)
+	bendRegUserID           = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	bendRegEVBatteryState   = 730  // EV Battery State (% 0-100)
+	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
+	bendRegHemsCurrentLimit = 1000 // Current limit of the HEMS module (A)
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
 	bendRegProtocolVersion      = 120 // Ebee Modbus TCP Server Protocol Version number
 	bendRegChargePointModel     = 142 // ChargePoint Model. Bytes 0 to 19.
 	bendRegSmartVehicleDetected = 740 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
+
+	// unused
+	// bendRegChargedEnergyLegacy    = 705 // Sum of charged energy for the current session (Wh)
+	// bendRegChargingDurationLegacy = 709 // Duration since beginning of charge (Seconds)
+	// bendRegChargedEnergy          = 716 // Sum of charged energy for the current session (Wh)
+	// bendRegChargingDuration       = 718 // Duration since beginning of charge (Seconds)
 )
 
 func init() {
@@ -82,7 +84,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -109,12 +111,12 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	}
 
 	var (
-		currentPower  func() (float64, error)
-		currents      func() (float64, float64, float64, error)
-		voltages      func() (float64, float64, float64, error)
-		chargedEnergy func() (float64, error)
-		totalEnergy   func() (float64, error)
-		identify      func() (string, error)
+		currentPower func() (float64, error)
+		currents     func() (float64, float64, float64, error)
+		voltages     func() (float64, float64, float64, error)
+		totalEnergy  func() (float64, error)
+		soc          func() (float64, error)
+		identify     func() (string, error)
 	)
 
 	// check presence of metering
@@ -126,12 +128,17 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		currentPower = wb.currentPower
 		currents = wb.currents
-		chargedEnergy = wb.chargedEnergy
 		totalEnergy = wb.totalEnergy
 
 		// check presence of "ocpp meter"
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
 			voltages = wb.voltages
+		}
+
+		if !wb.legacy {
+			if _, err := wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1); err == nil {
+				soc = wb.soc
+			}
 		}
 	}
 
@@ -140,7 +147,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, chargedEnergy, totalEnergy, identify), nil
+	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -201,26 +208,8 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargeTimer = (*BenderCC)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *BenderCC) ChargingTime() (time.Duration, error) {
-	if wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDurationLegacy, 1)
-		if err != nil {
-			return 0, err
-		}
-
-		return time.Duration(binary.BigEndian.Uint16(b)) * time.Second, nil
-	}
-
-	b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDuration, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
-}
+// removed: https://github.com/evcc-io/evcc/issues/13555
+// var _ api.ChargeTimer = (*BenderCC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *BenderCC) currentPower() (float64, error) {
@@ -237,24 +226,8 @@ func (wb *BenderCC) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *BenderCC) chargedEnergy() (float64, error) {
-	if wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegChargedEnergyLegacy, 1)
-		if err != nil {
-			return 0, err
-		}
-
-		return float64(binary.BigEndian.Uint16(b)) / 1e3, nil
-	}
-
-	b, err := wb.conn.ReadHoldingRegisters(bendRegChargedEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
-}
+// removed: https://github.com/evcc-io/evcc/issues/13726
+// var _ api.ChargeRater = (*BenderCC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *BenderCC) totalEnergy() (float64, error) {
@@ -280,34 +253,33 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// currents implements the api.PhaseCurrents interface
-func (wb *BenderCC) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegCurrents, 6)
+// getPhaseValues returns 3 sequential register values
+func (wb *BenderCC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+	var res [3]float64
+	for i := range res {
+		u32 := binary.BigEndian.Uint32(b[4*i:])
+		if u32 == math.MaxUint32 {
+			u32 = 0
+		}
+		res[i] = float64(u32) / divider
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
+}
+
+// currents implements the api.PhaseCurrents interface
+func (wb *BenderCC) currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(bendRegCurrents, 1e3)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *BenderCC) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var volt [3]float64
-	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint32(b[4*l : 4*(l+1)]))
-	}
-
-	return volt[0], volt[1], volt[2], nil
+	return wb.getPhaseValues(bendRegVoltages, 1)
 }
 
 // identify implements the api.Identifier interface
@@ -329,6 +301,26 @@ func (wb *BenderCC) identify() (string, error) {
 	}
 
 	return bytesAsString(b), nil
+}
+
+// soc implements the api.Battery interface
+func (wb *BenderCC) soc() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 1 {
+		b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
+		if err != nil {
+			return 0, err
+		}
+		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
+			return float64(soc), nil
+		}
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)

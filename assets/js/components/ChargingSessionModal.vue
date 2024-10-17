@@ -37,8 +37,9 @@
 										<VehicleOptions
 											:id="session.vehicle"
 											class="options"
-											:vehicles="vehicles"
-											:is-unknown="false"
+											:vehicles="vehicleOptions"
+											connected
+											:selected="session.vehicle"
 											@change-vehicle="changeVehicle"
 											@remove-vehicle="removeVehicle"
 										>
@@ -63,11 +64,22 @@
 									</td>
 								</tr>
 								<tr>
-									<th>
+									<th class="align-baseline">
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.chargedEnergy * 1e3) }}
+										{{
+											fmtWh(
+												chargedEnergy,
+												chargedEnergy >= 1e3
+													? POWER_UNIT.KW
+													: POWER_UNIT.AUTO
+											)
+										}}
+										<div v-if="session.chargeDuration">
+											{{ fmtDurationNs(session.chargeDuration) }}
+											(~{{ fmtW(avgPower) }})
+										</div>
 									</td>
 								</tr>
 								<tr v-if="session.solarPercentage != null">
@@ -75,11 +87,8 @@
 										{{ $t("sessions.solar") }}
 									</th>
 									<td>
-										{{ fmtNumber(session.solarPercentage, 1) }}% ({{
-											fmtKWh(
-												session.chargedEnergy * 10 * session.solarPercentage
-											)
-										}})
+										{{ fmtPercentage(session.solarPercentage, 1) }}
+										({{ fmtWh(solarEnergy, POWER_UNIT.AUTO) }})
 									</td>
 								</tr>
 								<tr v-if="session.price != null">
@@ -113,8 +122,8 @@
 										{{ $t("session.meter") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}<br />
-										{{ fmtKWh(session.meterStop * 1e3) }}
+										{{ fmtWh(session.meterStart * 1e3) }}<br />
+										{{ fmtWh(session.meterStop * 1e3) }}
 									</td>
 								</tr>
 							</tbody>
@@ -186,9 +195,28 @@ export default {
 	mixins: [formatter],
 	props: {
 		session: Object,
-		vehicles: [Object],
+		currency: String,
+		vehicles: Array,
 	},
 	emits: ["session-changed"],
+	computed: {
+		chargedEnergy: function () {
+			return this.session.chargedEnergy * 1e3;
+		},
+		avgPower: function () {
+			const hours = this.session.chargeDuration / 1e9 / 3600;
+			return this.chargedEnergy / hours;
+		},
+		solarEnergy: function () {
+			return this.chargedEnergy * (this.session.solarPercentage / 100);
+		},
+		vehicleOptions: function () {
+			return this.vehicles.map((v) => ({
+				name: v.title,
+				title: v.title,
+			}));
+		},
+	},
 	methods: {
 		openSessionDetailsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
@@ -201,17 +229,13 @@ export default {
 			modal.show();
 		},
 		formatKm: function (value) {
-			return `${distanceValue(value)} ${distanceUnit()}`;
+			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
-		async changeVehicle(index) {
-			await this.updateSession({
-				vehicle: this.vehicles[index - 1].title,
-			});
+		async changeVehicle(title) {
+			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
-			await this.updateSession({
-				vehicle: null,
-			});
+			await this.updateSession({ vehicle: null });
 		},
 		async updateSession(data) {
 			try {

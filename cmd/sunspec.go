@@ -11,7 +11,6 @@ import (
 	"github.com/andig/gosunspec/smdx"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/volkszaehler/mbmd/meters"
 	quirks "github.com/volkszaehler/mbmd/meters/sunspec"
 )

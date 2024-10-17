@@ -1,0 +1,13 @@
+template: ac-elwa-2
+products:
+  - brand: my-PV
+    description:
+      generic: AC ELWA 2
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: ac-elwa-2
+  {{- include "modbus" . }}

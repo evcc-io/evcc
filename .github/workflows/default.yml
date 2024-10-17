@@ -1,5 +1,8 @@
 name: Default
 
+env:
+  GO_VERSION: ^1.23
+
 on:
   push:
     branches:
@@ -13,12 +16,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-clean-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-clean-
+            ${{ runner.os }}-go-
 
       - name: Install tools
         run: make install
@@ -29,6 +43,9 @@ jobs:
       - name: Docs
         run: make docs
 
+      - name: Toml
+        run: make toml
+
       - name: Porcelain
         run: make porcelain
 
@@ -37,27 +54,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
         id: go
 
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+            ${{ runner.os }}-go-
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: mkdir dist && touch dist/empty
+
       - name: Build
-        run: mkdir dist && touch dist/empty && make build
+        run: make build
 
   test:
     name: Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-test-
+            ${{ runner.os }}-go-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -67,47 +113,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
+          cache: false # avoid cache thrashing
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-lint-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-lint-
+            ${{ runner.os }}-go-
 
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          args: --timeout 5m
+          args: --out-format=colored-line-number --timeout 5m
 
-  build-ui:
+  ui:
     name: UI
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
+          cache: "npm"
 
-      - name: Get NPM cache dir
-        id: npm-cache-dir
-        run: |
-          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-      - name: Cache NPM modules
-        uses: actions/cache@v3
-        id: npm-cache
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install tools
+      - name: Install
         run: make install-ui
 
       - name: Lint
@@ -116,24 +160,75 @@ jobs:
       - name: Test
         run: make test-ui
 
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ^1.20
-        id: go
+      - name: Build UI
+        run: make ui
 
-      - name: Toml
-        run: make toml
+      - name: Cache dist
+        uses: actions/cache/save@v4
+        id: cache-dist
+        with:
+          path: dist
+          key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Porcelain
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
-      - name: Build
-        run: make ui
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
 
-      - name: Cache dist
-        uses: actions/cache/save@v3
-        id: cache-dist
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
         with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+        id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-integration-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-integration-
+            ${{ runner.os }}-go-
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Build UI
+        run: make install-ui ui
+
+      - name: Build Go
+        run: make build
+
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run tests
+        run: npx playwright test
+
+      # - name: Run tests
+      #   uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
+      #   with:
+      #     args: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

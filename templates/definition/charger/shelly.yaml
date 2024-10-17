@@ -13,7 +13,11 @@ params:
 render: |
   type: shelly
   uri: http://{{ .host }}
-  {{ if ne .user "" }}user: {{ .user }}{{ end }}
-  {{ if ne .password "" }}password: {{ .password }}{{ end }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
   {{ include "switchsocket" . }}

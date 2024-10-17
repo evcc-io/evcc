@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -188,7 +189,7 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *HardyBarth) MaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
-	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
+	data := url.Values{"manualmodeamp": {strconv.FormatInt(current, 10)}}
 	return wb.post(uri, data)
 }
 

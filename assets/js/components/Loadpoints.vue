@@ -2,7 +2,11 @@
 	<div
 		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
 	>
-		<div ref="carousel" class="carousel d-lg-flex flex-wrap">
+		<div
+			ref="carousel"
+			class="carousel d-lg-flex flex-wrap"
+			:class="`carousel--${loadpoints.length}`"
+		>
 			<div
 				v-for="(loadpoint, index) in loadpoints"
 				:key="index"
@@ -11,12 +15,16 @@
 				<Loadpoint
 					v-bind="loadpoint"
 					:id="index + 1"
+					data-testid="loadpoint"
 					:vehicles="vehicles"
-					:smartCostLimit="smartCostLimit"
-					:smartCostUnit="smartCostUnit"
+					:smartCostType="smartCostType"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
 					:currency="currency"
+					:multipleLoadpoints="loadpoints.length > 1"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -31,7 +39,15 @@
 				:class="{ 'indicator--selected': selected(index) }"
 				@click="scrollTo(index)"
 			>
-				<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
+				<shopicon-filled-lightning
+					v-if="isCharging(loadpoint)"
+					class="indicator-icon"
+				></shopicon-filled-lightning>
+				<shopicon-filled-circle
+					v-else-if="loadpoint.connected"
+					class="indicator-icon"
+				></shopicon-filled-circle>
+				<shopicon-bold-circle v-else class="indicator-icon"></shopicon-bold-circle>
 			</button>
 		</div>
 	</div>
@@ -39,20 +55,24 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/circle";
+import "@h2d2/shopicons/es/bold/circle";
+import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 
 export default {
-	name: "Site",
+	name: "Loadpoints",
 	components: { Loadpoint },
 	props: {
 		loadpoints: Array,
 		vehicles: Array,
-		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		gridConfigured: Boolean,
+		pvConfigured: Boolean,
+		batteryConfigured: Boolean,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };
@@ -70,6 +90,9 @@ export default {
 			const { scrollLeft } = this.$refs.carousel;
 			const { offsetWidth } = this.$refs.carousel.children[0];
 			this.selectedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
+		},
+		isCharging(lp) {
+			return lp.charging && lp.chargePower > 0;
 		},
 		selected(index) {
 			return this.selectedIndex === index;
@@ -173,12 +196,28 @@ export default {
 	}
 }
 
-/* breakpoint lg */
+/* breakpoint lg, 2-col grid */
 @media (min-width: 992px) {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
 		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+	}
+}
+
+/* breakpoint lg, tall screen, 2 loadpoints rows */
+@media (min-width: 992px) and (min-height: 1450px) {
+	.carousel--2 {
+		grid-gap: 4rem;
+		grid-template-columns: 1fr;
+	}
+}
+
+/* breakpoint lg, taller screen, 3 loadpoints rows */
+@media (min-width: 992px) and (min-height: 1900px) {
+	.carousel--3 {
+		grid-gap: 4rem;
+		grid-template-columns: 1fr;
 	}
 }
 </style>

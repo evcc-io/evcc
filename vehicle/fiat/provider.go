@@ -1,11 +1,14 @@
 package fiat
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const refreshTimeout = 2 * time.Minute
@@ -48,6 +51,11 @@ func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	} else {
+		var se request.StatusError
+		if errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
+			err = nil
+		}
 	}
 	return err
 }

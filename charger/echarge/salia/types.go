@@ -4,6 +4,7 @@ const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
 	PauseCharging    = "salia/pausecharging"
+	SetPhase         = "salia/phase_switching/setphase"
 	GridCurrentLimit = "grid_current_limit"
 )
 
@@ -33,8 +34,13 @@ type Port struct {
 		}
 	}
 	Salia struct {
-		ChargeMode    string
-		PauseCharging int `json:"pausecharging,string"`
+		ChargeMode     string
+		PauseCharging  int `json:"pausecharging,string"`
+		PhaseSwitching struct {
+			Actual   int `json:",string"`
+			Status   string
+			SetPhase string `json:"setphase,omitempty"`
+		} `json:"phase_switching"`
 	}
 	Metering struct {
 		Meter struct {
@@ -78,7 +84,7 @@ type Port struct {
 			}
 		}
 	}
-	EvPresent        int `json:"ev_present,string"`
-	Charging         int `json:",string"`
-	GridCurrentLimit int `json:"grid_current_limit,string"`
+	EvPresent        int     `json:"ev_present,string"`
+	Charging         int     `json:",string"`
+	GridCurrentLimit float64 `json:"grid_current_limit,string"`
 }

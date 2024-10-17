@@ -6,16 +6,24 @@ products:
   - brand: BMW
     description:
       generic: i Wallbox
+  - brand: SolarEdge
+    description:
+      generic: Home EV Charger
 capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series)
-    en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series)
+    de: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series). Zur Phasenumschaltung wird zusätzlich der Keba Phasenumschalter (KeContact S10) benötigt und in den Wallboxeinstellungen muss die Umschaltsteuerung per Modbus aktiviert werden. Bei der x-Serie im WebMenü, bei der C-Serie per Modbus durch setzen des Wertes "3" im Register 5050.
+    en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series). For phase switching the Keba phase switch (KeContact S10) is also required and the switching control via Modbus must be set in the wallbox settings. For the X-series in the web menu, for the C-series via Modbus by setting the value "3" in register 5050.
 params:
   - name: modbus
     choice: ["tcpip"]
     id: 255
+  - name: welcomecharge
+    advanced: true
 render: |
   type: keba-modbus
   {{- include "modbus" . }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
+  {{- end }}

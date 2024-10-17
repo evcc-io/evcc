@@ -6,31 +6,64 @@
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
 			class="btn btn-sm btn-outline-secondary position-relative border-0 menu-button"
+			data-testid="topnavigation-button"
 		>
 			<span
 				v-if="showBadge"
-				class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"
+				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
+				:class="badgeClass"
 			>
 				<span class="visually-hidden">action required</span>
 			</span>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</button>
-		<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topNavigatonDropdown">
+		<ul
+			class="dropdown-menu dropdown-menu-end"
+			aria-labelledby="topNavigatonDropdown"
+			data-testid="topnavigation-dropdown"
+		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions">
+				<router-link class="dropdown-item" to="/sessions" active-class="active">
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
-
+			<li><hr class="dropdown-divider" /></li>
 			<li>
-				<button type="button" class="dropdown-item" @click="openSettingsModal">
-					<span
-						v-if="sponsorTokenExpires"
-						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
-					></span>
-					{{ $t("header.settings") }}
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-settings"
+					@click="openSettingsModal"
+				>
+					{{ $t("settings.title") }}
 				</button>
 			</li>
+			<li v-if="batteryModalAvailable">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-battery"
+					@click="openBatterySettingsModal"
+				>
+					{{ $t("batterySettings.modalTitle") }}
+				</button>
+			</li>
+			<li>
+				<router-link class="dropdown-item" to="/config" active-class="active">
+					<span
+						v-if="showBadge"
+						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
+						:class="badgeClass"
+					></span>
+					{{ $t("config.main.title") }}
+				</router-link>
+			</li>
+			<li>
+				<router-link class="dropdown-item" to="/log" active-class="active">
+					{{ $t("log.title") }}
+				</router-link>
+			</li>
+			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
 				<li>
@@ -44,7 +77,8 @@
 					>
 						<span
 							v-if="!login.loggedIn"
-							class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
+							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
+							:class="badgeClass"
 						></span>
 						{{ login.title }}
 						{{ $t(login.loggedIn ? "main.provider.logout" : "main.provider.login") }}
@@ -65,9 +99,17 @@
 					></shopicon-regular-newtab>
 				</a>
 			</li>
+			<li v-if="isApp">
+				<button type="button" class="dropdown-item" @click="openNativeSettings">
+					{{ $t("header.nativeSettings") }}
+				</button>
+			</li>
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
+				</button>
+			</li>
 		</ul>
-		<GlobalSettingsModal v-bind="globalSettingsModalProps" />
-		<HelpModal />
 	</div>
 </template>
 
@@ -78,15 +120,14 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
-import GlobalSettingsModal from "./GlobalSettingsModal.vue";
-import HelpModal from "./HelpModal.vue";
 import collector from "../mixins/collector";
-
+import { logout, isLoggedIn, openLoginModal } from "../auth";
 import baseAPI from "../baseapi";
+import { isApp, sendToApp } from "../utils/native";
+import { isUserConfigError } from "../utils/fatal";
 
 export default {
 	name: "TopNavigation",
-	components: { GlobalSettingsModal, HelpModal },
 	mixins: [collector],
 	props: {
 		vehicleLogins: {
@@ -95,12 +136,23 @@ export default {
 				return {};
 			},
 		},
-		sponsor: String,
-		sponsorTokenExpires: Number,
+		sponsor: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
+		battery: Array,
+		fatal: Object,
+	},
+	data() {
+		return {
+			isApp: isApp(),
+		};
 	},
 	computed: {
-		globalSettingsModalProps: function () {
-			return this.collectProps(GlobalSettingsModal);
+		batteryConfigured: function () {
+			return this.battery?.length;
 		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
@@ -117,10 +169,27 @@ export default {
 			return this.logoutCount > 0;
 		},
 		showBadge() {
-			return this.loginRequired || this.sponsorTokenExpires;
+			const userConfigError = isUserConfigError(this.fatal);
+			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+		},
+		badgeClass() {
+			if (this.fatal?.error) {
+				return "bg-danger";
+			}
+			return "bg-warning";
+		},
+		batteryModalAvailable() {
+			return this.batteryConfigured;
+		},
+		showLogout() {
+			return isLoggedIn();
 		},
 	},
 	mounted() {
+		const $el = document.getElementById("topNavigatonDropdown");
+		if (!$el) {
+			return;
+		}
 		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
 	},
 	unmounted() {
@@ -143,6 +212,22 @@ export default {
 		openHelpModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
 			modal.show();
+		},
+		openBatterySettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("batterySettingsModal")
+			);
+			modal.show();
+		},
+		openNativeSettings() {
+			sendToApp({ type: "settings" });
+		},
+		async login() {
+			openLoginModal();
+		},
+		async logout() {
+			await logout();
+			this.$router.push({ path: "/" });
 		},
 	},
 };

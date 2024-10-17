@@ -1,4 +1,5 @@
 template: jaguar-landrover
+deprecated: true
 products:
   - brand: Jaguar
   - brand: Land Rover

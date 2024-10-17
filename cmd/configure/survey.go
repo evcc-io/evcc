@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown/v2"
-	"golang.org/x/exp/slices"
 )
 
 // surveyAskOne asks the user for input
@@ -22,7 +22,6 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 		icons.Question.Text = ""
 	}))
 	err := survey.AskOne(p, response, opts...)
-
 	if err != nil {
 		if err == terminal.InterruptErr {
 			fmt.Println(c.localizedString("Cancel"))

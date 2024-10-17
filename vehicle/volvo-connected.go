@@ -64,20 +64,19 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
-	if err := identity.Login(cc.User, cc.Password); err != nil {
+	ts, err := identity.Login(cc.User, cc.Password)
+	if err != nil {
 		return nil, err
 	}
 
-	_ = identity
 	// api := connected.NewAPI(log, identity, cc.Sandbox)
-	api := connected.NewAPI(log, identity, cc.VccApiKey)
+	api := connected.NewAPI(log, ts, cc.VccApiKey)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	v := &VolvoConnected{
 		embed:    &cc.embed,
 		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
-		// ProviderLogin: identity, // expose the OAuth2 login
 	}
 
 	return v, err

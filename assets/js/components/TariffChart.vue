@@ -6,9 +6,12 @@
 			:data-index="index"
 			class="slot user-select-none"
 			:class="{
-				active: isActive(index),
+				active: slot.charging,
+				hovered: activeIndex === index,
 				toLate: slot.toLate,
+				warning: slot.warning,
 				'cursor-pointer': slot.selectable,
+				faded: activeIndex !== null && activeIndex !== index,
 			}"
 			@touchstart="hoverSlot(index)"
 			@mouseenter="hoverSlot(index)"
@@ -31,7 +34,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 
 export default {
 	name: "TariffChart",
@@ -44,15 +47,17 @@ export default {
 		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
-		maxPrice() {
-			let result = 0;
+		priceInfo() {
+			let max = Number.MIN_VALUE;
+			let min = 0;
 			this.slots
 				.map((s) => s.price)
 				.filter((price) => price !== undefined)
 				.forEach((price) => {
-					result = Math.max(result, price);
+					max = Math.max(max, price);
+					min = Math.min(min, price);
 				});
-			return result;
+			return { min, range: max - min };
 		},
 		avgPrice() {
 			let sum = 0;
@@ -66,7 +71,7 @@ export default {
 			return sum / count;
 		},
 		isCo2() {
-			return this.unit === CO2_UNIT;
+			return this.unit === CO2_TYPE;
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];
@@ -82,14 +87,12 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
-		isActive(index) {
-			return this.activeIndex !== null
-				? this.activeIndex === index
-				: this.slots[index].charging;
-		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
-			const height = value !== undefined ? `${5 + (95 / this.maxPrice) * value}%` : "100%";
+			const height =
+				value !== undefined && !isNaN(value)
+					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
+					: "75%";
 			return { height };
 		},
 	},
@@ -113,6 +116,9 @@ export default {
 	flex-direction: column;
 	position: relative;
 	opacity: 1;
+	transition-property: opacity, background, color;
+	transition-duration: var(--evcc-transition-fast);
+	transition-timing-function: ease-in;
 }
 @media (max-width: 991px) {
 	.chart {
@@ -144,6 +150,7 @@ export default {
 	display: flex;
 	justify-content: center;
 	color: var(--bs-white);
+	transition: height var(--evcc-transition-fast) ease-in;
 }
 .slot-label {
 	color: var(--bs-gray-light);
@@ -166,7 +173,19 @@ export default {
 .slot.active {
 	opacity: 1;
 }
+.slot.warning .slot-bar {
+	background: var(--bs-warning);
+}
+.slot.warning .slot-label {
+	color: var(--bs-warning);
+}
 .unknown {
 	margin: 0 -0.5rem;
+}
+.slot.hovered {
+	opacity: 1;
+}
+.slot.faded {
+	opacity: 0.33;
 }
 </style>

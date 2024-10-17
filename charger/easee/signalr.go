@@ -1,6 +1,9 @@
 package easee
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type Observation struct {
 	Mid       string
@@ -8,6 +11,21 @@ type Observation struct {
 	ID        ObservationID
 	Timestamp time.Time
 	Value     string
+}
+
+func (o *Observation) TypedValue() (interface{}, error) {
+	switch o.DataType {
+	case Boolean:
+		return o.Value == "1", nil
+	case Double:
+		return strconv.ParseFloat(o.Value, 64)
+	case Integer:
+		return strconv.Atoi(o.Value)
+	case String:
+		fallthrough
+	default:
+		return o.Value, nil
+	}
 }
 
 type SignalRCommandResponse struct {
@@ -55,7 +73,7 @@ const (
 	LOCAL_PRE_AUTHORIZE_ENABLED                        ObservationID = 15  // Preauthorize with whitelist enabled. Readback on setting [event] [Boolean]
 	LOCAL_AUTHORIZE_OFFLINE_ENABLED                    ObservationID = 16  // Allow offline charging for whitelisted RFID token. Readback on setting [event] [Boolean]
 	ALLOW_OFFLINE_TX_FOR_UNKNOWN_ID                    ObservationID = 17  // Allow offline charging for all RFID tokens. Readback on setting [event] [Boolean]
-	ERRATIC_EVMAX_TOGGLES                              ObservationID = 18  // 0 == erratic checking disabled, otherwise the number of toggles between states Charging and Charging Complate that will trigger an error [Integer]
+	ERRATIC_EVMAX_TOGGLES                              ObservationID = 18  // 0 == erratic checking disabled, otherwise the number of toggles between states Charging and Charging Complete that will trigger an error [Integer]
 	BACKPLATE_TYPE                                     ObservationID = 19  // Readback on backplate type [Integer]
 	SITE_STRUCTURE                                     ObservationID = 20  // Site Structure [boot] [String]
 	DETECTED_POWER_GRID_TYPE                           ObservationID = 21  // Detected power grid type according to PowerGridType table [boot] [Integer]
@@ -76,7 +94,7 @@ const (
 	FORCED_THREE_PHASE_ON_ITWITH_GND_FAULT             ObservationID = 39  // Default disabled. Must be set manually if grid type is indeed three phase IT [Boolean]
 	LED_STRIP_BRIGHTNESS                               ObservationID = 40  // LED strip brightness, 0-100% [Integer]
 	LOCAL_AUTHORIZATION_REQUIRED                       ObservationID = 41  // Local RFID authorization is required for charging [user options] [event] [Boolean]
-	AUTHORIZATION_REQUIRED                             ObservationID = 42  // Authorization is requried for charging [Boolean]
+	AUTHORIZATION_REQUIRED                             ObservationID = 42  // Authorization is required for charging [Boolean]
 	REMOTE_START_REQUIRED                              ObservationID = 43  // Remote start required flag [event] [Boolean]
 	SMART_BUTTON_ENABLED                               ObservationID = 44  // Smart button is enabled [Boolean]
 	OFFLINE_CHARGING_MODE                              ObservationID = 45  // Charger behavior when offline [Integer]
@@ -205,6 +223,8 @@ const (
 	EQ_AVAILABLE_CURRENT_P1                            ObservationID = 230 // Available current for charging on P1 according to Equalizer [Double]
 	EQ_AVAILABLE_CURRENT_P2                            ObservationID = 231 // Available current for charging on P2 according to Equalizer [Double]
 	EQ_AVAILABLE_CURRENT_P3                            ObservationID = 232 // Available current for charging on P3 according to Equalizer [Double]
+	CONNECTED_TO_CLOUD                                 ObservationID = 250 // If charger connected to cloud or not
+	CLOUD_DISCONNECT_REASON                            ObservationID = 251 // Reason why charger disconnected from cloud
 	LISTEN_TO_CONTROL_PULSE                            ObservationID = 56  // True = charger needs control pulse to consider itself online. Readback on charger setting [event] [Boolean]
 	CONTROL_PULSE_RTT                                  ObservationID = 57  // Control pulse round-trip time in milliseconds [Integer]
 )

@@ -3,10 +3,9 @@ package fixed
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 //go:generate enumer -type Day
@@ -89,7 +88,7 @@ func ParseDays(s string) ([]Day, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, Day(from%7))
+		res = append(res, from%7)
 
 		if len(fromto) == 2 {
 			to, err := ParseDay(fromto[1])
@@ -111,11 +110,7 @@ func ParseDays(s string) ([]Day, error) {
 		return nil, errors.New("too many days")
 	}
 
-	sorted := make([]Day, len(res))
-	copy(sorted, res)
-	slices.Sort(sorted)
-
-	if len(slices.Compact(sorted)) < len(res) {
+	if len(slices.Compact(slices.Sorted(slices.Values(res)))) < len(res) {
 		return nil, errors.New("duplicate days")
 	}
 

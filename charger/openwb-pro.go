@@ -21,9 +21,9 @@ func init() {
 // OpenWBPro charger implementation
 type OpenWBPro struct {
 	*request.Helper
-	uri         string
-	current     float64
-	statusCache provider.Cacheable[pro.Status]
+	uri     string
+	current float64
+	statusG provider.Cacheable[pro.Status]
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
@@ -52,7 +52,7 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 		current: 6, // 6A defined value
 	}
 
-	wb.statusCache = provider.ResettableCached(func() (pro.Status, error) {
+	wb.statusG = provider.ResettableCached(func() (pro.Status, error) {
 		var res pro.Status
 		uri := fmt.Sprintf("%s/%s", wb.uri, "connect.php")
 		err := wb.GetJSON(uri, &res)
@@ -66,7 +66,7 @@ func NewOpenWBPro(uri string, cache time.Duration) (*OpenWBPro, error) {
 
 func (wb *OpenWBPro) heartbeat(log *util.Logger) {
 	for range time.Tick(30 * time.Second) {
-		if _, err := wb.statusCache.Get(); err != nil {
+		if _, err := wb.statusG.Get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
 		}
 	}
@@ -77,7 +77,7 @@ func (wb *OpenWBPro) set(payload string) error {
 	resp, err := wb.Post(uri, "application/x-www-form-urlencoded", strings.NewReader(payload))
 	if err == nil {
 		resp.Body.Close()
-		wb.statusCache.Reset()
+		wb.statusG.Reset()
 	}
 
 	return err
@@ -85,7 +85,7 @@ func (wb *OpenWBPro) set(payload string) error {
 
 // Status implements the api.Charger interface
 func (wb *OpenWBPro) Status() (api.ChargeStatus, error) {
-	resp, err := wb.statusCache.Get()
+	resp, err := wb.statusG.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -103,7 +103,7 @@ func (wb *OpenWBPro) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *OpenWBPro) Enabled() (bool, error) {
-	res, err := wb.statusCache.Get()
+	res, err := wb.statusG.Get()
 	return res.OfferedCurrent > 0, err
 }
 
@@ -137,7 +137,7 @@ var _ api.Meter = (*OpenWBPro)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *OpenWBPro) CurrentPower() (float64, error) {
-	res, err := wb.statusCache.Get()
+	res, err := wb.statusG.Get()
 	return res.PowerAll, err
 }
 
@@ -145,24 +145,58 @@ var _ api.MeterEnergy = (*OpenWBPro)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *OpenWBPro) TotalEnergy() (float64, error) {
-	res, err := wb.statusCache.Get()
+	res, err := wb.statusG.Get()
 	return res.Imported / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*OpenWBPro)(nil)
-
-// Currents implements the api.PhaseCurrentss interface
-func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
-	res, err := wb.statusCache.Get()
+// getPhaseValues returns phase values
+func (wb *OpenWBPro) getPhaseValues(f func(pro.Status) []float64) (float64, float64, float64, error) {
+	status, err := wb.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	if len(res.Currents) != 3 {
-		return 0, 0, 0, fmt.Errorf("invalid currents: %v", res.Currents)
+	res := f(status)
+
+	if len(res) != 3 {
+		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
 	}
 
-	return res.Currents[0], res.Currents[1], res.Currents[2], err
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseVoltages = (*OpenWBPro)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *OpenWBPro) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(func(s pro.Status) []float64 {
+		return s.Voltages
+	})
+}
+
+var _ api.PhaseCurrents = (*OpenWBPro)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(func(s pro.Status) []float64 {
+		return s.Currents
+	})
+}
+
+var _ api.Battery = (*OpenWBPro)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *OpenWBPro) Soc() (float64, error) {
+	res, err := wb.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	if time.Since(time.Unix(res.SocTimestamp, 0)) > 5*time.Minute {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(res.Soc), nil
 }
 
 var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
@@ -176,10 +210,14 @@ var _ api.Identifier = (*OpenWBPro)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWBPro) Identify() (string, error) {
-	res, err := wb.statusCache.Get()
+	res, err := wb.statusG.Get()
 	if err != nil || res.VehicleID == "--" {
 		return "", err
 	}
 
-	return res.VehicleID, err
+	if res.VehicleID != "" {
+		return res.VehicleID, nil
+	}
+
+	return res.RfidTag, nil
 }

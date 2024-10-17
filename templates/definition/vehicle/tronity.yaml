@@ -7,9 +7,22 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: title
-  - name: user
+  - name: icon
+    default: car
+    advanced: true
+  - name: clientid
+    description:
+      generic: Tronity API Client ID
+    help:
+      de: Einrichtung unter https://app.tronity.tech
+      en: Setup at https://app.tronity.tech
     required: true
-  - name: password
+  - name: clientsecret
+    description:
+      generic: Tronity API Client Secret
+    help:
+      de: Einrichtung unter https://app.tronity.tech
+      en: Setup at https://app.tronity.tech
     required: true
   - name: vin
     example: W...
@@ -17,26 +30,12 @@ params:
     default: 10
   - name: phases
     advanced: true
-  - name: icon
-    default: car
-    advanced: true
   - preset: vehicle-identify
 render: |
   type: tronity
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if ne .icon "" }}
-  icon: {{ .icon }}
-  {{- end }}
-  credentials:
-    id: {{ .user }}
-    secret: {{ .password }}
-  capacity: {{ .capacity }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- if ne .vin "" }}
   vin: {{ .vin }}
-  {{- end }}
+  credentials:
+    id: {{ .clientid }}
+    secret: {{ .clientsecret }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}

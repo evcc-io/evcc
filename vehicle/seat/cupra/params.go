@@ -2,14 +2,6 @@ package cupra
 
 import "net/url"
 
-// const (
-// 	Brand   = "VW"
-// 	Country = "ES"
-
-// 	// Authorization ClientID
-// 	AuthClientID = "9d183b70-d129-424f-9a26-c3778edf95e1"
-// )
-
 // Authorization parameters
 var AuthParams = url.Values{
 	"response_type": {"code id_token"}, // token

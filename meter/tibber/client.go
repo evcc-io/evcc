@@ -3,11 +3,11 @@ package tibber
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/shurcooL/graphql"
-	"golang.org/x/exp/slices"
+	"github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 )
 

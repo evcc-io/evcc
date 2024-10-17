@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/hashicorp/go-version"
 )
 
 // https://github.com/evcc-io/evcc/discussions/778
@@ -43,6 +44,7 @@ type Salia struct {
 	log     *util.Logger
 	uri     string
 	current int64
+	fw      int // 2 if fw 2.0
 	apiG    provider.Cacheable[salia.Api]
 }
 
@@ -50,7 +52,7 @@ func init() {
 	registry.Add("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -93,7 +95,20 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 
 	// set chargemode manual
 	res, err := wb.apiG.Get()
-	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := version.NewSemver(res.Device.SoftwareVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	if v.Compare(version.Must(version.NewSemver("2.0.0"))) >= 0 {
+		wb.fw = 2
+	}
+
+	if res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
 			res, err = wb.apiG.Get()
 		}
@@ -103,25 +118,42 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 		}
 	}
 
-	if err == nil {
-		go wb.heartbeat()
-
-		wb.pause(false)
-
-		if res.Secc.Port0.Metering.Meter.Available > 0 {
-			return decorateSalia(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return wb, err
+	go wb.heartbeat()
+
+	wb.pause(false)
+
+	var (
+		currentPower func() (float64, error)
+		totalEnergy  func() (float64, error)
+		currents     func() (float64, float64, float64, error)
+		phasesG      func() (int, error)
+		phasesS      func(int) error
+	)
+
+	if res.Secc.Port0.Metering.Meter.Available > 0 {
+		currentPower = wb.currentPower
+		totalEnergy = wb.totalEnergy
+		currents = wb.currents
+	}
+
+	if res.Secc.Port0.Salia.PhaseSwitching.Actual > 0 {
+		phasesG = wb.getPhases
+		phasesS = wb.phases1p3p
+	}
+
+	return decorateSalia(wb, currentPower, totalEnergy, currents, phasesS, phasesG), nil
 }
 
 func (wb *Salia) heartbeat() {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 5 * time.Second
-	bo.MaxElapsedTime = time.Minute
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(5*time.Second),
+		backoff.WithMaxInterval(time.Minute))
 
-	for ; true; <-time.Tick(30 * time.Second) {
+	for range time.Tick(30 * time.Second) {
 		if err := backoff.Retry(func() error {
 			return wb.post(salia.HeartBeat, "alive")
 		}, bo); err != nil {
@@ -167,7 +199,12 @@ func (wb *Salia) Enabled() (bool, error) {
 	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		err = fmt.Errorf("invalid mode: %s", res.Secc.Port0.Salia.ChargeMode)
 	}
-	return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
+
+	if wb.fw < 2 {
+		return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
+	}
+
+	return res.Secc.Port0.Ci.Evse.Basic.OfferedCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
 }
 
 func (wb *Salia) pause(enable bool) {
@@ -229,6 +266,30 @@ func (wb *Salia) currents() (float64, float64, float64, error) {
 // func (wb *Salia) Identify() (string, error) {
 // 	return "", api.ErrNotAvailable
 // }
+
+func (wb *Salia) getPhases() (int, error) {
+	res, err := wb.apiG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	if res.Secc.Port0.Salia.PhaseSwitching.Actual == 0 {
+		return 0, api.ErrNotAvailable
+	}
+
+	return res.Secc.Port0.Salia.PhaseSwitching.Actual, nil
+}
+
+func (wb *Salia) phases1p3p(phases int) error {
+	p, err := wb.getPhases()
+	if err != nil {
+		return err
+	}
+	if p == phases {
+		return nil
+	}
+	return wb.post(salia.SetPhase, "toggle")
+}
 
 var _ api.Diagnosis = (*Salia)(nil)
 

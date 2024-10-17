@@ -2,8 +2,7 @@ package provider
 
 import (
 	"bytes"
-	"encoding/binary"
-	"errors"
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -12,31 +11,25 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
-	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
-	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log    *util.Logger
-	conn   *modbus.Connection
-	device meters.Device
-	op     modbus.Operation
-	scale  float64
+	log   *util.Logger
+	conn  *modbus.Connection
+	reg   modbus.Register
+	scale float64
 }
 
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.AddCtx("modbus", NewModbusFromConfig)
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
-		Model           string
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
-		Value           string
 		Scale           float64
 		Delay           time.Duration
 		ConnectDelay    time.Duration
@@ -49,243 +42,188 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	// assume RTU if not set and this is a known RS485 meter model
-	if cc.RTU == nil {
-		b := modbus.IsRS485(cc.Model)
-		cc.RTU = &b
-	}
+	modbus.Lock()
+	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// set non-default timeout
-	if cc.Timeout > 0 {
-		conn.Timeout(cc.Timeout)
-	}
+	conn.Timeout(cc.Timeout)
 
 	// set non-default delay
-	if cc.Delay > 0 {
-		conn.Delay(cc.Delay)
-	}
+	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
-	if cc.ConnectDelay > 0 {
-		conn.ConnectDelay(cc.ConnectDelay)
-	}
+	conn.ConnectDelay(cc.ConnectDelay)
 
-	log := util.NewLogger("modbus")
+	log := contextLogger(ctx, util.NewLogger("modbus"))
 	conn.Logger(log.TRACE)
 
-	var device meters.Device
-	var op modbus.Operation
-
-	if cc.Value != "" && cc.Register.Decode != "" {
-		return nil, errors.New("modbus cannot have value and register both")
-	}
-
-	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("missing modbus value or register - assuming Power")
-		cc.Value = "Power"
-	}
-
-	if cc.Model == "" && cc.Value != "" {
-		return nil, errors.New("need device model when value configured")
-	}
-
-	// no registered configured - need device
-	if cc.Register.Decode == "" {
-		device, err = modbus.NewDevice(cc.Model, cc.SubDevice)
-
-		// prepare device
-		if err == nil {
-			err = device.Initialize(conn)
-
-			// silence KOSTAL implementation errors
-			if errors.Is(err, meters.ErrPartiallyOpened) {
-				err = nil
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// model + value configured
-	if cc.Value != "" {
-		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
-			return nil, fmt.Errorf("invalid value %s", cc.Value)
-		}
-	}
-
-	// register configured
-	if cc.Register.Decode != "" {
-		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
-			return nil, err
-		}
+	if err := cc.Register.Error(); err != nil {
+		return nil, err
 	}
 
 	mb := &Modbus{
-		log:    log,
-		conn:   conn,
-		device: device,
-		op:     op,
-		scale:  cc.Scale,
+		log:   log,
+		conn:  conn,
+		reg:   cc.Register,
+		scale: cc.Scale,
 	}
 	return mb, nil
 }
 
-func (m *Modbus) bytesGetter() ([]byte, error) {
-	if op := m.op.MBMD; op.FuncCode != 0 {
-		switch op.FuncCode {
-		case rs485.ReadHoldingReg:
-			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-		case rs485.ReadInputReg:
-			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
-		default:
-			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
-		}
-	}
+func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
+	switch op.FuncCode {
+	case gridx.FuncCodeReadHoldingRegisters:
+		return m.conn.ReadHoldingRegisters(op.Addr, op.Length)
 
-	return nil, errors.New("expected rtu reading")
+	case gridx.FuncCodeReadInputRegisters:
+		return m.conn.ReadInputRegisters(op.Addr, op.Length)
+
+	case gridx.FuncCodeReadCoils:
+		return m.conn.ReadCoils(op.Addr, op.Length)
+
+	default:
+		return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
+	}
 }
 
-func (m *Modbus) floatGetter() (f float64, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
+var _ FloatProvider = (*Modbus)(nil)
 
-	var res meters.MeasurementResult
+// FloatGetter implements func() (float64, error)
+func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
 
-	// if funccode is configured, execute the read directly
-	if op := m.op.MBMD; op.FuncCode != 0 {
-		var bytes []byte
-		if bytes, err = m.bytesGetter(); err != nil {
+	decode, err := m.reg.DecodeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (float64, error) {
+		bytes, err := m.readBytes(op)
+		if err != nil {
 			return 0, fmt.Errorf("read failed: %w", err)
 		}
 
-		return m.scale * op.Transform(bytes), nil
-	}
-
-	// if funccode is not configured, try find the reading on sunspec
-	if dev, ok := m.device.(*sunspec.SunSpec); ok {
-		if m.op.MBMD.IEC61850 != 0 {
-			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
-		} else {
-			if res.Value, err = dev.QueryPoint(
-				m.conn,
-				m.op.SunSpec.Model,
-				m.op.SunSpec.Block,
-				m.op.SunSpec.Point,
-			); err != nil {
-				err = fmt.Errorf("model %d block %d point %s: %w", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, err)
-			}
-		}
-	}
-
-	// silence NaN reading errors by assuming zero
-	if err != nil && errors.Is(err, meters.ErrNaN) {
-		res.Value = 0
-		err = nil
-	}
-
-	if err == nil {
-		if m.op.MBMD.IEC61850 != 0 {
-			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
-		} else {
-			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
-		}
-	}
-
-	return m.scale * res.Value, err
+		return m.scale * decode(bytes), nil
+	}, nil
 }
 
-// FloatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) FloatGetter() func() (f float64, err error) {
-	return m.floatGetter
-}
+var _ IntProvider = (*Modbus)(nil)
 
-// IntGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) IntGetter() func() (int64, error) {
-	g := m.FloatGetter()
+// IntGetter implements IntProvider
+func (m *Modbus) IntGetter() (func() (int64, error), error) {
+	g, err := m.FloatGetter()
 
 	return func() (int64, error) {
 		res, err := g()
 		return int64(math.Round(res)), err
-	}
+	}, err
 }
 
-// StringGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) StringGetter() func() (string, error) {
+var _ StringProvider = (*Modbus)(nil)
+
+// StringGetter implements StringProvider
+func (m *Modbus) StringGetter() (func() (string, error), error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
+
 	return func() (string, error) {
-		b, err := m.bytesGetter()
+		b, err := m.readBytes(op)
 		if err != nil {
 			return "", err
 		}
 
 		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
-	}
+	}, nil
 }
 
-// UintFromBytes converts byte slice to bigendian uint value
-func UintFromBytes(bytes []byte) (u uint64, err error) {
-	switch l := len(bytes); l {
-	case 2:
-		u = uint64(binary.BigEndian.Uint16(bytes))
-	case 4:
-		u = uint64(binary.BigEndian.Uint32(bytes))
-	case 8:
-		u = binary.BigEndian.Uint64(bytes)
-	default:
-		err = fmt.Errorf("unexpected length: %d", l)
-	}
+var _ BoolProvider = (*Modbus)(nil)
 
-	return u, err
-}
+// BoolGetter implements BoolProvider
+func (m *Modbus) BoolGetter() (func() (bool, error), error) {
+	g, err := m.FloatGetter()
 
-// BoolGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
-		bytes, err := m.bytesGetter()
-		if err != nil {
-			return false, err
-		}
-
-		u, err := UintFromBytes(bytes)
-		return u > 0, err
-	}
+		res, err := g()
+		return res != 0, err
+	}, err
 }
 
-// IntSetter executes configured modbus write operation and implements SetIntProvider
-func (m *Modbus) IntSetter(param string) func(int64) error {
-	return func(val int64) error {
-		var err error
+func (m *Modbus) writeFunc() (func(float64) error, error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
 
-		// if funccode is configured, execute the read directly
-		if op := m.op.MBMD; op.FuncCode != 0 {
-			uval := uint16(int64(m.scale) * val)
+	encode, err := m.reg.EncodeFunc()
+	if err != nil {
+		return nil, err
+	}
 
-			switch op.FuncCode {
-			case gridx.FuncCodeWriteSingleRegister:
-				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
-			default:
-				err = fmt.Errorf("unknown function code %d", op.FuncCode)
+	return func(val float64) error {
+		val *= m.scale
+
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteSingleCoil:
+			var uval uint16
+			if val != 0 {
+				uval = 0xFF00
 			}
-		} else {
-			err = errors.New("modbus plugin does not support writing to sunspec")
-		}
+			_, err = m.conn.WriteSingleCoil(op.Addr, uval)
+			return err
 
-		return err
-	}
+		case gridx.FuncCodeWriteSingleRegister:
+			_, err = m.conn.WriteSingleRegister(op.Addr, uint16(val))
+			return err
+
+		case gridx.FuncCodeWriteMultipleRegisters:
+			b, err := encode(val)
+			if err == nil {
+				_, err = m.conn.WriteMultipleRegisters(op.Addr, op.Length, b)
+			}
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
 }
 
-// BoolSetter executes configured modbus write operation and implements SetBoolProvider
-func (m *Modbus) BoolSetter(param string) func(bool) error {
-	set := m.IntSetter(param)
+var _ SetFloatProvider = (*Modbus)(nil)
+
+// FloatSetter implements SetFloatProvider
+func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
+	return m.writeFunc()
+}
+
+var _ SetIntProvider = (*Modbus)(nil)
+
+// IntSetter implements SetIntProvider
+func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
+	fun, err := m.writeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val int64) error {
+		return fun(float64(val))
+	}, nil
+}
+
+var _ SetBoolProvider = (*Modbus)(nil)
+
+// BoolSetter implements SetBoolProvider
+func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
+	set, err := m.IntSetter(param)
 
 	return func(val bool) error {
 		var ival int64
@@ -294,5 +232,26 @@ func (m *Modbus) BoolSetter(param string) func(bool) error {
 		}
 
 		return set(ival)
+	}, err
+}
+
+var _ SetBytesProvider = (*Modbus)(nil)
+
+// BytesSetter implements SetBytesProvider
+func (m *Modbus) BytesSetter(_ string) (func([]byte) error, error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
 	}
+
+	return func(val []byte) error {
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteMultipleRegisters:
+			_, err = m.conn.WriteMultipleRegisters(op.Addr, uint16(len(val)/2), val)
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
 }

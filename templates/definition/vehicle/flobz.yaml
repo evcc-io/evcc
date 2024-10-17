@@ -8,6 +8,9 @@ requirements:
     generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: url
     required: true
     example: http://192.0.2.2
@@ -23,8 +26,11 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: icon
-    default: car
+  - name: wakeup_alt
+    help:
+      de: alternativer wakeup-Code; könnte zu erhöhter Entladung der 12V-Batterie führen.
+      en: alternative wakeup-code; could lead to increased discharge of the 12V battery.
+    default: false
     advanced: true
   - preset: vehicle-identify
 render: |
@@ -62,6 +68,21 @@ render: |
   climater:
     {{- include "source" . | indent 2 }}
     jq: .preconditionning.air_conditioning.status != "Disabled"
+  wakeup:
+    source: http
+    {{- if .host }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
+    {{- else }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- else }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
+    {{- else }}
+    uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- end }} 
   {{- define "source" }}
   source: http
   {{- if .host }}

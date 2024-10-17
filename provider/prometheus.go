@@ -86,7 +86,7 @@ func (p *Prometheus) Query() (model.Value, error) {
 var _ FloatProvider = (*Prometheus)(nil)
 
 // FloatGetter expects scalar value from query response as float
-func (p *Prometheus) FloatGetter() func() (float64, error) {
+func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		res, err := p.Query()
 		if err != nil {
@@ -99,16 +99,16 @@ func (p *Prometheus) FloatGetter() func() (float64, error) {
 
 		scalarVal := res.(*model.Scalar)
 		return float64(scalarVal.Value), nil
-	}
+	}, nil
 }
 
 var _ IntProvider = (*Prometheus)(nil)
 
 // IntGetter expects scalar value from query response as int
-func (p *Prometheus) IntGetter() func() (int64, error) {
-	floatGetter := p.FloatGetter()
+func (p *Prometheus) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 	return func() (int64, error) {
-		float, err := floatGetter()
+		float, err := g()
 		return int64(math.Round(float)), err
-	}
+	}, err
 }

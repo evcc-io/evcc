@@ -2,15 +2,18 @@ template: hoymiles-opendtu
 products:
   - brand: Hoymiles
     description:
-      generic: HM and HMS Series (via OpenDTU)
+      generic: HM & HMS Series (via OpenDTU)
 params:
   - name: usage
     choice: ["pv"]
   - name: host
-    required: true
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/api/livedata/status
     jq: .total.Power.v
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/livedata/status
+    jq: .total.YieldTotal.v

@@ -2,7 +2,7 @@ template: zaptec
 products:
   - brand: Zaptec
     description:
-      generic: Go/Pro
+      generic: Go, Pro
 requirements:
   evcc: ["sponsorship"]
 params:

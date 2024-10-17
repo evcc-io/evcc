@@ -1,10 +1,11 @@
 package golang
 
 import (
-	"github.com/traefik/yaegi/interp"
-	"github.com/traefik/yaegi/stdlib"
 	"strings"
 	"sync"
+
+	"github.com/traefik/yaegi/interp"
+	"github.com/traefik/yaegi/stdlib"
 )
 
 var (

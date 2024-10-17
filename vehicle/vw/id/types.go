@@ -108,7 +108,7 @@ type Status struct {
 				MaxChargeCurrentAC          string    `json:"maxChargeCurrentAC"` // reduced, maximum
 				AutoUnlockPlugWhenCharged   string    `json:"autoUnlockPlugWhenCharged"`
 				AutoUnlockPlugWhenChargedAC string    `json:"autoUnlockPlugWhenChargedAC"`
-				TargetSOCPct                int       `json:"targetSOC_pct"`
+				TargetSOCPct                *int      `json:"targetSOC_pct"`
 			} `json:"value"`
 		} `json:"chargingSettings"`
 		PlugStatus struct {
@@ -310,7 +310,7 @@ func (f *FuelStatus) EngineRangeStatus(typ string) (EngineRangeStatus, error) {
 		return f.RangeStatus.Value.SecondaryEngine, nil
 	}
 
-	return EngineRangeStatus{}, fmt.Errorf("unknown engine type: %s", typ)
+	return EngineRangeStatus{}, fmt.Errorf("unknown engine type: %s, got [%s, %s]", typ, f.RangeStatus.Value.PrimaryEngine.Type, f.RangeStatus.Value.SecondaryEngine.Type)
 }
 
 // EngineRangeStatus is the engine range status
@@ -331,7 +331,7 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 
 	t, err := time.Parse(time.RFC3339, s)
 	if err == nil {
-		(*ct).Time = t
+		ct.Time = t
 	}
 
 	return err

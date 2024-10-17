@@ -1,5 +1,8 @@
 name: Release
 
+env:
+  GO_VERSION: ^1.23
+
 on:
   push:
     tags:
@@ -7,7 +10,7 @@ on:
 
 jobs:
   call-build-workflow:
-    if: "startsWith(github.ref, 'refs/tags')"
+    if: startsWith(github.ref, 'refs/tags')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
 
   docker:
@@ -17,33 +20,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
       - name: Setup Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             evcc/evcc
 
       - name: Publish
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
-          build-args: RELEASE=1
+          build-args: |
+            RELEASE=1
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: ${{ steps.meta.outputs.tags }}
 
   apt:
@@ -53,24 +58,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
         id: go
-
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-dist
         with:
           path: dist
@@ -91,13 +93,21 @@ jobs:
       #   run: make image-rootfs
 
       - name: Create Github Release
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --clean
         env:
           # use GH_TOKEN for access to evcc-io/homebrew-tap
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
 
       - name: Publish .deb to Cloudsmith
         env:
@@ -112,7 +122,7 @@ jobs:
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --local-only --config packaging/fly.toml
 
@@ -132,7 +142,7 @@ jobs:
 
       - name: Update version
         run: |
-          sed -i -e s#\"version.*#\"version\":\ \"$(echo ${{ github.ref }} | sed -e s#refs/tags/##)\",# ./hassio/evcc/config.json
+          sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
 
       - name: Push
         run: |

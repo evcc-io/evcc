@@ -12,7 +12,7 @@ export default defineConfig({
     outDir: "../dist/",
     emptyOutDir: true,
     assetsInlineLimit: 1024,
-    chunkSizeWarningLimit: 700, // legacy build increases file size
+    chunkSizeWarningLimit: 800, // legacy build increases file size
   },
   server: {
     port: 7071,

@@ -3,9 +3,9 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/evcc-io/evcc/util/templates"
-	"golang.org/x/exp/slices"
 )
 
 // configureDeviceGuidedSetup lets the user choose a device that is set to support guided setup
@@ -163,7 +163,6 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 			if c.askConfigFailureNextStep() {
 				continue
 			}
-
 		} else {
 			c.configuration.AddDevice(deviceItem, category)
 			c.processDeviceCapabilities(templateItem.Capabilities)

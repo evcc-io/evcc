@@ -3,6 +3,19 @@ products:
   - brand: Growatt
     description:
       generic: Hybrid Inverter
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung nutzen zu können ist eine einmalige manuelle Einrichtung notwendig.
+      Es müssen die Modbusregister `1100, 1101, 1102` gleichzeitig (via "write multiple", FC 16) auf die Werte `0, 5947, 0` gesetzt werden.
+      Das kann zB. mit der [Modbus CLI](https://github.com/favalex/modbus-cli) gemacht werden: `modbus [...] H@1100=0 H@1101=5947 H@1102=0`.
+      Die aktive Ladesteuerung nutzt den ersten Zeitslot für den "Battery first" modus, d.h. dieser kann nicht anderweitig genutzt werden.
+    en: |
+      To use the active battery control, a one-time manual setup is necessary.
+      The modbus registers `1100, 1101, 1102` need to be set to the values `0, 5947, 0` at the same time (via "write multiple", FC 16).
+      This can be done by e.g. using the [Modbus CLI](https://github.com/favalex/modbus-cli): `modbus [...] H@1100=0 H@1101=5947 H@1102=0`.
+      The active battery control uses the first "Battery first" timeslot, so it cannot be used otherwise.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -12,10 +25,11 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -42,6 +56,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -59,6 +74,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -75,16 +91,6 @@ render: |
         type: input
         decode: uint32
       scale: -0.1
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 1014 # SOC
-      type: input
-      decode: uint16
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }} # kWh
-  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -93,4 +99,82 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1014 # SOC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal -> disable "battery first" and "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold -> enable "battery first" and disable "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge -> enable "battery first" and "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
+  capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

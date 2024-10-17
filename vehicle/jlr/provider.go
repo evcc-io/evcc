@@ -10,7 +10,7 @@ import (
 type Provider struct {
 	statusG   func() (StatusResponse, error)
 	positionG func() (PositionResponse, error)
-	actionS   func(bool) error
+	chargeS   func(bool) error
 }
 
 func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
@@ -21,8 +21,8 @@ func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 		positionG: provider.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
 		}, cache),
-		actionS: func(start bool) error {
-			return api.ChargeAction(vin, user, start)
+		chargeS: func(enable bool) error {
+			return api.ChargeAction(vin, user, enable)
 		},
 	}
 
@@ -116,14 +116,9 @@ func (v *Provider) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.actionS(true)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.actionS(false)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	return v.chargeS(enable)
 }

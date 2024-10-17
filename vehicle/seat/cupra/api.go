@@ -38,25 +38,37 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles(userID string) (res []string, err error) {
-	var vehicles struct {
+func (v *API) Vehicles(userID string) ([]Vehicle, error) {
+	var res struct {
 		Vehicles []Vehicle
 	}
 
-	uri := fmt.Sprintf("%s/v1/users/%s/garage/vehicles", BaseURL, userID)
-	err = v.GetJSON(uri, &vehicles)
+	uri := fmt.Sprintf("%s/v2/users/%s/garage/vehicles", BaseURL, userID)
+	err := v.GetJSON(uri, &res)
 
-	for _, v := range vehicles.Vehicles {
-		res = append(res, v.VIN)
-	}
-
-	return res, err
+	return res.Vehicles, err
 }
 
 // Status implements the /status response
 func (v *API) Status(userID, vin string) (Status, error) {
 	var res Status
-	uri := fmt.Sprintf("%s/v2/users/%s/vehicles/%s/mycar", BaseURL, userID, vin)
+	uri := fmt.Sprintf("%s/v5/users/%s/vehicles/%s/mycar", BaseURL, userID, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+// ParkingPosition implements the /parkingposition response
+func (v *API) ParkingPosition(vin string) (Position, error) {
+	var res Position
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/parkingposition", BaseURL, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+// Mileage implements the /mileage response
+func (v *API) Mileage(vin string) (Mileage, error) {
+	var res Mileage
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/mileage", BaseURL, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }

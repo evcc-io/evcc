@@ -2,18 +2,18 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"nhooyr.io/websocket"
 )
 
 const retryDelay = 5 * time.Second
@@ -22,13 +22,11 @@ const retryDelay = 5 * time.Second
 type Socket struct {
 	*request.Helper
 	log      *util.Logger
-	mux      sync.Mutex
-	wait     *util.Waiter
 	url      string
 	headers  map[string]string
 	scale    float64
 	pipeline *pipeline.Pipeline
-	val      []byte // Cached http response value
+	val      *util.Monitor[[]byte]
 }
 
 func init() {
@@ -65,10 +63,10 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		wait:    util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
+		val:     util.NewMonitor[[]byte](cc.Timeout),
 	}
 
 	// handle basic auth
@@ -85,16 +83,29 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 	}
 
 	var err error
-	if p.pipeline, err = pipeline.New(cc.Settings); err != nil {
+	if p.pipeline, err = pipeline.New(log, cc.Settings); err != nil {
 		return nil, err
 	}
 
-	go p.listen()
+	errC := make(chan error, 1)
+	go p.run(errC)
+
+	if cc.Timeout > 0 {
+		select {
+		case <-p.val.Done():
+		case <-time.After(cc.Timeout):
+			return nil, api.ErrTimeout
+		case err := <-errC:
+			return nil, err
+		}
+	}
 
 	return p, nil
 }
 
-func (p *Socket) listen() {
+func (p *Socket) run(errC chan error) {
+	var once sync.Once
+
 	headers := make(http.Header)
 	for k, v := range p.headers {
 		headers.Set(k, v)
@@ -110,6 +121,9 @@ func (p *Socket) listen() {
 		cancel()
 
 		if err != nil {
+			// handle initial connection error immediately
+			once.Do(func() { errC <- err })
+
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
 			continue
@@ -126,45 +140,35 @@ func (p *Socket) listen() {
 			p.log.TRACE.Printf("recv: %s", b)
 
 			if v, err := p.pipeline.Process(b); err == nil {
-				p.mux.Lock()
-				p.val = v
-				p.wait.Update()
-				p.mux.Unlock()
+				p.val.Set(v)
 			}
 		}
 	}
 }
 
-func (p *Socket) hasValue() ([]byte, error) {
-	if late := p.wait.Overdue(); late > 0 {
-		return nil, fmt.Errorf("outdated: %v", late.Truncate(time.Second))
-	}
-
-	p.mux.Lock()
-	defer p.mux.Unlock()
-
-	return p.val, nil
-}
-
 var _ StringProvider = (*Socket)(nil)
 
 // StringGetter sends string request
-func (p *Socket) StringGetter() func() (string, error) {
+func (p *Socket) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		v, err := p.hasValue()
+		val, err := p.val.Get()
 		if err != nil {
 			return "", err
 		}
 
-		return string(v), err
-	}
+		if err := knownErrors(val); err != nil {
+			return "", err
+		}
+
+		return string(val), nil
+	}, nil
 }
 
 var _ FloatProvider = (*Socket)(nil)
 
 // FloatGetter parses float from string getter
-func (p *Socket) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
+func (p *Socket) FloatGetter() (func() (float64, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -175,29 +179,29 @@ func (p *Socket) FloatGetter() func() (float64, error) {
 		f, err := strconv.ParseFloat(s, 64)
 
 		return f * p.scale, err
-	}
+	}, err
 }
 
 var _ IntProvider = (*Socket)(nil)
 
 // IntGetter parses int64 from float getter
-func (p *Socket) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
+func (p *Socket) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
 		f, err := g()
 		return int64(math.Round(f)), err
-	}
+	}, err
 }
 
 var _ BoolProvider = (*Socket)(nil)
 
 // BoolGetter parses bool from string getter
-func (p *Socket) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
+func (p *Socket) BoolGetter() (func() (bool, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
 		return util.Truish(s), err
-	}
+	}, err
 }

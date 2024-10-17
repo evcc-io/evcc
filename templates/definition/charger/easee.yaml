@@ -3,6 +3,15 @@ products:
   - brand: Easee
     description:
       generic: Home
+  - brand: Easee
+    description:
+      generic: Charge
+  - brand: Easee
+    description:
+      generic: Charge Lite
+  - brand: Easee
+    description:
+      generic: Charge Core
 capabilities: ["1p3p", "rfid"]
 requirements:
   evcc: ["sponsorship"]
@@ -14,7 +23,6 @@ params:
       en: Email address
   - name: password
     required: true
-    mask: true
     help:
       de: wie Login für Easee App oder Web Portal (https://easee.cloud)
       en: same as Easee app or the web portal (https://easee.cloud)
@@ -22,10 +30,16 @@ params:
     required: true
     example: EH______
   - name: timeout
-    default: 10s
+    default: 20s
+  - name: authorize
+    type: bool
+    help:
+      de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
+      en: Controls wether evcc shall perform authentication against charger. Benefit is a contolled start of charging. Not compatible with RFID identification of vehicles.
 render: |
   type: easee
   user: {{ .user }}
   password: {{ .password }}
   charger: {{ .charger }}
   timeout: {{ .timeout }}
+  authorize: {{ .authorize }}

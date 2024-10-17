@@ -63,8 +63,8 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 		}
 
-	case 2:
-		// Shelly GEN 2 API
+	case 2, 3:
+		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
 		conn.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
 		if user != "" {

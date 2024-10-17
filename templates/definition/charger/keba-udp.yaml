@@ -1,4 +1,5 @@
 template: keba
+deprecated: true
 products:
   - brand: KEBA
     description:
@@ -17,7 +18,7 @@ params:
     example: 765765348
     advanced: true
     help:
-      de: Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
+      de: Die Kennung eines RFID-Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
       en: A RFID tag ID to enable charging even when the wallbox is locked.
   - name: serial
     advanced: true
@@ -27,10 +28,10 @@ params:
 render: |
   type: keba-udp
   uri: {{ .host }}
-  {{ if ne .rfid "" }}
+  {{- if .rfid }}
   rfid:
     tag: {{ .rfid }}
-  {{ end }}
-  {{ if ne .serial "" }}
+  {{- end }}
+  {{- if .serial }}
   serial: {{ .serial }}
-  {{ end }}
+  {{- end }}

@@ -47,7 +47,8 @@ body:
       label: Log details
       render: text
       description: >
-        Show evcc log output by running with <code>evcc --log debug</code>. The evcc service **MUST** be stopped before running this command.
+        Show evcc log output of the issue, see https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis for instructions.
+        In case of issues with physical devices like chargers, meters or vehicles, make sure that the log file has level `trace` enabled for the device.
 
   - type: dropdown
     validations:
@@ -61,6 +62,15 @@ body:
         - Windows
         - Docker container
         - HomeAssistant Add-on
+
+  - type: checkboxes
+    id: nightly
+    attributes:
+      label: Nightly build
+      description: Check if issue as already been fixed in the latest nightly build
+      options:
+        - label: I have verified that the issue is reproducible with the latest nightly build
+          required: true
 
   - type: input
     attributes:

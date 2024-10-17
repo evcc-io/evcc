@@ -1,26 +1,53 @@
 import axios from "axios";
+import { openLoginModal } from "./auth";
 
 const { protocol, hostname, port, pathname } = window.location;
 
 const base = protocol + "//" + hostname + (port ? ":" + port : "") + pathname;
+
+// override the way axios serializes arrays in query parameters (a=1&a=2&a=3 instead of a[]=1&a[]=2&a[]=3)
+function customParamsSerializer(params) {
+  const queryString = Object.keys(params)
+    .filter((key) => params[key] !== null)
+    .map((key) => {
+      const value = params[key];
+      if (Array.isArray(value)) {
+        return value.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`).join("&");
+      }
+      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    })
+    .join("&");
+  return queryString;
+}
 
 const api = axios.create({
   baseURL: base + "api/",
   headers: {
     Accept: "application/json",
   },
+  paramsSerializer: customParamsSerializer,
 });
 
 // global error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    let message = error.message;
-    if (error.config) {
-      const url = error.config.baseURL + error.config.url;
-      message += `: API request failed ${url}`;
+    // handle unauthorized errors
+    if (error.response?.status === 401) {
+      openLoginModal();
+      return Promise.reject(error);
     }
-    window.app.error({ message });
+
+    const message = [`${error.message}.`];
+    if (error.response?.data?.error) {
+      message.push(`${error.response.data.error}.`);
+    }
+    if (error.config) {
+      const method = error.config.method.toUpperCase();
+      const url = error.request.responseURL;
+      message.push(`${method} ${url}`);
+    }
+    window.app.raise({ message });
     return Promise.reject(error);
   }
 );

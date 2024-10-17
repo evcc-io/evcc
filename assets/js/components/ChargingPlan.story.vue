@@ -16,13 +16,25 @@ const hoursFromNow = function (hours) {
 			<ChargingPlan id="1" :targetTime="hoursFromNow(14)" />
 		</Variant>
 		<Variant title="price EUR limit">
-			<ChargingPlan id="1" :smartCostLimit="0.13" smartCostUnit="EUR" :tariffGrid="0.3" />
+			<ChargingPlan
+				id="1"
+				:smartCostLimit="0.13"
+				smartCostType="price"
+				currency="EUR"
+				:tariffGrid="0.3"
+			/>
 		</Variant>
 		<Variant title="price SEK limit">
-			<ChargingPlan id="1" :smartCostLimit="0.43" smartCostUnit="SEK" :tariffGrid="0.32" />
+			<ChargingPlan
+				id="1"
+				:smartCostLimit="0.43"
+				smartCostType="price"
+				currency="SEK"
+				:tariffGrid="0.32"
+			/>
 		</Variant>
 		<Variant title="co2 limit">
-			<ChargingPlan id="1" :smartCostLimit="400" smartCostUnit="gCO2eq" :tariffCo2="623" />
+			<ChargingPlan id="1" :smartCostLimit="400" smartCostType="co2" :tariffCo2="623" />
 		</Variant>
 		<Variant title="min soc">
 			<ChargingPlan id="1" :minSoc="30" :vehicleSoc="25" />

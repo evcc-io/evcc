@@ -184,7 +184,7 @@ func (c *KebaUdp) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	}
 
-	return api.StatusA, fmt.Errorf("unexpected status: %+v", kr)
+	return api.StatusNone, fmt.Errorf("invalid status: %+d", kr.State)
 }
 
 // Enabled implements the api.Charger interface

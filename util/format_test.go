@@ -4,6 +4,9 @@ import (
 	"math"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTruish(t *testing.T) {
@@ -21,10 +24,7 @@ func TestTruish(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		b := Truish(c.k)
-		if b != c.v {
-			t.Errorf("expected %v got %v", c.v, b)
-		}
+		assert.Equal(t, c.v, Truish(c.k))
 	}
 }
 
@@ -36,6 +36,8 @@ func TestReplace(t *testing.T) {
 	}{
 		// regex tests
 		{"foo", true, "${foo}", "true"},
+		{"foo", true, "${Foo}", "true"},
+		{"Foo", true, "${foo}", "true"},
 		{"foo", "1", "abc${foo}${foo}", "abc11"},
 		{"foo", math.Pi, "${foo:%.2f}", "3.14"},
 		{"foo", math.Pi, "${foo:%.0f}%", "3%"},
@@ -47,9 +49,8 @@ func TestReplace(t *testing.T) {
 			c.k: c.v,
 		})
 
-		if s != c.expected || err != nil {
-			t.Error(s, err)
-		}
+		require.NoError(t, err)
+		assert.Equal(t, c.expected, s)
 	}
 }
 

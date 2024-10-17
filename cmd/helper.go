@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -57,35 +54,11 @@ func redact(src string) string {
 		"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 		"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 		"app", "chats", "recipients", // push messaging
-		"vin"} // vehicles
+		"vin", // vehicles
+	}
 	return regexp.
 		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
-}
-
-func publishErrorInfo(valueChan chan<- util.Param, cfgFile string, err error) {
-	if cfgFile != "" {
-		file, pathErr := filepath.Abs(cfgFile)
-		if pathErr != nil {
-			file = cfgFile
-		}
-		valueChan <- util.Param{Key: "file", Val: file}
-
-		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
-			log.ERROR.Println("could not open config file:", fileErr)
-		} else {
-			valueChan <- util.Param{Key: "config", Val: redact(string(src))}
-
-			// find line number
-			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
-				if line, err := strconv.Atoi(match[1]); err == nil {
-					valueChan <- util.Param{Key: "line", Val: line}
-				}
-			}
-		}
-	}
-
-	valueChan <- util.Param{Key: "fatal", Val: unwrap(err)}
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
@@ -102,23 +75,25 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
-func wrapErrors(err error) error {
-	if err != nil {
-		var opErr *net.OpError
-		var pathErr *os.PathError
+func wrapFatalError(err error) error {
+	if err == nil {
+		return nil
+	}
 
-		switch {
-		case errors.As(err, &opErr):
-			if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
-				err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
-			}
+	var opErr *net.OpError
+	var pathErr *os.PathError
 
-		case errors.As(err, &pathErr):
-			if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
-				err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
-			}
+	switch {
+	case errors.As(err, &opErr):
+		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
+		}
+
+	case errors.As(err, &pathErr):
+		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}
 
-	return err
+	return &FatalError{err}
 }

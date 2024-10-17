@@ -1,8 +1,6 @@
 package vehicle
 
 import (
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,10 +8,9 @@ import (
 	"github.com/evcc-io/evcc/vehicle/mercedes"
 )
 
-// Mercedes is an api.Vehicle implementation for Mercedes cars
+// Mercedes is an api.Vehicle implementation for Mercedes-Benz cars
 type Mercedes struct {
 	*embed
-	api.AuthProvider
 	*mercedes.Provider
 }
 
@@ -21,14 +18,16 @@ func init() {
 	registry.Add("mercedes", NewMercedesFromConfig)
 }
 
-// NewMercedesFromConfig creates a new Mercedes vehicle
+// NewMercedesFromConfig creates a new vehicle
 func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		VIN                    string
-		Sandbox                bool
-		Cache                  time.Duration
+		embed    `mapstructure:",squash"`
+		Tokens   Tokens
+		User     string
+		Account_ string `mapstructure:"account"` // TODO deprecated
+		VIN      string
+		Cache    time.Duration
+		Region   string
 	}{
 		Cache: interval,
 	}
@@ -37,41 +36,31 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.ClientID == "" && cc.ClientSecret == "" {
-		return nil, errors.New("missing credentials")
-	}
-
-	if cc.VIN == "" {
-		return nil, errors.New("missing vin")
-	}
-
-	var options []mercedes.IdentityOption
-
-	// TODO Load tokens from a persistence storage and use those during startup
-	// e.g. persistence.Load("key")
-	// if tokens != nil {
-	// 	options = append(options, mercedes.WithToken(&oauth2.Token{
-	// 		AccessToken:  tokens.Access,
-	// 		RefreshToken: tokens.Refresh,
-	// 		Expiry:       tokens.Expiry,
-	// 	}))
-	// }
-
-	log := util.NewLogger("mercedes")
-
-	// TODO session secret from config/persistence
-	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
+	token, err := cc.Tokens.Token()
 	if err != nil {
 		return nil, err
 	}
 
-	api := mercedes.NewAPI(log, identity, cc.Sandbox)
-
-	v := &Mercedes{
-		embed:        &cc.embed,
-		Provider:     mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
-		AuthProvider: identity, // expose the OAuth2 login
+	if cc.User == "" && cc.Account_ != "" {
+		cc.User = cc.Account_
 	}
 
-	return v, nil
+	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
+	if err != nil {
+		return nil, err
+	}
+
+	v := &Mercedes{
+		embed: &cc.embed,
+	}
+
+	api := mercedes.NewAPI(log, identity)
+
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	if err == nil {
+		v.Provider = mercedes.NewProvider(api, cc.VIN, cc.Cache)
+	}
+
+	return v, err
 }

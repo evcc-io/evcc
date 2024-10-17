@@ -19,7 +19,7 @@ type Provider struct {
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		action: func(value Action) error {
 			_, err := api.ChargingAction(vin, value)
@@ -30,7 +30,7 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 
 	impl.statusG = provider.Cached(func() (StatusResponse, error) {
 		return impl.status(
-			func() (StatusResponse, error) { return api.BatteryStatus(vin) },
+			func() (StatusResponse, error) { return api.BatteryStatus(vin, version) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
 	}, cache)
@@ -43,7 +43,8 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 	if err == nil {
 		// result valid?
-		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry {
+		updated := res.Attributes.Updated()
+		if time.Since(updated) < v.expiry || updated.IsZero() {
 			v.refreshTime = time.Time{}
 			return res, err
 		}
@@ -116,12 +117,20 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-
-	if err == nil {
-		return int64(res.Attributes.RangeHvacOff), nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Attributes.RangeHvacOff != nil {
+		return int64(*res.Attributes.RangeHvacOff), nil
+	}
+
+	// v2
+	if res.Attributes.BatteryAutonomy != nil {
+		return int64(*res.Attributes.BatteryAutonomy), nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -129,26 +138,26 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-
-	if err == nil {
-		if res.Attributes.RemainingTime == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return res.Attributes.LastUpdateTime.Time.Add(time.Duration(*res.Attributes.RemainingTime) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	return time.Time{}, err
+	if res.Attributes.RemainingTime != nil {
+		minutes := time.Duration(*res.Attributes.RemainingTime) * time.Minute
+
+		updated := res.Attributes.Updated()
+		if !updated.IsZero() {
+			return updated.Add(minutes), nil
+		}
+	}
+
+	return time.Time{}, api.ErrNotAvailable
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.action(ActionChargeStart)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.action(ActionChargeStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]Action{true: ActionChargeStart, false: ActionChargeStop}
+	return v.action(action[enable])
 }

@@ -1,0 +1,20 @@
+template: goodwe-wifi
+deprecated: true
+products:
+  - brand: GoodWe
+    description:
+      generic: GoodWe over Wifi
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: uri
+    description:
+      en: IP address of the GoodWe inverter.
+      de: IP-Adresse des GoodWe Wechselrichters.
+render: |
+  type: goodwe-wifi
+  usage: {{ .usage }}
+  uri: {{ .uri }}

@@ -1,0 +1,60 @@
+template: p1monitor
+products:
+  - brand: P1Monitor
+    description:
+      generic: P1 Monitor
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/api/v1
+  {{- end }}
+  type: custom
+  power:  
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}/status/74
+      jq: .[0].[1]
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}/status/75
+      jq: .[0].[1]
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}/status/76
+      jq: .[0].[1]
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}/status/77
+      jq: .[0].[1]
+      scale: -1000
+    - source: http
+      uri: {{ include "uri" . }}/status/78
+      jq: .[0].[1]
+      scale: -1000
+    - source: http
+      uri: {{ include "uri" . }}/status/79
+      jq: .[0].[1]
+      scale: -1000
+  energy:
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}/smartmeter?limit=1
+      jq: .[0].[3]
+    - source: http
+      uri: {{ include "uri" . }}/smartmeter?limit=1
+      jq: .[0].[4]
+  currents:
+  - source: http
+    uri: {{ include "uri" . }}/status/100
+    jq: .[0].[1]
+  - source: http
+    uri: {{ include "uri" . }}/status/101
+    jq: .[0].[1]
+  - source: http
+    uri: {{ include "uri" . }}/status/102
+    jq: .[0].[1]

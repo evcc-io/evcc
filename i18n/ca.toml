@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Nivell de bateria"
 capacity = "{energy} de {total}"
+disclaimerHint = "Nota:"
+disclaimerText = "aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
 legendBottomName = "prioritat de la casa"
 legendBottomSubline = "no utilitzat per carregar"
 legendMiddleName = "primer, el vehicle"
@@ -10,13 +12,46 @@ legendTopAutostart = "s'inicia automaticament"
 legendTopName = "càrrega soportada per bateria"
 legendTopSubline = "sensa interrupcions"
 modalTitle = "Configuració bateria"
-note = "Nota: aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
 
 [batterySettings.bufferStart]
 full = "quan gairebé ple"
 low = "quan una mica ple"
 medium = "quan mig ple"
 never = "només amb prous excedents"
+
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
 
 [footer]
 
@@ -33,8 +68,8 @@ powerSub2 = "carregant..."
 tabTitle = "Comunitat en viu"
 
 [footer.savings]
-footerLong = "{percent}% Autoconsum"
-footerShort = "{percent}% Sol"
+footerLong = "{percent} Autoconsum"
+footerShort = "{percent} Sol"
 modalTitle = "Avaluació de l'energia de càrrega"
 percentGrid = "{grid} kWh xarxa"
 percentSelf = "{self} kWh solar"
@@ -47,6 +82,8 @@ savingsTitle = "Estalvi"
 savingsTotalEnergy = "{total} kWh carregats"
 since = "desde {since}"
 tabTitle = "Les meves dades"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Convertir-se en patrocinador"
@@ -76,17 +113,6 @@ modalUpdateNow = "Instal·lar ara"
 modalUpdateStarted = "Després de l'actualització, evcc es reiniciarà."
 modalUpdateStatusStart = "Instal·lació iniciada:"
 
-[gridSettings]
-activeHours = "{charging} de {total}"
-activeHoursLabel = "Hores funcionant"
-co2Label = "Emissions de CO₂"
-co2Limit = "Límit de CO₂"
-costLimitDescription = "Habilita temporalment la càrrega ràpida en mode solar"
-modalTitle = "Xarxa intel·ligent de càrrega"
-none = "cap"
-priceLabel = "Preu de l'energia"
-priceLimit = "Límit de preu"
-
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -115,11 +141,14 @@ description = "Sota circumstàncies normals no hauria de ser necessari reiniciar
 disclaimer = "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei"
 modalTitle = "¿Segur que vols tornar començar?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Estacionament"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Arribades"
 departureTab = "Sortides"
 modalTitle = "Plà de càrrega"
@@ -141,10 +170,12 @@ pvExport = "Excedent"
 pvProduction = "Producció"
 selfConsumption = "Autoconsum"
 
+[main.heatingStatus]
+
 [main.loadpoint]
-avgPrice = "Preu Ø"
+avgPrice = "Preu ⌀"
 charged = "Carregat"
-co2 = "CO₂ Ø "
+co2 = "CO₂ ⌀ "
 duration = "Duració"
 fallbackName = "Punt de càrrega"
 power = "Potència"
@@ -154,10 +185,10 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
 default = "defecte"
-disclaimerHint = "Nota:"
-disclaimerText = "Els canvis encara no són persistents i es restableixen al iniciar el servei."
 title = "Configuracions {0}"
 vehicle = "Vehicle"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrent de carrega màxima "
@@ -166,7 +197,7 @@ label = "Corrent de carrega màxima "
 label = "Corriente de carrega mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0}% en mode solar. Després continua amb l'excedent fotovoltaic."
+description = "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0} en mode solar. Després continua amb l'excedent fotovoltaic."
 label = "Càrrega de min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -192,7 +223,7 @@ activate = "Activar"
 co2Limit = "Límit de CO₂ del {co2}"
 costLimitIgnore = "El {limit} configurat serà ignorat durant aquest període."
 descriptionEnergy = "Fins quan s'ha d'haver carregat {targetEnergy} el vehicle?"
-descriptionSoc = "Fins quan s'ha d'haver carregat el vehicle al {targetSoc}%?"
+descriptionSoc = "Fins quan s'ha d'haver carregat el vehicle al {targetSoc}?"
 inactiveLabel = "hora objectiu"
 planDuration = "Temps de càrrega"
 planPeriodLabel = "Període"
@@ -209,7 +240,7 @@ update = "Actualitzar"
 
 [main.targetChargePlan]
 chargeDuration = "Temps de càrrega"
-co2Label = "Emissió de CO₂ Ø"
+co2Label = "Emissió de CO₂ ⌀"
 priceLabel = "Preu de l'energia"
 timeRange = "{day} {range} hora"
 unknownPrice = "encara desconegut"
@@ -234,7 +265,7 @@ charging = "carregant"
 connected = "connectat"
 disconnected = "desconnectat"
 ready = "preparat"
-vehicleTarget = "límit de vehicle: {soc}%"
+vehicleLimit = "límit de vehicle: {soc}"
 
 [main.vehicleStatus]
 charging = "Carregant..."
@@ -243,8 +274,7 @@ cleanEnergyCharging = "Energia neta disponible. Carregant..."
 climating = "Precondicionament detectat."
 connected = "Connectat."
 disconnected = "Desconnectat."
-guard = "Començant a {remaining}..."
-minCharge = "Càrrega mínima fins a {soc}%."
+minCharge = "Càrrega mínima fins a {soc}."
 pvDisable = "Excedent insuficient. Pausa en {remaining}..."
 pvEnable = "Excedent disponible. Començar en {remaining}..."
 scale1p = "Reduint a càrrega monofàsica a {remaining}..."
@@ -252,8 +282,7 @@ scale3p = "Augmentant la càrrega trifàsica en {remaining}..."
 targetChargeActive = "Càrrega objectiu activa..."
 targetChargePlanned = "La càrrega objectiu comença a {time}."
 targetChargeWaitForVehicle = "Càrrega objectiu llesta. Esperar vehicle."
-unknown = ""
-vehicleTargetReached = "Límit de vehicle {soc}% assolit."
+vehicleLimitReached = "Límit de vehicle {soc} assolit."
 waitForVehicle = "A punt per carregar. Esperant vehicle."
 
 [notifications]
@@ -263,6 +292,8 @@ modalTitle = "Notificacions"
 [offline]
 message = "No connectat amb servidor."
 reload = "Actualitzar?"
+
+[passwordModal]
 
 [session]
 cancel = "Cancelar"
@@ -279,7 +310,7 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
-avgPrice = "Preu Ø"
+avgPrice = "Preu ⌀"
 co2 = "CO₂"
 date = "Període"
 downloadCsv = "Descarregar com a CSV"
@@ -302,8 +333,12 @@ meterstop = "Mesura final (kWh)"
 odometer = "Kilometratge (km)"
 vehicle = "Vehicle"
 
+[sessions.filter]
+
 [settings]
 title = "Configuració"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "En proves"
@@ -331,6 +366,17 @@ light = "clar"
 km = "km"
 label = "Unitats"
 mi = "milles"
+
+[smartCost]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Hores funcionant"
+co2Label = "Emissions de CO₂"
+co2Limit = "Límit de CO₂"
+loadpointDescription = "Habilita temporalment la càrrega ràpida en mode solar"
+modalTitle = "Xarxa intel·ligent de càrrega"
+none = "cap"
+priceLabel = "Preu de l'energia"
+priceLimit = "Límit de preu"
 
 [startupError]
 configFile = "Arxiu de configuració utilitzat:"

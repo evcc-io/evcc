@@ -30,7 +30,7 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
+    jq: (.value // 0)
   {{- if eq .usage "battery" }}
   soc:
     source: http
@@ -39,8 +39,6 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
-  {{- if ne .capacity "" }}
+    jq: (.value // 0)
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

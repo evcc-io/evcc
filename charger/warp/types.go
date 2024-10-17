@@ -1,9 +1,10 @@
 package warp
 
 const (
-	FeatureMeter       = "meter"
-	FeatureMeterPhases = "meter_phases"
-	FeatureNfc         = "nfc"
+	FeatureMeter          = "meter"
+	FeatureMeterAllValues = "meter_all_values"
+	FeatureMeterPhases    = "meter_phases"
+	FeatureNfc            = "nfc"
 )
 
 // https://www.warp-charger.com/api.html#evse_state
@@ -103,4 +104,8 @@ type EmState struct {
 	Input4State     bool            `json:"input4_state"`
 	RelayState      bool            `json:"relay_state"`
 	ErrorFlags      int             `json:"error_flags"`
+}
+
+type EmLowLevelState struct {
+	Is3phase bool `json:"is_3phase"`
 }

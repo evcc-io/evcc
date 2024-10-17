@@ -1,12 +1,15 @@
 package bluelink
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
@@ -14,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -35,6 +39,8 @@ type Config struct {
 	BasicToken        string
 	CCSPServiceID     string
 	CCSPApplicationID string
+	PushType          string
+	Cfb               string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -59,15 +65,16 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 }
 
 func (v *Identity) getDeviceID() (string, error) {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return "", err
 	}
 
 	uuid := uuid.NewString()
 	data := map[string]interface{}{
-		"pushRegId": "1",
-		"pushType":  "GCM",
+		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
+		"pushType":  v.config.PushType,
 		"uuid":      uuid,
 	}
 
@@ -79,7 +86,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		"Stamp":               stamp,
 	}
 
-	var resp struct {
+	var res struct {
 		RetCode string
 		ResMsg  struct {
 			DeviceID string
@@ -88,30 +95,32 @@ func (v *Identity) getDeviceID() (string, error) {
 
 	req, err := request.New(http.MethodPost, v.config.URI+DeviceIdURL, request.MarshalJSON(data), headers)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	return resp.ResMsg.DeviceID, err
+	if res.ResMsg.DeviceID == "" {
+		err = errors.New("deviceid not found")
+	}
+
+	return res.ResMsg.DeviceID, err
 }
 
 func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 	cookieClient = request.NewHelper(v.log)
-	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
+	cookieClient.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	if err == nil {
-		uri := fmt.Sprintf(
-			"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
-			v.config.URI,
-			v.config.CCSPServiceID,
-			v.config.URI,
-		)
+	uri := fmt.Sprintf(
+		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
+		v.config.URI,
+		v.config.CCSPServiceID,
+		v.config.URI,
+	)
 
-		var resp *http.Response
-		if resp, err = cookieClient.Get(uri); err == nil {
-			resp.Body.Close()
-		}
+	resp, err := cookieClient.Get(uri)
+	if err == nil {
+		resp.Body.Close()
 	}
 
 	return cookieClient, err
@@ -181,7 +190,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
 		if err == nil {
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
 
@@ -217,7 +226,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
-			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			cookieClient.CheckRedirect = request.DontFollow
 
 			var res struct {
 				RedirectUrl string `json:"redirectUrl"`
@@ -266,7 +275,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
+func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -279,14 +288,12 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 		"code":         {accCode},
 	}
 
-	var token oauth.Token
+	var token oauth2.Token
 
-	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
-	if err == nil {
-		err = v.DoJSON(req, &token)
-	}
+	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
 
-	return token, err
+	return util.TokenWithExpiry(&token), err
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -305,12 +312,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	return (*oauth2.Token)(&res), err
+	return util.TokenWithExpiry(&res), err
 }
 
 func (v *Identity) Login(user, password, language string) (err error) {
@@ -338,9 +345,9 @@ func (v *Identity) Login(user, password, language string) (err error) {
 	}
 
 	if err == nil {
-		var token oauth.Token
+		var token *oauth2.Token
 		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
 	}
 
@@ -353,7 +360,8 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 // Request decorates requests with authorization headers
 func (v *Identity) Request(req *http.Request) error {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return err
 	}
@@ -375,4 +383,25 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	return nil
+}
+
+// stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371
+func (v *Identity) stamp() (string, error) {
+	cfb, err := base64.StdEncoding.DecodeString(v.config.Cfb)
+	if err != nil {
+		return "", err
+	}
+
+	raw := v.config.CCSPApplicationID + ":" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+
+	if len(cfb) != len(raw) {
+		return "", fmt.Errorf("cfb and raw length not equal")
+	}
+
+	enc := make([]byte, 0, 50)
+	for i := 0; i < len(cfb); i++ {
+		enc = append(enc, cfb[i]^raw[i])
+	}
+
+	return base64.StdEncoding.EncodeToString(enc), nil
 }

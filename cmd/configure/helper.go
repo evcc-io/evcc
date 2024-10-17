@@ -2,6 +2,7 @@ package configure
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown/v2"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -76,10 +76,8 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 			c.addedDeviceIndex--
 			return device, c.errDeviceNotValid
 		}
-	} else {
-		if deviceCategory == DeviceCategoryCharger && testResult == DeviceTestResultValid {
-			device.ChargerHasMeter = true
-		}
+	} else if deviceCategory == DeviceCategoryCharger && testResult == DeviceTestResultValid {
+		device.ChargerHasMeter = true
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
@@ -99,7 +97,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 			}
 		}
 
-		b, _, err := templateItem.RenderResult(templates.TemplateRenderModeInstance, values)
+		b, _, err := templateItem.RenderResult(templates.RenderModeInstance, values)
 		if err != nil {
 			c.addedDeviceIndex--
 			return device, err
@@ -125,9 +123,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println("-------------------------------------------------")
 		fmt.Println(c.localizedString("Requirements_Title"))
 		fmt.Println(requirementDescription)
-		if len(templateItem.Requirements.URI) > 0 {
-			fmt.Println("  " + c.localizedString("Requirements_More") + " " + templateItem.Requirements.URI)
-		}
 		fmt.Println("-------------------------------------------------")
 	}
 
@@ -188,30 +183,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	return nil
 }
 
-// processParamRequirements handles param requirements
-func (c *CmdConfigure) processParamRequirements(param templates.Param) error {
-	requirementDescription := stripmd.Strip(param.Requirements.Description.String(c.lang))
-	if len(requirementDescription) > 0 {
-		fmt.Println()
-		fmt.Println("-------------------------------------------------")
-		fmt.Println(c.localizedString("Requirements_Title"))
-		fmt.Println(requirementDescription)
-		if len(param.Requirements.URI) > 0 {
-			fmt.Println("  " + c.localizedString("Requirements_More") + " " + param.Requirements.URI)
-		}
-		fmt.Println("-------------------------------------------------")
-	}
-
-	// check if sponsorship is required
-	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
-		if err := c.askSponsortoken(true, true); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	fmt.Println("-- Sponsorship -----------------------------")
 	if required {
@@ -255,7 +226,7 @@ func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	return err
 }
 
-func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[string]interface{}, error) {
+func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface{}, error) {
 	fmt.Println()
 	fmt.Println("-- MQTT Broker ----------------------------")
 
@@ -267,11 +238,17 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 		_, paramPort := templates.ConfigDefaults.ParamByName("port")
 		_, paramUser := templates.ConfigDefaults.ParamByName("user")
 		_, paramPassword := templates.ConfigDefaults.ParamByName("password")
+		_, paramCaCert := templates.ConfigDefaults.ParamByName("caCert")
+		_, paramClientCert := templates.ConfigDefaults.ParamByName("clientCert")
+		_, paramClientKey := templates.ConfigDefaults.ParamByName("clientKey")
 
 		host := c.askParam(paramHost)
 		port := c.askParam(paramPort)
 		user := c.askParam(paramUser)
 		password := c.askParam(paramPassword)
+		caCert := c.askParam(paramCaCert)
+		clientCert := c.askParam(paramClientCert)
+		clientKey := c.askParam(paramClientKey)
 
 		fmt.Println()
 		fmt.Println("--------------------------------------------")
@@ -279,14 +256,17 @@ func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[strin
 		broker := fmt.Sprintf("%s:%s", host, port)
 
 		mqttConfig := map[string]interface{}{
-			"broker":   broker,
-			"user":     user,
-			"password": password,
+			"broker":     broker,
+			"user":       user,
+			"password":   password,
+			"caCert":     caCert,
+			"clientCert": clientCert,
+			"clientKey":  clientKey,
 		}
 
 		log := util.NewLogger("mqtt")
 
-		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1, false); err == nil {
+		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1, false, caCert, clientCert, clientKey); err == nil {
 			return mqttConfig, nil
 		}
 
@@ -330,7 +310,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 		}
 	}
 
-	sort.Slice(items[:], func(i, j int) bool {
+	sort.Slice(items, func(i, j int) bool {
 		// sort generic templates to the bottom
 		if items[i].Group != "" && items[j].Group == "" {
 			return false
@@ -376,7 +356,7 @@ func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCat
 	fmt.Println(c.localizedString("Config_Title"))
 	fmt.Println()
 
-	c.processModbusConfig(templateItem, deviceCategory)
+	c.processModbusConfig(templateItem)
 
 	return c.processParams(templateItem, deviceCategory)
 }
@@ -458,34 +438,23 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		label = langLabel
 	}
 
-	help := param.Help.ShortString(c.lang)
-	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) {
-		help = fmt.Sprintf("%s\n\n%s", help, c.localizedString("Requirements_Sponsorship_Feature_Title"))
-	}
-
 	value := c.askValue(question{
 		label:        label,
 		defaultValue: param.Default,
 		exampleValue: param.Example,
-		help:         help,
+		help:         param.Help.ShortString(c.lang),
 		valueType:    param.Type,
 		validValues:  param.ValidValues,
-		mask:         param.IsMask(),
+		mask:         param.IsMasked(),
 		required:     param.IsRequired(),
 	})
-
-	if param.Type == templates.TypeBool && value == "true" {
-		if err := c.processParamRequirements(param); err != nil {
-			return "false"
-		}
-	}
 
 	return value
 }
 
 // processModbusConfig adds default values from the modbus Param to the template
 // and handles user input for interface type selection
-func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, deviceCategory DeviceCategory) {
+func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template) {
 	var choices []string
 	var choiceTypes []string
 
@@ -525,5 +494,5 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template, dev
 	templateItem.ModbusParams(choiceTypes[index], values)
 
 	// update the modbus default values
-	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
+	templateItem.ModbusValues(templates.RenderModeInstance, values)
 }

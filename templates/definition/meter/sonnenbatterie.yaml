@@ -4,6 +4,15 @@ products:
   - brand: Sonnen
     description:
       generic: sonnenBatterie
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
+      Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `chargepower` angepasst werden.
+    en: |
+      For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
+      The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `chargepower` parameter.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -13,6 +22,19 @@ params:
     default: 8080
   - name: capacity
     advanced: true
+  - name: token
+    required: false
+    help:
+      de: API Token (benötigt für aktive Batteriesteuerung)
+      en: API Token (required for active battery control)
+    usages: ["battery"]
+  - name: chargepower
+    default: 3300
+    advanced: true
+    help:
+      de: Ladeleistung für Netzladen in W
+      en: Charging power for grid charging in W
+    usages: ["battery"]
 render: |
   type: custom
   power:
@@ -31,7 +53,72 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }} # kWh
+  {{- if .token }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: http://{{ .host }}/api/v2/configurations
+        insecure: true
+        method: PUT
+        headers:
+        - content-type: application/json
+        - Auth-Token: {{ .token }}
+        body: '{"EM_OperatingMode":"2"}'  # self consumption
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/v2/configurations
+          insecure: true
+          method: PUT
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+          body: '{"EM_OperatingMode":"1"}'  # manual
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/charge/0
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/v2/configurations
+          insecure: true
+          method: PUT
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+          body: '{"EM_OperatingMode":"1"}'  # manual
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/charge/{{ .chargepower }}
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
   {{- end }}
+  capacity: {{ .capacity }} # kWh
   {{- end }}

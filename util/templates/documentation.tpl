@@ -3,7 +3,8 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- if .Help.DE }} # {{ .Help.DE }}{{- end }}{{- if not .IsRequired }}{{ if not .Help.DE }} # {{ else }} ({{ end }}Optional{{ if .Help.DE }}){{ end }}{{ end }}
+  {{- $help := localize .Help -}}
+  {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
 {{- end }}
 
 {{- define "header" }}

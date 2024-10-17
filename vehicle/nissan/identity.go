@@ -15,8 +15,8 @@ import (
 
 const (
 	APIVersion   = "protocol=1.0,resource=2.1"
-	ClientID     = "a-ncb-prod-android"
-	ClientSecret = "0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC"
+	ClientID     = "a-ncb-nc-android-prod"
+	ClientSecret = "6GKIax7fGT5yPHuNmWNVOc4q5POBw1WRSW39ubRA8WPBmQ7MOxhm75EsmKMKENem"
 	Scope        = "openid profile vehicles"
 	Realm        = "a-ncb-prod"
 	AuthURL      = "https://prod.eu2.auth.kamereon.org/kauth"
@@ -64,29 +64,27 @@ func (v *Identity) Login(user, password string) error {
 		}
 
 		// https://github.com/Tobiaswk/dartnissanconnect/commit/7d28dd5461aaed3e46b5be0c9fd58887e1e0cd0b
-		if err == nil {
-			err = api.ErrNotAvailable // not nil
-			for attempt := 1; attempt <= 10 && err != nil; attempt++ {
-				req, err = request.New(http.MethodPost, uri, request.MarshalJSON(res), map[string]string{
-					"Accept-Api-Version": APIVersion,
-					"X-Username":         "anonymous",
-					"X-Password":         "anonymous",
-					"Content-type":       "application/json",
-					"Accept":             "application/json",
-				})
-				if err == nil {
-					if err = v.DoJSON(req, &nToken); err != nil && !nToken.SessionExpired() {
-						break
-					}
+		err = api.ErrNotAvailable // not nil
+		for attempt := 1; attempt <= 10 && err != nil; attempt++ {
+			req, err = request.New(http.MethodPost, uri, request.MarshalJSON(res), map[string]string{
+				"Accept-Api-Version": APIVersion,
+				"X-Username":         "anonymous",
+				"X-Password":         "anonymous",
+				"Content-type":       "application/json",
+				"Accept":             "application/json",
+			})
+			if err == nil {
+				if err = v.DoJSON(req, &nToken); err != nil && !nToken.SessionExpired() {
+					break
 				}
 			}
-
-			if errT := nToken.Error(); err != nil && errT != nil {
-				err = errT
-			}
-
-			realm = strings.Trim(nToken.Realm, "/")
 		}
+
+		if errT := nToken.Error(); err != nil && errT != nil {
+			err = errT
+		}
+
+		realm = strings.Trim(nToken.Realm, "/")
 	}
 
 	if err == nil {

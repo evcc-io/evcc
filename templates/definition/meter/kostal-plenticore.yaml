@@ -3,12 +3,19 @@ products:
   - brand: Kostal
     description:
       generic: Plenticore Hybrid
+capabilities: ["battery-control"]
 linked:
   - template: kostal-ksem-inverter
     usage: grid
   - template: kostal-ksem
     usage: grid
     excludetemplate: kostal-ksem-inverter
+requirements:
+  description:
+    de: |
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Netzladen ist nicht verfügbar.
+    en: |
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. Grid charging is not available.
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -17,7 +24,26 @@ params:
     choice: ["tcpip"]
     id: 71
     port: 1502
+  - name: endianness
+    description:
+      de: Byte-Reihenfolge (Little/Big)
+      en: Endianness (Little/Big)
+    validvalues: ["big", "little"]
+    default: little
+    advanced: true
   - name: capacity
+    advanced: true
+  - name: maxacpower
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
     advanced: true
 render: |
   {{- if eq .usage "pv" }}
@@ -25,26 +51,43 @@ render: |
   power:
     source: calc
     add: # The add plugin sums up all string values
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:1:DCW # string 1
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:2:DCW # string 2
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:3:DCW # string 3
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:WH # total yield
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: modbus
-  {{- include "modbus" . }}
-  model: sunspec
-  power: 802:W # sunspec model 802 battery
-  soc: 802:SoC # sunspec model 802 battery
-  {{- if ne .capacity "" }}
+  type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:W # 802 battery control
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoC # 802 battery control
+  limitsoc:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writemultiple
+        encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  maxacpower: {{ .maxacpower }} # W
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

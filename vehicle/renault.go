@@ -18,6 +18,7 @@ import (
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
 //  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
+//  https://renault-api.readthedocs.io/en/latest/index.html
 
 // Renault is an api.Vehicle implementation for Renault cars
 type Renault struct {
@@ -39,6 +40,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
+		AlternativeWakeup           bool
 		Cache                       time.Duration
 		Timeout                     time.Duration
 	}{
@@ -75,7 +77,6 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	api.Client.Timeout = cc.Timeout
 
 	accountID, err := api.Person(identity.PersonID, brand)
-
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +85,8 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		func() ([]kamereon.Vehicle, error) {
 			return api.Vehicles(accountID)
 		},
-		func(v kamereon.Vehicle) string {
-			return v.VIN
+		func(v kamereon.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 
@@ -93,7 +94,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.AlternativeWakeup, cc.Cache)
 
 	return v, err
 }

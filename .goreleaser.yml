@@ -1,16 +1,22 @@
+version: 2
+
 dist: release
 release:
   github:
     owner: evcc-io
     name: evcc
+  mode: replace
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -49,7 +55,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
@@ -59,6 +65,7 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^Translations"
 
 nfpms:
   - id: default
@@ -74,6 +81,9 @@ nfpms:
     formats:
       - deb
 
+    dependencies:
+      - adduser
+
     contents:
       - src: ./packaging/init/evcc.service
         dst: /lib/systemd/system/evcc.service
@@ -85,13 +95,13 @@ nfpms:
       postremove: ./packaging/scripts/postremove.sh
 
 brews:
-  - tap:
+  - repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:
       name: andig
       email: cpuidle@gmx.de
-    folder: Formula
+    directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"
     license: "MIT"

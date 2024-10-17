@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-
 	"github.com/joeshaw/carwings"
 )
 
@@ -111,7 +110,7 @@ func (v *CarWings) status() (carwings.BatteryStatus, error) {
 	// api result is stale
 	if v.refreshKey != "" {
 		if err := v.refreshResult(); err != nil {
-			return *new(carwings.BatteryStatus), err
+			return carwings.BatteryStatus{}, err
 		}
 	}
 
@@ -120,7 +119,7 @@ func (v *CarWings) status() (carwings.BatteryStatus, error) {
 	if err == nil {
 		if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
 			if err = v.refreshRequest(); err != nil {
-				return *new(carwings.BatteryStatus), err
+				return carwings.BatteryStatus{}, err
 			}
 
 			err = api.ErrMustRetry

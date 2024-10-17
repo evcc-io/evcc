@@ -59,8 +59,7 @@ func (c *Shelly) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
-	err := c.conn.Enable(enable)
-	if err != nil {
+	if err := c.conn.Enable(enable); err != nil {
 		return err
 	}
 

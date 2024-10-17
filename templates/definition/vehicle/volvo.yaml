@@ -2,7 +2,8 @@ template: volvo
 products:
   - brand: Volvo
     description:
-      generic: legacy
+      de: veraltet
+      en: legacy
 params:
   - preset: vehicle-base
   - preset: vehicle-identify

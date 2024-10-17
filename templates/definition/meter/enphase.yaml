@@ -3,21 +3,77 @@ products:
   - brand: Enphase
     description:
       generic: IQ Envoy
+requirements:
+  description:
+    de: 'Als Batteriespeicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ "AC Battery" unterstützt.'
+    en: 'Only batteries of type "AC Battery" are currently supported by Enphase-API.'
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["grid", "pv", "battery"]
   - name: host
-    required: true
+  - name: token
+    help:
+      en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+      de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+  - name: capacity
+    advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
-    jq: .production[0].wNow
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .production | max_by(.wNow).wNow
   energy:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
-    jq: .production[0].whLifetime
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .production | max_by(.wNow).whLifetime
     scale: 0.001
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/production.json
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .storage[] | .wNow
+  soc:
+    source: http
+    uri: http://{{ .host }}/ivp/ensemble/inventory
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .[].devices | map(.percentFull) | add / length
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

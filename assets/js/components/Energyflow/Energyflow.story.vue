@@ -11,12 +11,15 @@ import Energyflow from "./Energyflow.vue";
 				:pvPower="7300"
 				:gridPower="-2300"
 				:homePower="800"
-				:loadpointsPower="4200"
-				:activeLoadpointsCount="3"
+				:loadpointsCompact="[
+					{ power: 1000, icon: 'car', charging: true },
+					{ power: 1000, icon: 'bike', charging: true },
+					{ power: 2200, icon: 'car', charging: true },
+				]"
 				:tariffGrid="0.25"
 				:tariffFeedIn="0.08"
 				:tariffEffectivePrice="0.08"
-				smartCostUnit="EUR"
+				smartCostType="price"
 				smartCostAvailable
 				currency="EUR"
 				siteTitle="Home"
@@ -52,8 +55,7 @@ import Energyflow from "./Energyflow.vue";
 				:pvPower="5000"
 				:gridPower="-1300"
 				:homePower="800"
-				:loadpointsPower="1400"
-				:activeLoadpointsCount="1"
+				:loadpointsCompact="[{ power: 1400, icon: 'car', charging: true }]"
 				:batteryPower="-1500"
 				:batterySoc="75"
 				siteTitle="Home"
@@ -79,8 +81,10 @@ import Energyflow from "./Energyflow.vue";
 				batteryConfigured
 				:pvPower="8700"
 				:gridPower="-500"
-				:loadpointsPower="7500"
-				:activeLoadpointsCount="2"
+				:loadpointsCompact="[
+					{ power: 5000, icon: 'car', charging: true },
+					{ power: 2500, icon: 'bus', charging: true },
+				]"
 				:batteryPower="-700"
 				:batterySoc="95"
 				siteTitle="Home"
@@ -92,10 +96,12 @@ import Energyflow from "./Energyflow.vue";
 				pvConfigured
 				batteryConfigured
 				:pvPower="300"
-				:gridPower="5500"
+				:gridPower="6500"
 				:homePower="1000"
-				:loadpointsPower="5600"
-				:activeLoadpointsCount="2"
+				:loadpointsCompact="[
+					{ power: 5000, icon: 'car', charging: true },
+					{ power: 1600, icon: 'car', charging: true },
+				]"
 				:batteryPower="800"
 				:batterySoc="76"
 				siteTitle="Home"
@@ -109,8 +115,12 @@ import Energyflow from "./Energyflow.vue";
 				:pvPower="0"
 				:gridPower="6500"
 				:homePower="1000"
-				:loadpointsPower="5500"
-				:activeLoadpointsCount="1"
+				:loadpointsCompact="[
+					{ power: 5500, icon: 'car', charging: true },
+					{ power: 0, icon: 'car', charging: false },
+					{ power: 0, icon: 'car', charging: false },
+					{ power: 0, icon: 'car', charging: false },
+				]"
 				:batteryPower="0"
 				:batterySoc="0"
 				siteTitle="Home"
@@ -140,18 +150,48 @@ import Energyflow from "./Energyflow.vue";
 				:pvPower="7300"
 				:gridPower="-2300"
 				:homePower="800"
-				:loadpointsPower="4200"
-				:activeLoadpointsCount="3"
+				:loadpointsCompact="[
+					{ power: 1000, icon: 'car', charging: true },
+					{ power: 1000, icon: 'car', charging: true },
+					{ power: 2200, icon: 'car', charging: true },
+				]"
 				:tariffGrid="0.25"
 				:tariffFeedIn="0.08"
 				:tariffEffectivePrice="0.08"
 				:tariffCo2="723"
 				:tariffEffectiveCo2="0"
-				smartCostUnit="gCO2eq"
+				smartCostType="co2"
 				smartCostAvailable
 				currency="EUR"
 				siteTitle="Home"
 				:pv="[{ power: 5000 }, { power: 2300 }]"
+			/>
+		</Variant>
+		<Variant title="low input">
+			<Energyflow
+				gridConfigured
+				pvConfigured
+				:pvPower="2000"
+				:gridPower="-2000"
+				:loadpointsCompact="[{ power: 1000, icon: 'car', charging: true }]"
+			/>
+		</Variant>
+		<Variant title="low output">
+			<Energyflow
+				gridConfigured
+				pvConfigured
+				:pvPower="3000"
+				:gridPower="-1000"
+				:loadpointsCompact="[{ power: 1700, icon: 'car', charging: true }]"
+			/>
+		</Variant>
+		<Variant title="low output (&lt; 10%)">
+			<Energyflow
+				gridConfigured
+				pvConfigured
+				:pvPower="3000"
+				:gridPower="-1000"
+				:loadpointsCompact="[{ power: 1800, icon: 'car', charging: true }]"
 			/>
 		</Variant>
 	</Story>

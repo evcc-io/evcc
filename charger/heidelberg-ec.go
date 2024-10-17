@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -30,6 +31,7 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
+	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
 	wakeup  bool
@@ -68,7 +70,7 @@ func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
@@ -86,14 +88,37 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
+		log:     log,
 		conn:    conn,
 		current: 60, // assume min current
 	}
 
-	// disable standby to prevent comm loss
-	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	// https://github.com/evcc-io/evcc/issues/15437
+	conn.Delay(100 * time.Millisecond)
 
-	return wb, err
+	// disable standby to prevent comm loss
+	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {
+		return nil, err
+	}
+
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(hecRegTimeoutConfig, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b) / 4; u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Millisecond)
+	}
+
+	return wb, nil
+}
+
+func (wb *HeidelbergEC) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.Status(); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {
@@ -188,10 +213,6 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *HeidelbergEC) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -240,38 +261,33 @@ func (wb *HeidelbergEC) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.PhaseCurrents = (*HeidelbergEC)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(hecRegCurrents, 3)
+// getPhaseValues returns 3 sequential register values
+func (wb *HeidelbergEC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 10
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*HeidelbergEC)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(hecRegCurrents, 10)
 }
 
 var _ api.PhaseVoltages = (*HeidelbergEC)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(hecRegVoltages, 3)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var volt [3]float64
-	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint16(b[2*l:]))
-	}
-
-	return volt[0], volt[1], volt[2], nil
+	return wb.getPhaseValues(hecRegVoltages, 1)
 }
 
 var _ api.Diagnosis = (*HeidelbergEC)(nil)

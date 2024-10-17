@@ -13,6 +13,11 @@ requirements:
     en: Charge mode must be configured as `manual`
 params:
   - name: host
+  - name: connector
+    default: 1
+    advanced: true
 render: |
   type: hardybarth-ecb1
   uri: http://{{ .host }}
+  chargecontrol: {{ .connector }}
+  meter: {{ .connector }}

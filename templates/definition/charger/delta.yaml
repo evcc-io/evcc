@@ -1,0 +1,26 @@
+template: delta
+products:
+  - brand: Delta
+    description:
+      generic: AC Max Basic
+  - brand: Delta
+    description:
+      generic: AC MAX Smart
+  - brand: Delta
+    description:
+      generic: SLIM Charger
+  - brand: Delta
+    description:
+      generic: Ultra Fast Charger
+capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 115200
+  - name: connector
+render: |
+  type: delta
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

@@ -1,21 +1,27 @@
 template: phoenix-ev-eth
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
-      generic: EV-ETH (Modbus TCP)
+      generic: EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
+  - brand: Wallbe
+    description:
+      generic: Eco, Eco 2.0(s), Pro
+  - brand: ESL
+    description:
+      generic: Walli LIGHT
+  - brand: E3/DC
+    description:
+      generic: Easy Connect
+capabilities: ["mA", "rfid"]
 requirements:
   description:
-    en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.
-    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
-  uri: https://docs.evcc.io/docs/devices/chargers#phoenix-contact
+    en: DIP switch 10 at the controller needs to be set to 'ON'. A recent controller firmware is recommended.
+    de: DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+  evcc: ["sponsorship"]
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: phoenix-ev-eth
-  uri: {{ .host }}:{{ .port }}
-  meter: # only if a charge meter is connected to the controller
-    power: true
-    energy: true
-    currents: true
+  {{- include "modbus" . }}

@@ -72,6 +72,11 @@ meters:
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
+    batterymode:
+      source: js
+      vm: shared
+      script: |
+        1
 
   - name: meter_charger_1
     type: custom
@@ -153,6 +158,7 @@ chargers:
         var lp = state.loadpoints[1];
         lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    tos: true
     phases1p3p:
       source: js
       vm: shared
@@ -182,8 +188,6 @@ vehicles:
         var range = (44 * lp.vehicleSoc) / 15;
         range
     capacity: 44
-    onidentify:
-      targetsoc: 90
   - name: vehicle_2
     title: weißes Model 3
     type: custom
@@ -209,8 +213,9 @@ vehicles:
       script: |
         "B"
     capacity: 80
-    onidentify:
-      targetsoc: 75
+    limitsoc:
+      source: const
+      value: 90
   - name: vehicle_3
     type: template
     template: offline
@@ -239,7 +244,6 @@ loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
-    phases: 1
     meter: meter_charger_1
     vehicle: vehicle_1
   - title: Garage
@@ -251,11 +255,13 @@ loadpoints:
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
-    type: fixed
-    price: 0.399 # EUR/kWh
+    type: template
+    template: energy-charts-api # epex spot market prices
+    bzn: DE-LU
+    charges: 0.15
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  planner:
+  co2:
     type: grünstromindex
     zip: 12349

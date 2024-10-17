@@ -1,0 +1,25 @@
+template: hoymiles-ahoydtu
+products:
+  - brand: Hoymiles
+    description:
+      generic: HM & HMS Series (via AhoyDTU)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: id
+    type: number
+    description:
+      de: Wechselrichter ID (falls mehrere vorhanden)
+      en: Inverter ID (if multiple exist)
+    default: 0
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/inverter/id/{{ .id }}
+    jq: .ch[0][2]
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/inverter/id/{{ .id }}
+    jq: .ch[0][6]

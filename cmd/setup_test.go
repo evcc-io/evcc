@@ -5,20 +5,17 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
-const sample = `
-loadpoints:
-- mode: off
-`
-
 func TestYamlOff(t *testing.T) {
-	var conf config
+	var conf globalconfig.All
 	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(strings.NewReader(sample)); err != nil {
+	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
+- mode: off
+`)); err != nil {
 		t.Error(err)
 	}
 
@@ -31,7 +28,7 @@ func TestYamlOff(t *testing.T) {
 		t.Error(err)
 	}
 
-	if lp.Mode != api.ModeOff {
-		t.Errorf("expected `off`, got %s", lp.Mode)
+	if lp.Mode_ != api.ModeOff {
+		t.Errorf("expected `off`, got %s", lp.Mode_)
 	}
 }

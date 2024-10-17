@@ -1,0 +1,115 @@
+template: slimmelezer
+products:
+  - brand: Zuidwijk
+    description:
+      generic: SlimmeLezer(+)
+  - brand: ESPHome
+    description:
+      generic: DSMR
+  - brand: mhendriks
+    description:
+      generic: P1 dongle
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: scale
+    example: 1 | 10 | 100 | 1000
+    default: 1000
+    required: true
+    advanced: true
+    description:
+      de: Skalierungsfaktor
+      en: Scale factor
+    help:
+      de: Verwenden Skala von 1000 für Zuidwijk Slimmelezer. Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
+      en: Use scale of 1000 for Zuidwijk Slimmelezer. Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
+  - name: host
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: {{ .scale }}
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -{{ .scale }}
+  energy:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/energy_delivered_tariff1
+      headers:
+      - content-type: application/json
+      jq: .value
+    - source: http
+      uri: http://{{ .host }}/sensor/energy_delivered_tariff2
+      headers:
+      - content-type: application/json
+      jq: .value
+  currents:
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l1
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l2
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l3
+    headers:
+    - content-type: application/json
+    jq: .value
+  powers:
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: {{ .scale }}
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -{{ .scale }}
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: {{ .scale }}
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -{{ .scale }}
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: {{ .scale }}
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -{{ .scale }}

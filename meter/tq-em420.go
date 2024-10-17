@@ -165,3 +165,11 @@ func (m *TqEM420) Currents() (float64, float64, float64, error) {
 	}
 	return res.SmartMeter.Values.CurrentL1 / 1e3, res.SmartMeter.Values.CurrentL2 / 1e3, res.SmartMeter.Values.CurrentL3 / 1e3, nil
 }
+
+func (m *TqEM420) Voltages() (float64, float64, float64, error) {
+	res, err := m.dataG()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return res.SmartMeter.Values.VoltageL1 / 1e3, res.SmartMeter.Values.VoltageL2 / 1e3, res.SmartMeter.Values.VoltageL3 / 1e3, nil
+}

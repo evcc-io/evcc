@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -20,21 +21,27 @@ type EventTemplateConfig struct {
 	Title, Msg string
 }
 
+type Vehicles interface {
+	// ByName returns a single vehicle adapter by name
+	ByName(string) (vehicle.API, error)
+}
+
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
 	definitions map[string]EventTemplateConfig
 	sender      []Messenger
 	cache       *util.Cache
+	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
+func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.Cache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
-		if _, err := template.New("out").Funcs(sprig.TxtFuncMap()).Parse(v.Title); err != nil {
+		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
 			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
-		if _, err := template.New("out").Funcs(sprig.TxtFuncMap()).Parse(v.Msg); err != nil {
+		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Msg); err != nil {
 			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
 		}
 	}
@@ -42,6 +49,7 @@ func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) 
 	h := &Hub{
 		definitions: cc,
 		cache:       cache,
+		vehicles:    vv,
 	}
 
 	return h, nil
@@ -68,11 +76,25 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 		}
 	}
 
+	// add missing attributes
+	if name, ok := attr["vehicleName"].(string); ok {
+		if v, err := h.vehicles.ByName(name); err == nil {
+			attr["vehicleLimitSoc"] = v.GetLimitSoc()
+			attr["vehicleMinSoc"] = v.GetMinSoc()
+			attr["vehiclePlanTime"], attr["vehiclePlanSoc"] = v.GetPlanSoc()
+
+			instance := v.Instance()
+			attr["vehicleTitle"] = instance.Title()
+			attr["vehicleIcon"] = instance.Icon()
+			attr["vehicleCapacity"] = instance.Capacity()
+		}
+	}
+
 	return util.ReplaceFormatted(tmpl, attr)
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
+func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -102,12 +124,12 @@ func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
 			continue
 		}
 
+		if strings.TrimSpace(msg) == "" {
+			continue
+		}
+
 		for _, sender := range h.sender {
-			if strings.TrimSpace(msg) != "" {
-				go sender.Send(title, msg)
-			} else {
-				log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
-			}
+			go sender.Send(title, msg)
 		}
 	}
 }

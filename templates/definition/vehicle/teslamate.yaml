@@ -9,6 +9,9 @@ requirements:
     de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: id
     description:
       de: Fahrzeug-ID
@@ -17,24 +20,10 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: icon
-    default: car
-    advanced: true
   - preset: vehicle-identify
 render: |
   type: custom
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
   {{- include "vehicle-identify" . }}
   soc:
     source: mqtt
@@ -54,3 +43,8 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/rated_battery_range_km
     timeout: 720h # 30d
+  odometer:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/odometer
+    timeout: 720h # 30d
+  features: ["coarsecurrent"]

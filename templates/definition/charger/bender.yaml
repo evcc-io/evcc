@@ -2,10 +2,19 @@ template: bender
 products:
   - brand: Bender
     description:
-      generic: CC612/613
+      generic: CC612
+  - brand: Bender
+    description:
+      generic: CC613
   - brand: Mennekes
     description:
-      generic: Amedio, Amtron ChargeControl, Professional
+      generic: AMTRON Professional
+  - brand: Mennekes
+    description:
+      generic: AMEDIO Professional
+  - brand: Mennekes
+    description:
+      generic: AMTRON ChargeControl
   - brand: Webasto
     description:
       generic: Live
@@ -30,6 +39,12 @@ products:
   - brand: Ubitricity
     description:
       generic: Heinz
+  - brand: CUBOS
+    description:
+      generic: C11E, C22E
+  - brand: Spelsberg
+    description:
+      generic: Wallbox
 capabilities: ["rfid"]
 requirements:
   description:
@@ -38,8 +53,6 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
   - name: port
     default: 502
 render: |

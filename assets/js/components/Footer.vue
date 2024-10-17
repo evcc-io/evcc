@@ -3,7 +3,7 @@
 		<div class="container py-2">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
-				<Savings v-bind="savings" :sponsor="sponsor" />
+				<Savings v-bind="savings" />
 			</div>
 		</div>
 	</footer>
@@ -20,10 +20,7 @@ export default {
 	components: { Version, Savings },
 	props: {
 		version: Object,
-		sponsor: String,
 		savings: Object,
 	},
 };
 </script>
-
-<style scoped></style>

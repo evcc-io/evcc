@@ -4,25 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/elering"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
 )
 
 type Elering struct {
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	unit    string
-	region  string
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	region string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Elering)(nil)
@@ -32,12 +30,9 @@ func init() {
 }
 
 func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
-		embed    `mapstructure:",squash"`
-		Currency string
-		Region   string
-	}{
-		Currency: "EUR",
+	var cc struct {
+		embed  `mapstructure:",squash"`
+		Region string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,9 +45,9 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Elering{
 		embed:  &cc.embed,
-		log:    util.NewLogger("Elering"),
-		unit:   cc.Currency,
+		log:    util.NewLogger("elering"),
 		region: strings.ToLower(cc.Region),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -66,7 +61,8 @@ func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)
@@ -74,22 +70,17 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
-		if err := client.GetJSON(uri, &res); err != nil {
+		if err := backoff.Retry(func() error {
+			return backoffPermanentError(client.GetJSON(uri, &res))
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		data := res.Data[t.region]
-
-		t.data = make(api.Rates, 0, len(data))
-		for _, r := range data {
+		data := make(api.Rates, 0, len(res.Data[t.region]))
+		for _, r := range res.Data[t.region] {
 			ts := time.Unix(r.Timestamp, 0)
 
 			ar := api.Rate{
@@ -97,26 +88,24 @@ func (t *Elering) run(done chan error) {
 				End:   ts.Add(time.Hour).Local(),
 				Price: t.totalPrice(r.Price / 1e3),
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
 
-		t.mux.Unlock()
+		mergeRates(t.data, data)
+		once.Do(func() { close(done) })
 	}
-}
-
-// Unit implements the api.Tariff interface
-func (t *Elering) Unit() string {
-	return t.unit
 }
 
 // Rates implements the api.Tariff interface
 func (t *Elering) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Elering) IsDynamic() bool {
-	return true
+// Type implements the api.Tariff interface
+func (t *Elering) Type() api.TariffType {
+	return api.TariffTypePriceForecast
 }

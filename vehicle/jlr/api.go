@@ -32,11 +32,10 @@ func NewAPI(log *util.Logger, device string, ts oauth2.TokenSource) *API {
 		Decorator: func(req *http.Request) error {
 			token, err := ts.Token()
 			if err == nil {
-				for k, v := range map[string]string{
-					"Authorization":           fmt.Sprintf("Bearer %s", token.AccessToken),
-					"X-Device-Id":             device,
+				for k, v := range Headers(device, map[string]string{
+					"Authorization":           "Bearer " + token.AccessToken,
 					"x-telematicsprogramtype": "jlrpy",
-				} {
+				}) {
 					req.Header.Set(k, v)
 				}
 			}

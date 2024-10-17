@@ -26,7 +26,7 @@
 							class="d-block d-sm-flex justify-content-between align-items-stretch mb-4"
 						>
 							<a
-								href="https://docs.evcc.io/"
+								:href="docsUrl"
 								target="_blank"
 								class="btn btn-outline-primary w-100 w-sm-auto flex-grow-1 mb-3 mb-sm-0 me-sm-3"
 								type="button"
@@ -49,22 +49,32 @@
 						<div
 							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
 						>
-							<p class="flex-sm-grow-1 text-muted me-sm-3">
+							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
+								{{ $t("help.logsDescription") }}
+							</p>
+							<router-link to="/log" class="btn btn-outline-primary text-nowrap">
+								{{ $t("help.logsButton") }}
+							</router-link>
+						</div>
+						<div
+							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
+						>
+							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.issueDescription") }}
 							</p>
 							<a
 								href="https://github.com/evcc-io/evcc/issues"
 								target="_blank"
 								class="btn btn-outline-primary text-nowrap"
-								type="button"
 							>
 								{{ $t("help.issueButton") }}
 							</a>
 						</div>
+
 						<div
 							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
 						>
-							<p class="flex-sm-grow-1 text-muted me-sm-3">
+							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.restartDescription") }}
 							</p>
 							<button
@@ -105,7 +115,7 @@
 					<div class="modal-footer d-flex justify-content-between">
 						<button
 							type="button"
-							class="btn btn-outline-secondary"
+							class="btn btn-link text-muted"
 							data-bs-dismiss="modal"
 							@click="openHelpModal"
 						>
@@ -128,11 +138,17 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import api from "../api";
+import { docsPrefix } from "../i18n";
+import { performRestart } from "../restart";
 
 export default {
 	name: "HelpModal",
 	props: {},
+	computed: {
+		docsUrl() {
+			return `${docsPrefix()}/`;
+		},
+	},
 	methods: {
 		openHelpModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
@@ -143,14 +159,7 @@ export default {
 			modal.show();
 		},
 		async restartConfirmed() {
-			try {
-				await api.post("shutdown");
-				alert(
-					"Server was stopped successfully. Waiting for the operating system to start evcc again."
-				);
-			} catch (e) {
-				alert("Unabled to restart server.");
-			}
+			await performRestart();
 		},
 	},
 };

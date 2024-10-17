@@ -1,9 +1,10 @@
 package vw
 
 import (
+	"cmp"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -163,16 +164,12 @@ func (v *Provider) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.action(ActionCharge, ActionChargeStart)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.action(ActionCharge, ActionChargeStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
+	return v.action(ActionCharge, action[enable])
 }
 
 var _ api.Diagnosis = (*Provider)(nil)
@@ -186,8 +183,8 @@ func (v *Provider) Diagnose() {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
-	sort.Slice(rr.OperationList.ServiceInfo, func(i, j int) bool {
-		return rr.OperationList.ServiceInfo[i].ServiceId < rr.OperationList.ServiceInfo[j].ServiceId
+	slices.SortFunc(rr.OperationList.ServiceInfo, func(i, j ServiceInfo) int {
+		return cmp.Compare(i.ServiceId, j.ServiceId)
 	})
 
 	for _, si := range rr.OperationList.ServiceInfo {

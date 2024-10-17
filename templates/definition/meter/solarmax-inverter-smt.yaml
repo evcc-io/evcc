@@ -1,0 +1,29 @@
+template: solarmax-smt
+products:
+  - brand: SolarMax
+    description:
+      generic: SolarMax SMT
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4151 # PAC
+      type: holding
+      decode: uint32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4129 # Total
+      type: holding
+      decode: uint32
+    scale: 0.1

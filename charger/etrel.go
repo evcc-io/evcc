@@ -43,8 +43,8 @@ const (
 	etrelRegSWVersion     = 1015
 
 	// Always zero, see https://github.com/evcc-io/evcc/issues/5346
-	//etrelRegSessionEnergy = 30
-	//etrelRegChargeTime    = 32
+	// etrelRegSessionEnergy = 30
+	// etrelRegChargeTime    = 32
 
 	// holding, write-only!
 	etrelRegMaxCurrent = 8
@@ -190,6 +190,9 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+// removed due to https://github.com/evcc-io/evcc/issues/14507
+// var _ api.CurrentGetter = (*Etrel)(nil)
+
 var _ api.Meter = (*Etrel)(nil)
 
 // CurrentPower implements the api.Meter interface
@@ -211,18 +214,18 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var currents [3]float64
-	for i := 0; i < 3; i++ {
-		currents[i] = float64(encoding.Float32(b[4*i:]))
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(encoding.Float32(b[4*i:]))
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // var _ api.ChargeTimer = (*Etrel)(nil)
 //
-// // ChargingTime implements the api.ChargeTimer interface
-// func (wb *Etrel) ChargingTime() (time.Duration, error) {
+// // ChargeDuration implements the api.ChargeTimer interface
+// func (wb *Etrel) ChargeDuration() (time.Duration, error) {
 // 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
 // 	if err != nil {
 // 		return 0, err
