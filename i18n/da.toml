@@ -454,6 +454,7 @@ smartCostCheap = "Billig opladning fra elnet"
 smartCostClean = "Grøn opladning fra elnet"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"
+batteryUsage = "Husbatteri"
 
 [main.loadpointSettings.limitSoc]
 description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
@@ -581,6 +582,7 @@ vehicleLimit = "Køretøjets grænse"
 vehicleLimitReached = "Køretøjets grænse er nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 welcome = "Kort indledende opladning for at bekræfte forbindelsen."
+batteryBoost = "Boost fra batteri er aktiv"
 
 [notifications]
 dismissAll = "Afvis alle"
@@ -729,3 +731,10 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Hurtig opladning fra husbatteriet"
+label = "Batteri boost"
+mode = "Kun tilgængelig i solar og min+solar mode"
+once = "Boost er aktiveret for denne opladning"
