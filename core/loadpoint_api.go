@@ -57,7 +57,8 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
-		lp.batteryBoost = 0
+		lp.batteryBoost = boostDisabled
+		lp.publish(keys.BatteryBoost, false)
 
 		// reset timers
 		switch mode {
