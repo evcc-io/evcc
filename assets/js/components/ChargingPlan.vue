@@ -74,11 +74,12 @@
 								</li>
 							</ul>
 							<div v-if="isModalVisible">
-								<ChargingPlanSettings
+								<ChargingPlansSettings
 									v-if="departureTabActive"
-									v-bind="chargingPlanSettingsProps"
-									@plan-updated="updatePlan"
-									@plan-removed="removePlan"
+									v-bind="chargingPlansSettingsProps"
+									@static-plan-updated="updateStaticPlan"
+									@static-plan-removed="removeStaticPlan"
+									@repeating-plans-updated="updateRepeatingPlans"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
@@ -98,7 +99,7 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "./LabelAndValue.vue";
-import ChargingPlanSettings from "./ChargingPlanSettings.vue";
+import ChargingPlansSettings from "./ChargingPlansSettings.vue";
 import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 
 import formatter from "../mixins/formatter";
@@ -110,7 +111,7 @@ const ONE_MINUTE = 60 * 1000;
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, ChargingPlanSettings, ChargingPlanArrival },
+	components: { LabelAndValue, ChargingPlansSettings, ChargingPlanArrival },
 	mixins: [formatter, collector],
 	props: {
 		currency: String,
@@ -171,6 +172,9 @@ export default {
 			}
 			return [];
 		},
+		repeatingPlans: function () {
+			return this.vehicle.repeatingPlans || [];
+		},
 		enabled: function () {
 			return this.effectivePlanTime;
 		},
@@ -183,8 +187,8 @@ export default {
 		arrivalTabActive: function () {
 			return this.activeTab === "arrival";
 		},
-		chargingPlanSettingsProps: function () {
-			return this.collectProps(ChargingPlanSettings);
+		chargingPlansSettingsProps: function () {
+			return this.collectProps(ChargingPlansSettings);
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
@@ -263,7 +267,7 @@ export default {
 		showArrivalTab: function () {
 			this.activeTab = "arrival";
 		},
-		updatePlan: function ({ soc, time, energy }) {
+		updateStaticPlan: function ({ soc, time, energy }) {
 			const timeISO = time.toISOString();
 			if (this.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
@@ -271,12 +275,15 @@ export default {
 				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
 			}
 		},
-		removePlan: function () {
+		removeStaticPlan: function () {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
+		},
+		updateRepeatingPlans: function (plans) {
+			api.post(`${this.apiVehicle}plan/repeating`, { plans });
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

@@ -18,13 +18,14 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title    string       `json:"title"`
-	Icon     string       `json:"icon,omitempty"`
-	Capacity float64      `json:"capacity,omitempty"`
-	MinSoc   int          `json:"minSoc,omitempty"`
-	LimitSoc int          `json:"limitSoc,omitempty"`
-	Features []string     `json:"features,omitempty"`
-	Plans    []planStruct `json:"plans,omitempty"`
+	Title          string                  `json:"title"`
+	Icon           string                  `json:"icon,omitempty"`
+	Capacity       float64                 `json:"capacity,omitempty"`
+	MinSoc         int                     `json:"minSoc,omitempty"`
+	LimitSoc       int                     `json:"limitSoc,omitempty"`
+	Features       []string                `json:"features,omitempty"`
+	Plans          []planStruct            `json:"plans,omitempty"`
+	RepeatingPlans []vehicle.RepeatingPlan `json:"repeatingPlans"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -43,13 +44,14 @@ func (site *Site) publishVehicles() {
 		instance := v.Instance()
 
 		res[v.Name()] = vehicleStruct{
-			Title:    instance.Title(),
-			Icon:     instance.Icon(),
-			Capacity: instance.Capacity(),
-			MinSoc:   v.GetMinSoc(),
-			LimitSoc: v.GetLimitSoc(),
-			Features: lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
-			Plans:    plans,
+			Title:          instance.Title(),
+			Icon:           instance.Icon(),
+			Capacity:       instance.Capacity(),
+			MinSoc:         v.GetMinSoc(),
+			LimitSoc:       v.GetLimitSoc(),
+			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
+			Plans:          plans,
+			RepeatingPlans: v.GetRepeatingPlans(),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
