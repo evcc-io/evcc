@@ -1,5 +1,5 @@
 <template>
-	<div class="mode-group border d-inline-flex" role="group">
+	<div class="mode-group border d-inline-flex" :class="{ large }" role="group">
 		<button
 			v-for="(option, i) in options"
 			:id="i === 0 ? id : null"
@@ -23,6 +23,7 @@ export default {
 		options: Array,
 		modelValue: [Number, String],
 		equalWidth: Boolean,
+		large: Boolean,
 	},
 	emits: ["update:modelValue"],
 };
@@ -55,7 +56,11 @@ export default {
 	color: var(--evcc-background);
 	background: var(--evcc-default-text);
 }
-.btn-group {
+.modal-group.large {
+	height: 32px;
+}
+.large .btn {
+	height: 32px;
 	border-radius: 16px;
 }
 </style>

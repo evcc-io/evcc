@@ -14,55 +14,43 @@ import { Doughnut } from "vue-chartjs";
 import { DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
 import LegendList from "./LegendList.vue";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter from "../../mixins/formatter";
 import colors from "../../colors";
-import { GROUPS } from "./types";
+import { TYPES, GROUPS } from "./types";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
 export default {
-	name: "EnergyGroupedChart",
+	name: "CostGroupedChart",
 	components: { Doughnut, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.NONE },
-		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
+		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		costType: { type: String, default: TYPES.PRICE },
 	},
 	mixins: [formatter],
 	computed: {
 		chartData() {
-			console.log("update energy aggregate data");
+			console.log(`update ${this.costType} grouped data`);
 			const aggregatedData = {};
 
-			if (this.groupBy === GROUPS.NONE) {
-				const total = this.sessions.reduce((acc, s) => acc + s.chargedEnergy, 0);
-				const self = this.sessions.reduce(
-					(acc, s) => acc + (s.chargedEnergy / 100) * s.solarPercentage,
-					0
-				);
-				aggregatedData.self = self;
-				aggregatedData.grid = total - self;
-			} else {
-				this.sessions.forEach((session) => {
-					const groupKey = session[this.groupBy];
-					if (!aggregatedData[groupKey]) {
-						aggregatedData[groupKey] = 0;
-					}
-					aggregatedData[groupKey] += session.chargedEnergy;
-				});
-			}
+			this.sessions.forEach((session) => {
+				const groupKey = session[this.groupBy];
+				if (!aggregatedData[groupKey]) {
+					aggregatedData[groupKey] = 0;
+				}
+				if (this.costType === TYPES.PRICE) {
+					aggregatedData[groupKey] += session.price;
+				} else if (this.costType === TYPES.CO2) {
+					aggregatedData[groupKey] += session.co2PerKWh * session.chargedEnergy;
+				}
+			});
 
-			// Sort the data by energy in descending order
-			const sortedEntries = Object.entries(aggregatedData); //.sort((a, b) => b[1] - a[1]);
-
-			const labels = sortedEntries.map(([label]) =>
-				this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${label}`) : label
-			);
+			const sortedEntries = Object.entries(aggregatedData).sort((a, b) => b[1] - a[1]);
+			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => value);
-			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const backgroundColor = sortedEntries.map(
-				([label]) => this.colorMappings[colorGroup][label]
-			);
+			const backgroundColor = labels.map((label) => this.colorMappings[this.groupBy][label]);
 
 			return {
 				labels: labels,
@@ -102,7 +90,9 @@ export default {
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
-								return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
+								return this.costType === TYPES.PRICE
+									? this.fmtMoney(value, this.currency)
+									: this.fmtGrams(value);
 							},
 							labelColor: tooltipLabelColor(false),
 						},

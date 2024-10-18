@@ -1,5 +1,5 @@
 import { Chart, Tooltip } from "chart.js";
-
+import colors from "../../colors";
 // Register common components
 export function registerChartComponents(components) {
   Chart.register(...components);
@@ -39,15 +39,24 @@ export const commonOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: {
-      display: false,
-    },
+    legend: { display: false },
     tooltip: {
       backgroundColor: "#000000cc",
       boxPadding: 5,
-      usePointStyle: true,
+      usePointStyle: false,
       borderWidth: 0.00001,
-      labelPointStyle: "circle",
     },
   },
 };
+
+export function tooltipLabelColor(useBorder = false) {
+  return function (item) {
+    const { backgroundColor, borderColor } = item.element.options;
+    const color = useBorder ? borderColor : backgroundColor;
+    return {
+      borderColor: !item.raw ? colors.muted : "#fff",
+      borderWidth: 1,
+      backgroundColor: color,
+    };
+  };
+}

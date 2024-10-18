@@ -83,13 +83,9 @@ export default {
       }).format(number);
     },
     fmtGrams: function (gramms, withUnit = true) {
-      // handle gram, kilogram, tonne
       let unit = "gram";
       let value = gramms;
-      if (gramms >= 1000000) {
-        unit = "tonne";
-        value = gramms / 1000000;
-      } else if (gramms >= 1000) {
+      if (gramms >= 1000) {
         unit = "kilogram";
         value = gramms / 1000;
       }

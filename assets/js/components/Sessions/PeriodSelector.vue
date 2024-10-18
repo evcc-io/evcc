@@ -1,8 +1,16 @@
 <template>
 	<SelectGroup
-		id="sessionsPeriod"
-		class="w-100"
+		id="sessionsPeriodSmall"
+		class="w-100 d-flex d-lg-none"
 		:options="periodOptions"
+		:modelValue="period"
+		@update:modelValue="changePeriod"
+	/>
+	<SelectGroup
+		id="sessionsPeriod"
+		class="w-100 d-none d-lg-flex"
+		:options="periodOptions"
+		large
 		:modelValue="period"
 		@update:modelValue="changePeriod"
 	/>
@@ -17,14 +25,8 @@ export default {
 		SelectGroup,
 	},
 	props: {
-		period: {
-			type: String,
-			required: true,
-		},
-		periodOptions: {
-			type: Array,
-			required: true,
-		},
+		period: { type: String, required: true },
+		periodOptions: { type: Array, required: true },
 	},
 	methods: {
 		changePeriod(newPeriod) {

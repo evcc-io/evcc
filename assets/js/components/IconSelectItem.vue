@@ -1,7 +1,16 @@
 <template>
 	<div>
-		<button type="button" class="btn" :class="{ active }" @click="$emit('click', value)">
+		<button
+			type="button"
+			class="btn gap-2 btn-sm"
+			:class="{ active, withLabel: !!label }"
+			:disabled="disabled"
+			@click="$emit('click', value)"
+		>
 			<slot></slot>
+			<span v-if="label" class="text-nowrap text-truncate">
+				{{ label }}
+			</span>
 		</button>
 	</div>
 </template>
@@ -13,6 +22,8 @@ export default {
 	props: {
 		value: String,
 		active: Boolean,
+		label: String,
+		disabled: Boolean,
 	},
 };
 </script>
@@ -35,5 +46,9 @@ export default {
 .btn.active {
 	color: var(--evcc-background);
 	background: var(--evcc-default-text);
+}
+.btn.withLabel {
+	width: auto;
+	padding: 0 1rem;
 }
 </style>

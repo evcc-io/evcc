@@ -10,23 +10,13 @@
 <script>
 import { Bar } from "vue-chartjs";
 import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter from "../../mixins/formatter";
 import colors from "../../colors";
+import { TYPES, GROUPS, PERIODS } from "./types";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
-
-const GROUPS = {
-	NONE: "none",
-	LOADPOINT: "loadpoint",
-	VEHICLE: "vehicle",
-};
-
-const COST_TYPES = {
-	PRICE: "price",
-	CO2: "co2",
-};
 
 export default {
 	name: "CostHistoryChart",
@@ -34,10 +24,11 @@ export default {
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
-		costType: { type: String, default: COST_TYPES.PRICE },
-		period: { type: String, default: "total" },
+		costType: { type: String, default: TYPES.PRICE },
+		period: { type: String, default: PERIODS.TOTAL },
 		currency: { type: String, default: "EUR" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		suggestedMaxCost: { type: Number, default: 0 },
 	},
 	mixins: [formatter],
 	computed: {
@@ -60,7 +51,7 @@ export default {
 			return new Date(this.sessions[this.sessions.length - 1].created);
 		},
 		chartData() {
-			console.log("update history data");
+			console.log("update cost history data");
 			const result = {};
 			const groups = new Set();
 
@@ -68,10 +59,10 @@ export default {
 				//const lastDay = new Date(this.year, this.month, 0);
 				//const daysInMonth = this.lastDay.getDate();
 				let xFrom, xTo;
-				if (this.period === "total") {
+				if (this.period === PERIODS.TOTAL) {
 					xFrom = this.firstDay.getFullYear();
 					xTo = this.lastDay.getFullYear();
-				} else if (this.period === "year") {
+				} else if (this.period === PERIODS.YEAR) {
 					xFrom = 1;
 					xTo = 12;
 				} else {
@@ -92,9 +83,9 @@ export default {
 				this.sessions.forEach((session) => {
 					let index;
 					const date = new Date(session.created);
-					if (this.period === "month") {
+					if (this.period === PERIODS.MONTH) {
 						index = date.getDate();
-					} else if (this.period === "year") {
+					} else if (this.period === PERIODS.YEAR) {
 						index = date.getMonth() + 1;
 					} else {
 						index = date.getFullYear();
@@ -105,7 +96,7 @@ export default {
 					groups.add(groupKey);
 
 					const value =
-						this.costType === COST_TYPES.PRICE
+						this.costType === TYPES.PRICE
 							? session.price
 							: session.co2PerKWh * session.chargedEnergy;
 
@@ -144,12 +135,11 @@ export default {
 			});
 
 			// add average price line
-			const costColor =
-				this.costType === COST_TYPES.PRICE ? colors.pricePerKWh : colors.co2PerKWh;
+			const costColor = this.costType === TYPES.PRICE ? colors.pricePerKWh : colors.co2PerKWh;
 			datasets.push({
 				type: "line",
 				label:
-					this.costType === COST_TYPES.PRICE
+					this.costType === TYPES.PRICE
 						? this.pricePerKWhUnit(this.currency, false)
 						: "gCO₂e/kWh",
 				data: Object.values(result).map((index) => index.avgCost || null),
@@ -178,7 +168,7 @@ export default {
 					const min = Math.min(...items);
 					const max = Math.max(...items);
 					const format = (value, withUnit) => {
-						return this.costType === COST_TYPES.PRICE
+						return this.costType === TYPES.PRICE
 							? this.fmtPricePerKWh(value, this.currency, true, withUnit)
 							: this.fmtGrams(value, withUnit);
 					};
@@ -186,7 +176,7 @@ export default {
 				} else {
 					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 					value =
-						this.costType === COST_TYPES.PRICE
+						this.costType === TYPES.PRICE
 							? this.fmtMoney(total, this.currency, true, true)
 							: this.fmtGrams(total);
 				}
@@ -226,9 +216,9 @@ export default {
 						callbacks: {
 							title: (tooltipItem) => {
 								const { label } = tooltipItem[0];
-								if (this.period === "total") {
+								if (this.period === PERIODS.TOTAL) {
 									return label;
-								} else if (this.period === "year") {
+								} else if (this.period === PERIODS.YEAR) {
 									const date = new Date(this.year, label - 1, 1);
 									return this.fmtMonth(date);
 								} else {
@@ -248,7 +238,7 @@ export default {
 
 									return (
 										"⌀ " +
-										(this.costType === COST_TYPES.PRICE
+										(this.costType === TYPES.PRICE
 											? this.fmtPricePerKWh(value, this.currency, false)
 											: this.fmtCo2Medium(value))
 									);
@@ -257,19 +247,12 @@ export default {
 								return (
 									datasetLabel +
 									": " +
-									(this.costType === COST_TYPES.PRICE
+									(this.costType === TYPES.PRICE
 										? this.fmtMoney(value || 0, this.currency, true, true)
 										: this.fmtGrams(value || 0))
 								);
 							},
-							labelColor: (item) => {
-								const { backgroundColor } = item.element.options;
-								const white = "#fff";
-								return {
-									borderColor: !item.raw ? colors.muted : white,
-									backgroundColor,
-								};
-							},
+							labelColor: tooltipLabelColor(false),
 							labelTextColor: (item) => {
 								return !item.raw ? colors.muted : "#fff";
 							},
@@ -293,12 +276,12 @@ export default {
 						grid: { color: colors.border },
 						title: {
 							text: "kgCO₂e",
-							display: this.costType === COST_TYPES.CO2,
+							display: this.costType === TYPES.CO2,
 							color: colors.muted,
 						},
 						ticks: {
 							callback: (value) =>
-								this.costType === COST_TYPES.PRICE
+								this.costType === TYPES.PRICE
 									? this.fmtMoney(value, this.currency, false, true)
 									: this.fmtNumber(value / 1e3, 0),
 							color: colors.muted,
@@ -309,12 +292,13 @@ export default {
 					y1: {
 						position: "left",
 						border: { display: false },
+						suggestedMax: this.suggestedMaxCost,
 						grid: {
 							drawOnChartArea: false,
 						},
 						title: {
 							text:
-								this.costType === COST_TYPES.CO2
+								this.costType === TYPES.CO2
 									? "gCO₂e/kWh"
 									: this.pricePerKWhUnit(this.currency, false),
 							display: true,
@@ -322,7 +306,7 @@ export default {
 						},
 						ticks: {
 							callback: (value) =>
-								this.costType === COST_TYPES.PRICE
+								this.costType === TYPES.PRICE
 									? this.fmtPricePerKWh(value, this.currency, false, false)
 									: this.fmtNumber(value, 0),
 							color: colors.muted,

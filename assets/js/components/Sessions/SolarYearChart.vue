@@ -20,7 +20,7 @@
 <script>
 import { Radar } from "vue-chartjs";
 import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter from "../../mixins/formatter";
 import colors, { dimColor, lightenColor } from "../../colors";
 import LegendList from "./LegendList.vue";
@@ -158,19 +158,13 @@ export default {
 						intersect: false,
 						mode: "index",
 						position: "topBottomCenter",
-						labelPointStyle: "circle",
 						callbacks: {
 							label: (tooltipItem) => {
 								const value = tooltipItem.raw || 0;
 								const datasetLabel = tooltipItem.dataset.label || "";
 								return datasetLabel + ": " + this.fmtPercentage(value, 1);
 							},
-							labelColor: (item) => {
-								const { borderColor } = item.element.options;
-								return {
-									backgroundColor: borderColor,
-								};
-							},
+							labelColor: tooltipLabelColor(true),
 						},
 					},
 				},

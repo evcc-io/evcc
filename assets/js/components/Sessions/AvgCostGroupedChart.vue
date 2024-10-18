@@ -15,52 +15,53 @@ import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter from "../../mixins/formatter";
 import colors, { dimColor } from "../../colors";
+import { TYPES, GROUPS } from "./types";
 import LegendList from "./LegendList.vue";
-import { GROUPS } from "./types";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
 export default {
-	name: "SolarGroupedChart",
+	name: "AvgCostGroupedChart",
 	components: { PolarArea, LegendList },
 	props: {
 		sessions: { type: Array, default: () => [] },
+		currency: { type: String, default: "EUR" },
 		groupBy: { type: String, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		suggestedMax: { type: Number, default: 0 },
+		costType: { type: String, default: TYPES.PRICE },
 	},
 	mixins: [formatter],
 	computed: {
 		chartData() {
-			console.log("update solar grouped data");
+			console.log(`update ${this.costType} grouped data`);
 			const aggregatedData = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
 				if (!aggregatedData[groupKey]) {
-					aggregatedData[groupKey] = { grid: 0, self: 0 };
+					aggregatedData[groupKey] = { energy: 0, cost: 0 };
 				}
-				const charged = session.chargedEnergy;
-				const self = (charged / 100) * session.solarPercentage;
-				const grid = charged - self;
-				aggregatedData[groupKey].self += self;
-				aggregatedData[groupKey].grid += grid;
+				const chargedEnergy = session.chargedEnergy;
+				if (this.costType === TYPES.CO2) {
+					aggregatedData[groupKey].energy += chargedEnergy;
+					aggregatedData[groupKey].cost += session.co2PerKWh * chargedEnergy;
+				} else if (this.costType === TYPES.PRICE) {
+					aggregatedData[groupKey].energy += chargedEnergy;
+					aggregatedData[groupKey].cost += session.price;
+				}
 			});
 
-			console.log("solar grouped data", aggregatedData);
+			console.log(`${this.costType} grouped data`, aggregatedData);
 
-			// Sort the data by total energy in descending order
 			const sortedEntries = Object.entries(aggregatedData).sort(
-				(a, b) => b[1].grid + b[1].self - (a[1].grid + a[1].self)
+				(a, b) => b[1].cost - a[1].cost
 			);
 			const labels = sortedEntries.map(([label]) => label);
-			const data = sortedEntries.map(([, value]) => {
-				const total = value.grid + value.self;
-				const selfPercentage = (value.self / total) * 100;
-				return selfPercentage;
-			});
+			const data = sortedEntries.map(([, value]) => value.cost / value.energy);
 
-			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const borderColors = labels.map((label) => this.colorMappings[colorGroup][label]);
+			console.log(`${this.costType} grouped data`, labels, data);
+			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {
 				labels: labels,
@@ -77,7 +78,14 @@ export default {
 			return this.chartData.labels.map((label, index) => ({
 				label: label,
 				color: this.chartData.datasets[0].borderColor[index],
-				value: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
+				value:
+					this.costType === TYPES.CO2
+						? this.fmtCo2Short(this.chartData.datasets[0].data[index])
+						: this.fmtPricePerKWh(
+								this.chartData.datasets[0].data[index],
+								this.currency,
+								true
+							),
 			}));
 		},
 		options() {
@@ -101,7 +109,13 @@ export default {
 							title: () => null,
 							label: (tooltipItem) => {
 								const { label, raw = 0 } = tooltipItem;
-								return label + ": " + this.fmtPercentage(raw, 1);
+								return (
+									label +
+									": " +
+									(this.costType === TYPES.CO2
+										? this.fmtCo2Long(raw)
+										: this.fmtPricePerKWh(raw, this.currency))
+								);
 							},
 							labelColor: tooltipLabelColor(true),
 						},
@@ -109,13 +123,20 @@ export default {
 				},
 				scales: {
 					r: {
-						min: 0,
-						max: 100,
+						suggestedMin: 0,
+						suggestedMax: this.suggestedMax,
+						beginAtZero: false,
 						ticks: {
-							stepSize: 25,
 							color: colors.muted,
 							backdropColor: colors.background,
+							font: { size: 10 },
+							callback: (value) =>
+								this.costType === TYPES.CO2
+									? this.fmtCo2Short(value)
+									: this.fmtPricePerKWh(value, this.currency, true),
+							maxTicksLimit: 6,
 						},
+						angleLines: { display: false },
 						grid: { color: colors.border },
 					},
 				},

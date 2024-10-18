@@ -9,9 +9,8 @@ const SESSION_INFO = "session_info";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
-const SESSIONS_SOLAR_GROUP = "sessions_solar_group";
-const SESSIONS_COST_GROUP = "sessions_cost_group";
-const SESSIONS_COST_TYPE = "sessions_cost_type";
+const SESSIONS_GROUP = "sessions_group";
+const SESSIONS_TYPE = "sessions_type";
 
 function read(key) {
   return window.localStorage[key];
@@ -63,9 +62,8 @@ const settings = reactive({
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
   savingsRegion: read(SAVINGS_REGION),
-  sessionsSolarGroup: read(SESSIONS_SOLAR_GROUP),
-  sessionsCostGroup: read(SESSIONS_COST_GROUP),
-  sessionsCostType: read(SESSIONS_COST_TYPE),
+  sessionsGroup: read(SESSIONS_GROUP),
+  sessionsType: read(SESSIONS_TYPE),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -77,7 +75,6 @@ watch(() => settings.sessionInfo, saveArray(SESSION_INFO));
 watch(() => settings.sessionColumns, saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
-watch(() => settings.sessionsSolarGroup, save(SESSIONS_SOLAR_GROUP));
-watch(() => settings.sessionsCostGroup, save(SESSIONS_COST_GROUP));
-watch(() => settings.sessionsCostType, save(SESSIONS_COST_TYPE));
+watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
+watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 export default settings;

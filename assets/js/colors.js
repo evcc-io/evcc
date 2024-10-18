@@ -13,9 +13,9 @@ const colors = reactive({
   border: null,
   self: null,
   grid: null,
-  pricePerKWh: "#FFB900FF",
+  co2PerKWh: null,
+  pricePerKWh: null,
   price: "#FF912FFF",
-  co2PerKWh: "#00C997FF",
   co2: "#00916EFF",
   background: null,
   selfPalette: ["#0fde41ff", "#0ba631ff", "#076f20ff", "#054e18ff", "#043611ff", "#02230bff"],
@@ -43,6 +43,8 @@ function updateCssColors() {
   colors.self = style.getPropertyValue("--evcc-self");
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.background = style.getPropertyValue("--evcc-background");
+  colors.pricePerKWh = style.getPropertyValue("--evcc-grid");
+  colors.co2PerKWh = style.getPropertyValue("--evcc-grid");
 }
 
 // update colors on theme change

@@ -1,8 +1,10 @@
 <template>
-	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mt-3 mb-5">
+	<h3 class="fw-normal mb-4">Übersicht</h3>
+
+	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mb-5">
 		<p>{{ $t("sessions.noData") }}</p>
 	</div>
-	<div v-else class="my-5 table-outer">
+	<div v-else class="mb-5 table-outer">
 		<table class="table text-nowrap">
 			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
@@ -449,11 +451,11 @@ export default {
 	z-index: 1;
 }
 .sticky-top {
-	top: 6.5rem;
+	top: 7rem;
 }
 @media (min-width: 992px) {
 	.sticky-top {
-		top: 3rem;
+		top: 4.5rem;
 	}
 }
 .sticky-top th {
