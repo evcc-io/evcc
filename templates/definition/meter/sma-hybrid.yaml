@@ -18,6 +18,7 @@ params:
       de: Der ModbusTCP Server muss aktiviert sein.
   - name: capacity
     advanced: true
+  - name: maxacpower
   - name: watchdog
     type: duration
     default: 30s
@@ -183,4 +184,5 @@ render: |
                 type: writemultiple
                 decode: uint32
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

@@ -18,6 +18,7 @@ params:
       - 2
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -134,7 +135,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 8 # EMSPowerMode 8 disables discharge. Charging possible. Charge from PV+AC according to the EMSPowerSet below
+            value: 2 # EMSPowerMode 2 "Charge-PV"-Mode. If EMSPowerSet=0 only PV is used to charge. Value 6 "Conserve"-Mode can be alternatively used.
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -156,7 +157,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2 # Charge from PV+AC according to the EMSPowerSet below
+            value: 2 # Charge from PV+AC according to the EMSPowerSet below. PV-Preferred. "Import-AC"-Mode (Value: 4) would prefer Grid-Power and reduce PV-Power generated.
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -174,4 +175,5 @@ render: |
                 type: writemultiple
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

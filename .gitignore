@@ -6,6 +6,7 @@ __debug_bin*
 *.py
 *.log
 *.json
+!.devcontainer/devcontainer.json
 *.yaml
 !templates/**/*.yaml
 !templates/**/*-schema.json

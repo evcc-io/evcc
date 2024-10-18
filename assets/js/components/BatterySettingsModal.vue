@@ -337,7 +337,7 @@ export default {
 			}
 			options.push({
 				value: 0,
-				name: this.$t("batterySettings.bufferStart.never"),
+				name: this.getBufferStartName(0),
 			});
 			return options;
 		},
@@ -362,7 +362,7 @@ export default {
 			}
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
-				.map(({ soc, capacity }) => {
+				.map(({ soc = 0, capacity }) => {
 					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
@@ -489,10 +489,10 @@ export default {
 				console.error(err);
 			}
 		},
-		getBufferStartName(soc) {
-			return this.$t(`batterySettings.bufferStart.${soc === 100 ? "full" : "above"}`, {
-				soc: this.fmtSoc(soc),
-			});
+		getBufferStartName(value) {
+			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
+			const soc = this.fmtSoc(value);
+			return this.$t(`batterySettings.bufferStart.${key}`, { soc });
 		},
 	},
 };

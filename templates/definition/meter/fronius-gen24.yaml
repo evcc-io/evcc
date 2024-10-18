@@ -18,6 +18,7 @@ params:
     deprecated: true
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
@@ -164,4 +165,5 @@ render: |
             id: 1
             value: 124:0:InOutWRte_RvrtTms
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
