@@ -1,0 +1,105 @@
+<template>
+	<div class="row" v-if="chartData.labels.length > 1">
+		<div class="col-12 col-md-6 mb-3">
+			<Doughnut :data="chartData" :options="options" />
+		</div>
+		<div class="col-12 col-md-6 d-flex align-items-center">
+			<LegendList :legends="legends" extra-class="flex-md-column" />
+		</div>
+	</div>
+</template>
+
+<script>
+import { Doughnut } from "vue-chartjs";
+import { DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
+import LegendList from "./LegendList.vue";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import formatter from "../../mixins/formatter";
+import colors from "../../colors";
+import { TYPES, GROUPS } from "./types";
+
+registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
+
+export default {
+	name: "CostGroupedChart",
+	components: { Doughnut, LegendList },
+	props: {
+		sessions: { type: Array, default: () => [] },
+		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		costType: { type: String, default: TYPES.PRICE },
+	},
+	mixins: [formatter],
+	computed: {
+		chartData() {
+			console.log(`update ${this.costType} grouped data`);
+			const aggregatedData = {};
+
+			this.sessions.forEach((session) => {
+				const groupKey = session[this.groupBy];
+				if (!aggregatedData[groupKey]) {
+					aggregatedData[groupKey] = 0;
+				}
+				if (this.costType === TYPES.PRICE) {
+					aggregatedData[groupKey] += session.price;
+				} else if (this.costType === TYPES.CO2) {
+					aggregatedData[groupKey] += session.co2PerKWh * session.chargedEnergy;
+				}
+			});
+
+			const sortedEntries = Object.entries(aggregatedData).sort((a, b) => b[1] - a[1]);
+			const labels = sortedEntries.map(([label]) => label);
+			const data = sortedEntries.map(([, value]) => value);
+			const backgroundColor = labels.map((label) => this.colorMappings[this.groupBy][label]);
+
+			return {
+				labels: labels,
+				datasets: [{ data, backgroundColor }],
+			};
+		},
+		legends() {
+			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
+			return this.chartData.labels.map((label, index) => ({
+				label: label,
+				color: this.chartData.datasets[0].backgroundColor[index],
+				value: this.fmtPercentage(
+					(100 / total) * this.chartData.datasets[0].data[index],
+					1
+				),
+			}));
+		},
+		options() {
+			return {
+				...commonOptions,
+				locale: this.$i18n?.locale,
+				aspectRatio: 1,
+				borderRadius: 10,
+				color: colors.text,
+				borderWidth: 3,
+				borderColor: colors.background,
+				cutout: "70%",
+				radius: "95%",
+				animation: { duration: 250 },
+				plugins: {
+					...commonOptions.plugins,
+					tooltip: {
+						...commonOptions.plugins.tooltip,
+						mode: "index",
+						position: "center",
+						intersect: false,
+						callbacks: {
+							label: (tooltipItem) => {
+								const value = tooltipItem.raw || 0;
+								return this.costType === TYPES.PRICE
+									? this.fmtMoney(value, this.currency)
+									: this.fmtGrams(value);
+							},
+							labelColor: tooltipLabelColor(false),
+						},
+					},
+				},
+			};
+		},
+	},
+};
+</script>

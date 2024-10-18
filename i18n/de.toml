@@ -652,6 +652,17 @@ allLoadpoints = "Alle Ladepunkte"
 allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
+[sessions.group]
+co2 = "Emissionen"
+grid = "Netz"
+price = "Preis"
+self = "Sonne"
+
+[sessions.period]
+month = "Monat"
+total = "Gesamt"
+year = "Jahr"
+
 [settings]
 title = "Darstellung"
 
