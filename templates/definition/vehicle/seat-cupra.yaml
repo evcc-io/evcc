@@ -2,7 +2,7 @@ template: cupra
 products:
   - brand: Seat
     description:
-      generic: CupraConnect Gen4 (Born)
+      generic: Born
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
