@@ -269,6 +269,13 @@ messaging:
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?
+  # examples for notifications:
+  # Start/Endtime {{printf `%02d:%02d` now.Hour now.Minute}} Uhr
+  # SoC {{round (.vehicleSoc) 0}} %
+  # Range ${vehicleRange} Km
+  # Charged Energy ${chargedEnergy:%.1fk} kWh
+  # Total Price {{round (.sessionPrice) 2}} €
+  # Average Price {{round (mulf .sessionPricePerKWh 100) 2}} ct/kWh
   services:
   # - type: pushover
   #   app: # app id
