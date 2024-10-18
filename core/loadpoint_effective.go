@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sort"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,7 +32,23 @@ func (lp *Loadpoint) EffectivePriority() int {
 // vehiclePlanSoc returns the next vehicle plan time and soc
 func (lp *Loadpoint) vehiclePlanSoc() (time.Time, int) {
 	if v := lp.GetVehicle(); v != nil {
-		return vehicle.Settings(lp.log, v).GetPlanSoc()
+		// merge the static plan with the repeating ones to sort them in one array
+
+		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps()
+
+		planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
+		plans = append(plans, PlanStruct{
+			Soc:  soc,
+			Time: planTime,
+		})
+
+		sort.Slice(plans, func(i, j int) bool {
+			return plans[i].Time.After(plans[j].Time)
+		})
+
+		if len(plans) > 0 {
+			return plans[0].Time, plans[0].Soc
+		}
 	}
 	return time.Time{}, 0
 }

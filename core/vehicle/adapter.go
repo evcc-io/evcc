@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -132,4 +133,48 @@ func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
 	v.log.DEBUG.Printf("update repeating plans triggered error: %s", err)
 
 	return []RepeatingPlan{}
+}
+
+func (v *adapter) GetRepeatingPlansWithTimestamps() []core.PlanStruct {
+	var formattedPlans []core.PlanStruct
+
+	plans := v.GetRepeatingPlans()
+
+	for _, p := range plans {
+		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(v)...)
+	}
+
+	return formattedPlans
+}
+
+func (p *RepeatingPlan) ToPlansWithTimestamp(v *adapter) []core.PlanStruct {
+	var formattedPlans []core.PlanStruct
+
+	now := time.Now()
+
+	// current weekday as integer, Sunday (0 in Go) is 6 in our representation, Monday (1 in Go) is 1, Tuesday (2 in G) is 2, ...
+	// in other words in Go the week begins with the Sunday, in our representation the week begins with Monday
+	currentWeekday := (int(now.Weekday()) + 6) % 7
+
+	for _, w := range p.Weekdays {
+		// Calculate the difference in days to the target weekday
+		dayOffset := (w - currentWeekday + 7) % 7
+
+		planTime, err := time.Parse("12:12", p.Time)
+		if err != nil {
+			v.log.DEBUG.Printf("formatting repeating plans time %s triggered error: %s", p.Time, err)
+			return []core.PlanStruct{}
+		}
+
+		// Adjust the current timestamp to the target weekday and set the time
+		timestamp := now.AddDate(0, 0, dayOffset).Truncate(24 * time.Hour).Add(time.Hour*time.Duration(planTime.Hour()) + time.Minute*time.Duration(planTime.Minute()))
+
+		// Append the resulting plan with the calculated timestamp
+		formattedPlans = append(formattedPlans, core.PlanStruct{
+			Soc:  p.Soc,
+			Time: timestamp,
+		})
+	}
+
+	return formattedPlans
 }

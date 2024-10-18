@@ -12,7 +12,7 @@ import (
 	"github.com/samber/lo"
 )
 
-type planStruct struct {
+type PlanStruct struct {
 	Soc  int       `json:"soc"`
 	Time time.Time `json:"time"`
 }
@@ -24,7 +24,7 @@ type vehicleStruct struct {
 	MinSoc         int                     `json:"minSoc,omitempty"`
 	LimitSoc       int                     `json:"limitSoc,omitempty"`
 	Features       []string                `json:"features,omitempty"`
-	Plans          []planStruct            `json:"plans,omitempty"`
+	Plans          []PlanStruct            `json:"plans,omitempty"`
 	RepeatingPlans []vehicle.RepeatingPlan `json:"repeatingPlans"`
 }
 
@@ -34,11 +34,11 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plans []planStruct
+		var plans []PlanStruct
 
 		// TODO: add support for multiple plans
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plans = append(plans, planStruct{Soc: soc, Time: time})
+			plans = append(plans, PlanStruct{Soc: soc, Time: time})
 		}
 
 		instance := v.Instance()

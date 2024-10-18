@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 )
 
 var _ API = (*dummy)(nil)
@@ -55,4 +56,8 @@ func (v *dummy) SetRepeatingPlans(plans []RepeatingPlan) error {
 
 func (v *dummy) GetRepeatingPlans() []RepeatingPlan {
 	return []RepeatingPlan{}
+}
+
+func (v *dummy) GetRepeatingPlansWithTimestamps() []core.PlanStruct {
+	return []core.PlanStruct{}
 }
