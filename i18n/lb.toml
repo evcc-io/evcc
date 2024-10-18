@@ -450,6 +450,7 @@ smartCostCheap = "Bëlleg vum Reseau oplueden"
 smartCostClean = "Grengt Luede vun Netz"
 title = "Astellungen {0}"
 vehicle = "Gefier"
+batteryUsage = "Hausbatterie"
 
 [main.loadpointSettings.limitSoc]
 description = "Luedzil dat benotzt gëtt, wann dëst Gefier verbonnen ass."
@@ -574,6 +575,7 @@ vehicleLimit = "Limitt vum Gefier."
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."
+batteryBoost = "Batterie Boost ass aktiv."
 
 [notifications]
 dismissAll = "Notifikatiounen ewechuelen"
@@ -717,3 +719,10 @@ lineError = "An {0} gouf ee Feeler fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Schnell vun der Hausbatterie lueden."
+once = "Boost ass dir dës Luedsessioun aktivéiert."
+label = "Batterie Boost"
+mode = "Nëmmen am PV- a Min+PV-Modus verfügbar."

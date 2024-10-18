@@ -459,6 +459,7 @@ smartCostCheap = "Chargement bon marché depuis le réseau"
 smartCostClean = "Chargement propre depuis le réseau"
 title = "Réglages {0}"
 vehicle = "Véhicule"
+batteryUsage = "Batterie domestique"
 
 [main.loadpointSettings.limitSoc]
 description = "Limite de charge à utiliser quand ce véhicule est connecté."
@@ -583,6 +584,7 @@ vehicleLimit = "Limit du véhicule."
 vehicleLimitReached = "Limite du véhicule atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 welcome = "Courte charge initiale pour confirmer la connexion."
+batteryBoost = "Boost Batterie actif."
 
 [notifications]
 dismissAll = "Supprimer tout"
@@ -731,3 +733,10 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+once = "Boost actif pour cette session de charge."
+description = "Chargement rapide de la batterie domestique."
+label = "Boost Batterie "
+mode = "Uniquement disponible en mode solaire et min+solaire »."

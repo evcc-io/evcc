@@ -455,6 +455,7 @@ smartCostCheap = "Carregamento de rede barato"
 smartCostClean = "Carregamento de rede limpa"
 title = "Configurações {0}"
 vehicle = "Veículo"
+batteryUsage = "Bateria de casa"
 
 [main.loadpointSettings.limitSoc]
 description = "limite de compartilhamento que é usado quando este veículo está conectado."
@@ -581,6 +582,7 @@ vehicleLimit = "“Limite dos veículos.”"
 vehicleLimitReached = "Limite de veículo atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 welcome = "Carga inicial curta para confirmar a ligação."
+batteryBoost = "Boost da bateria ativo."
 
 [notifications]
 dismissAll = "Recusar tudos"
@@ -736,3 +738,10 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[main.loadpointSettings.batteryBoost]
+label = "Boost bateria "
+mode = "Disponível apenas nos modos solar e min+solar."
+once = "Boost ativo para esta sessão de carga."
+description = "Carga rápida da bateria de casa."
