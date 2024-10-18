@@ -31,7 +31,7 @@
 					:id="formId('day')"
 					v-model="selectedDay"
 					class="form-select me-2"
-					data-testid="plan-day"
+					data-testid="static-plan-day"
 					@change="preview"
 				>
 					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
@@ -51,7 +51,7 @@
 					type="time"
 					class="form-control mx-0"
 					:step="60 * 5"
-					data-testid="plan-time"
+					data-testid="static-plan-time"
 					required
 					@change="preview"
 				/>
@@ -67,7 +67,7 @@
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
-					data-testid="plan-soc"
+					data-testid="static-plan-soc"
 					@change="preview"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
@@ -92,14 +92,14 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 d-flex align-items-center justify-content-start">
+			<div class="col-7 col-lg-3 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
 						class="form-check-input"
 						type="checkbox"
 						role="switch"
-						data-testid="plan-active"
+						data-testid="static-plan-active"
 						:checked="!isNew"
 						:disabled="timeInThePast"
 						@change="toggle"
@@ -108,7 +108,7 @@
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline ms-auto me-4"
 					data-testid="plan-apply"
 					:disabled="timeInThePast"
 					@click="update"
@@ -138,7 +138,7 @@ const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
 export default {
-	name: "ChargingPlanSettingsEntry",
+	name: "ChargingPlanStaticSettings",
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -150,7 +150,7 @@ export default {
 		capacity: Number,
 		socBasedPlanning: Boolean,
 	},
-	emits: ["plan-updated", "plan-removed", "plan-preview"],
+	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data: function () {
 		return {
 			selectedDay: null,
@@ -298,7 +298,7 @@ export default {
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("plan-updated", {
+			this.$emit("static-plan-updated", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
@@ -316,7 +316,7 @@ export default {
 			if (checked) {
 				this.update();
 			} else {
-				this.$emit("plan-removed");
+				this.$emit("static-plan-removed");
 			}
 			this.enabled = checked;
 		},

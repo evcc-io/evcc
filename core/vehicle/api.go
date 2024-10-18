@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 )
 
 //go:generate mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
@@ -42,6 +43,13 @@ type API interface {
 	GetPlanSoc() (time.Time, int)
 	// SetPlanSoc sets the charge plan time and soc
 	SetPlanSoc(time.Time, int) error
+
+	// GetRepeatingPlans returns every repeating plan
+	GetRepeatingPlans() []RepeatingPlan
+	// SetRepeatingPlans stores every repeating plan
+	SetRepeatingPlans([]RepeatingPlan) error
+	// GetRepeatingPlansAsNormalPlans returns every repeating plan with a timestamp-key to sort
+	GetRepeatingPlansWithTimestamps() []core.PlanStruct
 
 	// // GetMinCurrent returns the min charging current
 	// GetMinCurrent() float64

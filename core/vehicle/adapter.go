@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -20,6 +21,13 @@ type adapter struct {
 	log         *util.Logger
 	name        string
 	api.Vehicle // TODO handle instance updates
+}
+
+type RepeatingPlan struct {
+	Weekdays []int  `json:"weekdays"`
+	Time     string `json:"time"`
+	Soc      int    `json:"soc"`
+	Active   bool   `json:"active"`
 }
 
 func (v *adapter) key() string {
@@ -102,4 +110,71 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	v.publish()
 
 	return nil
+}
+
+func (v *adapter) SetRepeatingPlans(plans []RepeatingPlan) error {
+	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
+
+	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
+
+	v.publish()
+
+	return nil
+}
+
+func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
+	var plans []RepeatingPlan
+
+	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
+	if err == nil {
+		return plans
+	}
+
+	v.log.DEBUG.Printf("update repeating plans triggered error: %s", err)
+
+	return []RepeatingPlan{}
+}
+
+func (v *adapter) GetRepeatingPlansWithTimestamps() []core.PlanStruct {
+	var formattedPlans []core.PlanStruct
+
+	plans := v.GetRepeatingPlans()
+
+	for _, p := range plans {
+		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(v)...)
+	}
+
+	return formattedPlans
+}
+
+func (p *RepeatingPlan) ToPlansWithTimestamp(v *adapter) []core.PlanStruct {
+	var formattedPlans []core.PlanStruct
+
+	now := time.Now()
+
+	// current weekday as integer, Sunday (0 in Go) is 6 in our representation, Monday (1 in Go) is 1, Tuesday (2 in G) is 2, ...
+	// in other words in Go the week begins with the Sunday, in our representation the week begins with Monday
+	currentWeekday := (int(now.Weekday()) + 6) % 7
+
+	for _, w := range p.Weekdays {
+		// Calculate the difference in days to the target weekday
+		dayOffset := (w - currentWeekday + 7) % 7
+
+		planTime, err := time.Parse("12:12", p.Time)
+		if err != nil {
+			v.log.DEBUG.Printf("formatting repeating plans time %s triggered error: %s", p.Time, err)
+			return []core.PlanStruct{}
+		}
+
+		// Adjust the current timestamp to the target weekday and set the time
+		timestamp := now.AddDate(0, 0, dayOffset).Truncate(24 * time.Hour).Add(time.Hour*time.Duration(planTime.Hour()) + time.Minute*time.Duration(planTime.Minute()))
+
+		// Append the resulting plan with the calculated timestamp
+		formattedPlans = append(formattedPlans, core.PlanStruct{
+			Soc:  p.Soc,
+			Time: timestamp,
+		})
+	}
+
+	return formattedPlans
 }
