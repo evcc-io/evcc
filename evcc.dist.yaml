@@ -258,7 +258,7 @@ messaging:
         SoC {{round (.vehicleSoc) 0}} %
         Range ${vehicleRange} Km
     stop: # charge stop event
-      title: Charge finished
+      title: Charge of ${vehicleTitle} finished
       msg: |
         End Time {{printf `%02d:%02d` now.Hour now.Minute}} Uhr
         SoC {{round (.vehicleSoc) 0}} %
