@@ -61,6 +61,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -136,5 +137,4 @@ render: |
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
