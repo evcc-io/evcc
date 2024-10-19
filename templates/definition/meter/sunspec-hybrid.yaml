@@ -79,7 +79,6 @@ render: |
       value: 
         - 203:WphC
         - 213:WphC
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -102,6 +101,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCWH # mppt 2
         scale: 0.001
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
