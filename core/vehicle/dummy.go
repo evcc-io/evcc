@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core"
 )
 
 var _ API = (*dummy)(nil)
@@ -50,14 +49,14 @@ func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
 }
 
 // SetRepeatingPlans stores every repeating plan
-func (v *dummy) SetRepeatingPlans(plans []RepeatingPlan) error {
+func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	return nil
 }
 
-func (v *dummy) GetRepeatingPlans() []RepeatingPlan {
-	return []RepeatingPlan{}
+func (v *dummy) GetRepeatingPlans() []api.RepeatingPlanStruct {
+	return []api.RepeatingPlanStruct{}
 }
 
-func (v *dummy) GetRepeatingPlansWithTimestamps() []core.PlanStruct {
-	return []core.PlanStruct{}
+func (v *dummy) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
+	return []api.PlanStruct{}
 }

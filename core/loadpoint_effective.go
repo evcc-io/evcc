@@ -37,13 +37,13 @@ func (lp *Loadpoint) vehiclePlanSoc() (time.Time, int) {
 		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps()
 
 		planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
-		plans = append(plans, PlanStruct{
+		plans = append(plans, api.PlanStruct{
 			Soc:  soc,
 			Time: planTime,
 		})
 
 		sort.Slice(plans, func(i, j int) bool {
-			return plans[i].Time.After(plans[j].Time)
+			return plans[i].Time.Before(plans[j].Time)
 		})
 
 		if len(plans) > 0 {

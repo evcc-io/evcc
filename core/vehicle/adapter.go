@@ -6,50 +6,42 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 )
 
-var _ API = (*adapter)(nil)
+var _ API = (*AdapterStruct)(nil)
 
 // Publish publishes vehicle updates at site level
 var Publish func()
 
-type adapter struct {
+type AdapterStruct struct {
 	log         *util.Logger
 	name        string
 	api.Vehicle // TODO handle instance updates
 }
 
-type RepeatingPlan struct {
-	Weekdays []int  `json:"weekdays"`
-	Time     string `json:"time"`
-	Soc      int    `json:"soc"`
-	Active   bool   `json:"active"`
-}
-
-func (v *adapter) key() string {
+func (v *AdapterStruct) key() string {
 	return fmt.Sprintf("vehicle.%s.", v.name)
 }
 
-func (v *adapter) publish() {
+func (v *AdapterStruct) publish() {
 	if Publish != nil {
 		Publish()
 	}
 }
 
-func (v *adapter) Instance() api.Vehicle {
+func (v *AdapterStruct) Instance() api.Vehicle {
 	return v.Vehicle
 }
 
-func (v *adapter) Name() string {
+func (v *AdapterStruct) Name() string {
 	return v.name
 }
 
 // GetMinSoc returns the min soc
-func (v *adapter) GetMinSoc() int {
+func (v *AdapterStruct) GetMinSoc() int {
 	if v, err := settings.Int(v.key() + keys.MinSoc); err == nil {
 		return int(v)
 	}
@@ -57,14 +49,14 @@ func (v *adapter) GetMinSoc() int {
 }
 
 // SetMinSoc sets the min soc
-func (v *adapter) SetMinSoc(soc int) {
+func (v *AdapterStruct) SetMinSoc(soc int) {
 	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.MinSoc, int64(soc))
 	v.publish()
 }
 
 // GetLimitSoc returns the limit soc
-func (v *adapter) GetLimitSoc() int {
+func (v *AdapterStruct) GetLimitSoc() int {
 	if v, err := settings.Int(v.key() + keys.LimitSoc); err == nil {
 		return int(v)
 	}
@@ -72,14 +64,14 @@ func (v *adapter) GetLimitSoc() int {
 }
 
 // SetLimitSoc sets the limit soc
-func (v *adapter) SetLimitSoc(soc int) {
+func (v *AdapterStruct) SetLimitSoc(soc int) {
 	v.log.DEBUG.Printf("set %s limit soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.LimitSoc, int64(soc))
 	v.publish()
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, int) {
+func (v *AdapterStruct) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
@@ -92,7 +84,7 @@ func (v *adapter) GetPlanSoc() (time.Time, int) {
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
+func (v *AdapterStruct) SetPlanSoc(ts time.Time, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -112,7 +104,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
-func (v *adapter) SetRepeatingPlans(plans []RepeatingPlan) error {
+func (v *AdapterStruct) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
 	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
@@ -122,8 +114,8 @@ func (v *adapter) SetRepeatingPlans(plans []RepeatingPlan) error {
 	return nil
 }
 
-func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
-	var plans []RepeatingPlan
+func (v *AdapterStruct) GetRepeatingPlans() []api.RepeatingPlanStruct {
+	var plans []api.RepeatingPlanStruct
 
 	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
 	if err == nil {
@@ -132,48 +124,16 @@ func (v *adapter) GetRepeatingPlans() []RepeatingPlan {
 
 	v.log.DEBUG.Printf("update repeating plans triggered error: %s", err)
 
-	return []RepeatingPlan{}
+	return []api.RepeatingPlanStruct{}
 }
 
-func (v *adapter) GetRepeatingPlansWithTimestamps() []core.PlanStruct {
-	var formattedPlans []core.PlanStruct
+func (v *AdapterStruct) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
+	var formattedPlans []api.PlanStruct
 
 	plans := v.GetRepeatingPlans()
 
 	for _, p := range plans {
-		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(v)...)
-	}
-
-	return formattedPlans
-}
-
-func (p *RepeatingPlan) ToPlansWithTimestamp(v *adapter) []core.PlanStruct {
-	var formattedPlans []core.PlanStruct
-
-	now := time.Now()
-
-	// current weekday as integer, Sunday (0 in Go) is 6 in our representation, Monday (1 in Go) is 1, Tuesday (2 in G) is 2, ...
-	// in other words in Go the week begins with the Sunday, in our representation the week begins with Monday
-	currentWeekday := (int(now.Weekday()) + 6) % 7
-
-	for _, w := range p.Weekdays {
-		// Calculate the difference in days to the target weekday
-		dayOffset := (w - currentWeekday + 7) % 7
-
-		planTime, err := time.Parse("12:12", p.Time)
-		if err != nil {
-			v.log.DEBUG.Printf("formatting repeating plans time %s triggered error: %s", p.Time, err)
-			return []core.PlanStruct{}
-		}
-
-		// Adjust the current timestamp to the target weekday and set the time
-		timestamp := now.AddDate(0, 0, dayOffset).Truncate(24 * time.Hour).Add(time.Hour*time.Duration(planTime.Hour()) + time.Minute*time.Duration(planTime.Minute()))
-
-		// Append the resulting plan with the calculated timestamp
-		formattedPlans = append(formattedPlans, core.PlanStruct{
-			Soc:  p.Soc,
-			Time: timestamp,
-		})
+		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp()...)
 	}
 
 	return formattedPlans

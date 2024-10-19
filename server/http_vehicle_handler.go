@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
 
@@ -123,7 +123,7 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 		}
 
 		var plansWrapper struct {
-			RepeatingPlans []vehicle.RepeatingPlan `json:"plans"`
+			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
 		}
 
 		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
