@@ -79,6 +79,7 @@ render: |
       value: 
         - 203:WphC
         - 213:WphC
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -125,5 +126,4 @@ render: |
       - 124:ChaState
       - 802:SoC
   capacity: {{ .capacity }} # kWh
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
