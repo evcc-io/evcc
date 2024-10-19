@@ -1209,7 +1209,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	availablePower := lp.chargePower - sitePower
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.configuredPhases < 3
 
-	lp.log.DEBUG.Printf("!! pvScalePhases DOWN activePhases: %d, available power: %.0fW, scalable: %T", activePhases, availablePower, scalable)
+	lp.log.DEBUG.Printf("!! pvScalePhases DOWN activePhases: %d, available power: %.0fW, scalable: %t", activePhases, availablePower, scalable)
 
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
@@ -1240,7 +1240,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	target1pCurrent := powerToCurrent(availablePower, 1)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
-	lp.log.DEBUG.Printf("!! pvScalePhases UP maxPhases: %d, available power: %.0fW, scalable: %T", maxPhases, availablePower, scalable)
+	lp.log.DEBUG.Printf("!! pvScalePhases UP maxPhases: %d, available power: %.0fW, scalable: %t", maxPhases, availablePower, scalable)
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
