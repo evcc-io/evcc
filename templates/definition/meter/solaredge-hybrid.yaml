@@ -114,7 +114,6 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -208,4 +207,5 @@ render: |
                 type: writemultiple
                 encoding: float32s
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}

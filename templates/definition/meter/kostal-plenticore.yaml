@@ -65,7 +65,6 @@ render: |
     {{- include "modbus" . | indent 2 }}
     value: 103:WH # total yield
     scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
@@ -88,6 +87,7 @@ render: |
         type: writemultiple
         encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}

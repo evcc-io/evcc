@@ -105,7 +105,7 @@ params:
     default: 0
     example: 5000
     type: float
-    usages: ["pv"]
+    usages: ["battery"]
     advanced: true
   - name: vin
     description:

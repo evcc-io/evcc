@@ -72,7 +72,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -177,4 +176,5 @@ render: |
               type: writemultiple
               decode: uint16
   capacity: {{ .capacity }} # kWh
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
