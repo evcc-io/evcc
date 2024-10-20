@@ -46,8 +46,6 @@ export default {
 				aggregatedData[groupKey].grid += grid;
 			});
 
-			console.log("solar grouped data", aggregatedData);
-
 			// Sort the data by total energy in descending order
 			const sortedEntries = Object.entries(aggregatedData).sort(
 				(a, b) => b[1].grid + b[1].self - (a[1].grid + a[1].self)

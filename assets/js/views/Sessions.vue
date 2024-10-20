@@ -262,7 +262,7 @@ export default {
 			return store.state.currency || "EUR";
 		},
 		energyTitle() {
-			return `${this.solarPercentageFmt} Sonnenenergie`;
+			return this.$t("sessions.energyTitle", { percent: this.solarPercentageFmt });
 		},
 		historyTitle() {
 			if (this.activeType === TYPES.SOLAR) {
@@ -297,31 +297,34 @@ export default {
 			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
 		},
 		energySubTitle() {
-			return `${this.energySumFmt} gesamt`;
+			return this.$t("sessions.energySubTitle", { energy: this.energySumFmt });
 		},
 		solarTitle() {
-			if (this.selectedGroup === GROUPS.NONE) {
-				return `Jahresverlauf`;
+			return this.selectedGroup === GROUPS.NONE
+				? this.$t("sessions.solarTitle")
+				: this.$t("sessions.solarTitleByGroup", { byGroup: this.byGroupTitle });
+		},
+		byGroupTitle() {
+			if (this.selectedGroup === GROUPS.LOADPOINT) {
+				return this.$t("sessions.byGroupLoadpoint");
+			} else if (this.selectedGroup === GROUPS.VEHICLE) {
+				return this.$t("sessions.byGroupVehicle");
 			}
-			const entity = this.selectedGroup === GROUPS.LOADPOINT ? "Ladepunkt" : "Fahrzeug";
-			return `Sonnenanteil pro ${entity}`;
+			return "";
 		},
 		energyGroupedTitle() {
 			if (this.selectedGroup === GROUPS.NONE) {
-				return `Energiemenge ${this.energySumFmt}`;
+				return this.$t("sessions.energyGroupedTitle", { energy: this.energySumFmt });
 			}
-			const entity = this.selectedGroup === GROUPS.LOADPOINT ? "Ladepunkt" : "Fahrzeug";
-			return `Energiemenge pro ${entity}`;
+			return this.$t("sessions.energyGroupedTitleByGroup", { byGroup: this.byGroupTitle });
 		},
 		avgCostTitle() {
-			const name = this.activeType === TYPES.PRICE ? "Ladepreis" : "⌀ CO₂";
-			const entity = this.selectedGroup === GROUPS.LOADPOINT ? "Ladepunkt" : "Fahrzeug";
-			return `${name} pro ${entity}`;
+			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
+			return this.$t(`sessions.avg${type}TitleByGroup`, { byGroup: this.byGroupTitle });
 		},
 		costGroupedTitle() {
-			const name = this.activeType === TYPES.PRICE ? "Gesamtpreis" : "CO₂-Menge";
-			const entity = this.selectedGroup === GROUPS.LOADPOINT ? "Ladepunkt" : "Fahrzeug";
-			return `${name} pro ${entity}`;
+			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
+			return this.$t(`sessions.grouped${type}TitleByGroup`, { byGroup: this.byGroupTitle });
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({
@@ -382,14 +385,20 @@ export default {
 			return energy ? this.totalCo2 / energy : null;
 		},
 		costTitle() {
-			return this.activeType === TYPES.PRICE
-				? `⌀ ${this.fmtPricePerKWh(this.pricePerKWh, this.currency)} Ladepreis`
-				: `⌀ ${this.fmtCo2Medium(this.co2PerKWh)} CO₂-Emission`;
+			const value =
+				this.activeType === TYPES.PRICE
+					? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
+					: this.fmtCo2Medium(this.co2PerKWh);
+			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
+			return this.$t(`sessions.history${type}Title`, { value });
 		},
 		costSubTitle() {
-			return this.activeType === TYPES.PRICE
-				? `${this.fmtMoney(this.totalPrice, this.currency, true, true)} gesamt`
-				: `${this.fmtGrams(this.totalCo2)} gesamt`;
+			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
+			const value =
+				this.activeType === TYPES.PRICE
+					? this.fmtMoney(this.totalPrice, this.currency, true, true)
+					: this.fmtGrams(this.totalCo2);
+			return this.$t(`sessions.history${type}SubTitle`, { value });
 		},
 		activeType() {
 			if (this.selectedType === TYPES.PRICE && this.typePriceAvailable) {
@@ -566,7 +575,7 @@ export default {
 			const isSolar = this.activeType === TYPES.SOLAR;
 			const isNotMonth = this.period !== PERIODS.MONTH;
 
-			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth);
+			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth && !isGrouped);
 		},
 		suggestedMaxPrice() {
 			// returns the 90th percentile of all prices
