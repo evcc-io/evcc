@@ -254,9 +254,9 @@ messaging:
     start: # charge start event
       title: Started charging of ${vehicleTitle} in ${mode} mode
       msg: |
-        Start Time {{printf `%02d:%02d` now.Hour now.Minute}} Uhr
+        Start Time {{printf `%02d:%02d` now.Hour now.Minute}}
         SoC {{round (.vehicleSoc) 0}} %
-        Range ${vehicleRange} Km
+        Range ${vehicleRange} km
     stop: # charge stop event
       title: Charge of ${vehicleTitle} finished
       msg: |
