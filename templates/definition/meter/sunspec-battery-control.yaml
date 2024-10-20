@@ -29,11 +29,11 @@ render: |
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:0:SoC
+    value: 802:SoC
   limitsoc: # model 802
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:0:SoCRsvMin
+    value: 802:SoCRsvMin
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
