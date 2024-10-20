@@ -25,7 +25,7 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:0:W
+    value: 802:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
