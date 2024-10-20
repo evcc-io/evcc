@@ -29,7 +29,7 @@
 					</div>
 				</div>
 
-				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap">
+				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap pt-1">
 					<IconSelectGroup>
 						<template v-for="largeScreen in [true, false]">
 							<IconSelectItem

@@ -221,7 +221,11 @@ a:hover {
 	color: inherit !important;
 	background-color: inherit !important;
 	border-color: inherit !important;
-	opacity: 0.2;
+	opacity: 0.3;
+}
+
+.dark .btn-disabled {
+	opacity: 0.4;
 }
 
 .btn-outline-primary {

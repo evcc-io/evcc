@@ -14,7 +14,7 @@ import { Radar } from "vue-chartjs";
 import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter from "../../mixins/formatter";
-import colors, { dimColor, lightenColor } from "../../colors";
+import colors, { dimColor } from "../../colors";
 import LegendList from "./LegendList.vue";
 
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
@@ -78,7 +78,7 @@ export default {
 			});
 
 			const datasets = years.map((year) => {
-				const borderColor = lightenColor(colors.self, years.indexOf(year));
+				const borderColor = colors.selfPalette[years.indexOf(year)];
 				const backgroundColor = years.length === 1 ? dimColor(borderColor) : "transparent";
 				return {
 					backgroundColor,
