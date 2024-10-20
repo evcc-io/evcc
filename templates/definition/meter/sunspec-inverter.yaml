@@ -110,11 +110,7 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value:
-      - 101:W
-      - 111:W
-      - 103:W
-      - 113:W
+    value: 802:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
