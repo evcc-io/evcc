@@ -444,6 +444,7 @@ func (site *Site) updatePvMeters() {
 	var mu sync.Mutex
 
 	site.pvPower = 0
+	site.excessDCPower = 0
 
 	mm := make([]meterMeasurement, len(site.pvMeters))
 
@@ -484,8 +485,8 @@ func (site *Site) updatePvMeters() {
 				site.excessDCPower += dc
 				mu.Unlock()
 
-				excessDC = dc
-				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", dc)
+				excessDC = -dc
+				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -dc)
 			}
 		}
 
@@ -508,7 +509,12 @@ func (site *Site) updatePvMeters() {
 	}
 	wg.Wait()
 
-	site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
+	var excessStr string
+	if site.excessDCPower < 0 {
+		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
+	}
+
+	site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
@@ -581,7 +587,6 @@ func (site *Site) updateBatteryMeters() error {
 	var mu sync.Mutex
 
 	site.batteryPower = 0
-	site.excessDCPower = 0
 	site.batterySoc = 0
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
@@ -673,12 +678,7 @@ func (site *Site) updateBatteryMeters() error {
 	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 	site.publish(keys.BatterySoc, site.batterySoc)
 
-	var excessStr string
-	if site.excessDCPower > 0 {
-		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.excessDCPower)
-	}
-
-	site.log.DEBUG.Printf("battery power: %.0fW"+excessStr, site.batteryPower)
+	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
