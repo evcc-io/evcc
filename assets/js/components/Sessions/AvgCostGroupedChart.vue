@@ -4,7 +4,7 @@
 			<PolarArea :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList :legends="legends" extra-class="flex-md-column" />
+			<LegendList :legends="legends" grid />
 		</div>
 	</div>
 </template>
@@ -78,14 +78,7 @@ export default {
 			return this.chartData.labels.map((label, index) => ({
 				label: label,
 				color: this.chartData.datasets[0].borderColor[index],
-				value:
-					this.costType === TYPES.CO2
-						? this.fmtCo2Short(this.chartData.datasets[0].data[index])
-						: this.fmtPricePerKWh(
-								this.chartData.datasets[0].data[index],
-								this.currency,
-								true
-							),
+				value: this.formatValue(this.chartData.datasets[0].data[index]),
 			}));
 		},
 		options() {
@@ -130,10 +123,7 @@ export default {
 							color: colors.muted,
 							backdropColor: colors.background,
 							font: { size: 10 },
-							callback: (value) =>
-								this.costType === TYPES.CO2
-									? this.fmtCo2Short(value)
-									: this.fmtPricePerKWh(value, this.currency, true),
+							callback: this.formatValue,
 							maxTicksLimit: 6,
 						},
 						angleLines: { display: false },
@@ -141,6 +131,13 @@ export default {
 					},
 				},
 			};
+		},
+	},
+	methods: {
+		formatValue(value) {
+			return this.costType === TYPES.CO2
+				? this.fmtCo2Short(value)
+				: this.fmtPricePerKWh(value, this.currency, true);
 		},
 	},
 };

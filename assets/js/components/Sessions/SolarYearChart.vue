@@ -4,15 +4,7 @@
 			<Radar :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList
-				:legends="legends"
-				:grid="period === 'year'"
-				:extra-class="
-					period === 'year'
-						? 'justify-content-around me-3 flex-row'
-						: 'ps-3 flex-md-column'
-				"
-			/>
+			<LegendList :legends="legends" small-equal-widths />
 		</div>
 	</div>
 </template>

@@ -4,7 +4,7 @@
 			<Doughnut :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center">
-			<LegendList :legends="legends" extra-class="flex-md-column" />
+			<LegendList :legends="legends" grid />
 		</div>
 	</div>
 </template>
@@ -27,6 +27,7 @@ export default {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		currency: { type: String, default: "EUR" },
 		costType: { type: String, default: TYPES.PRICE },
 	},
 	mixins: [formatter],
@@ -59,13 +60,14 @@ export default {
 		},
 		legends() {
 			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
+			const fmtShare = (value) => this.fmtPercentage((100 / total) * value, 1);
 			return this.chartData.labels.map((label, index) => ({
 				label: label,
 				color: this.chartData.datasets[0].backgroundColor[index],
-				value: this.fmtPercentage(
-					(100 / total) * this.chartData.datasets[0].data[index],
-					1
-				),
+				value: [
+					this.formatValue(this.chartData.datasets[0].data[index]),
+					fmtShare(this.chartData.datasets[0].data[index]),
+				],
 			}));
 		},
 		options() {
@@ -88,17 +90,20 @@ export default {
 						position: "center",
 						intersect: false,
 						callbacks: {
-							label: (tooltipItem) => {
-								const value = tooltipItem.raw || 0;
-								return this.costType === TYPES.PRICE
-									? this.fmtMoney(value, this.currency)
-									: this.fmtGrams(value);
-							},
+							label: (tooltipItem) => this.formatValue(tooltipItem.raw || 0),
 							labelColor: tooltipLabelColor(false),
 						},
 					},
 				},
 			};
+		},
+	},
+	methods: {
+		formatValue(value) {
+			if (this.costType === TYPES.PRICE) {
+				return this.fmtMoney(value, this.currency, true, true);
+			}
+			return this.fmtGrams(value);
 		},
 	},
 };

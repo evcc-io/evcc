@@ -4,7 +4,7 @@
 			<PolarArea :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList :legends="legends" extra-class="flex-md-column" />
+			<LegendList :legends="legends" grid />
 		</div>
 	</div>
 </template>
