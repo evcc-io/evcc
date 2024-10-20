@@ -255,17 +255,17 @@ messaging:
       title: Started charging of ${vehicleTitle} in ${mode} mode
       msg: |
         Start Time {{printf `%02d:%02d` now.Hour now.Minute}}
-        SoC {{round (.vehicleSoc) 0}} %
-        Range ${vehicleRange} km
+        SoC {{round (.vehicleSoc) 0}}%
+        Range ${vehicleRange}km
     stop: # charge stop event
       title: Charge of ${vehicleTitle} finished
       msg: |
         End Time {{printf `%02d:%02d` now.Hour now.Minute}}
-        SoC {{round (.vehicleSoc) 0}} %
-        Range ${vehicleRange} km
-        Charged Energy ${chargedEnergy:%.1fk} kWh
-        Total Price {{round (.sessionPrice) 2}} €
-        Average Price {{round (mulf .sessionPricePerKWh 100) 2}} ct/kWh
+        SoC {{round (.vehicleSoc) 0}}%
+        Range ${vehicleRange}km
+        Charged Energy ${chargedEnergy:%.1fk}kWh
+        Total Price {{round (.sessionPrice) 2}}€
+        Average Price {{round (mulf .sessionPricePerKWh 100) 2}}ct/kWh
     connect: # vehicle connect event
       title: Car connected
       msg: Car connected at ${pvPower:%.1fk}kW PV
