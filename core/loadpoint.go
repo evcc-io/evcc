@@ -1341,6 +1341,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+	} else if lp.getBatteryBoost() != boostDisabled {
+		lp.log.DEBUG.Printf("!! pvScalePhases phasesSwitched: %v, %v", lp.phasesSwitched, time.Since(lp.phasesSwitched))
 	}
 
 	// calculate target charge current from delta power and actual current
