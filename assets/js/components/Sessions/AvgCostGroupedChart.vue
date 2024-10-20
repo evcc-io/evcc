@@ -52,15 +52,12 @@ export default {
 				}
 			});
 
-			console.log(`${this.costType} grouped data`, aggregatedData);
-
 			const sortedEntries = Object.entries(aggregatedData).sort(
 				(a, b) => b[1].cost - a[1].cost
 			);
 			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => value.cost / value.energy);
 
-			console.log(`${this.costType} grouped data`, labels, data);
 			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {

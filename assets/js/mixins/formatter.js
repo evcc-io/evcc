@@ -47,7 +47,7 @@ export default {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 1_000_000) {
+        if (watt >= 10_000_000) {
           unit = POWER_UNIT.MW;
         } else if (watt >= 1000 || 0 === watt) {
           unit = POWER_UNIT.KW;

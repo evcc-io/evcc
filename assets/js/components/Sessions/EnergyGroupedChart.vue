@@ -74,7 +74,7 @@ export default {
 			const maxEnergy = Math.max(...this.chartData.datasets[0].data);
 			// sync energy units for label grid view
 			const unit =
-				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e3 ? POWER_UNIT.MW : POWER_UNIT.KW;
+				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
 			const fmtShare = (value) => this.fmtPercentage((100 / total) * value, 1);
 			const fmtValue = (value) => this.fmtWh(value * 1e3, unit);
 			return this.chartData.labels.map((label, index) => ({
