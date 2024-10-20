@@ -264,8 +264,9 @@ messaging:
         SoC {{round (.vehicleSoc) 0}}%
         Range ${vehicleRange}km
         Charged Energy ${chargedEnergy:%.1fk}kWh
-        Total Price {{round (.sessionPrice) 2}}€
-        Average Price {{round (mulf .sessionPricePerKWh 100) 2}}ct/kWh
+  # tariff must be configured for following messages
+  #     Total Costs {{round (.sessionPrice) 2}}€ 
+  #     Average Price {{round (mulf .sessionPricePerKWh 100) 2}}ct/kWh
     connect: # vehicle connect event
       title: Car connected
       msg: Car connected at ${pvPower:%.1fk}kW PV
