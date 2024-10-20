@@ -4,50 +4,91 @@
 		:class="showMonth ? 'justify-content-between' : 'justify-content-end'"
 	>
 		<div v-if="showMonth" class="d-none d-sm-flex justify-content-between">
-			<DateNavigatorButton prev :disabled="!hasPrevMonth" :onClick="emitPrevMonth" />
+			<DateNavigatorButton
+				prev
+				:disabled="!hasPrevMonth"
+				:onClick="emitPrevMonth"
+				data-testid="navigate-prev-month"
+			/>
 			<CustomSelect
 				id="sessionsMonth"
 				:options="monthOptions"
 				:selected="month"
 				@change="emitMonth($event.target.value)"
 			>
-				<button class="btn btn-sm border-0 text-truncate h-100" style="width: 8em">
+				<button
+					class="btn btn-sm border-0 text-truncate h-100"
+					style="width: 8em"
+					data-testid="navigate-month"
+				>
 					{{ monthName }}
 				</button>
 			</CustomSelect>
-			<DateNavigatorButton next :disabled="!hasNextMonth" :onClick="emitNextMonth" />
+			<DateNavigatorButton
+				next
+				:disabled="!hasNextMonth"
+				:onClick="emitNextMonth"
+				data-testid="navigate-next-month"
+			/>
 		</div>
 		<div v-if="showMonth" class="d-flex d-sm-none justify-content-between">
-			<DateNavigatorButton prev :disabled="!hasPrevMonth" :onClick="emitPrevMonth" />
+			<DateNavigatorButton
+				prev
+				:disabled="!hasPrevMonth"
+				:onClick="emitPrevMonth"
+				data-testid="navigate-prev-year-month"
+			/>
 			<CustomSelect
 				id="sessionsMonthYear"
 				:options="monthYearOptions"
 				:selected="month"
 				@change="emitMonthYear($event.target.value)"
 			>
-				<button class="btn btn-sm border-0 h-100 text-truncate">
+				<button
+					class="btn btn-sm border-0 h-100 text-truncate"
+					data-testid="navigate-month-year"
+				>
 					{{ monthYearName }}
 				</button>
 			</CustomSelect>
-			<DateNavigatorButton next :disabled="!hasNextMonth" :onClick="emitNextMonth" />
+			<DateNavigatorButton
+				next
+				:disabled="!hasNextMonth"
+				:onClick="emitNextMonth"
+				data-testid="navigate-next-year-month"
+			/>
 		</div>
 		<div
 			v-if="showYear"
 			class="justify-content-between"
 			:class="showMonth ? 'd-none d-sm-flex' : 'd-flex'"
 		>
-			<DateNavigatorButton prev :disabled="!hasPrevYear" :onClick="emitPrevYear" />
+			<DateNavigatorButton
+				prev
+				:disabled="!hasPrevYear"
+				:onClick="emitPrevYear"
+				data-testid="navigate-prev-year"
+			/>
 			<CustomSelect
 				id="sessionsYear"
 				:options="yearOptions"
 				:selected="year"
 				@change="emitYear($event.target.value)"
 			>
-				<button class="btn btn-sm border-0 h-100" style="width: 4em">
+				<button
+					class="btn btn-sm border-0 h-100"
+					style="width: 4em"
+					data-testid="navigate-year"
+				>
 					{{ year }}
 				</button>
 			</CustomSelect>
-			<DateNavigatorButton next :disabled="!hasNextYear" :onClick="emitNextYear" />
+			<DateNavigatorButton
+				next
+				:disabled="!hasNextYear"
+				:onClick="emitNextYear"
+				data-testid="navigate-next-year"
+			/>
 		</div>
 	</div>
 </template>
