@@ -454,9 +454,9 @@ title = "Postavke {0}"
 vehicle = "Vozilo"
 
 [main.loadpointSettings.batteryBoost]
-description = "Brzo puni s kućnom baterijom."
+description = "Brzo puni iz kućne baterije."
 label = "Pojačati baterijom"
-mode = "Dostupno samo u 'Solarno' i 'Mini+Solarno' načinima rada."
+mode = "Dostupno samo u 'Solarno' i 'Min+Solar' načinima rada."
 once = "Pojačavanje je aktivirano za ovo punjenje."
 
 [main.loadpointSettings.limitSoc]
@@ -642,6 +642,23 @@ solar = "Solarno"
 title = "Postupci punjenja"
 total = "Ukupno"
 vehicle = "Vozilo"
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
+avgPriceTitleByGroup = "⌀ cijena {byGroup}
+byGroupVehicle = "po vozilu"
+energyTitle = "{percent} solarna energija"
+groupedCo2TitleByGroup = "CO₂- količina {byGroup}"
+historyCo2Title = "⌀ {value} CO₂ - onečišćenje"
+groupedPriceTitleByGroup = "Ukupni trošak {byGroup}"
+byGroupLoadpoint = "po punjaču"
+energyGroupedTitle = "Isporučena energija {energy}"
+energyGroupedTitleByGroup = "Energija {byGroup}"
+energySubTitle = "ukupno {energy}"
+historyCo2SubTitle = "ukupno {value}"
+historyPriceSubTitle = "ukupno {value}"
+historyPriceTitle = "⌀ {value} cijena punjenja"
+showIndividualEntries = "Prikaži pojedine zapise"
+solarTitle = "Udio solara tokom godine"
+solarTitleByGroup = "Solar {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -737,3 +754,25 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
+
+
+[sessions.group]
+co2 = "Onečišćenje"
+grid = "Mreža"
+price = "Cijena"
+self = "Solar"
+
+[sessions.groupBy]
+loadpoint = "Punjač"
+none = "Ukupno"
+vehicle = "Vozilo"
+
+[sessions.period]
+month = "Mjesec"
+total = "Ukupno"
+year = "Godina"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Cijena"
+solar = "Solar"
