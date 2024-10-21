@@ -96,6 +96,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           t.Capabilities,
 		"Requirements":           t.Requirements.EVCC,
+		"Protocol":               t.Protocol,
 		"RequirementDescription": t.Requirements.Description.String(lang),
 		"Params":                 filteredParams,
 		"AdvancedParams":         hasAdvancedParams,

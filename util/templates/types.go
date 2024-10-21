@@ -61,6 +61,17 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
+const (
+	ProtocolOCPP     = "ocpp"     // Open Charge Point Protocol
+	ProtocolLocalApi = "localapi" // local vendor-specific API
+	ProtocolCloudApi = "cloudapi" // cloud-based vendor API
+	ProtocolModbus   = "modbus"   // Modbus RTU or TCP
+	ProtocolMQTT     = "mqtt"     // MQTT
+	ProtocolEEBUS    = "eebus"    // EEBUS
+)
+
+var ValidProtocols = []string{ProtocolOCPP, ProtocolLocalApi, ProtocolCloudApi, ProtocolModbus, ProtocolMQTT, ProtocolEEBUS}
+
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
@@ -260,6 +271,7 @@ type TemplateDefinition struct {
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
+	Protocol     string           `json:",omitempty"` // communication protocol used in this template. used do differentiate templates for the same device
 	Capabilities []string         `json:",omitempty"`
 	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
