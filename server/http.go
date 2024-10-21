@@ -111,6 +111,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
 		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site)},
+		"solarshare":              {"POST", "/solarshare/{value:[-0-9.]+}", updateSolarShare(site)},
+		"solarshareDelete":        {"DELETE", "/solarshare", updateSolarShare(site)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
@@ -180,6 +182,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"smartCost":        {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"smartCostDelete":  {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"priority":         {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"solarshare":       {"POST", "/solarshare/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
+			"solarshareDelete": {"DELETE", "/solarshare", floatPtrHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
 			"batteryBoost":     {"POST", "/batteryboost/{value:[01truefalse]}", boolHandler(lp.SetBatteryBoost, lp.GetBatteryBoost)},
 		}
 

@@ -102,6 +102,11 @@ type API interface {
 	// SetDisableThreshold sets loadpoint disable threshold
 	SetDisableThreshold(threshold float64)
 
+	// GetSolarShare gets the solar share
+	GetSolarShare() *float64
+	// SetSolarShare sets the solar share
+	SetSolarShare(*float64)
+
 	// GetEnableDelay gets the loadpoint enable delay
 	GetEnableDelay() time.Duration
 	// SetEnableDelay sets loadpoint enable delay
