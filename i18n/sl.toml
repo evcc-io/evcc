@@ -454,6 +454,7 @@ smartCostCheap = "Poceni polnjenje iz omrežja"
 smartCostClean = "Čisto polnjenje iz omrežja"
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
+batteryUsage = "Domača baterija"
 
 [main.loadpointSettings.limitSoc]
 description = "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano."
@@ -579,6 +580,7 @@ vehicleLimit = "Omejitev vozila."
 vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 welcome = "Kratko začetno polnjenje za potrditev povezave."
+batteryBoost = "Pospeševanje z baterijo aktivno"
 
 [notifications]
 dismissAll = "Opusti vse"
@@ -733,3 +735,10 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Hitro polnjenje iz domače baterije."
+mode = "Na voljo samo v solarnem in min+solarnem načinu."
+label = "Pospeševanje baterije"
+once = "Pospeševanje z baterijo aktivno za to sejo polnjenja."
