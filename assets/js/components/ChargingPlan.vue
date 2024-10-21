@@ -173,7 +173,10 @@ export default {
 			return [];
 		},
 		repeatingPlans: function () {
-			return this.vehicle.repeatingPlans || [];
+			if (this.vehicle.repeatingPlans.length > 0) {
+				return this.fmtRepeatingPlansUTC(this.vehicle.repeatingPlans.slice(), false);
+			}
+			return [];
 		},
 		enabled: function () {
 			return this.effectivePlanTime;
@@ -283,7 +286,9 @@ export default {
 			}
 		},
 		updateRepeatingPlans: function (plans) {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+			api.post(`${this.apiVehicle}plan/repeating`, {
+				plans: this.fmtRepeatingPlansUTC([...plans], true),
+			});
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
