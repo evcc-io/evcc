@@ -239,7 +239,6 @@ running = "prüfe…"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
-validateSave = "Prüfen & speichern"
 
 [config.vehicle]
 cancel = "Abbrechen"
@@ -432,6 +431,7 @@ remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
 solar = "Sonne"
 
 [main.loadpointSettings]
+batteryUsage = "Hausbatterie"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
@@ -440,6 +440,12 @@ smartCostCheap = "günstige Netzladung"
 smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
+
+[main.loadpointSettings.batteryBoost]
+description = "Schnell aus Hausbatterie laden."
+label = "Batterie Boost"
+mode = "Nur im PV- und Min+PV-Modus verfügbar."
+once = "Boost ist für diesen Ladevorgang aktiviert."
 
 [main.loadpointSettings.limitSoc]
 description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."
@@ -538,6 +544,7 @@ vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Warte auf Autorisierung."
+batteryBoost = "Batterie Boost aktiv."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."
@@ -572,7 +579,6 @@ modalTitle = "Meldungen"
 [offline]
 configurationError = "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu."
 message = "Keine Verbindung zum Server."
-reload = "Erneut laden?"
 restart = "Neustart"
 restartNeeded = "Erforderlich, um Änderungen zu übernehmen"
 restarting = "Server ist gleich wieder verfügbar."
@@ -605,8 +611,12 @@ started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
 avgPower = "⌀ Leistung"
 avgPrice = "⌀ Preis"
+avgPriceTitleByGroup = "⌀ Ladepreis {byGroup}"
+byGroupLoadpoint = "je Ladepunkt"
+byGroupVehicle = "je Fahrzeug"
 chargeDuration = "Ladedauer"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
@@ -614,11 +624,24 @@ csvTotal = "Gesamte CSV herunterladen"
 date = "Anfang"
 downloadCsv = "Als CSV herunterladen"
 energy = "Geladen"
+energyGroupedTitle = "Energiemenge {energy}"
+energyGroupedTitleByGroup = "Energiemenge {byGroup}"
+energySubTitle = "{energy} gesamt"
+energyTitle = "{percent} Sonnenenergie"
+groupedCo2TitleByGroup = "CO₂-Menge {byGroup}"
+groupedPriceTitleByGroup = "Kosten {byGroup}"
+historyCo2SubTitle = "{value} gesamt"
+historyCo2Title = "⌀ {value} CO₂-Emission"
+historyPriceSubTitle = "{value} gesamt"
+historyPriceTitle = "⌀ {value} Ladepreis"
 loadpoint = "Ladepunkt"
 noData = "Noch keine Ladevorgänge in diesem Monat."
 price = "Σ Preis"
 reallyDelete = "Möchtest du diesen Ladevorgang wirklich löschen?"
+showIndividualEntries = "Einzelne Ladevorgänge anzeigen"
 solar = "Sonne"
+solarTitle = "Sonnenanteil über das Jahr"
+solarTitleByGroup = "Sonnenanteil {byGroup}"
 title = "Ladevorgänge"
 total = "Insgesamt"
 vehicle = "Fahrzeug"
@@ -643,6 +666,27 @@ vehicle = "Fahrzeug"
 allLoadpoints = "Alle Ladepunkte"
 allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
+
+[sessions.group]
+co2 = "Emissionen"
+grid = "Netz"
+price = "Preis"
+self = "Sonne"
+
+[sessions.groupBy]
+loadpoint = "Ladepunkt"
+none = "Gesamt"
+vehicle = "Fahrzeug"
+
+[sessions.period]
+month = "Monat"
+total = "Gesamt"
+year = "Jahr"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Preis"
+solar = "Sonne"
 
 [settings]
 title = "Darstellung"
