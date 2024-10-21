@@ -34,6 +34,7 @@
 						type="checkbox"
 						:id="formId(option.value)"
 						:value="option.value"
+						:disabled="onlySelected(option.value)"
 						v-model="internalValue"
 					/>
 					<div class="form-check-label">
@@ -119,12 +120,11 @@ export default {
 		formId(name) {
 			return `${this.id}-${name}`;
 		},
+		onlySelected(value) {
+			return this.internalValue.length === 1 && this.internalValue.includes(value);
+		},
 		toggleCheckAll() {
-			if (this.allOptionsSelected) {
-				this.internalValue = [];
-			} else {
-				this.internalValue = this.options.map((option) => option.value);
-			}
+			this.internalValue = this.options.map((option) => option.value);
 		},
 	},
 };
