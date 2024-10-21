@@ -6,12 +6,12 @@ discharge = "D'Entlueden am schnelle Modus a geplangte Lueden verhënneren."
 disclaimerHint = "Notiz:"
 disclaimerText = "Dës Astellunge beaflossen nëmmen de Solarmodus. D'Luedeverhalen gëtt deementspriechend ugepasst."
 gridChargeTab = "Vum Netz oplueden"
-legendBottomName = "Prioritéit fir d'Lueden vun der Hausbatterie"
+legendBottomName = "Prioritéit fir d'Oplueden vun der Hausbatterie"
 legendBottomSubline = "bis {soc} erreecht sinn."
-legendMiddleName = "Prioritéit fir d'Lueden vum Gefier"
+legendMiddleName = "Prioritéit fir d'Oplueden vum Gefier"
 legendMiddleSubline = "wann d'Hausbatterie iwwer {soc} ass."
 legendTopAutostart = "Automatesch starten"
-legendTopName = "Batterie-ënnerstëtzt Luede vum Gefier"
+legendTopName = "Batterie-ënnerstëtzt Opluede vum Gefier"
 legendTopSubline = "wann d'Hausbatterie iwwer {soc} ass."
 modalTitle = "Hausbatterie"
 usageTab = "Batterieverbrauch"
@@ -24,7 +24,7 @@ never = "nëmme mat genuch Iwwerschoss."
 [config]
 
 [config.battery]
-titleAdd = "Batterie bäisetzen"
+titleAdd = "Batterie derbäi setzen"
 titleEdit = "Batterie upassen"
 
 [config.circuits]
@@ -37,7 +37,7 @@ descriptionInterval = "Kontrollschläifen-Update-Zyklus a Sekonnen. Definéiert 
 descriptionMaxGridSupply = "Nëmme relevant fir Hybrid-Invertere, déi net fäeg sinn d'Totalitéit vum DC-Stroum iwwer AC an d'Haus ze liwweren. Dëse Szenario kann zu ongewolltem Netzverbrauch féieren, well evcc unhëllt datt d'Totalitéit vum DC-Stroum verfügbar ass. Benotzt ee Wäert vu mindestens 50 W fir dat ze verhënneren."
 descriptionResidualPower = "Verschiibt d'Funktioun vun der Kontrollschläifen. Wann s du eng Hausbatterie hues, ass et recommandéiert ee Wäert vun 100 W ze setzen. Esou kritt d'Batterie eng liicht Prioritéit par Rapport zum Netz."
 labelInterval = "Aktualiséierungsintervall"
-labelMaxGridSupply = "Max. Netzbezuch beim Lueden"
+labelMaxGridSupply = "Max. Netzverbrauch beim Oplueden"
 labelResidualPower = "Residuell Leeschtung"
 title = "Kontrollverhalen"
 
@@ -450,6 +450,7 @@ smartCostCheap = "Bëlleg vum Reseau oplueden"
 smartCostClean = "Grengt Luede vun Netz"
 title = "Astellungen {0}"
 vehicle = "Gefier"
+batteryUsage = "Hausbatterie"
 
 [main.loadpointSettings.limitSoc]
 description = "Luedzil dat benotzt gëtt, wann dëst Gefier verbonnen ass."
@@ -574,6 +575,7 @@ vehicleLimit = "Limitt vum Gefier."
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."
+batteryBoost = "Batterie Boost ass aktiv."
 
 [notifications]
 dismissAll = "Notifikatiounen ewechuelen"
@@ -633,6 +635,23 @@ solar = "Sonn"
 title = "Opluedsessiounen"
 total = "Total"
 vehicle = "Gefier"
+historyCo2Title = "⌀ {value} CO₂-Emissiounen"
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
+byGroupLoadpoint = "pro Luedpunkt"
+byGroupVehicle = "pro Gefier"
+energyGroupedTitleByGroup = "Quantitéit Stroum {byGroup}"
+energyTitle = "{percent} Sonnenenergie"
+groupedCo2TitleByGroup = "CO₂-Quantitéit {byGroup}"
+groupedPriceTitleByGroup = "Käschten {byGroup}"
+historyCo2SubTitle = "{value} insgesamt"
+historyPriceSubTitle = "{value} insgesamt"
+solarTitle = "Sonnenundeel iwwert d'Joer"
+avgPriceTitleByGroup = "⌀ Luedpräis {byGroup}"
+energyGroupedTitle = "Opgeluedene Stroum {energy}"
+energySubTitle = "{energy} gesamt"
+showIndividualEntries = "Eenzel Luedsessiounen uweisen"
+solarTitleByGroup = "Sonnenundeel {byGroup}"
+historyPriceTitle = "⌀ {value} Luedpräis"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -717,3 +736,31 @@ lineError = "An {0} gouf ee Feeler fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Schnell vun der Hausbatterie lueden."
+once = "Boost ass dir dës Luedsessioun aktivéiert."
+label = "Batterie Boost"
+mode = "Nëmmen am PV- a Min+PV-Modus verfügbar."
+
+[sessions.period]
+year = "Joer"
+total = "Gesamt"
+month = "Mount"
+
+[sessions.group]
+price = "Präis"
+self = "Sonn"
+grid = "Netz"
+co2 = "Emissiounen"
+
+[sessions.groupBy]
+loadpoint = "Luedpunkt"
+vehicle = "Gefier"
+none = "Insgesamt"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Präis"
+solar = "Sonn"

@@ -455,6 +455,7 @@ smartCostCheap = "Carregamento de rede barato"
 smartCostClean = "Carregamento de rede limpa"
 title = "Configurações {0}"
 vehicle = "Veículo"
+batteryUsage = "Bateria de casa"
 
 [main.loadpointSettings.limitSoc]
 description = "limite de compartilhamento que é usado quando este veículo está conectado."
@@ -581,6 +582,7 @@ vehicleLimit = "“Limite dos veículos.”"
 vehicleLimitReached = "Limite de veículo atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 welcome = "Carga inicial curta para confirmar a ligação."
+batteryBoost = "Boost da bateria ativo."
 
 [notifications]
 dismissAll = "Recusar tudos"
@@ -641,6 +643,23 @@ solar = "Sol"
 title = "Sessões de carga"
 total = "Total"
 vehicle = "Veículo"
+byGroupLoadpoint = "por ponto de carregamento"
+avgPriceTitleByGroup = "⌀ Preço {byGroup}"
+energyGroupedTitle = "Energia carregada {energy}"
+energyTitle = "{percent} Energia Solar"
+historyCo2SubTitle = "{value} total"
+historyPriceSubTitle = "{value} total"
+showIndividualEntries = "Mostrar sessões individuais"
+historyPriceTitle = "⌀ {value} Preço de carregamento"
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
+byGroupVehicle = "por veículo"
+energyGroupedTitleByGroup = "Energia {byGroup}"
+energySubTitle = "{energy} total"
+groupedCo2TitleByGroup = "Quantidade de CO₂ {byGroup}"
+groupedPriceTitleByGroup = "Custo total {byGroup}"
+historyCo2Title = "⌀ {value} Emissões de CO₂"
+solarTitle = “Parte de energia solar ao longo de um ano”
+solarTitleByGroup = “Parte solar {byGroup}”
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -736,3 +755,31 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[main.loadpointSettings.batteryBoost]
+label = "Boost bateria "
+mode = "Disponível apenas nos modos solar e min+solar."
+once = "Boost ativo para esta sessão de carga."
+description = "Carga rápida da bateria de casa."
+
+[sessions.group]
+self = "Solar"
+co2 = "Emissões"
+grid = "Rede"
+price = "Preço"
+
+[sessions.groupBy]
+loadpoint = “Ponto de recarga”
+none = "Total"
+vehicle = "Veiculo"
+
+[sessions.period]
+month = "Mês"
+year = "Ano"
+total = "Total"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Preço"
+solar = "Solar"
