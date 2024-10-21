@@ -459,6 +459,7 @@ smartCostCheap = "Carga barata desde la red"
 smartCostClean = "Carga desde una red ecológica"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
+batteryUsage = "Batería doméstica"
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"
@@ -740,3 +741,7 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Carga rápida desde la batería de casa"
