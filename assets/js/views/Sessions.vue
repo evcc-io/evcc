@@ -72,10 +72,17 @@
 				</div>
 
 				<h3
-					class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden justify-content-between"
+					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden justify-content-start justify-content-md-between"
 				>
-					<span class="d-block no-wrap text-truncate">{{ historyTitle }}</span>
-					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
+					<span v-if="historyTitle" class="d-block no-wrap text-truncate">{{
+						historyTitle
+					}}</span>
+					<span class="d-block no-wrap text-truncate">{{ periodTitle }}</span>
+					<small
+						class="d-block no-wrap text-truncate"
+						:class="{ 'pe-md-4': activeType !== types.PRICE }"
+						>{{ historySubTitle }}</small
+					>
 				</h3>
 				<EnergyHistoryChart
 					v-if="activeType === types.SOLAR"
@@ -262,13 +269,21 @@ export default {
 			return store.state.currency || "EUR";
 		},
 		energyTitle() {
-			return this.$t("sessions.energyTitle", { percent: this.solarPercentageFmt });
+			return this.$t("sessions.chartTitle.energy");
 		},
 		historyTitle() {
-			if (this.activeType === TYPES.SOLAR) {
-				return this.energyTitle;
+			return this.activeType === TYPES.SOLAR ? this.energyTitle : this.costTitle;
+		},
+		periodTitle() {
+			if (this.period === PERIODS.MONTH) {
+				const date = new Date();
+				date.setMonth(this.month - 1, 1);
+				return this.fmtMonthYear(date);
 			}
-			return this.costTitle;
+			if (this.period === PERIODS.YEAR) {
+				return this.year;
+			}
+			return null;
 		},
 		historySubTitle() {
 			if (this.activeType === TYPES.SOLAR) {
@@ -297,34 +312,40 @@ export default {
 			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
 		},
 		energySubTitle() {
-			return this.$t("sessions.energySubTitle", { energy: this.energySumFmt });
+			return this.$t("sessions.chartTitle.energySub", { energy: this.energySumFmt });
 		},
 		solarTitle() {
 			return this.selectedGroup === GROUPS.NONE
-				? this.$t("sessions.solarTitle")
-				: this.$t("sessions.solarTitleByGroup", { byGroup: this.byGroupTitle });
+				? this.$t("sessions.chartTitle.solar")
+				: this.$t("sessions.chartTitle.solarByGroup", { byGroup: this.byGroupTitle });
 		},
 		byGroupTitle() {
 			if (this.selectedGroup === GROUPS.LOADPOINT) {
-				return this.$t("sessions.byGroupLoadpoint");
+				return this.$t("sessions.chartTitle.byGroupLoadpoint");
 			} else if (this.selectedGroup === GROUPS.VEHICLE) {
-				return this.$t("sessions.byGroupVehicle");
+				return this.$t("sessions.chartTitle.byGroupVehicle");
 			}
 			return "";
 		},
 		energyGroupedTitle() {
 			if (this.selectedGroup === GROUPS.NONE) {
-				return this.$t("sessions.energyGroupedTitle", { energy: this.energySumFmt });
+				return this.$t("sessions.chartTitle.energyGrouped");
 			}
-			return this.$t("sessions.energyGroupedTitleByGroup", { byGroup: this.byGroupTitle });
+			return this.$t("sessions.chartTitle.energyGroupedByGroup", {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		avgCostTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.avg${type}TitleByGroup`, { byGroup: this.byGroupTitle });
+			return this.$t(`sessions.chartTitle.avg${type}ByGroup`, {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		costGroupedTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.grouped${type}TitleByGroup`, { byGroup: this.byGroupTitle });
+			return this.$t(`sessions.chartTitle.grouped${type}ByGroup`, {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({
@@ -390,7 +411,7 @@ export default {
 					? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
 					: this.fmtCo2Medium(this.co2PerKWh);
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.history${type}Title`, { value });
+			return this.$t(`sessions.chartTitle.history${type}`, { value });
 		},
 		costSubTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
@@ -398,7 +419,7 @@ export default {
 				this.activeType === TYPES.PRICE
 					? this.fmtMoney(this.totalPrice, this.currency, true, true)
 					: this.fmtGrams(this.totalCo2);
-			return this.$t(`sessions.history${type}SubTitle`, { value });
+			return this.$t(`sessions.chartTitle.history${type}Sub`, { value });
 		},
 		activeType() {
 			if (this.selectedType === TYPES.PRICE && this.typePriceAvailable) {
