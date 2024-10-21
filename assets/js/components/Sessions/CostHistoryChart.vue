@@ -222,7 +222,7 @@ export default {
 									const date = new Date(this.year, label - 1, 1);
 									return this.fmtMonth(date);
 								} else {
-									const date = new Date(this.year, this.month, label);
+									const date = new Date(this.year, this.month - 1, label);
 									return this.fmtDayMonth(date);
 								}
 							},
