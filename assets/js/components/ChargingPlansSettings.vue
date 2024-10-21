@@ -56,7 +56,7 @@ const DEFAULT_TARGET_TIME = "7:00";
 const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
-	name: "ChargingPlanSettings",
+	name: "ChargingPlansSettings",
 	components: {
 		ChargingPlanPreview,
 		ChargingPlanStaticSettings,
