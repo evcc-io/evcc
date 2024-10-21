@@ -19,6 +19,7 @@
 							type="checkbox"
 							value="all"
 							@change="toggleCheckAll()"
+							:disabled="allOptionsSelected"
 							:checked="allOptionsSelected"
 						/>
 						<div class="form-check-label">{{ selectAllLabel }}</div>
@@ -27,12 +28,13 @@
 				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
-				<label class="form-check px-3 py-2 d-flex" :for="option.value">
+				<label class="form-check px-3 py-2 d-flex" :for="formId(option.value)">
 					<input
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
-						:id="option.value"
+						:id="formId(option.value)"
 						:value="option.value"
+						:disabled="onlySelected(option.value)"
 						v-model="internalValue"
 					/>
 					<div class="form-check-label">
@@ -46,7 +48,7 @@
 
 <script>
 import Dropdown from "bootstrap/js/dist/dropdown";
-
+import deepEqual from "../utils/deepEqual";
 export default {
 	name: "MultiSelect",
 	props: {
@@ -102,8 +104,9 @@ export default {
 						: [...newValue];
 			},
 		},
-		internalValue(newValue) {
-			if (this.allOptionsSelected || this.noneSelected) {
+		internalValue(newValue, oldValue) {
+			if (deepEqual(newValue, oldValue)) return;
+			if (this.noneSelected) {
 				this.$emit("update:modelValue", []);
 			} else {
 				this.$emit("update:modelValue", newValue);
@@ -114,12 +117,14 @@ export default {
 		open() {
 			this.$emit("open");
 		},
+		formId(name) {
+			return `${this.id}-${name}`;
+		},
+		onlySelected(value) {
+			return this.internalValue.length === 1 && this.internalValue.includes(value);
+		},
 		toggleCheckAll() {
-			if (this.allOptionsSelected) {
-				this.internalValue = [];
-			} else {
-				this.internalValue = this.options.map((option) => option.value);
-			}
+			this.internalValue = this.options.map((option) => option.value);
 		},
 	},
 };

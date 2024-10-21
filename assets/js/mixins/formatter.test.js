@@ -137,3 +137,127 @@ describe("fmtDuration", () => {
     config.global.mocks["$i18n"].locale = "de-DE";
   });
 });
+
+describe("getShortenedWeekdaysLabel", () => {
+  test("should format single days", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Mo, Mi, Fr, So");
+    expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
+    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Do, So");
+  });
+  test("should format ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0, 1])).eq("Mo, Di");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Di, Do – Sa");
+  });
+  test("should format single days and ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Di, Do, Sa, So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Mo, Mi, Do, Sa, So");
+  });
+});
+
+describe("fmtDayHourMinute", () => {
+  test("should format time correctly when converting to UTC", () => {
+    expect(fmt.fmtDayHourMinute("12:30", true)).toBe(["10:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", true)).toBe(["10:45", 0]);
+  });
+  test("should format time correctly when not converting to UTC", () => {
+    expect(fmt.fmtDayHourMinute("12:30", false)).toBe(["14:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", false)).toBe(["17:45", 0]);
+  });
+  test("should handle edge cases for times near midnight", () => {
+    expect(fmt.fmtDayHourMinute("00:00", true)).toBe(["22:00", -1]);
+    expect(fmt.fmtDayHourMinute("00:00", false)).toBe(["02:00", 1]);
+    expect(fmt.fmtDayHourMinute("23:59", true)).toBe(["21:59", -1]);
+    expect(fmt.fmtDayHourMinute("23:59", false)).toBe(["01:59", 1]);
+  });
+});
+
+describe("fmt.fmtRepeatingPlansUTC", () => {
+  test("should format to UTC", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "12:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toBe([
+      {
+        time: "10:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
+  test("should format to local timezone", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "10:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        false
+      )
+    ).toBe([
+      {
+        time: "12:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
+  test("should correctly adjust weekdays when crossing date boundaries", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "23:30",
+            weekdays: [0, 5, 6],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toBe([
+      {
+        time: "21:30",
+        weekdays: [6, 4, 5],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
+  expect(
+    fmt.fmtRepeatingPlansUTC(
+      [
+        {
+          time: "23:30",
+          weekdays: [0, 1, 2],
+          active: true,
+          soc: 80,
+        },
+      ],
+      true
+    )
+  ).toBe([
+    {
+      time: "02:30",
+      weekdays: [1, 2, 3],
+      active: true,
+      soc: 80,
+    },
+  ]);
+});
