@@ -3,11 +3,11 @@ products:
   - brand: EM2GO
     description:
       generic: Home
-capabilities: ["1p3p"]
+capabilities: ["1p3p", "mA"]
 requirements:
   description:
-    de: "Benötigt Firmware version E3C_V1.1 oder neuer."
-    en: "Requires Firmware version E3C_V1.1 or newer."
+    de: "Benötigt FW version >= E3C_V1.1. mA Regelung benötigt FW version >= E3C_V1.3."
+    en: "Requires FW Version >= E3C_V1.1. mA regulation requires FW version >= E3C_V1.3."
 params:
   - name: host
 render: |
