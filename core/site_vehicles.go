@@ -44,7 +44,7 @@ func (site *Site) publishVehicles() {
 			LimitSoc:       v.GetLimitSoc(),
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plans:          plans,
-			RepeatingPlans: v.GetRepeatingPlans(),
+			RepeatingPlans: v.GetRepeatingPlans(false),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
