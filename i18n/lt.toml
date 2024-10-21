@@ -653,6 +653,23 @@ solar = "Saulės"
 title = "Įkrovimo Sesijos"
 total = "Viso"
 vehicle = "Automobilis"
+avgPriceTitleByGroup = "⌀ Kaina {byGroup}"
+byGroupLoadpoint = "pagal įkroviklį"
+byGroupVehicle = "pagal automobilį"
+groupedCo2TitleByGroup = "CO₂-Kiekis {byGroup}"
+groupedPriceTitleByGroup = "Bendra kaina {byGroup}"
+historyCo2SubTitle = "{value} viso"
+historyPriceSubTitle = "{value} viso"
+historyPriceTitle = "⌀ {value} Įkrovimo Kaina"
+showIndividualEntries = "Rodyti individualias sesijas"
+solarTitle = "Saulės dalis per metus"
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
+energyGroupedTitle = "Įkrauta Energija {energy}"
+energyGroupedTitleByGroup = "Energija {byGroup}"
+energySubTitle = "{energy} viso"
+energyTitle = "{percent} Saulės Energija"
+historyCo2Title = "⌀ {value} CO₂-Emisija"
+solarTitleByGroup = "Saulės {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -748,3 +765,25 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[sessions.group]
+co2 = "Emisijos"
+price = "Kaina"
+grid = "Tinklo"
+self = "Saulės"
+
+[sessions.groupBy]
+vehicle = "Automobilis"
+loadpoint = "Įkroviklis"
+none = "Viso"
+
+[sessions.period]
+month = "Mėnesis"
+total = "Viso"
+year = "Metai"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Kaina"
+solar = "Saulės"
