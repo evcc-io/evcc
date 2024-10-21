@@ -9,14 +9,32 @@
 
 <script>
 import { Bar } from "vue-chartjs";
-import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
+import {
+	BarController,
+	BarElement,
+	CategoryScale,
+	Legend,
+	LinearScale,
+	LineController,
+	LineElement,
+	Tooltip,
+} from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
 import formatter from "../../mixins/formatter";
 import colors from "../../colors";
 import { TYPES, GROUPS, PERIODS } from "./types";
 
-registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
+registerChartComponents([
+	BarController,
+	BarElement,
+	CategoryScale,
+	Legend,
+	LinearScale,
+	LineController,
+	LineElement,
+	Tooltip,
+]);
 
 export default {
 	name: "CostHistoryChart",
