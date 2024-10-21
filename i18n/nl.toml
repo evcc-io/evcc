@@ -96,6 +96,7 @@ remove = "Verwijderen"
 save = "Opslaan"
 telemetry = "Telemetrie"
 title = "Titel"
+readFromFile = "Uit bestand lezen"
 
 [config.grid]
 title = "Netmeter"
@@ -119,6 +120,7 @@ labelUser = "Gebruikersnaam"
 title = "InfluxDB"
 v1Support = "Hulp nodig voor InfluxDB 1.x?"
 v2Support = "Terug naar InfluxDB 2.x"
+labelInsecure = "Certificaat validatie"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
@@ -161,6 +163,9 @@ labelTopic = "Onderwerp"
 labelUser = "Gebruikersnaam"
 publishing = "Publiceren"
 title = "MQTT"
+labelClientKey = "Client key"
+labelCaCert = "Servercertificaat (CA)"
+labelClientCert = "Clientcertificaat"
 
 [config.network]
 descriptionHost = "Gebruik de .local toevoeging om mDNS te activeren. Voor toegang vanuit de mobiele app en sommige OCPP laders van belang."
@@ -449,6 +454,7 @@ smartCostCheap = "Goedkoop laden met netstroom"
 smartCostClean = "Laden met schone energie van het net"
 title = "Instellingen {0}"
 vehicle = "Voertuig"
+batteryUsage = "Thuisbatterij"
 
 [main.loadpointSettings.limitSoc]
 description = "Standaard laadlimiet wanneer dit voertuig aangesloten wordt"
@@ -571,6 +577,9 @@ vehicleLimit = "Voertuiglimiet."
 vehicleLimitReached = "Voertuiglimiet bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
 welcome = "Verkort initiële lading om de verbinding te bevestigen."
+batteryBoost = "Batterijboost actief."
+awaitingAuthorization = "Wachten op autorisatie."
+disconnectRequired = "Sessie afgebroken. Verbind opnieuw."
 
 [notifications]
 dismissAll = "Alles verwijderen"
@@ -630,6 +639,23 @@ solar = "Zon"
 title = "Oplaadsessies"
 total = "Totaal"
 vehicle = "Voertuig"
+byGroupLoadpoint = "per laadpunt"
+byGroupVehicle = "per voertuig"
+energyGroupedTitleByGroup = "Energie {byGroup}"
+energySubTitle = "{energy} totaal"
+energyTitle = "{percent} zonne-energie"
+historyCo2Title = "⌀ {value} CO₂-Uitstoot"
+historyPriceSubTitle = "{value} totaal"
+historyPriceTitle = "⌀ {value} Laadprijs"
+solarTitle = "Jaarlijks zonne-aandeel"
+groupedCo2TitleByGroup = "CO₂-Hoeveelheid {byGroup}"
+groupedPriceTitleByGroup = "Kosten {byGroup}"
+historyCo2SubTitle = "{value} totaal"
+showIndividualEntries = "Toon individuele sessies"
+solarTitleByGroup = "Zonne-aandeel {byGroup}"
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
+avgPriceTitleByGroup = "⌀ Prijs {byGroup}"
+energyGroupedTitle = "Geladen energie {energy}"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -725,3 +751,31 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Snelladen vanuit thuisbatterij"
+label = "Batterij Boost"
+mode = "Enkel beschikbaar in PV en Min+PV modus."
+once = "Boost geactiveerd voor deze laadsessie."
+
+[sessions.period]
+month = "Maand"
+total = "Totaal"
+year = "Jaar"
+
+[sessions.type]
+solar = "Zon"
+co2 = "CO₂"
+price = "Prijs"
+
+[sessions.group]
+co2 = "Emissies"
+price = "Prijs"
+grid = "Net"
+self = "Zon"
+
+[sessions.groupBy]
+none = "Totaal"
+vehicle = "Voertuig"
+loadpoint = "Laadpunt"
