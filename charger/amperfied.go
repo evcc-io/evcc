@@ -49,6 +49,7 @@ const (
 	ampRegAmpsConfig         = 261  // Holding
 	ampRegFailSafeConfig     = 262  // Holding
 	ampRegPhaseSwitchControl = 501  // Holding
+	ampRegPhaseSwitchState   = 5001 // Input
 	ampRegRfidUID            = 2002 // Input
 )
 
@@ -56,7 +57,7 @@ func init() {
 	registry.Add("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -106,11 +107,13 @@ func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
 	}
 
 	var phases1p3p func(int) error
+	var phasesG func() (int, error)
 	if phases {
 		phases1p3p = wb.phases1p3p
+		phasesG = wb.getPhases
 	}
 
-	return decorateAmperfied(wb, phases1p3p), nil
+	return decorateAmperfied(wb, phases1p3p, phasesG), nil
 }
 
 func (wb *Amperfied) heartbeat(timeout time.Duration) {
@@ -342,4 +345,14 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 
 	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
 	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Amperfied) getPhases() (int, error) {
+	b, err := wb.conn.ReadInputRegisters(ampRegPhaseSwitchState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint16(b)), nil
 }

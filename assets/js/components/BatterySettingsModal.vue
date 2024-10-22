@@ -160,7 +160,7 @@
 								@change="changeBufferStart"
 							>
 								<span class="text-decoration-underline">
-									{{ bufferStartOption.name }}
+									{{ selectedBufferStartName }}
 								</span>
 							</CustomSelect>
 						</small>
@@ -332,19 +332,20 @@ export default {
 			for (let i = 100; i >= this.bufferSoc; i -= 5) {
 				options.push({
 					value: i,
-					name: this.$t(`batterySettings.bufferStart.${i === 100 ? "full" : "above"}`, {
-						soc: this.fmtSoc(i),
-					}),
+					name: this.getBufferStartName(i),
 				});
 			}
 			options.push({
 				value: 0,
-				name: this.$t("batterySettings.bufferStart.never"),
+				name: this.getBufferStartName(0),
 			});
 			return options;
 		},
 		bufferStartOption() {
 			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
+		},
+		selectedBufferStartName() {
+			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
@@ -361,7 +362,7 @@ export default {
 			}
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
-				.map(({ soc, capacity }) => {
+				.map(({ soc = 0, capacity }) => {
 					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
@@ -487,6 +488,11 @@ export default {
 			} catch (err) {
 				console.error(err);
 			}
+		},
+		getBufferStartName(value) {
+			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
+			const soc = this.fmtSoc(value);
+			return this.$t(`batterySettings.bufferStart.${key}`, { soc });
 		},
 	},
 };

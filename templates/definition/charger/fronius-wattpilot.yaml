@@ -1,4 +1,5 @@
 template: fronius-wattpilot
+deprecated: true
 products:
   - brand: Fronius
     description:

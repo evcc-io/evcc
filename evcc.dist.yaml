@@ -108,7 +108,6 @@ site:
     aux:
       - aux # list of auxiliary meters for adjusting grid operating point
   residualPower: 0 # additional household usage margin
-  maxGridSupplyWhileBatteryCharging: 0 # ignore battery charging if AC consumption is above this value
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

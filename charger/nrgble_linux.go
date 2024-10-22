@@ -3,8 +3,8 @@ package charger
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,6 +22,7 @@ const nrgTimeout = 10 * time.Second
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
+	mu            sync.Mutex
 	log           *util.Logger
 	timer         *time.Ticker
 	adapter       *adapter.Adapter1
@@ -68,10 +69,6 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	// set LE mode
 	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
 
-	if len(os.Getenv("DOCKER")) > 0 {
-		btmgmt.BinPath = "./docker-btmgmt"
-	}
-
 	err = btmgmt.SetPowered(false)
 	if err == nil {
 		err = btmgmt.SetLe(true)
@@ -102,12 +99,11 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	agent.NextAgentPath()
 
 	ag := agent.NewSimpleAgent()
-	err = agent.ExposeAgent(conn, ag, agent.CapNoInputNoOutput, true)
-	if err != nil {
+	if err := agent.ExposeAgent(conn, ag, agent.CapNoInputNoOutput, true); err != nil {
 		return nil, err
 	}
 
-	nrg := &NRGKickBLE{
+	wb := &NRGKickBLE{
 		log:     logger,
 		timer:   time.NewTicker(2 * time.Second),
 		device:  ainfo.AdapterID,
@@ -117,108 +113,111 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		agent:   ag,
 	}
 
-	return nrg, nil
+	return wb, nil
 }
 
-func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := ble.FindDevice(nrg.adapter, nrg.mac, nrgTimeout)
+func (wb *NRGKickBLE) connect() (*device.Device1, error) {
+	dev, err := ble.FindDevice(wb.adapter, wb.mac, nrgTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
 
-	if err := ble.Connect(dev, nrg.agent, nrg.device); err != nil {
-		return nil, err
-	}
-
-	return dev, nil
+	err = ble.Connect(dev, wb.agent, wb.device)
+	return dev, err
 }
 
-func (nrg *NRGKickBLE) close() {
-	if nrg.dev != nil {
-		nrg.dev.Close()
-		nrg.dev = nil
+func (wb *NRGKickBLE) close() {
+	if wb.dev != nil {
+		wb.dev.Close()
+		wb.dev = nil
 	}
 }
 
-func (nrg *NRGKickBLE) read(service string, res interface{}) error {
-	<-nrg.timer.C
+func (wb *NRGKickBLE) read(service string, res interface{}) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
 
-	if nrg.dev == nil {
-		dev, err := nrg.connect()
+	<-wb.timer.C
+
+	if wb.dev == nil {
+		dev, err := wb.connect()
 		if err != nil {
 			return err
 		}
-		nrg.dev = dev
+		wb.dev = dev
 	}
 
-	char, err := nrg.dev.GetCharByUUID(service)
+	char, err := wb.dev.GetCharByUUID(service)
 	if err != nil {
-		nrg.close()
+		wb.close()
 		return err
 	}
 
 	b, err := char.ReadValue(map[string]interface{}{})
 	if err != nil {
-		nrg.close()
+		wb.close()
 		return err
 	}
-	nrg.log.TRACE.Printf("read %s %0x", service, b)
+	wb.log.TRACE.Printf("read %s %0x", service, b)
 
 	return struc.Unpack(bytes.NewReader(b), res)
 }
 
-func (nrg *NRGKickBLE) write(service string, val interface{}) error {
+func (wb *NRGKickBLE) write(service string, val interface{}) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	var out bytes.Buffer
 	if err := struc.Pack(&out, val); err != nil {
 		return err
 	}
-	nrg.log.TRACE.Printf("write %s %0x", service, out.Bytes())
+	wb.log.TRACE.Printf("write %s %0x", service, out.Bytes())
 
-	<-nrg.timer.C
+	<-wb.timer.C
 
-	if nrg.dev == nil {
-		dev, err := nrg.connect()
+	if wb.dev == nil {
+		dev, err := wb.connect()
 		if err != nil {
 			return err
 		}
-		nrg.dev = dev
+		wb.dev = dev
 	}
 
-	char, err := nrg.dev.GetCharByUUID(service)
+	char, err := wb.dev.GetCharByUUID(service)
 	if err != nil {
-		nrg.close()
+		wb.close()
 		return err
 	}
 
 	if err := char.WriteValue(out.Bytes(), map[string]interface{}{}); err != nil {
-		nrg.close()
+		wb.close()
 		return err
 	}
 
 	return nil
 }
 
-func (nrg *NRGKickBLE) mergeSettings(info ble.Info) ble.Settings {
+func (wb *NRGKickBLE) mergeSettings(info ble.Info) ble.Settings {
 	return ble.Settings{
-		PIN:                  nrg.pin,
+		PIN:                  wb.pin,
 		ChargingEnergyLimit:  19997, // magic const for "disable"
 		KWhPer100:            info.KWhPer100,
 		AmountPerKWh:         info.AmountPerKWh,
 		Efficiency:           info.Efficiency,
 		BLETransmissionPower: info.BLETransmissionPower,
-		PauseCharging:        nrg.pauseCharging, // apply last value
-		Current:              nrg.current,       // apply last value
+		PauseCharging:        wb.pauseCharging, // apply last value
+		Current:              wb.current,       // apply last value
 	}
 }
 
 // Status implements the api.Charger interface
-func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
-	res := ble.Power{}
-	if err := nrg.read(ble.PowerService, &res); err != nil {
+func (wb *NRGKickBLE) Status() (api.ChargeStatus, error) {
+	var res ble.Power
+	if err := wb.read(ble.PowerService, &res); err != nil {
 		return api.StatusF, err
 	}
 
-	nrg.log.TRACE.Printf("read power: %+v", res)
+	wb.log.TRACE.Printf("read power: %+v", res)
 
 	switch res.CPSignal {
 	case 3:
@@ -233,13 +232,13 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (nrg *NRGKickBLE) Enabled() (bool, error) {
-	res := ble.Info{}
-	if err := nrg.read(ble.InfoService, &res); err != nil {
+func (wb *NRGKickBLE) Enabled() (bool, error) {
+	var res ble.Info
+	if err := wb.read(ble.InfoService, &res); err != nil {
 		return false, err
 	}
 
-	nrg.log.TRACE.Printf("read info: %+v", res)
+	wb.log.TRACE.Printf("read info: %+v", res)
 
 	// workaround internal NRGkick state change after connecting
 	// https://github.com/evcc-io/evcc/pull/274
@@ -247,57 +246,57 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (nrg *NRGKickBLE) Enable(enable bool) error {
+func (wb *NRGKickBLE) Enable(enable bool) error {
 	var res ble.Info
-	if err := nrg.read(ble.InfoService, &res); err != nil {
+	if err := wb.read(ble.InfoService, &res); err != nil {
 		return err
 	}
 
 	// workaround internal NRGkick state change after connecting
 	// https://github.com/evcc-io/evcc/pull/274
 	if !enable && res.PauseCharging {
-		nrg.pauseCharging = false
-		settings := nrg.mergeSettings(res)
+		wb.pauseCharging = false
+		settings := wb.mergeSettings(res)
 
-		nrg.log.TRACE.Printf("write settings (workaround): %+v", settings)
-		if err := nrg.write(ble.SettingsService, &settings); err != nil {
+		wb.log.TRACE.Printf("write settings (workaround): %+v", settings)
+		if err := wb.write(ble.SettingsService, &settings); err != nil {
 			return err
 		}
 	}
 
-	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
-	settings := nrg.mergeSettings(res)
+	wb.pauseCharging = !enable // use cached value to work around API roundtrip delay
+	settings := wb.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write settings: %+v", settings)
+	wb.log.TRACE.Printf("write settings: %+v", settings)
 
-	return nrg.write(ble.SettingsService, &settings)
+	return wb.write(ble.SettingsService, &settings)
 }
 
 // MaxCurrent implements the api.Charger interface
-func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
+func (wb *NRGKickBLE) MaxCurrent(current int64) error {
 	var res ble.Info
-	if err := nrg.read(ble.InfoService, &res); err != nil {
+	if err := wb.read(ble.InfoService, &res); err != nil {
 		return err
 	}
 
-	nrg.current = int(current) // use cached value to work around API roundtrip delay
-	settings := nrg.mergeSettings(res)
+	wb.current = int(current) // use cached value to work around API roundtrip delay
+	settings := wb.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write settings: %+v", settings)
+	wb.log.TRACE.Printf("write settings: %+v", settings)
 
-	return nrg.write(ble.SettingsService, &settings)
+	return wb.write(ble.SettingsService, &settings)
 }
 
 var _ api.Meter = (*NRGKickBLE)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
+func (wb *NRGKickBLE) CurrentPower() (float64, error) {
 	var res ble.Power
-	if err := nrg.read(ble.PowerService, &res); err != nil {
+	if err := wb.read(ble.PowerService, &res); err != nil {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("read power: %+v", res)
+	wb.log.TRACE.Printf("read power: %+v", res)
 
 	return float64(res.TotalPower) * 10, nil
 }
@@ -305,13 +304,13 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 var _ api.MeterEnergy = (*NRGKickBLE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
+func (wb *NRGKickBLE) TotalEnergy() (float64, error) {
 	var res ble.Energy
-	if err := nrg.read(ble.EnergyService, &res); err != nil {
+	if err := wb.read(ble.EnergyService, &res); err != nil {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("read energy: %+v", res)
+	wb.log.TRACE.Printf("read energy: %+v", res)
 
 	return float64(res.TotalEnergy) / 1000, nil
 }
@@ -319,13 +318,13 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 var _ api.PhaseCurrents = (*NRGKickBLE)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
+func (wb *NRGKickBLE) Currents() (float64, float64, float64, error) {
 	var res ble.VoltageCurrent
-	if err := nrg.read(ble.VoltageCurrentService, &res); err != nil {
+	if err := wb.read(ble.VoltageCurrentService, &res); err != nil {
 		return 0, 0, 0, err
 	}
 
-	nrg.log.TRACE.Printf("read voltage/current: %+v", res)
+	wb.log.TRACE.Printf("read voltage/current: %+v", res)
 
 	return float64(res.CurrentL1) / 100,
 		float64(res.CurrentL2) / 100,
@@ -335,11 +334,11 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 
 // ChargedEnergy implements the ChargeRater interface
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
-// func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
+// func (wb *NRGKickBLE) ChargedEnergy() (float64, error) {
 // 	res := ble.Energy{}
-// 	if err := nrg.read(ble.EnergyService, &res); err != nil {
+// 	if err := wb.read(ble.EnergyService, &res); err != nil {
 // 		return 0, err
 // 	}
-// 	nrg.log.TRACE.Printf("energy: %+v", res)
+// 	wb.log.TRACE.Printf("energy: %+v", res)
 // 	return float64(res.EnergyLastCharge) / 1000, nil
 // }

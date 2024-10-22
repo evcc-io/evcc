@@ -56,9 +56,10 @@ const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
 	RequirementMQTT        = "mqtt"        // MQTT Setup is required
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
+	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
 )
 
-var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship}
+var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",

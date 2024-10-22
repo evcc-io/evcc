@@ -57,6 +57,9 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
+		lp.batteryBoost = boostDisabled
+		lp.publish(keys.BatteryBoost, false)
+
 		// reset timers
 		switch mode {
 		case api.ModeNow, api.ModeOff:
@@ -274,6 +277,89 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 		lp.Disable.Threshold = threshold
 		lp.publish(keys.DisableThreshold, threshold)
 	}
+}
+
+// GetEnableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetEnableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Enable.Delay
+}
+
+// SetEnableDelay sets loadpoint enable delay
+func (lp *Loadpoint) SetEnableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set enable delay:", delay)
+
+	if lp.Enable.Delay != delay {
+		lp.Enable.Delay = delay
+		lp.publish(keys.EnableDelay, delay)
+	}
+}
+
+// GetDisableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetDisableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Disable.Delay
+}
+
+// SetDisableDelay sets loadpoint disable delay
+func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set disable delay:", delay)
+
+	if lp.Disable.Delay != delay {
+		lp.Disable.Delay = delay
+		lp.publish(keys.DisableDelay, delay)
+	}
+}
+
+// getBatteryBoost returns the battery boost
+func (lp *Loadpoint) getBatteryBoost() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoost
+}
+
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() bool {
+	return lp.getBatteryBoost() > 0
+}
+
+// setBatteryBoost returns the battery boost
+func (lp *Loadpoint) setBatteryBoost(boost int) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.batteryBoost = boost
+}
+
+// SetBatteryBoost sets the battery boost
+func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if enable && lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
+		return errors.New("battery boost is only available in PV modes")
+	}
+
+	lp.log.DEBUG.Println("set battery boost:", enable)
+
+	if enable != (lp.batteryBoost != boostDisabled) {
+		lp.publish(keys.BatteryBoost, enable)
+
+		lp.batteryBoost = boostDisabled
+		if enable {
+			lp.batteryBoost = boostStart
+			lp.requestUpdate()
+		}
+	}
+
+	return nil
 }
 
 // RemoteControl sets remote status demand

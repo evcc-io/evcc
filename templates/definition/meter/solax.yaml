@@ -17,6 +17,7 @@ params:
     baudrate: 19200
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   power:
@@ -60,6 +61,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus

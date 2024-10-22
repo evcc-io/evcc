@@ -17,13 +17,13 @@ func Types() []string {
 }
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (api.Meter, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Meter, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := factory(context.TODO(), other)
+	v, err := factory(ctx, other)
 	if err != nil {
 		err = fmt.Errorf("cannot create meter type '%s': %w", typ, err)
 	}

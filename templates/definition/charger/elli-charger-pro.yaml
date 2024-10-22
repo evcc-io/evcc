@@ -2,19 +2,19 @@ template: ellipro
 products:
   - brand: Elli
     description:
-      generic: Charger Pro (Beta)
+      generic: Charger Pro
   - brand: Volkswagen
     description:
-      generic: ID. Charger Pro (Beta)
+      generic: ID. Charger Pro
   - brand: Skoda
     description:
-      generic: iV Charger Connect+ (Beta)
+      generic: iV Charger Connect+
   - brand: Cupra
     description:
-      generic: Charger Pro (Beta)
+      generic: Charger Pro
   - brand: Audi
     description:
-      generic: Audi Wallbox pro (Beta)
+      generic: Audi Wallbox pro
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]

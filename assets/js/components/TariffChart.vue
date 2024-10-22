@@ -13,9 +13,10 @@
 				'cursor-pointer': slot.selectable,
 				faded: activeIndex !== null && activeIndex !== index,
 			}"
-			@touchstart="hoverSlot(index)"
+			@touchstart="startLongPress(index)"
+			@touchend="cancelLongPress"
+			@touchmove="cancelLongPress"
 			@mouseenter="hoverSlot(index)"
-			@touchend="hoverSlot(null)"
 			@mouseleave="hoverSlot(null)"
 			@mouseup="hoverSlot(null)"
 			@click="selectSlot(index)"
@@ -44,7 +45,12 @@ export default {
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
-		return { activeIndex: null, startTime: new Date() };
+		return {
+			activeIndex: null,
+			startTime: new Date(),
+			longPressTimer: null,
+			isLongPress: false,
+		};
 	},
 	computed: {
 		priceInfo() {
@@ -83,6 +89,10 @@ export default {
 			this.$emit("slot-hovered", index);
 		},
 		selectSlot(index) {
+			if (this.isLongPress) {
+				this.isLongPress = false;
+				return;
+			}
 			if (this.slots[index]?.selectable) {
 				this.$emit("slot-selected", index);
 			}
@@ -94,6 +104,16 @@ export default {
 					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
 					: "75%";
 			return { height };
+		},
+		startLongPress(index) {
+			this.longPressTimer = setTimeout(() => {
+				this.isLongPress = true;
+				this.hoverSlot(index);
+			}, 300);
+		},
+		cancelLongPress() {
+			clearTimeout(this.longPressTimer);
+			this.hoverSlot(null);
 		},
 	},
 };

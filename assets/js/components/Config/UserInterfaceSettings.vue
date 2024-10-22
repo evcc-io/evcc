@@ -11,6 +11,7 @@
 						name: $t(`settings.theme.${value}`),
 					}))
 				"
+				equal-width
 			/>
 		</FormRow>
 		<FormRow id="settingsLanguage" :label="$t('settings.language.label')">
@@ -36,6 +37,7 @@
 						name: $t(`settings.unit.${value}`),
 					}))
 				"
+				equal-width
 			/>
 		</FormRow>
 		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
