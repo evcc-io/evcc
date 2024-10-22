@@ -16,19 +16,21 @@ func init() {
 	registry.Add("hoymiles-wifi", NewHoymilesWifiMeterFromConfig)
 }
 
+type Config struct {
+	Host string
+}
+
 type HoymilesWifi struct {
 	client           *hoymiles_wifi.ClientData
 	log              *util.Logger
-	host string
+	host             string
 	lastValue        float64
 	lastValueUpdated time.Time
+	config           *Config
 }
 
 func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
-		Host string
-	}
-
+	var cc Config
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -40,9 +42,9 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 	client.ConnectionTimeout = 5 * time.Second
 
 	return &HoymilesWifi{
-		client:    client,
-		log:       log,
-		cc:        cc,
+		client: client,
+		log:    log,
+		config: &cc,
 	}, nil
 }
 
@@ -62,14 +64,14 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 			hmWifi.lastValue = 0
 		}
 		if err.Error() == "client connection is closed" {
-			hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.cc.Host)
+			hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.config.Host)
 			return hmWifi.lastValue, nil
 		}
 		opErr, ok := err.(*net.OpError)
 		if ok {
 			sysErr, ok2 := opErr.Err.(*os.SyscallError)
 			if ok2 && sysErr.Err == syscall.Errno(10060) {
-				hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.cc.Host)
+				hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.config.Host)
 				return hmWifi.lastValue, nil
 			}
 		}
