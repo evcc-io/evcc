@@ -29,8 +29,8 @@ const colors = reactive({
     "#0470D4FF",
     "#FFBD2FFF",
     "#77C93EFF",
-    "#0AAFBFFF",
     "#4E1D10FF",
+    "#0AAFBFFF",
     "#813504FF",
   ],
 });
