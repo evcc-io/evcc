@@ -158,8 +158,8 @@ export default {
 				type: "line",
 				label:
 					this.costType === TYPES.PRICE
-						? this.pricePerKWhUnit(this.currency, false)
-						: "gCO₂e/kWh",
+						? this.$t("sessions.avgPrice")
+						: this.$t("sessions.co2"),
 				data: Object.values(result).map((index) => index.avgCost || null),
 				yAxisID: "y1",
 				tension: 0.25,
@@ -187,8 +187,10 @@ export default {
 					const max = Math.max(...items);
 					const format = (value, withUnit) => {
 						return this.costType === TYPES.PRICE
-							? this.fmtPricePerKWh(value, this.currency, true, withUnit)
-							: this.fmtGrams(value, withUnit);
+							? this.fmtPricePerKWh(value, this.currency, false, withUnit)
+							: withUnit
+								? this.fmtCo2Medium(value)
+								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
 				} else {
@@ -255,7 +257,8 @@ export default {
 									}
 
 									return (
-										"⌀ " +
+										datasetLabel +
+										": " +
 										(this.costType === TYPES.PRICE
 											? this.fmtPricePerKWh(value, this.currency, false)
 											: this.fmtCo2Medium(value))
