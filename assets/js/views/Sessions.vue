@@ -72,17 +72,12 @@
 				</div>
 
 				<h3
-					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden justify-content-start justify-content-md-between"
+					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
 				>
-					<span v-if="historyTitle" class="d-block no-wrap text-truncate">{{
-						historyTitle
-					}}</span>
-					<span class="d-block no-wrap text-truncate">{{ periodTitle }}</span>
-					<small
-						class="d-block no-wrap text-truncate"
-						:class="{ 'pe-md-4': activeType !== types.PRICE }"
-						>{{ historySubTitle }}</small
-					>
+					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
+						{{ historyTitle }}
+					</span>
+					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
 				</h3>
 				<EnergyHistoryChart
 					v-if="activeType === types.SOLAR"
@@ -274,17 +269,6 @@ export default {
 		historyTitle() {
 			return this.activeType === TYPES.SOLAR ? this.energyTitle : this.costTitle;
 		},
-		periodTitle() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				return this.fmtMonthYear(date);
-			}
-			if (this.period === PERIODS.YEAR) {
-				return this.year;
-			}
-			return null;
-		},
 		historySubTitle() {
 			if (this.activeType === TYPES.SOLAR) {
 				return this.energySubTitle;
@@ -312,7 +296,13 @@ export default {
 			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
 		},
 		energySubTitle() {
-			return this.$t("sessions.chartTitle.energySub", { energy: this.energySumFmt });
+			const total = this.$t("sessions.chartTitle.energySubTotal", {
+				value: this.energySumFmt,
+			});
+			const solar = this.$t("sessions.chartTitle.energySubSolar", {
+				value: this.solarPercentageFmt,
+			});
+			return `${total} ・ ${solar}`;
 		},
 		solarTitle() {
 			return this.selectedGroup === GROUPS.NONE
@@ -406,12 +396,13 @@ export default {
 			return energy ? this.totalCo2 / energy : null;
 		},
 		costTitle() {
-			const value =
-				this.activeType === TYPES.PRICE
-					? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
-					: this.fmtCo2Medium(this.co2PerKWh);
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.chartTitle.history${type}`, { value });
+			return this.$t(`sessions.chartTitle.history${type}`);
+		},
+		avgCostFmt() {
+			return this.activeType === TYPES.PRICE
+				? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
+				: this.fmtCo2Medium(this.co2PerKWh);
 		},
 		costSubTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
@@ -419,7 +410,8 @@ export default {
 				this.activeType === TYPES.PRICE
 					? this.fmtMoney(this.totalPrice, this.currency, true, true)
 					: this.fmtGrams(this.totalCo2);
-			return this.$t(`sessions.chartTitle.history${type}Sub`, { value });
+			const total = this.$t(`sessions.chartTitle.history${type}Sub`, { value });
+			return `${total} ・ ⌀ ${this.avgCostFmt}`;
 		},
 		activeType() {
 			if (this.selectedType === TYPES.PRICE && this.typePriceAvailable) {
