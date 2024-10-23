@@ -42,8 +42,8 @@ type Circuit struct {
 func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
 		Title         string           // title
-		ParentRef     string           // parent circuit reference
-		MeterRef      string           // meter reference
+		ParentRef     string           `mapstructure:"parent"` // parent circuit reference
+		MeterRef      string           `mapstructure:"meter"`  // meter reference
 		MaxCurrent    float64          // the max allowed current
 		MaxPower      float64          // the max allowed power
 		GetMaxCurrent *provider.Config // dynamic max allowed current
