@@ -526,6 +526,8 @@ func (site *Site) updateAuxMeters() {
 		return
 	}
 
+	site.auxPower = 0
+
 	mm := make([]meterMeasurement, len(site.auxMeters))
 
 	for i, meter := range site.auxMeters {
