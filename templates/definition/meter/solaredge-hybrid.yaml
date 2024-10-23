@@ -61,22 +61,6 @@ render: |
       timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphC
-  voltages:
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
-      subdevice: 1 # Metering device
-      value: 203:PhVphA
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
-      subdevice: 1 # Metering device
-      value: 203:PhVphB
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
-      subdevice: 1 # Metering device
-      value: 203:PhVphC
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}

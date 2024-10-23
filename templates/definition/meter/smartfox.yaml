@@ -28,16 +28,6 @@ render: |
     uri: {{ include "uri" . }}
     jq: .energy_in
     scale: 0.001  
-  voltages:
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .voltages[0]
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .voltages[1]
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .voltages[2]
   currents:
   - source: http
     uri: {{ include "uri" . }}
