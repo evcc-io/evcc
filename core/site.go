@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
 )
@@ -439,12 +440,7 @@ func (site *Site) updatePvMeters() {
 		return
 	}
 
-	var totalEnergy float64
 	var wg sync.WaitGroup
-	var mu sync.Mutex
-
-	site.pvPower = 0
-	site.excessDCPower = 0
 
 	mm := make([]meterMeasurement, len(site.pvMeters))
 
@@ -452,15 +448,11 @@ func (site *Site) updatePvMeters() {
 		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
-			// ignore negative values which represent self-consumption
-			mu.Lock()
-			site.pvPower += max(0, power)
-			mu.Unlock()
-
 			if power < -500 {
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
 		} else {
+			power = 0
 			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
@@ -468,11 +460,8 @@ func (site *Site) updatePvMeters() {
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
-			if err == nil {
-				mu.Lock()
-				totalEnergy += energy
-				mu.Unlock()
-			} else {
+			if err != nil {
+				energy = 0
 				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
 		}
@@ -481,10 +470,6 @@ func (site *Site) updatePvMeters() {
 		var excessStr string
 		if m, ok := meter.(api.MaxACPower); ok {
 			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
-				mu.Lock()
-				site.excessDCPower += dc
-				mu.Unlock()
-
 				excessDC = -dc
 				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -dc)
 			}
@@ -509,6 +494,16 @@ func (site *Site) updatePvMeters() {
 	}
 	wg.Wait()
 
+	site.pvPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+		return acc + max(0, m.Power)
+	}, 0)
+	site.excessDCPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+		return acc - math.Abs(m.ExcessDCPower)
+	}, 0)
+	totalEnergy := lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+		return acc + m.Energy
+	}, 0)
+
 	var excessStr string
 	if site.excessDCPower < 0 {
 		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
@@ -526,19 +521,30 @@ func (site *Site) updateAuxMeters() {
 		return
 	}
 
-	site.auxPower = 0
+	var wg sync.WaitGroup
 
 	mm := make([]meterMeasurement, len(site.auxMeters))
 
-	for i, meter := range site.auxMeters {
+	fun := func(i int, meter api.Meter) {
 		if power, err := meter.CurrentPower(); err == nil {
-			site.auxPower += power
 			mm[i].Power = power
 			site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
 		} else {
 			site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
 		}
+
+		wg.Done()
 	}
+
+	wg.Add(len(site.auxMeters))
+	for i, meter := range site.auxMeters {
+		go fun(i, meter)
+	}
+	wg.Wait()
+
+	site.auxPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+		return acc + m.Power
+	}, 0)
 
 	site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
 	site.publish(keys.AuxPower, site.auxPower)
