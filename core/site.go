@@ -452,7 +452,6 @@ func (site *Site) updatePvMeters() {
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
 		} else {
-			power = 0
 			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
@@ -461,7 +460,6 @@ func (site *Site) updatePvMeters() {
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err != nil {
-				energy = 0
 				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
 		}
@@ -590,12 +588,7 @@ func (site *Site) updateBatteryMeters() error {
 		return nil
 	}
 
-	var totalCapacity, totalEnergy float64
 	var eg errgroup.Group
-	var mu sync.Mutex
-
-	site.batteryPower = 0
-	site.batterySoc = 0
 
 	mm := make([]batteryMeasurement, len(site.batteryMeters))
 
@@ -606,10 +599,6 @@ func (site *Site) updateBatteryMeters() error {
 			return fmt.Errorf("battery %d power: %v", i+1, err)
 		}
 
-		mu.Lock()
-		site.batteryPower += power
-		mu.Unlock()
-
 		if len(site.batteryMeters) > 1 {
 			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
 		}
@@ -618,11 +607,7 @@ func (site *Site) updateBatteryMeters() error {
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); ok {
 			energy, err = m.TotalEnergy()
-			if err == nil {
-				mu.Lock()
-				totalEnergy += energy
-				mu.Unlock()
-			} else {
+			if err != nil {
 				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 			}
 		}
@@ -633,18 +618,9 @@ func (site *Site) updateBatteryMeters() error {
 			batSoc, err = soc.Guard(meter.Soc())
 
 			if err == nil {
-				// weigh soc by capacity and accumulate total capacity
-				weighedSoc := batSoc
-
-				mu.Lock()
 				if m, ok := meter.(api.BatteryCapacity); ok {
 					capacity = m.Capacity()
-					totalCapacity += capacity
-					weighedSoc *= capacity
 				}
-
-				site.batterySoc += weighedSoc
-				mu.Unlock()
 
 				if len(site.batteryMeters) > 1 {
 					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
@@ -675,7 +651,17 @@ func (site *Site) updateBatteryMeters() error {
 		return err
 	}
 
-	site.publish(keys.BatteryCapacity, totalCapacity)
+	site.batterySoc = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		// weigh soc by capacity
+		weighedSoc := m.Soc
+		if m.Capacity > 0 {
+			weighedSoc *= m.Capacity
+		}
+		return acc + weighedSoc
+	}, 0)
+	totalCapacity := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		return acc + m.Capacity
+	}, 0)
 
 	// convert weighed socs to total soc
 	if totalCapacity == 0 {
@@ -684,7 +670,15 @@ func (site *Site) updateBatteryMeters() error {
 	site.batterySoc /= totalCapacity
 
 	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
+	site.publish(keys.BatteryCapacity, totalCapacity)
 	site.publish(keys.BatterySoc, site.batterySoc)
+
+	site.batteryPower = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		return acc + m.Power
+	}, 0)
+	totalEnergy := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		return acc + m.Energy
+	}, 0)
 
 	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 	site.publish(keys.BatteryPower, site.batteryPower)
