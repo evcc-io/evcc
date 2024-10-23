@@ -28,16 +28,6 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="energyValue")."#content" | rtrimstr(" kWh")
-  voltages: # grid voltages in V
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .values.value[] | select(.attrid=="voltageL1Value")."#content" | rtrimstr(" V")
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .values.value[] | select(.attrid=="voltageL2Value")."#content" | rtrimstr(" V")
-  - source: http
-    uri: {{ include "uri" . }}
-    jq: .values.value[] | select(.attrid=="voltageL3Value")."#content" | rtrimstr(" V")
   currents: # grid currents in A
   - source: http
     uri: {{ include "uri" . }}
