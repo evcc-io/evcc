@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
-	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
+	smallSlotDuration = 15 * time.Minute // small planner slot duration we might ignore
+	smallGapDuration  = 30 * time.Minute // small gap duration between planner slots we might ignore
 )
 
 // TODO planActive is not guarded by mutex
@@ -169,10 +169,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("plan: continuing until end of slot")
 			return true
-		case requiredDuration < smallGapDuration:
+		case requiredDuration < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < smallGapDuration:
+		case requiredDuration > smallSlotDuration && lp.clock.Until(planStart) < smallGapDuration:
 			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", smallGapDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
