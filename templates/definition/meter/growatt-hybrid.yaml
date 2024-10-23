@@ -25,10 +25,11 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -55,6 +56,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -70,8 +72,10 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -88,14 +92,6 @@ render: |
         type: input
         decode: uint32
       scale: -0.1
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 1014 # SOC
-      type: input
-      decode: uint16
-  capacity: {{ .capacity }} # kWh
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -104,7 +100,13 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
-  {{- end }}
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 1014 # SOC
+      type: input
+      decode: uint16
   batterymode:
     source: switch
     switch:
@@ -174,3 +176,5 @@ render: |
               address: 1092
               type: writemultiple
               decode: uint16
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

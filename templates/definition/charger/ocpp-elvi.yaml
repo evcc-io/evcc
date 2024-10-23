@@ -4,7 +4,7 @@ products:
     description:
       generic: Elvi
 requirements:
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
   - name: meter

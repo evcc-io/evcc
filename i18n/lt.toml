@@ -115,7 +115,9 @@ title = "HEMS"
 description = "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius."
 descriptionToken = "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Bucket"
+labelCheckInsecure = "Leisti savarankiškai pasirašytus sertifikatus"
 labelDatabase = "Duomenų bazė"
+labelInsecure = "Sertifikato patvirtinimas"
 labelOrg = "Organizacija"
 labelPassword = "Slaptažodis"
 labelToken = "API Token'as"
@@ -449,6 +451,7 @@ remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
 solar = "Saulės"
 
 [main.loadpointSettings]
+batteryUsage = "Namų kaupiklis"
 currents = "Įkrovimo Srovė"
 default = "standartiškai"
 disclaimerHint = "Pastaba:"
@@ -457,6 +460,12 @@ smartCostCheap = "Įkrovimas pigiai iš tinklo"
 smartCostClean = "Įkrovimas švariai iš tinklo"
 title = "Nustatymai {0}"
 vehicle = "Automobilis"
+
+[main.loadpointSettings.batteryBoost]
+description = "Greitas įkrovimas iš namų kaupiklio"
+label = "Kaupikliu paspartintas įkrovimas"
+mode = "Galimas tik Saulė ir Min+Saulė režimuose."
+once = "Paspartinimas aktyvuotas šiai įkrovimo sesijai."
 
 [main.loadpointSettings.limitSoc]
 description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
@@ -559,6 +568,7 @@ vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Laukiama autorizacijos."
+batteryBoost = "Veikia paspartinimas kaupikliu."
 charging = "Įkraunama..."
 cheapEnergyCharging = "Šiuo metu energija yra pigi."
 cheapEnergyNextStart = "Pigi energija už {duration}."

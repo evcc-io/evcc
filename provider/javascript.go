@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -16,11 +18,11 @@ type Javascript struct {
 }
 
 func init() {
-	registry.Add("js", NewJavascriptProviderFromConfig)
+	registry.AddCtx("js", NewJavascriptProviderFromConfig)
 }
 
 // NewJavascriptProviderFromConfig creates a Javascript provider
-func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewJavascriptProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -37,12 +39,12 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 		return nil, err
 	}
 
-	in, err := configureInputs(cc.In)
+	in, err := configureInputs(ctx, cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := configureOutputs(cc.Out)
+	out, err := configureOutputs(ctx, cc.Out)
 	if err != nil {
 		return nil, err
 	}

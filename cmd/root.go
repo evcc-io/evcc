@@ -48,7 +48,7 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
-	Short:   "EV Charge Controller",
+	Short:   "evcc - open source solar charging",
 	Version: server.FormattedVersion(),
 	Run:     runRoot,
 }

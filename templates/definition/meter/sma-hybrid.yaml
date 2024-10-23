@@ -18,6 +18,7 @@ params:
       de: Der ModbusTCP Server muss aktiviert sein.
   - name: capacity
     advanced: true
+  - name: maxacpower
   - name: watchdog
     type: duration
     default: 30s
@@ -87,6 +88,7 @@ render: |
       type: holding
       decode: uint64nan
     scale: 0.001
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
