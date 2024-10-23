@@ -177,7 +177,6 @@ func (c *Circuit) GetMaxPower() float64 {
 		if err == nil {
 			return res
 		}
-
 		c.log.WARN.Printf("get max power: %v", err)
 	}
 
