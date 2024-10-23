@@ -1,5 +1,4 @@
 template: volvo2mqtt
-deprecated: true
 products:
   - description:
       generic: volvo2mqtt
