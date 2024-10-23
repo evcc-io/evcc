@@ -199,7 +199,6 @@ func (c *Circuit) GetMaxCurrent() float64 {
 		if err == nil {
 			return res
 		}
-
 		c.log.WARN.Printf("get max current: %v", err)
 	}
 
