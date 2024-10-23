@@ -133,8 +133,8 @@ export default {
 	methods: {
 		formatValue(value) {
 			return this.costType === TYPES.CO2
-				? this.fmtCo2Short(value)
-				: this.fmtPricePerKWh(value, this.currency, true);
+				? this.fmtCo2Medium(value)
+				: this.fmtPricePerKWh(value, this.currency);
 		},
 	},
 };
