@@ -18,7 +18,7 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
   await lp.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
   if (soc) {
-    await page.getByTestId("plan-soc").selectOption(soc);
+    await page.getByTestId("static-plan-soc").selectOption(soc);
   }
   if (energy) {
     // select "25 kWh (+50%)" by providing "25 kWh" as option text
@@ -28,7 +28,7 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
       .textContent();
     await page.getByTestId("plan-energy").selectOption(optionText);
   }
-  await page.getByTestId("plan-active").click();
+  await page.getByTestId("static-plan-active").click();
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lp.getByTestId("charging-plan")).toContainText(soc || energy);
 }
@@ -52,10 +52,10 @@ test.describe("basic functionality", async () => {
     await lp1.getByRole("button", { name: "Solar", exact: true }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
-    await page.getByTestId("plan-day").selectOption({ index: 1 });
-    await page.getByTestId("plan-time").fill("09:30");
-    await page.getByTestId("plan-soc").selectOption("80%");
-    await page.getByTestId("plan-active").click();
+    await page.getByTestId("static-plan-day").selectOption({ index: 1 });
+    await page.getByTestId("static-plan-time").fill("09:30");
+    await page.getByTestId("static-plan-soc").selectOption("80%");
+    await page.getByTestId("static-plan-active").click();
     await page.getByRole("button", { name: "Close" }).click();
 
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
@@ -70,7 +70,7 @@ test.describe("basic functionality", async () => {
       "tomorrow 9:30 AM80%"
     );
     await lp1.getByTestId("charging-plan").getByRole("button").click();
-    await expect(page.getByTestId("plan-soc")).toHaveValue("80");
+    await expect(page.getByTestId("static-plan-soc")).toHaveValue("80");
   });
 });
 
@@ -219,7 +219,7 @@ test.describe("preview", async () => {
     {
       szenario: "soc based plan",
       vehicle: "Vehicle with SoC with Capacity",
-      goalId: "plan-soc",
+      goalId: "static-plan-soc",
     },
   ];
 
@@ -235,13 +235,13 @@ test.describe("preview", async () => {
       await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
       // initial set -> preview plan
-      await page.getByTestId("plan-day").selectOption({ index: 1 });
-      await page.getByTestId("plan-time").fill("09:30");
+      await page.getByTestId("static-plan-day").selectOption({ index: 1 });
+      await page.getByTestId("static-plan-time").fill("09:30");
       await page.getByTestId(c.goalId).selectOption("80");
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
 
       // activate -> active plan
-      await page.getByTestId("plan-active").click();
+      await page.getByTestId("static-plan-active").click();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       // change -> preview plan
@@ -254,10 +254,10 @@ test.describe("preview", async () => {
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       // deactivate -> stay in preview
-      await page.getByTestId("plan-time").fill("23:30");
+      await page.getByTestId("static-plan-time").fill("23:30");
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
       await expect(page.getByTestId("plan-apply")).toBeVisible();
-      await page.getByTestId("plan-active").click();
+      await page.getByTestId("static-plan-active").click();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
     });
   });
@@ -277,7 +277,7 @@ test.describe("warnings", async () => {
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
-    await page.getByTestId("plan-active").click();
+    await page.getByTestId("static-plan-active").click();
 
     // match this text but with fuzzy date "getByText('Goal will be reached 52:10 h')"
     await expect(page.getByTestId("plan-warnings")).toHaveText(/Goal will be reached .* later/);
@@ -297,12 +297,12 @@ test.describe("warnings", async () => {
 
     await expect(page.getByTestId("plan-entry-warnings")).not.toBeVisible();
 
-    await page.getByTestId("plan-day").selectOption({ index: 0 });
-    await page.getByTestId("plan-time").fill("00:01");
+    await page.getByTestId("static-plan-day").selectOption({ index: 0 });
+    await page.getByTestId("static-plan-time").fill("00:01");
 
     await expect(page.getByTestId("plan-entry-warnings")).toContainText(
       "Pick a time in the future, Marty."
     );
-    await page.getByTestId("plan-time").fill("00:01");
+    await page.getByTestId("static-plan-time").fill("00:01");
   });
 });

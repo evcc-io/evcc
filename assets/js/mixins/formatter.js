@@ -270,6 +270,45 @@ export default {
       }
       return price;
     },
+    fmtRepeatingPlansUTC: function (plans, toUTC) {
+      return plans.map((plan) => {
+        let [time, dayOffset] = this.fmtDayHourMinute(plan.time, toUTC);
+
+        let newWeekdays = plan.weekdays.map(function (weekday) {
+          return (weekday + dayOffset + 7) % 7;
+        });
+
+        return {
+          ...plan,
+          time: time,
+          weekdays: newWeekdays,
+        };
+      });
+    },
+    fmtDayHourMinute: function (timeString, toUTC) {
+      const [h, m] = timeString.split(":").map(Number);
+      const date = new Date();
+      const oldDate = date.getDate();
+
+      var hours, minutes, newDate;
+
+      if (toUTC) {
+        date.setHours(h, m);
+        hours = date.getUTCHours();
+        minutes = date.getUTCMinutes();
+        newDate = date.getUTCDate();
+      } else {
+        date.setUTCHours(h, m);
+        hours = date.getHours();
+        minutes = date.getMinutes();
+        newDate = date.getDate();
+      }
+
+      return [
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`, // formatted string
+        newDate - oldDate, // dayoffset
+      ];
+    },
     pricePerKWhUnit: function (currency = "EUR", short = false) {
       const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
@@ -310,6 +349,48 @@ export default {
     fmtTemperature: function (value) {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
+    },
+    getWeekdaysList: function (weekdayFormat) {
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
+      return [...Array(7).keys()].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+    },
+    getShortenedWeekdaysLabel: function (selectedWeekdays) {
+      if (0 === selectedWeekdays.length) {
+        return this.$t("main.chargingPlan.noWeekdaysSelected");
+      }
+
+      let label = "";
+      let weekdays = this.getWeekdaysList("short");
+      let maxWeekday = Math.max(...selectedWeekdays);
+
+      for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
+        if (selectedWeekdays.includes(weekdayRangeStart)) {
+          label += weekdays[weekdayRangeStart];
+
+          let weekdayRangeEnd = weekdayRangeStart;
+          while (selectedWeekdays.includes(weekdayRangeEnd + 1)) {
+            weekdayRangeEnd++;
+          }
+
+          if (weekdayRangeEnd - weekdayRangeStart > 1) {
+            // more than 2 consecutive weekdays selected
+            label += " – " + weekdays[weekdayRangeEnd];
+            weekdayRangeStart = weekdayRangeEnd;
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          } else if (weekdayRangeStart !== weekdayRangeEnd) {
+            // exactly 2 consecutive weekdays selected
+            label += ", ";
+          } else {
+            // exactly 1 single day selected
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          }
+        }
+      }
+      return label;
     },
   },
 };

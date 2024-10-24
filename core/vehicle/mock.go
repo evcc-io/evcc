@@ -83,6 +83,34 @@ func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
 }
 
+// GetRepeatingPlans mocks base method.
+func (m *MockAPI) GetRepeatingPlans(arg0 bool) []api.RepeatingPlanStruct {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepeatingPlans", arg0)
+	ret0, _ := ret[0].([]api.RepeatingPlanStruct)
+	return ret0
+}
+
+// GetRepeatingPlans indicates an expected call of GetRepeatingPlans.
+func (mr *MockAPIMockRecorder) GetRepeatingPlans(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlans), arg0)
+}
+
+// GetRepeatingPlansWithTimestamps mocks base method.
+func (m *MockAPI) GetRepeatingPlansWithTimestamps(arg0 bool) []api.PlanStruct {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepeatingPlansWithTimestamps", arg0)
+	ret0, _ := ret[0].([]api.PlanStruct)
+	return ret0
+}
+
+// GetRepeatingPlansWithTimestamps indicates an expected call of GetRepeatingPlansWithTimestamps.
+func (mr *MockAPIMockRecorder) GetRepeatingPlansWithTimestamps(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlansWithTimestamps", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlansWithTimestamps), arg0)
+}
+
 // Instance mocks base method.
 func (m *MockAPI) Instance() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -147,4 +175,18 @@ func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
 func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+}
+
+// SetRepeatingPlans mocks base method.
+func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlanStruct) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetRepeatingPlans indicates an expected call of SetRepeatingPlans.
+func (mr *MockAPIMockRecorder) SetRepeatingPlans(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlans), arg0)
 }

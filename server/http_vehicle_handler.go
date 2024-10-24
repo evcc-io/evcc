@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
 )
@@ -106,6 +108,36 @@ func planSocHandler(site site.API) http.HandlerFunc {
 		}
 
 		jsonResult(w, res)
+	}
+}
+
+// addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
+func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var plansWrapper struct {
+			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
+		}
+
+		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetRepeatingPlans(plansWrapper.RepeatingPlans); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonResult(w, plansWrapper)
 	}
 }
 

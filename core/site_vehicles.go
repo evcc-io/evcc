@@ -1,8 +1,6 @@
 package core
 
 import (
-	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
@@ -12,19 +10,15 @@ import (
 	"github.com/samber/lo"
 )
 
-type planStruct struct {
-	Soc  int       `json:"soc"`
-	Time time.Time `json:"time"`
-}
-
 type vehicleStruct struct {
-	Title    string       `json:"title"`
-	Icon     string       `json:"icon,omitempty"`
-	Capacity float64      `json:"capacity,omitempty"`
-	MinSoc   int          `json:"minSoc,omitempty"`
-	LimitSoc int          `json:"limitSoc,omitempty"`
-	Features []string     `json:"features,omitempty"`
-	Plans    []planStruct `json:"plans,omitempty"`
+	Title          string                    `json:"title"`
+	Icon           string                    `json:"icon,omitempty"`
+	Capacity       float64                   `json:"capacity,omitempty"`
+	MinSoc         int                       `json:"minSoc,omitempty"`
+	LimitSoc       int                       `json:"limitSoc,omitempty"`
+	Features       []string                  `json:"features,omitempty"`
+	Plans          []api.PlanStruct          `json:"plans,omitempty"`
+	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -33,23 +27,24 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plans []planStruct
+		var plans []api.PlanStruct
 
 		// TODO: add support for multiple plans
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plans = append(plans, planStruct{Soc: soc, Time: time})
+			plans = append(plans, api.PlanStruct{Soc: soc, Time: time})
 		}
 
 		instance := v.Instance()
 
 		res[v.Name()] = vehicleStruct{
-			Title:    instance.Title(),
-			Icon:     instance.Icon(),
-			Capacity: instance.Capacity(),
-			MinSoc:   v.GetMinSoc(),
-			LimitSoc: v.GetLimitSoc(),
-			Features: lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
-			Plans:    plans,
+			Title:          instance.Title(),
+			Icon:           instance.Icon(),
+			Capacity:       instance.Capacity(),
+			MinSoc:         v.GetMinSoc(),
+			LimitSoc:       v.GetLimitSoc(),
+			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
+			Plans:          plans,
+			RepeatingPlans: v.GetRepeatingPlans(false),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
