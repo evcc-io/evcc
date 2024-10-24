@@ -75,7 +75,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport");
 
-    // update loadpoint
+    // update loadpoint title
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expect(lpModal).toBeVisible();
     await lpModal.getByLabel("Title").fill("Solar Carport 2");
@@ -88,6 +88,22 @@ test.describe("loadpoint", async () => {
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Solar Carport 2");
+
+    // update loadpoint priority
+    await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await lpModal.getByLabel("Priority").selectOption("2");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
+
+    // restart
+    await restart(CONFIG);
+    await page.reload();
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("2");
+    await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport 2");
 
     // delete loadpoint
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();

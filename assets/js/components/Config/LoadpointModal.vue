@@ -41,7 +41,7 @@
 			<div v-else class="d-flex justify-content-end">
 				<button
 					class="btn btn-outline-primary"
-					type="button"
+					type="submit"
 					:disabled="values.title?.length === 0"
 					@click.prevent="editCharger"
 				>

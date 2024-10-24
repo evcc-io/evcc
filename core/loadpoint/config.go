@@ -63,11 +63,10 @@ func (payload DynamicConfig) Apply(lp API) error {
 		err = lp.SetPhases(payload.Phases)
 	}
 
-	if err == nil {
+	if err == nil && payload.MinCurrent != 0 {
 		err = lp.SetMinCurrent(payload.MinCurrent)
 	}
-
-	if err == nil {
+	if err == nil && payload.MaxCurrent != 0 {
 		err = lp.SetMaxCurrent(payload.MaxCurrent)
 	}
 
