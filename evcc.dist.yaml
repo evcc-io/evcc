@@ -252,20 +252,30 @@ eebus:
 messaging:
   events:
     start: # charge start event
-      title: Charge started
-      msg: Started charging in "${mode}" mode
+      title: Started charging of ${vehicleTitle} in ${mode} mode
+      msg: |
+        Start Time {{printf `%02d:%02d` now.Hour now.Minute}}
+        SoC {{round (.vehicleSoc) 0}}%
+        Range ${vehicleRange}km
     stop: # charge stop event
-      title: Charge finished
-      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+      title: Charge of ${vehicleTitle} finished
+      msg: |
+        End Time {{printf `%02d:%02d` now.Hour now.Minute}}
+        SoC {{round (.vehicleSoc) 0}}%
+        Range ${vehicleRange}km
+        Charged Energy ${chargedEnergy:%.1fk}kWh
+# tariff must be configured for following messages
+  #     Total Cost {{round (.sessionPrice) 2}}€ 
+  #     Average Price {{round (mulf .sessionPricePerKWh 100) 2}}ct/kWh
     connect: # vehicle connect event
       title: Car connected
-      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+      msg: Car connected at ${pvPower:%.1fk}kW PV
     disconnect: # vehicle connected event
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
     soc: # vehicle soc update event
       title: Soc updated
-      msg: Battery charged to ${vehicleSoc:%.0f}%
+      msg: Battery charged to ${vehicleSoc:%.0f} %
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?
