@@ -82,7 +82,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	if device == nil {
 		// silence KOSTAL implementation errors
 		device = sunsdev.NewDevice("sunspec", cc.SubDevice)
-		if err := device.Initialize(devices); err != nil {
+		if err := device.InitializeWithTree(devices); err != nil {
 			return nil, err
 		}
 
