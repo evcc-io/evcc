@@ -22,6 +22,8 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/provider/golang"
@@ -46,6 +48,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -256,7 +259,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
 
-			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -320,7 +323,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
 
-			if err := config.Chargers().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -413,7 +416,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			mu.Lock()
 			defer mu.Unlock()
-			devs2 = append(devs2, config.NewConfigurableDevice(conf, instance))
+			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
 
 			return nil
 		})
@@ -900,8 +903,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(*conf)
-	if err != nil {
+	if err := configureLoadpoints(*conf); err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
 
@@ -909,6 +911,11 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	if err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
+
+	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
+		lp := dev.Instance()
+		return lp.(*core.Loadpoint)
+	})
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -971,26 +978,63 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	return site, nil
 }
 
-func configureLoadpoints(conf globalconfig.All) ([]*core.Loadpoint, error) {
-	if len(conf.Loadpoints) == 0 {
-		return nil, errors.New("missing loadpoints")
-	}
+func configureLoadpoints(conf globalconfig.All) error {
+	for id, cc := range conf.Loadpoints {
+		cc.Name = "lp-" + strconv.Itoa(id+1)
 
-	var loadpoints []*core.Loadpoint
+		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
+		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
 
-	for id, cfg := range conf.Loadpoints {
-		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
-		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
-
-		lp, err := core.NewLoadpointFromConfig(log, settings, cfg)
+		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {
-			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
+			return fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
-		loadpoints = append(loadpoints, lp)
+		if err := config.Loadpoints().Add(config.NewStaticDevice(cc, loadpoint.API(instance))); err != nil {
+			return &DeviceError{cc.Name, err}
+		}
 	}
 
-	return loadpoints, nil
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Loadpoint)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		cc := conf.Named()
+
+		id := len(config.Loadpoints().Devices())
+		name := "lp-" + strconv.Itoa(id+1)
+		log := util.NewLoggerWithLoadpoint(name, id+1)
+
+		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+
+		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
+		if err != nil {
+			return fmt.Errorf("failed configuring loadpoint: %w", err)
+		}
+
+		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		if err != nil {
+			return fmt.Errorf("failed configuring loadpoint: %w", err)
+		}
+
+		if err := dynamic.Apply(instance); err != nil {
+			return err
+		}
+
+		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		if err := config.Loadpoints().Add(dev); err != nil {
+			return err
+		}
+	}
+
+	if len(config.Loadpoints().Devices()) == 0 {
+		return errors.New("missing loadpoints")
+	}
+
+	return nil
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes

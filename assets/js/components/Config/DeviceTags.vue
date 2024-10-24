@@ -79,6 +79,8 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "phases1p3p":
+				case "enabled":
 				case "configured":
 					return value
 						? this.$t("config.deviceValue.yes")
