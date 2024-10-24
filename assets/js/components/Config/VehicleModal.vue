@@ -102,6 +102,7 @@
 								{ name: '2-phases', value: '2' },
 								{ name: '3-phases', value: undefined },
 							]"
+							equal-width
 						/>
 					</FormRow>
 					<div class="row mb-3">
@@ -124,7 +125,6 @@
 								class="me-2"
 							/>
 						</FormRow>
-
 						<FormRow
 							id="vehicleParamMaxCurrent"
 							label="Maximum current"
@@ -147,74 +147,6 @@
 							/>
 						</FormRow>
 					</div>
-          
-							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
-									<PropertyEntry
-										v-for="param in advancedParams"
-										:key="param.Name"
-										:id="`vehicleParam${param.Name}`"
-										v-bind="param"
-										v-model="values[param.Name]"
-									/>
-								</template>
-								<template #more>
-									<h6 class="mt-3">Charging settings</h6>
-									<FormRow
-										id="vehicleParamMode"
-										label="Default mode"
-										help="Charging point mode when connecting this vehicle."
-									>
-										<PropertyField
-											id="vehicleParamMode"
-											v-model="values.mode"
-											type="String"
-											class="w-100"
-											:valid-values="[
-												{ key: 'off', name: $t('main.mode.off') },
-												{ key: 'pv', name: $t('main.mode.pv') },
-												{ key: 'minpv', name: $t('main.mode.minpv') },
-												{ key: 'now', name: $t('main.mode.now') },
-											]"
-										/>
-									</FormRow>
-									<FormRow
-										id="vehicleParamPhases"
-										label="Maximum phases"
-										help="How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
-									>
-										<SelectGroup
-											id="vehicleParamPhases"
-											class="w-100"
-											v-model="values.phases"
-											:options="[
-												{ name: '1-phase', value: '1' },
-												{ name: '2-phases', value: '2' },
-												{ name: '3-phases', value: undefined },
-											]"
-											equal-width
-										/>
-									</FormRow>
-									<div class="row mb-3">
-										<FormRow
-											id="vehicleParamMinCurrent"
-											label="Minimum current"
-											class="col-sm-6 mb-sm-0"
-											:help="
-												values.minCurrent && values.minCurrent < 6
-													? 'Only go below 6 A if you know what you\'re doing.'
-													: null
-											"
-										>
-											<PropertyField
-												id="vehicleParamMinCurrent"
-												v-model="values.minCurrent"
-												type="Float"
-												unit="A"
-												size="w-25 w-min-200"
-												class="me-2"
-											/>
-										</FormRow>
 
 					<!-- todo: only show when multiple loadpoints exist -->
 					<FormRow
