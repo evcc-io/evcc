@@ -3,6 +3,7 @@ products:
   - brand: Growatt
     description:
       generic: TL-X(H) Hybrid Inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -12,6 +13,7 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -81,6 +83,7 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -100,14 +103,6 @@ render: |
         type: input
         decode: uint32
       scale: -0.1
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 3171 # SOC
-      type: input
-      decode: uint16
-  capacity: {{ .capacity }} # kWh
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -116,4 +111,108 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3171 # SOC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal -> disable "battery first" and "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 8192
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3038
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 5947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3039
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3049
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold -> enable "battery first" and disable "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 40960
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3038
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 5947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3039
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3049
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge -> enable "battery first" and "ac charge"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 40960
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3038
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 5947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3039
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 3049
+              type: writemultiple
+              decode: uint16 
+  capacity: {{ .capacity }} # kWh
   {{- end }}

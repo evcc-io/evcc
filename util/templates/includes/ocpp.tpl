@@ -9,7 +9,7 @@ connector: {{ .connector }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
-{{- if ne .remotestart "false"}}
+{{- if and .remotestart (ne .remotestart "false") }}
 remotestart: {{ .remotestart }}
 {{- end }}
 {{- if .metervalues }}

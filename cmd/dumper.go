@@ -120,6 +120,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 	}
 
+	if v, ok := v.(api.MaxACPower); ok {
+		fmt.Fprintf(w, "Max AC power:\t%.0fW\n", v.MaxACPower())
+	}
+
 	// charger
 
 	if v, ok := v.(api.ChargeState); ok {

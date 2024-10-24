@@ -5,6 +5,8 @@ products:
     description:
       de: Wechselrichter (Speedwire)
       en: Inverter (Speedwire)
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["pv", "battery"]

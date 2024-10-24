@@ -92,9 +92,21 @@ params:
     help:
       de: Akkukapazität in kWh
       en: Battery capacity in kWh
-    example: "50"
+    example: 50
     type: float
     usages: ["vehicle", "battery"]
+  - name: maxacpower
+    description:
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    help:
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    default: 0
+    example: 5000
+    type: float
+    usages: ["pv"]
+    advanced: true
   - name: vin
     description:
       de: Fahrzeugidentifikationsnummer

@@ -240,4 +240,8 @@ export default {
 	width: 18px;
 	height: 20px;
 }
+.dropdown-menu {
+	/* above sticky, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
+	z-index: 1045 !important;
+}
 </style>

@@ -33,6 +33,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxacpower
   # battery control
   - name: minsoc
     type: number
@@ -64,6 +65,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     value: 103:WH # total yield
     scale: 0.001
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom

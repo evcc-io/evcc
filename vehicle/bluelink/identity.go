@@ -399,7 +399,7 @@ func (v *Identity) stamp() (string, error) {
 	}
 
 	enc := make([]byte, 0, 50)
-	for i := 0; i < len(cfb); i++ {
+	for i := range cfb {
 		enc = append(enc, cfb[i]^raw[i])
 	}
 

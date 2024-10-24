@@ -52,8 +52,7 @@ func NewEvseDIN(uri, device, comset string, baudrate int, proto modbus.Protocol,
 	}
 
 	conn.Logger(log.TRACE)
-	conn.Timeout(2000 * time.Millisecond)
-	conn.Delay(300 * time.Millisecond)
+	conn.Delay(200 * time.Millisecond)
 
 	evse := &EvseDIN{
 		conn:    conn,

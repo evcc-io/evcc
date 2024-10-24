@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -222,7 +223,9 @@ func configureMeters(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
@@ -249,9 +252,9 @@ func configureMeters(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			// TODO add fake devices
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
@@ -284,7 +287,9 @@ func configureChargers(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
 			}
@@ -311,9 +316,9 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			// TODO add fake devices
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
@@ -330,7 +335,9 @@ func configureChargers(static []config.Named, names ...string) error {
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
-	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {
@@ -461,9 +468,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup persistence
-	if err == nil {
-		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
-	}
+	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// setup translations
 	if err == nil {
@@ -601,6 +606,10 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
+		if !runAsService {
+			return
+		}
+
 		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 
@@ -659,7 +668,7 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 	// 	}
 	// }
 
-	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
+	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, conf.Other, site, httpd)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
 	}
@@ -764,7 +773,9 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
-	instance, err := tariff.NewFromConfig(conf.Type, conf.Other)
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
+
+	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {

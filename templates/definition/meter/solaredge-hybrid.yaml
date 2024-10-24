@@ -8,10 +8,10 @@ requirements:
   description:
     de: |
       Nur ein System kann und darf zeitgleich eine Modbus TCP-Verbindung zum Wechselrichter haben!
-      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen, das funktioniert am einfachsten wenn der Batteriemodus "Nutzungszeit" in der MySolarEdge-App aktiviert wurde.
+      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
     en: |
       Only one system can and may have a Modbus TCP connection to the inverter at the same time!
-      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote" that is most easily achieved by setting the battery mode to "Time of Use" e.g. in the MySolarEdge-App.
+      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -23,6 +23,7 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
+  - name: maxacpower
   - name: watchdog
     type: duration
     default: 60s
@@ -113,6 +114,7 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

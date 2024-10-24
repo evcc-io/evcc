@@ -86,7 +86,7 @@ type API interface {
 	EffectivePriority() int
 	// EffectivePlanTime returns the effective plan time
 	EffectivePlanTime() time.Time
-	// EffectiveMinPower returns the min charging power for a single phase
+	// EffectiveMinPower returns the min charging power for the minimum active phases
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
@@ -136,6 +136,11 @@ type API interface {
 	GetDisableDelay() time.Duration
 	// SetDisableDelay sets loadpoint disable delay
 	SetDisableDelay(delay time.Duration)
+
+	// GetBatteryBoost returns the battery boost
+	GetBatteryBoost() bool
+	// SetBatteryBoost sets the battery boost
+	SetBatteryBoost(enable bool) error
 
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)

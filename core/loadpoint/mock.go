@@ -110,6 +110,20 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
+// GetBatteryBoost mocks base method.
+func (m *MockAPI) GetBatteryBoost() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBatteryBoost")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetBatteryBoost indicates an expected call of GetBatteryBoost.
+func (mr *MockAPIMockRecorder) GetBatteryBoost() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).GetBatteryBoost))
+}
+
 // GetChargePower mocks base method.
 func (m *MockAPI) GetChargePower() float64 {
 	m.ctrl.T.Helper()
@@ -597,6 +611,20 @@ func (m *MockAPI) RemoteControl(arg0 string, arg1 RemoteDemand) {
 func (mr *MockAPIMockRecorder) RemoteControl(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoteControl", reflect.TypeOf((*MockAPI)(nil).RemoteControl), arg0, arg1)
+}
+
+// SetBatteryBoost mocks base method.
+func (m *MockAPI) SetBatteryBoost(arg0 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetBatteryBoost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetBatteryBoost indicates an expected call of SetBatteryBoost.
+func (mr *MockAPIMockRecorder) SetBatteryBoost(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).SetBatteryBoost), arg0)
 }
 
 // SetDisableDelay mocks base method.

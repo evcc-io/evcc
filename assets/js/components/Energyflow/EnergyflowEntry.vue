@@ -2,8 +2,8 @@
 	<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
 		<div class="d-flex justify-content-between">
 			<span class="d-flex flex-nowrap">
-				<BatteryIcon v-if="isBattery" :soc="soc" />
-				<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
+				<BatteryIcon v-if="isBattery" v-bind="iconProps" />
+				<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
 				<component :is="`shopicon-regular-${icon}`" v-else></component>
 			</span>
 			<div class="d-block text-nowrap flex-grow-1 ms-3 text-truncate">
@@ -49,11 +49,10 @@ export default {
 	props: {
 		name: { type: String },
 		icon: { type: String },
-		vehicleIcons: { type: Array },
+		iconProps: { type: Object, default: () => ({}) },
 		power: { type: Number },
 		powerTooltip: { type: Array },
 		powerUnit: { type: String },
-		soc: { type: Number },
 		details: { type: Number },
 		detailsFmt: { type: Function },
 		detailsTooltip: { type: Array },

@@ -36,7 +36,7 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 	// encode command message
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
 	var key byte = 171 // initialization vector
-	for i := 0; i < len(cmd); i++ {
+	for i := range cmd {
 		key ^= cmd[i]
 		_ = buf.WriteByte(key)
 	}
