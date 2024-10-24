@@ -68,10 +68,25 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 		return nil, errors.New("value is required")
 	}
 
-	// silence KOSTAL implementation errors
-	device := sunsdev.NewDevice("sunspec", cc.SubDevice)
-	if err := device.Initialize(conn); err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
-		return nil, err
+	devices := sunspecDevices.Get(conn)
+	if devices == nil {
+		devices, err = sunsdev.DeviceTree(conn)
+		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
+			return nil, err
+		}
+
+		sunspecDevices.Put(conn, devices)
+	}
+
+	device := sunspecSubDevices.Get(conn, cc.SubDevice)
+	if device == nil {
+		// silence KOSTAL implementation errors
+		device = sunsdev.NewDevice("sunspec", cc.SubDevice)
+		if err := device.InitializeWithTree(devices); err != nil {
+			return nil, err
+		}
+
+		sunspecSubDevices.Put(conn, cc.SubDevice, device)
 	}
 
 	var ops []modbus.SunSpecOperation
