@@ -203,7 +203,7 @@
 									values.thresholds.enable.threshold === 0
 										? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
 										: values.thresholds.enable.threshold < 0
-											? `Start charging, when ${fmtW(-1 * values.thresholds.enable.threshold, POWER_UNIT.AUTO)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+											? `Start charging, when ${fmtW(-1 * values.thresholds.enable.threshold, powerUnit.AUTO)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
 											: `Please use a negative value.`
 								}}
 							</div>
@@ -245,7 +245,7 @@
 									values.thresholds.disable.threshold === 0
 										? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
 										: values.thresholds.disable.threshold > 0
-											? `Stop charging, when more than ${fmtW(values.thresholds.disable.threshold, POWER_UNIT.AUTO)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+											? `Stop charging, when more than ${fmtW(values.thresholds.disable.threshold, powerUnit.AUTO)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
 											: `Please use a positive value.`
 								}}
 							</div>
@@ -551,6 +551,7 @@ export default {
 			chargerPower: "11kw",
 			solarMode: "summer",
 			tab: "solar",
+			powerUnit: POWER_UNIT,
 		};
 	},
 	computed: {
