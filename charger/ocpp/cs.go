@@ -12,6 +12,7 @@ import (
 )
 
 type cpState struct {
+	mu     sync.Mutex
 	cp     *CP
 	status *core.StatusNotificationRequest
 }
@@ -21,36 +22,7 @@ type CS struct {
 	log *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*cpState
-	init  map[string]*sync.Mutex
 	txnId atomic.Int64
-}
-
-// Register registers a charge point with the central system.
-// The charge point identified by id may already be connected in which case initial connection is triggered.
-func (cs *CS) register(id string, new *CP) error {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
-	state, ok := cs.cps[id]
-
-	// case 1: charge point neither registered nor physically connected
-	if !ok {
-		cs.cps[id] = &cpState{cp: new}
-		return nil
-	}
-
-	// case 2: duplicate registration of id empty
-	if id == "" {
-		return errors.New("cannot have >1 charge point with empty station id")
-	}
-
-	// case 3: charge point not registered but physically already connected
-	if state.cp == nil {
-		cs.cps[id].cp = new
-		new.connect(true)
-	}
-
-	return nil
 }
 
 // errorHandler logs error channel
@@ -84,29 +56,37 @@ func (cs *CS) WithChargepointStatusByID(id string, fun func(status *core.StatusN
 	}
 }
 
+// RegisterChargepoint registers a charge point with the central system of returns an already registered charge point
 func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) error) (*CP, error) {
 	cs.mu.Lock()
-	cpmu, ok := cs.init[id]
+
+	// prepare shadow state
+	state, ok := cs.cps[id]
 	if !ok {
-		cpmu = new(sync.Mutex)
-		cs.init[id] = cpmu
+		state = new(cpState)
+		cs.cps[id] = state
 	}
-	cs.mu.Unlock()
 
 	// serialise on chargepoint id
-	cpmu.Lock()
-	defer cpmu.Unlock()
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	cs.mu.Unlock()
 
 	// already registered?
-	if cp, err := cs.ChargepointByID(id); err == nil {
+	if cp := state.cp; cp != nil {
+		// duplicate registration of id empty
+		if id == "" {
+			return nil, errors.New("cannot have >1 charge point with empty station id")
+		}
+
 		return cp, nil
 	}
 
-	// first time- registration should not error
+	// first time- create the charge point
 	cp := newfun()
-	if err := cs.register(id, cp); err != nil {
-		return nil, err
-	}
+	state.cp = cp
+	cp.connect(true)
 
 	return cp, init(cp)
 }

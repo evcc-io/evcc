@@ -41,7 +41,6 @@ func Instance() *CS {
 		instance = &CS{
 			log:           log,
 			cps:           make(map[string]*cpState),
-			init:          make(map[string]*sync.Mutex),
 			CentralSystem: cs,
 		}
 		instance.txnId.Store(time.Now().UTC().Unix())
