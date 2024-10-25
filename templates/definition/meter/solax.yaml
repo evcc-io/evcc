@@ -18,7 +18,16 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
-  - name: workmodesolax # "SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"
+  - name: workmode
+    description:
+      de: Standart Arbeitsmodus des Solax Wechselrichter
+      en: Default Workmode for Solax Inverter
+    help:
+      de: Standart Arbeitsmodus des Solax Wechselrichter
+      en: Default Workmode for Solax Inverter
+    default: "SelfUse" # "SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"
+    validvalues: ["SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"]
+    usages: ["battery"]
     advanced: true
 render: |
   type: custom
@@ -86,19 +95,19 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        {{- if eq .workmodesolax "SelfUse" }}
+        {{- if eq .workmode "SelfUse" }}
         value: 0
-        {{- else if eq .workmodesolax "FeedIn" }}
+        {{- else if eq .workmode "FeedIn" }}
         value: 1
-        {{- else if eq .workmodesolax "Backup" }}
+        {{- else if eq .workmode "Backup" }}
         value: 2
-        {{- else if eq .workmodesolax "Manuel" }}
+        {{- else if eq .workmode "Manuel" }}
         value: 3
-        {{- else if eq .workmodesolax "PeakShaving" }}
+        {{- else if eq .workmode "PeakShaving" }}
         value: 4
-        {{- else if eq .workmodesolax "TOU" }}
+        {{- else if eq .workmode "TOU" }}
         value: 5
-        {{- else if eq .workmodesolax "SmartSchedule" }}
+        {{- else if eq .workmode "SmartSchedule" }}
         value: 6
         {{- else }}
         value: 0
