@@ -10,6 +10,8 @@ github.com/BLun78/hoymiles_wifi v0.0.0-20240919194410-a47f525d4958 h1:kpb4VafkSk
 github.com/BLun78/hoymiles_wifi v0.0.0-20240919194410-a47f525d4958/go.mod h1:/WSkEPy1bwWUxtBAqzNjqHN0ww5PB6HLvm7/48BQG5c=
 github.com/BLun78/hoymiles_wifi v0.0.0-20240919200552-bca1fde08633 h1:ezpl3PBJArvwzK0/HVnenBdfH9e2ZiPGkXt92bzJKrY=
 github.com/BLun78/hoymiles_wifi v0.0.0-20240919200552-bca1fde08633/go.mod h1:/WSkEPy1bwWUxtBAqzNjqHN0ww5PB6HLvm7/48BQG5c=
+github.com/BLun78/hoymiles_wifi v0.0.0-20241025211207-b8fbeb0b1c1e h1:4VdljbEqVRhVVchkVbEVluAUwio2Ntz/AG20ADECz38=
+github.com/BLun78/hoymiles_wifi v0.0.0-20241025211207-b8fbeb0b1c1e/go.mod h1:/WSkEPy1bwWUxtBAqzNjqHN0ww5PB6HLvm7/48BQG5c=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=

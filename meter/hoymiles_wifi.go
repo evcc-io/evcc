@@ -1,9 +1,9 @@
 package meter
 
 import (
+	"errors"
 	"net"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/BLun78/hoymiles_wifi"
@@ -11,6 +11,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
+
+const cacheTimeOutLastValueInMin = 3
+const connectionTimeOutInSeconds = 1
 
 func init() {
 	registry.Add("hoymiles-wifi", NewHoymilesWifiMeterFromConfig)
@@ -23,7 +26,6 @@ type Config struct {
 type HoymilesWifi struct {
 	client           *hoymiles_wifi.ClientData
 	log              *util.Logger
-	host             string
 	lastValue        float64
 	lastValueUpdated time.Time
 	config           *Config
@@ -39,12 +41,14 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 	log.TRACE.Printf("Start HoymilesWifi setup: %s", cc.Host)
 
 	client := hoymiles_wifi.NewClientDefault(cc.Host)
-	client.ConnectionTimeout = 5 * time.Second
+	client.ConnectionTimeout = time.Duration(connectionTimeOutInSeconds) * time.Second
 
 	return &HoymilesWifi{
-		client: client,
-		log:    log,
-		config: &cc,
+		client:           client,
+		log:              log,
+		config:           &cc,
+		lastValue:        0.0,
+		lastValueUpdated: time.Now(),
 	}, nil
 }
 
@@ -60,19 +64,17 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 
 	result, err := hmWifi.client.GetRealDataNew(request)
 	if err != nil {
-		if hmWifi.lastValue != 0 && !hmWifi.lastValueUpdated.Add(time.Minute*15).Before(time.Now()) {
-			hmWifi.lastValue = 0
+		if hmWifi.lastValue != 0.0 && !hmWifi.lastValueUpdated.Add(time.Minute*time.Duration(cacheTimeOutLastValueInMin)).Before(time.Now()) {
+			hmWifi.lastValue = 0.0
 		}
-		if err.Error() == "client connection is closed" {
-			hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.config.Host)
-			return hmWifi.lastValue, nil
-		}
-		opErr, ok := err.(*net.OpError)
-		if ok {
-			sysErr, ok2 := opErr.Err.(*os.SyscallError)
-			if ok2 && sysErr.Err == syscall.Errno(10060) {
-				hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.config.Host)
-				return hmWifi.lastValue, nil
+		var opErr *net.OpError
+		if errors.As(err, &opErr) {
+			if opErr.Op == "dial" && opErr.Net == "tcp" {
+				if os.IsTimeout(opErr.Err) {
+					// this error is raise if the hoymiles inverter is offline or the config is wrong
+					hmWifi.log.TRACE.Printf("HoymilesWifi the Host is offline: %s", hmWifi.config.Host)
+					return hmWifi.lastValue, nil
+				}
 			}
 		}
 		return value, err

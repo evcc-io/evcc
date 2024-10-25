@@ -109,7 +109,7 @@ require (
 )
 
 require (
-	github.com/BLun78/hoymiles_wifi v0.0.0-20240919200552-bca1fde08633 // indirect
+	github.com/BLun78/hoymiles_wifi v0.0.0-20241025211207-b8fbeb0b1c1e // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
