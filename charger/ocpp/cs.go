@@ -149,7 +149,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	// register unknown charge point
 	// when charge point setup is complete, it will eventually be associated with the connected id
-	cs.cps[chargePoint.ID()] = nil
+	cs.cps[chargePoint.ID()] = new(cpState)
 }
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
