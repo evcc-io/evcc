@@ -70,10 +70,10 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 	defer cs.mu.Unlock()
 
 	// cache status for future cp connection
-	if state, ok := cs.cps[id]; ok {
-		state.mu.Lock()
-		state.status = request
-		state.mu.Unlock()
+	if reg, ok := cs.regs[id]; ok {
+		reg.mu.Lock()
+		reg.status = request
+		reg.mu.Unlock()
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
