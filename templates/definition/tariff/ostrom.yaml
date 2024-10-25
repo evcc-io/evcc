@@ -5,6 +5,7 @@ requirements:
   description:
     en: "Create a 'Production Client' in the Ostrom developer portal: https://developer.ostrom-api.io/"
     de: "Erzeuge einen 'Production Client' in dem Tibber-Entwicklerportal: https://developer.ostrom-api.io/"
+  evcc: ["skiptest"]
 group: price
 params:
   - name: clientid
