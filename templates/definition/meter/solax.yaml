@@ -67,7 +67,6 @@ render: |
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
-  {{- $workmodeMap := dict "SelfUse" 0 "FeedIn" 1 "Backup" 2 "Manuel" 3 "PeakShaving" 4 "TOU" 5 "SmartSchedule" 6 }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -88,7 +87,27 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: "{{ index $workmodeMap .Values.workmode }}"
+        {{- if eq .workmode "SelfUse" }}
+        value: 0
+        {{- end }}
+        {{- if eq .workmode "FeedIn" }}
+        value: 1
+        {{- end }}      
+        {{- if eq .workmode "Backup" }}
+        value: 2
+        {{- end }}
+        {{- if eq .workmode "Manuel" }}
+        value: 3
+        {{- end }}
+        {{- if eq .workmode "PeakShaving" }}
+        value: 4
+        {{- end }}
+        {{- if eq .workmode "TOU" }}
+        value: 5
+        {{- end }}
+        {{- if eq .workmode "SmartSchedule" }}
+        value: 6
+        {{- end }}
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
