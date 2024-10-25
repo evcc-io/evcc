@@ -18,8 +18,7 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
-  - name: workmodesolax
-    choice: ["SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"]
+  - name: workmodesolax # "SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"
     advanced: true
 render: |
   type: custom
@@ -107,6 +106,8 @@ render: |
         {{- end }}
         {{- if eq .workmodesolax "SmartSchedule" }}
         value: 6
+        {{- else }}
+        value: 0
         {{- end }}
         set:
           source: modbus

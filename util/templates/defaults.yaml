@@ -114,15 +114,8 @@ params:
     help:
       de: Standart Arbeitsmodus des Solax Wechselrichter
       en: Default Workmode for Solax Inverter
-    type: choice
-    validvalues:
-      - "SelfUse"
-      - "FeedIn"
-      - "Backup"
-      - "Manuel"
-      - "PeakShaving"
-      - "TOU"
-      - "SmartSchedule"
+    default: "SelfUse" # "SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"
+    validvalues: ["SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"]
     usages: ["battery"]
     advanced: true
   - name: vin
