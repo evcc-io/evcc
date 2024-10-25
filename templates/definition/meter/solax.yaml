@@ -18,7 +18,7 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
-  - name: workmode
+  - name: workmodesolax
     choice: ["SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"]
     advanced: true
 render: |
@@ -87,25 +87,25 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        {{- if eq .workmode "SelfUse" }}
+        {{- if eq .workmodesolax "SelfUse" }}
         value: 0
         {{- end }}
-        {{- if eq .workmode "FeedIn" }}
+        {{- if eq .workmodesolax "FeedIn" }}
         value: 1
         {{- end }}      
-        {{- if eq .workmode "Backup" }}
+        {{- if eq .workmodesolax "Backup" }}
         value: 2
         {{- end }}
-        {{- if eq .workmode "Manuel" }}
+        {{- if eq .workmodesolax "Manuel" }}
         value: 3
         {{- end }}
-        {{- if eq .workmode "PeakShaving" }}
+        {{- if eq .workmodesolax "PeakShaving" }}
         value: 4
         {{- end }}
-        {{- if eq .workmode "TOU" }}
+        {{- if eq .workmodesolax "TOU" }}
         value: 5
         {{- end }}
-        {{- if eq .workmode "SmartSchedule" }}
+        {{- if eq .workmodesolax "SmartSchedule" }}
         value: 6
         {{- end }}
         set:

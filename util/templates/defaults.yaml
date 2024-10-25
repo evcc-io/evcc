@@ -107,6 +107,24 @@ params:
     type: float
     usages: ["pv"]
     advanced: true
+  - name: workmodesolax
+    description:
+      de: Standart Arbeitsmodus des Solax Wechselrichter
+      en: Default Workmode for Solax Inverter
+    help:
+      de: Standart Arbeitsmodus des Solax Wechselrichter
+      en: Default Workmode for Solax Inverter
+    type: choice
+    validvalues:
+      - "SelfUse"
+      - "FeedIn"
+      - "Backup"
+      - "Manuel"
+      - "PeakShaving"
+      - "TOU"
+      - "SmartSchedule"
+    usages: ["battery"]
+    advanced: true
   - name: vin
     description:
       de: Fahrzeugidentifikationsnummer
