@@ -71,7 +71,9 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 
 	// cache status for future cp connection
 	if state, ok := cs.cps[id]; ok {
+		state.mu.Lock()
 		state.status = request
+		state.mu.Unlock()
 	}
 
 	return new(core.StatusNotificationConfirmation), nil

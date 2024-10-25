@@ -12,15 +12,16 @@ import (
 )
 
 type cpState struct {
-	mu     sync.Mutex
-	cp     *CP
-	status *core.StatusNotificationRequest
+	mu     sync.RWMutex
+	setup  sync.RWMutex                    // serialises chargepoint setup
+	cp     *CP                             // guarded by setup and CS mutexes
+	status *core.StatusNotificationRequest // guarded by mu mutex
 }
 
 type CS struct {
-	mu  sync.Mutex
-	log *util.Logger
 	ocpp16.CentralSystem
+	mu    sync.Mutex
+	log   *util.Logger
 	cps   map[string]*cpState
 	txnId atomic.Int64
 }
@@ -50,9 +51,12 @@ func (cs *CS) WithChargepointStatusByID(id string, fun func(status *core.StatusN
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	state, ok := cs.cps[id]
-	if ok && state.status != nil {
-		fun(state.status)
+	if state, ok := cs.cps[id]; ok {
+		state.mu.RLock()
+		if state.status != nil {
+			fun(state.status)
+		}
+		state.mu.RUnlock()
 	}
 }
 
@@ -68,13 +72,15 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	}
 
 	// serialise on chargepoint id
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	state.setup.Lock()
+	defer state.setup.Unlock()
+
+	cp := state.cp
 
 	cs.mu.Unlock()
 
 	// already registered?
-	if cp := state.cp; cp != nil {
+	if cp != nil {
 		// duplicate registration of id empty
 		if id == "" {
 			return nil, errors.New("cannot have >1 charge point with empty station id")
@@ -84,8 +90,12 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	}
 
 	// first time- create the charge point
-	cp := newfun()
+	cp = newfun()
+
+	cs.mu.Lock()
 	state.cp = cp
+	cs.mu.Unlock()
+
 	cp.connect(true)
 
 	return cp, init(cp)
