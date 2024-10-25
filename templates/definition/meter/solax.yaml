@@ -86,7 +86,6 @@ render: |
     - case: 1 # normal
       set:
         source: const
-
         {{- if eq .workmodesolax "SelfUse" }}
         value: 0
         {{- else if eq .workmodesolax "FeedIn" }}
