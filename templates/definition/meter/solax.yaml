@@ -18,6 +18,9 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: workmode
+    choice: ["SelfUse", "FeedIn", "Backup", "Manuel", "PeakShaving", "TOU", "SmartSchedule"]
+    advanced: true
 render: |
   type: custom
   power:
@@ -64,6 +67,7 @@ render: |
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  {{- $workmodeMap := dict "SelfUse" 0 "FeedIn" 1 "Backup" 2 "Manuel" 3 "PeakShaving" 4 "TOU" 5 "SmartSchedule" 6 }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -84,7 +88,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: 0 # self use mode
+        value: "{{ index $workmodeMap .Values.workmode }}"
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
