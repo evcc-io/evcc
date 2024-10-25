@@ -86,25 +86,20 @@ render: |
     - case: 1 # normal
       set:
         source: const
+
         {{- if eq .workmodesolax "SelfUse" }}
         value: 0
-        {{- end }}
-        {{- if eq .workmodesolax "FeedIn" }}
+        {{- else if eq .workmodesolax "FeedIn" }}
         value: 1
-        {{- end }}      
-        {{- if eq .workmodesolax "Backup" }}
+        {{- else if eq .workmodesolax "Backup" }}
         value: 2
-        {{- end }}
-        {{- if eq .workmodesolax "Manuel" }}
+        {{- else if eq .workmodesolax "Manuel" }}
         value: 3
-        {{- end }}
-        {{- if eq .workmodesolax "PeakShaving" }}
+        {{- else if eq .workmodesolax "PeakShaving" }}
         value: 4
-        {{- end }}
-        {{- if eq .workmodesolax "TOU" }}
+        {{- else if eq .workmodesolax "TOU" }}
         value: 5
-        {{- end }}
-        {{- if eq .workmodesolax "SmartSchedule" }}
+        {{- else if eq .workmodesolax "SmartSchedule" }}
         value: 6
         {{- else }}
         value: 0
