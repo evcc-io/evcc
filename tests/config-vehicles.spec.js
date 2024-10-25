@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, restart, cleanRestart, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
+import { enableExperimental, login } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -10,21 +11,6 @@ test.describe.configure({ mode: "parallel" });
 test.afterEach(async () => {
   await stop();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
 
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {

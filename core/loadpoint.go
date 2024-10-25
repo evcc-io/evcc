@@ -666,6 +666,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
+	// battery boost
+	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
+
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
@@ -1206,6 +1209,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	availablePower := lp.chargePower - sitePower
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.configuredPhases < 3
 
+	lp.log.DEBUG.Printf("!! pvScalePhases DOWN activePhases: %d, available power: %.0fW, scalable: %t", activePhases, availablePower, scalable)
+
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
@@ -1234,6 +1239,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	maxPhases := lp.maxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
+
+	lp.log.DEBUG.Printf("!! pvScalePhases UP maxPhases: %d, available power: %.0fW, scalable: %t", maxPhases, availablePower, scalable)
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
@@ -1265,6 +1272,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		lp.resetPhaseTimer()
 	}
 
+	lp.log.DEBUG.Println("!! pvScalePhases EXIT")
+
 	return 0
 }
 
@@ -1291,9 +1300,9 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(batteryBoostPower float64, batteryBuffered bool) float64 {
+func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	boost := lp.getBatteryBoost()
-	if boost == boostDisabled || !batteryBuffered {
+	if boost == boostDisabled {
 		return 0
 	}
 
@@ -1326,12 +1335,14 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower, batteryBuffered)
+	sitePower -= lp.boostPower(batteryBoostPower)
 
 	// switch phases up/down
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+	} else if lp.getBatteryBoost() != boostDisabled {
+		lp.log.DEBUG.Printf("!! pvScalePhases phasesSwitched: %v, %v", lp.phasesSwitched, time.Since(lp.phasesSwitched))
 	}
 
 	// calculate target charge current from delta power and actual current

@@ -129,10 +129,10 @@
 							</tbody>
 						</table>
 					</div>
-					<div class="modal-footer d-flex justify-content-right">
+					<div class="modal-footer d-flex justify-content-start">
 						<button
 							type="button"
-							class="btn btn-outline-danger"
+							class="btn btn-link text-danger"
 							data-bs-dismiss="modal"
 							@click="openRemoveConfirmationModal"
 						>
@@ -182,15 +182,14 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/checkmark";
-import { distanceUnit, distanceValue } from "../units";
-import formatter from "../mixins/formatter";
 import Modal from "bootstrap/js/dist/modal";
-import api from "../api";
-
-import VehicleOptions from "./VehicleOptions.vue";
+import formatter from "../../mixins/formatter";
+import VehicleOptions from "../VehicleOptions.vue";
+import { distanceUnit, distanceValue } from "../../units";
+import api from "../../api";
 
 export default {
-	name: "ChargingSessionModal",
+	name: "SessionDetailsModal",
 	components: { VehicleOptions },
 	mixins: [formatter],
 	props: {

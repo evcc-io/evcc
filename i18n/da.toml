@@ -446,6 +446,7 @@ remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
 solar = "solenergi"
 
 [main.loadpointSettings]
+batteryUsage = "Husbatteri"
 currents = "Ladestrøm"
 default = "standard"
 disclaimerHint = "Bemærk:"
@@ -454,6 +455,12 @@ smartCostCheap = "Billig opladning fra elnet"
 smartCostClean = "Grøn opladning fra elnet"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"
+
+[main.loadpointSettings.batteryBoost]
+description = "Hurtig opladning fra husbatteriet"
+label = "Batteri boost"
+mode = "Kun tilgængelig i solar og min+solar mode"
+once = "Boost er aktiveret for denne opladning"
 
 [main.loadpointSettings.limitSoc]
 description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
@@ -556,6 +563,7 @@ vehicleLimit = "Køretøjsgrænse: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Venter på godkendelse."
+batteryBoost = "Boost fra batteri er aktiv"
 charging = "Oplader..."
 cheapEnergyCharging = "Billig energi er tilgængelig."
 cheapEnergyNextStart = "Billig energi i {duration}."

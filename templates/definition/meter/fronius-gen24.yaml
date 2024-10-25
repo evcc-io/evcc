@@ -18,6 +18,7 @@ params:
     deprecated: true
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
@@ -45,6 +46,7 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:2:DCW # mppt 2
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom

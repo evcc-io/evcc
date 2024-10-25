@@ -120,6 +120,7 @@
 												{ name: '2-phases', value: '2' },
 												{ name: '3-phases', value: undefined },
 											]"
+											equal-width
 										/>
 									</FormRow>
 									<div class="row mb-3">

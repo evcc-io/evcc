@@ -101,6 +101,7 @@ export default {
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
+		batteryBoostActive: Boolean,
 		enabled: Boolean,
 		heating: Boolean,
 		id: [String, Number],
