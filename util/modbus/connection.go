@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/volkszaehler/mbmd/meters"
@@ -10,8 +11,13 @@ import (
 type Connection struct {
 	*logger
 	meters.Connection
+	slaveID uint8 // duplicated from meters.Connection
 	logical meters.Logger
 	delay   time.Duration
+}
+
+func (c *Connection) Addr() string {
+	return fmt.Sprintf("%s::%d", c.Connection.String(), c.slaveID)
 }
 
 func (c *Connection) Logger(logger meters.Logger) {
@@ -24,6 +30,7 @@ func (c *Connection) Delay(delay time.Duration) {
 
 func (c *Connection) Clone(slaveID uint8) *Connection {
 	return &Connection{
+		slaveID:    slaveID,
 		Connection: c.Connection.Clone(slaveID),
 		logger:     c.logger,
 	}

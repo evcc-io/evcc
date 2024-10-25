@@ -74,7 +74,7 @@ func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		planTime, err := time.Parse(time.RFC3339, vars["time"])
+		planTime, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -131,7 +131,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		ts, err := time.Parse(time.RFC3339, vars["time"])
+		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

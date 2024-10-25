@@ -465,9 +465,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup persistence
-	if err == nil {
-		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
-	}
+	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// setup translations
 	if err == nil {
@@ -605,6 +603,10 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
+		if !runAsService {
+			return
+		}
+
 		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 
