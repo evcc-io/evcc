@@ -22,7 +22,7 @@ type CS struct {
 	ocpp16.CentralSystem
 	mu    sync.Mutex
 	log   *util.Logger
-	regs  map[string]*registration
+	regs  map[string]*registration // guarded by mu mutex
 	txnId atomic.Int64
 }
 
