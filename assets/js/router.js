@@ -32,7 +32,7 @@ export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      { path: "/", component: Main, props: true },
+      { path: "/", component: () => import("./views/Main.vue"), props: true },
       {
         path: "/config",
         component: () => import("./views/Config.vue"),

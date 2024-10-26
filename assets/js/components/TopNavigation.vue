@@ -69,19 +69,19 @@
 				<li>
 					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
 				</li>
-				<li v-for="login in providerLogins" :key="login.title">
+				<li v-for="l in providerLogins" :key="l.title">
 					<button
 						type="button"
 						class="dropdown-item"
-						@click="handleProviderAuthorization(login)"
+						@click="handleProviderAuthorization(l)"
 					>
 						<span
-							v-if="!login.loggedIn"
+							v-if="!l.loggedIn"
 							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
 							:class="badgeClass"
 						></span>
-						{{ login.title }}
-						{{ $t(login.loggedIn ? "main.provider.logout" : "main.provider.login") }}
+						{{ l.title }}
+						{{ $t(l.loggedIn ? "main.provider.logout" : "main.provider.login") }}
 					</button>
 				</li>
 			</template>

@@ -75,7 +75,11 @@ watch(
   () => auth.configured,
   (configured) => {
     const modal = Modal.getOrCreateInstance(document.getElementById("passwordModal"));
-    configured ? modal.hide() : modal.show();
+    if (configured) {
+      modal.hide();
+    } else {
+      modal.show();
+    }
   }
 );
 

@@ -20,6 +20,7 @@
 </template>
 
 <script>
+/* eslint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 

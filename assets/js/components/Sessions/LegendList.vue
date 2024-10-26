@@ -7,9 +7,9 @@
 		}"
 	>
 		<li
-			class="legend-item d-flex align-items-baseline gap-2 no-wrap overflow-hidden"
 			v-for="legend in legends"
 			:key="legend.label"
+			class="legend-item d-flex align-items-baseline gap-2 no-wrap overflow-hidden"
 		>
 			<div
 				v-if="legend.color"
@@ -19,8 +19,8 @@
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div
 				v-for="value in valueList(legend.value)"
-				class="text-muted text-nowrap legend-value text-end"
 				:key="value"
+				class="text-muted text-nowrap legend-value text-end"
 			>
 				{{ value }}
 			</div>

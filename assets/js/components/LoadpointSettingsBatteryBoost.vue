@@ -47,19 +47,20 @@ export default {
 		mode: String,
 		batteryBoost: Boolean,
 	},
+	emits: ["batteryboost-updated"],
 	data() {
 		return {
 			selectedEnabled: this.batteryBoost,
 		};
 	},
-	watch: {
-		batteryBoost(newVal) {
-			this.selectedEnabled = newVal;
-		},
-	},
 	computed: {
 		disabled() {
 			return ["off", "now"].includes(this.mode);
+		},
+	},
+	watch: {
+		batteryBoost(newVal) {
+			this.selectedEnabled = newVal;
 		},
 	},
 	methods: {
@@ -67,6 +68,5 @@ export default {
 			this.$emit("batteryboost-updated", this.selectedEnabled);
 		},
 	},
-	emits: ["batteryboost-updated"],
 };
 </script>

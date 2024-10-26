@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h6 class="mt-0" v-if="isLoadpoint">{{ title }}</h6>
+		<h6 v-if="isLoadpoint" class="mt-0">{{ title }}</h6>
 		<p>
 			{{ description }}
 		</p>

@@ -25,7 +25,7 @@ function save(key) {
         delete window.localStorage[key];
       }
     } catch (e) {
-      console.error("unable to write to localstorage", { key, value });
+      console.error("unable to write to localstorage", { key, value, e });
     }
   };
 }
