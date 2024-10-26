@@ -198,7 +198,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 		}
 
 		// static
-		if err := configurable.Update(static, instance); err != nil {
+		if err := configurable.PartialUpdate(static, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
