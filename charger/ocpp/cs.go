@@ -65,8 +65,8 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	cs.mu.Lock()
 
 	// prepare shadow state
-	reg, ok := cs.regs[id]
-	if !ok {
+	reg, registered := cs.regs[id]
+	if !registered {
 		reg = new(registration)
 		cs.regs[id] = reg
 	}
@@ -79,7 +79,7 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 
 	cs.mu.Unlock()
 
-	// already registered?
+	// setup already completed?
 	if cp != nil {
 		// duplicate registration of id empty
 		if id == "" {
@@ -96,7 +96,9 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	reg.cp = cp
 	cs.mu.Unlock()
 
-	cp.connect(true)
+	if registered {
+		cp.connect(true)
+	}
 
 	return cp, init(cp)
 }
@@ -121,7 +123,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	// check for configured anonymous charge point
 	reg, ok = cs.regs[""]
-	if cp := reg.cp; ok && cp != nil {
+	if ok && reg.cp != nil {
+		cp := reg.cp
 		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
 		// update id
