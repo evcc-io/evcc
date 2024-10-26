@@ -19,6 +19,7 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -101,6 +102,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

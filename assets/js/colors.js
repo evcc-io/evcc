@@ -43,8 +43,8 @@ function updateCssColors() {
   colors.self = style.getPropertyValue("--evcc-self");
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.background = style.getPropertyValue("--evcc-background");
-  colors.pricePerKWh = style.getPropertyValue("--evcc-grid");
-  colors.co2PerKWh = style.getPropertyValue("--evcc-grid");
+  colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
+  colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
 }
 
 // update colors on theme change

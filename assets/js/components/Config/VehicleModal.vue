@@ -103,6 +103,7 @@
 								{ name: '3-phases', value: undefined },
 							]"
 							equal-width
+              transparent
 						/>
 					</FormRow>
 					<div class="row mb-3">
@@ -475,4 +476,3 @@ export default {
 	padding-right: 0;
 }
 </style>
-import type MarkdownVue from "./Markdown.vue";
