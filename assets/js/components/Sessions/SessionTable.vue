@@ -189,7 +189,10 @@ export default {
 	emits: ["show-session"],
 	computed: {
 		filteredSessions() {
-			return this.sessions.filter(this.filterByLoadpoint).filter(this.filterByVehicle);
+			return this.sessions
+				.filter(this.filterByLoadpoint)
+				.filter(this.filterByVehicle)
+				.sort((a, b) => new Date(b.created) - new Date(a.created));
 		},
 		maxColumns() {
 			return COLUMNS_PER_BREAKPOINT[this.breakpoint] || 1;

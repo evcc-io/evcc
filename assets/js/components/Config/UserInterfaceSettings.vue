@@ -5,6 +5,7 @@
 				id="settingsDesign"
 				v-model="theme"
 				class="w-100"
+				transparent
 				:options="
 					THEMES.map((value) => ({
 						value,
@@ -31,6 +32,7 @@
 				id="settingsUnit"
 				v-model="unit"
 				class="w-75"
+				transparent
 				:options="
 					UNITS.map((value) => ({
 						value,

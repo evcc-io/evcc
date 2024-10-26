@@ -186,18 +186,15 @@ export default {
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw || 0;
-								return (
-									datasetLabel + ": " + this.fmtWh(value * 1e3, POWER_UNIT.AUTO)
-								);
+								return value
+									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
+									: null;
 							},
 							labelColor: tooltipLabelColor(false),
 							labelPointStyle: function () {
 								return {
 									pointStyle: "circle",
 								};
-							},
-							labelTextColor: (item) => {
-								return !item.raw ? colors.muted : "#fff";
 							},
 						},
 						itemSort: function (a, b) {
@@ -210,7 +207,13 @@ export default {
 						stacked: true,
 						border: { display: false },
 						grid: { display: false },
-						ticks: { color: colors.muted },
+						ticks: {
+							color: colors.muted,
+							callback: (value) =>
+								this.period === PERIODS.YEAR
+									? this.fmtMonth(new Date(this.year, value, 1), true)
+									: value,
+						},
 					},
 					y: {
 						stacked: true,
