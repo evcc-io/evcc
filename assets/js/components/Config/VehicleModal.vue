@@ -103,7 +103,7 @@
 								{ name: '3-phases', value: undefined },
 							]"
 							equal-width
-              transparent
+							transparent
 						/>
 					</FormRow>
 					<div class="row mb-3">
