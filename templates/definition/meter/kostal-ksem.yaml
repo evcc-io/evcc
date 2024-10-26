@@ -10,16 +10,66 @@ params:
     choice: ["tcpip"]
     id: 71
 render: |
-  type: mbmd
-  {{- include "modbus" . }}
-  model: sunspec
-  power: Power
-  energy: Import
+  type: custom
+  # sunspec model 203 (int+sf)/ 213 (float) meter
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 
+      - 203:TotWhImp
+      - 213:TotWhImp
+    scale: 0.001
   currents:
-    - CurrentL1
-    - CurrentL2
-    - CurrentL3
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphC
+        - 213:AphC
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphC
+        - 213:PhVphC
   powers:
-    - PowerL1
-    - PowerL2
-    - PowerL3
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphC
+        - 213:WphC

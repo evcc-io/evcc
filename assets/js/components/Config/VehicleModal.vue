@@ -120,6 +120,7 @@
 												{ name: '2-phases', value: '2' },
 												{ name: '3-phases', value: undefined },
 											]"
+											transparent
 											equal-width
 										/>
 									</FormRow>
