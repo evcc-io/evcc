@@ -107,12 +107,12 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	defer cs.mu.Unlock()
 
 	// check for configured charge point
-	state, ok := cs.regs[chargePoint.ID()]
+	reg, ok := cs.regs[chargePoint.ID()]
 	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
 		// trigger initial connection if charge point is already setup
-		if cp := state.cp; cp != nil {
+		if cp := reg.cp; cp != nil {
 			cp.connect(true)
 		}
 
@@ -120,8 +120,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	}
 
 	// check for configured anonymous charge point
-	state, ok = cs.regs[""]
-	if cp := state.cp; ok && cp != nil {
+	reg, ok = cs.regs[""]
+	if cp := reg.cp; ok && cp != nil {
 		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
 		// update id
