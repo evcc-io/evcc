@@ -53,18 +53,6 @@ export default {
 		};
 	},
 	emits: ["open", "opened", "close", "closed"],
-	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
-	},
 	computed: {
 		classes() {
 			return [
@@ -85,6 +73,18 @@ export default {
 			}
 			return "";
 		},
+	},
+	mounted() {
+		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
+		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
+	},
+	unmounted() {
+		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
+		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
+		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	methods: {
 		handleShow() {

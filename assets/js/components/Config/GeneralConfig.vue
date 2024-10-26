@@ -109,16 +109,13 @@ import formatter from "../../mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
+	components: { TitleModal, EditIcon },
+	mixins: [formatter],
+	emits: ["site-changed"],
 	data() {
 		return {
 			title: "",
 		};
-	},
-	components: { TitleModal, EditIcon },
-	mixins: [formatter],
-	emits: ["site-changed"],
-	async mounted() {
-		await this.load();
 	},
 	computed: {
 		telemetryEnabled() {
@@ -148,6 +145,9 @@ export default {
 			return { name, expiresSoon, cssClass };
 		},
 	},
+	async mounted() {
+		await this.load();
+	},
 	methods: {
 		async changed() {
 			this.$emit("site-changed");
@@ -155,7 +155,7 @@ export default {
 		},
 		async load() {
 			try {
-				let res = await api.get("/config/site", {
+				const res = await api.get("/config/site", {
 					validateStatus: (code) => [200, 404].includes(code),
 				});
 				if (res.status === 200) {

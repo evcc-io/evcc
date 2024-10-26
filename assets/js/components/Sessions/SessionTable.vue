@@ -181,12 +181,12 @@ export default {
 		vehicleFilter: { type: String, default: "" },
 		currency: { type: String },
 	},
+	emits: ["show-session"],
 	data() {
 		return {
 			selectedColumns: settings.sessionColumns,
 		};
 	},
-	emits: ["show-session"],
 	computed: {
 		filteredSessions() {
 			return this.sessions
@@ -266,14 +266,14 @@ export default {
 		},
 		sortedColumns() {
 			const columns = [...this.columns];
-			let sorted = [];
-			for (let name of this.selectedColumns) {
+			const sorted = [];
+			for (const name of this.selectedColumns) {
 				if (!name && columns.length) {
 					sorted.push(columns.shift());
 				} else if (columns.some((c) => c.name === name)) {
 					const column = columns.find((c) => c.name === name);
 					sorted.push(column);
-					let index = columns.indexOf(column);
+					const index = columns.indexOf(column);
 					columns.splice(index, 1);
 				}
 			}

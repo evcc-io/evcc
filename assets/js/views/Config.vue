@@ -3,7 +3,7 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
-				<div class="alert alert-danger my-4 pb-0" role="alert" v-if="$hiddenFeatures()">
+				<div v-if="$hiddenFeatures()" class="alert alert-danger my-4 pb-0" role="alert">
 					<p>
 						<strong>Experimental! 🧪</strong>
 						Only use these features if you are in the mood for adventure and not afraid
@@ -236,8 +236,8 @@
 										:tags="yamlTags('circuits')"
 									/>
 									<template
-										v-else
 										v-for="(circuit, idx) in circuits"
+										v-else
 										:key="circuit.name"
 									>
 										<hr v-if="idx > 0" />
@@ -413,6 +413,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 	},
+	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
 		notifications: Array,
@@ -442,7 +443,6 @@ export default {
 			},
 		};
 	},
-	mixins: [formatter, collector],
 	computed: {
 		fatalClass() {
 			return store.state?.fatal?.class;

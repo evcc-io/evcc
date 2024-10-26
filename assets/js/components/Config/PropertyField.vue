@@ -46,8 +46,8 @@
 	<SelectGroup
 		v-else-if="boolean"
 		:id="id"
-		class="w-50"
 		v-model="value"
+		class="w-50"
 		equal-width
 		transparent
 		:options="[

@@ -9,7 +9,7 @@
 		data-testid="mqtt-modal"
 		@changed="$emit('changed')"
 	>
-		<template v-slot:default="{ values }">
+		<template #default="{ values }">
 			<FormRow
 				id="mqttBroker"
 				:label="$t('config.mqtt.labelBroker')"
@@ -53,10 +53,10 @@
 			<FormRow id="mqttInsecure" :label="$t('config.mqtt.labelInsecure')">
 				<div class="d-flex">
 					<input
-						class="form-check-input"
 						id="mqttInsecure"
-						type="checkbox"
 						v-model="values.insecure"
+						class="form-check-input"
+						type="checkbox"
 					/>
 					<label class="form-check-label ms-2" for="mqttInsecure">
 						{{ $t("config.mqtt.labelCheckInsecure") }}
