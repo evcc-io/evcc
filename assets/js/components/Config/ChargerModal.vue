@@ -12,9 +12,9 @@
 				<select
 					id="chargerTemplate"
 					v-model="templateName"
-					@change="templateChanged"
 					:disabled="!isNew"
 					class="form-select w-100"
+					@change="templateChanged"
 				>
 					<option value="">---</option>
 					<optgroup :label="$t('config.charger.generic')">
@@ -79,8 +79,8 @@
 			/>
 			<PropertyEntry
 				v-for="param in normalParams"
-				:key="param.Name"
 				:id="`chargerParam${param.Name}`"
+				:key="param.Name"
 				v-bind="param"
 				v-model="values[param.Name]"
 			/>
@@ -89,8 +89,8 @@
 				<template v-if="advancedParams.length" #advanced>
 					<PropertyEntry
 						v-for="param in advancedParams"
-						:key="param.Name"
 						:id="`chargerParam${param.Name}`"
+						:key="param.Name"
 						v-bind="param"
 						v-model="values[param.Name]"
 					/>

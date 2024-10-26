@@ -291,16 +291,16 @@
 
 				<LoadpointModal
 					:id="selectedLoadpointId"
-					:vehicleOptions="vehicleOptions"
 					ref="loadpointModal"
+					:vehicleOptions="vehicleOptions"
 					:loadpointCount="loadpoints.length"
 					:chargers="chargers"
 					:meters="meters"
 					:circuits="circuits"
 					:fade="loadpointSubModalOpen ? 'left' : ''"
 					@updated="loadpointChanged"
-					@openChargerModal="editLoadpointCharger"
-					@openMeterModal="editLoadpointMeter"
+					@open-charger-modal="editLoadpointCharger"
+					@open-meter-modal="editLoadpointMeter"
 					@opened="loadpointSubModalOpen = false"
 				/>
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />

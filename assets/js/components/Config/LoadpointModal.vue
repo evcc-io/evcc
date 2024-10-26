@@ -51,8 +51,8 @@
 			<div v-if="values.charger || !isNew">
 				<FormRow
 					v-if="values.meter"
-					class="mb-6"
 					id="loadpointParamMeter"
+					class="mb-6"
 					label="Energy meter"
 					help="Additional meter if the charger doesn't have an integrated one."
 				>
@@ -422,8 +422,8 @@
 					</FormRow>
 					<FormRow
 						v-if="values.soc.poll.mode !== 'charging'"
-						class="ms-3 mb-5"
 						id="loadpointPollInterval"
+						class="ms-3 mb-5"
 						label="Udate interval"
 						help="Time between vehicle API updates. Short intervals may drain the vehicle battery."
 					>
@@ -440,10 +440,10 @@
 
 					<div class="d-flex mb-4">
 						<input
-							class="form-check-input"
 							id="loadpointEstimate"
-							type="checkbox"
 							v-model="values.soc.estimate"
+							class="form-check-input"
+							type="checkbox"
 						/>
 						<label class="form-check-label ms-2" for="loadpointEstimate">
 							Interpolate charge level between API updates
@@ -452,7 +452,7 @@
 				</div>
 			</div>
 
-			<div class="mb-4 d-flex justify-content-between" v-if="values.charger">
+			<div v-if="values.charger" class="mb-4 d-flex justify-content-between">
 				<button
 					v-if="isDeletable"
 					type="button"
@@ -530,6 +530,7 @@ const winterThresholds = {
 export default {
 	name: "LoadpointModal",
 	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
+	mixins: [formatter],
 	props: {
 		id: Number,
 		name: String,
@@ -540,7 +541,6 @@ export default {
 		meters: { type: Array, default: () => [] },
 		circuits: { type: Array, default: () => [] },
 	},
-	mixins: [formatter],
 	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
 	data() {
 		return {

@@ -47,12 +47,12 @@ export default {
 		fade: String,
 		size: String,
 	},
+	emits: ["open", "opened", "close", "closed"],
 	data: function () {
 		return {
 			isModalVisible: false,
 		};
 	},
-	emits: ["open", "opened", "close", "closed"],
 	computed: {
 		classes() {
 			return [
