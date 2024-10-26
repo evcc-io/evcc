@@ -23,6 +23,7 @@ registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 export default {
 	name: "AvgCostGroupedChart",
 	components: { PolarArea, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		currency: { type: String, default: "EUR" },
@@ -31,7 +32,6 @@ export default {
 		suggestedMax: { type: Number, default: 0 },
 		costType: { type: String, default: TYPES.PRICE },
 	},
-	mixins: [formatter],
 	computed: {
 		chartData() {
 			console.log(`update ${this.costType} grouped data`);

@@ -5,10 +5,10 @@
 				<span>{{ $t("config.validation.label") }}: </span>
 				<span v-if="unknown">{{ $t("config.validation.unknown") }}</span>
 				<span v-if="running">{{ $t("config.validation.running") }}</span>
-				<span class="text-success" v-if="success">
+				<span v-if="success" class="text-success">
 					{{ $t("config.validation.success") }}
 				</span>
-				<span class="text-danger" v-if="failed">
+				<span v-if="failed" class="text-danger">
 					{{ $t("config.validation.failed") }}
 				</span>
 			</strong>
@@ -22,11 +22,11 @@
 				{{ $t("config.validation.validate") }}
 			</a>
 		</div>
-		<hr class="divider" v-if="error" />
-		<div class="text-danger" v-if="error">
+		<hr v-if="error" class="divider" />
+		<div v-if="error" class="text-danger">
 			{{ error }}
 		</div>
-		<hr class="divider" v-if="result" />
+		<hr v-if="result" class="divider" />
 		<div v-if="result">
 			<DeviceTags :tags="result" class="success-values" />
 		</div>
@@ -38,6 +38,7 @@ import DeviceTags from "./DeviceTags.vue";
 
 export default {
 	name: "TestResult",
+	components: { DeviceTags },
 	props: {
 		success: Boolean,
 		failed: Boolean,
@@ -47,7 +48,6 @@ export default {
 		error: String,
 	},
 	emits: ["test"],
-	components: { DeviceTags },
 };
 </script>
 <style scoped>
