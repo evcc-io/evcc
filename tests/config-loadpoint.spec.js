@@ -104,6 +104,8 @@ test.describe("loadpoint", async () => {
     await expect(lpModal).toBeVisible();
     await expect(lpModal.getByLabel("Priority")).toHaveValue("2");
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport 2");
+    await lpModal.getByRole("button", { name: "Close" }).click();
+    await expect(lpModal).not.toBeVisible();
 
     // delete loadpoint
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
