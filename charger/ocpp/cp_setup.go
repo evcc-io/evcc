@@ -156,25 +156,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
-	// trigger status for all connectors
-	if cp.HasRemoteTriggerFeature {
-		var ok bool
-
-		// apply cached status if available
-		instance.WithChargepointStatusByID(cp.id, func(status *core.StatusNotificationRequest) {
-			if _, err := cp.OnStatusNotification(status); err == nil {
-				ok = true
-			}
-		})
-
-		// only trigger if we don't already have a status
-		if !ok {
-			if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-				cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
-			}
-		}
-	}
-
 	return nil
 }
 

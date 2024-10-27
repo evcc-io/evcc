@@ -70,9 +70,9 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 	defer cs.mu.Unlock()
 
 	// cache status for future cp connection
-	if reg, ok := cs.regs[id]; ok {
+	if reg, ok := cs.regs[id]; ok && request != nil {
 		reg.mu.Lock()
-		reg.status = request
+		reg.status[request.ConnectorId] = request
 		reg.mu.Unlock()
 	}
 

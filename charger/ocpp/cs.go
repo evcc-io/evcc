@@ -13,9 +13,13 @@ import (
 
 type registration struct {
 	mu     sync.RWMutex
-	setup  sync.RWMutex                    // serialises chargepoint setup
-	cp     *CP                             // guarded by setup and CS mutexes
-	status *core.StatusNotificationRequest // guarded by mu mutex
+	setup  sync.RWMutex                            // serialises chargepoint setup
+	cp     *CP                                     // guarded by setup and CS mutexes
+	status map[int]*core.StatusNotificationRequest // guarded by mu mutex
+}
+
+func newRegistration() *registration {
+	return &registration{status: make(map[int]*core.StatusNotificationRequest)}
 }
 
 type CS struct {
@@ -47,14 +51,14 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 	return reg.cp, nil
 }
 
-func (cs *CS) WithChargepointStatusByID(id string, fun func(status *core.StatusNotificationRequest)) {
+func (cs *CS) WithConnectorStatus(id string, connector int, fun func(status *core.StatusNotificationRequest)) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
 	if reg, ok := cs.regs[id]; ok {
 		reg.mu.RLock()
-		if reg.status != nil {
-			fun(reg.status)
+		if status, ok := reg.status[connector]; ok {
+			fun(status)
 		}
 		reg.mu.RUnlock()
 	}
@@ -67,7 +71,7 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	// prepare shadow state
 	reg, registered := cs.regs[id]
 	if !registered {
-		reg = new(registration)
+		reg = newRegistration()
 		cs.regs[id] = reg
 	}
 
@@ -142,7 +146,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	// register unknown charge point
 	// when charge point setup is complete, it will eventually be associated with the connected id
-	cs.regs[chargePoint.ID()] = new(registration)
+	cs.regs[chargePoint.ID()] = newRegistration()
 }
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler

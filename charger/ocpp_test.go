@@ -2,6 +2,8 @@ package charger
 
 import (
 	"errors"
+	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,6 +29,29 @@ const (
 	ocppTestConnectTimeout = 10 * time.Second
 )
 
+type ocppLogger struct {
+	suite *ocppTestSuite
+}
+
+func (l *ocppLogger) print(s string) {
+	if !l.suite.done.Load() {
+		l.suite.T().Log((time.Now().Format(time.DateTime)), s)
+	}
+}
+
+func (l *ocppLogger) Debug(args ...interface{}) { l.print(fmt.Sprint(args...)) }
+func (l *ocppLogger) Debugf(format string, args ...interface{}) {
+	l.print(fmt.Sprintf(format, args...))
+}
+func (l *ocppLogger) Info(args ...interface{}) { l.print(fmt.Sprint(args...)) }
+func (l *ocppLogger) Infof(format string, args ...interface{}) {
+	l.print(fmt.Sprintf(format, args...))
+}
+func (l *ocppLogger) Error(args ...interface{}) { l.print(fmt.Sprint(args...)) }
+func (l *ocppLogger) Errorf(format string, args ...interface{}) {
+	l.print(fmt.Sprintf(format, args...))
+}
+
 func TestOcpp(t *testing.T) {
 	suite.Run(t, new(ocppTestSuite))
 }
@@ -34,17 +59,22 @@ func TestOcpp(t *testing.T) {
 type ocppTestSuite struct {
 	suite.Suite
 	clock *clock.Mock
+	done  atomic.Bool
 }
 
-func (suite *ocppTestSuite) SetupSuite() {
+func (suite *ocppTestSuite) SetupTest() {
 	ocpp.Timeout = 5 * time.Second
 
 	// setup cs so we can overwrite logger afterwards
 	_ = ocpp.Instance()
-	ocppj.SetLogger(&ocppLogger{suite.T()})
+	ocppj.SetLogger(&ocppLogger{suite})
 
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
+}
+
+func (suite *ocppTestSuite) TeardownTest() {
+	suite.done.Store(true)
 }
 
 func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
