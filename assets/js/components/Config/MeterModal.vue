@@ -41,9 +41,9 @@
 								<select
 									id="meterTemplate"
 									v-model="templateName"
-									@change="templateChanged"
 									:disabled="!isNew"
 									class="form-select w-100"
+									@change="templateChanged"
 								>
 									<option
 										v-for="option in genericOptions"
@@ -83,8 +83,8 @@
 							/>
 							<PropertyEntry
 								v-for="param in normalParams"
-								:key="param.Name"
 								:id="`meterParam${param.Name}`"
+								:key="param.Name"
 								v-bind="param"
 								v-model="values[param.Name]"
 							/>
@@ -93,8 +93,8 @@
 								<template v-if="advancedParams.length" #advanced>
 									<PropertyEntry
 										v-for="param in advancedParams"
-										:key="param.Name"
 										:id="`meterParam${param.Name}`"
+										:key="param.Name"
 										v-bind="param"
 										v-model="values[param.Name]"
 									/>

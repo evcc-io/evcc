@@ -10,7 +10,7 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template v-slot:default="{ values }">
+		<template #default="{ values }">
 			<FormRow
 				id="siteTitle"
 				:label="$t('config.title.label')"

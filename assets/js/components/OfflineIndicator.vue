@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="modal-backdrop" v-if="offline" />
+		<div v-if="offline" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
 			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
@@ -88,14 +88,6 @@ export default {
 	data() {
 		return { dismissed: false };
 	},
-	watch: {
-		offline: function () {
-			if (!this.offline) {
-				restartComplete();
-				this.dismissed = false;
-			}
-		},
-	},
 	computed: {
 		restartNeeded() {
 			return restart.restartNeeded;
@@ -114,6 +106,14 @@ export default {
 				this.fatal?.error &&
 				!this.dismissed
 			);
+		},
+	},
+	watch: {
+		offline: function () {
+			if (!this.offline) {
+				restartComplete();
+				this.dismissed = false;
+			}
 		},
 	},
 	methods: {

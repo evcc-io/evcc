@@ -29,9 +29,9 @@
 								<select
 									id="vehicleTemplate"
 									v-model="templateName"
-									@change="templateChanged"
 									:disabled="!isNew"
 									class="form-select w-100"
+									@change="templateChanged"
 								>
 									<option value="offline">
 										{{ $t("config.vehicle.offline") }}
@@ -70,8 +70,8 @@
 							<Markdown v-if="description" :markdown="description" class="my-4" />
 							<PropertyEntry
 								v-for="param in normalParams"
-								:key="param.Name"
 								:id="`vehicleParam${param.Name}`"
+								:key="param.Name"
 								v-bind="param"
 								v-model="values[param.Name]"
 							/>
@@ -80,8 +80,8 @@
 								<template v-if="advancedParams.length" #advanced>
 									<PropertyEntry
 										v-for="param in advancedParams"
-										:key="param.Name"
 										:id="`vehicleParam${param.Name}`"
+										:key="param.Name"
 										v-bind="param"
 										v-model="values[param.Name]"
 									/>
@@ -113,8 +113,8 @@
 									>
 										<SelectGroup
 											id="vehicleParamPhases"
-											class="w-100"
 											v-model="values.phases"
+											class="w-100"
 											:options="[
 												{ name: '1-phase', value: '1' },
 												{ name: '2-phases', value: '2' },

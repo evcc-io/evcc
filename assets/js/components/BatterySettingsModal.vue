@@ -30,7 +30,7 @@
 			</li>
 		</ul>
 
-		<div class="row" v-show="usageTabActive">
+		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
 				<strong>{{ fmtSoc(batterySoc) }}</strong>
@@ -224,7 +224,7 @@
 						</i18n-t>
 					</span>
 				</p>
-				<div class="form-check form-switch mt-4" v-if="controllable">
+				<div v-if="controllable" class="form-check form-switch mt-4">
 					<input
 						id="batteryDischargeControl"
 						:checked="batteryDischargeControl"
@@ -263,8 +263,8 @@ import smartCostAvailable from "../utils/smartCostAvailable";
 
 export default {
 	name: "BatterySettingsModal",
-	mixins: [formatter, collector],
 	components: { SmartCostLimit, CustomSelect, GenericModal },
+	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,

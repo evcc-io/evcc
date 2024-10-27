@@ -94,6 +94,7 @@
 					:color-mappings="colorMappings"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
+					:currency="currency"
 					:period="period"
 					:suggested-max-cost="suggestedMaxCost"
 				/>
@@ -120,6 +121,7 @@
 							:suggested-max-price="suggestedMaxCost"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 					<div class="col-12 col-lg-6 mb-5">
@@ -136,6 +138,7 @@
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 				</div>
