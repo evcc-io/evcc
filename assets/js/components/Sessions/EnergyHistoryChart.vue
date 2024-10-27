@@ -21,13 +21,13 @@ registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, 
 export default {
 	name: "EnergyHistoryChart",
 	components: { Bar, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
 		period: { type: String, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
-	mixins: [formatter],
 	computed: {
 		firstDay() {
 			if (this.sessions.length === 0) {
@@ -186,18 +186,15 @@ export default {
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw || 0;
-								return (
-									datasetLabel + ": " + this.fmtWh(value * 1e3, POWER_UNIT.AUTO)
-								);
+								return value
+									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
+									: null;
 							},
 							labelColor: tooltipLabelColor(false),
 							labelPointStyle: function () {
 								return {
 									pointStyle: "circle",
 								};
-							},
-							labelTextColor: (item) => {
-								return !item.raw ? colors.muted : "#fff";
 							},
 						},
 						itemSort: function (a, b) {
@@ -210,7 +207,13 @@ export default {
 						stacked: true,
 						border: { display: false },
 						grid: { display: false },
-						ticks: { color: colors.muted },
+						ticks: {
+							color: colors.muted,
+							callback: (value) =>
+								this.period === PERIODS.YEAR
+									? this.fmtMonth(new Date(this.year, value, 1), true)
+									: value,
+						},
 					},
 					y: {
 						stacked: true,

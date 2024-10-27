@@ -4,7 +4,7 @@
 		class="w-100 d-flex d-lg-none"
 		:options="periodOptions"
 		:modelValue="period"
-		@update:modelValue="changePeriod"
+		@update:model-value="changePeriod"
 	/>
 	<SelectGroup
 		id="sessionsPeriod"
@@ -12,7 +12,7 @@
 		:options="periodOptions"
 		large
 		:modelValue="period"
-		@update:modelValue="changePeriod"
+		@update:model-value="changePeriod"
 	/>
 </template>
 
@@ -28,6 +28,7 @@ export default {
 		period: { type: String, required: true },
 		periodOptions: { type: Array, required: true },
 	},
+	emits: ["update:period"],
 	methods: {
 		changePeriod(newPeriod) {
 			this.$emit("update:period", newPeriod);

@@ -104,6 +104,7 @@ export default {
 		CustomSelect,
 		DateNavigatorButton,
 	},
+	mixins: [formatter],
 	props: {
 		month: Number,
 		year: Number,
@@ -111,7 +112,6 @@ export default {
 		showMonth: Boolean,
 		showYear: Boolean,
 	},
-	mixins: [formatter],
 	emits: ["update-date"],
 	computed: {
 		hasPrevMonth() {

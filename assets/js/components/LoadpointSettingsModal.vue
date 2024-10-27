@@ -2,8 +2,8 @@
 	<Teleport to="body">
 		<div
 			:id="`loadpointSettingsModal_${id}`"
-			class="modal fade text-dark modal-xl"
 			ref="modal"
+			class="modal fade text-dark modal-xl"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -178,8 +178,8 @@ const insertSorted = (arr, num) => {
 
 export default {
 	name: "LoadpointSettingsModal",
-	mixins: [formatter, collector],
 	components: { SmartCostLimit, LoadpointSettingsBatteryBoost },
+	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,

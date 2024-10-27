@@ -76,6 +76,7 @@ import formatter from "../mixins/formatter";
 
 export default {
 	name: "VehicleSoc",
+	mixins: [formatter],
 	props: {
 		connected: Boolean,
 		vehicleSoc: Number,
@@ -92,7 +93,6 @@ export default {
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 	},
-	mixins: [formatter],
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data: function () {
 		return {
@@ -230,7 +230,7 @@ export default {
 			}
 		},
 		movedLimitSoc: function (e) {
-			let value = parseInt(e.target.value, 10);
+			const value = parseInt(e.target.value, 10);
 			e.stopPropagation();
 			const minLimit = 20;
 			if (value < minLimit) {

@@ -39,6 +39,7 @@ registerChartComponents([
 export default {
 	name: "CostHistoryChart",
 	components: { Bar, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
@@ -48,7 +49,6 @@ export default {
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
-	mixins: [formatter],
 	computed: {
 		firstDay() {
 			if (this.sessions.length === 0) {
@@ -256,27 +256,22 @@ export default {
 										return null;
 									}
 
-									return (
-										datasetLabel +
-										": " +
-										(this.costType === TYPES.PRICE
+									const valueFmt =
+										this.costType === TYPES.PRICE
 											? this.fmtPricePerKWh(value, this.currency, false)
-											: this.fmtCo2Medium(value))
-									);
+											: this.fmtCo2Medium(value);
+									return `${datasetLabel}: ${valueFmt}`;
 								}
 
-								return (
-									datasetLabel +
-									": " +
-									(this.costType === TYPES.PRICE
-										? this.fmtMoney(value || 0, this.currency, true, true)
-										: this.fmtGrams(value || 0))
-								);
+								return value
+									? `${datasetLabel}: ${
+											this.costType === TYPES.PRICE
+												? this.fmtMoney(value, this.currency, true, true)
+												: this.fmtGrams(value)
+										}`
+									: null;
 							},
 							labelColor: tooltipLabelColor(false),
-							labelTextColor: (item) => {
-								return !item.raw ? colors.muted : "#fff";
-							},
 						},
 						itemSort: function (a, b) {
 							return b.datasetIndex - a.datasetIndex;
@@ -288,7 +283,13 @@ export default {
 						stacked: true,
 						border: { display: false },
 						grid: { display: false },
-						ticks: { color: colors.muted },
+						ticks: {
+							color: colors.muted,
+							callback: (value) =>
+								this.period === PERIODS.YEAR
+									? this.fmtMonth(new Date(this.year, value, 1), true)
+									: value,
+						},
 					},
 					y: {
 						stacked: true,
