@@ -34,6 +34,12 @@ func (p *RepeatingPlanStruct) ToPlansWithTimestamp() []PlanStruct {
 			return []PlanStruct{}
 		}
 
+		// If the user has selected the day of the week that is today, and at the same time the user
+		// has selected a time that would be in the past for today, the next day of the week in a week should be used
+		if dayOffset == 0 && (now.UTC().Hour()*60 + now.UTC().Minute()) > (planTime.Hour()*60 + planTime.Minute()) {
+			dayOffset = 7
+		}
+
 		// Adjust the current timestamp to the target weekday and set the time
 		timestamp := now.AddDate(0, 0, dayOffset).Truncate(24 * time.Hour).Add(time.Hour*time.Duration(planTime.Hour()) + time.Minute*time.Duration(planTime.Minute()))
 
