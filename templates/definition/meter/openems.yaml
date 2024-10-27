@@ -13,6 +13,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   power:
@@ -31,6 +32,9 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
   {{- if eq .usage "battery" }}
   soc:
     source: http
