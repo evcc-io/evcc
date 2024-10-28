@@ -173,7 +173,7 @@ export default {
 			return [];
 		},
 		repeatingPlans: function () {
-			if (this.vehicle.repeatingPlans.length > 0) {
+			if (this.vehicle?.repeatingPlans.length > 0) {
 				return this.fmtRepeatingPlansUTC(this.vehicle.repeatingPlans.slice(), false);
 			}
 			return [];
