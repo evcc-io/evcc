@@ -89,9 +89,6 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
         id: go
 
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
-
       - name: Patch ASN1
         run: make patch-asn1-sudo
 
@@ -110,6 +107,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
 
       - name: Publish .deb to Cloudsmith
         env:

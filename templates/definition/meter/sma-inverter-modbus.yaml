@@ -11,8 +11,8 @@ params:
     port: 502
     id: 3
     help:
-      en: The Modbus TCP-Server needs to be enabled on this inverter
-      de: Der Modbus TCP-Server muss an diesem Wechselrichter aktiviert sein
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
 render: |
   type: custom
   power:

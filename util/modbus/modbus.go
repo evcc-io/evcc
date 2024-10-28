@@ -8,8 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
-	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
 type Protocol int
@@ -47,7 +45,7 @@ func (s Settings) Protocol() Protocol {
 	switch {
 	case s.UDP:
 		return Udp
-	case s.RTU != nil && *s.RTU:
+	case s.Device != "" || s.RTU != nil && *s.RTU:
 		return Rtu
 	default:
 		return Tcp
@@ -109,6 +107,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 	}
 
 	res := &Connection{
+		slaveID:    slaveID,
 		Connection: conn.Clone(slaveID),
 		logger:     conn.logger,
 	}
@@ -134,10 +133,11 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if proto == Ascii {
-			return registeredConnection(cfg.Device, Ascii, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
-		} else {
-			return registeredConnection(cfg.Device, Rtu, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
+		switch proto {
+		case Ascii:
+			return registeredConnection(cfg.Device, proto, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
+		default:
+			return registeredConnection(cfg.Device, proto, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
@@ -145,50 +145,12 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 
 	switch proto {
 	case Udp:
-		return registeredConnection(uri, Udp, meters.NewRTUOverUDP(uri))
+		return registeredConnection(uri, proto, meters.NewRTUOverUDP(uri))
 	case Rtu:
-		return registeredConnection(uri, Rtu, meters.NewRTUOverTCP(uri))
+		return registeredConnection(uri, proto, meters.NewRTUOverTCP(uri))
 	case Ascii:
-		return registeredConnection(uri, Ascii, meters.NewASCIIOverTCP(uri))
+		return registeredConnection(uri, proto, meters.NewASCIIOverTCP(uri))
 	default:
-		return registeredConnection(uri, Tcp, meters.NewTCP(uri))
+		return registeredConnection(uri, proto, meters.NewTCP(uri))
 	}
-}
-
-// NewDevice creates physical modbus device from config
-func NewDevice(model string, subdevice int) (device meters.Device, err error) {
-	if IsRS485(model) {
-		device, err = rs485.NewDevice(strings.ToUpper(model))
-	} else {
-		device = sunspec.NewDevice(strings.ToUpper(model), subdevice)
-	}
-
-	if device == nil {
-		err = errors.New("invalid modbus configuration: need either uri or device")
-	}
-
-	return device, err
-}
-
-// IsRS485 determines if model is a known MBMD rs485 device model
-func IsRS485(model string) bool {
-	for k := range rs485.Producers {
-		if strings.EqualFold(model, k) {
-			return true
-		}
-	}
-	return false
-}
-
-// RS485FindDeviceOp checks is RS485 device supports operation
-func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op rs485.Operation, err error) {
-	ops := device.Producer().Produce()
-
-	for _, op := range ops {
-		if op.IEC61850 == measurement {
-			return op, nil
-		}
-	}
-
-	return op, fmt.Errorf("unsupported measurement: %s", measurement.String())
 }

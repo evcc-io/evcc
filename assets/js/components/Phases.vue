@@ -32,7 +32,10 @@ export default {
 	},
 	methods: {
 		targetWidth() {
-			let current = Math.min(Math.max(this.minCurrent, this.chargeCurrent), this.maxCurrent);
+			const current = Math.min(
+				Math.max(this.minCurrent, this.chargeCurrent),
+				this.maxCurrent
+			);
 			return (100 / this.maxCurrent) * current;
 		},
 		realWidth(num) {

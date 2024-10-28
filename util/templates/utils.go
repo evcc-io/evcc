@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-sprout/sprout/sprigin"
+	"github.com/Masterminds/sprig/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,5 +59,5 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		"urlEncode": url.QueryEscape,
 	}
 
-	return tmpl.Funcs(sprigin.FuncMap()).Funcs(funcMap)
+	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)
 }

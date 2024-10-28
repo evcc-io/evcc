@@ -47,7 +47,7 @@ export default {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 1_000_000) {
+        if (watt >= 10_000_000) {
           unit = POWER_UNIT.MW;
         } else if (watt >= 1000 || 0 === watt) {
           unit = POWER_UNIT.KW;
@@ -81,6 +81,20 @@ export default {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);
+    },
+    fmtGrams: function (gramms, withUnit = true) {
+      let unit = "gram";
+      let value = gramms;
+      if (gramms >= 1000) {
+        unit = "kilogram";
+        value = gramms / 1000;
+      }
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: withUnit ? "unit" : "decimal",
+        unit,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
     },
     fmtCo2Short: function (gramms) {
       return `${this.fmtNumber(gramms, 0)} g`;
@@ -203,6 +217,11 @@ export default {
         month: short ? "short" : "long",
       }).format(date);
     },
+    fmtYear: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        year: "numeric",
+      }).format(date);
+    },
     fmtDayMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         day: "numeric",
@@ -210,16 +229,29 @@ export default {
         year: "numeric",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+    fmtDayMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtDayOfMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+      }).format(date);
+    },
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
+      const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
-        currencyDisplay: "code",
+        currencyDisplay,
         maximumFractionDigits: decimals ? undefined : 0,
-      })
-        .format(amout)
-        .replace(currency, "")
-        .trim();
+      }).format(amout);
+
+      return withSymbol ? result : result.replace(currency, "").trim();
     },
     fmtCurrencySymbol: function (currency = "EUR") {
       const symbols = { EUR: "€", USD: "$" };

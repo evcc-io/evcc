@@ -42,19 +42,19 @@ export default {
 		editable: Boolean,
 		error: Boolean,
 	},
+	emits: ["edit"],
 	data() {
 		return {
 			tooltip: null,
 		};
 	},
-	emits: ["edit"],
-	mounted() {
-		this.initTooltip();
-	},
 	watch: {
 		editable() {
 			this.initTooltip();
 		},
+	},
+	mounted() {
+		this.initTooltip();
 	},
 	methods: {
 		initTooltip() {

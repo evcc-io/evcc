@@ -4,36 +4,26 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 )
 
-type CS struct {
-	mu  sync.Mutex
-	log *util.Logger
-	ocpp16.CentralSystem
-	cps map[string]*CP
+type registration struct {
+	mu     sync.RWMutex
+	setup  sync.RWMutex                    // serialises chargepoint setup
+	cp     *CP                             // guarded by setup and CS mutexes
+	status *core.StatusNotificationRequest // guarded by mu mutex
 }
 
-// Register registers a charge point with the central system.
-// The charge point identified by id may already be connected in which case initial connection is triggered.
-func (cs *CS) Register(id string, cp *CP) error {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
-	if _, ok := cs.cps[id]; ok && id == "" {
-		return errors.New("cannot have >1 charge point with empty station id")
-	}
-
-	// trigger unknown charge point connected
-	if unknown, ok := cs.cps[id]; ok && unknown == nil {
-		cp.connect(true)
-	}
-
-	cs.cps[id] = cp
-
-	return nil
+type CS struct {
+	ocpp16.CentralSystem
+	mu    sync.Mutex
+	log   *util.Logger
+	regs  map[string]*registration // guarded by mu mutex
+	txnId atomic.Int64
 }
 
 // errorHandler logs error channel
@@ -47,14 +37,70 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, ok := cs.cps[id]
+	reg, ok := cs.regs[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown charge point: %s", id)
 	}
-	if cp == nil {
+	if reg.cp == nil {
 		return nil, fmt.Errorf("charge point not configured: %s", id)
 	}
-	return cp, nil
+	return reg.cp, nil
+}
+
+func (cs *CS) WithChargepointStatusByID(id string, fun func(status *core.StatusNotificationRequest)) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	if reg, ok := cs.regs[id]; ok {
+		reg.mu.RLock()
+		if reg.status != nil {
+			fun(reg.status)
+		}
+		reg.mu.RUnlock()
+	}
+}
+
+// RegisterChargepoint registers a charge point with the central system of returns an already registered charge point
+func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) error) (*CP, error) {
+	cs.mu.Lock()
+
+	// prepare shadow state
+	reg, registered := cs.regs[id]
+	if !registered {
+		reg = new(registration)
+		cs.regs[id] = reg
+	}
+
+	// serialise on chargepoint id
+	reg.setup.Lock()
+	defer reg.setup.Unlock()
+
+	cp := reg.cp
+
+	cs.mu.Unlock()
+
+	// setup already completed?
+	if cp != nil {
+		// duplicate registration of id empty
+		if id == "" {
+			return nil, errors.New("cannot have >1 charge point with empty station id")
+		}
+
+		return cp, nil
+	}
+
+	// first time- create the charge point
+	cp = newfun()
+
+	cs.mu.Lock()
+	reg.cp = cp
+	cs.mu.Unlock()
+
+	if registered {
+		cp.connect(true)
+	}
+
+	return cp, init(cp)
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
@@ -63,12 +109,12 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	defer cs.mu.Unlock()
 
 	// check for configured charge point
-	cp, ok := cs.cps[chargePoint.ID()]
+	reg, ok := cs.regs[chargePoint.ID()]
 	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
 		// trigger initial connection if charge point is already setup
-		if cp != nil {
+		if cp := reg.cp; cp != nil {
 			cp.connect(true)
 		}
 
@@ -76,15 +122,16 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	}
 
 	// check for configured anonymous charge point
-	cp, ok = cs.cps[""]
-	if ok && cp != nil {
+	reg, ok = cs.regs[""]
+	if ok && reg.cp != nil {
+		cp := reg.cp
 		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
 		// update id
 		cp.RegisterID(chargePoint.ID())
 
-		cs.cps[chargePoint.ID()] = cp
-		delete(cs.cps, "")
+		cs.regs[chargePoint.ID()].cp = cp
+		delete(cs.regs, "")
 
 		cp.connect(true)
 
@@ -95,7 +142,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	// register unknown charge point
 	// when charge point setup is complete, it will eventually be associated with the connected id
-	cs.cps[chargePoint.ID()] = nil
+	cs.regs[chargePoint.ID()] = new(registration)
 }
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler

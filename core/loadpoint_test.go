@@ -182,7 +182,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		}
 
 		lp.mode = tc.mode
-		lp.Update(0, nil, false, false, 0, nil, nil) // false,sitePower false,0
+		lp.Update(0, 0, nil, false, false, 0, nil, nil) // false,sitePower false,0
 
 		ctrl.Finish()
 	}
@@ -338,7 +338,7 @@ func TestPVHysteresis(t *testing.T) {
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
-				current := lp.pvMaxCurrent(api.ModePV, se.site, false, false)
+				current := lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false)
 
 				if current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
@@ -371,7 +371,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
-	current := lp.pvMaxCurrent(api.ModePV, sitePower, false, false)
+	current := lp.pvMaxCurrent(api.ModePV, sitePower, 0, false, false)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
@@ -428,7 +428,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 
 	t.Log("charging above target - soc deactivates charger")
@@ -437,7 +437,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(500, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 
 	t.Log("deactivated charger changes status to B")
@@ -445,14 +445,14 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle.EXPECT().Soc().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-500, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 
 	t.Log("soc has risen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-500, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update timer expired")
@@ -462,7 +462,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	charger.EXPECT().Enable(true).Return(nil)
-	lp.Update(-500, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 }
 
@@ -497,14 +497,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, false, false, 0, nil, nil)
 
 	t.Log("switch off when disconnected")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusA, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(-300, nil, false, false, 0, nil, nil)
+	lp.Update(-300, 0, nil, false, false, 0, nil, nil)
 
 	if mode := lp.GetMode(); mode != api.ModeOff {
 		t.Error("unexpected mode", mode)
@@ -567,14 +567,14 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 
 	t.Log("at 1:00h charging at 5 kWh")
 	clock.Add(time.Hour)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h stop charging at 5 kWh")
@@ -582,7 +582,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h restart charging at 5 kWh")
@@ -590,7 +590,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:30h continue charging at 7.5 kWh")
@@ -598,7 +598,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 7500.0)
 
 	t.Log("at 2:00h stop charging at 10 kWh")
@@ -606,7 +606,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 10000.0)
 
 	ctrl.Finish()
@@ -758,7 +758,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 
 		for step, se := range tc.series {
 			clck.Set(start.Add(se.delay))
-			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, false, false), step)
+			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false), step)
 		}
 
 		ctrl.Finish()

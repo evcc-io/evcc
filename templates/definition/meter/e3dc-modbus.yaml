@@ -56,7 +56,5 @@ render: |
       address: 40082 # Batterie-SOC in %
       type: holding
       decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

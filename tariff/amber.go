@@ -108,6 +108,9 @@ func (t *Amber) run(done chan error) {
 					End:   endTime.Local(),
 					Price: r.PerKwh / 1e2,
 				}
+				if r.AdvancedPrice != nil {
+					ar.Price = r.AdvancedPrice.Predicted / 1e2
+				}
 				data = append(data, ar)
 			}
 		}

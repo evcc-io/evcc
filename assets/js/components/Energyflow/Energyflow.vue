@@ -15,11 +15,15 @@
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
+				:batteryGridCharge="batteryGridChargeActive"
+				:batteryHold="batteryHold"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
 				:powerUnit="powerUnit"
 				:vehicleIcons="vehicleIcons"
+				:inPower="inPower"
+				:outPower="outPower"
 			/>
 		</div>
 		<div
@@ -88,13 +92,19 @@
 							icon="battery"
 							:power="batteryDischarge"
 							:powerUnit="powerUnit"
-							:soc="batterySoc"
+							:iconProps="{
+								hold: batteryHold,
+								soc: batterySoc,
+								gridCharge: batteryGridChargeActive,
+							}"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
 							detailsClickable
 							data-testid="energyflow-entry-batterydischarge"
 							@details-clicked="openBatterySettingsModal"
-						/>
+						>
+							<template v-if="batteryGridChargeActive" #subline> &nbsp; </template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
 							icon="powersupply"
@@ -130,12 +140,12 @@
 						/>
 						<EnergyflowEntry
 							:name="
-								$tc('main.energyflow.loadpoints', activeLoadpointsCount, {
+								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
 									count: activeLoadpointsCount,
 								})
 							"
 							icon="vehicle"
-							:vehicleIcons="vehicleIcons"
+							:iconProps="{ names: vehicleIcons }"
 							:power="loadpointsPower"
 							:powerUnit="powerUnit"
 							:details="
@@ -155,7 +165,11 @@
 							icon="battery"
 							:power="batteryCharge"
 							:powerUnit="powerUnit"
-							:soc="batterySoc"
+							:iconProps="{
+								hold: batteryHold,
+								soc: batterySoc,
+								gridCharge: batteryGridChargeActive,
+							}"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
 							detailsClickable
@@ -337,7 +351,7 @@ export default {
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
 		batteryGridChargeLimitFmt() {
-			if (this.batteryGridChargeLimit === null || this.batteryGridChargeLimit === undefined) {
+			if (this.batteryGridChargeLimit === null) {
 				return;
 			}
 			if (this.co2Available) {

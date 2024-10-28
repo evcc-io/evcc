@@ -1,0 +1,115 @@
+template: kostal-plenticore-gen2
+products:
+  - brand: Kostal
+    description:
+      generic: Plenticore Hybrid (Gen2)
+capabilities: ["battery-control"]
+linked:
+  - template: kostal-ksem-inverter
+    usage: grid
+  - template: kostal-ksem
+    usage: grid
+    excludetemplate: kostal-ksem-inverter
+requirements:
+  description:
+    de: |
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Das Netzladen steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit Gen.1 Wechselrichtern (z.B. HW-Version 0100).
+    en: |
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is available using this template, but actually incompatible with Gen.1 inverters (e.g. HW version 0100).
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+    allinone: true
+  - name: modbus
+    choice: ["tcpip"]
+    id: 71
+    port: 1502
+  - name: endianness
+    description:
+      de: Byte-Reihenfolge (Little/Big)
+      en: Endianness (Little/Big)
+    validvalues: ["big", "little"]
+    default: little
+    advanced: true
+  - name: capacity
+    advanced: true
+  - name: maxacpower
+  # battery control
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
+render: |
+  {{- if eq .usage "pv" }}
+  type: custom
+  power:
+    source: calc
+    add: # The add plugin sums up all string values
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 160:1:DCW # string 1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 160:2:DCW # string 2
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 160:3:DCW # string 3
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:WH # total yield
+    scale: 0.001
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:W # 802 battery control
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoC # 802 battery control
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set: 
+          source: const
+          value: 0 # % (set once to reset from forced charge)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      - case: 2 # hold
+        set:
+          source: const
+          value: 0 # %
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      - case: 3 # charge
+        set:
+          source: const
+          value: -100 # %
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

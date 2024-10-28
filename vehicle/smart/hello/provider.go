@@ -30,6 +30,21 @@ func (v *Provider) Soc() (float64, error) {
 	return float64(res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargeLevel), err
 }
 
+var _ api.ChargeState = (*Provider)(nil)
+
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	res, err := v.statusG()
+	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargerState {
+	case 1, 3:
+		return api.StatusB, err
+	case 2:
+		return api.StatusC, err
+	default:
+		return api.StatusA, err
+	}
+}
+
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
