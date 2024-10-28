@@ -80,7 +80,6 @@ body:
         - label: I have verified that no real passwords or sponsortoken is in my bug report
           required: true
 
-
   - type: input
     attributes:
       label: Version
