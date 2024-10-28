@@ -323,8 +323,9 @@ presets:
       - name: language
   tariff-base:
     description:
-      de: Die Berechnung erfolgt nach folgende Formel: Gesamtpreis = ((Preis * margin) + charges) * tax + uplifts  
-      en: TODO
+      generic:
+        de: Die Berechnung erfolgt nach folgende Formel: Gesamtpreis = ((Preis * margin) + charges) * tax + uplifts  
+        en: TODO
     params:
       - name: margin
         type: number
