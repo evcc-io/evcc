@@ -32,7 +32,7 @@
 					:value="selectedWeekdays"
 					:options="dayOptions"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
-					@update:modelValue="changeSelectedWeekdays"
+					@update:model-value="changeSelectedWeekdays"
 				>
 					{{ weekdaysLabel }}
 				</MultiSelect>
@@ -81,8 +81,8 @@
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
-						class="form-check-input"
 						v-model="selectedActive"
+						class="form-check-input"
 						type="checkbox"
 						role="switch"
 						data-testid="repeating-plan-active"
@@ -129,20 +129,6 @@ export default {
 		formIdPrefix: String,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
-	watch: {
-		weekdays(newValue) {
-			this.selectedWeekdays = newValue;
-		},
-		time(newValue) {
-			this.selectedTime = newValue;
-		},
-		soc(newValue) {
-			this.selectedSoc = newValue;
-		},
-		active(newValue) {
-			this.selectedActive = newValue;
-		},
-	},
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
@@ -168,6 +154,20 @@ export default {
 					value: index,
 				};
 			});
+		},
+	},
+	watch: {
+		weekdays(newValue) {
+			this.selectedWeekdays = newValue;
+		},
+		time(newValue) {
+			this.selectedTime = newValue;
+		},
+		soc(newValue) {
+			this.selectedSoc = newValue;
+		},
+		active(newValue) {
+			this.selectedActive = newValue;
 		},
 	},
 	methods: {

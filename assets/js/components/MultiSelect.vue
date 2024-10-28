@@ -18,9 +18,9 @@
 							class="form-check-input ms-0 me-2"
 							type="checkbox"
 							value="all"
-							@change="toggleCheckAll()"
 							:disabled="allOptionsSelected"
 							:checked="allOptionsSelected"
+							@change="toggleCheckAll()"
 						/>
 						<div class="form-check-label">{{ selectAllLabel }}</div>
 					</label>
@@ -30,10 +30,10 @@
 			<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
 				<label class="form-check px-3 py-2 d-flex" :for="formId(option.value)">
 					<input
+						:id="formId(option.value)"
 						v-model="internalValue"
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
-						:id="formId(option.value)"
 						:value="option.value"
 						:disabled="onlySelected(option.value)"
 					/>

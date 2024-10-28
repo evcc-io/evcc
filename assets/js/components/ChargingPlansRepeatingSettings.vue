@@ -1,8 +1,8 @@
 <template>
 	<div v-for="(plan, index) in plans" :key="index">
 		<ChargingPlanRepeatingSettings
-			class="mb-4"
 			:id="index"
+			class="mb-4"
 			:formIdPrefix="formIdPrefix"
 			v-bind="plan"
 			:rangePerSoc="rangePerSoc"
@@ -50,11 +50,6 @@ export default {
 		rangePerSoc: Number,
 		initialPlans: { type: Array, default: () => [] },
 	},
-	watch: {
-		initialPlans(newPlans) {
-			this.plans = [...newPlans]; // clone array
-		},
-	},
 	emits: ["repeating-plans-updated"],
 	data: function () {
 		return {
@@ -67,6 +62,11 @@ export default {
 		},
 		formIdPrefix: function () {
 			return `chargingplan-${this.id}`;
+		},
+	},
+	watch: {
+		initialPlans(newPlans) {
+			this.plans = [...newPlans]; // clone array
 		},
 	},
 	methods: {
