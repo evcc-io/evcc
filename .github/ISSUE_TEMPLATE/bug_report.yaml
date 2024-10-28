@@ -77,7 +77,7 @@ body:
     attributes:
       label: No passwords
       options:
-        - label: I have verified that I have no passwords and the sponsortoken in my bug report
+        - label: I have verified that no real passwords or sponsortoken is in my bug report
           required: true
 
 
