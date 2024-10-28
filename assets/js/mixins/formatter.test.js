@@ -254,7 +254,7 @@ describe("fmt.fmtRepeatingPlansUTC", () => {
     )
   ).toBe([
     {
-      time: "02:30",
+      time: "21:30",
       weekdays: [1, 2, 3],
       active: true,
       soc: 80,
