@@ -322,31 +322,27 @@ presets:
     params:
       - name: language
   tariff-base:
-    description:
-      generic:
-        de: Die Berechnung erfolgt nach folgende Formel: Gesamtpreis = ((Preis * margin) + charges) * tax + uplifts  
-        en: TODO
     params:
       - name: margin
         type: number
         help:
-          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
-          en: Additional percentage charge (e.g. 0.2 for 20%)
+          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%); Berechnung = Preis * (1 + margin)
+          en: Additional percentage charge (e.g. 0.2 for 20%); Calculation = price * (1 + margin)
       - name: charges
         type: number
         help:
-          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent); Berechnung = Preis * (1 + margin) + charges
+          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents); Calculation = price * (1 + margin) + charges
       - name: tax
         type: number
         help:
-          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
-          en: Additional percentage charge (e.g. 0.2 for 20%)
+          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%); Berechnung = (Preis * (1 + margin) + charges) * (1 + tax)
+          en: Additional percentage charge (e.g. 0.2 for 20%); Calculation = (price * (1 + margin) + charges) * (1 + tax)
       - name: uplifts
         type: number
         help:
-          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent); Berechnung = (Preis * (1 + margin) + charges) * (1 + tax) + uplifts
+          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents); Calculation = (price * (1 + margin) + charges) * (1 + tax) + uplifts
   eebus:
     params:
       - name: ski
