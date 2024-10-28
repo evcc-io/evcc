@@ -294,25 +294,35 @@ export default {
     fmtDayHourMinute: function (timeString, toUTC) {
       const [h, m] = timeString.split(":").map(Number);
       const date = new Date();
-      const oldDate = date.getDate();
+      const previousDate = new Date(date);
 
-      var hours, minutes, newDate;
+      var hours, minutes, newDate, oldDate, dayoffset;
 
       if (toUTC) {
+        oldDate = date.getDate();
         date.setHours(h, m);
         hours = date.getUTCHours();
         minutes = date.getUTCMinutes();
         newDate = date.getUTCDate();
       } else {
+        oldDate = date.getUTCDate();
         date.setUTCHours(h, m);
         hours = date.getHours();
         minutes = date.getMinutes();
         newDate = date.getDate();
       }
 
+      if (newDate === oldDate) {
+        dayoffset = 0;
+      } else if (date - previousDate > 0) {
+        dayoffset = 1;
+      } else {
+        dayoffset = -1;
+      }
+
       return [
         `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`, // formatted string
-        newDate - oldDate, // dayoffset
+        dayoffset,
       ];
     },
     pricePerKWhUnit: function (currency = "EUR", short = false) {

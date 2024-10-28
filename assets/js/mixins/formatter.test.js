@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, beforeAll } from "vitest";
 import formatter, { POWER_UNIT } from "./formatter";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
@@ -9,6 +9,22 @@ const fmt = mount({
   render() {},
   mixins: [formatter],
 }).componentVM;
+
+const summerDateConstructor = class extends Date {
+  constructor(date) {
+    // If a date is provided, call the parent constructor with it
+    // Otherwise, set the default summer date
+    super(date || "2024-07-01T12:00:00Z");
+  }
+};
+
+const winterDateConstructor = class extends Date {
+  constructor(date) {
+    // If a date is provided, call the parent constructor with it
+    // Otherwise, set the default winter date
+    super(date || "2024-11-01T12:00:00Z");
+  }
+};
 
 describe("fmtW", () => {
   test("should format with units", () => {
@@ -156,24 +172,50 @@ describe("getShortenedWeekdaysLabel", () => {
   });
 });
 
-describe("fmtDayHourMinute", () => {
+describe("fmtDayHourMinute for summertime", () => {
+  beforeAll(() => {
+    global.Date = summerDateConstructor;
+  });
   test("should format time correctly when converting to UTC", () => {
-    expect(fmt.fmtDayHourMinute("12:30", true)).toBe(["10:30", 0]);
-    expect(fmt.fmtDayHourMinute("15:45", true)).toBe(["10:45", 0]);
+    expect(fmt.fmtDayHourMinute("12:30", true)).toEqual(["10:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", true)).toEqual(["13:45", 0]);
   });
   test("should format time correctly when not converting to UTC", () => {
-    expect(fmt.fmtDayHourMinute("12:30", false)).toBe(["14:30", 0]);
-    expect(fmt.fmtDayHourMinute("15:45", false)).toBe(["17:45", 0]);
+    expect(fmt.fmtDayHourMinute("12:30", false)).toEqual(["14:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", false)).toEqual(["17:45", 0]);
   });
   test("should handle edge cases for times near midnight", () => {
-    expect(fmt.fmtDayHourMinute("00:00", true)).toBe(["22:00", -1]);
-    expect(fmt.fmtDayHourMinute("00:00", false)).toBe(["02:00", 1]);
-    expect(fmt.fmtDayHourMinute("23:59", true)).toBe(["21:59", -1]);
-    expect(fmt.fmtDayHourMinute("23:59", false)).toBe(["01:59", 1]);
+    expect(fmt.fmtDayHourMinute("00:00", true)).toEqual(["22:00", -1]);
+    expect(fmt.fmtDayHourMinute("00:00", false)).toEqual(["02:00", 0]);
+    expect(fmt.fmtDayHourMinute("23:59", true)).toEqual(["21:59", 0]);
+    expect(fmt.fmtDayHourMinute("23:59", false)).toEqual(["01:59", 1]);
   });
 });
 
-describe("fmt.fmtRepeatingPlansUTC", () => {
+describe("fmtDayHourMinute for wintertime", () => {
+  beforeAll(() => {
+    global.Date = winterDateConstructor;
+  });
+  test("should format time correctly when converting to UTC", () => {
+    expect(fmt.fmtDayHourMinute("12:30", true)).toEqual(["11:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", true)).toEqual(["14:45", 0]);
+  });
+  test("should format time correctly when not converting to UTC", () => {
+    expect(fmt.fmtDayHourMinute("12:30", false)).toEqual(["13:30", 0]);
+    expect(fmt.fmtDayHourMinute("15:45", false)).toEqual(["16:45", 0]);
+  });
+  test("should handle edge cases for times near midnight", () => {
+    expect(fmt.fmtDayHourMinute("00:00", true)).toEqual(["23:00", -1]);
+    expect(fmt.fmtDayHourMinute("00:00", false)).toEqual(["01:00", 0]);
+    expect(fmt.fmtDayHourMinute("23:59", true)).toEqual(["22:59", 0]);
+    expect(fmt.fmtDayHourMinute("23:59", false)).toEqual(["00:59", 1]);
+  });
+});
+
+describe("fmtRepeatingPlansUTC for summertime", () => {
+  beforeAll(() => {
+    global.Date = summerDateConstructor;
+  });
   test("should format to UTC", () => {
     expect(
       fmt.fmtRepeatingPlansUTC(
@@ -187,7 +229,7 @@ describe("fmt.fmtRepeatingPlansUTC", () => {
         ],
         true
       )
-    ).toBe([
+    ).toEqual([
       {
         time: "10:30",
         weekdays: [0, 1, 2],
@@ -209,7 +251,7 @@ describe("fmt.fmtRepeatingPlansUTC", () => {
         ],
         false
       )
-    ).toBe([
+    ).toEqual([
       {
         time: "12:30",
         weekdays: [0, 1, 2],
@@ -223,7 +265,7 @@ describe("fmt.fmtRepeatingPlansUTC", () => {
       fmt.fmtRepeatingPlansUTC(
         [
           {
-            time: "23:30",
+            time: "00:30",
             weekdays: [0, 5, 6],
             active: true,
             soc: 80,
@@ -231,33 +273,125 @@ describe("fmt.fmtRepeatingPlansUTC", () => {
         ],
         true
       )
-    ).toBe([
+    ).toEqual([
       {
-        time: "21:30",
+        time: "22:30",
         weekdays: [6, 4, 5],
         active: true,
         soc: 80,
       },
     ]);
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "23:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toEqual([
+      {
+        time: "21:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
   });
-  expect(
-    fmt.fmtRepeatingPlansUTC(
-      [
-        {
-          time: "23:30",
-          weekdays: [0, 1, 2],
-          active: true,
-          soc: 80,
-        },
-      ],
-      true
-    )
-  ).toBe([
-    {
-      time: "21:30",
-      weekdays: [1, 2, 3],
-      active: true,
-      soc: 80,
-    },
-  ]);
+});
+
+describe("fmtRepeatingPlansUTC for wintertime", () => {
+  beforeAll(() => {
+    global.Date = winterDateConstructor;
+  });
+  test("should format to UTC", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "12:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toEqual([
+      {
+        time: "11:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
+  test("should format to local timezone", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "10:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        false
+      )
+    ).toEqual([
+      {
+        time: "11:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
+  test("should correctly adjust weekdays when crossing date boundaries", () => {
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "00:30",
+            weekdays: [0, 5, 6],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toEqual([
+      {
+        time: "23:30",
+        weekdays: [6, 4, 5],
+        active: true,
+        soc: 80,
+      },
+    ]);
+    expect(
+      fmt.fmtRepeatingPlansUTC(
+        [
+          {
+            time: "23:30",
+            weekdays: [0, 1, 2],
+            active: true,
+            soc: 80,
+          },
+        ],
+        true
+      )
+    ).toEqual([
+      {
+        time: "22:30",
+        weekdays: [0, 1, 2],
+        active: true,
+        soc: 80,
+      },
+    ]);
+  });
 });
