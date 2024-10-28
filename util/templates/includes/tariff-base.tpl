@@ -5,4 +5,10 @@ charges: {{ .charges }}
 {{- if .tax }}
 tax: {{ .tax }}
 {{- end }}
+{{- if .margin }}
+margin: {{ .margin }}
+{{- end }}
+{{- if .uplifts }}
+uplifts: {{ .uplifts }}
+{{- end }}
 {{- end }}
