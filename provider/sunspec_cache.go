@@ -51,5 +51,5 @@ func (c *sunspecSubDeviceCache) Put(conn *modbus.Connection, subDevice int, dev 
 }
 
 func sunspecSubdeviceAddr(conn *modbus.Connection, subDevice int) string {
-	return conn.String() + "::" + strconv.Itoa(subDevice)
+	return conn.Addr() + "::" + strconv.Itoa(subDevice)
 }
