@@ -72,6 +72,15 @@ body:
         - label: I have verified that the issue is reproducible with the latest nightly build
           required: true
 
+  - type: checkboxes
+    id: passwords
+    attributes:
+      label: No passwords
+      options:
+        - label: I have verified that I have no passwords and the sponsortoken in my bug report
+          required: true
+
+
   - type: input
     attributes:
       label: Version
