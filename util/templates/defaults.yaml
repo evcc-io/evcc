@@ -322,7 +322,15 @@ presets:
     params:
       - name: language
   tariff-base:
+    description:
+      de: Die Berechnung erfolgt nach folgende Formel: Gesamtpreis = ((Preis * margin) + charges) * tax + uplifts  
+      en: TODO
     params:
+      - name: margin
+        type: number
+        help:
+          de: TODO
+          en: TODO
       - name: charges
         type: number
         help:
@@ -333,6 +341,11 @@ presets:
         help:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
           en: Additional percentage charge (e.g. 0.2 for 20%)
+      - name: uplifts
+        type: number
+        help:
+          de: TODO
+          en: TODO
   eebus:
     params:
       - name: ski
