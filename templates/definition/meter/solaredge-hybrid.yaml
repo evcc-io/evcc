@@ -104,7 +104,7 @@ render: |
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         timeout: {{ .timeout }}
-        value: 
+        value:
           - 101:DCW
           - 103:DCW
       - source: modbus

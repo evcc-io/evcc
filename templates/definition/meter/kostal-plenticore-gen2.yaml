@@ -79,7 +79,7 @@ render: |
       source: switch
       switch:
       - case: 1 # normal
-        set: 
+        set:
           source: const
           value: 0 # % (set once to reset from forced charge)
           set:
