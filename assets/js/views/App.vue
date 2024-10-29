@@ -53,20 +53,6 @@ export default {
 		const siteTitle = store.state.siteTitle;
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
-	watch: {
-		version: function (now, prev) {
-			if (!!prev && !!now) {
-				console.log("new version detected. reloading browser", { now, prev });
-				this.reload();
-			}
-		},
-		offline: function (offline) {
-			store.offline(offline);
-			if (offline) {
-				this.reconnect();
-			}
-		},
-	},
 	computed: {
 		version: function () {
 			return store.state.version;
@@ -82,6 +68,20 @@ export default {
 		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, store.state);
+		},
+	},
+	watch: {
+		version: function (now, prev) {
+			if (!!prev && !!now) {
+				console.log("new version detected. reloading browser", { now, prev });
+				this.reload();
+			}
+		},
+		offline: function (offline) {
+			store.offline(offline);
+			if (offline) {
+				this.reconnect();
+			}
 		},
 	},
 	mounted: function () {
@@ -159,7 +159,7 @@ export default {
 			};
 			this.ws.onmessage = (evt) => {
 				try {
-					var msg = JSON.parse(evt.data);
+					const msg = JSON.parse(evt.data);
 					store.update(msg);
 					lastDataReceived = new Date();
 				} catch (error) {

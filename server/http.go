@@ -140,7 +140,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	vehicles := map[string]route{
 		"minsoc":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
 		"limitsoc": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
-		"plan":     {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
+		"plan":     {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},
 		"plan2":    {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 
 		// config ui
@@ -166,8 +166,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"maxcurrent":       {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
 			"phases":           {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
 			"plan":             {"GET", "/plan", planHandler(lp)},
-			"planpreview":      {"GET", "/plan/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planPreviewHandler(lp)},
-			"planenergy":       {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
+			"planpreview":      {"GET", "/plan/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planPreviewHandler(lp)},
+			"planenergy":       {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
 			"planenergy2":      {"DELETE", "/plan/energy", planRemoveHandler(lp)},
 			"vehicle":          {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
 			"vehicle2":         {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},

@@ -1,12 +1,14 @@
 package circuit
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -24,8 +26,10 @@ type Circuit struct {
 	meter    api.Meter     // meter to determine current power
 	timeout  time.Duration
 
-	maxCurrent float64 // max allowed current
-	maxPower   float64 // max allowed power
+	maxCurrent    float64                 // max allowed current
+	maxPower      float64                 // max allowed power
+	getMaxCurrent func() (float64, error) // dynamic max allowed current
+	getMaxPower   func() (float64, error) // dynamic max allowed power
 
 	current float64
 	power   float64
@@ -37,12 +41,14 @@ type Circuit struct {
 // NewFromConfig creates a new Circuit
 func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
-		Title      string        `mapstructure:"title"`      // title
-		ParentRef  string        `mapstructure:"parent"`     // parent circuit reference
-		MeterRef   string        `mapstructure:"meter"`      // meter reference
-		MaxCurrent float64       `mapstructure:"maxCurrent"` // the max allowed current
-		MaxPower   float64       `mapstructure:"maxPower"`   // the max allowed power
-		Timeout    time.Duration `mapstructure:"timeout"`    // timeout between meter updates
+		Title         string           // title
+		ParentRef     string           `mapstructure:"parent"` // parent circuit reference
+		MeterRef      string           `mapstructure:"meter"`  // meter reference
+		MaxCurrent    float64          // the max allowed current
+		MaxPower      float64          // the max allowed power
+		GetMaxCurrent *provider.Config // dynamic max allowed current
+		GetMaxPower   *provider.Config // dynamic max allowed power
+		Timeout       time.Duration    // timeout between meter updates
 	}{
 		Timeout: time.Minute,
 	}
@@ -63,6 +69,22 @@ func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit,
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
+	}
+
+	if cc.GetMaxPower != nil {
+		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxPower)
+		if err != nil {
+			return nil, err
+		}
+		circuit.getMaxPower = res
+	}
+
+	if cc.GetMaxCurrent != nil {
+		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxCurrent)
+		if err != nil {
+			return nil, err
+		}
+		circuit.getMaxCurrent = res
 	}
 
 	if cc.ParentRef != "" {
@@ -150,6 +172,14 @@ func (c *Circuit) HasMeter() bool {
 
 // GetMaxPower returns the max power setting
 func (c *Circuit) GetMaxPower() float64 {
+	if c.getMaxPower != nil {
+		res, err := c.getMaxPower()
+		if err == nil {
+			return res
+		}
+		c.log.WARN.Printf("get max power: %v", err)
+	}
+
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxPower
@@ -164,6 +194,14 @@ func (c *Circuit) SetMaxPower(power float64) {
 
 // GetMaxCurrent returns the max current setting
 func (c *Circuit) GetMaxCurrent() float64 {
+	if c.getMaxCurrent != nil {
+		res, err := c.getMaxCurrent()
+		if err == nil {
+			return res
+		}
+		c.log.WARN.Printf("get max current: %v", err)
+	}
+
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxCurrent
@@ -232,15 +270,18 @@ func (c *Circuit) updateMeters() error {
 }
 
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
+	maxPower := c.GetMaxPower()
+	maxCurrent := c.GetMaxCurrent()
+
 	defer func() {
-		if c.maxPower != 0 && c.power > c.maxPower {
-			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, c.maxPower)
+		if maxPower != 0 && c.power > maxPower {
+			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, maxPower)
 		} else {
 			c.log.DEBUG.Printf("power: %.5gW", c.power)
 		}
 
-		if c.maxCurrent != 0 && c.current > c.maxCurrent {
-			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, c.maxCurrent)
+		if maxCurrent != 0 && c.current > maxCurrent {
+			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, maxCurrent)
 		} else {
 			c.log.DEBUG.Printf("current: %.3gA", c.current)
 		}
@@ -282,14 +323,14 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 func (c *Circuit) ValidatePower(old, new float64) float64 {
 	delta := max(0, new-old)
 
-	if c.maxPower != 0 {
-		potential := c.maxPower - c.power
+	if maxPower := c.GetMaxPower(); maxPower != 0 {
+		potential := maxPower - c.power
 		if delta > potential {
 			capped := max(0, old+potential)
-			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, c.maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, c.maxPower)
+			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
 		}
 	}
 
@@ -304,14 +345,14 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	delta := max(0, new-old)
 
-	if c.maxCurrent != 0 {
-		potential := c.maxCurrent - c.current
+	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		potential := maxCurrent - c.current
 		if delta > potential {
 			capped := max(0, old+potential)
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, c.maxCurrent, capped)
+			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, c.maxCurrent)
+			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
 		}
 	}
 

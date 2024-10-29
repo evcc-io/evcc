@@ -125,7 +125,7 @@ export default {
 			return lines;
 		},
 		clear: function () {
-			window.app && window.app.clear();
+			window.app?.clear();
 		},
 	},
 };

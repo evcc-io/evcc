@@ -29,10 +29,13 @@ func init() {
 }
 
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
-	var cc struct {
+	cc := struct {
 		embed    `mapstructure:",squash"`
 		Price    *provider.Config
 		Forecast *provider.Config
+		Cache    time.Duration
+	}{
+		Cache: 15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -54,6 +57,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		if err != nil {
 			return nil, fmt.Errorf("price: %w", err)
 		}
+
+		priceG = provider.Cached(priceG, cc.Cache)
 	}
 
 	if cc.Forecast != nil {
@@ -126,7 +131,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 	res := make(api.Rates, 48)
 	start := now.BeginningOfHour()
 
-	for i := 0; i < len(res); i++ {
+	for i := range res {
 		slot := start.Add(time.Duration(i) * time.Hour)
 		res[i] = api.Rate{
 			Start: slot,

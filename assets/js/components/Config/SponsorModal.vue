@@ -13,7 +13,7 @@
 		@changed="$emit('changed')"
 		@open="showForm = false"
 	>
-		<template v-slot:default="{ values }">
+		<template #default="{ values }">
 			<SponsorTokenExpires v-bind="sponsor" />
 			<div class="mt-4 mb-3">
 				<Sponsor v-bind="sponsor" />
@@ -65,11 +65,6 @@ export default {
 	data: () => ({
 		showForm: false,
 	}),
-	methods: {
-		transformReadValues() {
-			return { token: "" };
-		},
-	},
 	computed: {
 		sponsor() {
 			return store?.state?.sponsor;
@@ -82,6 +77,11 @@ export default {
 			return this.hasToken
 				? this.$t("config.sponsor.changeToken")
 				: this.$t("config.sponsor.addToken");
+		},
+	},
+	methods: {
+		transformReadValues() {
+			return { token: "" };
 		},
 	},
 };

@@ -158,8 +158,20 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// trigger status for all connectors
 	if cp.HasRemoteTriggerFeature {
-		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
+		var ok bool
+
+		// apply cached status if available
+		instance.WithChargepointStatusByID(cp.id, func(status *core.StatusNotificationRequest) {
+			if _, err := cp.OnStatusNotification(status); err == nil {
+				ok = true
+			}
+		})
+
+		// only trigger if we don't already have a status
+		if !ok {
+			if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+				cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
+			}
 		}
 	}
 

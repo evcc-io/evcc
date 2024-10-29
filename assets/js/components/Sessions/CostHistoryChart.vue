@@ -9,18 +9,37 @@
 
 <script>
 import { Bar } from "vue-chartjs";
-import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
+import {
+	BarController,
+	BarElement,
+	CategoryScale,
+	Legend,
+	LinearScale,
+	LineController,
+	LineElement,
+	Tooltip,
+} from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
 import formatter from "../../mixins/formatter";
 import colors from "../../colors";
 import { TYPES, GROUPS, PERIODS } from "./types";
 
-registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
+registerChartComponents([
+	BarController,
+	BarElement,
+	CategoryScale,
+	Legend,
+	LinearScale,
+	LineController,
+	LineElement,
+	Tooltip,
+]);
 
 export default {
 	name: "CostHistoryChart",
 	components: { Bar, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
@@ -30,7 +49,6 @@ export default {
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
-	mixins: [formatter],
 	computed: {
 		firstDay() {
 			if (this.sessions.length === 0) {
@@ -140,8 +158,8 @@ export default {
 				type: "line",
 				label:
 					this.costType === TYPES.PRICE
-						? this.pricePerKWhUnit(this.currency, false)
-						: "gCO₂e/kWh",
+						? this.$t("sessions.avgPrice")
+						: this.$t("sessions.co2"),
 				data: Object.values(result).map((index) => index.avgCost || null),
 				yAxisID: "y1",
 				tension: 0.25,
@@ -169,8 +187,10 @@ export default {
 					const max = Math.max(...items);
 					const format = (value, withUnit) => {
 						return this.costType === TYPES.PRICE
-							? this.fmtPricePerKWh(value, this.currency, true, withUnit)
-							: this.fmtGrams(value, withUnit);
+							? this.fmtPricePerKWh(value, this.currency, false, withUnit)
+							: withUnit
+								? this.fmtCo2Medium(value)
+								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
 				} else {
@@ -236,26 +256,22 @@ export default {
 										return null;
 									}
 
-									return (
-										"⌀ " +
-										(this.costType === TYPES.PRICE
+									const valueFmt =
+										this.costType === TYPES.PRICE
 											? this.fmtPricePerKWh(value, this.currency, false)
-											: this.fmtCo2Medium(value))
-									);
+											: this.fmtCo2Medium(value);
+									return `${datasetLabel}: ${valueFmt}`;
 								}
 
-								return (
-									datasetLabel +
-									": " +
-									(this.costType === TYPES.PRICE
-										? this.fmtMoney(value || 0, this.currency, true, true)
-										: this.fmtGrams(value || 0))
-								);
+								return value
+									? `${datasetLabel}: ${
+											this.costType === TYPES.PRICE
+												? this.fmtMoney(value, this.currency, true, true)
+												: this.fmtGrams(value)
+										}`
+									: null;
 							},
 							labelColor: tooltipLabelColor(false),
-							labelTextColor: (item) => {
-								return !item.raw ? colors.muted : "#fff";
-							},
 						},
 						itemSort: function (a, b) {
 							return b.datasetIndex - a.datasetIndex;
@@ -267,7 +283,13 @@ export default {
 						stacked: true,
 						border: { display: false },
 						grid: { display: false },
-						ticks: { color: colors.muted },
+						ticks: {
+							color: colors.muted,
+							callback: (value) =>
+								this.period === PERIODS.YEAR
+									? this.fmtMonth(new Date(this.year, value, 1), true)
+									: value,
+						},
 					},
 					y: {
 						stacked: true,

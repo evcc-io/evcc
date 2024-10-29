@@ -145,8 +145,8 @@ github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:Bsz
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/evcc-io/modbus v0.0.0-20241004132439-d6ad2da50a88 h1:r19xxUsbuh8LhO6dgg/OWVlKRIdbpy26cESeO+EM2pY=
-github.com/evcc-io/modbus v0.0.0-20241004132439-d6ad2da50a88/go.mod h1:WpbUAyptAAi0VAriSRopZa6uhiJOJCTz7KFvgGtNRXc=
+github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529 h1:18rLAN7zm3AmY2OPoYmMa5FxIN1RNYiiVoBEJnGISvc=
+github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130 h1:U4xSZBknKsMDFQtLU3gdkDUylfN9kRUj01offtqs8lY=
 github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130/go.mod h1:ZynYDWGw6CslG3vyPuucLsy6AyE+h3XXYlr39jhNiQY=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
@@ -640,6 +640,7 @@ github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a/go.mod h1:qNTQ5P5J
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
+github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=
 github.com/stretchr/objx v0.5.2 h1:xuMeJ0Sdp5ZMRXx/aWO6RZxdr3beISkG5/G/aIRr3pY=
 github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/8L+MA=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
@@ -650,6 +651,7 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
+github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/suapapa/go_eddystone v1.3.1/go.mod h1:bXC11TfJOS+3g3q/Uzd7FKd5g62STQEfeEIhcKe4Qy8=
@@ -671,8 +673,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e h1:d0KoYuIPXTI/vn85axsoD7w616oUalAzmDLZwv9yB9Q=
-github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
+github.com/volkszaehler/mbmd v0.0.0-20241024124559-c21fb12c007d h1:K49ROfxojl+nq1k+eJG5QdYgBs1pjBnC1jQj/fypeiw=
+github.com/volkszaehler/mbmd v0.0.0-20241024124559-c21fb12c007d/go.mod h1:egeAZti78O7U6QcdDPze5NHiiLdPSviw6YA7rsNYSMQ=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
