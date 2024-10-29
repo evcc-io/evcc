@@ -12,7 +12,7 @@ render: |
   http://{{ .host }}/api/v1
   {{- end }}
   type: custom
-  power:  
+  power:
     source: calc
     add:
     - source: http
