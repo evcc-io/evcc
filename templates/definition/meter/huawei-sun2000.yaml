@@ -3,7 +3,7 @@ covers: ["huawei-dongle-powersensor", "huawei-sun2000-rs485"]
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 with SDongle & Power Sensor
+      generic: SUN2000
 capabilities: ["battery-control"]
 requirements:
   description:
