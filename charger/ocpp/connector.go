@@ -265,8 +265,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
+	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "-N")
+	if found {
+		return res[0] + res[1] + res[2], err
+	}
 
-	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
+	res, found, err = conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
 	if found {
 		return res[0] + res[1] + res[2], err
 	}
@@ -347,7 +351,12 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
+	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "-N")
+	if found {
+		return res[0], res[1], res[2], err
+	}
+
+	res, found, err = conn.phaseMeasurements(types.MeasurandCurrentImport, "")
 	if found {
 		return res[0], res[1], res[2], err
 	}
