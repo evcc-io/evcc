@@ -19,5 +19,5 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://i.spottyenergy.at/api/prices/MARKET/{{ .contractId }}
+    uri: https://i.spottyenergie.at/api/prices/MARKET/{{ .contractId }}
     jq: '[.[] | {start: .from, end: (.from | fromdate + 3600 | todate), price: (.price/100)}] | tostring'
