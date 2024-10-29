@@ -11,9 +11,9 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: maxacpower
   - name: capacity
     advanced: true
-  - name: maxacpower
 render: |
   type: custom
   power:
