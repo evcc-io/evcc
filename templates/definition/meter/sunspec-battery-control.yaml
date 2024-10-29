@@ -23,28 +23,17 @@ render: |
   {{- if eq .usage "battery" }}
   type: custom
   power:
-    source: calc
-    add:
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 160:3:DCW # mppt 3 (charge)
-      scale: -1
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 160:4:DCW # mppt 4 (discharge)
-  energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 160:4:DCWH # mppt 4 (discharge)
-    scale: 0.001
+    value: 802:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:0:SoC
+    value: 802:SoC
   limitsoc: # model 802
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:0:SoCRsvMin
+    value: 802:SoCRsvMin
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
