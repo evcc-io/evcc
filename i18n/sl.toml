@@ -446,6 +446,7 @@ remoteDisabledSoft = "{source}: izklopljeno prilagodljivo solarno polnjenje"
 solar = "Sončna energija"
 
 [main.loadpointSettings]
+batteryUsage = "Domača baterija"
 currents = "Polnilni tok"
 default = "privzeto"
 disclaimerHint = "Opomba:"
@@ -454,6 +455,12 @@ smartCostCheap = "Poceni polnjenje iz omrežja"
 smartCostClean = "Čisto polnjenje iz omrežja"
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
+
+[main.loadpointSettings.batteryBoost]
+description = "Hitro polnjenje iz domače baterije."
+label = "Pospeševanje baterije"
+mode = "Na voljo samo v solarnem in min+solarnem načinu."
+once = "Pospeševanje z baterijo aktivno za to sejo polnjenja."
 
 [main.loadpointSettings.limitSoc]
 description = "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano."
@@ -553,6 +560,7 @@ vehicleLimit = "Omejitev vozila: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Čakanje na avtorizacijo."
+batteryBoost = "Pospeševanje z baterijo aktivno"
 charging = "Polnjenje…"
 cheapEnergyCharging = "Poceni energija je na voljo."
 cheapEnergyNextStart = "Poceni energija čez {duration}."
