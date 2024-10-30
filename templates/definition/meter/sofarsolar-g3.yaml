@@ -192,14 +192,14 @@ render: |
                   address: 0x1187
                   type: writemultiple
                   decode: bytes
-    - case: 3 # charge (not implemented -> normal)
+    - case: 3 # charge 
       set:
-        source: const
-        value: 0 # self-use
+        source: sequence
         set:
-          source: sequence
+        - source: const
+          value: 3 # passive
           set:
-          - source: ignore
+            source: ignore
             error: "modbus: response data size '18' does not match count '4'"
             set:
               source: modbus
@@ -208,7 +208,20 @@ render: |
                 address: 0x1110
                 type: writemultiple
                 decode: int16
-          - source: error
-            error: ErrNotAvailable
+        - source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '0x00000000_7FFFFFFF_7FFFFFFF'
+            set:
+              source: ignore
+              error: "modbus: response data size '18' does not match count '4'"
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 0x1187
+                  type: writemultiple
+                  decode: bytes
   capacity: {{ .capacity }} # kWh
   {{- end }}
