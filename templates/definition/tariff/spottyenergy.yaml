@@ -7,13 +7,13 @@ requirements:
     en: "Only available for Austria."
 group: price
 params:
-  - name: contractId
+  - name: contractid
     example: ffffffff-4444-6666-2222-aaaaaabbbbbb
     required: true
     help:
       de: "Die Vertragsnummer bekommst du im Kundenportal https://i.spottyenergie.at/"
       en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
-  - name: priceType
+  - name: pricetype
     example: CONSUMPTION
     validvalues: ["MARKET", "CONSUMPTION", "GENERATION"]
     required: true
@@ -26,5 +26,5 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://i.spottyenergie.at/api/prices/{{ .priceType }}/{{ .contractId }}
+    uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ .contractid }}
     jq: '[.[] | {start: .from, end: (.from | fromdate + 3600 | todate), price: (.price/100)}] | tostring'
