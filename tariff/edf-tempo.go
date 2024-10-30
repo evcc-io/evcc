@@ -53,6 +53,10 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing credentials")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
 	log := util.NewLogger("edf-tempo").Redact(basic)
 
