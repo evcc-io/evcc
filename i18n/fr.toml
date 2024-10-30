@@ -451,6 +451,7 @@ remoteDisabledSoft = "{source} : charge PV adaptative désactivée"
 solar = "Solaire"
 
 [main.loadpointSettings]
+batteryUsage = "Batterie domestique"
 currents = "Courant de charge"
 default = "défaut"
 disclaimerHint = "Remarque:"
@@ -459,6 +460,12 @@ smartCostCheap = "Chargement bon marché depuis le réseau"
 smartCostClean = "Chargement propre depuis le réseau"
 title = "Réglages {0}"
 vehicle = "Véhicule"
+
+[main.loadpointSettings.batteryBoost]
+description = "Chargement rapide de la batterie domestique."
+label = "Boost Batterie "
+mode = "Uniquement disponible en mode solaire et min+solaire »."
+once = "Boost actif pour cette session de charge."
 
 [main.loadpointSettings.limitSoc]
 description = "Limite de charge à utiliser quand ce véhicule est connecté."
@@ -558,6 +565,7 @@ vehicleLimit = "Limite du véhicule : {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "En attente d’autorisation."
+batteryBoost = "Boost Batterie actif."
 charging = "En charge..."
 cheapEnergyCharging = "Énergie bon marché disponible."
 cheapEnergyNextStart = "Énergie bon marché dans {duration}."
@@ -625,8 +633,12 @@ started = "Commencé"
 title = "Session de charge"
 
 [sessions]
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
 avgPower = "Puissance ⌀"
 avgPrice = "Prix ⌀"
+avgPriceTitleByGroup = "⌀ Prix {byGroup}"
+byGroupLoadpoint = "par borne de recharge"
+byGroupVehicle = "par véhicule"
 chargeDuration = "Durée"
 co2 = "CO₂ ⌀"
 csvMonth = "Télécharger CSV {month}"
@@ -634,11 +646,24 @@ csvTotal = "Télécharger CSV total"
 date = "Début session"
 downloadCsv = "Télécharger au format CSV"
 energy = "Chargé"
+energyGroupedTitle = "Énergie chargée {energy}"
+energyGroupedTitleByGroup = "Énergie {byGroup}"
+energySubTitle = "{energy} totale"
+energyTitle = "{percent} d'énergie solaire"
+groupedCo2TitleByGroup = "Quantitée de CO₂ {byGroup}"
+groupedPriceTitleByGroup = "Coût total {byGroup}"
+historyCo2SubTitle = "{value} totale"
+historyCo2Title = "⌀ {value} émissions de CO₂"
+historyPriceSubTitle = "{value} totale"
+historyPriceTitle = "⌀ {value} Prix de la charge"
 loadpoint = "Point de chargement"
 noData = "Pas de session de charge ce mois-ci"
 price = "Σ Prix"
 reallyDelete = "Voulez-vous vraiment supprimer cette session?"
+showIndividualEntries = "Afficher les sessions individuelles"
 solar = "Solaire"
+solarTitle = "Part d'énergie solaire sur une année"
+solarTitleByGroup = "Part solaire {byGroup}"
 title = "Sessions de charge"
 total = "Total"
 vehicle = "Véhicule"
@@ -663,6 +688,27 @@ vehicle = "Véhicule"
 allLoadpoints = "tous les points de chargement"
 allVehicles = "tous les véhicules"
 filter = "Filtrer"
+
+[sessions.group]
+co2 = "Émissions"
+grid = "Réseau"
+price = "Prix"
+self = "Solaire"
+
+[sessions.groupBy]
+loadpoint = "Point de recharge"
+none = "Total"
+vehicle = "Véhicule"
+
+[sessions.period]
+month = "Mois"
+total = "Total"
+year = "Année"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Prix"
+solar = "Solaire"
 
 [settings]
 title = "Interface utilisateur"
