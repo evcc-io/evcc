@@ -34,10 +34,8 @@ title = "Management vun der Belaaschtung"
 [config.control]
 description = "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss."
 descriptionInterval = "Kontrollschläifen-Update-Zyklus a Sekonnen. Definéiert wéi dacks evcc Meter-Daten liest, d'Luedekraaft upasst an d'UI aktualiséiert. Kuerz Intervalle (<30s) kënnen Oszillatiounen an ongewollt Verhale verursaachen."
-descriptionMaxGridSupply = "Nëmme relevant fir Hybrid-Invertere, déi net fäeg sinn d'Totalitéit vum DC-Stroum iwwer AC an d'Haus ze liwweren. Dëse Szenario kann zu ongewolltem Netzverbrauch féieren, well evcc unhëllt datt d'Totalitéit vum DC-Stroum verfügbar ass. Benotzt ee Wäert vu mindestens 50 W fir dat ze verhënneren."
 descriptionResidualPower = "Verschiibt d'Funktioun vun der Kontrollschläifen. Wann s du eng Hausbatterie hues, ass et recommandéiert ee Wäert vun 100 W ze setzen. Esou kritt d'Batterie eng liicht Prioritéit par Rapport zum Netz."
 labelInterval = "Aktualiséierungsintervall"
-labelMaxGridSupply = "Max. Netzverbrauch beim Oplueden"
 labelResidualPower = "Residuell Leeschtung"
 title = "Kontrollverhalen"
 

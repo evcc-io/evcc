@@ -37,10 +37,8 @@ title = "Gestion de la charge"
 [config.control]
 description = "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites."
 descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
-descriptionMaxGridSupply = "Uniquement pertinent pour les onduleurs hybrides qui ne sont pas capables de fournir la puissance totale en courant continu à destination du circuit domestique en courant alternatif. Ce scénario peut mener à une utilisation non désirée d’électricité du réseau, puisque evcc part du principe que l’intégralité du courant continu est disponible. Définir une valeur d’au moins 50 W pour éviter cela."
 descriptionResidualPower = "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau."
 labelInterval = "Intervalle de mise à jour"
-labelMaxGridSupply = "Utilisation max du réseau pendant la charge"
 labelResidualPower = "Puissance résiduelle"
 title = "Comportement du contrôle"
 

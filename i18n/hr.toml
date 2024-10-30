@@ -37,10 +37,8 @@ title = "Upravljanje opterećenjem"
 [config.control]
 description = "Uobičajene vrijednosti su uglavnom ispravne. Promijenite samo ako znate što radite."
 descriptionInterval = "Učestalost osvježavanja podataka u sekundama. Definira koliko će često evcc čitati podatke s brojača, prilagoditi snagu punjenja i osvježavati sučelje. Prekratki intervali (kraći od 30s) mogu prouzročiti česte oscilacije i prouzročiti neželjene ishode."
-descriptionMaxGridSupply = "Bitno samo za hibridne invertere koji nisu u mogućnosti isporučiti svu DC električnu energiju u kućnu AC energiju. Ovo može prouzročiti neželjenu potrošnju energije iz mreže s obzirom da evcc pretpostavlja kako je sva DC energija dostupna. Unesite vrijednost od barem 50W kako bi to spriječili."
 descriptionResidualPower = "Pomiče operacijsku točku kontrolne petlje. Ukoliko imate kućnu bateriju, savjetuje se vrijednost od 100W. Na taj način će upotreba baterije dobiti prioritet nad energetskom mrežom."
 labelInterval = "Interval ažuriranja"
-labelMaxGridSupply = "Maksimalna opskrba mreže tijekom punjenja"
 labelResidualPower = "Preostala snaga"
 title = "Učestalost osvježavanja"
 
