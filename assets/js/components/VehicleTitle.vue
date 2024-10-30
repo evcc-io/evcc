@@ -3,8 +3,8 @@
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<div
 				v-if="iconType === 'refresh'"
-				class="me-2 flex-shrink-0 spin"
 				ref="refresh"
+				class="me-2 flex-shrink-0 spin"
 				:title="$t('main.vehicle.detectionActive')"
 				data-bs-toggle="tooltip"
 			>
@@ -37,8 +37,8 @@
 			</span>
 			<button
 				v-if="vehicleNotReachable"
-				class="ms-2 btn-neutral"
 				ref="notReachable"
+				class="ms-2 btn-neutral"
 				data-bs-toggle="tooltip"
 				:title="$t('main.vehicle.notReachable')"
 				type="button"
@@ -75,13 +75,13 @@ export default {
 		vehicles: { type: Array, default: () => [] },
 		title: String,
 	},
+	emits: ["change-vehicle", "remove-vehicle"],
 	data: function () {
 		return {
 			refreshTooltip: null,
 			notReachableTooltip: null,
 		};
 	},
-	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
 		iconType() {
 			if (this.vehicleDetectionActive) {

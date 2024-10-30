@@ -72,9 +72,11 @@
 				</div>
 
 				<h3
-					class="fw-normal my-0 d-flex gap-2 flex-wrap d-flex align-items-baseline overflow-hidden justify-content-between"
+					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
 				>
-					<span class="d-block no-wrap text-truncate">{{ historyTitle }}</span>
+					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
+						{{ historyTitle }}
+					</span>
 					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
 				</h3>
 				<EnergyHistoryChart
@@ -92,7 +94,9 @@
 					:color-mappings="colorMappings"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
+					:currency="currency"
 					:period="period"
+					:suggested-max-avg-cost="suggestedMaxAvgCost"
 					:suggested-max-cost="suggestedMaxCost"
 				/>
 				<div v-if="showExtraCharts" class="row align-items-start">
@@ -115,9 +119,10 @@
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
-							:suggested-max-price="suggestedMaxCost"
+							:suggested-max-price="suggestedMaxAvgCost"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 					<div class="col-12 col-lg-6 mb-5">
@@ -134,6 +139,7 @@
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 				</div>
@@ -187,6 +193,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
@@ -262,13 +269,10 @@ export default {
 			return store.state.currency || "EUR";
 		},
 		energyTitle() {
-			return this.$t("sessions.energyTitle", { percent: this.solarPercentageFmt });
+			return this.$t("sessions.chartTitle.energy");
 		},
 		historyTitle() {
-			if (this.activeType === TYPES.SOLAR) {
-				return this.energyTitle;
-			}
-			return this.costTitle;
+			return this.activeType === TYPES.SOLAR ? this.energyTitle : this.costTitle;
 		},
 		historySubTitle() {
 			if (this.activeType === TYPES.SOLAR) {
@@ -297,34 +301,46 @@ export default {
 			return this.fmtWh(this.totalEnergy * 1e3, POWER_UNIT.AUTO);
 		},
 		energySubTitle() {
-			return this.$t("sessions.energySubTitle", { energy: this.energySumFmt });
+			const total = this.$t("sessions.chartTitle.energySubTotal", {
+				value: this.energySumFmt,
+			});
+			const solar = this.$t("sessions.chartTitle.energySubSolar", {
+				value: this.solarPercentageFmt,
+			});
+			return `${total} ・ ${solar}`;
 		},
 		solarTitle() {
 			return this.selectedGroup === GROUPS.NONE
-				? this.$t("sessions.solarTitle")
-				: this.$t("sessions.solarTitleByGroup", { byGroup: this.byGroupTitle });
+				? this.$t("sessions.chartTitle.solar")
+				: this.$t("sessions.chartTitle.solarByGroup", { byGroup: this.byGroupTitle });
 		},
 		byGroupTitle() {
 			if (this.selectedGroup === GROUPS.LOADPOINT) {
-				return this.$t("sessions.byGroupLoadpoint");
+				return this.$t("sessions.chartTitle.byGroupLoadpoint");
 			} else if (this.selectedGroup === GROUPS.VEHICLE) {
-				return this.$t("sessions.byGroupVehicle");
+				return this.$t("sessions.chartTitle.byGroupVehicle");
 			}
 			return "";
 		},
 		energyGroupedTitle() {
 			if (this.selectedGroup === GROUPS.NONE) {
-				return this.$t("sessions.energyGroupedTitle", { energy: this.energySumFmt });
+				return this.$t("sessions.chartTitle.energyGrouped");
 			}
-			return this.$t("sessions.energyGroupedTitleByGroup", { byGroup: this.byGroupTitle });
+			return this.$t("sessions.chartTitle.energyGroupedByGroup", {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		avgCostTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.avg${type}TitleByGroup`, { byGroup: this.byGroupTitle });
+			return this.$t(`sessions.chartTitle.avg${type}ByGroup`, {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		costGroupedTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.grouped${type}TitleByGroup`, { byGroup: this.byGroupTitle });
+			return this.$t(`sessions.chartTitle.grouped${type}ByGroup`, {
+				byGroup: this.byGroupTitle,
+			});
 		},
 		periodOptions() {
 			return Object.entries(PERIODS).map(([key, value]) => ({
@@ -385,12 +401,13 @@ export default {
 			return energy ? this.totalCo2 / energy : null;
 		},
 		costTitle() {
-			const value =
-				this.activeType === TYPES.PRICE
-					? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
-					: this.fmtCo2Medium(this.co2PerKWh);
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
-			return this.$t(`sessions.history${type}Title`, { value });
+			return this.$t(`sessions.chartTitle.history${type}`);
+		},
+		avgCostFmt() {
+			return this.activeType === TYPES.PRICE
+				? this.fmtPricePerKWh(this.pricePerKWh, this.currency)
+				: this.fmtCo2Medium(this.co2PerKWh);
 		},
 		costSubTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
@@ -398,7 +415,8 @@ export default {
 				this.activeType === TYPES.PRICE
 					? this.fmtMoney(this.totalPrice, this.currency, true, true)
 					: this.fmtGrams(this.totalCo2);
-			return this.$t(`sessions.history${type}SubTitle`, { value });
+			const total = this.$t(`sessions.chartTitle.history${type}Sub`, { value });
+			return `${total} ・ ⌀ ${this.avgCostFmt}`;
 		},
 		activeType() {
 			if (this.selectedType === TYPES.PRICE && this.typePriceAvailable) {
@@ -577,17 +595,42 @@ export default {
 
 			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth && !isGrouped);
 		},
-		suggestedMaxPrice() {
-			// returns the 90th percentile of all prices
+		suggestedMaxAvgPrice() {
+			// returns the 98th percentile of avg prices for all sessions
 			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
 			const prices = sessionsWithPrice.map((s) => s.pricePerKWh);
-			return this.percentile(prices, 90);
+			return this.percentile(prices, 98);
 		},
-		suggestedMaxCo2() {
-			// returns the 90th percentile of all co2 emissions
+		suggestedMaxAvgCo2() {
+			// returns the 98th percentile of avg co2 emissions for all sessions
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
 			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh);
-			return this.percentile(co2, 90);
+			return this.percentile(co2, 98);
+		},
+		suggestedMaxAvgCost() {
+			return this.activeType === TYPES.PRICE
+				? this.suggestedMaxAvgPrice
+				: this.suggestedMaxAvgCo2;
+		},
+		suggestedMaxCo2() {
+			// returns the 98th percentile of total co2 emissions by time period
+			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
+			const co2Map = sessionsWithCo2.reduce((acc, s) => {
+				const key = this.dateToPeriodKey(new Date(s.created));
+				acc[key] = (acc[key] || 0) + s.co2PerKWh * s.chargedEnergy;
+				return acc;
+			}, {});
+			return Math.max(this.percentile(Object.values(co2Map), 98), 5); // 5kg default
+		},
+		suggestedMaxPrice() {
+			// returns the 98th percentile of total price by time period
+			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
+			const priceMap = sessionsWithPrice.reduce((acc, s) => {
+				const key = this.dateToPeriodKey(new Date(s.created));
+				acc[key] = (acc[key] || 0) + s.price;
+				return acc;
+			}, {});
+			return Math.max(this.percentile(Object.values(priceMap), 98), 1); // 1 CURRENCY default
 		},
 		suggestedMaxCost() {
 			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
@@ -618,6 +661,12 @@ export default {
 					period = undefined;
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
+		},
+		dateToPeriodKey(date) {
+			const options = { year: "numeric", month: "numeric", day: "numeric" };
+			if (this.period === PERIODS.YEAR) options.day = undefined;
+			if (this.period === PERIODS.TOTAL) options.month = undefined;
+			return date.toLocaleDateString(undefined, options);
 		},
 		async loadSessions() {
 			const response = await api.get("sessions");
@@ -669,6 +718,7 @@ export default {
 	--vertical-shift: 0rem;
 	left: 0;
 	right: 0;
+	top: max(0rem, env(safe-area-inset-top)) !important;
 	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
 	-webkit-backdrop-filter: blur(35px);
 	backdrop-filter: blur(35px);

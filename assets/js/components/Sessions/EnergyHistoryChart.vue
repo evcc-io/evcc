@@ -21,13 +21,13 @@ registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, 
 export default {
 	name: "EnergyHistoryChart",
 	components: { Bar, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.NONE },
 		period: { type: String, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
-	mixins: [formatter],
 	computed: {
 		firstDay() {
 			if (this.sessions.length === 0) {
@@ -145,6 +145,9 @@ export default {
 			}));
 		},
 		options() {
+			// capture vue component this to be used in chartjs callbacks
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			const vThis = this;
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
@@ -186,18 +189,15 @@ export default {
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw || 0;
-								return (
-									datasetLabel + ": " + this.fmtWh(value * 1e3, POWER_UNIT.AUTO)
-								);
+								return value
+									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
+									: null;
 							},
 							labelColor: tooltipLabelColor(false),
 							labelPointStyle: function () {
 								return {
 									pointStyle: "circle",
 								};
-							},
-							labelTextColor: (item) => {
-								return !item.raw ? colors.muted : "#fff";
 							},
 						},
 						itemSort: function (a, b) {
@@ -210,7 +210,14 @@ export default {
 						stacked: true,
 						border: { display: false },
 						grid: { display: false },
-						ticks: { color: colors.muted },
+						ticks: {
+							color: colors.muted,
+							callback: function (value) {
+								return vThis.period === PERIODS.YEAR
+									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
+									: this.getLabelForValue(value);
+							},
+						},
 					},
 					y: {
 						stacked: true,

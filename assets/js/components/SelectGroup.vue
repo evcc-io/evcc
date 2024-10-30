@@ -1,5 +1,5 @@
 <template>
-	<div class="mode-group border d-inline-flex" :class="{ large }" role="group">
+	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="group">
 		<button
 			v-for="(option, i) in options"
 			:id="i === 0 ? id : null"
@@ -24,6 +24,7 @@ export default {
 		modelValue: [Number, String],
 		equalWidth: Boolean,
 		large: Boolean,
+		transparent: Boolean,
 	},
 	emits: ["update:modelValue"],
 };
@@ -34,6 +35,9 @@ export default {
 	border: 2px solid var(--evcc-default-text);
 	border-radius: 17px;
 	padding: 4px;
+}
+
+.mode-group:not(.transparent) {
 	background: var(--evcc-background);
 }
 

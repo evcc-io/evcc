@@ -16,8 +16,8 @@
 				</label>
 				<input
 					id="loginPassword"
-					v-model="password"
 					ref="password"
+					v-model="password"
 					class="form-control"
 					autocomplete="current-password"
 					type="password"

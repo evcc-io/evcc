@@ -236,6 +236,12 @@ export default {
         month: "short",
       }).format(date);
     },
+    fmtDayOfMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+      }).format(date);
+    },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
       const result = new Intl.NumberFormat(this.$i18n?.locale, {

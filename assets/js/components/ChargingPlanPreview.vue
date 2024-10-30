@@ -95,7 +95,7 @@ export default {
 			if (!this.targetTime || this.duration === 0) {
 				return "—";
 			}
-			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
+			const price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}

@@ -48,6 +48,11 @@ export default {
 		size: String,
 	},
 	emits: ["open", "closed"],
+	computed: {
+		sizeClass() {
+			return this.size ? `modal-${this.size}` : "";
+		},
+	},
 	mounted() {
 		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
@@ -55,11 +60,6 @@ export default {
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
 		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
-	},
-	computed: {
-		sizeClass() {
-			return this.size ? `modal-${this.size}` : "";
-		},
 	},
 	methods: {
 		handleShow() {
