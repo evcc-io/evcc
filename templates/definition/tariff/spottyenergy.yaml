@@ -14,7 +14,7 @@ params:
       de: "Die Vertragsnummer bekommst du im Kundenportal https://i.spottyenergie.at/"
       en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
   - name: pricetype
-    example: CONSUMPTION
+    default: CONSUMPTION
     validvalues: ["MARKET", "CONSUMPTION", "GENERATION"]
     required: true
     help:
