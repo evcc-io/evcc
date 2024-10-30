@@ -1,5 +1,5 @@
 <template>
-	<div class="row" v-if="chartData.labels.length > 1">
+	<div v-if="chartData.labels.length > 1" class="row">
 		<div class="col-12 col-md-6 mb-3">
 			<Doughnut :data="chartData" :options="options" />
 		</div>
@@ -23,6 +23,7 @@ registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, To
 export default {
 	name: "CostGroupedChart",
 	components: { Doughnut, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.LOADPOINT },
@@ -30,7 +31,6 @@ export default {
 		currency: { type: String, default: "EUR" },
 		costType: { type: String, default: TYPES.PRICE },
 	},
-	mixins: [formatter],
 	computed: {
 		chartData() {
 			console.log(`update ${this.costType} grouped data`);

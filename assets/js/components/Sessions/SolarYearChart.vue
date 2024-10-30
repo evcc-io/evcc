@@ -22,11 +22,11 @@ registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, T
 export default {
 	name: "SolarYearChart",
 	components: { Radar, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		period: { type: String, default: "total" },
 	},
-	mixins: [formatter],
 	computed: {
 		firstDay() {
 			if (this.sessions.length === 0) {

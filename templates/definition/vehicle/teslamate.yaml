@@ -47,4 +47,8 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/odometer
     timeout: 720h # 30d
+  limitsoc:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/charge_limit_soc
+    timeout: 720h
   features: ["coarsecurrent"]

@@ -18,13 +18,13 @@
 <script>
 export default {
 	name: "IconSelectItem",
-	emits: ["click"],
 	props: {
 		value: String,
 		active: Boolean,
 		label: String,
 		disabled: Boolean,
 	},
+	emits: ["click"],
 };
 </script>
 

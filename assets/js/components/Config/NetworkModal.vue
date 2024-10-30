@@ -8,7 +8,7 @@
 		data-testid="network-modal"
 		@changed="$emit('changed')"
 	>
-		<template v-slot:default="{ values }">
+		<template #default="{ values }">
 			<FormRow
 				id="networkSchema"
 				:label="$t('config.network.labelSchema')"

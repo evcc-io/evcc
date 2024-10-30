@@ -24,6 +24,7 @@ import icon from "../../mixins/icon";
 
 export default {
 	name: "BatteryIcon",
+	mixins: [icon],
 	props: {
 		soc: { type: Number, default: 0 },
 		hold: { type: Boolean, default: false },
@@ -35,6 +36,5 @@ export default {
 			return `M30 38H18v-${height}h12v${height}z`;
 		},
 	},
-	mixins: [icon],
 };
 </script>

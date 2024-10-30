@@ -30,10 +30,10 @@ import store from "../store";
 
 export default {
 	name: "TopHeader",
-	mixins: [collector],
 	components: {
 		TopNavigation,
 	},
+	mixins: [collector],
 	props: {
 		showConfig: Boolean,
 		title: String,

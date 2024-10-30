@@ -27,10 +27,10 @@ import formatter from "../../mixins/formatter";
 
 export default {
 	name: "DeviceTags",
+	mixins: [formatter],
 	props: {
 		tags: Object,
 	},
-	mixins: [formatter],
 	computed: {
 		entries() {
 			return Object.entries(this.tags).map(
