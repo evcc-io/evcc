@@ -265,8 +265,7 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
-	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "-N")
-	if found {
+	if res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, ""); found {
 		return res[0] + res[1] + res[2], err
 	}
 
