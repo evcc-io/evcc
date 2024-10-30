@@ -625,8 +625,12 @@ started = "Počelo"
 title = "Postupak punjenja"
 
 [sessions]
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
 avgPower = "⌀ snaga"
 avgPrice = "⌀ cijena"
+avgPriceTitleByGroup = "⌀ cijena {byGroup}"
+byGroupLoadpoint = "po punjaču"
+byGroupVehicle = "po vozilu"
 chargeDuration = "Trajanje"
 co2 = "⌀ CO₂"
 csvMonth = "Preuzmi CSV za {month}"
@@ -634,31 +638,27 @@ csvTotal = "Preuzmi CSV za ukupno"
 date = "Početak"
 downloadCsv = "Preuzmi kao CSV"
 energy = "Isporučeno"
+energyGroupedTitle = "Isporučena energija {energy}"
+energyGroupedTitleByGroup = "Energija {byGroup}"
+energySubTitle = "ukupno {energy}"
+energyTitle = "{percent} solarne energije"
+groupedCo2TitleByGroup = "CO₂- količina {byGroup}"
+groupedPriceTitleByGroup = "Ukupni trošak {byGroup}"
+historyCo2SubTitle = "ukupno {value}"
+historyCo2Title = "⌀ {value} CO₂ - onečišćenje"
+historyPriceSubTitle = "ukupno {value}"
+historyPriceTitle = "⌀ {value} cijena punjenja"
 loadpoint = "Mjesto punjenja"
 noData = "U ovom mjesecu nema sesija napajanja."
 price = "Σ cijena"
 reallyDelete = "Stvarno želiš izbrisati ovu sesiju?"
+showIndividualEntries = "Prikaži pojedine zapise"
 solar = "Solarno"
+solarTitle = "Udio solara tokom godine"
+solarTitleByGroup = "Solar {byGroup}"
 title = "Postupci punjenja"
 total = "Ukupno"
 vehicle = "Vozilo"
-avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
-avgPriceTitleByGroup = "⌀ cijena {byGroup}
-byGroupVehicle = "po vozilu"
-energyTitle = "{percent} solarne energije"
-groupedCo2TitleByGroup = "CO₂- količina {byGroup}"
-historyCo2Title = "⌀ {value} CO₂ - onečišćenje"
-groupedPriceTitleByGroup = "Ukupni trošak {byGroup}"
-byGroupLoadpoint = "po punjaču"
-energyGroupedTitle = "Isporučena energija {energy}"
-energyGroupedTitleByGroup = "Energija {byGroup}"
-energySubTitle = "ukupno {energy}"
-historyCo2SubTitle = "ukupno {value}"
-historyPriceSubTitle = "ukupno {value}"
-historyPriceTitle = "⌀ {value} cijena punjenja"
-showIndividualEntries = "Prikaži pojedine zapise"
-solarTitle = "Udio solara tokom godine"
-solarTitleByGroup = "Solar {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -680,6 +680,27 @@ vehicle = "Vozilo"
 allLoadpoints = "sva mjesta napajanja"
 allVehicles = "sva vozila"
 filter = "Filtar"
+
+[sessions.group]
+co2 = "Onečišćenje"
+grid = "Mreža"
+price = "Cijena"
+self = "Solar"
+
+[sessions.groupBy]
+loadpoint = "Punjač"
+none = "Ukupno"
+vehicle = "Vozilo"
+
+[sessions.period]
+month = "Mjesec"
+total = "Ukupno"
+year = "Godina"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Cijena"
+solar = "Solar"
 
 [settings]
 title = "Korisničko sučelje"
@@ -754,25 +775,3 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
-
-
-[sessions.group]
-co2 = "Onečišćenje"
-grid = "Mreža"
-price = "Cijena"
-self = "Solar"
-
-[sessions.groupBy]
-loadpoint = "Punjač"
-none = "Ukupno"
-vehicle = "Vozilo"
-
-[sessions.period]
-month = "Mjesec"
-total = "Ukupno"
-year = "Godina"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Cijena"
-solar = "Solar"
