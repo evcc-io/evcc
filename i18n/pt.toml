@@ -37,10 +37,8 @@ title = "Gerenciamento de carga"
 [config.control]
 description = "No geral, os valores padrão estão bem. Apenas mude-os se você sabe o que está fazendo."
 descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar oscilações e comportamentos indesejados."
-descriptionMaxGridSupply = "Só relevante para inversores híbridos que não são capazes de produzir o poder de geração DC completo para a casa via AC. Este szenario pode levar ao uso indesejado da grade, uma vez que o evcc assume que a potência total DC está disponível. Use um valor de pelo menos 50 W para evitar isso."
 descriptionResidualPower = "Evita o ponto de operação do circuito de controle. Se você tem uma bateria em casa, é recomendável definir um valor de 100 W. Desta forma, a bateria terá uma leve prioridade sobre o uso da rede."
 labelInterval = "Intervalo actualizado"
-labelMaxGridSupply = "Máx. rede de fornecimento enquanto carrega"
 labelResidualPower = "Poder real"
 title = "Comportamento de controle"
 

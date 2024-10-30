@@ -37,10 +37,8 @@ title = "Upravljanje obremenitve"
 [config.control]
 description = "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete."
 descriptionInterval = "Cikel posodabljanja krmilne zanke v sekundah. Določa, kako pogosto evcc bere podatke števca, prilagodi moč polnjenja in posodobi uporabniški vmesnik. Kratki intervali (< 30 s) lahko povzročijo nihanje in neželeno vedenje."
-descriptionMaxGridSupply = "Ustrezno samo za hibridne pretvornike, ki ne morejo oddajati celotne električne energije enosmernega toka v dom prek izmeničnega toka. Ta scenarij lahko povzroči neželeno uporabo omrežja, saj evcc predvideva, da je na voljo polna enosmerna moč. Uporabite vrednost najmanj 50 W da bi to preprečili."
 descriptionResidualPower = "Prestavi točko delovanja krmilne zanke. Če imate domačo baterijo, je priporočljivo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja."
 labelInterval = "Interval posodabljanja"
-labelMaxGridSupply = "Največja napetost omrežja med polnjenjem"
 labelResidualPower = "Preostala moč"
 title = "Nadzor vedenja"
 

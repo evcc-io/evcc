@@ -37,10 +37,8 @@ title = "Gestión de carga"
 [config.control]
 description = "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo."
 descriptionInterval = " Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados."
-descriptionMaxGridSupply = "Solo relevante para inversores híbridos que no son capaces de producir la fuerza completa de generación DC al hogar a través de AC. Este szenario puede llevar al uso no deseado de la red, ya que evcc asume que la potencia DC completa está disponible. Utilice un valor de al menos 50 W para prevenir esto."
 descriptionResidualPower = "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica"
 labelInterval = "Intervalo de actualización"
-labelMaxGridSupply = "Suministro máximo de red durante la carga"
 labelResidualPower = "Fuerza residual"
 title = "Controlar la conducta"
 

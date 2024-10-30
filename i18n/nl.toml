@@ -36,7 +36,6 @@ title = "Belastingbeheer"
 [config.control]
 description = "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet."
 labelInterval = "Update interval"
-labelMaxGridSupply = "Max. netgebruik tijdens het laden"
 labelResidualPower = "Vermogensoverschot"
 title = "Regelgedrag"
 

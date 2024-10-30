@@ -37,10 +37,8 @@ title = "Belastningsstyring"
 [config.control]
 description = "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem."
 descriptionInterval = "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat."
-descriptionMaxGridSupply = "Kun relevant for hybrid-invertere, der ikke er i stand til at udsende den fulde DC-effekt til hjemmet via AC. Dette scenario kan føre til uønsket netbrug, da evcc antager, at den fulde DC-effekt er tilgængelig. Brug en værdi på mindst 50 W for at forhindre dette."
 descriptionResidualPower = "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug."
 labelInterval = "Opdateringsinterval"
-labelMaxGridSupply = "Max. forsyning fra elnettet under opladning"
 labelResidualPower = "Tilbageværende effekt"
 title = "kontrol adfærd"
 
