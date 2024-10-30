@@ -18,7 +18,7 @@ params:
     validvalues: ["MARKET", "CONSUMPTION", "GENERATION"]
     required: true
     help:
-      de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütunt (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"
+      de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"
       en: "Price type, either spotmarket price, consumption price or generation compensation (if contractually agreed), more info at https://www.spottyenergie.at/blog/energie-smart-produzieren"
   - preset: tariff-base
 render: |
