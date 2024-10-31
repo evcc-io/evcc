@@ -261,7 +261,7 @@
 							>
 								<template #icon><HemsIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('hems')" />
+									<DeviceTags :tags="hemsTags" />
 								</template>
 							</DeviceCard>
 						</ul>
@@ -395,7 +395,6 @@ export default {
 				eebus: false,
 				circuits: false,
 				modbusproxy: false,
-				hems: false,
 			},
 		};
 	},
@@ -452,6 +451,15 @@ export default {
 			const result = { url: { value: url } };
 			if (database) result.bucket = { value: database };
 			if (org) result.org = { value: org };
+			return result;
+		},
+		hemsTags() {
+			const result = { configured: { value: false } };
+			const { type } = store.state?.hems || {};
+			if (type) {
+				result.configured.value = true;
+				result.hemsType = { value: type };
+			}
 			return result;
 		},
 	},
