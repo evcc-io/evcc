@@ -91,7 +91,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: {{ .workmode }}
+        value: {{ .defaultmode }}
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
