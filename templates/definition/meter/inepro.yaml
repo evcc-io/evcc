@@ -5,7 +5,7 @@ products:
       generic: PRO380-MOD
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |

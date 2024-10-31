@@ -17,7 +17,7 @@ products:
       generic: Energy Meter P (KEM-P)
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |

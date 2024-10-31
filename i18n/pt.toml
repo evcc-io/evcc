@@ -37,10 +37,8 @@ title = "Gerenciamento de carga"
 [config.control]
 description = "No geral, os valores padrão estão bem. Apenas mude-os se você sabe o que está fazendo."
 descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar oscilações e comportamentos indesejados."
-descriptionMaxGridSupply = "Só relevante para inversores híbridos que não são capazes de produzir o poder de geração DC completo para a casa via AC. Este szenario pode levar ao uso indesejado da grade, uma vez que o evcc assume que a potência total DC está disponível. Use um valor de pelo menos 50 W para evitar isso."
 descriptionResidualPower = "Evita o ponto de operação do circuito de controle. Se você tem uma bateria em casa, é recomendável definir um valor de 100 W. Desta forma, a bateria terá uma leve prioridade sobre o uso da rede."
 labelInterval = "Intervalo actualizado"
-labelMaxGridSupply = "Máx. rede de fornecimento enquanto carrega"
 labelResidualPower = "Poder real"
 title = "Comportamento de controle"
 
@@ -447,6 +445,7 @@ remoteDisabledSoft = "{source}:carregamento PV adaptável desativado"
 solar = "Sol"
 
 [main.loadpointSettings]
+batteryUsage = "Bateria de casa"
 currents = "Corrente de carga"
 default = "predefinado"
 disclaimerHint = "Aviso:"
@@ -455,6 +454,12 @@ smartCostCheap = "Carregamento de rede barato"
 smartCostClean = "Carregamento de rede limpa"
 title = "Configurações {0}"
 vehicle = "Veículo"
+
+[main.loadpointSettings.batteryBoost]
+description = "Carga rápida da bateria de casa."
+label = "Boost bateria "
+mode = "Disponível apenas nos modos solar e min+solar."
+once = "Boost ativo para esta sessão de carga."
 
 [main.loadpointSettings.limitSoc]
 description = "limite de compartilhamento que é usado quando este veículo está conectado."
@@ -556,6 +561,7 @@ vehicleLimit = "Limite de veículo: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "À espera de autorização."
+batteryBoost = "Boost da bateria ativo."
 charging = "Carregando..."
 cheapEnergyCharging = "Energia barata disponível."
 cheapEnergyNextStart = "Energia barata em {duration}."
@@ -623,8 +629,12 @@ started = "Começado"
 title = "Sessão de carga"
 
 [sessions]
+avgCo2TitleByGroup = "⌀ CO₂ {byGroup}"
 avgPower = "Desempenho ⌀"
 avgPrice = "Preço ⌀"
+avgPriceTitleByGroup = "⌀ Preço {byGroup}"
+byGroupLoadpoint = "por ponto de carregamento"
+byGroupVehicle = "por veículo"
 chargeDuration = "Duração"
 co2 = "CO₂ ⌀"
 csvMonth = "Download {month} CSV"
@@ -632,12 +642,25 @@ csvTotal = "Download tudo CSV"
 date = "Início"
 downloadCsv = "Download como CSV"
 energy = "Carregado"
+energyGroupedTitle = "Energia carregada {energy}"
+energyGroupedTitleByGroup = "Energia {byGroup}"
+energySubTitle = "{energy} total"
+energyTitle = "{percent} Energia Solar"
+groupedCo2TitleByGroup = "Quantidade de CO₂ {byGroup}"
+groupedPriceTitleByGroup = "Custo total {byGroup}"
+historyCo2SubTitle = "{value} total"
+historyCo2Title = "⌀ {value} Emissões de CO₂"
+historyPriceSubTitle = "{value} total"
+historyPriceTitle = "⌀ {value} Preço de carregamento"
 loadpoint = "Ponto de carga"
 noData = "Nenhuma sessão de carregamento este mês."
 odometer = "Quilometragem"
 price = "Preço Σ"
 reallyDelete = "Você realmente quer excluir esta sessão?"
+showIndividualEntries = "Mostrar sessões individuais"
 solar = "Sol"
+solarTitle = "“Parte de energia solar ao longo de um ano”"
+solarTitleByGroup = "“Parte solar {byGroup}”"
 title = "Sessões de carga"
 total = "Total"
 vehicle = "Veículo"
@@ -662,6 +685,27 @@ vehicle = "Veículo"
 allLoadpoints = "todos pontos de carregamento"
 allVehicles = "todos veículos"
 filter = "Filtro"
+
+[sessions.group]
+co2 = "Emissões"
+grid = "Rede"
+price = "Preço"
+self = "Solar"
+
+[sessions.groupBy]
+loadpoint = "“Ponto de recarga”"
+none = "Total"
+vehicle = "Veiculo"
+
+[sessions.period]
+month = "Mês"
+total = "Total"
+year = "Ano"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Preço"
+solar = "Solar"
 
 [settings]
 title = "Interface de usuário"

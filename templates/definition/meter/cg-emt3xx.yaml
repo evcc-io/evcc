@@ -20,7 +20,7 @@ products:
       generic: Energy Meter C (KEM-C)
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |

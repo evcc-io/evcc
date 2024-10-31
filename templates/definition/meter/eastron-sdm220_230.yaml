@@ -11,7 +11,7 @@ products:
       generic: EM111-RTU-2P
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |

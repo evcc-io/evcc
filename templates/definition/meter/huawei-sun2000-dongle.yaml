@@ -2,7 +2,7 @@ template: huawei-dongle
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 with SDongle
+      generic: SUN2000 (SDongle)
 requirements:
   description:
     de: |
