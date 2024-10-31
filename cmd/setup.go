@@ -645,7 +645,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {

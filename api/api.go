@@ -241,3 +241,8 @@ type Circuit interface {
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 }
+
+// Redactor is an interface to redact sensitive data
+type Redactor interface {
+	Redacted() any
+}
