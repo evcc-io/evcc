@@ -18,13 +18,10 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
-  - name: workmode
+  - name: defaultmode
     description:
-      de: Standart Arbeitsmodus des Solax Wechselrichter
-      en: Default Workmode for Solax Inverter
-    help:
-      de: Standart Arbeitsmodus des Solax Wechselrichter
-      en: Default Workmode for Solax Inverter
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
     default: 0 # "SelfUse"
     usages: ["battery"]
     advanced: true
