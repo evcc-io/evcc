@@ -59,7 +59,7 @@ func (t *embed) init() error {
 }
 
 func (t *embed) totalPrice(price float64) float64 {
-	if t.calc == nil {
+	if t.calc != nil {
 		res, _ := t.calc(price)
 		return res
 	}
