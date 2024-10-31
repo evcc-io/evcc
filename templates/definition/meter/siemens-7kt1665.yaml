@@ -5,7 +5,7 @@ products:
       generic: 7KT1665
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |

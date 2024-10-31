@@ -5,7 +5,7 @@ products:
       generic: OR-WE-516, OR-WE-517
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
     comset: "8E1"
