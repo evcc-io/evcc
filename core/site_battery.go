@@ -12,6 +12,10 @@ func batteryModeModified(mode api.BatteryMode) bool {
 	return mode != api.BatteryUnknown && mode != api.BatteryNormal
 }
 
+func (site *Site) batteryConfigured() bool {
+	return len(site.batteryMeters) > 0
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()
@@ -47,7 +51,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	}
 
 	switch {
-	case len(site.batteryMeters) == 0:
+	case !site.batteryConfigured():
 		res = api.BatteryUnknown
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
