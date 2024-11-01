@@ -3,9 +3,7 @@ package provider
 import (
 	"context"
 	"errors"
-	"math"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +15,7 @@ import (
 
 // Script implements shell script-based providers and setters
 type Script struct {
+	*getter
 	log      *util.Logger
 	script   string
 	timeout  time.Duration
@@ -25,7 +24,6 @@ type Script struct {
 	val      string
 	err      error
 	pipeline *pipeline.Pipeline
-	scale    float64
 }
 
 func init() {
@@ -50,6 +48,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error)
 	}
 
 	p, err := NewScriptProvider(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
+	p.getter = defaultGetters(p, cc.Scale)
 
 	if err == nil {
 		var pipe *pipeline.Pipeline
@@ -71,7 +70,6 @@ func NewScriptProvider(script string, timeout time.Duration, scale float64, cach
 		log:     util.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
-		scale:   scale,
 		cache:   cache,
 	}
 
@@ -126,55 +124,6 @@ func (p *Script) StringGetter() (func() (string, error), error) {
 
 		return p.val, p.err
 	}, nil
-}
-
-var _ FloatProvider = (*Script)(nil)
-
-// FloatGetter parses float from exec result
-func (p *Script) FloatGetter() (func() (float64, error), error) {
-	g, err := p.StringGetter()
-
-	return func() (float64, error) {
-		s, err := g()
-		if err != nil {
-			return 0, err
-		}
-
-		f, err := strconv.ParseFloat(s, 64)
-		if err == nil {
-			f *= p.scale
-		}
-
-		return f, err
-	}, err
-}
-
-var _ IntProvider = (*Script)(nil)
-
-// IntGetter parses int64 from exec result
-func (p *Script) IntGetter() (func() (int64, error), error) {
-	g, err := p.FloatGetter()
-
-	return func() (int64, error) {
-		f, err := g()
-		return int64(math.Round(f)), err
-	}, err
-}
-
-var _ BoolProvider = (*Script)(nil)
-
-// BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (p *Script) BoolGetter() (func() (bool, error), error) {
-	g, err := p.StringGetter()
-
-	return func() (bool, error) {
-		s, err := g()
-		if err != nil {
-			return false, err
-		}
-
-		return util.Truish(s), nil
-	}, err
 }
 
 var _ SetIntProvider = (*Script)(nil)
