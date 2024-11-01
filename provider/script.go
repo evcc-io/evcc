@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
+	"github.com/spf13/cast"
 )
 
 // Script implements shell script-based providers and setters
@@ -210,7 +211,7 @@ func (p *Script) BoolGetter() (func() (bool, error), error) {
 			return false, err
 		}
 
-		return util.Truish(s), nil
+		return cast.ToBoolE(s)
 	}, err
 }
 

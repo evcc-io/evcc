@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/spf13/cast"
 )
 
 // HTTP implements HTTP request provider
@@ -238,7 +239,10 @@ func (p *HTTP) BoolGetter() (func() (bool, error), error) {
 
 	return func() (bool, error) {
 		s, err := g()
-		return util.Truish(s), err
+		if err != nil {
+			return false, err
+		}
+		return cast.ToBoolE(s)
 	}, err
 }
 

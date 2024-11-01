@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
+	"github.com/spf13/cast"
 )
 
 type msgHandler struct {
@@ -73,5 +74,5 @@ func (h *msgHandler) boolGetter() (bool, error) {
 		return false, err
 	}
 
-	return util.Truish(v), nil
+	return cast.ToBoolE(v)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/spf13/cast"
 )
 
 const retryDelay = 5 * time.Second
@@ -202,6 +203,9 @@ func (p *Socket) BoolGetter() (func() (bool, error), error) {
 
 	return func() (bool, error) {
 		s, err := g()
-		return util.Truish(s), err
+		if err != nil {
+			return false, err
+		}
+		return cast.ToBoolE(s)
 	}, err
 }
