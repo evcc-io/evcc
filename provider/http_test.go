@@ -42,7 +42,7 @@ func (suite *httpTestSuite) TearDown() {
 
 func (suite *httpTestSuite) TestGet() {
 	uri := suite.srv.URL + "/foo/bar{{\"/baz\"}}"
-	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 1, 0)
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 0)
 
 	g, err := p.StringGetter()
 	suite.Require().NoError(err)
@@ -55,7 +55,7 @@ func (suite *httpTestSuite) TestGet() {
 
 func (suite *httpTestSuite) TestSetQuery() {
 	uri := suite.srv.URL + "/foo/bar?baz={{.baz}}"
-	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 1, 0)
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 0)
 
 	s, err := p.StringSetter("baz")
 	suite.Require().NoError(err)
@@ -65,7 +65,7 @@ func (suite *httpTestSuite) TestSetQuery() {
 
 func (suite *httpTestSuite) TestSetPath() {
 	uri := suite.srv.URL + "/foo/bar/{{.baz}}"
-	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 1, 0)
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 0)
 
 	s, err := p.StringSetter("baz")
 	suite.Require().NoError(err)
