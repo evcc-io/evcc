@@ -3,33 +3,29 @@ package provider
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
 )
 
 // Script implements shell script-based providers and setters
 type Script struct {
-	log     *util.Logger
-	script  string
-	timeout time.Duration
-	cache   time.Duration
-	updated time.Time
-	val     string
-	err     error
-	re      *regexp.Regexp
-	jq      *gojq.Query
-	scale   float64
+	log      *util.Logger
+	script   string
+	timeout  time.Duration
+	cache    time.Duration
+	updated  time.Time
+	val      string
+	err      error
+	pipeline *pipeline.Pipeline
+	scale    float64
 }
 
 func init() {
@@ -39,12 +35,11 @@ func init() {
 // NewScriptProviderFromConfig creates a script provider.
 func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
-		Cmd     string
-		Timeout time.Duration
-		Cache   time.Duration
-		Regex   string
-		Jq      string
-		Scale   float64
+		Cmd               string
+		pipeline.Settings `mapstructure:",squash"`
+		Scale             float64
+		Timeout           time.Duration
+		Cache             time.Duration
 	}{
 		Timeout: request.Timeout,
 		Scale:   1,
@@ -56,12 +51,10 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error)
 
 	p, err := NewScriptProvider(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
 
-	if err == nil && cc.Regex != "" {
-		_, err = p.WithRegex(cc.Regex)
-	}
-
-	if err == nil && cc.Jq != "" {
-		_, err = p.WithJq(cc.Jq)
+	if err == nil {
+		var pipe *pipeline.Pipeline
+		pipe, err = pipeline.New(log, cc.Settings)
+		p.pipeline = pipe
 	}
 
 	return p, err
@@ -83,28 +76,6 @@ func NewScriptProvider(script string, timeout time.Duration, scale float64, cach
 	}
 
 	return s, nil
-}
-
-func (p *Script) WithRegex(regex string) (*Script, error) {
-	re, err := regexp.Compile(regex)
-	if err != nil {
-		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
-	}
-
-	p.re = re
-
-	return p, nil
-}
-
-func (p *Script) WithJq(jq string) (*Script, error) {
-	op, err := gojq.Parse(jq)
-	if err != nil {
-		return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
-	}
-
-	p.jq = op
-
-	return p, nil
 }
 
 func (p *Script) exec(script string) (string, error) {
@@ -146,18 +117,10 @@ func (p *Script) StringGetter() (func() (string, error), error) {
 			p.val, p.err = p.exec(p.script)
 			p.updated = time.Now()
 
-			if p.err == nil && p.re != nil {
-				m := p.re.FindStringSubmatch(p.val)
-				if len(m) > 1 {
-					p.val = m[1] // first submatch
-				}
-			}
-
-			if p.err == nil && p.jq != nil {
-				var v interface{}
-				if v, p.err = jq.Query(p.jq, []byte(p.val)); p.err == nil {
-					p.val = fmt.Sprintf("%v", v)
-				}
+			if p.err == nil && p.pipeline != nil {
+				var b []byte
+				b, p.err = p.pipeline.Process([]byte(p.val))
+				p.val = string(b)
 			}
 		}
 
