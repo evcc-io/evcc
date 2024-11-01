@@ -63,18 +63,18 @@ require (
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
-	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
+	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
-	github.com/nicksnyder/go-i18n/v2 v2.4.0
+	github.com/nicksnyder/go-i18n/v2 v2.4.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
 	github.com/prometheus-community/pro-bing v0.4.1
-	github.com/prometheus/client_golang v1.20.4
-	github.com/prometheus/common v0.60.0
+	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/common v0.60.1
 	github.com/robertkrimen/otto v0.4.0
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
@@ -90,20 +90,20 @@ require (
 	github.com/teslamotors/vehicle-command v0.2.1
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20241024124559-c21fb12c007d
+	github.com/volkszaehler/mbmd v0.0.0-20241028131242-5830329dc302
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.28.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20241004205956-6c2174895805
-	golang.org/x/exp v0.0.0-20241004190924-225e2abe05e6
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20241022195102-750a45fe5e47
+	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.8.0
 	golang.org/x/text v0.19.0
 	golang.org/x/tools v0.26.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.12
 )
