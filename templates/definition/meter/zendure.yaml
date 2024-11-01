@@ -1,0 +1,34 @@
+template: zendure
+products:
+  - brand: Zendure
+    description:
+      generic: Hyper V
+requirements:
+  # description:
+  #   de: |
+  #     Zur Erfassung der PV-Produktion wird ein extern angebundenener S0-Erzeugungszähler benötigt.
+  #   en: |
+  #     An externally connected S0 generation meter is required to record the solar production.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: topic
+  - name: capacity
+    default: 2
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "battery" }}
+  power:
+    source: mqtt
+    topic: {{ .topic }}/state
+    jq: .outputHomePower // if .gridInputPower > 0 then -.gridInputPower else 0 end
+    # timeout: 5m
+  soc:
+    source: mqtt
+    topic: {{ .topic }}/state
+    jq: .electricLevel // 0
+    # timeout: 30m
+  capacity: {{ .capacity }} # kWh
+  {{- end}}
