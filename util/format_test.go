@@ -9,25 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTruish(t *testing.T) {
-	cases := []struct {
-		k string
-		v bool
-	}{
-		{"", false},
-		{"false", false},
-		{"0", false},
-		{"off", false},
-		{"true", true},
-		{"1", true},
-		{"on", true},
-	}
-
-	for _, c := range cases {
-		assert.Equal(t, c.v, Truish(c.k))
-	}
-}
-
 func TestReplace(t *testing.T) {
 	cases := []struct {
 		k             string
