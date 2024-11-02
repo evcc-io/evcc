@@ -24,7 +24,7 @@ func Settings(log *util.Logger, v api.Vehicle) API {
 
 // Adapter creates a vehicle API adapter
 func Adapter(log *util.Logger, dev config.Device[api.Vehicle]) API {
-	return &AdapterStruct{
+	return &adapter{
 		log:     log,
 		name:    dev.Config().Name,
 		Vehicle: dev.Instance(),

@@ -11,37 +11,37 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-var _ API = (*AdapterStruct)(nil)
+var _ API = (*adapter)(nil)
 
 // Publish publishes vehicle updates at site level
 var Publish func()
 
-type AdapterStruct struct {
+type adapter struct {
 	log         *util.Logger
 	name        string
 	api.Vehicle // TODO handle instance updates
 }
 
-func (v *AdapterStruct) key() string {
+func (v *adapter) key() string {
 	return fmt.Sprintf("vehicle.%s.", v.name)
 }
 
-func (v *AdapterStruct) publish() {
+func (v *adapter) publish() {
 	if Publish != nil {
 		Publish()
 	}
 }
 
-func (v *AdapterStruct) Instance() api.Vehicle {
+func (v *adapter) Instance() api.Vehicle {
 	return v.Vehicle
 }
 
-func (v *AdapterStruct) Name() string {
+func (v *adapter) Name() string {
 	return v.name
 }
 
 // GetMinSoc returns the min soc
-func (v *AdapterStruct) GetMinSoc() int {
+func (v *adapter) GetMinSoc() int {
 	if v, err := settings.Int(v.key() + keys.MinSoc); err == nil {
 		return int(v)
 	}
@@ -49,14 +49,14 @@ func (v *AdapterStruct) GetMinSoc() int {
 }
 
 // SetMinSoc sets the min soc
-func (v *AdapterStruct) SetMinSoc(soc int) {
+func (v *adapter) SetMinSoc(soc int) {
 	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.MinSoc, int64(soc))
 	v.publish()
 }
 
 // GetLimitSoc returns the limit soc
-func (v *AdapterStruct) GetLimitSoc() int {
+func (v *adapter) GetLimitSoc() int {
 	if v, err := settings.Int(v.key() + keys.LimitSoc); err == nil {
 		return int(v)
 	}
@@ -64,14 +64,14 @@ func (v *AdapterStruct) GetLimitSoc() int {
 }
 
 // SetLimitSoc sets the limit soc
-func (v *AdapterStruct) SetLimitSoc(soc int) {
+func (v *adapter) SetLimitSoc(soc int) {
 	v.log.DEBUG.Printf("set %s limit soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.LimitSoc, int64(soc))
 	v.publish()
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *AdapterStruct) GetPlanSoc() (time.Time, int) {
+func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
@@ -84,7 +84,7 @@ func (v *AdapterStruct) GetPlanSoc() (time.Time, int) {
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *AdapterStruct) SetPlanSoc(ts time.Time, soc int) error {
+func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -104,7 +104,7 @@ func (v *AdapterStruct) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
-func (v *AdapterStruct) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
 	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
@@ -114,7 +114,7 @@ func (v *AdapterStruct) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error
 	return nil
 }
 
-func (v *AdapterStruct) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStruct {
+func (v *adapter) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStruct {
 	var plans []api.RepeatingPlanStruct
 
 	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
@@ -136,7 +136,7 @@ func (v *AdapterStruct) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingP
 	return []api.RepeatingPlanStruct{}
 }
 
-func (v *AdapterStruct) GetRepeatingPlansWithTimestamps(onlyActivePlans bool) []api.PlanStruct {
+func (v *adapter) GetRepeatingPlansWithTimestamps(onlyActivePlans bool) []api.PlanStruct {
 	var formattedPlans []api.PlanStruct
 
 	plans := v.GetRepeatingPlans(onlyActivePlans)
