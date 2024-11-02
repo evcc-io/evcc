@@ -218,6 +218,11 @@ export default {
 		effectivePlanTime() {
 			this.updateTargetTimeLabel();
 		},
+		"$i18n.locale": {
+			handler() {
+				this.updateTargetTimeLabel();
+			},
+		},
 	},
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
