@@ -35,7 +35,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.22.1
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/go-telegram/bot v1.10.0
 	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33

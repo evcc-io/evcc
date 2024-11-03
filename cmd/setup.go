@@ -757,7 +757,7 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	}
 
 	for _, service := range conf.Services {
-		impl, err := push.NewFromConfig(service.Type, service.Other)
+		impl, err := push.NewFromConfig(context.TODO(), service.Type, service.Other)
 		if err != nil {
 			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
