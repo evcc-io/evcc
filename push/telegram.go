@@ -43,6 +43,8 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (M
 
 	bot, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
 		log.DEBUG.Println(err)
+	}), bot.WithDebugHandler(func(format string, args ...interface{}) {
+		log.TRACE.Printf(format, args...)
 	}))
 	if err != nil {
 		return nil, errors.New("invalid bot token")
