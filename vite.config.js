@@ -25,6 +25,7 @@ export default defineConfig({
   plugins: [
     legacy({
       targets: ["defaults", "iOS >= 14"],
+      modernPolyfills: ["es.promise.all-settled"],
     }),
     vuePlugin({
       template: {
