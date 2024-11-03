@@ -4,25 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
-	"strconv"
 	"time"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/spf13/cast"
 )
 
 // Collect collects and combines JSON maps
 type Collect struct {
+	*getter
 	log     *util.Logger
 	get     func() (string, error)
 	data    map[string]any
 	cache   time.Duration
 	timeout time.Duration
 	updated time.Time
-	scale   float64
 }
 
 func init() {
@@ -33,12 +30,10 @@ func init() {
 func NewCollectProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		Get     Config
-		Scale   float64
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
 		Timeout: request.Timeout,
-		Scale:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,21 +45,21 @@ func NewCollectProviderFromConfig(ctx context.Context, other map[string]interfac
 		return nil, fmt.Errorf("get: %w", err)
 	}
 
-	p, err := NewCollectProvider(g, cc.Timeout, cc.Scale, cc.Cache)
+	p, err := NewCollectProvider(g, cc.Timeout, cc.Cache)
+	p.getter = defaultGetters(p, 1)
 
 	return p, err
 }
 
 // NewCollectProvider creates a collect provider.
 // Collect execution is aborted after given timeout.
-func NewCollectProvider(get func() (string, error), timeout time.Duration, scale float64, cache time.Duration) (*Collect, error) {
+func NewCollectProvider(get func() (string, error), timeout time.Duration, cache time.Duration) (*Collect, error) {
 	s := &Collect{
 		log:     util.NewLogger("collect"),
 		get:     get,
 		data:    make(map[string]any),
 		cache:   cache,
 		timeout: timeout,
-		scale:   scale,
 	}
 
 	return s, nil
@@ -96,53 +91,4 @@ func (p *Collect) StringGetter() (func() (string, error), error) {
 		b, err := json.Marshal(p.data)
 		return string(b), err
 	}, nil
-}
-
-var _ FloatProvider = (*Collect)(nil)
-
-// FloatGetter parses float from exec result
-func (p *Collect) FloatGetter() (func() (float64, error), error) {
-	g, err := p.StringGetter()
-
-	return func() (float64, error) {
-		s, err := g()
-		if err != nil {
-			return 0, err
-		}
-
-		f, err := strconv.ParseFloat(s, 64)
-		if err == nil {
-			f *= p.scale
-		}
-
-		return f, err
-	}, err
-}
-
-var _ IntProvider = (*Collect)(nil)
-
-// IntGetter parses int64 from exec result
-func (p *Collect) IntGetter() (func() (int64, error), error) {
-	g, err := p.FloatGetter()
-
-	return func() (int64, error) {
-		f, err := g()
-		return int64(math.Round(f)), err
-	}, err
-}
-
-var _ BoolProvider = (*Collect)(nil)
-
-// BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (p *Collect) BoolGetter() (func() (bool, error), error) {
-	g, err := p.StringGetter()
-
-	return func() (bool, error) {
-		s, err := g()
-		if err != nil {
-			return false, err
-		}
-
-		return cast.ToBoolE(s)
-	}, err
 }
