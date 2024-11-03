@@ -8,7 +8,7 @@ products:
       generic: EM24
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |

@@ -5,7 +5,7 @@ products:
       generic: MPM3PM
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
