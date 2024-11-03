@@ -11,9 +11,12 @@ var registry = reg.New[Provider]("plugin")
 
 // provider types
 type (
-	Provider    interface{}
-	IntProvider interface {
-		IntGetter() (func() (int64, error), error)
+	Provider interface{}
+	Getters  interface {
+		StringProvider
+		FloatProvider
+		IntProvider
+		BoolProvider
 	}
 	StringProvider interface {
 		StringGetter() (func() (string, error), error)
@@ -21,17 +24,20 @@ type (
 	FloatProvider interface {
 		FloatGetter() (func() (float64, error), error)
 	}
+	IntProvider interface {
+		IntGetter() (func() (int64, error), error)
+	}
 	BoolProvider interface {
 		BoolGetter() (func() (bool, error), error)
-	}
-	SetIntProvider interface {
-		IntSetter(param string) (func(int64) error, error)
 	}
 	SetStringProvider interface {
 		StringSetter(param string) (func(string) error, error)
 	}
 	SetFloatProvider interface {
 		FloatSetter(param string) (func(float64) error, error)
+	}
+	SetIntProvider interface {
+		IntSetter(param string) (func(int64) error, error)
 	}
 	SetBoolProvider interface {
 		BoolSetter(param string) (func(bool) error, error)

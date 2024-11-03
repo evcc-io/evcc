@@ -178,7 +178,7 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	return p.val, p.err
 }
 
-var _ StringProvider = (*HTTP)(nil)
+var _ Getters = (*HTTP)(nil)
 
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
