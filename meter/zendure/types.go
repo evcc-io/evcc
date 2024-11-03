@@ -6,12 +6,12 @@ type CredentialsRequest struct {
 }
 
 type CredentialsResponse struct {
-	Success string `json:"success"` // true,
+	Success bool `json:"success"`
 	Data    struct {
-		AppKey  string `json:"appKey"`  // "zendure",
-		Secret  string `json:"secret"`  // "zendureSecret",
-		MqttUrl string `json:"mqttUrl"` // "mqtt.zen-iot.com",
-		Port    int    `json:"port"`    // 1883
+		AppKey  string `json:"appKey"`
+		Secret  string `json:"secret"`
+		MqttUrl string `json:"mqttUrl"`
+		Port    int    `json:"port"`
 	}
-	Msg string `json:"msg"` // "Successful operation"
+	Msg string `json:"msg"`
 }

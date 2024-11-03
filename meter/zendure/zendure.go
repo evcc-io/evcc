@@ -1,6 +1,7 @@
 package zendure
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
@@ -9,7 +10,7 @@ import (
 
 const CredentialsUri = "https://app.zendure.tech/eu/developer/api/apply"
 
-func MqttCredentials(serial, account string) (CredentialsResponse, error) {
+func MqttCredentials(account, serial string) (CredentialsResponse, error) {
 	client := request.NewHelper(util.NewLogger("zendure"))
 
 	data := CredentialsRequest{
@@ -21,6 +22,10 @@ func MqttCredentials(serial, account string) (CredentialsResponse, error) {
 
 	var res CredentialsResponse
 	err := client.DoJSON(req, &res)
+
+	if err == nil && !res.Success {
+		err = errors.New(res.Msg)
+	}
 
 	return res, err
 }
