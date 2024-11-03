@@ -42,7 +42,7 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (M
 	}
 
 	bot, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
-		log.DEBUG.Println(err)
+		log.ERROR.Println(err)
 	}), bot.WithDebugHandler(func(format string, args ...interface{}) {
 		log.TRACE.Printf(format, args...)
 	}))
@@ -51,13 +51,11 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (M
 	}
 
 	m.bot = bot
-	bot.Start(ctx)
 
-	for _, i := range cc.Chats {
-		log.Redact(strconv.FormatInt(i, 10))
-	}
+	go bot.Start(ctx)
 
 	for _, chat := range cc.Chats {
+		log.Redact(strconv.FormatInt(chat, 10))
 		m.chats[chat] = struct{}{}
 	}
 
