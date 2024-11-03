@@ -34,7 +34,7 @@ import (
 type Em2Go struct {
 	log        *util.Logger
 	conn       *modbus.Connection
-	current    int64
+	current    uint16
 	workaround bool
 	phases     int
 }
@@ -99,7 +99,7 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 	wb := &Em2Go{
 		log:        log,
 		conn:       conn,
-		current:    6,
+		current:    60,
 		workaround: false,
 	}
 
@@ -177,17 +177,27 @@ func (wb *Em2Go) Enable(enable bool) error {
 	}
 
 	// re-set 1p if required
-	if wb.workaround && wb.phases == 1 && enable {
-		binary.BigEndian.PutUint16(b, uint16(wb.phases))
-		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
-			return err
+	if wb.workaround && enable {
+		if wb.phases == 1 {
+			binary.BigEndian.PutUint16(b, uint16(wb.phases))
+			if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
+				return err
+			}
 		}
 
 		// send default current
-		return wb.MaxCurrent(wb.current)
+		return wb.setCurrent(wb.current)
 	}
 
 	return nil
+}
+
+func (wb *Em2Go) setCurrent(current uint16) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, current)
+
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrentLimit, 1, b)
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -197,10 +207,11 @@ func (wb *Em2Go) MaxCurrent(current int64) error {
 
 // maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Em2Go) maxCurrentMillis(current float64) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(10*current))
-
-	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrentLimit, 1, b)
+	curr := uint16(current * 10)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.current = curr
+	}
 	return err
 }
 

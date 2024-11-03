@@ -5,7 +5,7 @@ products:
       generic: A43, A44, B23, B24
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
