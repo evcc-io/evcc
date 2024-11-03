@@ -15,3 +15,19 @@ type CredentialsResponse struct {
 	}
 	Msg string `json:"msg"`
 }
+
+type Command struct {
+	CommandTopic      string `json:"command_topic"`
+	DeviceClass       string `json:"device_class"`
+	ElectricLevel     int    `json:"electricLevel"`
+	Name              string `json:"name"`
+	PayloadOff        bool   `json:"payload_off"`
+	PayloadOn         bool   `json:"payload_on"`
+	Sn                string `json:"sn"`
+	StateOff          bool   `json:"state_off"`
+	StateOn           bool   `json:"state_on"`
+	StateTopic        string `json:"state_topic"`
+	UniqueId          string `json:"unique_id"`
+	UnitOfMeasurement string `json:"unit_of_measurement"`
+	ValueTemplate     string `json:"value_template"`
+}
