@@ -106,7 +106,7 @@ func (p *Script) exec(script string) (string, error) {
 	return s, nil
 }
 
-var _ StringProvider = (*Script)(nil)
+var _ Getters = (*Script)(nil)
 
 // StringGetter returns string from exec result. Only STDOUT is considered.
 func (p *Script) StringGetter() (func() (string, error), error) {
