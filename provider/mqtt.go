@@ -113,7 +113,7 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	return h, err
 }
 
-var _ StringProvider = (*Mqtt)(nil)
+var _ Getters = (*Mqtt)(nil)
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) StringGetter() (func() (string, error), error) {

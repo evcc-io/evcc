@@ -145,7 +145,7 @@ func (p *Socket) run(errC chan error) {
 	}
 }
 
-var _ StringProvider = (*Socket)(nil)
+var _ Getters = (*Socket)(nil)
 
 // StringGetter sends string request
 func (p *Socket) StringGetter() (func() (string, error), error) {
