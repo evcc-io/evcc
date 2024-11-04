@@ -72,10 +72,10 @@ func evcc(client *mqtt.Client, commands map[string]zendure.Command) {
 
 		new := grid + res
 
-		if cmd, ok := commands["outputHomePower"]; ok && new >= 0 {
+		if cmd, ok := commands["outputLimit"]; ok && new >= 0 {
 			if new = max(0, min(new-Margin, MaxDischarge)); new != grid {
 				fmt.Println("vvv")
-				fmt.Println("set outputHomePower:", new)
+				fmt.Println("set outputLimit:", new)
 
 				client.Publish(cmd.CommandTopic, false, strconv.FormatInt(new, 10))
 
