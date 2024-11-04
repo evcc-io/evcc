@@ -8,8 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
-	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
 type Protocol int
@@ -109,6 +107,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 	}
 
 	res := &Connection{
+		slaveID:    slaveID,
 		Connection: conn.Clone(slaveID),
 		logger:     conn.logger,
 	}
@@ -154,42 +153,4 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 	default:
 		return registeredConnection(uri, proto, meters.NewTCP(uri))
 	}
-}
-
-// NewDevice creates physical modbus device from config
-func NewDevice(model string, subdevice int) (device meters.Device, err error) {
-	if IsRS485(model) {
-		device, err = rs485.NewDevice(strings.ToUpper(model))
-	} else {
-		device = sunspec.NewDevice(strings.ToUpper(model), subdevice)
-	}
-
-	if device == nil {
-		err = errors.New("invalid modbus configuration: need either uri or device")
-	}
-
-	return device, err
-}
-
-// IsRS485 determines if model is a known MBMD rs485 device model
-func IsRS485(model string) bool {
-	for k := range rs485.Producers {
-		if strings.EqualFold(model, k) {
-			return true
-		}
-	}
-	return false
-}
-
-// RS485FindDeviceOp checks is RS485 device supports operation
-func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op rs485.Operation, err error) {
-	ops := device.Producer().Produce()
-
-	for _, op := range ops {
-		if op.IEC61850 == measurement {
-			return op, nil
-		}
-	}
-
-	return op, fmt.Errorf("unsupported measurement: %s", measurement.String())
 }

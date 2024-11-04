@@ -38,10 +38,10 @@
 					</div>
 					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
 						<input
+							v-model="search"
 							type="search"
 							class="form-control search"
 							:placeholder="$t('log.search')"
-							v-model="search"
 							data-testid="log-search"
 						/>
 					</div>
@@ -63,7 +63,7 @@
 							:modelValue="areas"
 							:options="areaOptions"
 							:selectAllLabel="$t('log.selectAll')"
-							@update:modelValue="changeAreas"
+							@update:model-value="changeAreas"
 							@open="updateAreas()"
 						>
 							{{ areasLabel }}
@@ -72,8 +72,8 @@
 				</div>
 				<hr class="my-0" />
 				<div
-					class="overflow-y-scroll pt-2 pb-4 flex-grow-1 d-flex flex-column"
 					ref="log"
+					class="overflow-y-scroll pt-2 pb-4 flex-grow-1 d-flex flex-column"
 					@scroll="onScroll"
 				>
 					<div v-if="showMoreButton" class="my-2">
@@ -142,13 +142,6 @@ export default {
 			busy: false,
 		};
 	},
-	mounted() {
-		this.startInterval();
-		this.updateAreas();
-	},
-	unmounted() {
-		this.stopInterval();
-	},
 	computed: {
 		filteredLines() {
 			return this.lines.filter(
@@ -210,6 +203,13 @@ export default {
 		level() {
 			this.updateLogs();
 		},
+	},
+	mounted() {
+		this.startInterval();
+		this.updateAreas();
+	},
+	unmounted() {
+		this.stopInterval();
 	},
 	methods: {
 		async updateLogs(showAll) {

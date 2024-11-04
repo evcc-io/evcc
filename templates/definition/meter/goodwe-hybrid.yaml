@@ -18,6 +18,7 @@ params:
       - 2
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -74,6 +75,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -113,7 +115,7 @@ render: |
           set:
           - source: const
             value: 1 # Normal operation mode
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -122,7 +124,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 0 # Maximum allowed power from Grid in W. 
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -134,8 +136,8 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 8 # EMSPowerMode 8 disables discharge. Charging possible. Charge from PV+AC according to the EMSPowerSet below
-            set: 
+            value: 2 # EMSPowerMode 2 "Charge-PV"-Mode. If EMSPowerSet=0 only PV is used to charge. Value 6 "Conserve"-Mode can be alternatively used.
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -144,7 +146,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 0 # Maximum allowed power from Grid in W. If >0 battery will be charged also from Grid in Standby mode.
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -156,8 +158,8 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2 # Charge from PV+AC according to the EMSPowerSet below
-            set: 
+            value: 2 # Charge from PV+AC according to the EMSPowerSet below. PV-Preferred. "Import-AC"-Mode (Value: 4) would prefer Grid-Power and reduce PV-Power generated.
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -166,7 +168,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:

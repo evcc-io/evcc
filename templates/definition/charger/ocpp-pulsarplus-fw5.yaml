@@ -23,7 +23,7 @@ requirements:
 params:
   - preset: ocpp
   - name: metervalues
-    default: -Current.Offered,-Power.Offered
+    default: -Current.Offered,Power.Offered
 render: |
   {{ include "ocpp" . }}
   remotestart: true 

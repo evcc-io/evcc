@@ -50,6 +50,8 @@ func (r Register) Length() (uint16, error) {
 		return 2, nil
 	case strings.Contains(enc, "64"):
 		return 4, nil
+	case strings.EqualFold(enc, "bytes"):
+		return 0, nil
 	default:
 		return 0, fmt.Errorf("invalid register length: %s", enc)
 	}

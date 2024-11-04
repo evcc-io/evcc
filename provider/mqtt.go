@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
@@ -10,22 +11,22 @@ import (
 
 // Mqtt provider
 type Mqtt struct {
+	*getter
 	log      *util.Logger
 	client   *mqtt.Client
 	topic    string
 	retained bool
 	payload  string
-	scale    float64
 	timeout  time.Duration
 	pipeline *pipeline.Pipeline
 }
 
 func init() {
-	registry.Add("mqtt", NewMqttFromConfig)
+	registry.AddCtx("mqtt", NewMqttFromConfig)
 }
 
 // NewMqttFromConfig creates Mqtt provider
-func NewMqttFromConfig(other map[string]interface{}) (Provider, error) {
+func NewMqttFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters
@@ -41,7 +42,7 @@ func NewMqttFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("mqtt")
+	log := contextLogger(ctx, util.NewLogger("mqtt"))
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {
@@ -67,9 +68,10 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.D
 		log:     log,
 		client:  client,
 		topic:   topic,
-		scale:   1,
 		timeout: timeout,
 	}
+
+	m.getter = defaultGetters(m, 1)
 
 	return m
 }
@@ -102,7 +104,6 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
 		topic:    m.topic,
-		scale:    m.scale,
 		pipeline: m.pipeline,
 		val:      util.NewMonitor[string](m.timeout),
 	}
@@ -111,36 +112,12 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	return h, err
 }
 
-var _ FloatProvider = (*Mqtt)(nil)
-
-// FloatGetter creates handler for float64 from MQTT topic that returns cached value
-func (m *Mqtt) FloatGetter() (func() (float64, error), error) {
-	h, err := m.newReceiver()
-	return h.floatGetter, err
-}
-
-var _ IntProvider = (*Mqtt)(nil)
-
-// IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *Mqtt) IntGetter() (func() (int64, error), error) {
-	h, err := m.newReceiver()
-	return h.intGetter, err
-}
-
-var _ StringProvider = (*Mqtt)(nil)
+var _ Getters = (*Mqtt)(nil)
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) StringGetter() (func() (string, error), error) {
 	h, err := m.newReceiver()
-	return h.stringGetter, err
-}
-
-var _ BoolProvider = (*Mqtt)(nil)
-
-// BoolGetter creates handler for string from MQTT topic that returns cached value
-func (m *Mqtt) BoolGetter() (func() (bool, error), error) {
-	h, err := m.newReceiver()
-	return h.boolGetter, err
+	return h.value, err
 }
 
 var _ SetIntProvider = (*Mqtt)(nil)

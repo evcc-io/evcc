@@ -78,7 +78,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		ts, err := time.Parse(time.RFC3339, vars["time"])
+		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

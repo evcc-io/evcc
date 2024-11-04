@@ -91,7 +91,7 @@
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" />
+					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -102,6 +102,7 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
+		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
 	</div>
 </template>
 
@@ -127,6 +128,8 @@ export default {
 		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
+		batteryHold: { type: Boolean, default: false },
+		batteryGridCharge: { type: Boolean, default: false },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
@@ -302,5 +305,18 @@ html.dark .grid-import {
 }
 .visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
+}
+.battery-hold {
+	position: absolute;
+	top: 2.5rem;
+	right: -0.25rem;
+	color: var(--evcc-gray);
+	opacity: 0;
+	transition-property: opacity;
+	transition-duration: var(--evcc-transition-medium);
+	transition-timing-function: linear;
+}
+.battery-hold--active {
+	opacity: 1;
 }
 </style>

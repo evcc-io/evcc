@@ -47,7 +47,7 @@ export default {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 1_000_000) {
+        if (watt >= 10_000_000) {
           unit = POWER_UNIT.MW;
         } else if (watt >= 1000 || 0 === watt) {
           unit = POWER_UNIT.KW;
@@ -81,6 +81,20 @@ export default {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);
+    },
+    fmtGrams: function (gramms, withUnit = true) {
+      let unit = "gram";
+      let value = gramms;
+      if (gramms >= 1000) {
+        unit = "kilogram";
+        value = gramms / 1000;
+      }
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: withUnit ? "unit" : "decimal",
+        unit,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
     },
     fmtCo2Short: function (gramms) {
       return `${this.fmtNumber(gramms, 0)} g`;
@@ -150,13 +164,17 @@ export default {
       return tomorrow.toDateString() === date.toDateString();
     },
     weekdayPrefix: function (date) {
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       if (this.isToday(date)) {
-        return ""; //rtf.formatToParts(0, "day")[0].value;
+        return "";
       }
       if (this.isTomorrow(date)) {
-        return rtf.formatToParts(1, "day")[0].value;
+        try {
+          const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+          return rtf.formatToParts(1, "day")[0].value;
+        } catch (e) {
+          console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
+          return "tomorrow";
+        }
       }
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
@@ -203,6 +221,11 @@ export default {
         month: short ? "short" : "long",
       }).format(date);
     },
+    fmtYear: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        year: "numeric",
+      }).format(date);
+    },
     fmtDayMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         day: "numeric",
@@ -210,16 +233,29 @@ export default {
         year: "numeric",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+    fmtDayMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtDayOfMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+      }).format(date);
+    },
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
+      const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
-        currencyDisplay: "code",
+        currencyDisplay,
         maximumFractionDigits: decimals ? undefined : 0,
-      })
-        .format(amout)
-        .replace(currency, "")
-        .trim();
+      }).format(amout);
+
+      return withSymbol ? result : result.replace(currency, "").trim();
     },
     fmtCurrencySymbol: function (currency = "EUR") {
       const symbols = { EUR: "€", USD: "$" };
@@ -256,12 +292,17 @@ export default {
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)
-        if (Math.abs(elapsed) > units[u] || u == "second")
-          return rtf.format(Math.round(elapsed / units[u]), u);
+        if (Math.abs(elapsed) > units[u] || u == "second") {
+          try {
+            const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+            return rtf.format(Math.round(elapsed / units[u]), u);
+          } catch (e) {
+            console.warn("fmtTimeAgo: Intl.RelativeTimeFormat not supported", e);
+            return `${elapsed} ${u}s ago`;
+          }
+        }
     },
     fmtSocOption: function (soc, rangePerSoc, distanceUnit, heating) {
       let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;

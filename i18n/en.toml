@@ -34,10 +34,8 @@ title = "Load Management"
 [config.control]
 description = "Usually the default values are fine. Only change them if you know what you are doing."
 descriptionInterval = "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oscillations and unwanted behavior."
-descriptionMaxGridSupply = "Only relevant for hybrid inverters that are not able to output the full DC generation power to the home via AC. This szenario can lead to unwanted grid use, since evcc assumes the full DC power is available. Use a value of at least 50 W to prevent this."
 descriptionResidualPower = "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use."
 labelInterval = "Update interval"
-labelMaxGridSupply = "Max. grid supply while charging"
 labelResidualPower = "Residual power"
 title = "Control behavior"
 
@@ -62,6 +60,7 @@ enabled = "Enabled"
 energy = "Energy"
 feedinPrice = "Feed-in price"
 gridPrice = "Grid price"
+hemsType = "System"
 no = "no"
 odometer = "Odometer"
 org = "Organization"
@@ -423,13 +422,14 @@ co2 = "⌀ CO₂"
 duration = "Duration"
 fallbackName = "Charging point"
 power = "Power"
-price = "Σ Price"
+price = "Cost"
 remaining = "Remaining"
 remoteDisabledHard = "{source}: turned off"
 remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
 [main.loadpointSettings]
+batteryUsage = "Home Battery"
 currents = "Charging Current"
 default = "default"
 disclaimerHint = "Note:"
@@ -438,6 +438,12 @@ smartCostCheap = "Cheap Grid Charging"
 smartCostClean = "Clean Grid Charging"
 title = "Settings {0}"
 vehicle = "Vehicle"
+
+[main.loadpointSettings.batteryBoost]
+description = "Fast charge from home battery."
+label = "Battery Boost"
+mode = "Only available in solar and min+solar mode."
+once = "Boost active for this charging session."
 
 [main.loadpointSettings.limitSoc]
 description = "Charging limit that is used when this vehicle is connected."
@@ -536,6 +542,7 @@ vehicleLimit = "Vehicle limit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
+batteryBoost = "Battery boost active."
 charging = "Charging…"
 cheapEnergyCharging = "Cheap energy available."
 cheapEnergyNextStart = "Cheap energy in {duration}."
@@ -613,12 +620,32 @@ downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
 noData = "No charging sessions this month."
-price = "Σ Price"
+price = "Cost"
 reallyDelete = "Do you really want to delete this session?"
+showIndividualEntries = "Show individual sessions"
 solar = "Solar"
 title = "Charging Sessions"
 total = "Total"
 vehicle = "Vehicle"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Price {byGroup}"
+byGroupLoadpoint = "by Charging Point"
+byGroupVehicle = "by Vehicle"
+energy = "Charged Energy"
+energyGrouped = "Solar vs. Grid Energy"
+energyGroupedByGroup = "Energy {byGroup}"
+energySubSolar = "{value} solar"
+energySubTotal = "{value} total"
+groupedCo2ByGroup = "CO₂-Amount {byGroup}"
+groupedPriceByGroup = "Total Cost {byGroup}"
+historyCo2 = "CO₂-Emissions"
+historyCo2Sub = "{value} total"
+historyPrice = "Charging Costs"
+historyPriceSub = "{value} total"
+solar = "Solar Share Over Year"
+solarByGroup = "Solar Share {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
@@ -640,6 +667,27 @@ vehicle = "Vehicle"
 allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
 filter = "Filter"
+
+[sessions.group]
+co2 = "Emissions"
+grid = "Grid"
+price = "Price"
+self = "Solar"
+
+[sessions.groupBy]
+loadpoint = "Charging point"
+none = "Total"
+vehicle = "Vehicle"
+
+[sessions.period]
+month = "Month"
+total = "Total"
+year = "Year"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Price"
+solar = "Solar"
 
 [settings]
 title = "User Interface"

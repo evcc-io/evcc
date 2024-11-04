@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -13,11 +14,11 @@ type calcProvider struct {
 }
 
 func init() {
-	registry.Add("calc", NewCalcFromConfig)
+	registry.AddCtx("calc", NewCalcFromConfig)
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
+func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config
@@ -38,7 +39,7 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	for idx, cc := range cc.Add {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
@@ -46,7 +47,7 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	for idx, cc := range cc.Mul {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
@@ -54,7 +55,7 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	for idx, cc := range cc.Div {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("div[%d]: %w", idx, err)
 		}
@@ -62,7 +63,7 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	if cc.Sign != nil {
-		f, err := NewFloatGetterFromConfig(*cc.Sign)
+		f, err := NewFloatGetterFromConfig(ctx, *cc.Sign)
 		if err != nil {
 			return nil, fmt.Errorf("sign: %w", err)
 		}

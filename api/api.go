@@ -44,6 +44,11 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
+// MaxACPower provides max AC power in W
+type MaxACPower interface {
+	MaxACPower() float64
+}
+
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
@@ -235,4 +240,9 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+}
+
+// Redactor is an interface to redact sensitive data
+type Redactor interface {
+	Redacted() any
 }

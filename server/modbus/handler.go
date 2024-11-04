@@ -19,7 +19,7 @@ type handler struct {
 
 func bytesAsUint16(b []byte) []uint16 {
 	u := make([]uint16, 0, len(b)/2)
-	for i := 0; i < len(b)/2; i++ {
+	for i := range len(b) / 2 {
 		u = append(u, binary.BigEndian.Uint16(b[2*i:]))
 	}
 	return u

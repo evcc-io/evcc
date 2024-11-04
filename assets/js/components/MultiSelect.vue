@@ -1,16 +1,16 @@
 <template>
 	<div>
 		<button
+			:id="id"
 			class="form-select text-start text-nowrap"
 			type="button"
-			:id="id"
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
 			data-bs-auto-close="outside"
 		>
 			<slot></slot>
 		</button>
-		<ul class="dropdown-menu dropdown-menu-end" ref="dropdown" :aria-labelledby="id">
+		<ul ref="dropdown" class="dropdown-menu dropdown-menu-end" :aria-labelledby="id">
 			<template v-if="selectAllLabel">
 				<li class="dropdown-item p-0">
 					<label class="form-check px-3 py-2">
@@ -18,8 +18,8 @@
 							class="form-check-input ms-0 me-2"
 							type="checkbox"
 							value="all"
-							@change="toggleCheckAll()"
 							:checked="allOptionsSelected"
+							@change="toggleCheckAll()"
 						/>
 						<div class="form-check-label">{{ selectAllLabel }}</div>
 					</label>
@@ -29,11 +29,11 @@
 			<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
 				<label class="form-check px-3 py-2 d-flex" :for="option.value">
 					<input
+						:id="option.value"
+						v-model="internalValue"
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
-						:id="option.value"
 						:value="option.value"
-						v-model="internalValue"
 					/>
 					<div class="form-check-label">
 						{{ option.name }}
@@ -60,12 +60,6 @@ export default {
 		return {
 			internalValue: [...this.value],
 		};
-	},
-	mounted() {
-		this.$refs.dropdown.addEventListener("show.bs.dropdown", this.open);
-	},
-	unmounted() {
-		this.$refs.dropdown?.removeEventListener("show.bs.dropdown", this.open);
 	},
 	computed: {
 		allOptionsSelected() {
@@ -109,6 +103,12 @@ export default {
 				this.$emit("update:modelValue", newValue);
 			}
 		},
+	},
+	mounted() {
+		this.$refs.dropdown.addEventListener("show.bs.dropdown", this.open);
+	},
+	unmounted() {
+		this.$refs.dropdown?.removeEventListener("show.bs.dropdown", this.open);
 	},
 	methods: {
 		open() {

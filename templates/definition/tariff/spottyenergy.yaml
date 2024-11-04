@@ -1,0 +1,30 @@
+template: spottyenergy
+products:
+  - brand: Spotty Energie
+requirements:
+  description:
+    de: "Nur für Österreich verfügbar."
+    en: "Only available for Austria."
+group: price
+params:
+  - name: contractid
+    example: ffffffff-4444-6666-2222-aaaaaabbbbbb
+    required: true
+    help:
+      de: "Die Vertragsnummer bekommst du im Kundenportal https://i.spottyenergie.at/"
+      en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
+  - name: pricetype
+    default: CONSUMPTION
+    validvalues: ["MARKET", "CONSUMPTION", "GENERATION"]
+    required: true
+    help:
+      de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"
+      en: "Price type, either spotmarket price, consumption price or generation compensation (if contractually agreed), more info at https://www.spottyenergie.at/blog/energie-smart-produzieren"
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ .contractid }}
+    jq: '[.[] | {start: .from, end: (.from | fromdate + 3600 | todate), price: (.price/100)}] | tostring'

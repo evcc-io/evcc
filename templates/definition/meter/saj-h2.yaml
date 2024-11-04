@@ -115,10 +115,10 @@ render: |
     - case: 1 # normal
       set:
         source: sequence
-        set: 
+        set:
         - source: const
           value: {{ .defaultmode }}
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -127,7 +127,7 @@ render: |
               decode: int16
         - source: const
           value: {{ .minsoc }} 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -140,7 +140,7 @@ render: |
         set:
         - source: const
           value: {{ .defaultmode }}
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -149,7 +149,7 @@ render: |
               decode: int16
         - source: const
           value: {{ .maxsoc }}
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -162,7 +162,7 @@ render: |
         set:
         - source: const
           value: 1 # time_mode
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -171,7 +171,7 @@ render: |
               decode: int16
         - source: const
           value: 1 # enable
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -180,7 +180,7 @@ render: |
               decode: int16
         - source: const
           value: 0 # start (00:00)
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -189,7 +189,7 @@ render: |
               decode: int16
         - source: const
           value: 0x173B # end (23:59)
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -198,7 +198,7 @@ render: |
               decode: int16
         - source: const
           value: 0x7F64 # end (0xFF / 100%)
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:

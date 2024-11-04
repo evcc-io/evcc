@@ -25,6 +25,7 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -71,6 +72,7 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

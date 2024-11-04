@@ -3,7 +3,7 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
-				<div class="alert alert-danger my-4 pb-0" role="alert" v-if="$hiddenFeatures()">
+				<div v-if="$hiddenFeatures()" class="alert alert-danger my-4 pb-0" role="alert">
 					<p>
 						<strong>Experimental! 🧪</strong>
 						Only use these features if you are in the mood for adventure and not afraid
@@ -227,8 +227,8 @@
 										:tags="yamlTags('circuits')"
 									/>
 									<template
-										v-else
 										v-for="(circuit, idx) in circuits"
+										v-else
 										:key="circuit.name"
 									>
 										<hr v-if="idx > 0" />
@@ -261,7 +261,7 @@
 							>
 								<template #icon><HemsIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('hems')" />
+									<DeviceTags :tags="hemsTags" />
 								</template>
 							</DeviceCard>
 						</ul>
@@ -374,6 +374,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 	},
+	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
 		notifications: Array,
@@ -394,11 +395,9 @@ export default {
 				eebus: false,
 				circuits: false,
 				modbusproxy: false,
-				hems: false,
 			},
 		};
 	},
-	mixins: [formatter, collector],
 	computed: {
 		fatalClass() {
 			return store.state?.fatal?.class;
@@ -452,6 +451,15 @@ export default {
 			const result = { url: { value: url } };
 			if (database) result.bucket = { value: database };
 			if (org) result.org = { value: org };
+			return result;
+		},
+		hemsTags() {
+			const result = { configured: { value: false } };
+			const { type } = store.state?.hems || {};
+			if (type) {
+				result.configured.value = true;
+				result.hemsType = { value: type };
+			}
 			return result;
 		},
 	},

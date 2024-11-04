@@ -17,6 +17,14 @@ params:
     baudrate: 19200
   - name: capacity
     advanced: true
+  - name: maxacpower
+  - name: defaultmode
+    description:
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
+    default: 0 # "SelfUse"
+    usages: ["battery"]
+    advanced: true
 render: |
   type: custom
   power:
@@ -60,6 +68,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -82,7 +91,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: 0 # self use mode
+        value: {{ .defaultmode }}
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}

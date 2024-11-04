@@ -1,0 +1,58 @@
+template: volvo2mqtt
+products:
+  - description:
+      generic: volvo2mqtt
+group: generic
+requirements:
+  description:
+    en: Requires MQTT broker configuration and a volvo2mqtt installation https://github.com/Dielee/volvo2mqtt
+    de: Erforderlich ist eine konfigurierte MQTT Broker-Konfiguration und eine volvo2mqtt-Installation https://github.com/Dielee/volvo2mqtt.
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: vin
+    required: true
+    help:
+      de: Erforderlich
+      en: Required
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: timeout
+    default: 720h
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    source: mqtt
+    topic: homeassistant/sensor/{{ .vin }}_battery_charge_level/state
+    timeout: {{ .timeout }}
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: homeassistant/sensor/{{ .vin }}_charging_connection_status/state
+      timeout: {{ .timeout }}
+    charging:
+      source: mqtt
+      topic: homeassistant/sensor/{{ .vin }}_charging_system_status/state
+      timeout: {{ .timeout }}
+  range:
+    source: mqtt
+    topic: homeassistant/sensor/{{ .vin }}_electric_range/state
+    timeout: {{ .timeout }}

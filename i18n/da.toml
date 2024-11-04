@@ -37,10 +37,8 @@ title = "Belastningsstyring"
 [config.control]
 description = "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem."
 descriptionInterval = "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat."
-descriptionMaxGridSupply = "Kun relevant for hybrid-invertere, der ikke er i stand til at udsende den fulde DC-effekt til hjemmet via AC. Dette scenario kan føre til uønsket netbrug, da evcc antager, at den fulde DC-effekt er tilgængelig. Brug en værdi på mindst 50 W for at forhindre dette."
 descriptionResidualPower = "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug."
 labelInterval = "Opdateringsinterval"
-labelMaxGridSupply = "Max. forsyning fra elnettet under opladning"
 labelResidualPower = "Tilbageværende effekt"
 title = "kontrol adfærd"
 
@@ -115,7 +113,9 @@ title = "HEMS"
 description = "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data."
 descriptionToken = "Tjek InfluxDB-dokumentation for at lære, hvordan du opretter en. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Bucket"
+labelCheckInsecure = "Tillad selvsignerede certifikater"
 labelDatabase = "Database"
+labelInsecure = "Certifikatvalidering"
 labelOrg = "Organisation"
 labelPassword = "Adgangskode"
 labelToken = "API Token"
@@ -444,6 +444,7 @@ remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
 solar = "solenergi"
 
 [main.loadpointSettings]
+batteryUsage = "Husbatteri"
 currents = "Ladestrøm"
 default = "standard"
 disclaimerHint = "Bemærk:"
@@ -452,6 +453,12 @@ smartCostCheap = "Billig opladning fra elnet"
 smartCostClean = "Grøn opladning fra elnet"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"
+
+[main.loadpointSettings.batteryBoost]
+description = "Hurtig opladning fra husbatteriet"
+label = "Batteri boost"
+mode = "Kun tilgængelig i solar og min+solar mode"
+once = "Boost er aktiveret for denne opladning"
 
 [main.loadpointSettings.limitSoc]
 description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
@@ -554,6 +561,7 @@ vehicleLimit = "Køretøjsgrænse: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Venter på godkendelse."
+batteryBoost = "Boost fra batteri er aktiv"
 charging = "Oplader..."
 cheapEnergyCharging = "Billig energi er tilgængelig."
 cheapEnergyNextStart = "Billig energi i {duration}."

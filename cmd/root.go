@@ -43,6 +43,8 @@ var (
 	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
 	viper *vpr.Viper
+
+	runAsService bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -111,6 +113,8 @@ func Execute() {
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
+	runAsService = true
+
 	// load config and re-configure logging after reading config file
 	var err error
 	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
@@ -207,6 +211,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
+	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
 	// TODO
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 

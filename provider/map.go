@@ -1,22 +1,24 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type mapProvider struct {
+	ctx    context.Context
 	values map[int64]int64
 	set    Config
 }
 
 func init() {
-	registry.Add("map", NewMapFromConfig)
+	registry.AddCtx("map", NewMapFromConfig)
 }
 
 // NewMapFromConfig creates type conversion provider
-func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
+func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Values map[int64]int64
 		Set    Config
@@ -31,6 +33,7 @@ func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &mapProvider{
+		ctx:    ctx,
 		set:    cc.Set,
 		values: cc.Values,
 	}
@@ -41,7 +44,7 @@ func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetIntProvider = (*mapProvider)(nil)
 
 func (o *mapProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(param, o.set)
+	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
 
 	return func(val int64) error {
 		m, ok := o.values[val]

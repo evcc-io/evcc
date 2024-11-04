@@ -37,10 +37,8 @@ title = "Gestión de carga"
 [config.control]
 description = "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo."
 descriptionInterval = " Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados."
-descriptionMaxGridSupply = "Solo relevante para inversores híbridos que no son capaces de producir la fuerza completa de generación DC al hogar a través de AC. Este szenario puede llevar al uso no deseado de la red, ya que evcc asume que la potencia DC completa está disponible. Utilice un valor de al menos 50 W para prevenir esto."
 descriptionResidualPower = "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica"
 labelInterval = "Intervalo de actualización"
-labelMaxGridSupply = "Suministro máximo de red durante la carga"
 labelResidualPower = "Fuerza residual"
 title = "Controlar la conducta"
 
@@ -115,7 +113,9 @@ title = "HEMS"
 description = "Escribe datos de cobro y otras métricas en InfluxDB. Utiliza Grafana u otras herramientas para visualizar los datos"
 descriptionToken = "Consulta la documentación de InfluxDB para saber cómo crear uno. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Bucket"
+labelCheckInsecure = "Permitir certificados autofirmados"
 labelDatabase = "Base de datos"
+labelInsecure = "Verificación de certificado"
 labelOrg = "Organización"
 labelPassword = "Contraseña"
 labelToken = "Token de la API"
@@ -449,6 +449,7 @@ remoteDisabledSoft = "{source}: Carga adaptativa desactivada"
 solar = "Solar"
 
 [main.loadpointSettings]
+batteryUsage = "Batería doméstica"
 currents = "Corriente de carga"
 default = "defecto"
 disclaimerHint = "Nota:"
@@ -457,6 +458,9 @@ smartCostCheap = "Carga barata desde la red"
 smartCostClean = "Carga desde una red ecológica"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
+
+[main.loadpointSettings.batteryBoost]
+description = "Carga rápida desde la batería de casa"
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"

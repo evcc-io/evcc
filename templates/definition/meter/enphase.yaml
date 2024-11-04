@@ -41,7 +41,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .production[] | select(.measurementType == "production").wNow
+    jq: .production | max_by(.wNow).wNow
   energy:
     source: http
     uri: http://{{ .host }}/production.json
@@ -51,7 +51,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .production[] | select(.measurementType == "production").whLifetime
+    jq: .production | max_by(.wNow).whLifetime
     scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
