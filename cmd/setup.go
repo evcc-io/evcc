@@ -474,7 +474,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup machine id
-	if conf.Plant != "" {
+	if err == nil && conf.Plant != "" {
 		// TODO decide wrapping
 		err = machine.CustomID(conf.Plant)
 	}

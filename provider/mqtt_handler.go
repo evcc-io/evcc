@@ -6,7 +6,6 @@ import (
 )
 
 type msgHandler struct {
-	scale    float64
 	topic    string
 	pipeline *pipeline.Pipeline
 	val      *util.Monitor[string]

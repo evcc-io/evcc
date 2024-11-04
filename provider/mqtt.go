@@ -54,8 +54,6 @@ func NewMqttFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		m = m.WithRetained()
 	}
 
-	m.getter = defaultGetters(m, cc.Scale)
-
 	pipe, err := pipeline.New(log, cc.Settings)
 	if err == nil {
 		m = m.WithPipeline(pipe)
@@ -72,6 +70,8 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.D
 		topic:   topic,
 		timeout: timeout,
 	}
+
+	m.getter = defaultGetters(m, 1)
 
 	return m
 }
@@ -104,7 +104,6 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
 		topic:    m.topic,
-		scale:    m.scale,
 		pipeline: m.pipeline,
 		val:      util.NewMonitor[string](m.timeout),
 	}
