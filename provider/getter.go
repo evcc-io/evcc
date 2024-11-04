@@ -47,7 +47,11 @@ func (p *getter) IntGetter() (func() (int64, error), error) {
 
 	return func() (int64, error) {
 		f, err := g()
-		return int64(f), err
+		if err != nil {
+			return 0, err
+		}
+
+		return int64(f), nil
 	}, err
 }
 
