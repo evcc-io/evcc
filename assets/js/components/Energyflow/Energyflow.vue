@@ -103,7 +103,9 @@
 							data-testid="energyflow-entry-batterydischarge"
 							@details-clicked="openBatterySettingsModal"
 						>
-							<template v-if="batteryGridChargeActive" #subline> &nbsp; </template>
+							<template v-if="batteryGridChargeActive" #subline>
+								<div class="d-none d-md-block">&nbsp;</div>
+							</template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
@@ -368,6 +370,9 @@ export default {
 			this.$nextTick(this.updateHeight);
 		},
 		batteryConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+		batteryMode() {
 			this.$nextTick(this.updateHeight);
 		},
 	},

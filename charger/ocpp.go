@@ -364,7 +364,17 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	return c.setCurrent(c.current)
+	enabled, err := c.Enabled()
+	if err != nil {
+		return err
+	}
+
+	var current float64
+	if enabled {
+		current = c.current
+	}
+
+	return c.setCurrent(current)
 }
 
 var _ api.Identifier = (*OCPP)(nil)

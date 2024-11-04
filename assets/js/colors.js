@@ -48,7 +48,8 @@ function updateCssColors() {
 }
 
 // update colors on theme change
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateCssColors);
+const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+darkModeMatcher?.addEventListener("change", updateCssColors);
 updateCssColors();
 
 export const dimColor = (color) => {

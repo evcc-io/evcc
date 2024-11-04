@@ -47,6 +47,7 @@ export default {
 		period: { type: String, default: PERIODS.TOTAL },
 		currency: { type: String, default: "EUR" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
 	computed: {
@@ -313,12 +314,13 @@ export default {
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},
+						suggestedMax: this.suggestedMaxCost,
 						min: 0,
 					},
 					y1: {
 						position: "left",
 						border: { display: false },
-						suggestedMax: this.suggestedMaxCost,
+						suggestedMax: this.suggestedMaxAvgCost,
 						grid: {
 							drawOnChartArea: false,
 						},
