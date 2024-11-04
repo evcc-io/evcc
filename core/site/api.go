@@ -63,4 +63,8 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+
+	GetBatteryMode() api.BatteryMode
+	SetExternalBatteryMode(api.BatteryMode) error
+	SetAutoBatteryMode()
 }

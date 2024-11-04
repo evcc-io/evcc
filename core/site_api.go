@@ -354,3 +354,30 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 		}
 	}
 }
+
+func (site *Site) SetExternalBatteryMode(mode api.BatteryMode) error {
+	site.log.DEBUG.Println("set external battery mode:", mode)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if mode == api.BatteryUnknown {
+		return errors.New("invalid mode")
+	}
+
+	if site.batteryMode != mode {
+		site.batteryModeManual = true
+		site.setBatteryMode(mode)
+	}
+
+	return nil
+}
+
+func (site *Site) SetAutoBatteryMode() {
+	site.log.DEBUG.Println("set battery mode: auto")
+
+	site.Lock()
+	defer site.Unlock()
+
+	site.batteryModeManual = false
+}

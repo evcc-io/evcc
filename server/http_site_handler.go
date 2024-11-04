@@ -241,6 +241,16 @@ func healthHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// setAutoBatteryMode returns sets automatic battery mode
+func setAutoBatteryMode(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		site.SetAutoBatteryMode()
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}
+}
+
 // tariffHandler returns the configured tariff
 func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -53,6 +53,8 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
+	case site.batteryModeManual:
+		// keep current mode
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
