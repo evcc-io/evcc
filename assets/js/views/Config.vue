@@ -502,7 +502,7 @@ export default {
 		},
 		vehicleOptions() {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
-    },
+		},
 		hemsTags() {
 			const result = { configured: { value: false } };
 			const { type } = store.state?.hems || {};
@@ -511,7 +511,7 @@ export default {
 				result.hemsType = { value: type };
 			}
 			return result;
-		}
+		},
 	},
 	watch: {
 		offline() {
