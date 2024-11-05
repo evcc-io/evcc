@@ -318,6 +318,7 @@
 					:id="selectedChargerId"
 					:name="selectedChargerName"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
+					:isSponsor="isSponsor"
 					@added="addCharger"
 					@updated="chargerChanged"
 					@removed="removeCharger"
@@ -511,6 +512,10 @@ export default {
 				result.hemsType = { value: type };
 			}
 			return result;
+		},
+		isSponsor() {
+			const { name } = store.state?.sponsor || {};
+			return !!name;
 		},
 	},
 	watch: {

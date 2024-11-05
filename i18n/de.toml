@@ -208,13 +208,16 @@ system = "System"
 vehicles = "Fahrzeuge"
 
 [config.sponsor]
-addToken = "Sponsortoken eingeben"
-changeToken = "Sponsortoken ändern"
+addToken = "Token eingeben"
+changeToken = "Token ändern"
 description = "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen."
 descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an."
 error = "Das Sponsortoken ist ungültig."
 labelToken = "Sponsortoken"
 title = "Sponsorship"
+tokenRequired = "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät verwenden kannst."
+tokenRequiredLearnMore = "Mehr erfahren."
+trialToken = "Testtoken"
 
 [config.system]
 logs = "Logs"
@@ -292,7 +295,7 @@ thisYear = "dieses Jahr"
 total = "gesamt"
 
 [footer.sponsor]
-becomeSponsor = "Werden Sie Sponsor"
+becomeSponsor = "Werde Sponsor"
 becomeSponsorExtended = "Unterstütze uns direkt. Es gibt auch Sticker."
 confetti = "Lust auf Konfetti?"
 confettiPromise = "Es gibt auch Sticker und digitales Konfetti"

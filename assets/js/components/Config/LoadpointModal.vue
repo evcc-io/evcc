@@ -771,9 +771,6 @@ export default {
 .addButton {
 	min-height: auto;
 }
-.btn-cancel {
-	margin-left: -0.75rem;
-}
 h6 {
 	margin-top: 4rem;
 }

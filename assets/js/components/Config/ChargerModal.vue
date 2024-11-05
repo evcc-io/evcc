@@ -47,6 +47,7 @@
 				</select>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
+			<SponsorTokenRequired v-if="sponsorTokenRequired" />
 			<Markdown v-if="description" :markdown="description" class="my-4" />
 			<FormRow
 				v-if="ocppUrl"
@@ -128,7 +129,7 @@
 				<button
 					type="submit"
 					class="btn btn-primary"
-					:disabled="testRunning || saving"
+					:disabled="testRunning || saving || sponsorTokenRequired"
 					@click.prevent="isNew ? create() : update()"
 				>
 					<span
@@ -156,7 +157,7 @@ import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../GenericModal.vue";
 import Markdown from "./Markdown.vue";
-
+import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 const initialValues = { type: "template" };
 
 function sleep(ms) {
@@ -175,12 +176,14 @@ export default {
 		TestResult,
 		PropertyCollapsible,
 		Markdown,
+		SponsorTokenRequired,
 	},
 	mixins: [test],
 	props: {
 		id: Number,
 		name: String,
 		fade: String,
+		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
@@ -249,6 +252,10 @@ export default {
 		},
 		description() {
 			return this.template?.Requirements?.Description;
+		},
+		sponsorTokenRequired() {
+			const list = this.template?.Requirements?.EVCC || [];
+			return list.includes("sponsorship") && !this.isSponsor;
 		},
 		apiData() {
 			return {
