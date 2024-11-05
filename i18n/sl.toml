@@ -37,10 +37,8 @@ title = "Upravljanje obremenitve"
 [config.control]
 description = "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete."
 descriptionInterval = "Cikel posodabljanja krmilne zanke v sekundah. Določa, kako pogosto evcc bere podatke števca, prilagodi moč polnjenja in posodobi uporabniški vmesnik. Kratki intervali (< 30 s) lahko povzročijo nihanje in neželeno vedenje."
-descriptionMaxGridSupply = "Ustrezno samo za hibridne pretvornike, ki ne morejo oddajati celotne električne energije enosmernega toka v dom prek izmeničnega toka. Ta scenarij lahko povzroči neželeno uporabo omrežja, saj evcc predvideva, da je na voljo polna enosmerna moč. Uporabite vrednost najmanj 50 W da bi to preprečili."
 descriptionResidualPower = "Prestavi točko delovanja krmilne zanke. Če imate domačo baterijo, je priporočljivo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja."
 labelInterval = "Interval posodabljanja"
-labelMaxGridSupply = "Največja napetost omrežja med polnjenjem"
 labelResidualPower = "Preostala moč"
 title = "Nadzor vedenja"
 
@@ -446,6 +444,7 @@ remoteDisabledSoft = "{source}: izklopljeno prilagodljivo solarno polnjenje"
 solar = "Sončna energija"
 
 [main.loadpointSettings]
+batteryUsage = "Domača baterija"
 currents = "Polnilni tok"
 default = "privzeto"
 disclaimerHint = "Opomba:"
@@ -454,6 +453,12 @@ smartCostCheap = "Poceni polnjenje iz omrežja"
 smartCostClean = "Čisto polnjenje iz omrežja"
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
+
+[main.loadpointSettings.batteryBoost]
+description = "Hitro polnjenje iz domače baterije."
+label = "Pospeševanje baterije"
+mode = "Na voljo samo v solarnem in min+solarnem načinu."
+once = "Pospeševanje z baterijo aktivno za to sejo polnjenja."
 
 [main.loadpointSettings.limitSoc]
 description = "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano."
@@ -553,6 +558,7 @@ vehicleLimit = "Omejitev vozila: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Čakanje na avtorizacijo."
+batteryBoost = "Pospeševanje z baterijo aktivno"
 charging = "Polnjenje…"
 cheapEnergyCharging = "Poceni energija je na voljo."
 cheapEnergyNextStart = "Poceni energija čez {duration}."

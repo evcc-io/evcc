@@ -21,6 +21,7 @@ import (
 type MockAPI struct {
 	ctrl     *gomock.Controller
 	recorder *MockAPIMockRecorder
+	isgomock struct{}
 }
 
 // MockAPIMockRecorder is the mock recorder for MockAPI.
@@ -112,27 +113,27 @@ func (mr *MockAPIMockRecorder) Name() *gomock.Call {
 }
 
 // SetLimitSoc mocks base method.
-func (m *MockAPI) SetLimitSoc(arg0 int) {
+func (m *MockAPI) SetLimitSoc(soc int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetLimitSoc", arg0)
+	m.ctrl.Call(m, "SetLimitSoc", soc)
 }
 
 // SetLimitSoc indicates an expected call of SetLimitSoc.
-func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetLimitSoc(soc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), soc)
 }
 
 // SetMinSoc mocks base method.
-func (m *MockAPI) SetMinSoc(arg0 int) {
+func (m *MockAPI) SetMinSoc(soc int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMinSoc", arg0)
+	m.ctrl.Call(m, "SetMinSoc", soc)
 }
 
 // SetMinSoc indicates an expected call of SetMinSoc.
-func (mr *MockAPIMockRecorder) SetMinSoc(arg0 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetMinSoc(soc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), soc)
 }
 
 // SetPlanSoc mocks base method.

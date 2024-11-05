@@ -94,7 +94,9 @@
 					:color-mappings="colorMappings"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
+					:currency="currency"
 					:period="period"
+					:suggested-max-avg-cost="suggestedMaxAvgCost"
 					:suggested-max-cost="suggestedMaxCost"
 				/>
 				<div v-if="showExtraCharts" class="row align-items-start">
@@ -117,9 +119,10 @@
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
-							:suggested-max-price="suggestedMaxCost"
+							:suggested-max-price="suggestedMaxAvgCost"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 					<div class="col-12 col-lg-6 mb-5">
@@ -136,6 +139,7 @@
 							:color-mappings="colorMappings"
 							:group-by="selectedGroup"
 							:cost-type="activeType"
+							:currency="currency"
 						/>
 					</div>
 				</div>
@@ -189,6 +193,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
@@ -590,17 +595,42 @@ export default {
 
 			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth && !isGrouped);
 		},
-		suggestedMaxPrice() {
-			// returns the 90th percentile of all prices
+		suggestedMaxAvgPrice() {
+			// returns the 98th percentile of avg prices for all sessions
 			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
 			const prices = sessionsWithPrice.map((s) => s.pricePerKWh);
-			return this.percentile(prices, 90);
+			return this.percentile(prices, 98);
 		},
-		suggestedMaxCo2() {
-			// returns the 90th percentile of all co2 emissions
+		suggestedMaxAvgCo2() {
+			// returns the 98th percentile of avg co2 emissions for all sessions
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
 			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh);
-			return this.percentile(co2, 90);
+			return this.percentile(co2, 98);
+		},
+		suggestedMaxAvgCost() {
+			return this.activeType === TYPES.PRICE
+				? this.suggestedMaxAvgPrice
+				: this.suggestedMaxAvgCo2;
+		},
+		suggestedMaxCo2() {
+			// returns the 98th percentile of total co2 emissions by time period
+			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
+			const co2Map = sessionsWithCo2.reduce((acc, s) => {
+				const key = this.dateToPeriodKey(new Date(s.created));
+				acc[key] = (acc[key] || 0) + s.co2PerKWh * s.chargedEnergy;
+				return acc;
+			}, {});
+			return Math.max(this.percentile(Object.values(co2Map), 98), 5); // 5kg default
+		},
+		suggestedMaxPrice() {
+			// returns the 98th percentile of total price by time period
+			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
+			const priceMap = sessionsWithPrice.reduce((acc, s) => {
+				const key = this.dateToPeriodKey(new Date(s.created));
+				acc[key] = (acc[key] || 0) + s.price;
+				return acc;
+			}, {});
+			return Math.max(this.percentile(Object.values(priceMap), 98), 1); // 1 CURRENCY default
 		},
 		suggestedMaxCost() {
 			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
@@ -631,6 +661,12 @@ export default {
 					period = undefined;
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
+		},
+		dateToPeriodKey(date) {
+			const options = { year: "numeric", month: "numeric", day: "numeric" };
+			if (this.period === PERIODS.YEAR) options.day = undefined;
+			if (this.period === PERIODS.TOTAL) options.month = undefined;
+			return date.toLocaleDateString(undefined, options);
 		},
 		async loadSessions() {
 			const response = await api.get("sessions");

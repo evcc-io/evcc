@@ -270,7 +270,7 @@
 							>
 								<template #icon><HemsIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('hems')" />
+									<DeviceTags :tags="hemsTags" />
 								</template>
 							</DeviceCard>
 						</ul>
@@ -439,7 +439,6 @@ export default {
 				eebus: false,
 				circuits: false,
 				modbusproxy: false,
-				hems: false,
 			},
 		};
 	},
@@ -503,7 +502,16 @@ export default {
 		},
 		vehicleOptions() {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
-		},
+    },
+		hemsTags() {
+			const result = { configured: { value: false } };
+			const { type } = store.state?.hems || {};
+			if (type) {
+				result.configured.value = true;
+				result.hemsType = { value: type };
+			}
+			return result;
+		}
 	},
 	watch: {
 		offline() {

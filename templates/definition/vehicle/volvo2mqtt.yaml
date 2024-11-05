@@ -42,16 +42,6 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_battery_charge_level/state
     timeout: {{ .timeout }}
-  status:
-    source: combined
-    plugged:
-      source: mqtt
-      topic: homeassistant/sensor/{{ .vin }}_charging_connection_status/state
-      timeout: {{ .timeout }}
-    charging:
-      source: mqtt
-      topic: homeassistant/sensor/{{ .vin }}_charging_system_status/state
-      timeout: {{ .timeout }}
   range:
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
