@@ -26,6 +26,10 @@ func (t *embed) init() error {
 		return err
 	}
 
+	if _, err := vm.Eval(`import "math"`); err != nil {
+		return err
+	}
+
 	if _, err := vm.Eval("var price, charges, tax float64"); err != nil {
 		return err
 	}
