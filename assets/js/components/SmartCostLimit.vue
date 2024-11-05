@@ -288,17 +288,12 @@ export default {
 		slotHovered(index) {
 			this.activeIndex = index;
 		},
-		setSelectedSmartCostLimit(limit) {
-			const nextOption = this.costOptions.find(({ value }) => value >= limit);
-			if (nextOption) {
-				this.selectedSmartCostLimit = nextOption.value;
-			}
-		},
 		slotSelected(index) {
 			const price = this.slots[index].price;
 			if (price !== undefined) {
-				this.setSelectedSmartCostLimit(price);
-				this.saveSmartCostLimit(this.selectedSmartCostLimit);
+				// 3 decimal precision
+				const priceRounded = Math.ceil(price * 1000) / 1000;
+				this.saveSmartCostLimit(priceRounded);
 			}
 		},
 		changeSmartCostLimit($event) {
