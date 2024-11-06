@@ -437,7 +437,7 @@ co2 = "⌀ CO₂"
 duration = "Varaktighet"
 fallbackName = "Laddplats"
 power = "Effekt"
-price = "Σ pris"
+price = "Kostnad"
 remaining = "Återstående tid"
 remoteDisabledHard = "{source}: avstängd"
 remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
@@ -452,6 +452,7 @@ smartCostCheap = "Billig laddning från nätet"
 smartCostClean = "Laddning med grön el"
 title = "Inställningar {0}"
 vehicle = "Fordon"
+batteryUsage = "Hembatteri"
 
 [main.loadpointSettings.limitSoc]
 description = "Laddbegränsning när detta fordon är anslutet."
@@ -579,6 +580,7 @@ vehicleLimit = "Fordonsgräns."
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."
+batteryBoost = "Batteriboost är aktiv."
 
 [notifications]
 dismissAll = "Avvisa alla"
@@ -632,12 +634,13 @@ downloadCsv = "Ladda hem som CSV"
 energy = "Laddat"
 loadpoint = "Laddplats"
 noData = "Inga laddningar denna månad"
-price = "Σ pris"
+price = "Kostnad"
 reallyDelete = "Vill du verkligen radera den här sessionen?"
 solar = "Sol"
 title = "Laddningar"
 total = "Total"
 vehicle = "Fordon"
+showIndividualEntries = "Se enskilda sessioner"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -733,3 +736,50 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+description = "Snabbladdning från hembatteri"
+label = "Batteri Boost"
+mode = "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge."
+once = "Boost är aktiverat för denna laddning."
+
+[sessions.group]
+self = "Sol"
+co2 = "Emissioner"
+grid = "Nät"
+price = "Pris"
+
+[sessions.groupBy]
+loadpoint = "Laddare"
+none = "Total"
+vehicle = "Fordon"
+
+[sessions.period]
+month = "Månad"
+total = "Total"
+year = "År"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
+
+[sessions.chartTitle]
+groupedPriceByGroup = "Total kostnad {byGroup}"
+historyCo2 = "CO₂-Emissioner"
+energy = "Laddad energi"
+energyGrouped = "Sol vs. nätenergi"
+energyGroupedByGroup = "Energi {byGroup}"
+energySubSolar = "{value} sol"
+energySubTotal = "{value} total"
+groupedCo2ByGroup = "CO₂-mängd {byGroup}"
+byGroupLoadpoint = "per laddare"
+byGroupVehicle = "per fordon"
+historyCo2Sub = "{value} total"
+historyPrice = "Laddkostnad"
+historyPriceSub = "{value} total"
+solar = "Solandel över året"
+solarByGroup = "Solandel {byGroup}"
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Pris {byGroup}"
