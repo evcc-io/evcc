@@ -76,6 +76,7 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
+hemsType = Rendszer
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -424,7 +425,7 @@ co2 = "⌀ CO₂"
 duration = "Időtartam"
 fallbackName = "Töltőpont"
 power = "Teljesítmény"
-price = "Σ Ár"
+price = "Költség"
 remaining = "Hátralévő"
 remoteDisabledHard = "{source}: kikapcsolva"
 remoteDisabledSoft = "{source}: kikapcsolva, adaptív napelemes töltés"
@@ -439,6 +440,7 @@ smartCostCheap = "Olcsó Hálózati Töltés"
 smartCostClean = "Tiszta Hálózati Töltés"
 title = "Beállítások {0}"
 vehicle = "Jármű"
+batteryUsage = Otthoni Akkumulátor
 
 [main.loadpointSettings.limitSoc]
 description = "Töltési korlát, amikor a jármű csatlakoztatva van."
@@ -562,6 +564,7 @@ vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
+batteryBoost = Akkumulátoros rásegítés aktív.
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"
@@ -615,12 +618,13 @@ downloadCsv = "Letöltés mint: CSV"
 energy = "Töltve"
 loadpoint = "Töltőpont"
 noData = "Nincs töltési folyamat ebben a hónapban."
-price = "Σ Ár"
+price = "Σ Költség"
 reallyDelete = "Biztosan szeretné törölni ezt a folyamatot?"
 solar = "Napenergia"
 title = "Töltési Folyamatok"
 total = "Összesen"
 vehicle = "Jármű"
+showIndividualEntries = Egyéni munkamenetek megjelenítése
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -705,3 +709,50 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[main.loadpointSettings.batteryBoost]
+label = Akkumulátoros Rásegítés
+mode = Csak szolár és min+szolár módban elérhető.
+once = Rásegítés aktív ehhez a töltési folyamathoz.
+description = Gyorstöltés otthoni akkumulátorról.
+
+[sessions.chartTitle]
+avgCo2ByGroup = ⌀ CO₂ {byGroup}
+byGroupVehicle = jármű szerint
+groupedCo2ByGroup = CO₂-Mennyiség {byGroup}
+groupedPriceByGroup = Összes Költség {byGroup}
+historyCo2Sub = {value} összesen
+energy = Töltött Energia
+energyGrouped = Napelem vs. Hálózati Energia
+energySubSolar = {value} nap
+byGroupLoadpoint = töltőpont szerint
+avgPriceByGroup = ⌀ Ár {byGroup}
+energyGroupedByGroup = Energia {byGroup}
+energySubTotal = {value} összesen
+historyCo2 = CO₂-Emissziók
+historyPrice = Töltési Költségek
+solar = Napelem aránya egy évre vetítve
+historyPriceSub = {value} összesen
+solarByGroup = Napelem Aránya {byGroup}
+
+[sessions.group]
+grid = Hálózat
+price = Ár
+self = Nap
+co2 = Emissziók
+
+[sessions.period]
+total = Összes
+year = Év
+month = Hónap
+
+[sessions.groupBy]
+loadpoint = Töltőpont
+none = Összes
+vehicle = Jármű
+
+[sessions.type]
+co2 = CO₂
+price = Ár
+solar = Nap
