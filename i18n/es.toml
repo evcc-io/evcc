@@ -78,6 +78,7 @@ temp = "Temperatura"
 topic = "Tema"
 url = "URL"
 yes = "sí"
+hemsType = "Sistema"
 
 [config.eebus]
 description = "Configuración que permite a evcc comunicarse con otros dispositivos EEBus"
@@ -442,7 +443,7 @@ co2 = "CO₂ ⌀ "
 duration = "Duración"
 fallbackName = "Punto de carga"
 power = "Potencia"
-price = "Σ Precio"
+price = "Precio"
 remaining = "Tiempo restante"
 remoteDisabledHard = "{source}: desactivado"
 remoteDisabledSoft = "{source}: Carga adaptativa desactivada"
@@ -461,6 +462,9 @@ vehicle = "Vehículo"
 
 [main.loadpointSettings.batteryBoost]
 description = "Carga rápida desde la batería de casa"
+mode = "Solo disponible en modo solar y min+solar."
+once = "Boost activo para esta sesión de carga"
+label = "Aumento de la batería"
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"
@@ -588,6 +592,7 @@ vehicleLimit = "Límite de vehículos."
 vehicleLimitReached = "Límite del vehículos alcanzado"
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 welcome = "Breve carga inicial para confirmar la conexión."
+batteryBoost = "Refuerzo de batería activo"
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
@@ -641,12 +646,13 @@ downloadCsv = "Descargar como CSV"
 energy = "Cargado"
 loadpoint = "Punto de carga"
 noData = "No hay sesiones de carga este mes."
-price = "Σ Precio"
+price = "Precio"
 reallyDelete = "¿De verdad quieres eliminar esta sesión?"
 solar = "Solar"
 title = "Sesiones de carga"
 total = "Total"
 vehicle = "Vehículo"
+showIndividualEntries = "Mostrar sesiones individuales"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
@@ -742,3 +748,44 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[sessions.chartTitle]
+byGroupLoadpoint = "por punto de carga"
+byGroupVehicle = "por vehículo"
+energy = "Energía cargada"
+energyGrouped = “Energía solar versus energía de red”
+energyGroupedByGroup = "Energía {byGroup}"
+energySubSolar = "{value} solar"
+energySubTotal = "{value} total"
+avgCo2ByGroup = "CO₂ ⌀ {byGroup}"
+avgPriceByGroup = "Precio ⌀ {byGroup}"
+groupedCo2ByGroup = "CO₂-Importe {byGroup}"
+groupedPriceByGroup = "Coste total {byGroup}"
+historyCo2 = "Emisiones de CO₂"
+historyCo2Sub = "{value} total"
+historyPrice = "Precio de carga"
+historyPriceSub = "{value} total"
+solar = "Cuota solar anual"
+solarByGroup = "Cuota Solar {byGroup}"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Precio"
+solar = "Energía Solar"
+
+[sessions.period]
+total = "Total"
+year = "Año"
+month = "Mes"
+
+[sessions.group]
+co2 = "Emisiones"
+grid = "Red eléctrica"
+price = "Precio"
+self = "Energía Solar"
+
+[sessions.groupBy]
+vehicle = "Vehículo"
+loadpoint = "Punto de carga"
+none = "Total"
