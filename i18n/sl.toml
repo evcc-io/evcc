@@ -78,6 +78,7 @@ temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 yes = "da"
+hemsType = "Sistem"
 
 [config.eebus]
 description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
@@ -437,7 +438,7 @@ co2 = "⌀ CO₂"
 duration = "Trajanje"
 fallbackName = "Polnilno mesto"
 power = "Moč"
-price = "Σ Cena"
+price = "Cena"
 remaining = "Preostalo"
 remoteDisabledHard = "{source}: izključeno"
 remoteDisabledSoft = "{source}: izklopljeno prilagodljivo solarno polnjenje"
@@ -638,12 +639,13 @@ downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"
 loadpoint = "Polnilno mesto"
 noData = "Ta mesec ni bilo sej polnjenja."
-price = "Σ Cena"
+price = "Cena"
 reallyDelete = "Ali res želite izbrisati to sejo?"
 solar = "Sončna energija"
 title = "Seje polnjenja"
 total = "Skupaj"
 vehicle = "Vozilo"
+showIndividualEntries = "Prikaži posamezne seje"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -739,3 +741,44 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[sessions.period]
+month = "Mesec"
+total = "Skupaj"
+year = "Leto"
+
+[sessions.groupBy]
+vehicle = "Vozilo"
+loadpoint = "Polnilno mesto"
+none = "Skupaj"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Cena"
+solar = "Sončna energija"
+
+[sessions.chartTitle]
+energyGrouped = "Sončna energija v primerjavi z omrežno energijo"
+avgPriceByGroup = "⌀ Cena {byGroup}"
+byGroupLoadpoint = "po polnilnem mestu"
+byGroupVehicle = "po vozilu"
+energy = "Napolnjena energija"
+historyPriceSub = "{value} skupaj"
+energyGroupedByGroup = "Energija {byGroup}"
+groupedPriceByGroup = "Skupni stroški {byGroup}"
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+energySubSolar = "{value} sončna energija"
+energySubTotal = "{value} skupaj"
+groupedCo2ByGroup = "CO₂-Količina {byGroup}"
+historyCo2 = "CO₂-Emisije"
+historyCo2Sub = "{value} skupaj"
+historyPrice = "Stroški polnjenja"
+solar = "Solarni delež čez leto"
+solarByGroup = "Solarni delež {byGroup}"
+
+[sessions.group]
+co2 = "Emisije"
+grid = "Omrežje"
+self = "Sončna energija"
+price = "Cena"
