@@ -43,7 +43,7 @@
     "eslint-plugin-promise": "^7.1.0",
     "eslint-plugin-vue": "^9.3.0",
     "globals": "^15.11.0",
-    "happy-dom": "^15.0.0",
+    "happy-dom": "^15.10.2",
     "histoire": "^0.17.0",
     "markty-toml": "^0.1.1",
     "prettier": "^3.0.0",
