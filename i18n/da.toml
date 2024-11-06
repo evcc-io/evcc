@@ -78,6 +78,7 @@ temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 yes = "ja"
+hemsType = "System"
 
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
@@ -437,7 +438,7 @@ co2 = "⌀ CO₂"
 duration = "Varighed"
 fallbackName = "Ladepunkt"
 power = "Effekt"
-price = "Σ Pris"
+price = "Pris"
 remaining = "Resterende tid"
 remoteDisabledHard = "{source}: slukket"
 remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
@@ -640,12 +641,13 @@ downloadCsv = "Download som CSV"
 energy = "Opladet"
 loadpoint = "Ladepunkt"
 noData = "Ingen opladninger i denne måned."
-price = "Σ pris"
+price = "Pris"
 reallyDelete = "Er du sikker på at du vil slette denne session?"
 solar = "solenergi"
 title = "Opladnings Sessioner"
 total = "Total"
 vehicle = "Køretøj"
+showIndividualEntries = "Vis individuelle sessioner"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -735,3 +737,44 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[sessions.group]
+co2 = "Emission"
+grid = "Elnet"
+price = "Pris"
+self = "Sol"
+
+[sessions.period]
+year = "År"
+month = "Måned"
+total = "Total"
+
+[sessions.chartTitle]
+energy = "Opladet energi"
+historyCo2 = "CO₂-Emission"
+historyCo2Sub = "{value} total"
+historyPrice = "Opladningspris"
+solarByGroup = "Solar andel {byGroup}"
+byGroupLoadpoint = "Ved ladepunktet"
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Pris {byGroup}"
+byGroupVehicle = "Ved køretøjet"
+energyGrouped = "Sol vs elnet energi"
+energyGroupedByGroup = "Energi {byGroup}"
+historyPriceSub = "{value} total"
+energySubSolar = "{value} sol"
+energySubTotal = "{value} total"
+groupedCo2ByGroup = "CO₂-mængde {byGroup}"
+groupedPriceByGroup = "Total pris {byGroup}"
+solar = "Sol andel over året"
+
+[sessions.groupBy]
+loadpoint = "Opladnings punkt"
+vehicle = "Køretøj"
+none = "Total"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
