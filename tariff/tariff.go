@@ -46,6 +46,10 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, fmt.Errorf("must have either price or forecast")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	var (
 		err       error
 		priceG    func() (float64, error)
