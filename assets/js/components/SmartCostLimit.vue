@@ -275,7 +275,6 @@ export default {
 			});
 		},
 		costRange(slots) {
-			return { min: 0, max: 0.2 };
 			let min = undefined;
 			let max = undefined;
 			slots.forEach((slot) => {
