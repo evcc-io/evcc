@@ -78,6 +78,7 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
+hemsType = "System"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
