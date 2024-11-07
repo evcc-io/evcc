@@ -39,6 +39,10 @@ body:
       render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
+        
+        To create a config without secrets you can use `evcc dump --cfg`
+        
+        Please ensure you have **no passwords** and **no sponsortoken** in your report
 
   - type: textarea
     validations:
@@ -70,14 +74,6 @@ body:
       description: Check if issue as already been fixed in the latest nightly build
       options:
         - label: I have verified that the issue is reproducible with the latest nightly build
-          required: true
-
-  - type: checkboxes
-    id: passwords
-    attributes:
-      label: No passwords
-      options:
-        - label: I have verified that no real passwords or sponsortoken is in my bug report
           required: true
 
   - type: input
