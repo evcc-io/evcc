@@ -24,6 +24,6 @@ render: |
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{- if .welcomecharge }}
+  {{- if eq .welcomecharge "true" }}
   features: ["welcomecharge"]
   {{- end }}
