@@ -61,8 +61,6 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:          log,
 		basic:        basic,
 		contractType: ostrom.PRODUCT_DYNAMIC,
-		zip:          "",
-		cityId:       11111,
 		Helper:       request.NewHelper(log),
 		data:         util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -135,11 +133,9 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	}
 
 	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_STATIC_PRICE, params.Encode())
-	t.log.DEBUG.Printf("Query: %s\n", uri)
 	if err := backoff.Retry(func() error {
 		return backoffPermanentError(t.GetJSON(uri, &tariffs))
 	}, bo()); err != nil {
-		t.log.ERROR.Println(err)
 		return 0, err
 	}
 
@@ -149,8 +145,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 		}
 	}
 
-	t.log.ERROR.Printf("%s not found in tariff response\n", ostrom.PRODUCT_BASIC)
-	return 0, errors.New("Could not find basic tariff")
+	return 0, errors.New("Could not find basic tariff in tariff response")
 }
 
 func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
@@ -239,9 +234,8 @@ func (t *Ostrom) run(done chan error) {
 		}
 
 		data := make(api.Rates, 0, 48)
-		count := len(res.Data)
-		for i := 0; i < count; i++ {
-			data = addPrice(res.Data[i], data)
+		for _, val := range res.Data {
+			data = addPrice(val, data)
 		}
 
 		mergeRates(t.data, data)
@@ -260,11 +254,12 @@ func (t *Ostrom) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Ostrom) Type() api.TariffType {
-	if t.contractType == ostrom.PRODUCT_DYNAMIC {
+	switch t.contractType {
+	case ostrom.PRODUCT_DYNAMIC:
 		return api.TariffTypePriceForecast
-	} else if t.contractType == ostrom.PRODUCT_FAIR || t.contractType == ostrom.PRODUCT_FAIR_CAP {
+	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
 		return api.TariffTypePriceStatic
-	} else {
+	default:
 		t.log.ERROR.Printf("Unknown tariff type %s\n", t.contractType)
 		return api.TariffTypePriceStatic
 	}

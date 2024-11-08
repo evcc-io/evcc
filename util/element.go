@@ -33,7 +33,7 @@ func EnsureElementEx[T any](
 			}
 		}
 	} else if len(objects) == 1 {
-		// vin empty and exactly one object
+		// oin empty and exactly one object
 		return objects[0], nil
 	}
 
