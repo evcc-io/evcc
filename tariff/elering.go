@@ -43,6 +43,10 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Elering{
 		embed:  &cc.embed,
 		log:    util.NewLogger("elering"),

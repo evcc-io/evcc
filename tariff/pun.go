@@ -55,6 +55,10 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Pun{
 		log:   util.NewLogger("pun"),
 		embed: &cc,
