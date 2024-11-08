@@ -34,6 +34,14 @@ func (t *embed) init() error {
 		return err
 	}
 
+	if _, err := vm.Eval(fmt.Sprintf("charges = %f", t.Charges)); err != nil {
+		return err
+	}
+
+	if _, err := vm.Eval(fmt.Sprintf("tax = %f", t.Tax)); err != nil {
+		return err
+	}
+
 	prg, err := vm.Compile(t.Formula)
 	if err != nil {
 		return err
