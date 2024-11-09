@@ -42,6 +42,7 @@ func TestUnmarshalKwhDataResponse(t *testing.T) {
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 
 		assert.Equal(t, float64(30.511), res.TotalPowerImportT1kWh+res.TotalPowerImportT2kWh+res.TotalPowerImportT3kWh+res.TotalPowerImportT4kWh)
+		assert.Equal(t, float64(85.951), res.TotalPowerExportT1kWh+res.TotalPowerExportT2kWh+res.TotalPowerExportT3kWh+res.TotalPowerExportT4kWh)
 		assert.Equal(t, float64(543), res.ActivePowerW)
 		assert.Equal(t, float64(235.4), res.ActiveVoltageL1V)
 		assert.Equal(t, float64(235.8), res.ActiveVoltageL2V)
@@ -61,6 +62,7 @@ func TestUnmarshalP1DataResponse(t *testing.T) {
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 
 		assert.Equal(t, float64(18664.997), res.TotalPowerImportT1kWh+res.TotalPowerImportT2kWh+res.TotalPowerImportT3kWh+res.TotalPowerImportT4kWh)
+		assert.Equal(t, float64(13823.608), res.TotalPowerExportT1kWh+res.TotalPowerExportT2kWh+res.TotalPowerExportT3kWh+res.TotalPowerExportT4kWh)
 		assert.Equal(t, float64(203), res.ActivePowerW)
 		assert.Equal(t, float64(228), res.ActiveVoltageL1V)
 		assert.Equal(t, float64(226), res.ActiveVoltageL2V)
