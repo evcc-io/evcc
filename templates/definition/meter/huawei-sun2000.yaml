@@ -1,29 +1,32 @@
-template: huawei-dongle-powersensor
+template: huawei-sun2000
+covers: ["huawei-dongle-powersensor", "huawei-sun2000-rs485"]
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 with SDongle & Power Sensor
+      generic: SUN2000
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Grid und Batterie erfordern den PowerSensor.
+      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
     en: |
-      Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
+      Grid and Battery require the PowerSensor.
+      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+  - name: timeout
+    default: 15s
   - name: storageunit
     type: number
     default: 1
     advanced: true
-  - name: modbus
-    choice: ["tcpip"]
-  - name: timeout
-    default: 15s
   - name: capacity
     advanced: true
 render: |
@@ -162,7 +165,7 @@ render: |
           set:
           - source: const
             value: 2 # discharge
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -171,7 +174,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 0 # duration
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -180,7 +183,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 1 # Minute
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -189,7 +192,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 0 # W
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -202,7 +205,7 @@ render: |
           set:
           - source: const
             value: 1 # charge
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -211,7 +214,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 0 # duration
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -220,7 +223,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 1 # Minute
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -229,7 +232,7 @@ render: |
                 encoding: uint16
           - source: const
             value: 10000 # W
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
@@ -238,7 +241,7 @@ render: |
                 encoding: uint32
           - source: const
             value: 1 # Enable
-            set: 
+            set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:

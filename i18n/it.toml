@@ -35,10 +35,8 @@ title = "Gestione del Carico"
 [config.control]
 description = "Normalmente le impostazioni di base vanno bene. Modifica solo se sai cosa stai facendo."
 descriptionInterval = "Intervallo ciclo di aggiornamento in secondi. Definisce quanto spesso evcc rileva i dati, modifica la potenza di carica e aggiorna l'interfaccia utente. Intervalli ridotti (<30s) possono causare oscillazioni e comportamenti indesiderati."
-descriptionMaxGridSupply = "Utile soltanto per inverter ibridi che non sono in grado di convertire tutta la corrente DC in corrente AC. Siccome evcc suppone che tutta la corrente DC è usabile, questo scenario può portare ad un consumo dalla rete indesiderato. Usare un valore minimo di 50 W per prevenire questa eventualità."
 descriptionResidualPower = "Modifica la soglia di corrente per il ciclo di controllo. Se hai un batteria è consigliabile impostare un valore minimo di 100W, in questo modo la batteria riceverà una priorità rispetto all'uso della rete elettrica"
 labelInterval = "Intervallo di aggiornamento"
-labelMaxGridSupply = "Massimo uso della rete elettrica finché in ricarica"
 labelResidualPower = "Potenza residua"
 title = "Controllo del comportamento"
 

@@ -60,7 +60,8 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if request.TransactionId != nil && conn.txnId == 0 && conn.status != nil &&
+	if request.TransactionId != nil && *request.TransactionId > 0 &&
+		conn.txnId == 0 && conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {

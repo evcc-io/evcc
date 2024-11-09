@@ -39,6 +39,10 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Awattar{
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
