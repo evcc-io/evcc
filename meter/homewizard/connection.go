@@ -121,7 +121,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 	if c.usage == "pv" {
-		return res.ActiveCurrentL1A * -1, res.ActiveCurrentL2A * -1, res.ActiveCurrentL3A * -1, err
+		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
 	}
 	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
 }
