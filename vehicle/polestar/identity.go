@@ -24,7 +24,7 @@ const OAuthURI = "https://polestarid.eu.polestar.com"
 
 // https://polestarid.eu.polestar.com/.well-known/openid-configuration
 var OAuth2Config = &oauth2.Config{
-	ClientID:    "polmystar",
+	ClientID:    "l3oopkc_10",
 	RedirectURL: "https://www.polestar.com/sign-in-callback",
 	Endpoint: oauth2.Endpoint{
 		AuthURL:  OAuthURI + "/as/authorization.oauth2",
