@@ -2,7 +2,7 @@ template: homewizard
 products:
   - brand: HomeWizard
     description:
-      generic: Wi-Fi P1 Meter
+      generic: Wi-Fi HomeWizard Meter (P1+KWH)
 params:
   - name: usage
     choice: ["grid", "pv"]
@@ -10,3 +10,4 @@ params:
 render: |
   type: homewizard
   uri: http://{{ .host }}
+  usage: {{ .usage }}
