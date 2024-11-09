@@ -27,6 +27,7 @@ func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) 
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
+		Usage        string
 		StandbyPower float64
 		Cache        time.Duration
 	}{
@@ -37,12 +38,12 @@ func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.embed, cc.URI, cc.StandbyPower, cc.Cache)
+	return NewHomeWizard(cc.embed, cc.URI, cc.Usage, cc.StandbyPower, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard charger
-func NewHomeWizard(embed embed, uri string, standbypower float64, cache time.Duration) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri, cache)
+func NewHomeWizard(embed embed, uri string, usage string, standbypower float64, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, usage, cache)
 	if err != nil {
 		return nil, err
 	}
