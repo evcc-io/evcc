@@ -18,9 +18,8 @@ var (
 )
 
 type Connection struct {
-	log   *util.Logger
-	usage string
-	data  *util.Monitor[Data]
+	log  *util.Logger
+	data *util.Monitor[Data]
 }
 
 func NewConnection(account, serial string, timeout time.Duration) (*Connection, error) {

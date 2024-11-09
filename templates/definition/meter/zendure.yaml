@@ -3,6 +3,8 @@ products:
   - brand: Zendure
     description:
       generic: Hyper V
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["pv", "battery"]
