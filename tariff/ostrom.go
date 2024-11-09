@@ -96,14 +96,13 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-func addPrice(entry ostrom.ForecastInfo, rates api.Rates) api.Rates {
+func rate(entry ostrom.ForecastInfo) api.Rate {
 	ts := entry.StartTimestamp.Local()
-	ar := api.Rate{
+	return api.Rate{
 		Start: ts,
 		End:   ts.Add(time.Hour),
 		Price: (entry.Marketprice + entry.AdditionalCost) / 100.0, // Both values include VAT
 	}
-	return append(rates, ar)
 }
 
 func (t *Ostrom) getCityId() (int, error) {
@@ -114,13 +113,15 @@ func (t *Ostrom) getCityId() (int, error) {
 	}
 
 	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_CITYID, params.Encode())
-	if err := backoff.Retry(func() error {
-		return backoffPermanentError(t.GetJSON(uri, &city))
-	}, bo()); err != nil {
-		t.log.ERROR.Println(err)
+	if err := t.GetJSON(uri, &city); err != nil {
 		return 0, err
 	}
-	return city[0].Id, nil
+	if len(city) == 0 {
+		// Shouldn't happen, but who knows.
+		return 0, fmt.Errorf("No CityId found for zip: %s", t.zip)
+	} else {
+		return city[0].Id, nil
+	}
 }
 
 func (t *Ostrom) getFixedPrice() (float64, error) {
@@ -192,7 +193,7 @@ func (t *Ostrom) runStatic(done chan error) {
 			val.StartTimestamp = now.BeginningOfDay()
 			data := make(api.Rates, 0, 48)
 			for i := 0; i < 48; i++ {
-				data = addPrice(val, data)
+				data = append(data, rate(val))
 				val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
 			}
 			mergeRates(t.data, data)
@@ -234,7 +235,7 @@ func (t *Ostrom) run(done chan error) {
 
 		data := make(api.Rates, 0, 48)
 		for _, val := range res.Data {
-			data = addPrice(val, data)
+			data = append(data, rate(val))
 		}
 
 		mergeRates(t.data, data)
