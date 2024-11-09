@@ -51,7 +51,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.ClientId == "" || cc.ClientSecret == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientId, cc.ClientSecret)
