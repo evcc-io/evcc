@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/zendure"
 	"github.com/evcc-io/evcc/util"
-	_ "github.com/joho/godotenv/autoload"
 )
 
 func init() {
