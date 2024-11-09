@@ -67,7 +67,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth.RefreshTokenSource(new(oauth2.Token), t),
+		Source: oauth.RefreshTokenSource(nil, t),
 	}
 
 	contract, err := util.EnsureElementEx(cc.Contract, t.GetContracts,
@@ -85,7 +85,6 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	if t.Type() == api.TariffTypePriceStatic {
 		t.cityId, err = t.getCityId()
 		if err != nil {
-			log.DEBUG.Println("Cannot query cityId for static price")
 			return nil, err
 		}
 		go t.runStatic(done)
