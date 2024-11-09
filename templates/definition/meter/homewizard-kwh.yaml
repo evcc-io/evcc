@@ -2,7 +2,7 @@ template: homewizard-kwh
 products:
   - brand: HomeWizard
     description:
-      generic: kWh Meter 1+3-Phase
+      generic: kWh Meter
 params:
   - name: usage
     choice: ["pv"]
