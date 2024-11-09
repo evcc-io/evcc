@@ -40,11 +40,7 @@ func init() {
 }
 
 // Search for a contract in list of contracts
-func ensureContractEx(
-	cid string,
-	contracts []ostrom.Contract,
-) (ostrom.Contract, error) {
-
+func ensureContractEx(cid string, contracts []ostrom.Contract) (ostrom.Contract, error) {
 	var zero ostrom.Contract
 
 	if cid != "" {
