@@ -39,6 +39,29 @@ func init() {
 	registry.Add("ostrom", NewOstromFromConfig)
 }
 
+// Search for a contract in list of contracts
+func ensureContractEx(
+	cid string,
+	contracts []ostrom.Contract,
+) (ostrom.Contract, error) {
+
+	var zero ostrom.Contract
+
+	if cid != "" {
+		// cid defined
+		for _, contract := range contracts {
+			if cid == strconv.FormatInt(contract.Id, 10) {
+				return contract, nil
+			}
+		}
+	} else if len(contracts) == 1 {
+		// cid empty and exactly one object
+		return contracts[0], nil
+	}
+
+	return zero, fmt.Errorf("cannot find contract")
+}
+
 func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		ClientId     string
@@ -70,11 +93,11 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Source: oauth.RefreshTokenSource(nil, t),
 	}
 
-	contract, err := util.EnsureElementEx(cc.Contract, t.GetContracts,
-		func(c ostrom.Contract) (string, error) {
-			return strconv.FormatInt(c.Id, 10), nil
-		},
-	)
+	contracts, err := t.GetContracts()
+	if err != nil {
+		return nil, err
+	}
+	contract, err := ensureContractEx(cc.Contract, contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -116,12 +139,10 @@ func (t *Ostrom) getCityId() (int, error) {
 	if err := t.GetJSON(uri, &city); err != nil {
 		return 0, err
 	}
-	if len(city) == 0 {
-		// Shouldn't happen, but who knows.
-		return 0, fmt.Errorf("No CityId found for zip: %s", t.zip)
-	} else {
-		return city[0].Id, nil
+	if len(city) < 1 {
+		return 0, errors.New("city not found")
 	}
+	return city[0].Id, nil
 }
 
 func (t *Ostrom) getFixedPrice() (float64, error) {
@@ -145,13 +166,12 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 		}
 	}
 
-	return 0, errors.New("Could not find basic tariff in tariff response")
+	return 0, errors.New("tariff not found")
 }
 
 func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	tokenURL := ostrom.URI_AUTH + "/oauth2/token"
 	dataReader := strings.NewReader("grant_type=client_credentials")
-
 	req, _ := request.New(http.MethodPost, tokenURL, dataReader, map[string]string{
 		"Authorization": t.basic,
 		"Content-Type":  request.FormContent,
@@ -161,19 +181,14 @@ func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	var res oauth2.Token
 	client := request.NewHelper(t.log)
 	err := client.DoJSON(req, &res)
-
-	if err != nil {
-		t.log.DEBUG.Printf("Requesting token failed with Error: %s\n", err.Error())
-	}
-
 	return util.TokenWithExpiry(&res), err
 }
 
 func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 	var res ostrom.Contracts
 
-	contractsURL := ostrom.URI_API + "/contracts"
-	err := t.GetJSON(contractsURL, &res)
+	uri := ostrom.URI_API + "/contracts"
+	err := t.GetJSON(uri, &res)
 	return res.Data, err
 }
 
@@ -184,16 +199,15 @@ func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
 	var val ostrom.ForecastInfo
 	var err error
-	val.AdditionalCost = 0
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
 		val.Marketprice, err = t.getFixedPrice()
 		if err == nil {
 			val.StartTimestamp = now.BeginningOfDay()
-			data := make(api.Rates, 0, 48)
-			for i := 0; i < 48; i++ {
-				data = append(data, rate(val))
+			data := make(api.Rates, 48)
+			for i := range data {
+				data[i] = rate(val)
 				val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
 			}
 			mergeRates(t.data, data)
@@ -260,7 +274,6 @@ func (t *Ostrom) Type() api.TariffType {
 	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
 		return api.TariffTypePriceStatic
 	default:
-		t.log.ERROR.Printf("Unknown tariff type %s\n", t.contractType)
 		return api.TariffTypePriceStatic
 	}
 }
