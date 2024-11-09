@@ -13,7 +13,7 @@ params:
     advanced: true
   - name: timeout
 render: |
-  type: custom
+  type: zendure
   usage: {{ .usage }}
   account: {{ .account }}
   serial: {{ .serial }}
