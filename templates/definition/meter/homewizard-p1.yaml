@@ -1,0 +1,9 @@
+template: homewizard
+products:
+  - brand: HomeWizard
+    description:
+      generic: Wi-Fi HomeWizard P1 Meter
+render: |
+  type: homewizard
+  uri: http://{{ .host }}
+  usage: grid

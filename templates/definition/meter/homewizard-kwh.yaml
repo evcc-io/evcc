@@ -2,7 +2,7 @@ template: homewizard
 products:
   - brand: HomeWizard
     description:
-      generic: Wi-Fi HomeWizard Meter (P1+KWH)
+      generic: HomeWizard kWh Meter 1+3-Phase
 params:
   - name: usage
     choice: ["grid", "pv"]
