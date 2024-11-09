@@ -120,7 +120,7 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
-// PhaseDescriber returns the number of availablephases
+// PhaseDescriber returns the number of available phases
 type PhaseDescriber interface {
 	Phases() int
 }
