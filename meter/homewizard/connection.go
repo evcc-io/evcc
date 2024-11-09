@@ -103,7 +103,7 @@ func (c *Connection) Enabled() (bool, error) {
 func (c *Connection) CurrentPower() (float64, error) {
 	res, err := c.dataG.Get()
 	if c.usage == "pv" {
-		return res.ActivePowerW * -1, err
+		return -res.ActivePowerW, err
 	}
 	return res.ActivePowerW, err
 }
