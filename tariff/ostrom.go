@@ -40,13 +40,13 @@ func init() {
 }
 
 // Search for a contract in list of contracts
-func ensureContractEx(cid string, contracts []ostrom.Contract) (ostrom.Contract, error) {
+func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, error) {
 	var zero ostrom.Contract
 
-	if cid != "" {
+	if cid != -1 {
 		// cid defined
 		for _, contract := range contracts {
-			if cid == strconv.FormatInt(contract.Id, 10) {
+			if cid == contract.Id {
 				return contract, nil
 			}
 		}
@@ -62,9 +62,10 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		ClientId     string
 		ClientSecret string
-		Contract     string
+		Contract     int64
 	}
 
+	cc.Contract = -1
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
