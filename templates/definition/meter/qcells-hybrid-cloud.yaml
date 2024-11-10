@@ -1,6 +1,6 @@
 template: qcells-hybrid-cloud
 products:
-  - brand: QCells (based on Solax)
+  - brand: QCells
     description:
       de: Hybrid-Wechselrichter (Cloud)
       en: Hybrid-Inverter (Cloud)
