@@ -1,7 +1,4 @@
-
-
-
 [batterySettings]
 batteryLevel = "Akutase"
-control = "Akuhaldus"
 capacity = "{energy} / {total}"
+control = "Akuhaldus"

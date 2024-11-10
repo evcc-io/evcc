@@ -61,6 +61,7 @@ enabled = "Abilitato"
 energy = "Energia"
 feedinPrice = "Prezzo di vendita"
 gridPrice = "Prezzo d'acquisto"
+hemsType = "Sistema"
 no = "no"
 odometer = "Odometro"
 org = "Organizzazione"
@@ -76,7 +77,6 @@ temp = "Temperatura"
 topic = "Argomento"
 url = "URL"
 yes = "si"
-hemsType = "Sistema"
 
 [config.eebus]
 description = "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus"
@@ -93,11 +93,11 @@ experimental = "Sperimentale"
 off = "spento"
 on = "acceso"
 password = "Password"
+readFromFile = "Importa da file"
 remove = "Rimuovi"
 save = "Salva"
 telemetry = "Telemetria"
 title = "Titolo"
-readFromFile = "Importa da file"
 
 [config.grid]
 title = "Contatore"
@@ -112,7 +112,9 @@ title = "HEMS"
 description = "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati."
 descriptionToken = "Controlla la documentazione di InfluxDB per imparare a crearne uno. https://docs.influxdata.com/influxdb/v2/admin/"
 labelBucket = "Bucket"
+labelCheckInsecure = "Permetti certificati self-signed"
 labelDatabase = "Database"
+labelInsecure = "Validazione certificato"
 labelOrg = "Società"
 labelPassword = "Password"
 labelToken = "Token API"
@@ -121,8 +123,6 @@ labelUser = "Nome utente"
 title = "InfluxDB"
 v1Support = "Serve supporto per InfluxDB 1.x?"
 v2Support = "Torna a InfluxDB 2.x"
-labelInsecure = "Validazione certificato"
-labelCheckInsecure = "Permetti certificati self-signed"
 
 [config.main]
 addLoadpoint = "Aggiungi stazione di ricarica"
@@ -157,17 +157,17 @@ description = "Connettiti ad un broker MQTT per permettere lo scambio di dati co
 descriptionClientId = "Autore del messaggio. Viene usato `evcc-[rand]` se il campo è lasciato vuoto."
 descriptionTopic = "Lasciare vuoto per disabilitare la pubblicazione."
 labelBroker = "Broker"
+labelCaCert = "Certificato server (CA)"
 labelCheckInsecure = "Permetti certificati self-signed"
+labelClientCert = "Certificato client"
 labelClientId = "ID Client"
+labelClientKey = "Chiave client"
 labelInsecure = "Validazione certificato"
 labelPassword = "Password"
 labelTopic = "Argomento"
 labelUser = "Username"
 publishing = "Pubblicazione"
 title = "MQTT"
-labelClientCert = "Certificato client"
-labelCaCert = "Certificato server (CA)"
-labelClientKey = "Chiave client"
 
 [config.network]
 descriptionHost = "Usa il suffisso .local per abilitare mDNS. Utilizzato nella nell'app mobile e in alcune stazioni OCPP."
@@ -442,6 +442,7 @@ remoteDisabledSoft = "{source}: Ricarica FV adattiva disabilitata"
 solar = "Solare"
 
 [main.loadpointSettings]
+batteryUsage = "Batteria di casa"
 currents = "Corrente di carica"
 default = "default"
 disclaimerHint = "Nota:"
@@ -450,7 +451,12 @@ smartCostCheap = "Ricarica in Rete Economica"
 smartCostClean = "Ricarica Pulita"
 title = "Impostazioni {0}"
 vehicle = "Veicolo"
-batteryUsage = "Batteria di casa"
+
+[main.loadpointSettings.batteryBoost]
+description = "Carica rapida dalla batteria di casa."
+label = "Boost da batteria"
+mode = "Disponibile solo in modalità solare e min+solare."
+once = "Boost attivo per questa sessione di ricarica."
 
 [main.loadpointSettings.limitSoc]
 description = "Limite di carica applicato quando il veicolo è connesso."
@@ -550,6 +556,7 @@ vehicleLimit = "Limite veicolo: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Aspettando l'autorizzazione."
+batteryBoost = "Boost da batteria attivo"
 charging = "In carica..."
 cheapEnergyCharging = "Corrente economica disponibile."
 cheapEnergyNextStart = "Corrente economica in {duration}."
@@ -575,7 +582,6 @@ vehicleLimit = "Limite del veicolo."
 vehicleLimitReached = "Limite del veicolo raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 welcome = "Piccola carica iniziale per confermare la connessione."
-batteryBoost = "Boost da batteria attivo"
 
 [notifications]
 dismissAll = "Rimuovi tutte"
@@ -631,11 +637,30 @@ loadpoint = "Punto di ricarica"
 noData = "Nessuna sessione di ricarica questo mese."
 price = "Costo"
 reallyDelete = "Vuoi veramente eliminare questa sessione?"
+showIndividualEntries = "Mostra singole sessioni"
 solar = "Solare"
 title = "Sessioni di ricarica"
 total = "Totale"
 vehicle = "Veicolo"
-showIndividualEntries = "Mostra singole sessioni"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Prezzo {byGroup}"
+byGroupLoadpoint = "per Punto di Ricarica"
+byGroupVehicle = "per Veicolo"
+energy = "Energia ricaricata"
+energyGrouped = "Energia Solare vs Rete"
+energyGroupedByGroup = "Energia {byGroup}"
+energySubSolar = "{value} solare"
+energySubTotal = "{value} totale"
+groupedCo2ByGroup = "Quantità CO₂ {byGroup}"
+groupedPriceByGroup = "Costo Totale {byGroup}"
+historyCo2 = "Emissioni CO₂"
+historyCo2Sub = "{value} totale"
+historyPrice = "Costi di ricarica"
+historyPriceSub = "{value} totale"
+solar = "Perc. Solare annua"
+solarByGroup = "Perc. Solare {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -657,6 +682,27 @@ vehicle = "Veicolo"
 allLoadpoints = "tutte le stazioni di ricarica"
 allVehicles = "tutte i veicoli"
 filter = "Filtra"
+
+[sessions.group]
+co2 = "Emissioni"
+grid = "Rete"
+price = "Prezzo"
+self = "Solare"
+
+[sessions.groupBy]
+loadpoint = "Punto di ricarica"
+none = "Totale"
+vehicle = "Veicolo"
+
+[sessions.period]
+month = "Mese"
+total = "Totale"
+year = "Anno"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Prezzo"
+solar = "Solare"
 
 [settings]
 title = "Interfaccia Utente"
@@ -731,50 +777,3 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
-
-
-[main.loadpointSettings.batteryBoost]
-once = "Boost attivo per questa sessione di ricarica."
-label = "Boost da batteria"
-description = "Carica rapida dalla batteria di casa."
-mode = "Disponibile solo in modalità solare e min+solare."
-
-[sessions.group]
-co2 = "Emissioni"
-grid = "Rete"
-price = "Prezzo"
-self = "Solare"
-
-[sessions.chartTitle]
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-avgPriceByGroup = "⌀ Prezzo {byGroup}"
-byGroupLoadpoint = "per Punto di Ricarica"
-energy = "Energia ricaricata"
-energyGrouped = "Energia Solare vs Rete"
-energyGroupedByGroup = "Energia {byGroup}"
-energySubSolar = "{value} solare"
-groupedCo2ByGroup = "Quantità CO₂ {byGroup}"
-groupedPriceByGroup = "Costo Totale {byGroup}"
-historyCo2 = "Emissioni CO₂"
-historyCo2Sub = "{value} totale"
-historyPrice = "Costi di ricarica"
-historyPriceSub = "{value} totale"
-solarByGroup = "Perc. Solare {byGroup}"
-solar = "Perc. Solare annua"
-byGroupVehicle = "per Veicolo"
-energySubTotal = "{value} totale"
-
-[sessions.groupBy]
-none = "Totale"
-loadpoint = "Punto di ricarica"
-vehicle = "Veicolo"
-
-[sessions.period]
-month = "Mese"
-total = "Totale"
-year = "Anno"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Prezzo"
-solar = "Solare"

@@ -63,6 +63,7 @@ enabled = "Aktiverad"
 energy = "Energi"
 feedinPrice = "Inmatningspris"
 gridPrice = "Nätpris"
+hemsType = "System"
 no = "nej"
 odometer = "Mätarställning"
 org = "Organisation"
@@ -78,7 +79,6 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
-hemsType = "System"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
@@ -445,6 +445,7 @@ remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
 solar = "Solenergi"
 
 [main.loadpointSettings]
+batteryUsage = "Hembatteri"
 currents = "Laddström"
 default = "förvald"
 disclaimerHint = "Anmärkning:"
@@ -453,7 +454,12 @@ smartCostCheap = "Billig laddning från nätet"
 smartCostClean = "Laddning med grön el"
 title = "Inställningar {0}"
 vehicle = "Fordon"
-batteryUsage = "Hembatteri"
+
+[main.loadpointSettings.batteryBoost]
+description = "Snabbladdning från hembatteri"
+label = "Batteri Boost"
+mode = "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge."
+once = "Boost är aktiverat för denna laddning."
 
 [main.loadpointSettings.limitSoc]
 description = "Laddbegränsning när detta fordon är anslutet."
@@ -556,6 +562,7 @@ vehicleLimit = "Fordonsgräns: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Väntar på godkännande."
+batteryBoost = "Batteriboost är aktiv."
 charging = "Laddar..."
 cheapEnergyCharging = "Billig energi är tillgänglig."
 cheapEnergyNextStart = "Billig energi om {duration}."
@@ -581,7 +588,6 @@ vehicleLimit = "Fordonsgräns."
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."
-batteryBoost = "Batteriboost är aktiv."
 
 [notifications]
 dismissAll = "Avvisa alla"
@@ -637,11 +643,30 @@ loadpoint = "Laddplats"
 noData = "Inga laddningar denna månad"
 price = "Kostnad"
 reallyDelete = "Vill du verkligen radera den här sessionen?"
+showIndividualEntries = "Se enskilda sessioner"
 solar = "Sol"
 title = "Laddningar"
 total = "Total"
 vehicle = "Fordon"
-showIndividualEntries = "Se enskilda sessioner"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Pris {byGroup}"
+byGroupLoadpoint = "per laddare"
+byGroupVehicle = "per fordon"
+energy = "Laddad energi"
+energyGrouped = "Sol vs. nätenergi"
+energyGroupedByGroup = "Energi {byGroup}"
+energySubSolar = "{value} sol"
+energySubTotal = "{value} total"
+groupedCo2ByGroup = "CO₂-mängd {byGroup}"
+groupedPriceByGroup = "Total kostnad {byGroup}"
+historyCo2 = "CO₂-Emissioner"
+historyCo2Sub = "{value} total"
+historyPrice = "Laddkostnad"
+historyPriceSub = "{value} total"
+solar = "Solandel över året"
+solarByGroup = "Solandel {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -663,6 +688,27 @@ vehicle = "Fordon"
 allLoadpoints = "alla laddplatser"
 allVehicles = "alla fordon"
 filter = "Filter"
+
+[sessions.group]
+co2 = "Emissioner"
+grid = "Nät"
+price = "Pris"
+self = "Sol"
+
+[sessions.groupBy]
+loadpoint = "Laddare"
+none = "Total"
+vehicle = "Fordon"
+
+[sessions.period]
+month = "Månad"
+total = "Total"
+year = "År"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
 
 [settings]
 title = "Användargränssnitt"
@@ -737,50 +783,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[main.loadpointSettings.batteryBoost]
-description = "Snabbladdning från hembatteri"
-label = "Batteri Boost"
-mode = "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge."
-once = "Boost är aktiverat för denna laddning."
-
-[sessions.group]
-self = "Sol"
-co2 = "Emissioner"
-grid = "Nät"
-price = "Pris"
-
-[sessions.groupBy]
-loadpoint = "Laddare"
-none = "Total"
-vehicle = "Fordon"
-
-[sessions.period]
-month = "Månad"
-total = "Total"
-year = "År"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Pris"
-solar = "Sol"
-
-[sessions.chartTitle]
-groupedPriceByGroup = "Total kostnad {byGroup}"
-historyCo2 = "CO₂-Emissioner"
-energy = "Laddad energi"
-energyGrouped = "Sol vs. nätenergi"
-energyGroupedByGroup = "Energi {byGroup}"
-energySubSolar = "{value} sol"
-energySubTotal = "{value} total"
-groupedCo2ByGroup = "CO₂-mängd {byGroup}"
-byGroupLoadpoint = "per laddare"
-byGroupVehicle = "per fordon"
-historyCo2Sub = "{value} total"
-historyPrice = "Laddkostnad"
-historyPriceSub = "{value} total"
-solar = "Solandel över året"
-solarByGroup = "Solandel {byGroup}"
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-avgPriceByGroup = "⌀ Pris {byGroup}"

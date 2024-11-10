@@ -61,6 +61,7 @@ enabled = "Ενεργοποιημένο"
 energy = "Ενέργεια"
 feedinPrice = "Ταρίφα Feed-in"
 gridPrice = "Τιμή δικτύου"
+hemsType = "Σύστημα"
 no = "όχι"
 odometer = "Οδόμετρο"
 org = "Οργανισμός"
@@ -76,7 +77,6 @@ temp = "Θερμοκρασία"
 topic = "Topic"
 url = "URL"
 yes = "ναι"
-hemsType = "Σύστημα"
 
 [config.eebus]
 description = "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus."
@@ -623,11 +623,30 @@ loadpoint = "Σημείο φόρτισης"
 noData = "Δεν υπάρχουν συνεδρίες φόρτισης αυτό το μήνα."
 price = "Κόστος"
 reallyDelete = "Θέλετε πραγματικά να διαγράψετε αυτή τη συνεδρία;"
+showIndividualEntries = "Εμφάνιση μεμονωμένων συνεδριών"
 solar = "Φ/Β"
 title = "Συνεδρίες φόρτισης"
 total = "Σύνολο"
 vehicle = "Όχημα"
-showIndividualEntries = "Εμφάνιση μεμονωμένων συνεδριών"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Τιμή {byGroup}"
+byGroupLoadpoint = "κατά Σημείο Φόρτισης"
+byGroupVehicle = "κατά Όχημα"
+energy = "Φορτισμένη Ενέργεια"
+energyGrouped = "Ηλιακή Φ/Β vs. Ενέργειας Δικτύου"
+energyGroupedByGroup = "Ενέργεια {byGroup}"
+energySubSolar = "{value} ηλιακή"
+energySubTotal = "{value} σύνολο"
+groupedCo2ByGroup = "Ποσότητα CO₂ {byGroup}"
+groupedPriceByGroup = "Συνολικό Κόστος {byGroup}"
+historyCo2 = "Εκπομπές CO₂"
+historyCo2Sub = "{value} σύνολο"
+historyPrice = "Κόστη Φορτίσεων"
+historyPriceSub = "{value} σύνολο"
+solar = "Ηλιακό Μερίδιο σε Ετήσια βάση"
+solarByGroup = "Ηλιακό Μερίδιο {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Ενέργεια (kWh)"
@@ -649,6 +668,27 @@ vehicle = "Όχημα"
 allLoadpoints = "όλα τα σημεία φόρτισης"
 allVehicles = "όλα τα οχήματα"
 filter = "Φίλτρο"
+
+[sessions.group]
+co2 = "Εκπομπές"
+grid = "Δίκτυο"
+price = "Τιμή"
+self = "Φ/Β"
+
+[sessions.groupBy]
+loadpoint = "Σημείο φόρτισης"
+none = "Σύνολο"
+vehicle = "Όχημα"
+
+[sessions.period]
+month = "Μήνας"
+total = "Σύνολο"
+year = "Έτος"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Τιμή"
+solar = "Φ/Β"
 
 [settings]
 title = "Διεπαφή χρήστη"
@@ -712,44 +752,3 @@ lineError = "Σφάλμα στο {0}."
 lineErrorLink = "γραμμή {0}"
 restartButton = "Επανεκκίνηση"
 title = "Σφάλμα εκκίνησης"
-
-
-[sessions.chartTitle]
-groupedCo2ByGroup = "Ποσότητα CO₂ {byGroup}"
-historyPriceSub = "{value} σύνολο"
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-avgPriceByGroup = "⌀ Τιμή {byGroup}"
-energy = "Φορτισμένη Ενέργεια"
-byGroupLoadpoint = "κατά Σημείο Φόρτισης"
-byGroupVehicle = "κατά Όχημα"
-energyGrouped = "Ηλιακή Φ/Β vs. Ενέργειας Δικτύου"
-energyGroupedByGroup = "Ενέργεια {byGroup}"
-energySubSolar = "{value} ηλιακή"
-energySubTotal = "{value} σύνολο"
-groupedPriceByGroup = "Συνολικό Κόστος {byGroup}"
-historyCo2 = "Εκπομπές CO₂"
-historyCo2Sub = "{value} σύνολο"
-historyPrice = "Κόστη Φορτίσεων"
-solarByGroup = ""Ηλιακό Μερίδιο {byGroup}"
-solar = "Ηλιακό Μερίδιο σε Ετήσια βάση"
-
-[sessions.group]
-co2 = "Εκπομπές"
-grid = "Δίκτυο"
-price = "Τιμή"
-self = "Φ/Β"
-
-[sessions.period]
-year = "Έτος"
-month = "Μήνας"
-total = "Σύνολο"
-
-[sessions.type]
-solar = "Φ/Β"
-co2 = "CO₂"
-price = "Τιμή"
-
-[sessions.groupBy]
-loadpoint = "Σημείο φόρτισης"
-none = "Σύνολο"
-vehicle = "Όχημα"

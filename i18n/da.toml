@@ -63,6 +63,7 @@ enabled = "Aktiveret"
 energy = "Energi"
 feedinPrice = "Indfødningstarif"
 gridPrice = "God pris"
+hemsType = "System"
 no = "nej"
 odometer = "Kilometertæller"
 org = "Organisation"
@@ -78,7 +79,6 @@ temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 yes = "ja"
-hemsType = "System"
 
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
@@ -643,11 +643,30 @@ loadpoint = "Ladepunkt"
 noData = "Ingen opladninger i denne måned."
 price = "Pris"
 reallyDelete = "Er du sikker på at du vil slette denne session?"
+showIndividualEntries = "Vis individuelle sessioner"
 solar = "solenergi"
 title = "Opladnings Sessioner"
 total = "Total"
 vehicle = "Køretøj"
-showIndividualEntries = "Vis individuelle sessioner"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Pris {byGroup}"
+byGroupLoadpoint = "Ved ladepunktet"
+byGroupVehicle = "Ved køretøjet"
+energy = "Opladet energi"
+energyGrouped = "Sol vs elnet energi"
+energyGroupedByGroup = "Energi {byGroup}"
+energySubSolar = "{value} sol"
+energySubTotal = "{value} total"
+groupedCo2ByGroup = "CO₂-mængde {byGroup}"
+groupedPriceByGroup = "Total pris {byGroup}"
+historyCo2 = "CO₂-Emission"
+historyCo2Sub = "{value} total"
+historyPrice = "Opladningspris"
+historyPriceSub = "{value} total"
+solar = "Sol andel over året"
+solarByGroup = "Solar andel {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -669,6 +688,27 @@ vehicle = "Køretøj"
 allLoadpoints = "alle ladepunkter"
 allVehicles = "alle køretøjer"
 filter = "Filter"
+
+[sessions.group]
+co2 = "Emission"
+grid = "Elnet"
+price = "Pris"
+self = "Sol"
+
+[sessions.groupBy]
+loadpoint = "Opladnings punkt"
+none = "Total"
+vehicle = "Køretøj"
+
+[sessions.period]
+month = "Måned"
+total = "Total"
+year = "År"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
 
 [settings]
 title = "Brugergrænseflade"
@@ -737,44 +777,3 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-
-
-[sessions.group]
-co2 = "Emission"
-grid = "Elnet"
-price = "Pris"
-self = "Sol"
-
-[sessions.period]
-year = "År"
-month = "Måned"
-total = "Total"
-
-[sessions.chartTitle]
-energy = "Opladet energi"
-historyCo2 = "CO₂-Emission"
-historyCo2Sub = "{value} total"
-historyPrice = "Opladningspris"
-solarByGroup = "Solar andel {byGroup}"
-byGroupLoadpoint = "Ved ladepunktet"
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-avgPriceByGroup = "⌀ Pris {byGroup}"
-byGroupVehicle = "Ved køretøjet"
-energyGrouped = "Sol vs elnet energi"
-energyGroupedByGroup = "Energi {byGroup}"
-historyPriceSub = "{value} total"
-energySubSolar = "{value} sol"
-energySubTotal = "{value} total"
-groupedCo2ByGroup = "CO₂-mængde {byGroup}"
-groupedPriceByGroup = "Total pris {byGroup}"
-solar = "Sol andel over året"
-
-[sessions.groupBy]
-loadpoint = "Opladnings punkt"
-vehicle = "Køretøj"
-none = "Total"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Pris"
-solar = "Sol"

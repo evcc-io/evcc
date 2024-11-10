@@ -63,6 +63,7 @@ enabled = "Omogočeno"
 energy = "Energija"
 feedinPrice = "Cena prejete energije iz omrežja"
 gridPrice = "Cena omrežja"
+hemsType = "Sistem"
 no = "ne"
 odometer = "Število kilometrov"
 org = "Organizacija"
@@ -78,7 +79,6 @@ temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 yes = "da"
-hemsType = "Sistem"
 
 [config.eebus]
 description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
@@ -641,11 +641,30 @@ loadpoint = "Polnilno mesto"
 noData = "Ta mesec ni bilo sej polnjenja."
 price = "Cena"
 reallyDelete = "Ali res želite izbrisati to sejo?"
+showIndividualEntries = "Prikaži posamezne seje"
 solar = "Sončna energija"
 title = "Seje polnjenja"
 total = "Skupaj"
 vehicle = "Vozilo"
-showIndividualEntries = "Prikaži posamezne seje"
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Cena {byGroup}"
+byGroupLoadpoint = "po polnilnem mestu"
+byGroupVehicle = "po vozilu"
+energy = "Napolnjena energija"
+energyGrouped = "Sončna energija v primerjavi z omrežno energijo"
+energyGroupedByGroup = "Energija {byGroup}"
+energySubSolar = "{value} sončna energija"
+energySubTotal = "{value} skupaj"
+groupedCo2ByGroup = "CO₂-Količina {byGroup}"
+groupedPriceByGroup = "Skupni stroški {byGroup}"
+historyCo2 = "CO₂-Emisije"
+historyCo2Sub = "{value} skupaj"
+historyPrice = "Stroški polnjenja"
+historyPriceSub = "{value} skupaj"
+solar = "Solarni delež čez leto"
+solarByGroup = "Solarni delež {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -667,6 +686,27 @@ vehicle = "Vozilo"
 allLoadpoints = "vsa polnilna mesta"
 allVehicles = "vsa vozila"
 filter = "Filter"
+
+[sessions.group]
+co2 = "Emisije"
+grid = "Omrežje"
+price = "Cena"
+self = "Sončna energija"
+
+[sessions.groupBy]
+loadpoint = "Polnilno mesto"
+none = "Skupaj"
+vehicle = "Vozilo"
+
+[sessions.period]
+month = "Mesec"
+total = "Skupaj"
+year = "Leto"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Cena"
+solar = "Sončna energija"
 
 [settings]
 title = "Uporabniški vmesnik"
@@ -741,44 +781,3 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
-
-
-[sessions.period]
-month = "Mesec"
-total = "Skupaj"
-year = "Leto"
-
-[sessions.groupBy]
-vehicle = "Vozilo"
-loadpoint = "Polnilno mesto"
-none = "Skupaj"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Cena"
-solar = "Sončna energija"
-
-[sessions.chartTitle]
-energyGrouped = "Sončna energija v primerjavi z omrežno energijo"
-avgPriceByGroup = "⌀ Cena {byGroup}"
-byGroupLoadpoint = "po polnilnem mestu"
-byGroupVehicle = "po vozilu"
-energy = "Napolnjena energija"
-historyPriceSub = "{value} skupaj"
-energyGroupedByGroup = "Energija {byGroup}"
-groupedPriceByGroup = "Skupni stroški {byGroup}"
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-energySubSolar = "{value} sončna energija"
-energySubTotal = "{value} skupaj"
-groupedCo2ByGroup = "CO₂-Količina {byGroup}"
-historyCo2 = "CO₂-Emisije"
-historyCo2Sub = "{value} skupaj"
-historyPrice = "Stroški polnjenja"
-solar = "Solarni delež čez leto"
-solarByGroup = "Solarni delež {byGroup}"
-
-[sessions.group]
-co2 = "Emisije"
-grid = "Omrežje"
-self = "Sončna energija"
-price = "Cena"

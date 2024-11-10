@@ -61,6 +61,7 @@ enabled = "Engedélyezve"
 energy = "Energia"
 feedinPrice = "Kötelező átvételi ár"
 gridPrice = "Villamosenergia ára"
+hemsType = "Rendszer"
 no = "nem"
 odometer = "Óraállás"
 org = "Szervezet"
@@ -76,7 +77,6 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
-hemsType = Rendszer
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -432,6 +432,7 @@ remoteDisabledSoft = "{source}: kikapcsolva, adaptív napelemes töltés"
 solar = "Nap"
 
 [main.loadpointSettings]
+batteryUsage = "Otthoni Akkumulátor"
 currents = "Töltőáram"
 default = "alapértelmezett"
 disclaimerHint = "Megjegyzés:"
@@ -440,7 +441,12 @@ smartCostCheap = "Olcsó Hálózati Töltés"
 smartCostClean = "Tiszta Hálózati Töltés"
 title = "Beállítások {0}"
 vehicle = "Jármű"
-batteryUsage = Otthoni Akkumulátor
+
+[main.loadpointSettings.batteryBoost]
+description = "Gyorstöltés otthoni akkumulátorról."
+label = "Akkumulátoros Rásegítés"
+mode = "Csak szolár és min+szolár módban elérhető."
+once = "Rásegítés aktív ehhez a töltési folyamathoz."
 
 [main.loadpointSettings.limitSoc]
 description = "Töltési korlát, amikor a jármű csatlakoztatva van."
@@ -539,6 +545,7 @@ vehicleLimit = "Jármű limit: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Hitelesítésre várakozás."
+batteryBoost = "Akkumulátoros rásegítés aktív."
 charging = "Töltés…"
 cheapEnergyCharging = "Olcsó energia elérhető."
 cheapEnergyNextStart = "Olcsó energia {duration}."
@@ -564,7 +571,6 @@ vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
-batteryBoost = Akkumulátoros rásegítés aktív.
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"
@@ -620,11 +626,30 @@ loadpoint = "Töltőpont"
 noData = "Nincs töltési folyamat ebben a hónapban."
 price = "Σ Költség"
 reallyDelete = "Biztosan szeretné törölni ezt a folyamatot?"
+showIndividualEntries = "Egyéni munkamenetek megjelenítése"
 solar = "Napenergia"
 title = "Töltési Folyamatok"
 total = "Összesen"
 vehicle = "Jármű"
-showIndividualEntries = Egyéni munkamenetek megjelenítése
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Ár {byGroup}"
+byGroupLoadpoint = "töltőpont szerint"
+byGroupVehicle = "jármű szerint"
+energy = "Töltött Energia"
+energyGrouped = "Napelem vs. Hálózati Energia"
+energyGroupedByGroup = "Energia {byGroup}"
+energySubSolar = "{value} nap"
+energySubTotal = "{value} összesen"
+groupedCo2ByGroup = "CO₂-Mennyiség {byGroup}"
+groupedPriceByGroup = "Összes Költség {byGroup}"
+historyCo2 = "CO₂-Emissziók"
+historyCo2Sub = "{value} összesen"
+historyPrice = "Töltési Költségek"
+historyPriceSub = "{value} összesen"
+solar = "Napelem aránya egy évre vetítve"
+solarByGroup = "Napelem Aránya {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -646,6 +671,27 @@ vehicle = "Jármű"
 allLoadpoints = "minden töltőpont"
 allVehicles = "minden jármű"
 filter = "Szűrés"
+
+[sessions.group]
+co2 = "Emissziók"
+grid = "Hálózat"
+price = "Ár"
+self = "Nap"
+
+[sessions.groupBy]
+loadpoint = "Töltőpont"
+none = "Összes"
+vehicle = "Jármű"
+
+[sessions.period]
+month = "Hónap"
+total = "Összes"
+year = "Év"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Ár"
+solar = "Nap"
 
 [settings]
 title = "Felhasználói felület"
@@ -709,50 +755,3 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
-
-
-[main.loadpointSettings.batteryBoost]
-label = Akkumulátoros Rásegítés
-mode = Csak szolár és min+szolár módban elérhető.
-once = Rásegítés aktív ehhez a töltési folyamathoz.
-description = Gyorstöltés otthoni akkumulátorról.
-
-[sessions.chartTitle]
-avgCo2ByGroup = ⌀ CO₂ {byGroup}
-byGroupVehicle = jármű szerint
-groupedCo2ByGroup = CO₂-Mennyiség {byGroup}
-groupedPriceByGroup = Összes Költség {byGroup}
-historyCo2Sub = {value} összesen
-energy = Töltött Energia
-energyGrouped = Napelem vs. Hálózati Energia
-energySubSolar = {value} nap
-byGroupLoadpoint = töltőpont szerint
-avgPriceByGroup = ⌀ Ár {byGroup}
-energyGroupedByGroup = Energia {byGroup}
-energySubTotal = {value} összesen
-historyCo2 = CO₂-Emissziók
-historyPrice = Töltési Költségek
-solar = Napelem aránya egy évre vetítve
-historyPriceSub = {value} összesen
-solarByGroup = Napelem Aránya {byGroup}
-
-[sessions.group]
-grid = Hálózat
-price = Ár
-self = Nap
-co2 = Emissziók
-
-[sessions.period]
-total = Összes
-year = Év
-month = Hónap
-
-[sessions.groupBy]
-loadpoint = Töltőpont
-none = Összes
-vehicle = Jármű
-
-[sessions.type]
-co2 = CO₂
-price = Ár
-solar = Nap
