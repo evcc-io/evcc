@@ -35,4 +35,3 @@ render: |
   - welcomecharge
   {{- end }}
   {{- end }}
-  {{- end }}
