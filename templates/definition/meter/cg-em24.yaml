@@ -25,7 +25,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .usage "pv" }}0x5c{{ else }}0x42{{ end }}
+      address: {{ if eq .usage "pv" }}0x5c{{ else }}0x3e{{ end }}
       type: input
       decode: int32
     scale: 0.1
