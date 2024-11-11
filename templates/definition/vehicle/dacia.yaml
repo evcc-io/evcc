@@ -10,6 +10,6 @@ render: |
   type: dacia
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{- if .welcomecharge }}
+  {{- if eq .welcomecharge "true" }}
   features: ["welcomecharge"]
   {{- end }}

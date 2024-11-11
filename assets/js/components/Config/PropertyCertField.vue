@@ -10,11 +10,11 @@
 				{{ $t("config.general.readFromFile") }}
 			</button>
 			<input
-				type="file"
 				ref="fileInput"
+				type="file"
 				class="d-none"
-				@change="readFile"
 				accept=".crt,.pem,.cer,.csr,.key"
+				@change="readFile"
 			/>
 		</div>
 	</div>

@@ -51,6 +51,10 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing domain")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))
 	if err != nil {
 		return nil, err

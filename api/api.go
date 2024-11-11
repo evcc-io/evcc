@@ -68,7 +68,7 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
-// BatteryController optionally allows to control home battery (dis)charging behaviour
+// BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
@@ -120,7 +120,7 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
-// PhaseDescriber returns the number of availablephases
+// PhaseDescriber returns the number of available phases
 type PhaseDescriber interface {
 	Phases() int
 }
@@ -240,4 +240,9 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+}
+
+// Redactor is an interface to redact sensitive data
+type Redactor interface {
+	Redacted() any
 }

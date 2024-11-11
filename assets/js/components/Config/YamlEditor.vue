@@ -1,12 +1,12 @@
 <template>
 	<VueMonacoEditor
 		v-if="active"
+		ref="editor"
 		class="editor"
 		language="yaml"
 		:theme="theme"
 		:options="options"
 		:value="modelValue"
-		ref="editor"
 		@update:value="$emit('update:modelValue', $event)"
 		@mount="ready"
 	>
@@ -28,12 +28,12 @@ import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
 const $html = document.querySelector("html");
 export default {
 	name: "YamlEditor",
+	components: { VueMonacoEditor },
 	props: {
 		modelValue: String,
 		errorLine: Number,
 		disabled: Boolean,
 	},
-	components: { VueMonacoEditor },
 	emits: ["update:modelValue"],
 	data() {
 		return {
@@ -52,9 +52,13 @@ export default {
 			active: true,
 		};
 	},
-	mounted() {
-		this.updateTheme();
-		$html.addEventListener("themechange", this.updateTheme);
+	computed: {
+		options() {
+			return { ...this.defaultOptions, readOnly: this.disabled };
+		},
+		lines() {
+			return (this.modelValue || "").split("\n").length;
+		},
 	},
 	watch: {
 		errorLine() {
@@ -63,13 +67,9 @@ export default {
 			this.$nextTick(() => (this.active = true));
 		},
 	},
-	computed: {
-		options() {
-			return { ...this.defaultOptions, readOnly: this.disabled };
-		},
-		lines() {
-			return (this.modelValue || "").split("\n").length;
-		},
+	mounted() {
+		this.updateTheme();
+		$html.addEventListener("themechange", this.updateTheme);
 	},
 	beforeMount() {
 		loader.config({

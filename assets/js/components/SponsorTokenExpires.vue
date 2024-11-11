@@ -11,7 +11,7 @@
 			</template>
 		</i18n-t>
 
-		<em class="d-block mt-2" v-if="!isTrial">
+		<em v-if="!isTrial" class="d-block mt-2">
 			{{ $t("settings.sponsorToken.hint") }}
 		</em>
 	</div>

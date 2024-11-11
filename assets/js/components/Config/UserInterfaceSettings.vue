@@ -5,6 +5,7 @@
 				id="settingsDesign"
 				v-model="theme"
 				class="w-100"
+				transparent
 				:options="
 					THEMES.map((value) => ({
 						value,
@@ -31,6 +32,7 @@
 				id="settingsUnit"
 				v-model="unit"
 				class="w-75"
+				transparent
 				:options="
 					UNITS.map((value) => ({
 						value,
@@ -106,12 +108,6 @@ export default {
 			UNITS,
 		};
 	},
-	mounted() {
-		document.addEventListener("fullscreenchange", this.fullscreenChange);
-	},
-	unmounted() {
-		document.removeEventListener("fullscreenchange", this.fullscreenChange);
-	},
 	computed: {
 		languageOptions: () => {
 			const locales = Object.entries(LOCALES).map(([key, value]) => {
@@ -146,6 +142,12 @@ export default {
 				removeLocalePreference(i18n);
 			}
 		},
+	},
+	mounted() {
+		document.addEventListener("fullscreenchange", this.fullscreenChange);
+	},
+	unmounted() {
+		document.removeEventListener("fullscreenchange", this.fullscreenChange);
 	},
 	methods: {
 		enterFullscreen() {

@@ -104,7 +104,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     delay: {{ .delay }}
-    register:                         
+    register:
       address: 43000    # SOC
       type: holding
       decode: int16

@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h6 class="mt-0" v-if="isLoadpoint">{{ title }}</h6>
+		<h6 v-if="isLoadpoint" class="mt-0">{{ title }}</h6>
 		<p>
 			{{ description }}
 		</p>
@@ -106,10 +106,13 @@ export default {
 			return this.smartCostType === CO2_TYPE;
 		},
 		costOptions() {
+			const { max } = this.costRange(this.totalSlots);
+
 			const values = [];
 			const stepSize = this.optionStepSize;
 			for (let i = 1; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
+				if (value > max + stepSize) break;
 				values.push(this.roundLimit(value));
 			}
 			// add special entry if currently selected value is not in the scale
@@ -143,9 +146,13 @@ export default {
 				return 1;
 			}
 			const { min, max } = this.costRange(this.totalSlots);
-			for (const scale of [0.1, 0.5, 1, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
-				if (max - Math.min(0, min) < scale) {
-					return scale / 100;
+
+			const baseSteps = [0.001, 0.002, 0.005];
+			const range = max - Math.min(0, min);
+			for (let scale = 1; scale <= 10000; scale *= 10) {
+				for (const baseStep of baseSteps) {
+					const step = baseStep * scale;
+					if (range < step * 100) return step;
 				}
 			}
 			return 1;
@@ -288,17 +295,12 @@ export default {
 		slotHovered(index) {
 			this.activeIndex = index;
 		},
-		setSelectedSmartCostLimit(limit) {
-			const nextOption = this.costOptions.find(({ value }) => value >= limit);
-			if (nextOption) {
-				this.selectedSmartCostLimit = nextOption.value;
-			}
-		},
 		slotSelected(index) {
 			const price = this.slots[index].price;
 			if (price !== undefined) {
-				this.setSelectedSmartCostLimit(price);
-				this.saveSmartCostLimit(this.selectedSmartCostLimit);
+				// 3 decimal precision
+				const priceRounded = Math.ceil(price * 1000) / 1000;
+				this.saveSmartCostLimit(priceRounded);
 			}
 		},
 		changeSmartCostLimit($event) {

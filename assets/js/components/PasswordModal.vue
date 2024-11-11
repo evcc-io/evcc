@@ -1,8 +1,8 @@
 <template>
 	<GenericModal
 		id="passwordModal"
-		:title="title"
 		ref="modal"
+		:title="title"
 		data-testid="password-modal"
 		:uncloseable="!updateMode"
 		@open="open"
@@ -19,10 +19,10 @@
 		>
 			<!-- password manager hint -->
 			<input
+				id="username"
 				class="d-none"
 				type="text"
 				name="username"
-				id="username"
 				autocomplete="username"
 				value="admin"
 			/>
@@ -33,8 +33,8 @@
 			>
 				<input
 					id="passwordCurrent"
-					type="password"
 					v-model="passwordCurrent"
+					type="password"
 					class="form-control"
 					autocomplete="current-password"
 				/>
@@ -42,8 +42,8 @@
 			<FormRow id="passwordNew" :label="$t('passwordModal.labelNew')">
 				<input
 					id="passwordNew"
-					type="password"
 					v-model="passwordNew"
+					type="password"
 					class="form-control"
 					autocomplete="new-password"
 					required
@@ -55,9 +55,9 @@
 			<FormRow id="passwordRepeat" :label="$t('passwordModal.labelRepeat')">
 				<input
 					id="passwordRepeat"
-					type="password"
 					ref="passwordRepeat"
 					v-model="passwordRepeat"
+					type="password"
 					class="form-control"
 					autocomplete="new-password"
 				/>

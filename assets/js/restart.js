@@ -11,7 +11,7 @@ export async function performRestart() {
     await api.post("/system/shutdown");
     restart.restarting = true;
   } catch (e) {
-    alert("Unabled to restart server.");
+    alert("Unabled to restart server.", e);
   }
 }
 

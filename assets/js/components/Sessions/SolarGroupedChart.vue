@@ -23,12 +23,12 @@ registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 export default {
 	name: "SolarGroupedChart",
 	components: { PolarArea, LegendList },
+	mixins: [formatter],
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
-	mixins: [formatter],
 	computed: {
 		chartData() {
 			console.log("update solar grouped data");

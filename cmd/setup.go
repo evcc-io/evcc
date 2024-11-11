@@ -474,7 +474,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup machine id
-	if conf.Plant != "" {
+	if err == nil && conf.Plant != "" {
 		// TODO decide wrapping
 		err = machine.CustomID(conf.Plant)
 	}
@@ -645,7 +645,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
@@ -757,7 +757,7 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	}
 
 	for _, service := range conf.Services {
-		impl, err := push.NewFromConfig(service.Type, service.Other)
+		impl, err := push.NewFromConfig(context.TODO(), service.Type, service.Other)
 		if err != nil {
 			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}

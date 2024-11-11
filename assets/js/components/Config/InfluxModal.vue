@@ -9,7 +9,7 @@
 		data-testid="influx-modal"
 		@changed="$emit('changed')"
 	>
-		<template v-slot:default="{ values }">
+		<template #default="{ values }">
 			<FormRow
 				id="influxUrl"
 				:label="$t('config.influx.labelUrl')"
@@ -76,10 +76,10 @@
 			<FormRow id="influxInsecure" :label="$t('config.influx.labelInsecure')">
 				<div class="d-flex">
 					<input
-						class="form-check-input"
 						id="influxInsecure"
-						type="checkbox"
 						v-model="values.insecure"
+						class="form-check-input"
+						type="checkbox"
 					/>
 					<label class="form-check-label ms-2" for="influxInsecure">
 						{{ $t("config.influx.labelCheckInsecure") }}
