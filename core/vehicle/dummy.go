@@ -38,8 +38,8 @@ func (v *dummy) GetLimitSoc() int {
 func (v *dummy) SetLimitSoc(soc int) {
 }
 
-// GetPlanSoc returns the charge plan soc
-func (v *dummy) GetPlanSoc() (time.Time, int) {
+// GetStaticPlanSoc returns the charge plan soc
+func (v *dummy) GetStaticPlanSoc() (time.Time, int) {
 	return time.Time{}, 0
 }
 

@@ -70,8 +70,8 @@ func (v *adapter) SetLimitSoc(soc int) {
 	v.publish()
 }
 
-// GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, int) {
+// GetStaticPlanSoc returns the charge plan soc
+func (v *adapter) GetStaticPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v

@@ -68,21 +68,6 @@ func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSoc", reflect.TypeOf((*MockAPI)(nil).GetMinSoc))
 }
 
-// GetPlanSoc mocks base method.
-func (m *MockAPI) GetPlanSoc() (time.Time, int) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlanSoc")
-	ret0, _ := ret[0].(time.Time)
-	ret1, _ := ret[1].(int)
-	return ret0, ret1
-}
-
-// GetPlanSoc indicates an expected call of GetPlanSoc.
-func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
-}
-
 // GetRepeatingPlans mocks base method.
 func (m *MockAPI) GetRepeatingPlans(arg0 bool) []api.RepeatingPlanStruct {
 	m.ctrl.T.Helper()
@@ -109,6 +94,21 @@ func (m *MockAPI) GetRepeatingPlansWithTimestamps(arg0 bool) []api.PlanStruct {
 func (mr *MockAPIMockRecorder) GetRepeatingPlansWithTimestamps(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlansWithTimestamps", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlansWithTimestamps), arg0)
+}
+
+// GetStaticPlanSoc mocks base method.
+func (m *MockAPI) GetStaticPlanSoc() (time.Time, int) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStaticPlanSoc")
+	ret0, _ := ret[0].(time.Time)
+	ret1, _ := ret[1].(int)
+	return ret0, ret1
+}
+
+// GetStaticPlanSoc indicates an expected call of GetStaticPlanSoc.
+func (mr *MockAPIMockRecorder) GetStaticPlanSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStaticPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetStaticPlanSoc))
 }
 
 // Instance mocks base method.

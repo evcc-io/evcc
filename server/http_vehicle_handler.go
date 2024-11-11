@@ -97,7 +97,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		ts, soc = v.GetPlanSoc()
+		ts, soc = v.GetStaticPlanSoc()
 
 		res := struct {
 			Soc  int       `json:"soc"`

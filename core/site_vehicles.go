@@ -34,7 +34,7 @@ func (site *Site) publishVehicles() {
 		var plans []api.PlanStruct
 
 		// TODO: add support for multiple plans
-		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+		if time, soc := v.GetStaticPlanSoc(); !time.IsZero() {
 			plans = append(plans, api.PlanStruct{Soc: soc, Time: time})
 		}
 

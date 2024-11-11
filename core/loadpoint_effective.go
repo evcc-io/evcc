@@ -29,14 +29,14 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
-// nextVehiclePlanSoc returns the next vehicle plan time and soc
-func (lp *Loadpoint) nextVehiclePlanSoc() (time.Time, int) {
+// nextVehiclePlan returns the next vehicle plan time and soc
+func (lp *Loadpoint) nextVehiclePlan() (time.Time, int) {
 	if v := lp.GetVehicle(); v != nil {
 		// merge the static plan with the active repeating ones to sort them in one array
 
 		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps(true)
 
-		planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
+		planTime, soc := vehicle.Settings(lp.log, v).GetStaticPlanSoc()
 
 		if soc != 0 {
 			plans = append(plans, api.PlanStruct{
@@ -58,14 +58,14 @@ func (lp *Loadpoint) nextVehiclePlanSoc() (time.Time, int) {
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, soc := lp.nextVehiclePlanSoc()
+	_, soc := lp.nextVehiclePlan()
 	return soc
 }
 
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _ := lp.nextVehiclePlanSoc()
+		ts, _ := lp.nextVehiclePlan()
 		return ts
 	}
 
