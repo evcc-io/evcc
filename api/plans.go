@@ -21,9 +21,6 @@ func (p *RepeatingPlanStruct) ToPlansWithTimestamp() []PlanStruct {
 
 	now := time.Now()
 
-	// current weekday as integer, Sunday (0 in Go) is 6 in our representation, Monday (1 in Go) is 1, Tuesday (2 in G) is 2, ...
-	// in other words in Go the week begins with the Sunday, in our representation the week begins with Monday
-	currentWeekday := (int(now.Weekday()) + 6) % 7
 	planTime, err := time.Parse("15:04", p.Time)
 	if err != nil {
 		return []PlanStruct{}
@@ -31,7 +28,7 @@ func (p *RepeatingPlanStruct) ToPlansWithTimestamp() []PlanStruct {
 
 	for _, w := range p.Weekdays {
 		// Calculate the difference in days to the target weekday
-		dayOffset := (w - currentWeekday + 7) % 7
+		dayOffset := (w - int(now.Weekday()) + 7) % 7
 
 		// If the user has selected the day of the week that is today, and at the same time the user
 		// has selected a time that would be in the past for today, the next day of the week in a week should be used
