@@ -224,6 +224,12 @@ export default {
 				this.selectedEnergy = this.energy;
 			}
 		},
+		isNew(value) {
+			this.enabled = !value;
+		},
+		enabled() {
+			this.preview();
+		},
 	},
 	mounted() {
 		this.initInputFields();
@@ -309,6 +315,7 @@ export default {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
+				active: this.enabled,
 			});
 		},
 		toggle: function (e) {
@@ -319,6 +326,7 @@ export default {
 				this.$emit("static-plan-removed");
 			}
 			this.enabled = checked;
+			this.preview();
 		},
 		defaultTime: function () {
 			const [hours, minutes] = (

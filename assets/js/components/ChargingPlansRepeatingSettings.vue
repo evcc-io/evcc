@@ -50,7 +50,7 @@ export default {
 		rangePerSoc: Number,
 		initialPlans: { type: Array, default: () => [] },
 	},
-	emits: ["repeating-plans-updated"],
+	emits: ["repeating-plans-updated", "plans-preview"],
 	data: function () {
 		return {
 			plans: [...this.initialPlans], // clone array
@@ -77,6 +77,7 @@ export default {
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
 			});
+			this.preview();
 		},
 		updateRepeatingPlans: function () {
 			this.$emit("repeating-plans-updated", this.plans);
@@ -84,9 +85,14 @@ export default {
 		updateRepeatingPlan: function (newPlan) {
 			const { id } = newPlan;
 			this.plans.splice(id, 1, newPlan);
+			this.preview();
 		},
 		removeRepeatingPlan: function (index) {
 			this.plans.splice(index, 1);
+			this.preview();
+		},
+		preview: function () {
+			this.$emit("plans-preview", this.plans);
 		},
 	},
 };

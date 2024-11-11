@@ -12,7 +12,7 @@
 					:soc-based-planning="socBasedPlanning"
 					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
 					@static-plan-removed="() => removeStaticPlan(0)"
-					@plan-preview="previewPlan"
+					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
 					<hr class="w-75 mx-auto mt-5" />
@@ -26,6 +26,7 @@
 						:rangePerSoc="rangePerSoc"
 						:initialPlans="repeatingPlans"
 						@repeating-plans-updated="updateRepeatingPlans"
+						@plans-preview="previewRepeatingPlans"
 					/>
 				</div>
 			</div>
@@ -87,12 +88,22 @@ export default {
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
 	data: function () {
+		// If this.plans exists the static plan is active
+		// However no such key exists on the plan-pbject, so we have to add it
+		let staticPlan = {};
+		if (this.plans.length > 0) {
+			staticPlan = {
+				...this.plans[0],
+				active: true,
+			};
+		}
 		return {
 			tariff: {},
 			plan: {},
 			activeTab: "time",
 			isPreview: false,
 			debounceTimer: null,
+			previewPlans: { repeating: this.repeatingPlans, static: staticPlan },
 		};
 	},
 	computed: {
@@ -117,9 +128,7 @@ export default {
 		},
 	},
 	mounted() {
-		if (this.plans.length > 0) {
-			this.fetchPlanDebounced();
-		}
+		this.fetchPlanDebounced();
 	},
 	methods: {
 		fetchActivePlan: async function () {
@@ -133,19 +142,25 @@ export default {
 			const timeISO = time.toISOString();
 			return await api.get(`loadpoints/${this.id}/plan/preview/energy/${energy}/${timeISO}`);
 		},
-		fetchPlan: async function (preview) {
+		fetchPlan: async function () {
 			try {
-				let planRes = null;
-				if (preview && this.socBasedPlanning) {
-					planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
-					this.isPreview = true;
-				} else if (preview && !this.socBasedPlanning) {
-					planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
-					this.isPreview = true;
-				} else {
+				let nextPlan = this.getNextPlan();
+				console.log(nextPlan);
+
+				let planRes = undefined;
+
+				if (nextPlan.active) {
 					planRes = await this.fetchActivePlan();
 					this.isPreview = false;
+				} else {
+					if (this.socBasedPlanning) {
+						planRes = await this.fetchPlanPreviewSoc(nextPlan.soc, nextPlan.time);
+					} else {
+						planRes = await this.fetchPlanPreviewEnergy(nextPlan.energy, nextPlan.time);
+					}
+					this.isPreview = true;
 				}
+
 				this.plan = planRes.data.result;
 
 				const tariffRes = await api.get(`tariff/planner`, {
@@ -158,13 +173,13 @@ export default {
 				console.error(e);
 			}
 		},
-		fetchPlanDebounced: async function (preview) {
+		fetchPlanDebounced: async function () {
 			if (!this.debounceTimer) {
-				await this.fetchPlan(preview);
+				await this.fetchPlan();
 				return;
 			}
 			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.fetchPlan(preview), 1000);
+			this.debounceTimer = setTimeout(async () => await this.fetchPlan(), 1000);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
@@ -198,8 +213,16 @@ export default {
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
 		},
-		previewPlan: function (data) {
-			this.fetchPlanDebounced(data);
+		previewStaticPlan: function (plan) {
+			this.previewPlans.static = plan;
+			this.fetchPlanDebounced();
+		},
+		previewRepeatingPlans: function (plans) {
+			this.previewPlans.repeating = plans;
+			this.fetchPlanDebounced();
+		},
+		getNextPlan: function () {
+			return this.getNextLocalePlan(this.previewPlans.static, this.previewPlans.repeating);
 		},
 	},
 };
