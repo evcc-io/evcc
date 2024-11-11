@@ -368,7 +368,8 @@ export default {
     },
     getWeekdaysList: function (weekdayFormat) {
       const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
-      return [...Array(7).keys()].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+      return [6, 7, 8, 9, 10, 11, 12].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+    },
     },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
       if (0 === selectedWeekdays.length) {
