@@ -1,0 +1,13 @@
+template: homewizard-kwh
+products:
+  - brand: HomeWizard
+    description:
+      generic: kWh Meter
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: homewizard
+  uri: http://{{ .host }}
+  usage: {{ .usage }}
