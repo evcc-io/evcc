@@ -197,6 +197,13 @@ tariffs:
     #   uri: https://example.org/price.json
     #   jq: .price.current
 
+    # type: template
+    # template: energy-charts-api # epex spot market prices
+    # bzn: DE-LU
+    # charges: 0.15
+    # tax: 0.1
+    # formula: math.Min((price + charges) * (1 + tax), 0.5)
+
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed

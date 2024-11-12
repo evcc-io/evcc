@@ -1,0 +1,22 @@
+template: zendure
+products:
+  - brand: Zendure
+    description:
+      generic: Hyper V
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: account
+  - name: serial
+  - name: capacity
+    default: 2
+    advanced: true
+  - name: timeout
+render: |
+  type: zendure
+  usage: {{ .usage }}
+  account: {{ .account }}
+  serial: {{ .serial }}
+  timeout: {{ .timeout }}
