@@ -3,7 +3,6 @@ package push
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -66,9 +65,9 @@ func (m *Push) Send(title, msg string) {
 		})
 		res = string(b)
 	case "csv":
-		res = fmt.Sprintf("%s,%s", title, msg)
+		res = title + "," + msg
 	case "tsv":
-		res = fmt.Sprintf("%s\t%s", title, msg)
+		res = title + "\t" + msg
 	case "title":
 		res = title
 	default:
