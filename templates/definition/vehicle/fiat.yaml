@@ -18,6 +18,6 @@ render: |
   pin: {{ .pin }} # mandatory to deep refresh Soc
   {{- end }}
   {{ include "vehicle-identify" . }}
-  {{- if .welcomecharge }}
+  {{- if eq .welcomecharge "true" }}
   features: ["welcomecharge"]
   {{- end }}

@@ -15,6 +15,8 @@ params:
     #   - EU
     default: EU
     advanced: true
+  - name: coarsecurrent
+    advanced: true
   - name: welcomecharge
     advanced: true
 render: |
@@ -24,6 +26,12 @@ render: |
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{- if .welcomecharge }}
-  features: ["welcomecharge"]
+  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
+  features:
+  {{- if eq .coarsecurrent "true" }}
+  - coarsecurrent
+  {{- end }}
+  {{- if eq .welcomecharge "true" }}
+  - welcomecharge
+  {{- end }}
   {{- end }}

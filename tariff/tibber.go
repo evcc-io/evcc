@@ -44,6 +44,10 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing token")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
