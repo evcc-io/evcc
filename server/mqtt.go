@@ -220,7 +220,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		}},
 		{"vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
-			if payload == "-" {
+			if isEmpty(payload) {
 				lp.SetVehicle(nil)
 				return nil
 			}
