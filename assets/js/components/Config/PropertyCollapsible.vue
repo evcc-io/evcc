@@ -6,8 +6,8 @@
 			type="button"
 			@click="toggle"
 		>
-			<span v-if="open">{{ $t("config.mqtt.hideAdvancedSettings") }}</span>
-			<span v-else>{{ $t("config.mqtt.showAdvancedSettings") }}</span>
+			<span v-if="open">{{ $t("config.general.hideAdvancedSettings") }}</span>
+			<span v-else>{{ $t("config.general.showAdvancedSettings") }}</span>
 			<DropdownIcon class="icon" :class="{ iconUp: open }" />
 		</button>
 
