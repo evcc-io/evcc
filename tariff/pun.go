@@ -217,9 +217,7 @@ func parseFormFields(body io.Reader) (url.Values, error) {
 	var f func(*html.Node)
 	f = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "input" {
-			inputType := ""
-			inputName := ""
-			inputValue := ""
+			var inputType, inputName, inputValue string
 			for _, a := range n.Attr {
 				if a.Key == "type" {
 					inputType = a.Val
