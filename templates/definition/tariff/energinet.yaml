@@ -5,6 +5,7 @@ requirements:
   description:
     de: "Nur für Dänemark verfügbar."
     en: "Only available for Denmark."
+  evcc: ["skiptest"]
 group: price
 params:
   - name: region
