@@ -42,18 +42,25 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
+		var resem Gen2EmStatusResponse
 		var res Gen2StatusResponse
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-			return 0, err
+		if d.app == "Pro3EM" && d.profile == "monophase" {
+			if err := d.execGen2Cmd("Shelly.GetStatus", false, &resem); err != nil {
+				return 0, err
+			}
+		} else {
+			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+				return 0, err
+			}
 		}
 
 		switch d.channel {
 		case 1:
-			power = res.Switch1.Apower + res.Pm1.Apower
+			power = res.Switch1.Apower + res.Pm1.Apower + resem.Em1.ActPower
 		case 2:
-			power = res.Switch2.Apower + res.Pm2.Apower
+			power = res.Switch2.Apower + res.Pm2.Apower + resem.Em2.ActPower
 		default:
-			power = res.Switch0.Apower + res.Pm0.Apower
+			power = res.Switch0.Apower + res.Pm0.Apower + resem.Em0.ActPower
 		}
 	}
 
