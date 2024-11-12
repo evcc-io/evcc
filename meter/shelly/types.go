@@ -8,9 +8,11 @@ type DeviceInfo struct {
 	Model     string `json:"model"`
 	Type      string `json:"type"`
 	Mac       string `json:"mac"`
+	App       string `json:"app"`
 	Auth      bool   `json:"auth"`
 	AuthEn    bool   `json:"auth_en"`
 	NumMeters int    `json:"num_meters"`
+	Profile   string `json:"profile"`
 }
 
 type Gen2RpcPost struct {
@@ -40,6 +42,12 @@ type Gen2StatusResponse struct {
 	Pm2     Gen2Switch `json:"pm3:2"`
 }
 
+type Gen2Em struct {
+	Current  float64 `json:"current"`
+	Voltage  float64 `json:"voltage"`
+	ActPower float64 `json:"act_power"`
+}
+
 type Gen2EmStatusResponse struct {
 	TotalPower float64 `json:"total_act_power"`
 	CurrentA   float64 `json:"a_current"`
@@ -51,6 +59,9 @@ type Gen2EmStatusResponse struct {
 	PowerA     float64 `json:"a_act_power"`
 	PowerB     float64 `json:"b_act_power"`
 	PowerC     float64 `json:"c_act_power"`
+	Em0        Gen2Em  `json:"em1:0"`
+	Em1        Gen2Em  `json:"em2:1"`
+	Em2        Gen2Em  `json:"em3:2"`
 }
 
 type Gen2EmDataStatusResponse struct {
