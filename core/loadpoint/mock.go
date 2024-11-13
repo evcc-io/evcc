@@ -793,27 +793,27 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 }
 
 // SetSocConfig mocks base method.
-func (m *MockAPI) SetSocConfig(arg0 SocConfig) {
+func (m *MockAPI) SetSocConfig(soc SocConfig) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSocConfig", arg0)
+	m.ctrl.Call(m, "SetSocConfig", soc)
 }
 
 // SetSocConfig indicates an expected call of SetSocConfig.
-func (mr *MockAPIMockRecorder) SetSocConfig(arg0 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetSocConfig(soc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSocConfig", reflect.TypeOf((*MockAPI)(nil).SetSocConfig), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSocConfig", reflect.TypeOf((*MockAPI)(nil).SetSocConfig), soc)
 }
 
 // SetThresholds mocks base method.
-func (m *MockAPI) SetThresholds(arg0 ThresholdsConfig) {
+func (m *MockAPI) SetThresholds(thresholds ThresholdsConfig) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetThresholds", arg0)
+	m.ctrl.Call(m, "SetThresholds", thresholds)
 }
 
 // SetThresholds indicates an expected call of SetThresholds.
-func (mr *MockAPIMockRecorder) SetThresholds(arg0 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetThresholds(thresholds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetThresholds", reflect.TypeOf((*MockAPI)(nil).SetThresholds), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetThresholds", reflect.TypeOf((*MockAPI)(nil).SetThresholds), thresholds)
 }
 
 // SetTitle mocks base method.
