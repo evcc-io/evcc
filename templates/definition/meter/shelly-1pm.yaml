@@ -2,11 +2,11 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM, Plug S
+      generic: 1PM, EM, Plug S, Pro 3EM in monophase mode
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: host
   - name: user
   - name: password
