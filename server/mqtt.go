@@ -195,11 +195,11 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
- 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
+		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
 		{"phases", intSetter(lp.SetPhases)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
-    {"minCurrent", floatSetter(lp.SetMinCurrent)},
+		{"minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"maxCurrent", floatSetter(lp.SetMaxCurrent)},
 		{"limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},
 		{"enableThreshold", floatSetter(pass(lp.SetEnableThreshold))},
