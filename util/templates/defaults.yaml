@@ -277,6 +277,14 @@ params:
     help:
       en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
       de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+  - name: coarsecurrent
+    type: bool
+    help:
+      en: 1A current control
+      de: 1A Ladestromvorgabe
+    description:
+      en: Vehicle supports 1A current steps only
+      de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
   - name: welcomecharge
     type: bool
     description:

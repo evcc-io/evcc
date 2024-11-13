@@ -17,6 +17,10 @@ params:
     help:
       de: "Zu finden in der Zendure App in den Einstellungen des Geräts"
       en: "You can find this in the Zendure App in the settings of the device"
+  - name: region
+    type: choice
+    default: EU
+    validvalues: ["EU", "Global"]
   - name: capacity
     default: 2
     advanced: true
