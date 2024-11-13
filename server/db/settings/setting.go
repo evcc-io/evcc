@@ -245,3 +245,7 @@ func (s Settings) String(key string) (string, error) {
 func (s Settings) SetString(key string, value string) {
 	SetString(key, value)
 }
+
+func (s Settings) Persist() {
+	Persist()
+}

@@ -52,6 +52,7 @@ func (a *auth) getAdminPasswordHash() string {
 func (a *auth) RemoveAdminPassword() {
 	a.settings.SetString(keys.AdminPassword, "")
 	a.settings.SetString(keys.JwtSecret, "")
+	a.settings.Persist()
 }
 
 // IsAdminPasswordConfigured checks if the admin password is already set
@@ -71,6 +72,7 @@ func (a *auth) SetAdminPassword(password string) error {
 	}
 
 	a.settings.SetString(keys.AdminPassword, hashed)
+	a.settings.Persist()
 	return nil
 }
 
@@ -103,6 +105,7 @@ func (a *auth) getJwtSecret() ([]byte, error) {
 			return nil, err
 		}
 		a.settings.SetString(keys.JwtSecret, jwtSecret)
+		a.settings.Persist()
 	}
 
 	return []byte(jwtSecret), nil

@@ -5,4 +5,5 @@ package settings
 type API interface {
 	String(key string) (string, error)
 	SetString(key string, value string)
+	Persist()
 }
