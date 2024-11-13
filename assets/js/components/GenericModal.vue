@@ -25,7 +25,7 @@
 							aria-label="Close"
 						></button>
 					</div>
-					<div class="modal-body">
+					<div ref="modalBody" class="modal-body">
 						<slot />
 					</div>
 				</div>
@@ -92,6 +92,14 @@ export default {
 		},
 		handleShown() {
 			this.$emit("opened");
+			// focus first input or select
+			this.$nextTick(() => {
+				const firstInput = this.$refs.modalBody.querySelector("input, select, button");
+				if (firstInput) {
+					console.log(firstInput);
+					firstInput.focus();
+				}
+			});
 			this.isModalVisible = true;
 		},
 		handleHide() {

@@ -33,7 +33,8 @@ export default {
 	padding: 1rem 1rem 0.5rem;
 	transition: border-color var(--evcc-transition-fast) linear;
 }
-.root:hover {
+.root:hover,
+.root:focus-within {
 	border-color: var(--evcc-default-text);
 	color: var(--evcc-default-text);
 }
@@ -44,5 +45,8 @@ button {
 	height: 100%;
 	width: 100%;
 	color: inherit;
+}
+button:focus {
+	outline: none;
 }
 </style>
