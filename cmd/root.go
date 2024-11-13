@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -65,6 +66,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
+	rootCmd.PersistentFlags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -270,7 +272,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
-	httpd.RegisterSystemHandler(valueChan, cache, func() {
+	auth := auth.New()
+	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
+		log.WARN.Println("Authentication is disabled. This is dangerous! Your data and credentials are not protected.")
+		auth.Disable()
+	}
+
+	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})
