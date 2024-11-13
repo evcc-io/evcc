@@ -246,13 +246,13 @@ export default {
         day: "numeric",
       }).format(date);
     },
-    fmtSecondUnit: function (seconds) {
+    fmtDurationUnit: function (value, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style: "unit",
-        unit: "second",
+        unit,
         unitDisplay: "long",
       })
-        .formatToParts(seconds)
+        .formatToParts(value)
         .find((part) => part.type === "unit").value;
     },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
