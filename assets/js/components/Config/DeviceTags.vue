@@ -62,9 +62,9 @@ export default {
 				case "range":
 					return `${this.fmtNumber(value, 0)} km`;
 				case "phaseCurrents":
-					return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " A";
+					return value.map((v) => this.fmtNumber(v, 1)).join(" · ") + " A";
 				case "phaseVoltages":
-					return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " V";
+					return value.map((v) => this.fmtNumber(v, 0)).join(" · ") + " V";
 				case "phasePowers":
 					return value.map((v) => this.fmtW(v)).join(", ");
 				case "chargeStatus":
