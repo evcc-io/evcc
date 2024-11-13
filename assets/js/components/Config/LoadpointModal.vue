@@ -465,7 +465,6 @@ import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 
 const nsPerMin = 60 * 1e9;
-const wPerKw = 1e3;
 
 const defaultValues = {
 	title: "",
