@@ -2,7 +2,7 @@ template: zendure
 products:
   - brand: Zendure
     description:
-      generic: Hyper V
+      generic: Hyper 2000
 requirements:
   evcc: ["skiptest"]
 params:
@@ -10,6 +10,10 @@ params:
     choice: ["pv", "battery"]
   - name: account
   - name: serial
+  - name: region
+    type: choice
+    default: EU
+    validvalues: ["EU", "Global"]
   - name: capacity
     default: 2
     advanced: true
