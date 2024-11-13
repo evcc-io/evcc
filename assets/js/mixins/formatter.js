@@ -246,6 +246,15 @@ export default {
         day: "numeric",
       }).format(date);
     },
+    fmtSecondUnit: function (seconds) {
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: "unit",
+        unit: "second",
+        unitDisplay: "long",
+      })
+        .formatToParts(seconds)
+        .find((part) => part.type === "unit").value;
+    },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
       const result = new Intl.NumberFormat(this.$i18n?.locale, {

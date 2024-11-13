@@ -22,7 +22,7 @@ type Connection struct {
 	data *util.Monitor[Data]
 }
 
-func NewConnection(account, serial string, timeout time.Duration) (*Connection, error) {
+func NewConnection(account, serial string, global bool, timeout time.Duration) (*Connection, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -31,7 +31,7 @@ func NewConnection(account, serial string, timeout time.Duration) (*Connection, 
 		return conn, nil
 	}
 
-	res, err := MqttCredentials(account, serial)
+	res, err := MqttCredentials(account, serial, global)
 	if err != nil {
 		return nil, err
 	}
