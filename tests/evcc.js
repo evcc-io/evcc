@@ -42,12 +42,12 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
-export async function start(config, sqlDumps) {
+export async function start(config, sqlDumps, flags) {
   await _clean();
   if (sqlDumps) {
     await _restoreDatabase(sqlDumps);
   }
-  return await _start(config);
+  return await _start(config, flags);
 }
 
 export async function stop(instance) {
@@ -77,14 +77,15 @@ async function _restoreDatabase(sqlDumps) {
   }
 }
 
-async function _start(config) {
+async function _start(config, flags = []) {
   const configFile = config.includes("/") ? config : `tests/${config}`;
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
-  log("starting evcc", { config, port });
-  const instance = spawn(BINARY, ["--config", configFile], {
+  const additionalFlags = typeof flags === "string" ? [flags] : flags;
+  log("starting evcc", { config, port, additionalFlags });
+  const instance = spawn(BINARY, ["--config", configFile, additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });
