@@ -96,6 +96,16 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
+	// If the authorization code is empty, this indicates that user consent must be handled
+	// before the code can be obtained. The `confirmConsentAndGetCode` method is called as a
+	// workaround to guide the user through the consent process and retrieve the authorization code.
+	if code == "" {
+		code, err = v.confirmConsentAndGetCode(uri, resume, param)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	var res struct {
 		Token `graphql:"getAuthToken(code: $code)"`
 	}
@@ -136,4 +146,42 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	return v.login()
+}
+
+func (v *Identity) confirmConsentAndGetCode(uri, resume string, param request.InterceptResult) (string, error) {
+
+	// Step 1: Extract the user ID (UID) from the redirect parameters
+	var uid string
+	if uid, err := param(); err != nil || uid == "" {
+		return "", fmt.Errorf("Failed to extract user ID: %w", err)
+	}
+
+	// Step 2: Confirm user consent by submitting the consent form, which rejects cookies
+	data := url.Values{
+		"pf.submit": []string{"false"},
+		"subject":   []string{uid},
+	}
+
+	// Make a POST request to confirm the user consent
+	if _, err := v.Post(fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resume), request.FormContent, strings.NewReader(data.Encode())); err != nil {
+		return "", fmt.Errorf("Error confirming user consent to reject cookies during the authentication process: %w", err)
+	}
+
+	// Step 3: Retrieve the authorization code after consent has been confirmed
+	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
+	defer func() { v.Client.CheckRedirect = nil }()
+
+	// Make a GET request to fetch the code
+	if _, err := v.Get(uri); err != nil {
+		return "", fmt.Errorf("Error retrieving the authorization code after consent confirmation: %w", err)
+	}
+
+	// Extract the authorization code from the response
+	code, err := param()
+	if err != nil || code == "" {
+		return "", fmt.Errorf("Failed to extract authorization code: %w", err)
+	}
+
+	// Return the retrieved code
+	return code, nil
 }
