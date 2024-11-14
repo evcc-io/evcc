@@ -151,13 +151,17 @@ func (v *Identity) confirmConsentAndGetCode(uri, resume string, param request.In
 
 	fmt.Printf("Attempting to retrieve authorization code again after user consent confirmation")
 
-	// Step 1: Extract the user ID (UID) from the redirect parameters
+	// Attempt to extract the "uid" parameter
+	v.Client.CheckRedirect, param = request.InterceptRedirect("uid", true)
+	defer func() { v.Client.CheckRedirect = nil }()
+
+	// Extract the user ID (UID) from the redirect parameters
 	var uid string
 	if uid, err := param(); err != nil || uid == "" {
 		return "", fmt.Errorf("Failed to extract user ID: %w", err)
 	}
 
-	// Step 2: Confirm user consent by submitting the consent form, which rejects cookies
+	// Confirm user consent by submitting the consent form, which rejects cookies
 	data := url.Values{
 		"pf.submit": []string{"false"},
 		"subject":   []string{uid},
@@ -168,7 +172,7 @@ func (v *Identity) confirmConsentAndGetCode(uri, resume string, param request.In
 		return "", fmt.Errorf("Error confirming user consent to reject cookies during the authentication process: %w", err)
 	}
 
-	// Step 3: Retrieve the authorization code after consent has been confirmed
+	// Retrieve the authorization code after consent has been confirmed
 	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
 	defer func() { v.Client.CheckRedirect = nil }()
 
