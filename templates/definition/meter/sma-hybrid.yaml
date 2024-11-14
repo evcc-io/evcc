@@ -24,7 +24,7 @@ params:
     default: 30s
     advanced: true
   - name: chargepower
-    default: 100000  # 100kW, inverter will use it's maximum by default
+    default: 100000 # 100kW, inverter will use it's maximum by default
     advanced: true
     help:
       de: Ladeleistung für Netzladen in W
