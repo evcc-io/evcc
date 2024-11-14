@@ -1,7 +1,7 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"slices"
 	"time"
 )
@@ -36,5 +36,9 @@ func (r Rates) Current(now time.Time) (Rate, error) {
 		}
 	}
 
-	return Rate{}, errors.New("no matching rate")
+	if len(r) == 0 {
+		return Rate{}, fmt.Errorf("no matching rate: no rates available")
+	}
+	return Rate{}, fmt.Errorf("no matching rate: now %s, %d rates (%s to %s)",
+		now.Format(time.RFC3339), len(r), r[0].Start.Format(time.RFC3339), r[len(r)-1].End.Format(time.RFC3339))
 }
