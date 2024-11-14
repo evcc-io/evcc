@@ -129,7 +129,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	client.Jar, _ = cookiejar.New(nil)
 
 	// Erster Request
-	uri := "https://www.mercatoelettrico.org/It/WebServerDataStore/MGP_Prezzi/" + day.Format("20060102") + "MGPPrezzi.xml"
+	uri := "https://storico.mercatoelettrico.org/It/WebServerDataStore/MGP_Prezzi/" + day.Format("20060102") + "MGPPrezzi.xml"
 	resp, err := client.Get(uri)
 	if err != nil {
 		return nil, err
