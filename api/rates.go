@@ -40,5 +40,5 @@ func (r Rates) Current(now time.Time) (Rate, error) {
 		return Rate{}, fmt.Errorf("no matching rate for: %s", now.Local().Format(time.RFC3339))
 	}
 	return Rate{}, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
-		now.Format(time.RFC3339), len(r), r[0].Start.Format(time.RFC3339), r[len(r)-1].End.Format(time.RFC3339))
+		now.Local().Format(time.RFC3339), len(r), r[0].Start.Local().Format(time.RFC3339), r[len(r)-1].End.Local().Format(time.RFC3339))
 }
