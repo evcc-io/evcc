@@ -90,10 +90,9 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	var code string
 	if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
 		code, err = param()
-	}
-
-	if err != nil {
-		return nil, err
+		if err == nil && code == "" {
+			err = fmt.Errorf("authorization code is empty")
+		}
 	}
 
 	// If the authorization code is empty, this indicates that user consent must be handled
@@ -149,6 +148,8 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 }
 
 func (v *Identity) confirmConsentAndGetCode(uri, resume string, param request.InterceptResult) (string, error) {
+
+	fmt.Printf("Attempting to retrieve authorization code again after user consent confirmation")
 
 	// Step 1: Extract the user ID (UID) from the redirect parameters
 	var uid string
