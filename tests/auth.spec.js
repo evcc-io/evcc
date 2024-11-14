@@ -6,7 +6,7 @@ test.use({ baseURL: baseUrl() });
 const BASIC = "basics.evcc.yaml";
 
 test("set initial password", async ({ page }) => {
-  await start(BASIC);
+  await start(BASIC, null, "");
   await page.goto("/");
 
   const modal = page.getByTestId("password-modal");
@@ -34,7 +34,7 @@ test("set initial password", async ({ page }) => {
 });
 
 test("login", async ({ page }) => {
-  await start(BASIC, "password.sql");
+  await start(BASIC, "password.sql", "");
   await page.goto("/");
 
   // go to config
@@ -61,7 +61,7 @@ test("login", async ({ page }) => {
 });
 
 test("http iframe hint", async ({ page }) => {
-  await start(BASIC, "password.sql");
+  await start(BASIC, "password.sql", "");
   await page.goto("/");
 
   // go to config
@@ -89,7 +89,7 @@ test("http iframe hint", async ({ page }) => {
 });
 
 test("update password", async ({ page }) => {
-  await start(BASIC, "password.sql");
+  await start(BASIC, "password.sql", "");
   await page.goto("/");
 
   const oldPassword = "secret";

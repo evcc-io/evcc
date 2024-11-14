@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
-import { enableExperimental, login } from "./utils";
+import { enableExperimental } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -9,7 +9,7 @@ test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(CONFIG_GRID_ONLY, "password.sql");
+  await start(CONFIG_GRID_ONLY);
 });
 test.afterAll(async () => {
   await stop();
@@ -25,7 +25,6 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
@@ -73,7 +72,6 @@ test.describe("battery meter", async () => {
 
   test("advanced fields", async ({ page }) => {
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await page.getByRole("button", { name: "Add solar or battery" }).click();

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, login } from "./utils";
+import { enableExperimental } from "./utils";
+
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 
@@ -15,13 +16,12 @@ const SELECT_ALL = "ControlOrMeta+KeyA";
 
 async function goToConfig(page) {
   await page.goto("/#/config");
-  await login(page);
   await enableExperimental(page);
 }
 
 test.describe("tariffs", async () => {
   test("tariffs not configured", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
@@ -31,7 +31,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs via ui", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
     await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
@@ -89,7 +89,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs from evcc.yaml", async ({ page }) => {
-    await start(CONFIG_WITH_TARIFFS, "password.sql");
+    await start(CONFIG_WITH_TARIFFS);
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
