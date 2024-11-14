@@ -33,7 +33,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	return NewConfigurable(send, cc.Encoding)
 }
 
-// NewConfigurable creates a new meter
+// NewConfigurable creates a new Messenger
 func NewConfigurable(send func(string) error, encoding string) (*Push, error) {
 	m := &Push{
 		log:      util.NewLogger("push"),
