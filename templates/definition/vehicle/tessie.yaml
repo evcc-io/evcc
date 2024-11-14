@@ -1,0 +1,100 @@
+template: tessie
+products:
+  - description:
+      generic: Tessie
+group: generic
+requirements:
+  description:
+    de: Tessie API für Tesla Fahrzeuge, erfordert Token von https://dash.tessie.com/settings/api
+    en: Tessie API for Tesla vehicles, requires token from https://dash.tessie.com/settings/api
+params:
+  - name: title
+  - name: vin
+    description:
+      de: Fahrzeug-VIN
+      en: Vehicle VIN
+    required: true
+  - name: token
+    description:
+      de: Tessie API Token
+      en: Tessie API Token
+    required: true
+  - name: url
+    default: "https://api.tessie.com"
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - preset: vehicle-identify
+
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  {{- include "vehicle-identify" . }}
+
+  soc: # battery state of charge (%)
+    source: http
+    uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.battery_level
+
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+      headers:
+        Authorization: Bearer {{ .token }}
+      jq: .charge_state.charge_port_door_open
+    charging:
+      source: http
+      uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+      headers:
+        Authorization: Bearer {{ .token }}
+      jq: .charge_state.charging_state
+
+  range:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.battery_range
+
+  odometer:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .vehicle_state.odometer
+
+  climater:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .climate_state.is_climate_on
+
+  getMaxCurrent:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.charge_current_request
+
+  chargeEnable:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/command/start_charging?retry_duration=40&wait_for_completion=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+
+  maxcurrent:
+    source: http
+    uri: {{ .url }}/{{ .vin }}/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=${maxcurrent}
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+
