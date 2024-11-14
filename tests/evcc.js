@@ -109,10 +109,17 @@ async function _stop(instance) {
     log("evcc is down", { port });
     return;
   }
+  // check if auth is required
+  const res = await axios.get(`${baseUrl()}/api/auth/status`);
+  log("auth status", res.status, res.statusText, res.data);
+  let cookie;
+  // login required
+  if (!res.data) {
+    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+    log("login", res.status, res.statusText);
+    cookie = res.headers["set-cookie"];
+  }
   log("shutting down evcc", { port });
-  const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-  log(res.status, res.statusText);
-  const cookie = res.headers["set-cookie"];
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });

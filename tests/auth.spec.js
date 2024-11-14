@@ -142,7 +142,7 @@ test("update password", async ({ page }) => {
 });
 
 test("disable auth", async ({ page }) => {
-  await start(BASIC, "password.sql", "--disable-auth");
+  await start(BASIC, null, "--disable-auth");
   await page.goto("/");
 
   // no password modal
