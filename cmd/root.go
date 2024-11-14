@@ -66,7 +66,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
-	rootCmd.PersistentFlags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -77,6 +76,8 @@ func init() {
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
