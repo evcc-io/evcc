@@ -42,7 +42,7 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
-export async function start(config, sqlDumps, flags) {
+export async function start(config, sqlDumps, flags = "--disable-auth") {
   await _clean();
   if (sqlDumps) {
     await _restoreDatabase(sqlDumps);
@@ -55,9 +55,9 @@ export async function stop(instance) {
   await _clean();
 }
 
-export async function restart(config) {
+export async function restart(config, flags = "--disable-auth") {
   await _stop();
-  await _start(config);
+  await _start(config, flags);
 }
 
 export async function cleanRestart(config, sqlDumps) {
