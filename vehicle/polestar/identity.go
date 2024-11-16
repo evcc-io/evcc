@@ -94,7 +94,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err != nil {
+	if _, err := v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err != nil {
 		return nil, err
 	}
 
