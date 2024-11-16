@@ -1,7 +1,9 @@
 package push
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"strings"
 
@@ -50,6 +52,15 @@ type Push struct {
 	encoding string
 }
 
+func (m *Push) csv(separator rune, title, msg string) string {
+	var b bytes.Buffer
+	ww := csv.NewWriter(&b)
+	ww.Comma = separator
+	_ = ww.Write([]string{title, msg})
+	ww.Flush()
+	return b.String()
+}
+
 // Send implements the Messenger interface
 func (m *Push) Send(title, msg string) {
 	var res string
@@ -65,9 +76,9 @@ func (m *Push) Send(title, msg string) {
 		})
 		res = string(b)
 	case "csv":
-		res = title + "," + msg
+		res = m.csv(',', title, msg)
 	case "tsv":
-		res = title + "\t" + msg
+		res = m.csv('\t', title, msg)
 	case "title":
 		res = title
 	default:
