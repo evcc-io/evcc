@@ -114,20 +114,11 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	return nil
 }
 
-func (v *adapter) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStruct {
+func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	var plans []api.RepeatingPlanStruct
 
 	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
 	if err == nil {
-		if onlyActivePlans {
-			var activePlans []api.RepeatingPlanStruct
-			for _, plan := range plans {
-				if plan.Active {
-					activePlans = append(activePlans, plan)
-				}
-			}
-			return activePlans
-		}
 		return plans
 	}
 
@@ -136,13 +127,12 @@ func (v *adapter) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStr
 	return []api.RepeatingPlanStruct{}
 }
 
-func (v *adapter) GetRepeatingPlansWithTimestamps(onlyActivePlans bool) []api.PlanStruct {
+func (v *adapter) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
 	var formattedPlans []api.PlanStruct
 
-	plans := v.GetRepeatingPlans(onlyActivePlans)
-
-	for _, p := range plans {
-		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp()...)
+	plans := v.GetRepeatingPlans()
+	for id, p := range plans {
+		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(id+2)...)
 	}
 
 	return formattedPlans

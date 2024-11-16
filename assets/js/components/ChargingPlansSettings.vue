@@ -2,6 +2,14 @@
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0 mb-3">
+				<div class="d-lg-none">
+					<hr class="w-75 mx-auto mt-5" />
+					<h5>
+						<div class="inner" data-testid="repeating-plan-title">
+							{{ $t("main.chargingPlan.staticPlan") + " #1" }}
+						</div>
+					</h5>
+				</div>
 				<ChargingPlanStaticSettings
 					:id="`${id}_0`"
 					class="mb-2"
@@ -15,12 +23,15 @@
 					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
-					<hr class="w-75 mx-auto mt-5" />
-					<h5>
-						<div class="inner" data-testid="repeating-plan-title">
-							{{ $t("main.chargingPlan.repeatingPlan") }}
-						</div>
-					</h5>
+					<div class="d-none d-lg-block">
+						<hr class="w-75 mx-auto mt-5" />
+						<h5>
+							<div class="inner" data-testid="repeating-plan-title">
+								{{ $t("main.chargingPlan.repeatingPlans") }}
+							</div>
+						</h5>
+					</div>
+
 					<ChargingPlansRepeatingSettings
 						:id="id"
 						:rangePerSoc="rangePerSoc"
@@ -35,7 +46,17 @@
 		<hr />
 		<h5>
 			<div class="inner" data-testid="plan-preview-title">
-				{{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }}
+				<PlanPreviewOptions
+					class="text-decoration-underline"
+					:selectedPlan="selectedPreviewPlanTitle"
+					:planOptions="previewPlanOptions"
+					@change-preview-plan="changePreviewPlan"
+				>
+					<span class="flex-grow-1 text-truncate" data-testid="plan-preview-name">
+						{{ selectedPreviewPlanTitle }}
+					</span>
+				</PlanPreviewOptions>
+				<!-- {{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }} -->
 			</div>
 		</h5>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
@@ -45,6 +66,7 @@
 <script>
 import "@h2d2/shopicons/es/regular/plus";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
+import PlanPreviewOptions from "./PlanPreviewOptions.vue";
 import ChargingPlanStaticSettings from "./ChargingPlanStaticSettings.vue";
 import ChargingPlansRepeatingSettings from "./ChargingPlansRepeatingSettings.vue";
 import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
@@ -60,6 +82,7 @@ export default {
 	name: "ChargingPlansSettings",
 	components: {
 		ChargingPlanPreview,
+		PlanPreviewOptions,
 		ChargingPlanStaticSettings,
 		ChargingPlansRepeatingSettings,
 		ChargingPlanWarnings,
@@ -88,25 +111,20 @@ export default {
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
 	data: function () {
-		// If this.plans exists the static plan is active
-		// However no such key exists on the plan-pbject, so we have to add it
-		let staticPlan = {};
-		if (this.plans.length > 0) {
-			staticPlan = {
-				...this.plans[0],
-				active: true,
-			};
-		}
 		return {
 			tariff: {},
 			plan: {},
 			activeTab: "time",
-			isPreview: false,
 			debounceTimer: null,
-			previewPlans: { repeating: this.repeatingPlans, static: staticPlan },
+			// Since we want to show unapplied changes the user made in the UI we have to store these plans separately
+			plansForPreview: { repeating: this.repeatingPlans, static: this.plans[0] },
+			selectedPreviewPlanId: 1,
 		};
 	},
 	computed: {
+		selectedPreviewPlanTitle: function () {
+			return this.previewPlanOptions[this.selectedPreviewPlanId - 1].title;
+		},
 		chargingPlanWarningsProps: function () {
 			return this.collectProps(ChargingPlanWarnings);
 		},
@@ -118,6 +136,32 @@ export default {
 			return rates
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
+		},
+		previewPlanOptions: function () {
+			const options = [];
+			// let activePlan = this.fetchActivePlan();
+			// activePlan = activePlan.data.result;
+
+			// if (activePlan.planId !== 0) {
+			// 	options.push({
+			// 		planId: activePlan.planId,
+			// 		title: this.$t("main.targetCharge.preview") + " #" + activePlan.planId,
+			// 	});
+			// }
+
+			options.push({
+				planId: 1,
+				title: this.$t("main.targetCharge.preview") + " #1",
+			});
+
+			this.plansForPreview.repeating.forEach((_, index) => {
+				options.push({
+					planId: index + 2,
+					title: this.$t("main.targetCharge.preview") + " #" + (index + 2),
+				});
+			});
+
+			return options;
 		},
 	},
 	watch: {
@@ -131,34 +175,63 @@ export default {
 		this.fetchPlanDebounced();
 	},
 	methods: {
-		fetchActivePlan: async function () {
-			return await api.get(`loadpoints/${this.id}/plan`);
+		changePreviewPlan: function (event) {
+			this.selectedPreviewPlanId = event.planId;
+			this.fetchPlanDebounced();
 		},
-		fetchPlanPreviewSoc: async function (soc, time) {
+		fetchActivePlan: function () {
+			return api
+				.get(`loadpoints/${this.id}/plan`)
+				.then(function (response) {
+					return response;
+				})
+				.catch(function (error) {
+					console.error(error);
+				});
+		},
+
+		fetchStaticPlanPreview: async function (soc, time) {
 			const timeISO = time.toISOString();
-			return await api.get(`loadpoints/${this.id}/plan/preview/soc/${soc}/${timeISO}`);
+			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
+		},
+		fetchRepeatingPlanPreview: async function (weekdays, soc, time) {
+			return await api.get(
+				`loadpoints/${this.id}/plan/repeating/preview/${weekdays}/${time}/${soc}`
+			);
 		},
 		fetchPlanPreviewEnergy: async function (energy, time) {
 			const timeISO = time.toISOString();
-			return await api.get(`loadpoints/${this.id}/plan/preview/energy/${energy}/${timeISO}`);
+			return await api.get(
+				`loadpoints/${this.id}/plan/static/preview/energy/${energy}/${timeISO}`
+			);
 		},
 		fetchPlan: async function () {
 			try {
-				let nextPlan = this.getNextPlan();
-				console.log(nextPlan);
-
 				let planRes = undefined;
 
-				if (nextPlan.active) {
-					planRes = await this.fetchActivePlan();
-					this.isPreview = false;
-				} else {
+				if (this.selectedPreviewPlanId === 1) {
+					const planToPreview = this.plansForPreview.static;
+
 					if (this.socBasedPlanning) {
-						planRes = await this.fetchPlanPreviewSoc(nextPlan.soc, nextPlan.time);
+						planRes = await this.fetchStaticPlanPreview(
+							planToPreview.soc,
+							new Date(planToPreview.time)
+						);
 					} else {
-						planRes = await this.fetchPlanPreviewEnergy(nextPlan.energy, nextPlan.time);
+						planRes = await this.fetchPlanPreviewEnergy(
+							planToPreview.energy,
+							planToPreview.time
+						);
 					}
-					this.isPreview = true;
+				} else {
+					const planToPreview =
+						this.plansForPreview.repeating[this.selectedPreviewPlanId - 2];
+
+					planRes = await this.fetchRepeatingPlanPreview(
+						planToPreview.weekdays,
+						planToPreview.soc,
+						planToPreview.time
+					);
 				}
 
 				this.plan = planRes.data.result;
@@ -214,15 +287,15 @@ export default {
 			this.$emit("repeating-plans-updated", plans);
 		},
 		previewStaticPlan: function (plan) {
-			this.previewPlans.static = plan;
+			this.plansForPreview.static = plan;
 			this.fetchPlanDebounced();
 		},
 		previewRepeatingPlans: function (plans) {
-			this.previewPlans.repeating = plans;
+			this.plansForPreview.repeating = plans;
+			if (this.selectedPreviewPlanId > plans.length + 1) {
+				this.selectedPreviewPlanId = 1;
+			}
 			this.fetchPlanDebounced();
-		},
-		getNextPlan: function () {
-			return this.getNextLocalePlan(this.previewPlans.static, this.previewPlans.repeating);
 		},
 	},
 };

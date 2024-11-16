@@ -1,14 +1,24 @@
 <template>
 	<div v-for="(plan, index) in plans" :key="index">
-		<ChargingPlanRepeatingSettings
-			:id="index"
-			class="mb-4"
-			:formIdPrefix="formIdPrefix"
-			v-bind="plan"
-			:rangePerSoc="rangePerSoc"
-			@repeating-plan-updated="updateRepeatingPlan"
-			@repeating-plan-removed="removeRepeatingPlan"
-		/>
+		<div>
+			<div class="d-lg-none">
+				<hr class="w-75 mx-auto mt-5" />
+				<h5>
+					<div class="inner" data-testid="repeating-plan-title">
+						{{ $t("main.chargingPlan.repeatingPlan") + " #" + (index + 2) }}
+					</div>
+				</h5>
+			</div>
+			<ChargingPlanRepeatingSettings
+				:id="index"
+				class="mb-4"
+				:formIdPrefix="formIdPrefix"
+				v-bind="plan"
+				:rangePerSoc="rangePerSoc"
+				@repeating-plan-updated="updateRepeatingPlan"
+				@repeating-plan-removed="removeRepeatingPlan"
+			/>
+		</div>
 	</div>
 	<div class="d-flex align-items-baseline">
 		<button
@@ -66,7 +76,9 @@ export default {
 	},
 	watch: {
 		initialPlans(newPlans) {
-			this.plans = [...newPlans]; // clone array
+			if (deepEqual(newPlans, this.plans)) {
+				this.plans = [...newPlans]; // clone array
+			}
 		},
 	},
 	methods: {
@@ -84,7 +96,12 @@ export default {
 		},
 		updateRepeatingPlan: function (newPlan) {
 			const { id } = newPlan;
-			this.plans.splice(id, 1, newPlan);
+			this.plans.splice(id, 1, {
+				weekdays: newPlan.weekdays,
+				time: newPlan.time,
+				soc: newPlan.soc,
+				active: newPlan.active,
+			});
 			this.preview();
 		},
 		removeRepeatingPlan: function (index) {
@@ -97,3 +114,21 @@ export default {
 	},
 };
 </script>
+<style scoped>
+h5 {
+	position: relative;
+	display: flex;
+	top: -25px;
+	margin-bottom: -0.5rem;
+	padding: 0 0.5rem;
+	justify-content: center;
+}
+h5 .inner {
+	padding: 0 0.5rem;
+	background-color: var(--evcc-box);
+	font-weight: normal;
+	color: var(--evcc-gray);
+	text-transform: uppercase;
+	text-align: center;
+}
+</style>

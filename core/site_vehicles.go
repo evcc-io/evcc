@@ -53,7 +53,7 @@ func (site *Site) publishVehicles() {
 			Priority:       ac.Priority,
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plans:          plans,
-			RepeatingPlans: v.GetRepeatingPlans(false),
+			RepeatingPlans: v.GetRepeatingPlans(),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {

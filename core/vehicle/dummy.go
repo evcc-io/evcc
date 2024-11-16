@@ -53,10 +53,10 @@ func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	return nil
 }
 
-func (v *dummy) GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStruct {
+func (v *dummy) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	return []api.RepeatingPlanStruct{}
 }
 
-func (v *dummy) GetRepeatingPlansWithTimestamps(onlyActivePlans bool) []api.PlanStruct {
+func (v *dummy) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
 	return []api.PlanStruct{}
 }

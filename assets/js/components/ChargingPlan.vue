@@ -165,7 +165,11 @@ export default {
 		},
 		plans: function () {
 			if (this.socBasedPlanning) {
-				return this.vehicle?.plans || [];
+				if (this.vehicle && this.vehicle.plans) {
+					return [{ ...this.vehicle.plans[0], active: true }];
+				} else {
+					return [];
+				}
 			}
 			if (this.planEnergy && this.planTime) {
 				return [{ energy: this.planEnergy, time: this.planTime }];

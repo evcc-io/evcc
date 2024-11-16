@@ -12,6 +12,7 @@ import (
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
@@ -29,43 +30,59 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
-// nextVehiclePlan returns the next vehicle plan time and soc
-func (lp *Loadpoint) nextVehiclePlan() (time.Time, int) {
+// nextVehiclePlan returns the next vehicle plan time, soc and ID
+func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	if v := lp.GetVehicle(); v != nil {
 		// merge the static plan with the active repeating ones to sort them in one array
 
-		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps(true)
+		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps()
 
 		planTime, soc := vehicle.Settings(lp.log, v).GetStaticPlanSoc()
 
 		if soc != 0 {
 			plans = append(plans, api.PlanStruct{
-				Soc:  soc,
-				Time: planTime,
+				Id:     1, // id of the static plan is always 1
+				Soc:    soc,
+				Time:   planTime,
+				Active: true,
 			})
 		}
 
-		sort.Slice(plans, func(i, j int) bool {
-			return plans[i].Time.Before(plans[j].Time)
+		// Filter out inactive plans
+		activePlans := []api.PlanStruct{}
+		for _, plan := range plans {
+			if plan.Active {
+				activePlans = append(activePlans, plan)
+			}
+		}
+
+		sort.Slice(activePlans, func(i, j int) bool {
+			return activePlans[i].Time.Before(activePlans[j].Time)
 		})
 
-		if len(plans) > 0 {
-			return plans[0].Time, plans[0].Soc
+		if len(activePlans) > 0 {
+			return activePlans[0].Time, activePlans[0].Soc, activePlans[0].Id
 		}
 	}
-	return time.Time{}, 0
+	return time.Time{}, 0, 0
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, soc := lp.nextVehiclePlan()
+	_, soc, _ := lp.nextVehiclePlan()
 	return soc
+}
+
+// EffectivePlanSoc returns the id for the current plan
+func (lp *Loadpoint) EffectivePlanId() int {
+	_, _, id := lp.nextVehiclePlan()
+	return id
 }
 
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _ := lp.nextVehiclePlan()
+		ts, _, _ := lp.nextVehiclePlan()
 		return ts
 	}
 

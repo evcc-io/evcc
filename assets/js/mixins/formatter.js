@@ -370,42 +370,6 @@ export default {
       const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
       return [6, 7, 8, 9, 10, 11, 12].map((day) => format(new Date(Date.UTC(2021, 5, day))));
     },
-    getNextLocalePlan: function (staticPlan, repeatingPlans) {
-      let formattedPlans = [staticPlan];
-      let now = new Date();
-
-      repeatingPlans.forEach((repeatingPlan) => {
-        // NOTE: the time field stores at this point local time not UTC
-        let [hours, minutes] = repeatingPlan.time.split(":");
-
-        repeatingPlan.weekdays.forEach((weekday) => {
-          // Calculate the difference in days to the target weekday
-          let dayOffset = (weekday - now.getDay() + 7) % 7;
-
-          // If the user has selected the day of the week that is today, and at the same time the user
-          // has selected a time that would be in the past for today, the next day of the week in a week should be used
-          if (dayOffset == 0 && now.getHours() * 60 + now.getMinutes() > hours * 60 + minutes) {
-            dayOffset = 7;
-          }
-
-          // Adjust the current timestamp to the target weekday and set the time
-          let timestamp = new Date(now);
-          timestamp.setDate(now.getDate() + dayOffset);
-          timestamp.setHours(hours, minutes);
-
-          // Append the resulting plan with the calculated timestamp
-          formattedPlans.push({
-            soc: repeatingPlan.soc,
-            active: repeatingPlan.active,
-            time: timestamp,
-          });
-        });
-      });
-
-      // Find the next plan, which is the plan with the earliest time
-      formattedPlans.sort((a, b) => a.time - b.time);
-      return formattedPlans[0];
-    },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
       if (0 === selectedWeekdays.length) {
         return this.$t("main.chargingPlan.noWeekdaysSelected");

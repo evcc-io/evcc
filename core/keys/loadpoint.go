@@ -38,6 +38,7 @@ const (
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectivePlanId     = "effectivePlanId"     // effective plan id
 	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current

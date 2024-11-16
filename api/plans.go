@@ -5,8 +5,10 @@ import (
 )
 
 type PlanStruct struct {
-	Soc  int       `json:"soc"`
-	Time time.Time `json:"time"`
+	Id     int       `json:"Id"`
+	Soc    int       `json:"soc"`
+	Time   time.Time `json:"time"`
+	Active bool      `json:"active"`
 }
 
 type RepeatingPlanStruct struct {
@@ -16,7 +18,7 @@ type RepeatingPlanStruct struct {
 	Active   bool   `json:"active"`
 }
 
-func (p *RepeatingPlanStruct) ToPlansWithTimestamp() []PlanStruct {
+func (p *RepeatingPlanStruct) ToPlansWithTimestamp(id int) []PlanStruct {
 	var formattedPlans []PlanStruct
 
 	now := time.Now()
@@ -41,8 +43,10 @@ func (p *RepeatingPlanStruct) ToPlansWithTimestamp() []PlanStruct {
 
 		// Append the resulting plan with the calculated timestamp
 		formattedPlans = append(formattedPlans, PlanStruct{
-			Soc:  p.Soc,
-			Time: timestamp,
+			Id:     id,
+			Soc:    p.Soc,
+			Time:   timestamp,
+			Active: p.Active,
 		})
 	}
 

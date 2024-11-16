@@ -44,11 +44,11 @@ type API interface {
 	SetPlanSoc(time.Time, int) error
 
 	// GetRepeatingPlans returns every repeating plan
-	GetRepeatingPlans(onlyActivePlans bool) []api.RepeatingPlanStruct
+	GetRepeatingPlans() []api.RepeatingPlanStruct
 	// SetRepeatingPlans stores every repeating plan
 	SetRepeatingPlans([]api.RepeatingPlanStruct) error
 	// GetRepeatingPlansAsNormalPlans returns every repeating plan with a timestamp-key to sort
-	GetRepeatingPlansWithTimestamps(onlyActivePlans bool) []api.PlanStruct
+	GetRepeatingPlansWithTimestamps() []api.PlanStruct
 
 	// // GetMinCurrent returns the min charging current
 	// GetMinCurrent() float64

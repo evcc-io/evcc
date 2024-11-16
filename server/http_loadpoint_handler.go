@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -44,6 +46,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		maxPower := lp.EffectiveMaxPower()
 		planTime := lp.EffectivePlanTime()
+		id := lp.EffectivePlanId()
 
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
@@ -54,11 +57,13 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		res := struct {
+			Id       int       `json:"Id"`
 			PlanTime time.Time `json:"planTime"`
 			Duration int64     `json:"duration"`
 			Plan     api.Rates `json:"plan"`
 			Power    float64   `json:"power"`
 		}{
+			Id:       id,
 			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
@@ -69,8 +74,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planPreviewHandler returns a plan preview for given parameters
-func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+// staticPlanPreviewHandler returns a plan preview for given parameters
+func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -117,6 +122,67 @@ func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Power    float64   `json:"power"`
 		}{
 			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
+		}
+
+		jsonResult(w, res)
+	}
+}
+
+func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		planTime := vars["time"]
+
+		var weekdays []int
+		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
+			weekday, err := strconv.Atoi(weekdayStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
+				return
+			}
+			weekdays = append(weekdays, weekday)
+		}
+
+		soc, err := strconv.Atoi(vars["soc"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		repeatingPlan := api.RepeatingPlanStruct{
+			Weekdays: weekdays,
+			Time:     planTime,
+			Soc:      soc,
+			Active:   true, // dummy data
+		}
+
+		plans := repeatingPlan.ToPlansWithTimestamp(1)
+
+		sort.Slice(plans, func(i, j int) bool {
+			return plans[i].Time.Before(plans[j].Time)
+		})
+
+		nextPlan := plans[0]
+
+		maxPower := lp.EffectiveMaxPower()
+		requiredDuration := lp.GetPlanRequiredDuration(float64(nextPlan.Soc), maxPower)
+		plan, err := lp.GetPlan(nextPlan.Time, requiredDuration)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			PlanTime time.Time `json:"planTime"`
+			Duration int64     `json:"duration"`
+			Plan     api.Rates `json:"plan"`
+			Power    float64   `json:"power"`
+		}{
+			PlanTime: nextPlan.Time,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
 			Power:    maxPower,
