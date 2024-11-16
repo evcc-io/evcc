@@ -169,7 +169,7 @@ func (v *Identity) confirmConsentAndGetCode(resume, uid string) (string, error) 
 
 	// Make a POST request to confirm the user consent
 	if _, err := v.Post(fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resume), request.FormContent, strings.NewReader(data.Encode())); err != nil {
-		return "", fmt.Errorf("Error confirming user consent to reject cookies during the authentication process: %w", err)
+		return "", fmt.Errorf("failed confirming user consent: %w", err)
 	}
 
 	// Extract the authorization code from the response
