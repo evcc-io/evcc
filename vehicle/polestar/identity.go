@@ -153,7 +153,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 func (v *Identity) confirmConsentAndGetCode(resume, uid string) (string, error) {
 	// Extract the user ID (UID) from the redirect parameters
 	if uid == "" {
-		return "", errors.New("failed to extract user ID")
+		return "", fmt.Errorf("failed to extract user ID")
 	}
 
 	// Confirm user consent by submitting the consent form, which rejects cookies
