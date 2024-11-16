@@ -175,7 +175,7 @@ func (v *Identity) confirmConsentAndGetCode(resume, uid string) (string, error) 
 	// Extract the authorization code from the response
 	code, err := param()
 	if err != nil || code == "" {
-		return "", fmt.Errorf("Failed to extract authorization code: %w", err)
+		return "", fmt.Errorf("failed extracting authorisation code: %w", err)
 	}
 
 	// Return the retrieved code
