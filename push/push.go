@@ -57,7 +57,7 @@ func (m *Push) Send(title, msg string) {
 	switch m.encoding {
 	case "json":
 		b, _ := json.Marshal(struct {
-			Title string `json:"title"`
+			Title string `json:"title,omitempty"`
 			Msg   string `json:"msg"`
 		}{
 			Title: title,
