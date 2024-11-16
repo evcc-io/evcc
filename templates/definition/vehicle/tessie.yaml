@@ -26,19 +26,16 @@ params:
     default: car
     advanced: true
   - preset: vehicle-identify
-
 render: |
   type: custom
   {{- include "vehicle-common" . }}
   {{- include "vehicle-identify" . }}
-
   soc: # battery state of charge (%)
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .charge_state.usable_battery_level
-
   status:
     source: combined
     plugged:
@@ -53,56 +50,48 @@ render: |
       headers:
         Authorization: Bearer {{ .token }}
       jq: .charge_state.charging_state == "Charging"
-
   range:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .charge_state.battery_range * 1.60934
-
   odometer:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .vehicle_state.odometer * 1.60934
-
   climater:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .climate_state.is_climate_on
-    
   limitsoc:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .charge_state.charge_limit_soc
-  
   getMaxCurrent:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
     jq: .charge_state.charge_current_request
-    
   chargeEnable:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/command/start_charging?retry_duration=40&wait_for_completion=true
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-
   maxcurrent:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=${maxcurrent}
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-    
   wakeup:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/wake
