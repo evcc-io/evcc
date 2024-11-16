@@ -74,6 +74,6 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: [.[].devices[] | select(.percentFull != null) | .percentFull] | add / length
+    jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
   capacity: {{ .capacity }} # kWh
   {{- end }}
