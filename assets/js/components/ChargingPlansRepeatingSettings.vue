@@ -48,7 +48,7 @@ import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
 import deepEqual from "../utils/deepEqual";
 
 const DEFAULT_WEEKDAYS = [1]; // Monday
-const DEFAULT_TARGET_TIME = "7:00";
+const DEFAULT_TARGET_TIME = "07:00";
 const DEFAULT_TARGET_SOC = 80;
 
 export default {
