@@ -60,7 +60,7 @@
 					</PlanPreviewOptions>
 				</div>
 				<div v-else>
-					{{ $t(`main.targetCharge.${1 === nextPlanId ? "preview" : "currentPlan"}`) }}
+					{{ $t(`main.targetCharge.${1 === nextPlanId ? "currentPlan" : "preview"}`) }}
 				</div>
 			</div>
 		</h5>
