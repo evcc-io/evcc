@@ -383,7 +383,7 @@ export default {
       let weekdays = this.getWeekdaysList("short");
 
       function getWeekdayName(dayIndex) {
-        return weekdays.find(day => day.value === dayIndex).name;
+        return weekdays.find((day) => day.value === dayIndex).name;
       }
 
       let maxWeekday = Math.max(...selectedWeekdays);

@@ -57,13 +57,13 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		res := struct {
-			Id       int       `json:"Id"`
+			PlanId       int       `json:"planId"`
 			PlanTime time.Time `json:"planTime"`
 			Duration int64     `json:"duration"`
 			Plan     api.Rates `json:"plan"`
 			Power    float64   `json:"power"`
 		}{
-			Id:       id,
+			PlanId:       id,
 			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,

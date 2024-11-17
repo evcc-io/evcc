@@ -42,7 +42,6 @@
 				</div>
 			</div>
 		</div>
-		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
 		<hr />
 		<h5>
 			<div class="inner" data-testid="plan-preview-title">
@@ -59,6 +58,7 @@
 				<!-- {{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }} -->
 			</div>
 		</h5>
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
@@ -119,6 +119,7 @@ export default {
 			// Since we want to show unapplied changes the user made in the UI we have to store these plans separately
 			plansForPreview: { repeating: this.repeatingPlans, static: this.plans[0] },
 			selectedPreviewPlanId: 1,
+			nextPlanId: null,
 		};
 	},
 	computed: {
@@ -139,51 +140,55 @@ export default {
 		},
 		previewPlanOptions: function () {
 			const options = [];
-			// let activePlan = this.fetchActivePlan();
-			// activePlan = activePlan.data.result;
 
-			// if (activePlan.planId !== 0) {
-			// 	options.push({
-			// 		planId: activePlan.planId,
-			// 		title: this.$t("main.targetCharge.preview") + " #" + activePlan.planId,
-			// 	});
-			// }
-
-			options.push({
-				planId: 1,
-				title: this.$t("main.targetCharge.preview") + " #1",
-			});
-
-			this.plansForPreview.repeating.forEach((_, index) => {
+			if (this.nextPlanId) {
 				options.push({
-					planId: index + 2,
-					title: this.$t("main.targetCharge.preview") + " #" + (index + 2),
+					planId: this.nextPlanId,
+					title: this.$t("main.targetCharge.currentPlan") + " #" + this.nextPlanId,
 				});
+			}
+
+			if (this.nextPlanId !== 1) {
+				options.push({
+					planId: 1,
+					title: this.$t("main.targetCharge.preview") + " #1",
+				});
+			}
+
+			this.plansForPreview.repeating.forEach((plan, index) => {
+				if (0 !== plan.weekdays.length && this.nextPlanId !== index + 2) {
+					options.push({
+						planId: index + 2,
+						title: this.$t("main.targetCharge.preview") + " #" + (index + 2),
+					});
+				}
 			});
 
-			return options;
+			return options.sort((a, b) => {
+				return a.planId > b.planId;
+			});
 		},
 	},
 	watch: {
 		plans(newPlans, oldPlans) {
 			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
-				this.fetchPlanDebounced();
+				this.fetchPlanPreviewDebounced();
 			}
 		},
 	},
 	mounted() {
-		this.fetchPlanDebounced();
+		this.fetchActivePlanDebounced();
 	},
 	methods: {
 		changePreviewPlan: function (event) {
 			this.selectedPreviewPlanId = event.planId;
-			this.fetchPlanDebounced();
+			this.fetchPlanPreviewDebounced();
 		},
-		fetchActivePlan: function () {
-			return api
+		fetchActivePlan: async function () {
+			await api
 				.get(`loadpoints/${this.id}/plan`)
-				.then(function (response) {
-					return response;
+				.then((response) => {
+					this.nextPlanId = response.data.result.planId;
 				})
 				.catch(function (error) {
 					console.error(error);
@@ -195,8 +200,9 @@ export default {
 			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
 		},
 		fetchRepeatingPlanPreview: async function (weekdays, soc, time) {
+			const timeInUTC = this.fmtDayHourMinute(time, true)[0];
 			return await api.get(
-				`loadpoints/${this.id}/plan/repeating/preview/${weekdays}/${time}/${soc}`
+				`loadpoints/${this.id}/plan/repeating/preview/${weekdays}/${timeInUTC}/${soc}`
 			);
 		},
 		fetchPlanPreviewEnergy: async function (energy, time) {
@@ -227,6 +233,11 @@ export default {
 					const planToPreview =
 						this.plansForPreview.repeating[this.selectedPreviewPlanId - 2];
 
+					if (0 === planToPreview.weekdays.length) {
+						this.selectedPreviewPlanId = 1;
+						return;
+					}
+
 					planRes = await this.fetchRepeatingPlanPreview(
 						planToPreview.weekdays,
 						planToPreview.soc,
@@ -246,13 +257,21 @@ export default {
 				console.error(e);
 			}
 		},
-		fetchPlanDebounced: async function () {
+		fetchPlanPreviewDebounced: async function () {
 			if (!this.debounceTimer) {
 				await this.fetchPlan();
 				return;
 			}
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchPlan(), 1000);
+		},
+		fetchActivePlanDebounced: async function () {
+			if (!this.debounceTimer) {
+				await this.fetchActivePlan();
+				return;
+			}
+			clearTimeout(this.debounceTimer);
+			this.debounceTimer = setTimeout(async () => await this.fetchActivePlan(), 1000);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
@@ -279,23 +298,26 @@ export default {
 		},
 		removeStaticPlan: function (index) {
 			this.$emit("static-plan-removed", index);
+			this.fetchActivePlanDebounced();
 		},
 		updateStaticPlan: function (data) {
 			this.$emit("static-plan-updated", data);
+			this.fetchActivePlanDebounced();
 		},
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
+			this.fetchActivePlanDebounced();
 		},
 		previewStaticPlan: function (plan) {
 			this.plansForPreview.static = plan;
-			this.fetchPlanDebounced();
+			this.fetchPlanPreviewDebounced();
 		},
 		previewRepeatingPlans: function (plans) {
 			this.plansForPreview.repeating = plans;
 			if (this.selectedPreviewPlanId > plans.length + 1) {
 				this.selectedPreviewPlanId = 1;
 			}
-			this.fetchPlanDebounced();
+			this.fetchPlanPreviewDebounced();
 		},
 	},
 };
