@@ -372,7 +372,7 @@ export default {
     },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
       if (0 === selectedWeekdays.length) {
-        return this.$t("main.chargingPlan.noWeekdaysSelected");
+        return "-";
       }
 
       let label = "";

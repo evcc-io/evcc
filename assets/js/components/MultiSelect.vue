@@ -18,7 +18,6 @@
 							class="form-check-input ms-0 me-2"
 							type="checkbox"
 							value="all"
-							:disabled="allOptionsSelected"
 							:checked="allOptionsSelected"
 							@change="toggleCheckAll()"
 						/>
@@ -35,7 +34,6 @@
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
 						:value="option.value"
-						:disabled="onlySelected(option.value)"
 					/>
 					<div class="form-check-label">
 						{{ option.name }}
@@ -75,36 +73,17 @@ export default {
 		options: {
 			immediate: true,
 			handler(newOptions) {
-				// If value is empty, set internalValue to include all options
-				if (this.value.length === 0) {
-					this.internalValue = newOptions.map((option) => option.value);
-				} else {
-					// Otherwise, keep selected options that still exist in the new options
-					this.internalValue = this.internalValue.filter((value) =>
-						newOptions.some((option) => option.value === value)
-					);
-				}
+				this.internalValue = this.internalValue.filter((value) =>
+					newOptions.some((option) => option.value === value)
+				);
 				this.$nextTick(() => {
 					Dropdown.getOrCreateInstance(this.$refs.dropdown).update();
 				});
 			},
 		},
-		value: {
-			immediate: true,
-			handler(newValue) {
-				this.internalValue =
-					newValue.length === 0 && this.options.length > 0
-						? this.options.map((o) => o.value)
-						: [...newValue];
-			},
-		},
 		internalValue(newValue, oldValue) {
 			if (deepEqual(newValue, oldValue)) return;
-			if (this.noneSelected) {
-				this.$emit("update:modelValue", []);
-			} else {
-				this.$emit("update:modelValue", newValue);
-			}
+			this.$emit("update:modelValue", newValue);
 		},
 	},
 	mounted() {
@@ -120,11 +99,12 @@ export default {
 		formId(name) {
 			return `${this.id}-${name}`;
 		},
-		onlySelected(value) {
-			return this.internalValue.length === 1 && this.internalValue.includes(value);
-		},
 		toggleCheckAll() {
-			this.internalValue = this.options.map((option) => option.value);
+			if (this.allOptionsSelected) {
+				this.internalValue = [];
+			} else {
+				this.internalValue = this.options.map((option) => option.value);
+			}
 		},
 	},
 };
