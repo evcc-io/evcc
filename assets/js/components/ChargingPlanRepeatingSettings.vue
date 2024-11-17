@@ -152,12 +152,7 @@ export default {
 				.map(this.socOption);
 		},
 		dayOptions: function () {
-			return this.getWeekdaysList("long").map((weekday, index) => {
-				return {
-					name: weekday,
-					value: index,
-				};
-			});
+			return this.getWeekdaysList("long");
 		},
 	},
 	watch: {

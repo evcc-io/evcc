@@ -368,7 +368,11 @@ export default {
     },
     getWeekdaysList: function (weekdayFormat) {
       const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
-      return [6, 7, 8, 9, 10, 11, 12].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+      const mondayToSaturday = [7, 8, 9, 10, 11, 12].map((day, index) => {
+        return { name: format(new Date(Date.UTC(2021, 5, day))), value: index + 1 };
+      });
+      const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
+      return [...mondayToSaturday, sunday];
     },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
       if (0 === selectedWeekdays.length) {
@@ -377,11 +381,16 @@ export default {
 
       let label = "";
       let weekdays = this.getWeekdaysList("short");
+
+      function getWeekdayName(dayIndex) {
+        return weekdays.find(day => day.value === dayIndex).name;
+      }
+
       let maxWeekday = Math.max(...selectedWeekdays);
 
       for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
         if (selectedWeekdays.includes(weekdayRangeStart)) {
-          label += weekdays[weekdayRangeStart];
+          label += getWeekdayName(weekdayRangeStart);
 
           let weekdayRangeEnd = weekdayRangeStart;
           while (selectedWeekdays.includes(weekdayRangeEnd + 1)) {
@@ -390,7 +399,7 @@ export default {
 
           if (weekdayRangeEnd - weekdayRangeStart > 1) {
             // more than 2 consecutive weekdays selected
-            label += " – " + weekdays[weekdayRangeEnd];
+            label += " – " + getWeekdayName(weekdayRangeEnd);
             weekdayRangeStart = weekdayRangeEnd;
             if (maxWeekday !== weekdayRangeEnd) {
               label += ", ";
