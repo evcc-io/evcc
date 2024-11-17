@@ -222,12 +222,12 @@ export default {
 					if (this.socBasedPlanning) {
 						planRes = await this.fetchStaticPlanPreview(
 							planToPreview.soc,
-							Date.parse(planToPreview.time)
+							planToPreview.time
 						);
 					} else {
 						planRes = await this.fetchPlanPreviewEnergy(
 							planToPreview.energy,
-							planToPreview.time
+							new Date(planToPreview.time)
 						);
 					}
 				} else {
