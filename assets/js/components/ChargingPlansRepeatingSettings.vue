@@ -60,7 +60,7 @@ export default {
 		id: Number,
 		rangePerSoc: Number,
 		initialPlans: { type: Array, default: () => [] },
-		numberPlans: Boolean
+		numberPlans: Boolean,
 	},
 	emits: ["repeating-plans-updated", "plans-preview"],
 	data: function () {

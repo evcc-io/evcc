@@ -22,7 +22,10 @@
 			</div>
 		</div>
 		<div class="row">
-			<div v-if="numberPlans" class="col-id d-none d-lg-flex align-items-center justify-content-start">
+			<div
+				v-if="numberPlans"
+				class="col-id d-none d-lg-flex align-items-center justify-content-start"
+			>
 				<h5>#{{ id + 2 }}</h5>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -131,7 +134,7 @@ export default {
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
-		numberPlans: Boolean
+		numberPlans: Boolean,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
 	data: function () {
