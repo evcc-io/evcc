@@ -376,7 +376,7 @@ export default {
     },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
       if (0 === selectedWeekdays.length) {
-        return "-";
+        return "–";
       }
 
       const weekdays = this.getWeekdaysList("short");
