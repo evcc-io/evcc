@@ -119,7 +119,7 @@ export default {
 			// Since we want to show unapplied changes the user made in the UI we have to store these plans separately
 			plansForPreview: { repeating: this.repeatingPlans, static: this.plans[0] },
 			selectedPreviewPlanId: 1,
-			nextPlanId: null,
+			nextPlanId: 0,
 		};
 	},
 	computed: {
@@ -141,14 +141,14 @@ export default {
 		previewPlanOptions: function () {
 			const options = [];
 
-			if (this.nextPlanId) {
+			if (0 !== this.nextPlanId) {
 				options.push({
 					planId: this.nextPlanId,
 					title: this.$t("main.targetCharge.currentPlan") + " #" + this.nextPlanId,
 				});
 			}
 
-			if (this.nextPlanId !== 1) {
+			if (1 !== this.nextPlanId) {
 				options.push({
 					planId: 1,
 					title: this.$t("main.targetCharge.preview") + " #1",
@@ -156,7 +156,7 @@ export default {
 			}
 
 			this.plansForPreview.repeating.forEach((plan, index) => {
-				if (0 !== plan.weekdays.length && this.nextPlanId !== index + 2) {
+				if (0 !== plan.weekdays.length && index + 2 !== this.nextPlanId) {
 					options.push({
 						planId: index + 2,
 						title: this.$t("main.targetCharge.preview") + " #" + (index + 2),
@@ -174,6 +174,9 @@ export default {
 			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
 				this.fetchPlanPreviewDebounced();
 			}
+		},
+		effectivePlanTime() {
+			this.fetchActivePlanDebounced();
 		},
 	},
 	mounted() {
@@ -219,6 +222,8 @@ export default {
 				if (this.selectedPreviewPlanId === 1) {
 					const planToPreview = this.plansForPreview.static;
 
+					planToPreview.time = new Date(planToPreview.time);
+
 					if (this.socBasedPlanning) {
 						planRes = await this.fetchStaticPlanPreview(
 							planToPreview.soc,
@@ -227,7 +232,7 @@ export default {
 					} else {
 						planRes = await this.fetchPlanPreviewEnergy(
 							planToPreview.energy,
-							new Date(planToPreview.time)
+							planToPreview.time
 						);
 					}
 				} else {
@@ -299,15 +304,12 @@ export default {
 		},
 		removeStaticPlan: function (index) {
 			this.$emit("static-plan-removed", index);
-			this.fetchActivePlanDebounced();
 		},
 		updateStaticPlan: function (data) {
 			this.$emit("static-plan-updated", data);
-			this.fetchActivePlanDebounced();
 		},
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
-			this.fetchActivePlanDebounced();
 		},
 		previewStaticPlan: function (plan) {
 			this.plansForPreview.static = plan;
