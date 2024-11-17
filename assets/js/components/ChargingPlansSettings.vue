@@ -219,8 +219,6 @@ export default {
 				if (this.selectedPreviewPlanId === 1) {
 					const planToPreview = this.plansForPreview.static;
 
-					console.log(planToPreview.time);
-					
 					if (this.socBasedPlanning) {
 						planRes = await this.fetchStaticPlanPreview(
 							planToPreview.soc,
