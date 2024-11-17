@@ -44,14 +44,14 @@
 		</div>
 		<hr />
 		<h5>
-			<div class="inner" data-testid="plan-preview-title">
+			<div class="inner">
 				<PlanPreviewOptions
 					class="text-decoration-underline"
 					:selectedPlan="selectedPreviewPlanTitle"
 					:planOptions="previewPlanOptions"
 					@change-preview-plan="changePreviewPlan"
 				>
-					<span class="flex-grow-1 text-truncate" data-testid="plan-preview-name">
+					<span class="flex-grow-1 text-truncate" data-testid="plan-preview-title">
 						{{ selectedPreviewPlanTitle }}
 					</span>
 				</PlanPreviewOptions>
@@ -178,6 +178,7 @@ export default {
 	},
 	mounted() {
 		this.fetchActivePlanDebounced();
+		this.fetchPlanPreviewDebounced();
 	},
 	methods: {
 		changePreviewPlan: function (event) {
@@ -218,10 +219,12 @@ export default {
 				if (this.selectedPreviewPlanId === 1) {
 					const planToPreview = this.plansForPreview.static;
 
+					console.log(planToPreview.time);
+					
 					if (this.socBasedPlanning) {
 						planRes = await this.fetchStaticPlanPreview(
 							planToPreview.soc,
-							new Date(planToPreview.time)
+							Date.parse(planToPreview.time)
 						);
 					} else {
 						planRes = await this.fetchPlanPreviewEnergy(
