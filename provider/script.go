@@ -161,3 +161,20 @@ func (p *Script) BoolSetter(param string) (func(bool) error, error) {
 		return err
 	}, nil
 }
+
+var _ SetStringProvider = (*Script)(nil)
+
+// StringSetter returns a function that invokes a script with parameter by a string value
+func (p *Script) StringSetter(param string) (func(string) error, error) {
+	return func(v string) error {
+		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
+			param: v,
+		})
+
+		if err == nil {
+			_, err = p.exec(cmd)
+		}
+
+		return err
+	}, nil
+}
