@@ -238,27 +238,27 @@ test.describe("preview", async () => {
       await page.getByTestId("static-plan-day").selectOption({ index: 1 });
       await page.getByTestId("static-plan-time").fill("09:30");
       await page.getByTestId(c.goalId).selectOption("80");
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
 
       // activate -> active plan
       await page.getByTestId("static-plan-active").click();
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       // change -> preview plan
       await page.getByTestId(c.goalId).selectOption("90");
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
 
       // apply -> active plan
       await expect(page.getByTestId("plan-apply")).toBeVisible();
       await page.getByTestId("plan-apply").click();
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       // deactivate -> stay in preview
       await page.getByTestId("static-plan-time").fill("23:30");
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
       await expect(page.getByTestId("plan-apply")).toBeVisible();
       await page.getByTestId("static-plan-active").click();
-      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+      await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
     });
   });
 });
