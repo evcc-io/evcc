@@ -157,13 +157,13 @@ describe("fmtDuration", () => {
 describe("getWeekdaysList", () => {
   test("should return the correct weekday-order", () => {
     expect(fmt.getWeekdaysList("long")).toEqual([
-      { name: "Monday", value: 1 },
-      { name: "Tuesday", value: 2 },
-      { name: "Wednesday", value: 3 },
-      { name: "Thursday", value: 4 },
-      { name: "Friday", value: 5 },
-      { name: "Saturday", value: 6 },
-      { name: "Sunday", value: 0 },
+      { name: "Montag", value: 1 },
+      { name: "Dienstag", value: 2 },
+      { name: "Mittwoch", value: 3 },
+      { name: "Donnerstag", value: 4 },
+      { name: "Freitag", value: 5 },
+      { name: "Samstag", value: 6 },
+      { name: "Sonntag", value: 0 },
     ]);
   });
 });
