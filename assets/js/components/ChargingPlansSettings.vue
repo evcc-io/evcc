@@ -44,6 +44,7 @@
 				</div>
 			</div>
 		</div>
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<hr />
 		<h5>
 			<div class="inner">
@@ -64,7 +65,6 @@
 				</div>
 			</div>
 		</h5>
-		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
