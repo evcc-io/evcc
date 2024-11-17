@@ -358,6 +358,7 @@ export default {
 <style scoped>
 .col-id {
 	width: 4%;
+	margin-left: 15px;
 	padding-right: 0;
 	padding-left: 0;
 	color: var(--evcc-gray);
