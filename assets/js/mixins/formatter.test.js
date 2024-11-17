@@ -156,7 +156,7 @@ describe("fmtDuration", () => {
 
 describe("getWeekdaysList", () => {
   test("should return the correct weekday-order", () => {
-    expect(fmt.getWeekdaysList()).toEqual([
+    expect(fmt.getWeekdaysList("long")).toEqual([
       { name: "Monday", value: 1 },
       { name: "Tuesday", value: 2 },
       { name: "Wednesday", value: 3 },
@@ -170,19 +170,19 @@ describe("getWeekdaysList", () => {
 
 describe("getShortenedWeekdaysLabel", () => {
   test("should format single days", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Mo, Mi, Fr, So");
-    expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
-    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Do, So");
+    expect(fmt.getShortenedWeekdaysLabel([0])).eq("So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Di, Do, Sa, So");
+    expect(fmt.getShortenedWeekdaysLabel([6])).eq("Sa");
+    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Mi, Sa");
   });
   test("should format ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1])).eq("Mo, Di");
+    expect(fmt.getShortenedWeekdaysLabel([1, 2])).eq("Mo, Di");
     expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Di, Do – Sa");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
   });
   test("should format single days and ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Di, Do, Sa, So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Mo, Mi, Do, Sa, So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
   });
 });
 

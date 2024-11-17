@@ -379,21 +379,28 @@ export default {
         return "-";
       }
 
+      const weekdays = this.getWeekdaysList("short");
       let label = "";
-      let weekdays = this.getWeekdaysList("short");
 
+      // the week in the input-parameter starts with 0 for sunday and ends with 6 for saturday
+      // this algorithms works only if the week starts with 1 for monday and ends with 7 for sunday because
+      // then we are able to count from 1 to 7 by incrementing the number
+      // so we have to transform the input accordingly
+      const selectedWeekdaysTransformed = selectedWeekdays.map(function (dayIndex) {
+        return 0 === dayIndex ? 7 : dayIndex;
+      });
       function getWeekdayName(dayIndex) {
-        return weekdays.find((day) => day.value === dayIndex).name;
+        return weekdays.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex)).name;
       }
 
-      let maxWeekday = Math.max(...selectedWeekdays);
+      let maxWeekday = Math.max(...selectedWeekdaysTransformed);
 
-      for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
-        if (selectedWeekdays.includes(weekdayRangeStart)) {
+      for (let weekdayRangeStart = 1; weekdayRangeStart < 8; weekdayRangeStart++) {
+        if (selectedWeekdaysTransformed.includes(weekdayRangeStart)) {
           label += getWeekdayName(weekdayRangeStart);
 
           let weekdayRangeEnd = weekdayRangeStart;
-          while (selectedWeekdays.includes(weekdayRangeEnd + 1)) {
+          while (selectedWeekdaysTransformed.includes(weekdayRangeEnd + 1)) {
             weekdayRangeEnd++;
           }
 
