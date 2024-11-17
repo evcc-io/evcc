@@ -48,21 +48,20 @@
 		<hr />
 		<h5>
 			<div class="inner">
-				<div v-if="numberPlans">
-					<PlanPreviewOptions
-						class="text-decoration-underline"
-						:selectedPlan="selectedPreviewPlanTitle"
-						:planOptions="previewPlanOptions"
-						@change-preview-plan="changePreviewPlan"
-					>
-						<span class="flex-grow-1 text-truncate" data-testid="plan-preview-title">
-							{{ selectedPreviewPlanTitle }}
-						</span>
-					</PlanPreviewOptions>
-				</div>
-				<div v-else>
+				<PlanPreviewOptions
+					v-if="numberPlans"
+					class="text-decoration-underline"
+					:selectedPlan="selectedPreviewPlanTitle"
+					:planOptions="previewPlanOptions"
+					@change-preview-plan="changePreviewPlan"
+				>
+					<span data-testid="plan-preview-title">
+						{{ selectedPreviewPlanTitle }}
+					</span>
+				</PlanPreviewOptions>
+				<span v-else data-testid="plan-preview-title">
 					{{ $t(`main.targetCharge.${1 === nextPlanId ? "currentPlan" : "preview"}`) }}
-				</div>
+				</span>
 			</div>
 		</h5>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
