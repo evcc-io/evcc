@@ -15,6 +15,7 @@
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
+				:numberPlans="numberPlans"
 				@repeating-plan-updated="updateRepeatingPlan"
 				@repeating-plan-removed="removeRepeatingPlan"
 			/>
@@ -23,7 +24,7 @@
 	<div class="d-flex align-items-baseline">
 		<button
 			type="button"
-			class="d-flex btn btn-sm btn-outline-primary border-0 ps-0 align-items-baseline"
+			class="d-flex btn btn-sm btn-outline-secondary border-0 ps-0 align-items-baseline"
 			data-testid="repeating-plan-add"
 			@click="addRepeatingPlan"
 		>
@@ -59,6 +60,7 @@ export default {
 		id: Number,
 		rangePerSoc: Number,
 		initialPlans: { type: Array, default: () => [] },
+		numberPlans: Boolean
 	},
 	emits: ["repeating-plans-updated", "plans-preview"],
 	data: function () {

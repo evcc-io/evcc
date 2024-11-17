@@ -1,8 +1,8 @@
 <template>
 	<div>
 		<div class="row d-none d-lg-flex mb-2">
-			<div class="col-id d-none d-lg-flex"></div>
-			<div class="col-6 col-lg-3">
+			<div v-if="numberPlans" class="col-id d-none d-lg-flex"></div>
+			<div :class="['col-6', numberPlans ? 'col-lg-3' : 'col-lg-4']">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
@@ -22,7 +22,7 @@
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-id d-none d-lg-flex align-items-center justify-content-start">
+			<div v-if="numberPlans" class="col-id d-none d-lg-flex align-items-center justify-content-start">
 				<h5>#{{ id + 2 }}</h5>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -30,7 +30,7 @@
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
+			<div :class="['col-7', numberPlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
 				<MultiSelect
 					:id="formId('weekdays')"
 					:value="selectedWeekdays"
@@ -131,6 +131,7 @@ export default {
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
+		numberPlans: Boolean
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
 	data: function () {

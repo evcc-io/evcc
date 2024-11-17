@@ -2,7 +2,7 @@
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0 mb-3">
-				<div class="d-lg-none">
+				<div v-if="numberPlans" class="d-lg-none">
 					<hr class="w-75 mx-auto mt-5" />
 					<h5>
 						<div class="inner" data-testid="repeating-plan-title">
@@ -18,12 +18,13 @@
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
+					:numberPlans="numberPlans"
 					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
 					@static-plan-removed="() => removeStaticPlan(0)"
 					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
-					<div class="d-none d-lg-block">
+					<div v-if="numberPlans" class="d-none d-lg-block">
 						<hr class="w-75 mx-auto mt-5" />
 						<h5>
 							<div class="inner" data-testid="repeating-plan-title">
@@ -36,6 +37,7 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:initialPlans="repeatingPlans"
+						:numberPlans="numberPlans"
 						@repeating-plans-updated="updateRepeatingPlans"
 						@plans-preview="previewRepeatingPlans"
 					/>
@@ -45,17 +47,21 @@
 		<hr />
 		<h5>
 			<div class="inner">
-				<PlanPreviewOptions
-					class="text-decoration-underline"
-					:selectedPlan="selectedPreviewPlanTitle"
-					:planOptions="previewPlanOptions"
-					@change-preview-plan="changePreviewPlan"
-				>
-					<span class="flex-grow-1 text-truncate" data-testid="plan-preview-title">
-						{{ selectedPreviewPlanTitle }}
-					</span>
-				</PlanPreviewOptions>
-				<!-- {{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }} -->
+				<div v-if="numberPlans">
+					<PlanPreviewOptions
+						class="text-decoration-underline"
+						:selectedPlan="selectedPreviewPlanTitle"
+						:planOptions="previewPlanOptions"
+						@change-preview-plan="changePreviewPlan"
+					>
+						<span class="flex-grow-1 text-truncate" data-testid="plan-preview-title">
+							{{ selectedPreviewPlanTitle }}
+						</span>
+					</PlanPreviewOptions>
+				</div>
+				<div v-else>
+					{{ $t(`main.targetCharge.${1 === nextPlanId ? "preview" : "currentPlan"}`) }}
+				</div>
 			</div>
 		</h5>
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
@@ -123,6 +129,9 @@ export default {
 		};
 	},
 	computed: {
+		numberPlans: function () {
+			return this.plansForPreview.repeating.length !== 0;
+		},
 		selectedPreviewPlanTitle: function () {
 			return this.previewPlanOptions[this.selectedPreviewPlanId - 1].title;
 		},
