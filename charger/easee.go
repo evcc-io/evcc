@@ -821,7 +821,7 @@ var _ api.PhaseGetter = (*Easee)(nil)
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	var phases = 0
+	var phases int
 	if c.circuit != 0 {
 		// circuit level controlled charger
 		for dcc := range c.dynamicCircuitCurrent {
