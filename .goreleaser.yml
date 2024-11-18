@@ -32,6 +32,10 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    overrides:
+      - goos: darwin
+        ldflags:
+          - "-B gobuildid"
 
 env:
   - CGO_ENABLED=0
