@@ -2,6 +2,7 @@ package meter
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,9 +22,10 @@ type Zendure struct {
 // NewZendureFromConfig creates a Zendure meter from generic config
 func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Usage, Account, Serial string
-		Timeout                time.Duration
+		Usage, Account, Serial, Region string
+		Timeout                        time.Duration
 	}{
+		Region:  "EU",
 		Timeout: 30 * time.Second,
 	}
 
@@ -31,7 +33,7 @@ func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	conn, err := zendure.NewConnection(cc.Account, cc.Serial, cc.Timeout)
+	conn, err := zendure.NewConnection(strings.ToUpper(cc.Region), cc.Account, cc.Serial, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}

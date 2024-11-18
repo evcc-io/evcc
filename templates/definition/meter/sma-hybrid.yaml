@@ -23,6 +23,13 @@ params:
     type: duration
     default: 30s
     advanced: true
+  - name: chargepower
+    default: 100000 # 100kW, inverter will use it's maximum by default
+    advanced: true
+    help:
+      de: Ladeleistung für Netzladen in W
+      en: Charging power for grid charging in W
+    usages: ["battery"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -167,7 +174,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: -2147483647 # Wirkleistungsvorgabe
+            value: -{{ .chargepower }} # Wirkleistungsvorgabe
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

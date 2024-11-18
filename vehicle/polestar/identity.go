@@ -84,16 +84,28 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
-	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-	defer func() { v.Client.CheckRedirect = nil }()
 
 	var code string
-	if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
-		code, err = param()
+	var uid string
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		code = req.URL.Query().Get("code")
+		uid = req.URL.Query().Get("uid")
+		return nil
+	}
+	defer func() { v.Client.CheckRedirect = nil }()
+
+	if _, err := v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err != nil {
+		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
+	// If the authorization code is empty, this indicates that user consent must be handled
+	// before the code can be obtained. The `confirmConsentAndGetCode` method is called as a
+	// workaround to guide the user through the consent process and retrieve the authorization code.
+	if code == "" {
+		code, err = v.confirmConsentAndGetCode(resume, uid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var res struct {
@@ -136,4 +148,36 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	return v.login()
+}
+
+func (v *Identity) confirmConsentAndGetCode(resume, uid string) (string, error) {
+	// Extract the user ID (UID) from the redirect parameters
+	if uid == "" {
+		return "", fmt.Errorf("failed to extract user ID")
+	}
+
+	// Confirm user consent by submitting the consent form, which rejects cookies
+	data := url.Values{
+		"pf.submit": []string{"true"},
+		"subject":   []string{uid},
+	}
+
+	// Retrieve the authorization code after consent has been confirmed
+	var param request.InterceptResult
+	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
+	defer func() { v.Client.CheckRedirect = nil }()
+
+	// Make a POST request to confirm the user consent
+	if _, err := v.Post(fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resume), request.FormContent, strings.NewReader(data.Encode())); err != nil {
+		return "", fmt.Errorf("failed confirming user consent: %w", err)
+	}
+
+	// Extract the authorization code from the response
+	code, err := param()
+	if err != nil || code == "" {
+		return "", fmt.Errorf("failed extracting authorisation code: %w", err)
+	}
+
+	// Return the retrieved code
+	return code, nil
 }

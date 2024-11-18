@@ -15,8 +15,8 @@ products:
 # capabilities: ["battery-control"]
 requirements:
   description:
-    de: Die Verbindung über einen LSE-3 Logger Stick mittels ModBus TCP ist möglich, jedoch kann Battery Control darüber nicht genutzt werden. Der LSW-3 WLAN Stick wird nicht unterstützt. Bei seriellem Anschluss via RS485 am COM Port ist eine wechselrichterseitige Terminierung notwendig.
-    en: Connection via LSE-3 logger stick using ModBus TCP is possible, however does not allow Battery Control. The LSW-3 WiFi stick is not supported. For RS485 serial connection using the inverter's COM port the inverter's side must be properly terminated.
+    de: Die Verbindung über einen LSE-3 Logger Stick mittels LAN Anschluss und ModBus TCP über Port 8899 ist die einfachste Anbindung. Der LSW-3 WLAN Stick wird nicht unterstützt. Bei seriellem Anschluss via RS485 am COM Port ist eine wechselrichterseitige Terminierung notwendig.
+    en: LSE-3 logger stick using a LAN connection and ModBus TCP via the port 8899 is the easiest connection. The LSW-3 WiFi stick is not supported. For a RS485 serial connection using the inverter's COM port the inverter's side must be properly terminated.
 capabilities: ["battery-control"]
 params:
   - name: usage
