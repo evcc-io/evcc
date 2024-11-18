@@ -1,0 +1,100 @@
+template: tessie
+products:
+  - description:
+      generic: Tessie
+group: generic
+requirements:
+  description:
+    de: Verbinden Sie Ihr Tesla-Fahrzeug über die Tessie-API. Dies wird das Fahrzeug niemals aufwecken; das Polling kann auf „always“ und interval „1M“ eingestellt werden. Wenn das Fahrzeug wach ist, sind die Daten normalerweise weniger als 15 Sekunden alt. Wenn das Fahrzeug schläft, stammen die Daten aus dem Zeitpunkt, zu dem es eingeschlafen ist. Holen Sie sich Ihr Token unter https://dash.tessie.com/settings/api
+    en: Connect your Tesla using the Tessie API. This will never wake up the car, polling can be set to "always" and interval "1M". If the vehicle is awake, the data is usually less than 15 seconds old. If the vehicle is asleep, the data is from the time the vehicle went to sleep. Get your token at https://dash.tessie.com/settings/api
+params:
+  - name: title
+  - name: vin
+    description:
+      de: Fahrzeug-VIN
+      en: Vehicle VIN
+    required: true
+  - name: token
+    description:
+      de: Tessie API Token
+      en: Tessie API Token
+    required: true
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  {{- include "vehicle-identify" . }}
+  soc: # battery state of charge (%)
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.usable_battery_level
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+      headers:
+        Authorization: Bearer {{ .token }}
+      jq: .charge_state.charge_port_door_open
+    charging:
+      source: http
+      uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+      headers:
+        Authorization: Bearer {{ .token }}
+      jq: .charge_state.charging_state == "Charging"
+  range:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.battery_range * 1.60934
+  odometer:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .vehicle_state.odometer * 1.60934
+  climater:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .climate_state.is_climate_on
+  limitsoc:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.charge_limit_soc
+  getMaxCurrent:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: .charge_state.charge_current_request
+  chargeEnable:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/command/start_charging?retry_duration=40&wait_for_completion=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+  maxcurrent:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=${maxcurrent}
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+  wakeup:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/wake
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST

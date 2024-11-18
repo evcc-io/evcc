@@ -18,7 +18,7 @@ const colors = reactive({
   price: "#FF912FFF",
   co2: "#00916EFF",
   background: null,
-  selfPalette: ["#0fde41ff", "#0ba631ff", "#076f20ff", "#054e18ff", "#043611ff", "#02230bff"],
+  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
   palette: [
     "#03C1EFFF",
     "#FD6158FF",

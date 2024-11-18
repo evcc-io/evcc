@@ -190,9 +190,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.Cache, auth auth.Auth, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
-	auth := auth.New()
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()

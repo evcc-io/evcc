@@ -17,13 +17,14 @@ import (
 type Connection struct {
 	*request.Helper
 	uri         string
+	usage       string
 	ProductType string
 	dataG       provider.Cacheable[DataResponse]
 	stateG      provider.Cacheable[StateResponse]
 }
 
 // NewConnection creates a homewizard connection
-func NewConnection(uri string, cache time.Duration) (*Connection, error) {
+func NewConnection(uri string, usage string, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -32,6 +33,7 @@ func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 	c := &Connection{
 		Helper: request.NewHelper(log),
 		uri:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
+		usage:  usage,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -100,18 +102,27 @@ func (c *Connection) Enabled() (bool, error) {
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
 	res, err := c.dataG.Get()
+	if c.usage == "pv" {
+		return -res.ActivePowerW, err
+	}
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataG.Get()
+	if c.usage == "pv" {
+		return res.TotalPowerExportT1kWh + res.TotalPowerExportT2kWh + res.TotalPowerExportT3kWh + res.TotalPowerExportT4kWh, err
+	}
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
+	if c.usage == "pv" {
+		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
+	}
 	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
 }
 
