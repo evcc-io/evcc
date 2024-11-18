@@ -831,7 +831,7 @@ func (c *Easee) GetPhases() (int, error) {
 		}
 	} else {
 		// charger level
-		phases := c.phaseMode
+		phases = c.phaseMode
 		if phases == 2 { // map automatic to 3p
 			phases = 3
 		}
