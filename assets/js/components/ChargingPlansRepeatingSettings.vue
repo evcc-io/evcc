@@ -1,17 +1,9 @@
 <template>
-	<div v-for="(plan, index) in plans" :key="index">
+	<div v-for="(plan, index) in plans" :key="index" :data-testid="`repeating-plan-${index + 2}`">
 		<div>
-			<div class="d-lg-none">
-				<hr class="w-75 mx-auto mt-5" />
-				<h5>
-					<div class="inner" data-testid="repeating-plan-title">
-						{{ $t("main.chargingPlan.repeatingPlan") + " #" + (index + 2) }}
-					</div>
-				</h5>
-			</div>
 			<ChargingPlanRepeatingSettings
 				:id="index"
-				class="mb-4"
+				class="mb-5 mb-lg-4"
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
@@ -21,15 +13,15 @@
 			/>
 		</div>
 	</div>
-	<div class="d-flex align-items-baseline">
+	<div class="d-flex align-items-center mb-4 pb-2">
 		<button
 			type="button"
-			class="d-flex btn btn-sm btn-outline-secondary border-0 ps-0 align-items-baseline"
+			class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 			data-testid="repeating-plan-add"
 			@click="addRepeatingPlan"
 		>
-			<shopicon-regular-plus size="s" class="flex-shrink-0 me-2"></shopicon-regular-plus>
-			<p class="mb-0">{{ $t("main.chargingPlan.addRepeatingPlan") }}</p>
+			<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+			{{ $t("main.chargingPlan.addRepeatingPlan") }}
 		</button>
 		<button
 			v-if="dataHasChanged"
@@ -116,21 +108,9 @@ export default {
 	},
 };
 </script>
+
 <style scoped>
-h5 {
-	position: relative;
-	display: flex;
-	top: -25px;
-	margin-bottom: -0.5rem;
-	padding: 0 0.5rem;
-	justify-content: center;
-}
-h5 .inner {
-	padding: 0 0.5rem;
-	background-color: var(--evcc-box);
-	font-weight: normal;
-	color: var(--evcc-gray);
-	text-transform: uppercase;
-	text-align: center;
+.btn-outline-secondary {
+	margin-left: -0.5rem;
 }
 </style>

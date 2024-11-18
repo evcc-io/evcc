@@ -1,8 +1,18 @@
 <template>
-	<div>
+	<div class="mb-5 mb-lg-4">
+		<h5
+			v-if="numberPlans"
+			class="d-flex gap-3 align-items-baseline d-lg-none mb-4 fw-normal evcc-gray"
+			data-testid="repeating-plan-title"
+		>
+			<span class="text-uppercase fs-6">
+				{{ `${$t("main.chargingPlan.planNumber", { number: "#1" })}` }}
+			</span>
+		</h5>
+
 		<div class="row d-none d-lg-flex mb-2">
-			<div v-if="numberPlans" class="col-id d-none d-lg-flex"></div>
-			<div :class="['col-6', numberPlans ? 'col-lg-3' : 'col-lg-4']">
+			<div v-if="numberPlans" class="plan-id d-none d-lg-flex"></div>
+			<div class="col-6" :class="numberPlans ? 'col-lg-3' : 'col-lg-4'">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
@@ -24,9 +34,9 @@
 		<div class="row">
 			<div
 				v-if="numberPlans"
-				class="col-id d-none d-lg-flex align-items-center justify-content-start"
+				class="plan-id d-none d-lg-flex align-items-center justify-content-start fs-6"
 			>
-				<h5>#1</h5>
+				#1
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
@@ -356,11 +366,8 @@ export default {
 };
 </script>
 <style scoped>
-.col-id {
-	width: 4%;
-	margin-left: 15px;
-	padding-right: 0;
-	padding-left: 0;
+.plan-id {
+	width: 2.5rem;
 	color: var(--evcc-gray);
 }
 </style>

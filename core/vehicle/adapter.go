@@ -122,16 +122,13 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
 		return plans
 	}
 
-	v.log.DEBUG.Printf("update repeating plans triggered error: %s", err)
-
 	return []api.RepeatingPlanStruct{}
 }
 
 func (v *adapter) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
 	var formattedPlans []api.PlanStruct
 
-	plans := v.GetRepeatingPlans()
-	for id, p := range plans {
+	for id, p := range v.GetRepeatingPlans() {
 		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(id+2)...)
 	}
 

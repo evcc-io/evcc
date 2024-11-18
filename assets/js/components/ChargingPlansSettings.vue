@@ -1,15 +1,7 @@
 <template>
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
-			<div class="container px-0 mb-3">
-				<div v-if="numberPlans" class="d-lg-none">
-					<hr class="w-75 mx-auto mt-5" />
-					<h5>
-						<div class="inner" data-testid="repeating-plan-title">
-							{{ $t("main.chargingPlan.staticPlan") + " #1" }}
-						</div>
-					</h5>
-				</div>
+			<div class="container px-0">
 				<ChargingPlanStaticSettings
 					:id="`${id}_0`"
 					class="mb-2"
@@ -25,9 +17,9 @@
 				/>
 				<div v-if="socBasedPlanning">
 					<div v-if="numberPlans" class="d-none d-lg-block">
-						<hr class="w-75 mx-auto mt-5" />
+						<hr class="mt-5" />
 						<h5>
-							<div class="inner" data-testid="repeating-plan-title">
+							<div class="inner mb-3" data-testid="repeating-plan-title">
 								{{ $t("main.chargingPlan.repeatingPlans") }}
 							</div>
 						</h5>
@@ -152,7 +144,7 @@ export default {
 			if (0 !== this.nextPlanId) {
 				options.push({
 					planId: this.nextPlanId,
-					title: this.$t("main.targetCharge.currentPlan") + " #" + this.nextPlanId,
+					title: this.$t("main.targetCharge.nextPlan") + " #" + this.nextPlanId,
 				});
 			}
 
