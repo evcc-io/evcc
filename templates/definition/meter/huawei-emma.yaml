@@ -25,7 +25,6 @@ render: |
     id: 0
     uri: {{ .host }}:{{ .port }}
     timeout: {{ .timeout }}
-    connectdelay: 1s
     register:
       address: 31657 # Active power of built-in electric energy sensor
       type: holding
@@ -45,7 +44,6 @@ render: |
   - source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 31651 # Huawei phase A grid current
       type: holding
@@ -63,7 +61,6 @@ render: |
   - source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 31655 # Huawei phase C grid current
       type: holding
@@ -96,11 +93,10 @@ render: |
     id: 0
     uri: {{ .host }}:{{ .port }}
     timeout: {{ .timeout }}
-    connectdelay: 1s
     register:
       address: 30360
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -1
   energy:
     source: modbus
@@ -108,9 +104,9 @@ render: |
     uri: {{ .host }}:{{ .port }}
     timeout: {{ .timeout }}
     register:
-      address: 30312 # [Energy storage unit 1] Total discharge
+      address: 30312 # Total discharge
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.01
   soc:
     source: modbus
@@ -120,7 +116,7 @@ render: |
     register:
       address: 30368
       type: holding
-      decode: uint16
+      decode: uint16nan
     scale: .01
   capacity: {{ .capacity }} # kWh
   {{- end }}
