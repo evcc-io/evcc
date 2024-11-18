@@ -62,7 +62,6 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
-	outputPhase             int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -314,8 +313,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
-	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CIRCUIT_CURRENT_P1:
 		c.dynamicCircuitCurrent[0] = value.(float64)
 	case easee.DYNAMIC_CIRCUIT_CURRENT_P2:
