@@ -620,6 +620,15 @@ html.app .modal-dialog {
 	color: var(--bs-danger-text-emphasis) !important;
 }
 
+.dark .round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-warning);
+	border: 1px solid var(--bs-warning);
+}
+
+.dark .round-box--error .tags * {
+	color: var(--bs-warning) !important;
+}
+
 .alert-danger code {
 	color: var(--evcc-darkest-green);
 }

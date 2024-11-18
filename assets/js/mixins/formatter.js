@@ -164,13 +164,17 @@ export default {
       return tomorrow.toDateString() === date.toDateString();
     },
     weekdayPrefix: function (date) {
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       if (this.isToday(date)) {
-        return ""; //rtf.formatToParts(0, "day")[0].value;
+        return "";
       }
       if (this.isTomorrow(date)) {
-        return rtf.formatToParts(1, "day")[0].value;
+        try {
+          const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+          return rtf.formatToParts(1, "day")[0].value;
+        } catch (e) {
+          console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
+          return "tomorrow";
+        }
       }
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
@@ -241,6 +245,15 @@ export default {
         weekday: "short",
         day: "numeric",
       }).format(date);
+    },
+    fmtSecondUnit: function (seconds) {
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: "unit",
+        unit: "second",
+        unitDisplay: "long",
+      })
+        .formatToParts(seconds)
+        .find((part) => part.type === "unit").value;
     },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
@@ -337,12 +350,17 @@ export default {
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)
-        if (Math.abs(elapsed) > units[u] || u == "second")
-          return rtf.format(Math.round(elapsed / units[u]), u);
+        if (Math.abs(elapsed) > units[u] || u == "second") {
+          try {
+            const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+            return rtf.format(Math.round(elapsed / units[u]), u);
+          } catch (e) {
+            console.warn("fmtTimeAgo: Intl.RelativeTimeFormat not supported", e);
+            return `${elapsed} ${u}s ago`;
+          }
+        }
     },
     fmtSocOption: function (soc, rangePerSoc, distanceUnit, heating) {
       let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;

@@ -19,6 +19,8 @@ type Connection struct {
 	channel    int
 	gen        int    // Shelly api generation
 	devicetype string // Shelly device type
+	app        string // Shelly device app code
+	profile    string // Shelly device profile
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -45,6 +47,8 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 		channel:    channel,
 		gen:        resp.Gen,
 		devicetype: resp.Type,
+		app:        resp.App,
+		profile:    resp.Profile,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())

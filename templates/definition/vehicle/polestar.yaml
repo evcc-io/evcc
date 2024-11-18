@@ -1,6 +1,8 @@
 template: polestar
 products:
   - brand: Polestar
+requirements:
+  evcc: ["skiptest"]
 params:
   - preset: vehicle-base
   - preset: vehicle-identify

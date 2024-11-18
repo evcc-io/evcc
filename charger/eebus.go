@@ -331,7 +331,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// if VAS VW is available, limits are completely covered by it
-	// this way evcc can fully control the charging behaviour
+	// this way evcc can fully control the charging behavior
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
@@ -410,7 +410,7 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	return false
 }
 
-// provides support for the special VW VAS ISO15118-2 charging behaviour if supported
+// provides support for the special VW VAS ISO15118-2 charging behavior if supported
 // will return false if it isn't supported or successful
 //
 // this functionality allows to fully control charging without the EV actually having a

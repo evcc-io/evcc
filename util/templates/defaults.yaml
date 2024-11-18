@@ -277,6 +277,14 @@ params:
     help:
       en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
       de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+  - name: coarsecurrent
+    type: bool
+    help:
+      en: 1A current control
+      de: 1A Ladestromvorgabe
+    description:
+      en: Vehicle supports 1A current steps only
+      de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
   - name: welcomecharge
     type: bool
     description:
@@ -325,14 +333,23 @@ presets:
     params:
       - name: charges
         type: number
+        advanced: true
         help:
           de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
           en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
       - name: tax
         type: number
+        advanced: true
         help:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
           en: Additional percentage charge (e.g. 0.2 for 20%)
+      - name: formula
+        type: string
+        advanced: true
+        help:
+          de: Individuelle Formel zur Berechnung des Preises
+          en: Individual formula for calculating the price
+        example: "math.Max((price + charges) * (1 + tax), 0.0)"
   eebus:
     params:
       - name: ski
