@@ -814,7 +814,11 @@ var _ api.PhaseGetter = (*Easee)(nil)
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.outputPhase, nil
+	phaseMode := c.phaseMode
+	if phaseMode == 2 { // map automatic to 3p
+		phaseMode = 3
+	}
+	return phaseMode, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)
