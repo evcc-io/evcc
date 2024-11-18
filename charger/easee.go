@@ -824,7 +824,7 @@ func (c *Easee) GetPhases() (int, error) {
 	var phases int
 	if c.circuit != 0 {
 		// circuit level controlled charger
-		for dcc := range c.dynamicCircuitCurrent {
+		for _, dcc := range c.dynamicCircuitCurrent {
 			if dcc > 0 {
 				phases++
 			}
