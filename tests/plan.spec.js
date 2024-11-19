@@ -23,10 +23,10 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
   if (energy) {
     // select "25 kWh (+50%)" by providing "25 kWh" as option text
     const optionText = await page
-      .getByTestId("plan-energy")
+      .getByTestId("static-plan-energy")
       .locator("option", { hasText: energy })
       .textContent();
-    await page.getByTestId("plan-energy").selectOption(optionText);
+    await page.getByTestId("static-plan-energy").selectOption(optionText);
   }
   await page.getByTestId("static-plan-active").click();
   await page.getByRole("button", { name: "Close" }).click();
@@ -214,7 +214,7 @@ test.describe("preview", async () => {
     {
       szenario: "kWh based plan",
       vehicle: "Vehicle no SoC with Capacity",
-      goalId: "plan-energy",
+      goalId: "static-plan-energy",
     },
     {
       szenario: "soc based plan",
@@ -248,13 +248,13 @@ test.describe("preview", async () => {
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       // apply -> active plan
-      await expect(page.getByTestId("plan-apply")).toBeVisible();
-      await page.getByTestId("plan-apply").click();
+      await expect(page.getByTestId("static-plan-apply")).toBeVisible();
+      await page.getByTestId("static-plan-apply").click();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       await page.getByTestId("static-plan-time").fill("23:30");
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
-      await expect(page.getByTestId("plan-apply")).toBeVisible();
+      await expect(page.getByTestId("static-plan-apply")).toBeVisible();
 
       // deactivate
       await page.getByTestId("static-plan-active").click();

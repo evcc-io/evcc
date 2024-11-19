@@ -106,22 +106,30 @@
 						role="switch"
 						data-testid="repeating-plan-active"
 						:checked="selectedActive"
-						@change="update"
+						@change="update(true)"
 					/>
 				</div>
 			</div>
 			<div class="col-1 mx-auto d-flex align-items-center justify-content-start">
 				<button
+					v-if="showApply"
+					type="button"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					data-testid="repeating-plan-apply"
+					@click="update(true)"
+				>
+					{{ $t("main.chargingPlan.update") }}
+				</button>
+				<button
+					v-else
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
-					data-testid="plan-delete"
+					data-testid="repeating-plan-delete"
 					@click="$emit('repeating-plan-removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
 			</div>
-			<div class="col-1"></div>
-			<!-- Adds space to the right side which is needed due to the extra column containing the trash-icons -->
 		</div>
 	</div>
 </template>
@@ -147,6 +155,7 @@ export default {
 		rangePerSoc: Number,
 		formIdPrefix: String,
 		numberPlans: Boolean,
+		dataChanged: Boolean,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
 	data: function () {
@@ -158,6 +167,9 @@ export default {
 		};
 	},
 	computed: {
+		showApply: function () {
+			return this.dataChanged && this.selectedActive;
+		},
 		weekdaysLabel: function () {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
@@ -200,9 +212,10 @@ export default {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update: function () {
+		update: function (save) {
 			this.$emit("repeating-plan-updated", {
 				id: this.id,
+				save: !this.selectedActive || true === save,
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,
 				soc: this.selectedSoc,

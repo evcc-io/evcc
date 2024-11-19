@@ -96,7 +96,7 @@
 					:id="formId('goal')"
 					v-model="selectedEnergy"
 					class="form-select mx-0"
-					data-testid="plan-energy"
+					data-testid="static-plan-energy"
 					@change="preview"
 				>
 					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
@@ -109,7 +109,7 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 d-flex align-items-center justify-content-start">
+			<div class="col-1 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -122,11 +122,13 @@
 						@change="toggle"
 					/>
 				</div>
+			</div>
+			<div class="col-1 mx-auto d-flex align-items-center justify-content-start">
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline ms-auto me-4"
-					data-testid="plan-apply"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
 					@click="update"
 				>

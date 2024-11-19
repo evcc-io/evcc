@@ -8,6 +8,7 @@
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
 				:numberPlans="numberPlans"
+				:dataChanged="!deepEqual(initialPlans[index], plan)"
 				@repeating-plan-updated="updateRepeatingPlan"
 				@repeating-plan-removed="removeRepeatingPlan"
 			/>
@@ -22,15 +23,6 @@
 		>
 			<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 			{{ $t("main.chargingPlan.addRepeatingPlan") }}
-		</button>
-		<button
-			v-if="dataHasChanged"
-			type="button"
-			class="btn btn-sm btn-outline-primary ms-auto me-4 border-0 text-decoration-underline"
-			data-testid="plan-apply"
-			@click="updateRepeatingPlans"
-		>
-			{{ $t("main.chargingPlan.update") }}
 		</button>
 	</div>
 </template>
@@ -61,9 +53,6 @@ export default {
 		};
 	},
 	computed: {
-		dataHasChanged: function () {
-			return !deepEqual(this.initialPlans, this.plans);
-		},
 		formIdPrefix: function () {
 			return `chargingplan-${this.id}`;
 		},
@@ -76,6 +65,7 @@ export default {
 		},
 	},
 	methods: {
+		deepEqual,
 		addRepeatingPlan: function () {
 			this.plans.push({
 				weekdays: DEFAULT_WEEKDAYS,
@@ -84,12 +74,23 @@ export default {
 				active: false,
 			});
 			this.preview();
+
+			// update the plan without storing non-applied changes from other plans
+			const plans = [...this.initialPlans]; // clone array
+			plans.push({
+				weekdays: newPlan.weekdays,
+				time: newPlan.time,
+				soc: newPlan.soc,
+				active: newPlan.active,
+			});
+			this.updateRepeatingPlans(plans);
+			this.updateRepeatingPlans(this.plans);
 		},
-		updateRepeatingPlans: function () {
-			this.$emit("repeating-plans-updated", this.plans);
+		updateRepeatingPlans: function (plans) {
+			this.$emit("repeating-plans-updated", plans);
 		},
 		updateRepeatingPlan: function (newPlan) {
-			const { id } = newPlan;
+			const { id, save } = newPlan;
 			this.plans.splice(id, 1, {
 				weekdays: newPlan.weekdays,
 				time: newPlan.time,
@@ -97,9 +98,27 @@ export default {
 				active: newPlan.active,
 			});
 			this.preview();
+
+			if (save) {
+				// update the plan without storing non-applied changes from other plans
+				const plans = [...this.initialPlans]; // clone array
+				plans.splice(id, 1, {
+					weekdays: newPlan.weekdays,
+					time: newPlan.time,
+					soc: newPlan.soc,
+					active: newPlan.active,
+				});
+				this.updateRepeatingPlans(plans);
+			}
 		},
 		removeRepeatingPlan: function (index) {
 			this.plans.splice(index, 1);
+
+			// remove the plan without storing non-applied changes from other plans
+			const plans = [...this.initialPlans]; // clone array
+			plans.splice(index, 1);
+			this.updateRepeatingPlans(plans);
+
 			this.preview();
 		},
 		preview: function () {
