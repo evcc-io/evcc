@@ -13,17 +13,17 @@ const (
 	GlobalCredentialsUri = "https://app.zendure.tech/v2/developer/api/apply"
 )
 
-func MqttCredentials(account, serial string, global bool) (CredentialsResponse, error) {
-	client := request.NewHelper(util.NewLogger("zendure"))
+func MqttCredentials(log *util.Logger, region, account, serial string) (CredentialsResponse, error) {
+	client := request.NewHelper(log)
 
 	data := CredentialsRequest{
 		SnNumber: serial,
 		Account:  account,
 	}
 
-	uri := EUCredentialsUri
-	if global {
-		uri = GlobalCredentialsUri
+	uri := GlobalCredentialsUri
+	if region == "EU" {
+		uri = EUCredentialsUri
 	}
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)

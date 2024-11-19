@@ -126,14 +126,10 @@ func (p *Script) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ SetIntProvider = (*Script)(nil)
-
-// IntSetter invokes script with parameter replaced by int value
-func (p *Script) IntSetter(param string) (func(int64) error, error) {
-	// return func to access cached value
-	return func(i int64) error {
+func scriptSetter[T any](p *Script, param string) (func(T) error, error) {
+	return func(val T) error {
 		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
-			param: i,
+			param: val,
 		})
 
 		if err == nil {
@@ -142,39 +138,25 @@ func (p *Script) IntSetter(param string) (func(int64) error, error) {
 
 		return err
 	}, nil
+}
+
+var _ SetIntProvider = (*Script)(nil)
+
+// IntSetter invokes script with parameter replaced by int value
+func (p *Script) IntSetter(param string) (func(int64) error, error) {
+	return scriptSetter[int64](p, param)
 }
 
 var _ SetBoolProvider = (*Script)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
 func (p *Script) BoolSetter(param string) (func(bool) error, error) {
-	// return func to access cached value
-	return func(b bool) error {
-		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
-			param: b,
-		})
-
-		if err == nil {
-			_, err = p.exec(cmd)
-		}
-
-		return err
-	}, nil
+	return scriptSetter[bool](p, param)
 }
 
 var _ SetStringProvider = (*Script)(nil)
 
 // StringSetter returns a function that invokes a script with parameter by a string value
 func (p *Script) StringSetter(param string) (func(string) error, error) {
-	return func(v string) error {
-		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
-			param: v,
-		})
-
-		if err == nil {
-			_, err = p.exec(cmd)
-		}
-
-		return err
-	}, nil
+	return scriptSetter[string](p, param)
 }
