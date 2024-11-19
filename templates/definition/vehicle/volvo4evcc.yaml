@@ -1,0 +1,54 @@
+template: volvo4evcc
+products:
+  - description:
+      generic: volvo4evcc
+group: generic
+requirements:
+  description:
+    en: Dedicated EVCC module (in contradiction to Volvo2mqtt) with enhancements in security and using weather data for solar charging, No broker needed comes with lightweight JSON API https://github.com/MartijnvanGeffen13/Volvo4evcc
+    de: Dediziertes EVCC-Modul (im Gegensatz zu Volvo2mqtt) mit Verbesserungen in Bezug auf Sicherheit und Verwendung von Wetterdaten für das Aufladen von Solarenergie, Kein Broker erforderlich kommt mit leichtgewichtiger JSON-API https://github.com/MartijnvanGeffen13/Volvo4evcc
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: volvo4evcchostname
+    required: true
+    help:
+      de: Erforderlich, Beispiel http://192.168.1.1:6060
+      en: Required, example http://192.168.1.1:6060
+  - name: capacity
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+      source: http
+      uri: {{ .volvo4evcchostname }}
+      method: GET
+      headers:
+        - content-type: application/jso
+      jq: .data.batteryChargeLevel.value
+    status:
+      source: http
+      uri: {{ .volvo4evcchostname }}
+      method: GET
+      headers:
+        - content-type: application/json
+      jq: .data.EvccStatus.value
+    range:
+      source: http
+      uri: {{ ..volvo4evcchostname }}
+      method: GET
+      headers:
+        - content-type: application/json
+      jq: .data.electricRange.value
