@@ -52,6 +52,7 @@ type Easee struct {
 	lastEnergyPollMux       sync.Mutex
 	maxChargerCurrent       float64
 	dynamicChargerCurrent   float64
+	dynamicCircuitCurrent   [3]float64
 	current                 float64
 	chargerEnabled          bool
 	smartCharging           bool
@@ -61,7 +62,6 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
-	outputPhase             int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -313,8 +313,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
-	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P1:
+		c.dynamicCircuitCurrent[0] = value.(float64)
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P2:
+		c.dynamicCircuitCurrent[1] = value.(float64)
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P3:
+		c.dynamicCircuitCurrent[2] = value.(float64)
 	case easee.MAX_CHARGER_CURRENT:
 		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
@@ -814,7 +818,22 @@ var _ api.PhaseGetter = (*Easee)(nil)
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.outputPhase, nil
+	var phases int
+	if c.circuit != 0 {
+		// circuit level controlled charger
+		for _, dcc := range c.dynamicCircuitCurrent {
+			if dcc > 0 {
+				phases++
+			}
+		}
+	} else {
+		// charger level
+		phases = c.phaseMode
+		if phases == 2 { // map automatic to 3p
+			phases = 3
+		}
+	}
+	return phases, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)
