@@ -7,14 +7,8 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: storageunit
-    type: number
-    default: 1
-    advanced: true
   - name: modbus
     choice: ["tcpip"]
-  - name: timeout
-    default: 15s
   - name: capacity
     advanced: true
 render: |
@@ -24,7 +18,6 @@ render: |
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 31657 # Active power of built-in electric energy sensor
       type: holding
@@ -34,7 +27,6 @@ render: |
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 31679 # Total negative active energy of built-in electric energy sensor
       type: holding
@@ -52,7 +44,6 @@ render: |
   - source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 31653 # Huawei phase B grid current
       type: holding
@@ -92,7 +83,6 @@ render: |
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 30360
       type: holding
@@ -102,7 +92,6 @@ render: |
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 30312 # Total discharge
       type: holding
@@ -112,7 +101,6 @@ render: |
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
-    timeout: {{ .timeout }}
     register:
       address: 30368
       type: holding
