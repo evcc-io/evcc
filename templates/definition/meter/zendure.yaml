@@ -28,6 +28,7 @@ params:
 render: |
   type: zendure
   usage: {{ .usage }}
+  region: {{ .region }}
   account: {{ .account }}
   serial: {{ .serial }}
   timeout: {{ .timeout }}
