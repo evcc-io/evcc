@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util"
 )
 
 // PublishEffectiveValues publishes all effective values
@@ -30,38 +31,44 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
-// nextVehiclePlan returns the next vehicle plan time, soc and ID
+// nextVehiclePlan returns the next vehicle plan time, soc and id
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	if v := lp.GetVehicle(); v != nil {
-		// merge the static plan with the active repeating ones to sort them in one array
-
-		var plans = vehicle.Settings(lp.log, v).GetRepeatingPlansWithTimestamps()
-
-		planTime, soc := vehicle.Settings(lp.log, v).GetStaticPlanSoc()
-
-		if soc != 0 {
-			plans = append(plans, api.PlanStruct{
-				Id:     1, // id of the static plan is always 1
-				Soc:    soc,
-				Time:   planTime,
-				Active: true,
-			})
+		type plan struct {
+			Time time.Time
+			Soc  int
+			Id   int
 		}
 
-		// Filter out inactive plans
-		activePlans := []api.PlanStruct{}
-		for _, plan := range plans {
-			if plan.Active {
-				activePlans = append(activePlans, plan)
+		var plans []plan
+
+		// static plan
+		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+			plans = append(plans, plan{Id: 1, Soc: soc, Time: planTime})
+		}
+
+		// repeating plans
+		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
+			if !rp.Active {
+				continue
 			}
+
+			time, err := util.GetNextOccurrence(rp.Weekdays, rp.Time)
+			if err != nil {
+				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, error=%v", rp.Weekdays, rp.Time, err)
+				continue
+			}
+
+			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, Time: time})
 		}
 
-		sort.Slice(activePlans, func(i, j int) bool {
-			return activePlans[i].Time.Before(activePlans[j].Time)
+		// sort plans by time
+		sort.Slice(plans, func(i, j int) bool {
+			return plans[i].Time.Before(plans[j].Time)
 		})
 
-		if len(activePlans) > 0 {
-			return activePlans[0].Time, activePlans[0].Soc, activePlans[0].Id
+		if len(plans) > 0 {
+			return plans[0].Time, plans[0].Soc, plans[0].Id
 		}
 	}
 	return time.Time{}, 0, 0
@@ -78,13 +85,12 @@ func (lp *Loadpoint) EffectivePlanId() int {
 	if lp.socBasedPlanning() {
 		_, _, id := lp.nextVehiclePlan()
 		return id
-	} else {
-		if lp.planEnergy != 0 {
-			return 1
-		} else {
-			return 0
-		}
 	}
+	if lp.planEnergy > 0 {
+		return 1
+	}
+	// no plan
+	return 0
 }
 
 // EffectivePlanTime returns the effective plan time

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
 
@@ -135,7 +135,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		planTime := vars["time"]
+		hourMinute := vars["time"]
 
 		var weekdays []int
 		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
@@ -147,30 +147,21 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			weekdays = append(weekdays, weekday)
 		}
 
-		soc, err := strconv.Atoi(vars["soc"])
+		soc, err := strconv.ParseFloat(vars["soc"], 64)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		repeatingPlan := api.RepeatingPlanStruct{
-			Weekdays: weekdays,
-			Time:     planTime,
-			Soc:      soc,
-			Active:   true, // dummy data
+		planTime, err := util.GetNextOccurrence(weekdays, hourMinute)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
 		}
 
-		plans := repeatingPlan.ToPlansWithTimestamp(1)
-
-		sort.Slice(plans, func(i, j int) bool {
-			return plans[i].Time.Before(plans[j].Time)
-		})
-
-		nextPlan := plans[0]
-
 		maxPower := lp.EffectiveMaxPower()
-		requiredDuration := lp.GetPlanRequiredDuration(float64(nextPlan.Soc), maxPower)
-		plan, err := lp.GetPlan(nextPlan.Time, requiredDuration)
+		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
+		plan, err := lp.GetPlan(planTime, requiredDuration)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -182,7 +173,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Plan     api.Rates `json:"plan"`
 			Power    float64   `json:"power"`
 		}{
-			PlanTime: nextPlan.Time,
+			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
 			Power:    maxPower,

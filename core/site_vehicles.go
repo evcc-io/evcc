@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
@@ -9,6 +11,11 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 )
+
+type planStruct struct {
+	Soc  int       `json:"soc"`
+	Time time.Time `json:"time"`
+}
 
 type vehicleStruct struct {
 	Title          string                    `json:"title"`
@@ -21,7 +28,7 @@ type vehicleStruct struct {
 	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
 	Priority       int                       `json:"priority,omitempty"`
 	Features       []string                  `json:"features,omitempty"`
-	Plans          []api.PlanStruct          `json:"plans,omitempty"`
+	Plans          []planStruct              `json:"plans,omitempty"`
 	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
 }
 
@@ -31,11 +38,11 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plans []api.PlanStruct
+		var plans []planStruct
 
 		// TODO: add support for multiple plans
-		if time, soc := v.GetStaticPlanSoc(); !time.IsZero() {
-			plans = append(plans, api.PlanStruct{Soc: soc, Time: time})
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plans = append(plans, planStruct{Soc: soc, Time: time})
 		}
 
 		instance := v.Instance()

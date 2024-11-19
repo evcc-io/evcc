@@ -167,7 +167,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"maxcurrent":           {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
 			"phases":               {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
 			"plan":                 {"GET", "/plan", planHandler(lp)},
-			"staticPlanpreview":    {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
+			"staticPlanPreview":    {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
 			"repeatingPlanPreview": {"GET", "/plan/repeating/preview/{weekdays:[0-9,]+}/{time:[0-2][0-9]:[0-5][0-9]}/{soc:[0-9]+}", repeatingPlanPreviewHandler(lp)},
 			"planenergy":           {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
 			"planenergy2":          {"DELETE", "/plan/energy", planRemoveHandler(lp)},

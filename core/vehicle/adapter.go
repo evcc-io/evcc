@@ -70,8 +70,8 @@ func (v *adapter) SetLimitSoc(soc int) {
 	v.publish()
 }
 
-// GetStaticPlanSoc returns the charge plan soc
-func (v *adapter) GetStaticPlanSoc() (time.Time, int) {
+// GetPlanSoc returns the charge plan soc
+func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
@@ -105,6 +105,17 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 }
 
 func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+	for _, plan := range plans {
+		for _, day := range plan.Weekdays {
+			if day < 0 || day > 6 {
+				return fmt.Errorf("weekday out of range: %v", day)
+			}
+		}
+		if _, err := time.Parse("15:04", plan.Time); err != nil {
+			return fmt.Errorf("invalid time: %v", err)
+		}
+	}
+
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
 	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
@@ -123,14 +134,4 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	}
 
 	return []api.RepeatingPlanStruct{}
-}
-
-func (v *adapter) GetRepeatingPlansWithTimestamps() []api.PlanStruct {
-	var formattedPlans []api.PlanStruct
-
-	for id, p := range v.GetRepeatingPlans() {
-		formattedPlans = append(formattedPlans, p.ToPlansWithTimestamp(id+2)...)
-	}
-
-	return formattedPlans
 }
