@@ -1,9 +1,7 @@
 package charger
 
 import (
-	"errors"
-	"fmt"
-	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tasmota"
@@ -17,14 +15,15 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	conn    *tasmota.Connection
-	channel int
+	conn *tasmota.Connection
 	*switchSocket
 }
 
 func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateTasmota -b *Tasmota -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -34,138 +33,54 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-		Channel      int
+		Channel      []int
+		Cache        time.Duration
 	}{
-		Channel: 1,
+		Channel: []int{1},
+		Cache:   time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(embed embed, uri, user, password string, channel int, standbypower float64) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, channel)
+func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
 
+	if err := conn.RelayExists(); err != nil {
+		return nil, err
+	}
+
 	c := &Tasmota{
-		conn:    conn,
-		channel: channel,
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, c.channelExists(channel)
-}
-
-// channelExists checks the existence of the configured relay channel interface
-func (c *Tasmota) channelExists(channel int) error {
-	var res *tasmota.StatusSTSResponse
-	if err := c.conn.ExecCmd("Status 0", &res); err != nil {
-		return err
+	var currents, voltages func() (float64, float64, float64, error)
+	if len(channels) == 3 {
+		currents = c.currents
+		voltages = c.voltages
 	}
 
-	var ok bool
-	switch channel {
-	case 1:
-		ok = res.StatusSTS.Power != "" || res.StatusSTS.Power1 != ""
-	case 2:
-		ok = res.StatusSTS.Power2 != ""
-	case 3:
-		ok = res.StatusSTS.Power3 != ""
-	case 4:
-		ok = res.StatusSTS.Power4 != ""
-	case 5:
-		ok = res.StatusSTS.Power5 != ""
-	case 6:
-		ok = res.StatusSTS.Power6 != ""
-	case 7:
-		ok = res.StatusSTS.Power7 != ""
-	case 8:
-		ok = res.StatusSTS.Power8 != ""
-	}
-
-	if !ok {
-		return fmt.Errorf("invalid relay channel: %d", channel)
-	}
-
-	return nil
+	return decorateTasmota(c, currents, voltages), nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var res tasmota.StatusSTSResponse
-	err := c.conn.ExecCmd("Status 0", &res)
-	if err != nil {
-		return false, err
-	}
-
-	switch c.channel {
-	case 2:
-		return strings.ToUpper(res.StatusSTS.Power2) == "ON", err
-	case 3:
-		return strings.ToUpper(res.StatusSTS.Power3) == "ON", err
-	case 4:
-		return strings.ToUpper(res.StatusSTS.Power4) == "ON", err
-	case 5:
-		return strings.ToUpper(res.StatusSTS.Power5) == "ON", err
-	case 6:
-		return strings.ToUpper(res.StatusSTS.Power6) == "ON", err
-	case 7:
-		return strings.ToUpper(res.StatusSTS.Power7) == "ON", err
-	case 8:
-		return strings.ToUpper(res.StatusSTS.Power8) == "ON", err
-	default:
-		return strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON", err
-	}
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	var res tasmota.PowerResponse
-
-	cmd := fmt.Sprintf("Power%d off", c.channel)
-	if enable {
-		cmd = fmt.Sprintf("Power%d on", c.channel)
-	}
-
-	if err := c.conn.ExecCmd(cmd, &res); err != nil {
-		return err
-	}
-
-	var on bool
-	switch c.channel {
-	case 2:
-		on = strings.ToUpper(res.Power2) == "ON"
-	case 3:
-		on = strings.ToUpper(res.Power3) == "ON"
-	case 4:
-		on = strings.ToUpper(res.Power4) == "ON"
-	case 5:
-		on = strings.ToUpper(res.Power5) == "ON"
-	case 6:
-		on = strings.ToUpper(res.Power6) == "ON"
-	case 7:
-		on = strings.ToUpper(res.Power7) == "ON"
-	case 8:
-		on = strings.ToUpper(res.Power8) == "ON"
-	default:
-		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
-	}
-
-	switch {
-	case enable && !on:
-		return errors.New("switchOn failed")
-	case !enable && on:
-		return errors.New("switchOff failed")
-	default:
-		return nil
-	}
+	return c.conn.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
@@ -173,4 +88,14 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Tasmota) currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Tasmota) voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
 }

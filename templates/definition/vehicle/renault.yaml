@@ -6,7 +6,14 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WREN...
+  - name: alternativewakeup
+    type: bool
+    description:
+      de: Alternativer Aufweckmechanismus
+      en: Alternative wakeup mechanism
+    advanced: true
 render: |
   type: renault
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  alternativewakeup: {{ .alternativewakeup }}

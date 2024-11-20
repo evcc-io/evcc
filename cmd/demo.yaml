@@ -19,11 +19,7 @@ javascript:
           { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
-      function get() {
-        console.log("state:", JSON.stringify(state));
-      }
-      function set() {
-        console.log(param+":", val);
+      function logState() {
         console.log("state:", JSON.stringify(state));
       }
 
@@ -34,10 +30,25 @@ meters:
       source: js
       vm: shared
       script: |
-        state.pvpower = 8000+500*Math.random();
-        state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
-        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - state.batterypower - state.pvpower;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - batterypower - pvpower;
         state.gridpower;
+      in:
+        - name: pvpower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.pvpower = 8000+500*Math.random();
+              state.pvpower
+        - name: batterypower
+          type: float
+          config:
+            source: js
+            vm: shared
+            script: |
+              state.batterypower = state.gridpower > 0 ? 1000 * Math.random() : 0;
+              state.batterypower
 
   - name: pv
     type: custom
@@ -61,6 +72,11 @@ meters:
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
+    batterymode:
+      source: js
+      vm: shared
+      script: |
+        1
 
   - name: meter_charger_1
     type: custom
@@ -83,10 +99,18 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[0];
-        lp.enabled = val;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+        lp.enabled = enable;
+        enable;
+      out:
+        - name: enable
+          type: bool
+          config:
+            source: js
+            vm: shared
+            script: |
+              if (enable) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
       vm: shared
@@ -101,9 +125,9 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[0];
-        lp.maxcurrent = val;
+        lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
 
   - name: charger_2
@@ -112,9 +136,9 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[1];
-        lp.enabled = val;
+        lp.enabled = enable;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
     enabled:
       source: js
@@ -130,16 +154,17 @@ chargers:
       source: js
       vm: shared
       script: |
-        set();
+        logState();
         var lp = state.loadpoints[1];
-        lp.maxcurrent = val;
+        lp.maxcurrent = maxcurrent;
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
+    tos: true
     phases1p3p:
       source: js
       vm: shared
       script: |
-        set();
-        if (val === 1) lp.phases = 1; else lp.phases = 3;
+        logState();
+        if (phases === 1) lp.phases = 1; else lp.phases = 3;
         lp.phases;
 
 vehicles:
@@ -163,8 +188,6 @@ vehicles:
         var range = (44 * lp.vehicleSoc) / 15;
         range
     capacity: 44
-    onidentify:
-      targetsoc: 90
   - name: vehicle_2
     title: weißes Model 3
     type: custom
@@ -190,8 +213,9 @@ vehicles:
       script: |
         "B"
     capacity: 80
-    onidentify:
-      targetsoc: 75
+    limitsoc:
+      source: const
+      value: 90
   - name: vehicle_3
     type: template
     template: offline
@@ -220,7 +244,6 @@ loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
-    phases: 1
     meter: meter_charger_1
     vehicle: vehicle_1
   - title: Garage
@@ -232,14 +255,13 @@ loadpoints:
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
-    type: fixed
-    price: 0.399 # EUR/kWh
-  #  grid:
-  #    type: awattar
-  #    region: de
+    type: template
+    template: energy-charts-api # epex spot market prices
+    bzn: DE-LU
+    charges: 0.15
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  planner:
+  co2:
     type: grünstromindex
     zip: 12349

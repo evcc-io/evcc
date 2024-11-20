@@ -3,21 +3,23 @@
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
-			v-model="enabled"
+			:checked="enabled"
 			class="form-check-input"
 			type="checkbox"
 			role="switch"
-			:disabled="!sponsor"
+			:disabled="!sponsorActive"
 			@change="change"
 		/>
 		<div class="form-check-label">
 			<label for="telemetryEnabled">
 				{{ $t("footer.telemetry.optIn") }}
-				<i18n-t v-if="sponsor" tag="span" keypath="footer.telemetry.optInMoreDetails">
-					<a
-						href="https://docs.evcc.io/docs/guides/setup/#telemetry--community-daten"
-						target="_blank"
-					>
+				<i18n-t
+					v-if="sponsorActive"
+					tag="span"
+					keypath="footer.telemetry.optInMoreDetails"
+					scope="global"
+				>
+					<a :href="docsLink" target="_blank">
 						{{ $t("footer.telemetry.optInMoreDetailsLink") }}
 					</a>
 				</i18n-t>
@@ -30,6 +32,7 @@
 
 <script>
 import api from "../api";
+import { docsPrefix } from "../i18n";
 import settings from "../settings";
 
 function parseMarkdown(markdownText) {
@@ -42,7 +45,7 @@ function parseMarkdown(markdownText) {
 
 export default {
 	name: "TelemetrySettings",
-	props: { sponsor: String },
+	props: { sponsorActive: Boolean },
 	data() {
 		return {
 			error: null,
@@ -51,6 +54,9 @@ export default {
 	computed: {
 		enabled() {
 			return settings.telemetry;
+		},
+		docsLink() {
+			return `${docsPrefix()}/docs/faq#telemetry`;
 		},
 	},
 	async mounted() {
@@ -74,8 +80,12 @@ export default {
 				return;
 			}
 			try {
-				const response = await api.get("settings/telemetry");
-				settings.telemetry = response.data.result;
+				const response = await api.get("settings/telemetry", {
+					validateStatus: () => true,
+				});
+				if (response.status === 200) {
+					settings.telemetry = response.data.result;
+				}
 			} catch (err) {
 				console.error(err);
 			}

@@ -1,0 +1,60 @@
+template: e3dc
+deprecated: true
+products:
+  - brand: E3/DC
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 502
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register:
+      type: holding
+      decode: int32s
+      address: 40073 # Hausverbrauchsleistung in Watt
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      register:
+        type: holding
+        decode: int32s
+        address: 40067 # Photovoltaikleistung in Watt
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      register:
+        type: holding
+        decode: int32s
+        address: 40075 # Leistung zusätzlicher Einspeiser in Watt
+      scale: -1 # reverse sign
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register:
+      type: holding
+      decode: int32s
+      address: 40069 # Batterieleistung in Watt
+    scale: -1 # reverse direction
+  soc:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 40082 # Batterie-SOC in %
+      type: holding
+      decode: uint16
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

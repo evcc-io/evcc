@@ -34,7 +34,7 @@ func (v *Provider) Soc() (float64, error) {
 				continue
 			}
 
-			return float64(e.Level), nil
+			return e.Level, nil
 		}
 
 		err = api.ErrNotAvailable

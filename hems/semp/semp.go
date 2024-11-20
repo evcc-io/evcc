@@ -388,8 +388,8 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 			OptionalEnergy:       true,
 		},
 		Characteristics: Characteristics{
-			MinPowerConsumption: int(lp.GetMinPower()),
-			MaxPowerConsumption: int(lp.GetMaxPower()),
+			MinPowerConsumption: int(lp.EffectiveMinPower()),
+			MaxPowerConsumption: int(lp.EffectiveMaxPower()),
 		},
 	}
 
@@ -465,8 +465,8 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 		minEnergy = 0
 	}
 
-	maxPowerConsumption := int(lp.GetMaxPower())
-	minPowerConsumption := int(lp.GetMinPower())
+	maxPowerConsumption := int(lp.EffectiveMaxPower())
+	minPowerConsumption := int(lp.EffectiveMinPower())
 	if mode == api.ModeNow {
 		minPowerConsumption = maxPowerConsumption
 	}

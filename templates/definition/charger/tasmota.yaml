@@ -1,9 +1,11 @@
 template: tasmota
 products:
   - brand: Tasmota
+    description:
+      de: einphasig
+      en: single phase
 group: switchsockets
 params:
-  - name: host
   - name: host
   - name: user
     required: false
@@ -17,20 +19,20 @@ params:
     default: 1
     required: true
     description:
-      de: Nummer des Schaltkanals
-      en: Device relay channel number
+      de: Schaltkanal Nummer
+      en: Relaychannel number
     help:
-      de: Nummer des Schaltkanals (1-8), bei Geräten mit mehr als einem Schalter
-      en: Device relay channel number (allowed range 1-8)
+      de: Schaltkanal (1-8)
+      en: Relaychannel number (1-8)
   - preset: switchsocket
 render: |
   type: tasmota
   uri: http://{{ .host }}
-  {{ if ne .user "" }}
+  {{- if .user }}
   user: {{ .user }}
-  {{ end }}
-  {{ if ne .password "" }}
+  {{- end }}
+  {{- if .password }}
   password: {{ .password }}
-  {{ end }}
-  channel: {{ .channel }}  # relay channel (allowed range: 1-8)
+  {{- end }}
+  channel: [{{ .channel }}]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}

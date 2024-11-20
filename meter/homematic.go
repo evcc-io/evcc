@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/homematic"
 	"github.com/evcc-io/evcc/util"
@@ -18,7 +20,7 @@ func init() {
 
 // NewCCUFromConfig creates a Homematic meter from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		URI           string
 		Device        string
 		MeterChannel  string
@@ -26,18 +28,21 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User          string
 		Password      string
 		Usage         string
+		Cache         time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewCCU(cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.Usage)
+	return NewCCU(cc.URI, cc.Device, cc.MeterChannel, cc.SwitchChannel, cc.User, cc.Password, cc.Usage, cc.Cache)
 }
 
 // NewCCU creates a new connection with usage for meter
-func NewCCU(uri, deviceid, meterid, switchid, user, password, usage string) (*CCU, error) {
-	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password)
+func NewCCU(uri, deviceid, meterid, switchid, user, password, usage string, cache time.Duration) (*CCU, error) {
+	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password, cache)
 
 	m := &CCU{
 		conn:  conn,

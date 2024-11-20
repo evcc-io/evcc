@@ -26,7 +26,7 @@ func (w *influxWriter) WritePoint(p *write.Point) {
 }
 
 func (w *influxWriter) finish() {
-	assert.Equal(w.t, len(w.p), w.idx, "not enough points")
+	assert.Len(w.t, w.p, w.idx, "not enough points")
 }
 
 func TestInfluxTypes(t *testing.T) {

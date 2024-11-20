@@ -3,14 +3,13 @@ import { reactive } from "vue";
 import Vehicle from "./Vehicle.vue";
 
 const state = reactive({
-	vehicleTitle: "Mein Auto",
+	vehicle: { title: "Mein Auto", icon: "car", capacity: 72, features: [] },
 	enabled: false,
 	connected: true,
-	vehiclePresent: true,
+	vehicleName: "meinauto",
 	vehicleSoc: 42.742,
 	vehicleRange: 231,
-	targetSoc: 90,
-	vehicleCapacity: 72,
+	limitSoc: 90,
 	chargedEnergy: 14123,
 	socBasedCharging: true,
 	id: 0,
@@ -45,9 +44,9 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				:vehiclePresent="false"
+				vehicleName=""
 				:socBasedCharging="false"
-				:vehicleCapacity="null"
+				:vehicle="{ ...state.vehicle, capacity: null }"
 				mode="pv"
 			/>
 		</Variant>
@@ -56,10 +55,13 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				vehicleTitle="Opel Corsa-e"
 				:socBasedCharging="false"
-				:vehicleCapacity="72"
-				vehicleFeatureOffline
+				:vehicle="{
+					...state.vehicle,
+					title: 'Opel Corsa-e',
+					capacity: 72,
+					features: ['Offline'],
+				}"
 				mode="pv"
 			/>
 		</Variant>
@@ -68,25 +70,31 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				vehicleTitle="Opel Corsa-e"
 				:socBasedCharging="false"
-				:vehicleCapacity="72"
+				:vehicle="{
+					...state.vehicle,
+					title: 'Opel Corsa-e',
+					capacity: 72,
+					features: ['Offline'],
+				}"
 				:targetEnergy="30"
-				vehicleFeatureOffline
 				mode="pv"
 			/>
 		</Variant>
 		<Variant title="vehicle limit">
-			<Vehicle v-bind="state" enabled charging :vehicleTargetSoc="80" />
+			<Vehicle v-bind="state" enabled charging :vehicleLimitSoc="80" />
 		</Variant>
 		<Variant title="vehicle limit reached">
-			<Vehicle v-bind="state" enabled :vehicleTargetSoc="80" :vehicleSoc="80" />
+			<Vehicle v-bind="state" enabled :vehicleLimitSoc="80" :vehicleSoc="80" />
 		</Variant>
 		<Variant title="target charge planned">
-			<Vehicle v-bind="state" :targetTime="hoursFromNow(14)" mode="pv" />
+			<Vehicle v-bind="state" :targetTime="hoursFromNow(34)" mode="pv" />
 		</Variant>
 		<Variant title="target charge active">
 			<Vehicle v-bind="state" enabled charging :targetTime="hoursFromNow(14)" mode="pv" />
+		</Variant>
+		<Variant title="smart charge cost limit active">
+			<Vehicle v-bind="state" enabled charging :smartCostLimit="0.13" mode="pv" />
 		</Variant>
 		<Variant title="pv enable timer">
 			<Vehicle v-bind="state" pvAction="enable" :pvRemainingInterpolated="32" />
@@ -99,9 +107,6 @@ const hoursFromNow = function (hours) {
 				pvAction="disable"
 				:pvRemainingInterpolated="155"
 			/>
-		</Variant>
-		<Variant title="guard timer">
-			<Vehicle v-bind="state" guardAction="enable" :guardRemainingInterpolated="123" />
 		</Variant>
 		<Variant title="vehicle switch">
 			<Vehicle

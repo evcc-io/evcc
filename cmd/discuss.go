@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/cli/browser"
 	"github.com/evcc-io/evcc/server"
-	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +35,7 @@ func errorString(err error) string {
 }
 
 func runDiscuss(cmd *cobra.Command, args []string) {
-	cfgErr := loadConfigFile(&conf)
+	cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
 
 	file, pathErr := filepath.Abs(cfgFile)
 	if pathErr != nil {

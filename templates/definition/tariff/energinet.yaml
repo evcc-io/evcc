@@ -1,0 +1,18 @@
+template: energinet
+products:
+  - brand: Energinet
+requirements:
+  description:
+    de: "Nur für Dänemark verfügbar."
+    en: "Only available for Denmark."
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: region
+    example: dk1
+    validvalues: ["dk1", "dk2"]
+  - preset: tariff-base
+render: |
+  type: energinet
+  region: {{ .region }}
+  {{ include "tariff-base" . }}

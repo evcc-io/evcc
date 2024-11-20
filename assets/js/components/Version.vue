@@ -1,14 +1,16 @@
 <template>
-	<div>
+	<div class="text-truncate">
 		<a
 			v-if="commit"
 			:href="githubHashUrl"
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 		>
-			<Logo class="logo me-2" />
-			v{{ installed }}
-			<shopicon-regular-moonstars class="ms-2 text-gray-light"></shopicon-regular-moonstars>
+			<Logo class="logo me-2 flex-shrink-0" />
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
+			<shopicon-regular-moonstars
+				class="ms-2 text-gray-light flex-shrink-0"
+			></shopicon-regular-moonstars>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"
@@ -17,7 +19,7 @@
 			@click="openModal"
 		>
 			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
-			v{{ installed }}
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
 			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
@@ -28,8 +30,8 @@
 			target="_blank"
 			class="btn btn-link evcc-default-text ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
-			<Logo class="logo me-2" />
-			v{{ installed }}
+			<Logo class="logo me-2 flex-shrink-0" />
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
 		</a>
 
 		<Teleport to="body">
@@ -156,7 +158,7 @@ export default {
 			return (
 				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
-				this.installed != "0.0.1-alpha" && // make used?
+				this.installed != "0.0.0" && // make used?
 				this.available != this.installed
 			);
 		},
@@ -172,7 +174,9 @@ export default {
 			}
 		},
 		releaseNotesUrl: function (version) {
-			return `https://github.com/evcc-io/evcc/releases/tag/${version}`;
+			return version == "0.0.0"
+				? `https://github.com/evcc-io/evcc/releases`
+				: `https://github.com/evcc-io/evcc/releases/tag/${version}`;
 		},
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("updateModal"));

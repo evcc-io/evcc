@@ -1,16 +1,77 @@
 package mercedes
 
-type EVResponse struct {
-	Soc struct {
-		Value     int64 `json:",string"`
-		Timestamp int64
+import (
+	"fmt"
+	"html"
+	"time"
+)
+
+var Regions = map[string]string{
+	"apac":  "Asia-Pacific",
+	"ece":   "ECE",
+	"noram": "North-America",
+}
+
+type ErrorInfo struct {
+	ErrorCode    int
+	ErrorMessage string
+	ErrorDetails string
+}
+
+func (e ErrorInfo) Error() error {
+	if e.ErrorCode == 0 {
+		return nil
 	}
-	RangeElectric struct {
-		Value     int64 `json:",string"`
-		Timestamp int64
+	return fmt.Errorf("%s: %s", e.ErrorMessage, html.UnescapeString(e.ErrorDetails))
+}
+
+type PinRequest struct {
+	EmailOrPhoneNumber string `json:"emailOrPhoneNumber"`
+	CountryCode        string `json:"countryCode"`
+	Nonce              string `json:"nonce"`
+}
+
+type PinResponse struct {
+	IsEmail  bool   `json:"isEmail"`
+	UserName string `json:"username"`
+}
+
+type VehiclesResponse struct {
+	AssignedVehicles []Vehicle
+}
+
+type Vehicle struct {
+	Fin string
+	Vin string
+}
+
+type StatusResponse struct {
+	VehicleInfo struct {
+		Odometer struct {
+			Value int
+			Unit  string
+		}
+		Timestamp time.Time
 	}
-	Odometer struct {
-		Value     int64 `json:",string"`
-		Timestamp int64
-	} `json:"odo"`
+	EvInfo struct {
+		Battery struct {
+			ChargingStatus  int
+			DistanceToEmpty struct {
+				Value int
+				Unit  string
+			}
+			StateOfCharge         float64 // 75
+			EndOfChargeTime       int     // Minutes after midnight
+			TotalRange            int     // 17
+			SocLimit              int     // 50-100
+			SelectedChargeProgram int
+		}
+		Timestamp time.Time
+	}
+	LocationResponse struct {
+		TimeStamp time.Time
+		Longitude float64
+		Latitude  float64
+	}
+	Timestamp time.Time
 }

@@ -1,152 +1,126 @@
 package mercedes
 
 import (
-	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+	"sync"
+	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/server/oauth2redirect"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
 
-// https://ssoalpha.dvb.corpinter.net/v1/.well-known/openid-configuration
-const OAuthURI = "https://ssoalpha.dvb.corpinter.net/v1"
-
-type IdentityOption func(c *Identity) error
-
-// WithToken provides an oauth2.Token to the client for auth.
-func WithToken(t *oauth2.Token) IdentityOption {
-	return func(v *Identity) error {
-		v.ReuseTokenSource.Apply(t)
-		return nil
-	}
-}
-
 type Identity struct {
-	log *util.Logger
-	*ReuseTokenSource
-	oc      *oauth2.Config
-	baseURL string
-	authC   chan<- bool
+	*request.Helper
+	oauth2.TokenSource
+	mu        sync.Mutex
+	log       *util.Logger
+	account   string
+	region    string
+	Sessionid string
 }
 
-// TODO SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, options ...IdentityOption) (*Identity, error) {
-	provider, err := oidc.NewProvider(context.Background(), OAuthURI)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
-	}
+// OAuth2Config is the OAuth2 configuration for authenticating with the MercedesAPI.
+var OAuth2Config = &oauth2.Config{
+	//	RedirectURL: fmt.Sprintf("%s/void/RedirectURL", IdUri),
+	Endpoint: oauth2.Endpoint{
+		// AuthURL:   fmt.Sprintf("%s/void/AuthURL", IdUri),
+		TokenURL:  fmt.Sprintf("%s/as/token.oauth2", IdUri),
+		AuthStyle: oauth2.AuthStyleInParams,
+	},
+	Scopes: []string{"not_needed", "handled", "elsewhere"},
+}
 
-	oc := &oauth2.Config{
-		ClientID:     id,
-		ClientSecret: secret,
-		Endpoint:     provider.Endpoint(),
-		Scopes: []string{
-			oidc.ScopeOpenID,
-			oidc.ScopeOfflineAccess,
-			"mb:vehicle:mbdata:evstatus",      // soc, range
-			"mb:vehicle:mbdata:payasyoudrive", // odo
-		},
-	}
+// NewIdentity creates Mercedes identity
+func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region string) (*Identity, error) {
+	// serialise instance handling
+	mu.Lock()
+	defer mu.Unlock()
 
 	v := &Identity{
-		log: log,
-		oc:  oc,
+		Helper:  request.NewHelper(log),
+		log:     log,
+		account: account,
+		region:  region,
 	}
 
-	ts := &ReuseTokenSource{
-		oc: oc,
-		cb: v.invalidToken,
+	v.Sessionid = uuid.New().String()
+	v.Helper.Transport = &transport.Decorator{
+		Base:      v.Helper.Transport, //.NewTripper(log, transport.Insecure()),
+		Decorator: transport.DecorateHeaders(mbheaders(true, region)),
 	}
-	ts.Apply(nil)
 
-	v.ReuseTokenSource = ts
+	// reuse identity instance
+	if instance := getInstance(account); instance != nil {
+		v.log.DEBUG.Println("identity.NewIdentity - token found in instance store")
+		return instance, nil
+	}
 
-	for _, o := range options {
-		if err := o(v); err != nil {
-			return v, err
+	if !token.Valid() {
+		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
+	}
+
+	// database token
+	if !token.Valid() {
+		var tok oauth2.Token
+		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+			v.log.DEBUG.Println("identity.NewIdentity - database token found")
+			token = &tok
 		}
 	}
+
+	if !token.Valid() && token.RefreshToken != "" {
+		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
+		if tok, err := v.RefreshToken(token); err == nil {
+			token = tok
+		}
+	}
+
+	if !token.Valid() {
+		return nil, errors.New("token expired")
+	}
+
+	v.TokenSource = oauth.RefreshTokenSource(token, v)
+
+	// add instance
+	addInstance(account, v)
 
 	return v, nil
 }
 
-// invalidToken is the callback for the token source when token expires
-func (v *Identity) invalidToken() {
-	if v.authC != nil {
-		v.authC <- false
-	}
+func (v *Identity) settingsKey() string {
+	return fmt.Sprintf("mercedes.%s-%s", v.account, v.region)
 }
 
-var _ api.AuthProvider = (*Identity)(nil)
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
-func (v *Identity) SetCallbackParams(baseURL, redirectURL string, authC chan<- bool) {
-	v.baseURL = baseURL
-	v.oc.RedirectURL = redirectURL
-	v.authC = authC
-}
-
-func (v *Identity) LoginHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		state := oauth2redirect.Register(v.callbackHandler)
-
-		b, _ := json.Marshal(struct {
-			LoginUri string `json:"loginUri"`
-		}{
-			LoginUri: v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline,
-				oauth2.SetAuthURLParam("prompt", "login consent"),
-			),
-		})
-
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(b)
-	}
-}
-
-func (v *Identity) LogoutHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		v.ReuseTokenSource.Apply(nil)
-		v.authC <- false
-
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(nil)
-	}
-}
-
-func (v *Identity) callbackHandler(w http.ResponseWriter, r *http.Request) {
-	v.log.DEBUG.Println("callback request received")
-
-	data, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		fmt.Fprintln(w, "invalid response:", data)
-		return
+	data := url.Values{
+		"grant_type":    []string{"refresh_token"},
+		"refresh_token": []string{token.RefreshToken},
 	}
 
-	codes, ok := data["code"]
-	if !ok || len(codes) != 1 {
-		fmt.Fprintln(w, "invalid response:", data)
-		return
+	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
+
+	var res oauth2.Token
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
 	}
 
-	token, err := v.oc.Exchange(context.Background(), codes[0])
-	if err != nil {
-		fmt.Fprintln(w, "token error:", err)
-		return
-	}
+	tok := util.TokenWithExpiry(&res)
+	v.TokenSource = oauth.RefreshTokenSource(tok, v)
 
-	if token.Valid() {
-		v.log.TRACE.Println("sending login update...")
-		v.ReuseTokenSource.Apply(token)
-		v.authC <- true
+	err := settings.SetJson(v.settingsKey(), tok)
 
-		provider.ResetCached()
-	}
-
-	http.Redirect(w, r, v.baseURL, http.StatusFound)
+	return tok, err
 }

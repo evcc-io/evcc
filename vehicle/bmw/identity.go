@@ -12,126 +12,69 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
 
 const (
-	AuthURI     = "https://customer.bmwgroup.com/gcdm/oauth"
 	RedirectURI = "com.bmw.connected://oauth"
 )
 
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
-	user, password string
+	region Region
 }
 
 // NewIdentity creates BMW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, region string) *Identity {
 	v := &Identity{
 		Helper: request.NewHelper(log),
+		region: regions[strings.ToUpper(region)],
 	}
 
 	return v
 }
 
-func (v *Identity) Login(user, password string) error {
-	v.user = user
-	v.password = password
-
-	token, err := v.RefreshToken(nil)
-
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(token, v)
-	}
-
-	return err
-}
-
-func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
-	var tok struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int    `json:"expires_in"`
-	}
-
-	uri := fmt.Sprintf("%s/token", AuthURI)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
-	})
-
-	if err == nil {
-		err = v.DoJSON(req, &tok)
-	}
-
-	token := &oauth2.Token{
-		AccessToken:  tok.AccessToken,
-		RefreshToken: tok.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second),
-	}
-
-	return token, err
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	if token == nil || token.RefreshToken == "" {
-		return v.login()
-	}
-
-	data := url.Values{
-		"redirect_uri":  []string{RedirectURI},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
-	}
-
-	return v.retrieveToken(data)
-}
-
-func (v *Identity) login() (*oauth2.Token, error) {
-	// don't follow redirects
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
+func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
+	v.Client.CheckRedirect = request.DontFollow
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	cv, err := cv.CreateCodeVerifier()
-	if err != nil {
-		return nil, err
-	}
+	cv := oauth2.GenerateVerifier()
 
-	v.Jar, err = cookiejar.New(&cookiejar.Options{
+	v.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	data := url.Values{
-		"client_id":             {"31c357a0-7a1d-4590-aa99-33b97244d048"},
+		"client_id":             {v.region.ClientID},
 		"response_type":         {"code"},
 		"redirect_uri":          {RedirectURI},
-		"state":                 {"cwU-gIE27j67poy2UcL3KQ"},
+		"state":                 {v.region.State},
 		"scope":                 {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
-		"code_challenge":        {cv.CodeChallengeS256()},
-		"username":              {v.user},
-		"password":              {v.password},
+		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
+		"username":              {user},
+		"password":              {password},
 		"grant_type":            {"authorization_code"},
 	}
 
-	uri := fmt.Sprintf("%s/authenticate", AuthURI)
+	uri := fmt.Sprintf("%s/oauth/authenticate", v.region.AuthURI)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
 		return nil, err
 	}
 
 	var res struct {
-		RedirectTo string `json:"redirect_to"`
+		RedirectTo       string `json:"redirect_to"`
+		Error            string `json:"error"`
+		ErrorDescription string `json:"error_description"`
 	}
 
 	if err := v.DoJSON(req, &res); err != nil {
+		if res.ErrorDescription != "" {
+			err = fmt.Errorf("%s: %w", res.ErrorDescription, err)
+		}
 		return nil, err
 	}
 
@@ -175,7 +118,39 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"code":          {query.Get("code")},
 		"redirect_uri":  {RedirectURI},
 		"grant_type":    {"authorization_code"},
-		"code_verifier": {cv.CodeChallengePlain()},
+		"code_verifier": {cv},
+	}
+
+	token, err := v.retrieveToken(data)
+	if err != nil {
+		return nil, err
+	}
+
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
+
+	return ts, nil
+}
+
+func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
+	uri := fmt.Sprintf("%s/oauth/token", v.region.AuthURI)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": v.region.Token.Authorization,
+	})
+
+	var tok oauth2.Token
+	if err == nil {
+		err = v.DoJSON(req, &tok)
+	}
+
+	return util.TokenWithExpiry(&tok), err
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	data := url.Values{
+		"redirect_uri":  []string{RedirectURI},
+		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    []string{"refresh_token"},
 	}
 
 	return v.retrieveToken(data)

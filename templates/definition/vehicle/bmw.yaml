@@ -6,7 +6,32 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WBMW...
+  - name: region
+    description:
+      de: Region
+      en: Region
+    # values:
+    #   - NA
+    #   - EU
+    default: EU
+    advanced: true
+  - name: coarsecurrent
+    advanced: true
+  - name: welcomecharge
+    advanced: true
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  {{- if ne .region "EU" }}
+  region: {{ .region }}
+  {{- end }}
+  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
+  features:
+  {{- if eq .coarsecurrent "true" }}
+  - coarsecurrent
+  {{- end }}
+  {{- if eq .welcomecharge "true" }}
+  - welcomecharge
+  {{- end }}
+  {{- end }}

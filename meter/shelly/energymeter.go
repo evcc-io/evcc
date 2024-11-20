@@ -31,7 +31,7 @@ func (sh *EnergyMeter) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.TotalEnergy, nil
+	return res.TotalEnergy / 1000, nil
 }
 
 var _ api.PhaseCurrents = (*EnergyMeter)(nil)

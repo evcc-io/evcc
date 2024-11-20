@@ -1,5 +1,9 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
+	<div
+		data-testid="visualization"
+		class="visualization"
+		:class="{ 'visualization--ready': visualizationReady }"
+	>
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
@@ -11,18 +15,29 @@
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'unknownImport')">
+					<QuestionIcon />
+				</LabelBar>
 			</div>
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
+			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPvAdjusted) }">
+				<AnimatedNumber
+					v-if="selfPv && visualizationReady"
+					class="power"
+					:to="selfPv"
+					:format="fmtBarValue"
+				/>
+			</div>
 			<div
-				class="site-progress-bar self-consumption"
-				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
+				class="site-progress-bar self-battery"
+				:style="{ width: widthTotal(selfBatteryAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="selfConsumption && visualizationReady"
+					v-if="selfBattery && visualizationReady"
 					class="power"
-					:to="selfConsumption"
+					:to="selfBattery"
 					:format="fmtBarValue"
 				/>
 			</div>
@@ -49,10 +64,18 @@
 				/>
 			</div>
 			<div
-				v-if="totalAdjusted <= 0"
-				class="site-progress-bar bg-light border no-wrap w-100 text-dark"
+				class="site-progress-bar unknown-output"
+				:style="{ width: widthTotal(unknownOutput) }"
 			>
-				<span>{{ $t("main.energyflow.noEnergy") }}</span>
+				<AnimatedNumber
+					v-if="unknownOutput && visualizationReady"
+					class="power"
+					:to="unknownOutput"
+					:format="fmtBarValue"
+				/>
+			</div>
+			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
+				<span>{{ fmtW(0, POWER_UNIT.AUTO, true) }}</span>
 			</div>
 		</div>
 		<div class="label-scale d-flex">
@@ -60,46 +83,59 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<VehicleIcon :names="vehicleIcons" />
+				<LabelBar
+					v-for="(lp, index) in loadpoints"
+					:key="index"
+					v-bind="labelBarProps('bottom', 'loadpoints', lp.power)"
+				>
+					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" />
+					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'unknownOutput')">
+					<QuestionIcon />
+				</LabelBar>
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
+		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
 	</div>
 </template>
 
 <script>
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
+import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar, AnimatedNumber, VehicleIcon },
+	components: { BatteryIcon, LabelBar, AnimatedNumber, VehicleIcon, QuestionIcon },
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
-		selfConsumption: { type: Number, default: 0 },
+		selfPv: { type: Number, default: 0 },
+		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
-		loadpoints: { type: Number, default: 0 },
+		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
+		batteryHold: { type: Boolean, default: false },
+		batteryGridCharge: { type: Boolean, default: false },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerInKw: { type: Boolean, default: false },
-		vehicleIcons: { type: Array },
+		powerUnit: { type: String, default: POWER_UNIT.KW },
+		inPower: { type: Number, default: 0 },
+		outPower: { type: Number, default: 0 },
 	},
 	data: function () {
 		return { width: 0 };
@@ -109,19 +145,35 @@ export default {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalRaw: function () {
-			return this.gridImport + this.selfConsumption + this.pvExport;
+			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
 		},
 		gridImportAdjusted: function () {
 			return this.applyThreshold(this.gridImport);
 		},
-		selfConsumptionAdjusted: function () {
-			return this.applyThreshold(this.selfConsumption);
+		selfPvAdjusted: function () {
+			return this.applyThreshold(this.selfPv);
+		},
+		selfBatteryAdjusted: function () {
+			return this.applyThreshold(this.selfBattery);
 		},
 		pvExportAdjusted: function () {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalAdjusted: function () {
-			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
+			return (
+				this.gridImportAdjusted +
+				this.selfPvAdjusted +
+				this.selfBatteryAdjusted +
+				this.pvExportAdjusted
+			);
+		},
+		unknownImport: function () {
+			// input/output mismatch > 10%
+			return this.applyThreshold(Math.max(0, this.outPower - this.inPower), 10);
+		},
+		unknownOutput: function () {
+			// input/output mismatch > 10%
+			return this.applyThreshold(Math.max(0, this.inPower - this.outPower), 10);
 		},
 		visualizationReady: function () {
 			return this.totalAdjusted > 0 && this.width > 0;
@@ -139,19 +191,25 @@ export default {
 	},
 	methods: {
 		widthTotal: function (power) {
-			if (this.totalAdjusted === 0) return "0%";
+			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {
-			const withUnit = this.powerLabelEnoughSpace(watt);
-			return this.fmtKw(watt, this.powerInKw, withUnit);
+			if (!this.enoughSpaceForValue(watt)) {
+				return "";
+			}
+			const withUnit = this.enoughSpaceForUnit(watt);
+			return this.fmtW(watt, this.powerUnit, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		powerLabelEnoughSpace(power) {
+		enoughSpaceForValue(power) {
+			return this.powerLabelAvailableSpace(power) > 40;
+		},
+		enoughSpaceForUnit(power) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
 		hideLabelIcon(power, minWidth = 32) {
@@ -159,20 +217,20 @@ export default {
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent < minWidth;
 		},
-		applyThreshold(power) {
+		applyThreshold(power, threshold = 2) {
 			const percent = (100 / this.totalRaw) * power;
-			return percent < 2 ? 0 : power;
+			return percent < threshold ? 0 : power;
 		},
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
-		labelBarProps(position, name) {
-			const value = this[name];
+		labelBarProps(position, name, val) {
+			const value = val === undefined ? this[name] : val;
 			const minWidth = 40;
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
-				style: { width: this.widthTotal(value) },
+				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
 		},
@@ -218,12 +276,20 @@ html.dark .grid-import {
 	color: var(--bs-dark);
 }
 
-.self-consumption {
-	background-color: var(--evcc-self);
+.self-pv {
+	background-color: var(--evcc-pv);
+	color: var(--bs-dark);
+}
+.self-battery {
+	background-color: var(--evcc-battery);
 	color: var(--bs-dark);
 }
 .pv-export {
 	background-color: var(--evcc-export);
+	color: var(--bs-dark);
+}
+.unknown-output {
+	background-color: var(--evcc-gray);
 	color: var(--bs-dark);
 }
 .power {
@@ -233,11 +299,24 @@ html.dark .grid-import {
 	overflow: hidden;
 }
 .visualization--ready :deep(.label-bar) {
-	transition-property: width, opacity;
+	transition-property: flex-basis, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }
 .visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
+}
+.battery-hold {
+	position: absolute;
+	top: 2.5rem;
+	right: -0.25rem;
+	color: var(--evcc-gray);
+	opacity: 0;
+	transition-property: opacity;
+	transition-duration: var(--evcc-transition-medium);
+	transition-timing-function: linear;
+}
+.battery-hold--active {
+	opacity: 1;
 }
 </style>

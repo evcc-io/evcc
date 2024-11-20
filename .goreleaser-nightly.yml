@@ -1,14 +1,19 @@
+version: 2
+
 dist: release
 release:
   disable: true
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
@@ -33,7 +38,7 @@ archives:
     files:
       - evcc.dist.yaml
     name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
 
 env:
   - CGO_ENABLED=0
@@ -45,7 +50,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
+  version_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
@@ -69,6 +74,9 @@ nfpms:
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service

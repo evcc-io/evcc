@@ -1,5 +1,8 @@
 name: Nightly Build
 
+env:
+  GO_VERSION: ^1.23
+
 on:
   schedule: # runs on the default branch: master
     - cron: "0 2 * * *" # run at 2 AM UTC
@@ -12,7 +15,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -38,33 +41,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-dist
         with:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
       - name: Setup Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Publish
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
+          build-args: |
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: |
             evcc/evcc:nightly
 
@@ -75,35 +80,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
         id: go
-
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-dist
         with:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
 
       - name: Publish .deb to Cloudsmith
         env:

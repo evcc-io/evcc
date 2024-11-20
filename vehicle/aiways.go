@@ -63,9 +63,7 @@ func NewAiwaysFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// _, err := api.Vehicles()
 	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	if err == nil {
-		v.Provider = aiways.NewProvider(api, user, cc.VIN, cc.Cache)
-	}
+	v.Provider = aiways.NewProvider(api, user, cc.VIN, cc.Cache)
 
 	return v, err
 }

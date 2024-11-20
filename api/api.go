@@ -7,43 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
-
-// ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
-type ChargeMode string
-
-// Charge modes
-const (
-	ModeEmpty ChargeMode = ""
-	ModeOff   ChargeMode = "off"
-	ModeNow   ChargeMode = "now"
-	ModeMinPV ChargeMode = "minpv"
-	ModePV    ChargeMode = "pv"
-)
-
-// String implements Stringer
-func (c ChargeMode) String() string {
-	return string(c)
-}
-
-// ChargeStatus is the EV's charging status from A to F
-type ChargeStatus string
-
-// Charging states
-const (
-	StatusNone ChargeStatus = ""
-	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    - Kabel nicht angeschlossen
-	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Kabel angeschlossen
-	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    - Laden
-	StatusD    ChargeStatus = "D" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    - Laden mit Lüfter
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Kurzschluss)
-	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Ausfall Wallbox)
-)
-
-// String implements Stringer
-func (c ChargeStatus) String() string {
-	return string(c)
-}
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -80,14 +44,33 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
+// MaxACPower provides max AC power in W
+type MaxACPower interface {
+	MaxACPower() float64
+}
+
 // ChargeState provides current charging status
 type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides settings charging maximum charging current
-type CurrentLimiter interface {
+type StatusReasoner interface {
+	StatusReason() (Reason, error)
+}
+
+// CurrentController provides settings charging maximum charging current
+type CurrentController interface {
 	MaxCurrent(current int64) error
+}
+
+// CurrentGetter provides getting charging maximum charging current for validation
+type CurrentGetter interface {
+	GetMaxCurrent() (float64, error)
+}
+
+// BatteryController optionally allows to control home battery (dis)charging behavior
+type BatteryController interface {
+	SetBatteryMode(BatteryMode) error
 }
 
 // Charger provides current charging status and enable/disable charging
@@ -95,7 +78,7 @@ type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentLimiter
+	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -108,6 +91,10 @@ type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 
+type PhaseGetter interface {
+	GetPhases() (int, error)
+}
+
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
 	Diagnose()
@@ -115,7 +102,7 @@ type Diagnosis interface {
 
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
-	ChargingTime() (time.Duration, error)
+	ChargeDuration() (time.Duration, error)
 }
 
 // ChargeRater provides charged energy amount in kWh
@@ -133,14 +120,20 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
+// PhaseDescriber returns the number of available phases
+type PhaseDescriber interface {
+	Phases() int
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
 	BatteryCapacity
 	IconDescriber
+	FeatureDescriber
+	PhaseDescriber
 	Title() string
 	SetTitle(string)
-	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }
@@ -171,15 +164,19 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// SocLimiter returns the vehicles charge limit
-type SocLimiter interface {
-	TargetSoc() (float64, error)
+// CurrentLimiter returns the current limits
+type CurrentLimiter interface {
+	GetMinMaxCurrent() (float64, float64, error)
 }
 
-// VehicleChargeController allows to start/stop the charging session on the vehicle side
-type VehicleChargeController interface {
-	StartCharge() error
-	StopCharge() error
+// SocLimiter returns the soc limit
+type SocLimiter interface {
+	GetLimitSoc() (int64, error)
+}
+
+// ChargeController allows to start/stop the charging session on the vehicle side
+type ChargeController interface {
+	ChargeEnable(bool) error
 }
 
 // Resurrector provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger
@@ -187,25 +184,10 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Rate is a grid tariff rate
-type Rate struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
-}
-
-// IsEmpty returns is the rate is the zero value
-func (r Rate) IsEmpty() bool {
-	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
-}
-
-// Rates is a slice of (future) tariff rates
-type Rates []Rate
-
 // Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	Unit() string
 	Rates() (Rates, error)
+	Type() TariffType
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
@@ -228,4 +210,39 @@ type FeatureDescriber interface {
 // CsvWriter converts to csv
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
+}
+
+// CircuitMeasurements is the measurements a circuit or load must deliver
+type CircuitMeasurements interface {
+	GetChargePower() float64
+	GetMaxPhaseCurrent() float64
+}
+
+// CircuitLoad represents a loadpoint attached to a circuit
+type CircuitLoad interface {
+	CircuitMeasurements
+	GetCircuit() Circuit
+}
+
+// Circuit defines the load control domain
+type Circuit interface {
+	CircuitMeasurements
+	GetTitle() string
+	SetTitle(string)
+	GetParent() Circuit
+	RegisterChild(child Circuit)
+	Wrap(parent Circuit) error
+	HasMeter() bool
+	GetMaxPower() float64
+	GetMaxCurrent() float64
+	SetMaxPower(float64)
+	SetMaxCurrent(float64)
+	Update([]CircuitLoad) error
+	ValidateCurrent(old, new float64) float64
+	ValidatePower(old, new float64) float64
+}
+
+// Redactor is an interface to redact sensitive data
+type Redactor interface {
+	Redacted() any
 }

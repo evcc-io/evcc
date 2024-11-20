@@ -1,0 +1,20 @@
+template: obo
+products:
+  - brand: EcoHarmony
+    description:
+      generic: EVSE EPC 2.0 Plus
+  - brand: OBO Bettermann
+    description:
+      generic: Ion
+  - brand: Viridian EV
+    description:
+      generic: EVSE EPC 2.0 Plus
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
+    comset: 8E1
+    id: 101
+render: |
+  type: obo
+  {{- include "modbus" . }}

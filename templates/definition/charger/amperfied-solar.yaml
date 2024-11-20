@@ -1,0 +1,16 @@
+template: amperfied-solar
+products:
+  - brand: Amperfied
+    description:
+      generic: Wallbox connect.solar
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: amperfied
+  {{- include "modbus" . }}
+  phases1p3p: true

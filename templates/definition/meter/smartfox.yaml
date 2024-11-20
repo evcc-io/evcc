@@ -1,0 +1,83 @@
+template: smartfox
+products:
+  - brand: Smartfox
+    description:
+      generic: Box, Reg, Reg extended
+requirements:
+  description:
+    de: |
+      `aux` kann für die Leistung der Warmwasserbereitung verwendet werden.
+    en: |
+      `aux` can be used for water heating power.
+params:
+  - name: usage
+    choice: ["grid", "pv", "aux"]
+  - name: host
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/all
+  {{- end }}
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .power_io
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .energy_in
+    scale: 0.001  
+  voltages:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[2]
+  currents:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[2]
+  powers:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[2]
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .PvPower[0]
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .PvEnergy[0]
+    scale: 0.001
+  {{- end }}
+  {{- if eq .usage "aux" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .power_sf
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .day_energy_sf
+    scale: 0.001
+  {{- end }}

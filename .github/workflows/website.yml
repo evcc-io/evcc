@@ -1,9 +1,11 @@
 name: Deploy data to website
 
+env:
+  GO_VERSION: ^1.23
+
 on:
-  push:
-    branches: [master]
-    paths: ["templates/evcc.io/**"]
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
@@ -12,18 +14,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Build docs
         run: make install docs
 
+      - name: Remove .gitignore to allow brands.json to be committed
+        run: rm templates/evcc.io/.gitignore
+
       - name: Deploy to evcc.io repo
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./templates/evcc.io/
@@ -32,4 +37,4 @@ jobs:
           destination_dir: data
           allow_empty_commit: false
           commit_message: Brand data update
-        if: ${{ success() }}
+        if: success()

@@ -7,8 +7,14 @@ import Sponsor from "./Sponsor.vue";
 		<Variant title="no sponsor">
 			<Sponsor />
 		</Variant>
+		<Variant title="trial">
+			<Sponsor sponsor="trial" />
+		</Variant>
 		<Variant title="sponsor">
 			<Sponsor sponsor="naltatis" />
+		</Variant>
+		<Variant title="victron device">
+			<Sponsor sponsor="victron" />
 		</Variant>
 	</Story>
 </template>

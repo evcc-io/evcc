@@ -10,24 +10,44 @@
 					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 				}"
-				:style="{ width: `${vehicleSocDisplayWidth}%` }"
+				:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
 			></div>
 			<div
 				v-if="remainingSocWidth > 0 && enabled && connected"
 				class="progress-bar bg-muted"
 				role="progressbar"
 				:class="progressColor"
-				:style="{ width: `${remainingSocWidth}%`, transition: 'none' }"
+				:style="{ width: `${remainingSocWidth}%`, ...transition }"
 			></div>
 			<div
-				v-show="vehicleTargetSoc"
-				ref="vehicleTargetSoc"
-				class="vehicle-target-soc"
+				v-show="vehicleLimitSoc"
+				ref="vehicleLimitSoc"
+				class="vehicle-limit-soc"
 				data-bs-toggle="tooltip"
 				title=" "
-				:class="{ 'vehicle-target-soc--active': vehicleTargetSocActive }"
-				:style="{ left: `${vehicleTargetSoc}%` }"
+				:class="{ 'vehicle-limit-soc--active': vehicleLimitSocActive }"
+				:style="{ left: `${vehicleLimitSoc}%` }"
 			/>
+			<div
+				v-show="energyLimitMarkerPosition"
+				class="energy-limit-marker"
+				data-bs-toggle="tooltip"
+				:class="{
+					'energy-limit-marker--active': energyLimitMarkerActive,
+					'energy-limit-marker--visible': energyLimitMarkerPosition < 100,
+				}"
+				:style="{ left: `${energyLimitMarkerPosition}%` }"
+			/>
+			<div
+				v-show="planMarkerAvailable"
+				class="plan-marker"
+				data-bs-toggle="tooltip"
+				:style="{ left: `${planMarkerPosition}%` }"
+				data-testid="plan-marker"
+				@click="$emit('plan-clicked')"
+			>
+				<shopicon-regular-clock></shopicon-regular-clock>
+			</div>
 		</div>
 		<div class="target">
 			<input
@@ -35,15 +55,15 @@
 				type="range"
 				min="0"
 				max="100"
-				step="5"
-				:value="visibleTargetSoc"
-				class="target-slider"
-				:class="{ 'target-slider--active': targetSliderActive }"
-				@mousedown="changeTargetSocStart"
-				@touchstart="changeTargetSocStart"
-				@input="movedTargetSoc"
-				@mouseup="changeTargetSocEnd"
-				@touchend="changeTargetSocEnd"
+				:step="step"
+				:value="visibleLimitSoc"
+				class="slider"
+				:class="{ 'slider--active': sliderActive }"
+				@mousedown="changeLimitSocStart"
+				@touchstart="changeLimitSocStart"
+				@input="movedLimitSoc"
+				@mouseup="changeLimitSocEnd"
+				@touchend="changeLimitSocEnd"
 			/>
 		</div>
 	</div>
@@ -51,31 +71,41 @@
 
 <script>
 import Tooltip from "bootstrap/js/dist/tooltip";
+import "@h2d2/shopicons/es/regular/clock";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "VehicleSoc",
+	mixins: [formatter],
 	props: {
 		connected: Boolean,
-		vehiclePresent: Boolean,
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
+		heating: Boolean,
 		minSoc: Number,
-		targetSoc: Number,
-		targetEnergy: Number,
+		effectivePlanSoc: Number,
+		effectiveLimitSoc: Number,
+		limitEnergy: Number,
+		planEnergy: Number,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 	},
-	emits: ["target-soc-drag", "target-soc-updated"],
+	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data: function () {
 		return {
-			selectedTargetSoc: null,
+			selectedLimitSoc: null,
 			interactionStartScreenY: null,
 			tooltip: null,
+			dragging: false,
 		};
 	},
 	computed: {
+		step: function () {
+			return this.heating ? 1 : 5;
+		},
 		vehicleSocDisplayWidth: function () {
 			if (this.socBasedCharging) {
 				if (this.vehicleSoc >= 0) {
@@ -83,17 +113,63 @@ export default {
 				}
 				return 100;
 			} else {
-				if (this.targetEnergy) {
-					return (100 / this.targetEnergy) * (this.chargedEnergy / 1e3);
+				if (this.maxEnergy) {
+					return (100 / this.maxEnergy) * (this.chargedEnergy / 1e3);
 				}
 				return 100;
 			}
 		},
-		vehicleTargetSocActive: function () {
-			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
+		transition: function () {
+			if (this.dragging) {
+				return { transition: "none" };
+			}
+			return { transition: "width var(--evcc-transition-fast) linear" };
 		},
-		targetSliderActive: function () {
-			return !this.vehicleTargetSoc || this.visibleTargetSoc <= this.vehicleTargetSoc;
+		maxEnergy: function () {
+			return Math.max(this.planEnergy, this.limitEnergy, this.chargedEnergy / 1e3);
+		},
+		vehicleLimitSocActive: function () {
+			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
+		},
+		planMarkerPosition: function () {
+			if (this.socBasedPlanning) {
+				return this.effectivePlanSoc;
+			}
+			const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
+			if (maxEnergy) {
+				return (100 / maxEnergy) * this.planEnergy;
+			}
+			return 0;
+		},
+		planMarkerAvailable: function () {
+			if (this.socBasedCharging && !this.socBasedPlanning) {
+				// mixed mode (% limit and kWh plan): hide marker
+				return false;
+			}
+			return this.planMarkerPosition > 0;
+		},
+		energyLimitMarkerPosition: function () {
+			if (this.socBasedCharging) {
+				return null;
+			}
+			if (this.limitEnergy) {
+				return (100 / this.maxEnergy) * this.limitEnergy;
+			}
+			return 100;
+		},
+		energyLimitMarkerActive: function () {
+			if (this.socBasedCharging) {
+				return false;
+			}
+			if (this.planEnergy) {
+				return this.limitEnergy >= this.planEnergy;
+			}
+			return true;
+		},
+		sliderActive: function () {
+			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleLimitSoc || 100);
+			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
+			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
 		progressColor: function () {
 			if (this.minSocActive) {
@@ -112,11 +188,12 @@ export default {
 				if (this.minSocActive) {
 					return this.minSoc - this.vehicleSoc;
 				}
-				let targetSoc = this.targetSliderActive
-					? this.visibleTargetSoc
-					: this.vehicleTargetSoc;
-				if (targetSoc > this.vehicleSoc) {
-					return targetSoc - this.vehicleSoc;
+				const limit = Math.min(
+					this.vehicleLimitSoc || 100,
+					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
+				);
+				if (limit > this.vehicleSoc) {
+					return limit - this.vehicleSoc;
 				}
 			} else {
 				return 100 - this.vehicleSocDisplayWidth;
@@ -124,15 +201,15 @@ export default {
 
 			return null;
 		},
-		visibleTargetSoc: function () {
-			return Number(this.selectedTargetSoc || this.targetSoc);
+		visibleLimitSoc: function () {
+			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 	},
 	watch: {
-		targetSoc: function () {
-			this.selectedTargetSoc = this.targetSoc;
+		effectiveLimitSoc: function () {
+			this.selectedLimitSoc = this.effectiveLimitSoc;
 		},
-		vehicleTargetSoc: function () {
+		vehicleLimitSoc: function () {
 			this.updateTooltip();
 		},
 	},
@@ -140,37 +217,41 @@ export default {
 		this.updateTooltip();
 	},
 	methods: {
-		changeTargetSocStart: function (e) {
+		changeLimitSocStart: function (e) {
+			this.dragging = true;
 			e.stopPropagation();
 		},
-		changeTargetSocEnd: function (e) {
+		changeLimitSocEnd: function (e) {
+			this.dragging = false;
 			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (value !== this.targetSoc) {
-				this.$emit("target-soc-updated", value);
+			if (value !== this.effectiveLimitSoc) {
+				this.$emit("limit-soc-updated", value);
 			}
 		},
-		movedTargetSoc: function (e) {
-			let value = parseInt(e.target.value, 10);
+		movedLimitSoc: function (e) {
+			const value = parseInt(e.target.value, 10);
 			e.stopPropagation();
-			const minTargetSoc = 20;
-			if (value < minTargetSoc) {
-				e.target.value = minTargetSoc;
-				this.selectedTargetSoc = value;
+			const minLimit = 20;
+			if (value < minLimit) {
+				e.target.value = minLimit;
+				this.selectedLimitSoc = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoc = value;
+			this.selectedLimitSoc = value;
 
-			this.$emit("target-soc-drag", this.selectedTargetSoc);
+			this.$emit("limit-soc-drag", this.selectedLimitSoc);
 			return true;
 		},
 		updateTooltip: function () {
 			if (!this.tooltip) {
-				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoc);
+				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
 			}
-			const soc = this.vehicleTargetSoc;
-			const content = this.$t("main.vehicleSoc.vehicleTarget", { soc });
+			const soc = this.vehicleLimitSoc;
+			const content = this.$t("main.vehicleSoc.vehicleLimit", {
+				soc: this.fmtPercentage(soc),
+			});
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},
@@ -196,7 +277,7 @@ export default {
 .bg-light {
 	color: var(--bs-gray-dark);
 }
-.target-slider {
+.slider {
 	-webkit-appearance: none;
 	position: absolute;
 	top: calc(var(--thumb-overlap) * -1);
@@ -205,24 +286,28 @@ export default {
 	background: transparent;
 	pointer-events: none;
 }
-.target-slider:focus {
+.slider:focus {
 	outline: none;
 }
 /* Note: Safari,Chrome,Blink and Firefox specific styles need to be in separate definitions to work */
-.target-slider::-webkit-slider-runnable-track {
+.slider::-webkit-slider-runnable-track {
 	position: relative;
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: auto;
+	/* ensure slider start/end is at the edge and not inside the track */
+	margin: 0 -6px;
 }
-.target-slider::-moz-range-track {
+.slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: auto;
+	/* ensure slider start/end is at the edge and not inside the track */
+	margin: 0 -6px;
 }
-.target-slider::-webkit-slider-thumb {
+.slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	position: relative;
 	margin-left: var(--thumb-width) / 2;
@@ -237,7 +322,7 @@ export default {
 	pointer-events: auto;
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.target-slider::-moz-range-thumb {
+.slider::-moz-range-thumb {
 	position: relative;
 	height: 100%;
 	width: var(--thumb-width);
@@ -250,13 +335,13 @@ export default {
 	pointer-events: auto;
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.target-slider--active::-webkit-slider-thumb {
+.slider--active::-webkit-slider-thumb {
 	background-color: var(--evcc-dark-green);
 }
-.target-slider--active::-moz-range-thumb {
+.slider--active::-moz-range-thumb {
 	background-color: var(--evcc-dark-green);
 }
-.vehicle-target-soc {
+.vehicle-limit-soc {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -267,9 +352,50 @@ export default {
 	border-width: 0 8px;
 	border-style: solid;
 	border-color: transparent;
+	transition-property: background-color, left;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
+}
+.vehicle-limit-soc--active {
+	background-color: var(--evcc-box);
+}
+.plan-marker {
+	position: absolute;
+	top: 0;
+	transform: translateX(-50%);
+	color: var(--evcc-darker-green);
+	transition-property: color, left, opacity;
+	transition-timing-function: linear;
+	cursor: pointer;
+	transition-duration: var(--evcc-transition-fast);
+}
+.plan-marker::before {
+	content: "";
+	display: block;
+	height: var(--height);
+	border-width: 0 10px;
+	background-clip: padding-box;
+	border-style: solid;
+	border-color: transparent;
+	background-color: var(--evcc-darker-green);
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.vehicle-target-soc--active {
-	background-color: var(--evcc-box);
+.energy-limit-marker {
+	position: absolute;
+	top: -4px;
+	bottom: -4px;
+	transform: translateX(-50%);
+	width: 4px;
+	opacity: 0;
+	background-color: var(--evcc-gray);
+	transition-property: opacity, left, background-color;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
+}
+.energy-limit-marker--active {
+	background-color: var(--evcc-dark-green);
+}
+.energy-limit-marker--visible {
+	opacity: 1;
 }
 </style>

@@ -182,9 +182,7 @@ func createChallengeResponse(challenge, pass string) (string, error) {
 	}
 
 	hash := md5.New()
-	if _, err = hash.Write([]byte(utf16le)); err != nil {
-		return "", err
-	}
+	hash.Write([]byte(utf16le))
 
 	md5hash := hex.EncodeToString(hash.Sum(nil))
 	return challenge + "-" + md5hash, nil

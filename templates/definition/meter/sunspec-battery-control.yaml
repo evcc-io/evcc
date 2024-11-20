@@ -1,0 +1,40 @@
+template: sunspec-battery-control
+products:
+  - description:
+      de: SunSpec Batterie (Model 802)
+      en: SunSpec Battery (Model 802)
+capabilities: ["battery-control"]
+group: generic
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: capacity
+    advanced: true
+  # battery control (model 802)
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
+render: |
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:W
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoC
+  limitsoc: # model 802
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCRsvMin
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  {{- end }}

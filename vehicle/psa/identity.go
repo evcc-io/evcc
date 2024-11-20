@@ -2,48 +2,83 @@ package psa
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strings"
+	"sync"
 
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
 type Identity struct {
-	*request.Helper
-	oc *oauth2.Config
 	oauth2.TokenSource
+	mu      sync.Mutex
+	oc      *oauth2.Config
+	log     *util.Logger
+	subject string
 }
 
 // NewIdentity creates PSA identity
-func NewIdentity(log *util.Logger, brand, id, secret string) *Identity {
-	return &Identity{
-		Helper: request.NewHelper(log),
-		oc: &oauth2.Config{
-			ClientID:     id,
-			ClientSecret: secret,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:   "https://api.mpsa.com/api/connectedcar/v2/oauth/authorize",
-				TokenURL:  fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", brand),
-				AuthStyle: oauth2.AuthStyleInHeader,
-			},
-			Scopes: []string{"openid profile"},
-		},
+func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token *oauth2.Token) (oauth2.TokenSource, error) {
+	// serialise instance handling
+	mu.Lock()
+	defer mu.Unlock()
+
+	// reuse identity instance
+	subject := "psa." + strings.ToLower(brand) + "." + strings.ToLower(user)
+	if instance := getInstance(subject); instance != nil {
+		return instance, nil
 	}
+
+	v := &Identity{
+		log:     log,
+		oc:      oc,
+		subject: subject,
+	}
+
+	var tok oauth2.Token
+	if err := settings.Json(v.subject, &tok); err == nil {
+		token = &tok
+	}
+
+	if !token.Valid() {
+		if tok, err := v.RefreshToken(token); err == nil {
+			token = tok
+		}
+	}
+
+	if !token.Valid() {
+		return nil, errors.New("token expired")
+	}
+
+	v.TokenSource = oauth.RefreshTokenSource(token, v)
+
+	// add instance
+	addInstance(v.subject, v)
+
+	return v, nil
 }
 
-func (v *Identity) Login(user, password string) error {
-	ctx := context.WithValue(
-		context.Background(),
-		oauth2.HTTPClient,
-		v.Client,
-	)
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
-	// replace client with authenticated oauth client
-	token, err := v.oc.PasswordCredentialsToken(ctx, user, password)
-	if err == nil {
-		v.TokenSource = v.oc.TokenSource(ctx, token)
+	client := request.NewClient(v.log)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+
+	tok, err := v.oc.TokenSource(ctx, token).Token()
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid_grant") {
+			settings.Delete(v.subject)
+		}
+		return nil, err
 	}
 
-	return err
+	v.TokenSource = oauth.RefreshTokenSource(tok, v)
+	err = settings.SetJson(v.subject, tok)
+
+	return tok, err
 }

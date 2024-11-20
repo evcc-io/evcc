@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -34,25 +35,26 @@ func init() {
 	dumpConfig = dumpCmd.Flags().Bool("cfg", false, "Dump config file")
 }
 
-func handle(device any, err error) any {
+func handle[T any](name string, h config.Handler[T]) config.Device[T] {
+	dev, err := h.ByName(name)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
-	return device
+	return dev
 }
 
 func runDump(cmd *cobra.Command, args []string) {
 	// load config
-	err := loadConfigFile(&conf)
+	err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
 
 	// setup environment
 	if err == nil {
-		err = configureEnvironment(cmd, conf)
+		err = configureEnvironment(cmd, &conf)
 	}
 
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(conf)
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	if *dumpConfig {
@@ -68,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprig.TxtFuncMap()).
+				Funcs(sprig.FuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)
@@ -94,28 +96,28 @@ func runDump(cmd *cobra.Command, args []string) {
 	fmt.Println("")
 
 	if name := site.Meters.GridMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(cp.Meter(name)))
+		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(name, config.Meters()))
 	}
 
-	for id, name := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
+	for id, name := range site.Meters.PVMetersRef {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
-	for id, name := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
+	for id, name := range site.Meters.BatteryMetersRef {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
 	for id, name := range site.Meters.AuxMetersRef {
 		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
-	for _, v := range site.GetVehicles() {
+	for _, v := range site.Vehicles().Instances() {
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.Title()), v)
 	}
 
@@ -126,11 +128,11 @@ func runDump(cmd *cobra.Command, args []string) {
 		fmt.Println("")
 
 		if name := lp.MeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(name, config.Meters()))
 		}
 
 		if name := lp.ChargerRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(cp.Charger(name)))
+			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(name, config.Chargers()))
 		}
 	}
 }

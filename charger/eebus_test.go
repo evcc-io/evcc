@@ -1,88 +1,119 @@
 package charger
 
 import (
+	"errors"
 	"testing"
+	"time"
 
-	"github.com/enbility/cemd/emobility"
+	evcemuc "github.com/enbility/eebus-go/usecases/cem/evcem"
+	"github.com/enbility/eebus-go/usecases/mocks"
+	spinemocks "github.com/enbility/spine-go/mocks"
+	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-type limitStruct struct {
-	phase           uint
-	min, max, pause float64
+// Test measurements updated after writing limits detction works
+func TestEEBusNoCurrents(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		uc: &eebus.UseCasesEVSE{
+			EvCC:  evcc,
+			EvCem: evcem,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+
+	// limit set 15:04:45, measurement receviced afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 4, 45, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.5, 10.5, 10.5}, nil).Once()
+
+	l1, l2, l3, err := eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.5, l1)
+	assert.Equal(t, 10.5, l2)
+	assert.Equal(t, 10.5, l3)
+
+	// limit set 15:05:09, measurement receviced afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 5, 9, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{6.6, 6.6, 6.6}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 6.6, l1)
+	assert.Equal(t, 6.6, l2)
+	assert.Equal(t, 6.6, l3)
+
+	// limit set 15:05:39, measurement received afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 5, 39, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.5, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.5, l2)
+	assert.Equal(t, 10.4, l3)
+
+	// limit set 15:06:09, measurement received afterwards before calling currents
+	eebus.limitUpdated = time.Date(2024, 9, 16, 15, 6, 9, 0, time.UTC)
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.4, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.4, l2)
+	assert.Equal(t, 10.4, l3)
+
+	// limit set 20 seconds ago, no measurement received yet
+	eebus.limitUpdated = time.Now().Add(-20 * time.Second)
+
+	l1, l2, l3, err = eebus.currents()
+	require.Error(t, err)
+	assert.Equal(t, 0.0, l1)
+	assert.Equal(t, 0.0, l2)
+	assert.Equal(t, 0.0, l3)
+
+	// now we got a measurement again
+	eebus.UseCaseEvent(nil, evEntity, evcemuc.DataUpdateCurrentPerPhase)
+
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{10.4, 10.4, 10.4}, nil).Once()
+
+	l1, l2, l3, err = eebus.currents()
+	require.NoError(t, err)
+	assert.Equal(t, 10.4, l1)
+	assert.Equal(t, 10.4, l2)
+	assert.Equal(t, 10.4, l3)
 }
-
-type measurementStruct struct {
-	phase   uint
-	current float64
-}
-
-type testMeasurementStruct struct {
-	expected bool
-	data     []measurementStruct
-}
-
-// Emobility mock
-
-type EmobilityMock struct {
-	connectedPhases                               uint
-	currents, limitsMin, limitsMax, limitsDefault []float64
-}
-
-func (e *EmobilityMock) EVCurrentChargeState() (emobility.EVChargeStateType, error) {
-	return emobility.EVChargeStateTypeUnknown, nil
-}
-
-func (e *EmobilityMock) EVConnectedPhases() (uint, error) {
-	return e.connectedPhases, nil
-}
-
-func (e *EmobilityMock) EVChargedEnergy() (float64, error) {
-	return 0, nil
-}
-
-func (e *EmobilityMock) EVPowerPerPhase() ([]float64, error) {
-	return []float64{}, nil
-}
-
-func (e *EmobilityMock) EVCurrentsPerPhase() ([]float64, error) {
-	return e.currents, nil
-}
-
-func (e *EmobilityMock) EVCurrentLimits() ([]float64, []float64, []float64, error) {
-	return e.limitsMin, e.limitsMax, e.limitsDefault, nil
-}
-
-func (e *EmobilityMock) EVWriteLoadControlLimits(obligations, recommendations []float64) error {
-	return nil
-}
-
-func (e *EmobilityMock) EVCommunicationStandard() (emobility.EVCommunicationStandardType, error) {
-	return emobility.EVCommunicationStandardTypeUnknown, nil
-}
-
-func (e *EmobilityMock) EVIdentification() (string, error) {
-	return "", nil
-}
-
-func (e *EmobilityMock) EVOptimizationOfSelfConsumptionSupported() (bool, error) {
-	return false, nil
-}
-
-func (e *EmobilityMock) EVSoCSupported() (bool, error) {
-	return false, nil
-}
-
-func (e *EmobilityMock) EVSoC() (float64, error) {
-	return 0, nil
-}
-
-func (e *EmobilityMock) EVCoordinatedChargingSupported() (bool, error) {
-	return false, nil
-}
-
-var _ emobility.EmobilityI = (*EmobilityMock)(nil)
 
 func TestEEBusIsCharging(t *testing.T) {
+	type limitStruct struct {
+		min, max, pause float64
+	}
+
+	type testMeasurementStruct struct {
+		charging bool
+		currents []float64
+		powers   []float64
+	}
+
 	tests := []struct {
 		name         string
 		limits       []limitStruct
@@ -91,107 +122,146 @@ func TestEEBusIsCharging(t *testing.T) {
 		{
 			"3 phase IEC",
 			[]limitStruct{
-				{1, 6, 16, 0},
-				{2, 6, 16, 0},
-				{3, 6, 16, 0},
+				{6, 16, 0},
+				{6, 16, 0},
+				{6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 0},
-						{2, 3},
-						{3, 0},
-					},
+					[]float64{0, 3, 0},
+					[]float64{0, 690, 0},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 6},
-						{2, 0},
-						{3, 1},
-					},
+					[]float64{6, 0, 1},
+					[]float64{1380, 0, 230},
 				},
 			},
 		},
 		{
 			"1 phase IEC",
 			[]limitStruct{
-				{1, 6, 16, 0},
+				{6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 2},
-					},
+					[]float64{2},
+					[]float64{460},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 6},
-					},
+					[]float64{6},
+					[]float64{1380},
 				},
 			},
 		},
 		{
 			"3 phase ISO",
 			[]limitStruct{
-				{1, 2.2, 16, 0.1},
-				{2, 2.2, 16, 0.1},
-				{3, 2.2, 16, 0.1},
+				{2.2, 16, 0.1},
+				{2.2, 16, 0.1},
+				{2.2, 16, 0.1},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 1},
-						{2, 0},
-						{3, 0},
-					},
+					[]float64{1, 0, 0},
+					[]float64{230, 0, 0},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 1.8},
-						{2, 1},
-						{3, 3},
-					},
+					[]float64{1.8, 1, 3},
+					[]float64{414, 230, 690},
 				},
 			},
 		},
 	}
 
-	emobilityMock := &EmobilityMock{}
-	eebus := &EEBus{
-		emobility: emobilityMock,
-	}
-
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			emobilityMock.connectedPhases = 3
-			emobilityMock.limitsMin = make([]float64, 0)
-			emobilityMock.limitsMax = make([]float64, 0)
-			emobilityMock.limitsDefault = make([]float64, 0)
+			var limitsMin, limitsMax, limitsDefault []float64
 
 			for _, limit := range tc.limits {
-				emobilityMock.limitsMin = append(emobilityMock.limitsMin, limit.min)
-				emobilityMock.limitsMax = append(emobilityMock.limitsMax, limit.max)
-				emobilityMock.limitsDefault = append(emobilityMock.limitsDefault, limit.pause)
+				limitsMin = append(limitsMin, limit.min)
+				limitsMax = append(limitsMax, limit.max)
+				limitsDefault = append(limitsDefault, limit.pause)
 			}
 
-			for index, m := range tc.measurements {
-				emobilityMock.currents = make([]float64, 0)
+			for _, m := range tc.measurements {
+				ctrl := gomock.NewController(t)
 
-				for _, d := range m.data {
-					emobilityMock.currents = append(emobilityMock.currents, d.current)
+				evcc := mocks.NewCemEVCCInterface(t)
+				evcem := mocks.NewCemEVCEMInterface(t)
+				opev := mocks.NewCemOPEVInterface(t)
+
+				evEntity := spinemocks.NewEntityRemoteInterface(t)
+				eebus := &EEBus{
+					uc: &eebus.UseCasesEVSE{
+						EvCC:  evcc,
+						EvCem: evcem,
+						OpEV:  opev,
+					},
+					ev: evEntity,
 				}
 
-				result := eebus.isCharging()
-				if result != m.expected {
-					t.Errorf("Failure: test %s, series %d, expected %v, got %v", tc.name, index, m.expected, result)
-				}
+				evcc.EXPECT().EVConnected(evEntity).Return(true)
+				evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+				evcem.EXPECT().PowerPerPhase(evEntity).Return(m.powers, nil)
+				opev.EXPECT().CurrentLimits(evEntity).Return(limitsMin, limitsMax, limitsDefault, nil)
+
+				require.Equal(t, m.charging, eebus.isCharging(evEntity))
+
+				ctrl.Finish()
 			}
 		})
 	}
+}
+
+func TestEEBusCurrentPower(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		uc: &eebus.UseCasesEVSE{
+			EvCC:  evcc,
+			EvCem: evcem,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+	evcem.EXPECT().PowerPerPhase(evEntity).Return([]float64{600, 600, 600}, nil)
+
+	power, err := eebus.currentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 1800.0, power)
+}
+
+func TestEEBusCurrentPower_Elli(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		uc: &eebus.UseCasesEVSE{
+			EvCC:  evcc,
+			EvCem: evcem,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+	evcem.EXPECT().PowerPerPhase(evEntity).Return(nil, errors.New("error"))
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{5.8, 5.8, 5.8}, nil)
+
+	power, err := eebus.currentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 4002.0, power)
 }

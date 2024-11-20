@@ -6,13 +6,22 @@ products:
   - brand: Eastron
     description:
       generic: SDM72DM-V2
+  - brand: Weidmüller
+    description:
+      generic: EM120-RTU-2P
+  - brand: Weidmüller
+    description:
+      generic: EM122-RTU-2P
+  - brand: Kostal
+    description:
+      generic: Energy Meter P (KEM-P)
 params:
   - name: usage
     choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   model: sdm
   power: Power

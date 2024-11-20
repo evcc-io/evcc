@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -16,17 +17,6 @@ import (
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
-// InfluxConfig is the influx db configuration
-type InfluxConfig struct {
-	URL      string
-	Database string
-	Token    string
-	Org      string
-	User     string
-	Password string
-	Interval time.Duration
-}
-
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
@@ -38,7 +28,7 @@ type Influx struct {
 }
 
 // NewInfluxClient creates new publisher for influx
-func NewInfluxClient(url, token, org, user, password, database string) *Influx {
+func NewInfluxClient(url, token, org, user, password, database string, insecure bool) *Influx {
 	log := util.NewLogger("influx")
 
 	// InfluxDB v1 compatibility
@@ -46,7 +36,11 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
+	options := influxdb2.DefaultOptions()
+
+	options.SetTLSConfig(&tls.Config{InsecureSkipVerify: insecure})
+	options.SetPrecision(time.Second)
+
 	client := influxdb2.NewClientWithOptions(url, token, options)
 
 	// handle error logging in writer
@@ -77,6 +71,9 @@ func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags ma
 	fields := make(map[string]any)
 
 	switch val := param.Val.(type) {
+	case string:
+		return
+
 	case int, int64, float64:
 		fields["value"] = param.Val
 

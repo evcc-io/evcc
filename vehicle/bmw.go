@@ -34,9 +34,11 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Region              string
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Region: "EU",
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -52,19 +54,24 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	}
 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
-	identity := bmw.NewIdentity(log)
+	identity := bmw.NewIdentity(log, cc.Region)
 
-	err := identity.Login(cc.User, cc.Password)
+	ts, err := identity.Login(cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	api := bmw.NewAPI(log, brand, identity)
+	api := bmw.NewAPI(log, brand, cc.Region, ts)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v bmw.Vehicle) (string, error) {
+			return v.VIN, nil
+		},
+	)
 
 	if err == nil {
-		v.Provider = bmw.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = bmw.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err

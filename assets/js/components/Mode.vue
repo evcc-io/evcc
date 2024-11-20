@@ -1,5 +1,5 @@
 <template>
-	<div class="mode-group border d-inline-flex" role="group">
+	<div class="mode-group border d-inline-flex" role="group" data-testid="mode">
 		<button
 			v-for="m in modes"
 			:key="m"
@@ -8,7 +8,7 @@
 			:class="{ active: isActive(m) }"
 			@click="setTargetMode(m)"
 		>
-			{{ $t(`main.mode.${m}`) }}
+			{{ label(m) }}
 		</button>
 	</div>
 </template>
@@ -18,14 +18,31 @@ export default {
 	name: "Mode",
 	props: {
 		mode: String,
+		pvPossible: Boolean,
+		hasSmartCost: Boolean,
 	},
 	emits: ["updated"],
-	data() {
-		return {
-			modes: ["off", "pv", "minpv", "now"],
-		};
+
+	computed: {
+		modes: function () {
+			if (this.pvPossible) {
+				return ["off", "pv", "minpv", "now"];
+			}
+			if (this.hasSmartCost) {
+				return ["off", "pv", "now"];
+			}
+			return ["off", "now"];
+		},
 	},
 	methods: {
+		label: function (mode) {
+			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
+			// TODO: rollout smart name for everyting later
+			if (mode === "pv" && !this.pvPossible && this.hasSmartCost) {
+				return this.$t("main.mode.smart");
+			}
+			return this.$t(`main.mode.${mode}`);
+		},
 		isActive: function (mode) {
 			return this.mode === mode;
 		},

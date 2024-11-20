@@ -1,7 +1,0 @@
-product:
-  description: EVSE-WiFi
-render:
-  - default: |
-      type: template
-      template: evsewifi
-      host: 192.0.2.2 # IP-Adresse oder Hostname

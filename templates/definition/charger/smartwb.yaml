@@ -11,3 +11,4 @@ render: |
     power: true
     energy: true
     currents: true
+    voltages: true

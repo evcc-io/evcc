@@ -80,24 +80,33 @@ func init() {
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
 func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
-		ID: 1,
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Timeout         time.Duration
+	}{
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
-func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Ascii, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {
@@ -188,10 +197,6 @@ func (wb *ABLeMH) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -227,17 +232,17 @@ func (wb *ABLeMH) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var currents []float64
-	for i := 2; i < 5; i++ {
-		u := binary.BigEndian.Uint16(b[2*i:])
+	var res [3]float64
+	for i := range res {
+		u := binary.BigEndian.Uint16(b[2*(2+i):])
 		if u == ablAmpsDisabled || u == 1 {
 			u = 0
 		}
 
-		currents = append(currents, float64(u)/10)
+		res[i] = float64(u) / 10
 	}
 
-	return currents[2], currents[1], currents[0], nil
+	return res[2], res[1], res[0], nil
 }
 
 var _ api.Diagnosis = (*ABLeMH)(nil)

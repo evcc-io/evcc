@@ -19,15 +19,19 @@ function setProperty(obj, props, value) {
 }
 
 const state = reactive({
+  offline: false,
   loadpoints: [], // ensure array type
 });
 
 const store = {
   state,
+  offline: function (value) {
+    state.offline = value;
+  },
   update: function (msg) {
     Object.keys(msg).forEach(function (k) {
-      if (typeof window.app[k] === "function") {
-        window.app[k]({ message: msg[k] });
+      if (k === "log") {
+        window.app.raise(msg[k]);
       } else {
         setProperty(state, k.split("."), msg[k]);
       }

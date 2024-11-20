@@ -8,8 +8,9 @@ params:
     choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
+    comset: "8E1"
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   model: orno3p
   power: Power

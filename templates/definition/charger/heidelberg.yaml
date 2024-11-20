@@ -9,6 +9,9 @@ products:
   - brand: Walther Werke
     description:
       generic: Basic Evo Pro
+  - brand: Amperfied
+    description:
+      generic: Wallbox Energy Control
 capabilities: ["mA"]
 requirements:
   description:

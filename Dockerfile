@@ -1,7 +1,7 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:18-alpine as node
+FROM --platform=$BUILDPLATFORM node:22-alpine AS node
 
-RUN apk update && apk add --no-cache make alpine-sdk
+RUN apk update && apk add --no-cache make
 
 WORKDIR /build
 
@@ -11,8 +11,8 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js .
-COPY *.js .
+COPY .*.js ./
+COPY *.js ./
 COPY assets assets
 COPY i18n i18n
 
@@ -20,12 +20,12 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
+RUN apk update && apk add --no-cache git make patch tzdata ca-certificates && update-ca-certificates
 
 # define RELEASE=1 to hide commit hash
 ARG RELEASE=0
@@ -62,11 +62,14 @@ RUN case "${TARGETVARIANT}" in \
 	"v7") export GOARM='7' ;; \
 	esac;
 
+ARG TESLA_CLIENT_ID
+ENV TESLA_CLIENT_ID=${TESLA_CLIENT_ID}
+
 RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.17
+FROM alpine:3.20
 
 WORKDIR /app
 
@@ -77,16 +80,20 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /app/
+COPY packaging/docker/bin/* /app/
 
 # mDNS
 EXPOSE 5353/udp
+# EEBus
+EXPOSE 4712/tcp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
 # OCPP charger
 EXPOSE 8887/tcp
+# Modbus UDP
+EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
 

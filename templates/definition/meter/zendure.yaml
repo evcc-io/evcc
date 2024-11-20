@@ -1,0 +1,34 @@
+template: zendure
+products:
+  - brand: Zendure
+    description:
+      generic: Hyper 2000
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: account
+    required: true
+    example: dev@zendure.com
+  - name: serial
+    required: true
+    example: VU5D99F74021B04
+    help:
+      de: "Zu finden in der Zendure App in den Einstellungen des Geräts"
+      en: "You can find this in the Zendure App in the settings of the device"
+  - name: region
+    type: choice
+    default: EU
+    validvalues: ["EU", "Global"]
+  - name: capacity
+    default: 2
+    advanced: true
+  - name: timeout
+render: |
+  type: zendure
+  usage: {{ .usage }}
+  region: {{ .region }}
+  account: {{ .account }}
+  serial: {{ .serial }}
+  timeout: {{ .timeout }}

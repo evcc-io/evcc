@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-
 	"github.com/mlnoga/rct"
 )
 
@@ -42,6 +43,7 @@ meters:
 
 // RCT implements the api.Meter interface
 type RCT struct {
+	bo    *backoff.ExponentialBackOff
 	conn  *rct.Connection // connection with the RCT device
 	usage string          // grid, pv, battery
 }
@@ -73,16 +75,26 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
+var rctMu sync.Mutex
+
 // NewRCT creates an RCT meter
 func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+	rctMu.Lock()
+	defer rctMu.Unlock()
+
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
 	}
 
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(10*time.Millisecond),
+		backoff.WithMaxElapsedTime(time.Second))
+
 	m := &RCT{
 		usage: strings.ToLower(usage),
 		conn:  conn,
+		bo:    bo,
 	}
 
 	// decorate api.MeterEnergy
@@ -104,24 +116,22 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 func (m *RCT) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		res, err := m.conn.QueryFloat32(rct.TotalGridPowerW)
-		return float64(res), err
+		return m.queryFloat(rct.TotalGridPowerW)
 
 	case "pv":
-		a, err := m.conn.QueryFloat32(rct.SolarGenAPowerW)
+		a, err := m.queryFloat(rct.SolarGenAPowerW)
 		if err != nil {
 			return 0, err
 		}
-		b, err := m.conn.QueryFloat32(rct.SolarGenBPowerW)
+		b, err := m.queryFloat(rct.SolarGenBPowerW)
 		if err != nil {
 			return 0, err
 		}
-		c, err := m.conn.QueryFloat32(rct.S0ExternalPowerW)
-		return float64(a + b + c), err
+		c, err := m.queryFloat(rct.S0ExternalPowerW)
+		return a + b + c, err
 
 	case "battery":
-		res, err := m.conn.QueryFloat32(rct.BatteryPowerW)
-		return float64(res), err
+		return m.queryFloat(rct.BatteryPowerW)
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -132,24 +142,24 @@ func (m *RCT) CurrentPower() (float64, error) {
 func (m *RCT) totalEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":
-		res, err := m.conn.QueryFloat32(rct.TotalEnergyGridWh)
-		return float64(res / 1000), err
+		res, err := m.queryFloat(rct.TotalEnergyGridWh)
+		return res / 1000, err
 
 	case "pv":
-		a, err := m.conn.QueryFloat32(rct.TotalEnergySolarGenAWh)
+		a, err := m.queryFloat(rct.TotalEnergySolarGenAWh)
 		if err != nil {
 			return 0, err
 		}
-		b, err := m.conn.QueryFloat32(rct.TotalEnergySolarGenBWh)
-		return float64((a + b) / 1000), err
+		b, err := m.queryFloat(rct.TotalEnergySolarGenBWh)
+		return (a + b) / 1000, err
 
 	case "battery":
-		in, err := m.conn.QueryFloat32(rct.TotalEnergyBattInWh)
+		in, err := m.queryFloat(rct.TotalEnergyBattInWh)
 		if err != nil {
 			return 0, err
 		}
-		out, err := m.conn.QueryFloat32(rct.TotalEnergyBattOutWh)
-		return float64((in - out) / 1000), err
+		out, err := m.queryFloat(rct.TotalEnergyBattOutWh)
+		return (in - out) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -158,6 +168,22 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 // batterySoc implements the api.Battery interface
 func (m *RCT) batterySoc() (float64, error) {
-	res, err := m.conn.QueryFloat32(rct.BatterySoC)
-	return float64(res * 100), err
+	res, err := m.queryFloat(rct.BatterySoC)
+	return res * 100, err
+}
+
+// queryFloat adds retry logic of recoverable errors to QueryFloat32
+func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
+	m.bo.Reset()
+
+	res, err := backoff.RetryWithData(func() (float32, error) {
+		res, err := m.conn.QueryFloat32(id)
+		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+			err = backoff.Permanent(err)
+		}
+
+		return res, err
+	}, m.bo)
+
+	return float64(res), err
 }

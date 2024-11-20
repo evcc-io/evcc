@@ -1,0 +1,48 @@
+template: solis
+products:
+  - brand: Ginlong
+    description:
+      generic: Solis Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    id: 1
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3262 # Meter Total P
+      type: input
+      decode: int32
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3282 # Meter grid import active energy
+      type: input
+      decode: uint32
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 3004 # Active power
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3008 # Total energy
+      type: input
+      decode: uint32
+  {{- end }}

@@ -1,13 +1,12 @@
 template: tasmota
 products:
   - description:
-      generic: Tasmota
+      generic: Tasmota (1 Phase Meter)
 group: switchsockets
 params:
   - name: usage
-    choice: ["grid", "pv", "battery"]
+    choice: ["pv", "battery", "charge"]
   - name: host
-    default: 192.0.2.2
   - name: user
     required: false
     help:
@@ -16,9 +15,19 @@ params:
   - name: password
     required: false
     mask: true
+  - name: channel
+    default: 1
+    required: true
+    description:
+      de: Kanal Nummer
+      en: Channel number
+    help:
+      de: Meterkanal (1-8)
+      en: Meterchannel number (1-8)
 render: |
   type: tasmota
   uri: http://{{ .host }}
   usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}
+  channel: [{{ .channel }}]  # list of meter channels [1,2,....,8]

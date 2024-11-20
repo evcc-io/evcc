@@ -1,0 +1,54 @@
+template: teslamate
+products:
+  - description:
+      generic: TeslaMate
+group: generic
+requirements:
+  description:
+    en: Open source Tesla data logger https://github.com/adriankumpf/teslamate. MQTT broker required.
+    de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: id
+    description:
+      de: Fahrzeug-ID
+      en: Vehicle ID
+    default: 1
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/battery_level
+    timeout: 720h # 30d
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/plugged_in
+      timeout: 720h # 30d
+    charging:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/charger_actual_current
+      timeout: 720h # 30d
+  range:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/rated_battery_range_km
+    timeout: 720h # 30d
+  odometer:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/odometer
+    timeout: 720h # 30d
+  limitsoc:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/charge_limit_soc
+    timeout: 720h
+  features: ["coarsecurrent"]

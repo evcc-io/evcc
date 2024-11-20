@@ -34,7 +34,7 @@ func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewPhoenixEVSer creates a Phoenix charger
@@ -61,7 +61,7 @@ func (wb *PhoenixEVSer) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(string(b[0])), nil
+	return api.ChargeStatusString(string(b[0]))
 }
 
 // Enabled implements the api.Charger interface

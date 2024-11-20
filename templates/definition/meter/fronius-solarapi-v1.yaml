@@ -3,6 +3,21 @@ products:
   - brand: Fronius
     description:
       generic: Solar API V1
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Solar API sollte nur als Fallback genutzt werden. Die Integration über Modbus ist bevorzugt.
+
+      Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
+
+      **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen für die zeitabhängige Batteriesteuerung in der Wechselrichter-Konfiguration unter "Energiemanagement" - "Batteriemanagement" getätigt wurden, denn bestehende Einstellungen werden überschrieben.
+    en: |
+      Solar API should only be used as fallback. Integration via Modbus is preferred.
+
+      Username and password are only required for active battery control.
+
+      **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -10,6 +25,16 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: user
+    default: customer
+    description:
+      de: Benutzername (für aktive Batteriesteuerung)
+      en: Username (for active battery control)
+  - name: password
+    required: false
+    description:
+      de: Passwort (für aktive Batteriesteuerung)
+      en: Password (for active battery control)
 render: |
   type: custom
   power:
@@ -27,7 +52,50 @@ render: |
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: .Body.Data.Inverters."1".SOC
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }} # kWh
+  {{- if .password }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: http://{{ .host }}/config/timeofuse
+        method: POST
+        headers:
+        - content-type: application/json
+        auth:
+          type: digest
+          user: {{ .user }}
+          password: {{ .password }}
+        body: '{"timeofuse":[]}'
+    - case: 2 # hold
+      set:
+        source: http
+        uri: http://{{ .host }}/config/timeofuse
+        method: POST
+        headers:
+        - content-type: application/json
+        auth:
+          type: digest
+          user: {{ .user }}
+          password: {{ .password }}
+        body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
+    - case: 3 # charge (not implemented -> normal)
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/config/timeofuse
+          method: POST
+          headers:
+          - content-type: application/json
+          auth:
+            type: digest
+            user: {{ .user }}
+            password: {{ .password }}
+          body: '{"timeofuse":[]}'
+        - source: error
+          error: ErrNotAvailable
   {{- end }}
+  capacity: {{ .capacity }} # kWh
   {{- end }}

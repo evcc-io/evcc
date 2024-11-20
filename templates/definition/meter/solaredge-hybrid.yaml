@@ -3,10 +3,15 @@ products:
   - brand: SolarEdge
     description:
       generic: Hybrid Inverter
+capabilities: ["battery-control"]
 requirements:
   description:
-    de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
-    en: Only one system may access the inverter!
+    de: |
+      Nur ein System kann und darf zeitgleich eine Modbus TCP-Verbindung zum Wechselrichter haben!
+      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
+    en: |
+      Only one system can and may have a Modbus TCP connection to the inverter at the same time!
+      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -18,52 +23,189 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
+  - name: maxacpower
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
-    source: modbus
+  power:
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    model: sunspec
     subdevice: 1 # Metering device
     value: 203:W
     scale: -1
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    subdevice: 1 # Metering device
+    value: 203:TotWhImp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphC
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphC
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value:  203:WphA
+      scale: -1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:WphB
+      scale: -1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:WphC
+      scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
-      model: sunspec
-      value: DCPower
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
-      register:
-        address: 62836 # Battery 1 Instantaneous Power
-        type: holding
-        decode: float32s
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
+        value:
+          - 101:DCW
+          - 103:DCW
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
+        register:
+          address: 62836 # Battery 1 Instantaneous Power
+          type: holding
+          decode: float32nans
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 62836 # Battery 1 Instantaneous Power
+      address: 0xE174 # Battery 1 Instantaneous Power
       type: holding
-      decode: float32s
+      decode: float32nans
     scale: -1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 62852 # Battery 1 State of Energy (SOE)
+      address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
-      decode: float32s
-  {{- if ne .capacity "" }}
+      decode: float32nans
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Maximize self-consumption
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 5000 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Maximize self-consumption
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 3 # Charge from PV+AC according to the max battery power
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

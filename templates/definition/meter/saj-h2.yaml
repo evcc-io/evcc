@@ -1,0 +1,209 @@
+template: saj-h2
+products:
+  - brand: SAJ
+    description:
+      generic: H2 Series Hybrid Solar Inverter
+  - brand: Ampere
+    description:
+      generic: Ampere.StoragePro
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 115200
+    comset: 8N1
+  - name: capacity
+    advanced: true
+  # battery control
+  - name: defaultmode
+    default: 2
+    advanced: true
+  - name: minsoc
+    type: number
+    default: 20
+    advanced: true
+  - name: maxsoc
+    type: number
+    default: 95
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A7 # TotalGridPowerWatt
+      type: holding
+      decode: int16
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4032 # RGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4039 # SGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4040 # TGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40FD # Total_FeedInEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A5 # TotalPVPower
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40C5 # Total_PVEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A6 # TotalBatteryPower
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40D5 # Total_BatDisEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xA00C # Bat1SOC
+      type: holding
+      decode: uint16
+    scale: 0.01
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .defaultmode }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13895 # AppMode 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: {{ .minsoc }} 
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13905 # BatSocLimitkeep 
+              type: writeholding
+              decode: int16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .defaultmode }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13895 # AppMode 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13905 # BatSocLimitkeep 
+              type: writeholding
+              decode: int16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # time_mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13895 # AppMode 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: 1 # enable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13828 # Charge_time_enable_control 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: 0 # start (00:00)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13830 # First_charge_start_time 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: 0x173B # end (23:59)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13831 # First_charge_end_time 
+              type: writeholding
+              decode: int16
+        - source: const
+          value: 0x7F64 # end (0xFF / 100%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 13832 # First_charge_power_time 
+              type: writeholding
+              decode: int16
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

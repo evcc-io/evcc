@@ -6,25 +6,22 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 )
 
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
 
-	UsageChoiceGrid    = "grid"
-	UsageChoicePV      = "pv"
-	UsageChoiceBattery = "battery"
-	UsageChoiceCharge  = "charge"
-
 	HemsTypeSMA = "sma"
 
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
+	ModbusChoiceUDP      = "udp"
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
+	ModbusKeyUDP         = "udp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -34,48 +31,41 @@ const (
 	ModbusParamNameHost     = "host"
 	ModbusParamNamePort     = "port"
 	ModbusParamNameRTU      = "rtu"
-
-	TemplateRenderModeDocs     = "docs"
-	TemplateRenderModeUnitTest = "unittest"
-	TemplateRenderModeInstance = "instance"
-)
-
-var (
-	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
-	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 )
 
 const (
-	DependencyCheckEmpty    = "empty"
-	DependencyCheckNotEmpty = "notempty"
-	DependencyCheckEqual    = "equal"
+	RenderModeDocs int = iota
+	RenderModeUnitTest
+	RenderModeInstance
 )
 
-var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, DependencyCheckEqual}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
 
 const (
-	CapabilityISO151182 = "iso151182" // ISO 15118-2 support
-	CapabilityMilliAmps = "mA"        // Granular current control support
-	CapabilityRFID      = "rfid"      // RFID support
-	Capability1p3p      = "1p3p"      // 1P/3P phase switching support
-	CapabilitySMAHems   = "smahems"   // SMA HEMS Support
+	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
+	CapabilityMilliAmps      = "mA"              // Granular current control support
+	CapabilityRFID           = "rfid"            // RFID support
+	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
+	CapabilitySMAHems        = "smahems"         // SMA HEMS support
+	CapabilityBatteryControl = "battery-control" // Battery control support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems, CapabilityBatteryControl}
 
 const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
 	RequirementMQTT        = "mqtt"        // MQTT Setup is required
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
+	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
 )
 
-var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship}
+var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // TextLanguage contains language-specific texts
@@ -142,11 +132,23 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 	return json.Marshal(s)
 }
 
+func (r Requirements) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		EVCC        []string `json:",omitempty"`
+		Description string   `json:",omitempty"`
+	}{
+		EVCC:        r.EVCC,
+		Description: r.Description.String(encoderLanguage),
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
+}
+
 // Requirements
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
-	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
 // Linked Template
@@ -178,7 +180,6 @@ type Param struct {
 	Required      *bool        `json:",omitempty"` // cli if the user has to provide a non empty value
 	Mask          *bool        `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
 	Advanced      *bool        `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Hidden        *bool        `json:",omitempty"` // cli if the parameter should not be presented in the cli, the default value be assigned
 	Deprecated    *bool        `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
 	Example       string       `json:",omitempty"` // cli example value
@@ -189,23 +190,22 @@ type Param struct {
 	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
-	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
 	// TODO move somewhere else should not be part of the param definition
-	Baudrate int    `json:"-"` // device specific default for modbus RS485 baudrate
-	Comset   string `json:"-"` // device specific default for modbus RS485 comset
-	Port     int    `json:"-"` // device specific default for modbus TCPIP port
-	ID       int    `json:"-"` // device specific default for modbus ID
+	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
+	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
+	ID       int    `json:",omitempty"` // device specific default for modbus ID
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
-func (p *Param) DefaultValue(renderMode string) interface{} {
+func (p *Param) DefaultValue(renderMode int) interface{} {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeStringList {
 		return []string{}
 	}
 
-	if (renderMode == TemplateRenderModeDocs || renderMode == TemplateRenderModeUnitTest) && p.Default == "" {
+	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example
 	}
 
@@ -227,11 +227,7 @@ func (p *Param) IsAdvanced() bool {
 	return p.Advanced != nil && *p.Advanced
 }
 
-func (p *Param) IsHidden() bool {
-	return p.Hidden != nil && *p.Hidden
-}
-
-func (p *Param) IsMask() bool {
+func (p *Param) IsMasked() bool {
 	return p.Mask != nil && *p.Mask
 }
 
@@ -260,11 +256,12 @@ func (p Product) Title(lang string) string {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Deprecated   bool             `json:"-"`
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
-	Requirements Requirements     `json:"-"`
+	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template

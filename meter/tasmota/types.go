@@ -92,7 +92,7 @@ type StatusSNSResponse struct {
 	}
 }
 
-// Channels is a Tasmota specifc helper type to handle meter value lists and single meter values
+// Channels is a Tasmota specific helper type to handle meter value lists and single meter values
 type Channels []float64
 
 func (ch *Channels) Channel(channel int) (float64, error) {

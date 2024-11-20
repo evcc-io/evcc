@@ -139,7 +139,7 @@ func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
 	// TODO check IEC 61851-1 C1 state
 	state := string(b[0])
 
-	return api.ChargeStatus(state), nil
+	return api.ChargeStatusString(state)
 }
 
 // Enabled implements the api.Charger interface
@@ -180,8 +180,8 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*PhoenixCharx)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegChargeTime), 2)
 	if err != nil {
 		return 0, err
@@ -212,26 +212,27 @@ func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegCurrents), 3*2)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	return wb.getPhaseValues(charxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegVoltages), 3*2)
+	return wb.getPhaseValues(charxRegVoltages)
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (wb *PhoenixCharx) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(reg), 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Identifier = (*PhoenixCharx)(nil)

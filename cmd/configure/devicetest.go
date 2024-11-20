@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -52,7 +53,7 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 
 // configure creates a configured device from a template so we can test it
 func (d *DeviceTest) configure() (interface{}, error) {
-	b, _, err := d.Template.RenderResult(templates.TemplateRenderModeInstance, d.ConfigValues)
+	b, _, err := d.Template.RenderResult(templates.RenderModeInstance, d.ConfigValues)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +69,14 @@ func (d *DeviceTest) configure() (interface{}, error) {
 
 	var v interface{}
 
+	ctx := context.TODO()
 	switch DeviceCategories[d.DeviceCategory].class {
 	case templates.Meter:
-		v, err = meter.NewFromConfig(instance.Type, instance.Other)
+		v, err = meter.NewFromConfig(ctx, instance.Type, instance.Other)
 	case templates.Charger:
-		v, err = charger.NewFromConfig(instance.Type, instance.Other)
+		v, err = charger.NewFromConfig(ctx, instance.Type, instance.Other)
 	case templates.Vehicle:
-		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
+		v, err = vehicle.NewFromConfig(ctx, instance.Type, instance.Other)
 	}
 
 	return v, err

@@ -7,6 +7,7 @@ products:
   - brand: Qcells
     description:
       generic: Q.HOME ESS HYB-G3
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -15,6 +16,14 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 19200
   - name: capacity
+    advanced: true
+  - name: maxacpower
+  - name: defaultmode
+    description:
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
+    default: 0 # "SelfUse"
+    usages: ["battery"]
     advanced: true
 render: |
   type: custom
@@ -34,7 +43,7 @@ render: |
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
     source: calc
@@ -58,7 +67,8 @@ render: |
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -75,7 +85,63 @@ render: |
       address: 28 # 0x001C Battery Capacity
       type: input
       decode: uint16
-  {{- if ne .capacity "" }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: {{ .defaultmode }}
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 0x001F # SolarChargeUseMode
+            type: writesingle
+            decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Stop force charge & discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0020 # Manual mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 3 # manual mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # Force charge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0020 # Manual mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 3 # manual mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

@@ -3,10 +3,12 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,12 +17,10 @@ import (
 
 type ElectricityMaps struct {
 	*request.Helper
-	log     *util.Logger
-	mux     sync.Mutex
-	uri     string
-	zone    string
-	data    []CarbonIntensitySlot
-	updated time.Time
+	log  *util.Logger
+	uri  string
+	zone string
+	data *util.Monitor[api.Rates]
 }
 
 type CarbonIntensity struct {
@@ -60,6 +60,7 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimRight(cc.Uri, "/"), "https"),
 		zone:   strings.ToUpper(cc.Zone),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &transport.Decorator{
@@ -78,11 +79,16 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 
 func (t *ElectricityMaps) run(done chan error) {
 	var once sync.Once
+
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res CarbonIntensity
-		if err := t.GetJSON(uri, &res); err != nil {
+
+		if err := backoff.Retry(func() error {
+			return backoffPermanentError(t.GetJSON(uri, &res))
+		}, bo()); err != nil {
 			if res.Error != "" {
 				err = errors.New(res.Error)
 			}
@@ -93,33 +99,30 @@ func (t *ElectricityMaps) run(done chan error) {
 			continue
 		}
 
+		data := make(api.Rates, 0, len(res.Forecast))
+		for _, r := range res.Forecast {
+			ar := api.Rate{
+				Start: r.Datetime.Local(),
+				End:   r.Datetime.Add(time.Hour).Local(),
+				Price: r.CarbonIntensity,
+			}
+			data = append(data, ar)
+		}
+
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
-
-		t.mux.Lock()
-		t.updated = time.Now()
-		t.data = res.Forecast
-		t.mux.Unlock()
 	}
-}
-
-// Unit implements the api.Tariff interface
-func (t *ElectricityMaps) Unit() string {
-	return Co2Equivalent
 }
 
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
+}
 
-	res := make(api.Rates, 0, len(t.data))
-	for _, r := range t.data {
-		ar := api.Rate{
-			Start: r.Datetime.Local(),
-			End:   r.Datetime.Add(time.Hour).Local(),
-			Price: r.CarbonIntensity,
-		}
-		res = append(res, ar)
-	}
-
-	return res, outdatedError(t.updated, time.Hour)
+// Type implements the api.Tariff interface
+func (t *ElectricityMaps) Type() api.TariffType {
+	return api.TariffTypeCo2
 }

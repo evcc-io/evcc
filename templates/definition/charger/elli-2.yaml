@@ -1,0 +1,60 @@
+template: elli-2
+products:
+  - brand: Elli
+    description:
+      generic: Charger Connect 2
+  - brand: Elli
+    description:
+      generic: Charger Pro 2
+  - brand: Elli
+    description:
+      generic: Charger Pro Eichrecht 2
+  - brand: Volkswagen
+    description:
+      generic: Charger Connect 2
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro 2
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro Eichrecht 2
+  - brand: Skoda
+    description:
+      generic: Charger Connect
+  - brand: Skoda
+    description:
+      generic: Charger Pro
+  - brand: Skoda
+    description:
+      generic: Charger Pro Eichrecht
+  - brand: Cupra
+    description:
+      generic: Charger Connect 2
+  - brand: Cupra
+    description:
+      generic: Charger Pro 2
+  - brand: Cupra
+    description:
+      generic: Charger Pro Eichrecht 2
+capabilities: ["iso151182", "mA"]
+requirements:
+  evcc: ["eebus"]
+  description:
+    de: |
+      Die Wallbox muss im normalen Lademodus betrieben werden.
+
+      Die Nutzung der Phasenumschaltung ist in evcc momentan noch nicht möglich.
+
+      Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
+    en: |
+      The device has to be used in the normal charging mode.
+
+      The usage of phase switching is currently not possible in evcc.
+
+      The identification of a vehicle using the RFID card is not possible.
+params:
+  - preset: eebus
+render: |
+  {{ include "eebus" . }}
+  meter: true
+  vasvw: true

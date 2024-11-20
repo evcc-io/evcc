@@ -3,15 +3,22 @@ products:
   - brand: GoodWe
     description:
       generic: ET/EH/BH/BT Hybrid Inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485", "tcpip", "udp"]
     baudrate: 9600
     id: 247
+  - name: battery
+    default: 1
+    validvalues:
+      - 1
+      - 2
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -30,7 +37,7 @@ render: |
       address: 36017 # E-Total-Buy
       type: holding
       decode: float32
-    scale: 0.1
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -41,58 +48,132 @@ render: |
       register: # manual non-sunspec register configuration
         address: 35105 # Ppv1 PV1 Power
         type: holding
-        decode: uint32
+        decode: uint32nan
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35109 # Ppv2 PV2 Power
         type: holding
-        decode: uint32
+        decode: uint32nan
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35113 # Ppv3 PV3 Power
         type: holding
-        decode: uint32
+        decode: uint32nan
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register: # manual non-sunspec register configuration
         address: 35117 # Ppv4 PV4 Power
         type: holding
-        decode: uint32
+        decode: uint32nan
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35191 # PV E-Total Total PV Energy
+      address: 35191 # PV Energy-Total
       type: holding
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35183 # Pbattery1 First group battery power
+      address: {{ if eq .battery "1" }}35182{{ else }}35265{{ end }} # Battery1/2 Power
       type: holding
-      decode: int16
+      decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 37007 # SOC First group battery capacity
+      address: {{ if eq .battery "1" }}37007{{ else }}39005{{ end }} # Battery1/2 Soc
       type: holding
       decode: uint16
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }} # kWh
-  {{- end }}
+  {{- if eq .battery "1" }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35209 # E-BatteryDischarge Discharge energy
+      address: 35209 # Energy-Battery Discharge
       type: holding
       decode: uint32
     scale: 0.1
+  {{- end }}
+  batterymode:
+    source: watchdog
+    timeout: 30s
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 1 # Normal operation mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # Maximum allowed power from Grid in W. 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
+      - case: 2 # discharge hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 2 # EMSPowerMode 2 "Charge-PV"-Mode. If EMSPowerSet=0 only PV is used to charge. Value 6 "Conserve"-Mode can be alternatively used.
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # Maximum allowed power from Grid in W. If >0 battery will be charged also from Grid in Standby mode.
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 2 # Charge from PV+AC according to the EMSPowerSet below. PV-Preferred. "Import-AC"-Mode (Value: 4) would prefer Grid-Power and reduce PV-Power generated.
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
+  capacity: {{ .capacity }} # kWh
   {{- end }}

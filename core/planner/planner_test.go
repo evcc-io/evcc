@@ -1,16 +1,16 @@
 package planner
 
 import (
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Rates {
@@ -35,7 +35,7 @@ func TestPlan(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -44,13 +44,13 @@ func TestPlan(t *testing.T) {
 	}
 
 	rates, err := trf.Rates()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	slices.SortStableFunc(rates, sortByCost)
 
 	{
 		plan := p.plan(rates, time.Hour, clock.Now())
-		assert.Equal(t, 0, len(plan))
+		assert.Empty(t, plan)
 	}
 
 	tc := []struct {
@@ -82,7 +82,7 @@ func TestPlan(t *testing.T) {
 		},
 		{
 			"plan (30)30-0-60-0-0-0",
-			time.Duration(90 * time.Minute),
+			90 * time.Minute,
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute),
@@ -106,7 +106,7 @@ func TestPlan(t *testing.T) {
 		},
 		{
 			"plan (30)30-0-60-0-0-0",
-			time.Duration(90 * time.Minute),
+			90 * time.Minute,
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute),
@@ -134,19 +134,20 @@ func TestNilTariff(t *testing.T) {
 	}
 
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
-	assert.NoError(t, err)
-	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
-
-	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
-	assert.NoError(t, err)
-	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	require.NoError(t, err)
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}, plan, "expected simple plan")
 }
 
 func TestFlatTariffTargetInThePast(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -155,20 +156,27 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		tariff: trf,
 	}
 
+	simplePlan := api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}
+
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
-	assert.NoError(t, err)
-	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
+	require.NoError(t, err)
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
-	assert.NoError(t, err)
-	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	require.NoError(t, err)
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
 func TestFlatTariffLongSlots(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), 24*time.Hour), nil)
 
 	p := &Planner{
@@ -182,13 +190,13 @@ func TestFlatTariffLongSlots(t *testing.T) {
 
 	// expect 00:00-01:00 UTC
 	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
 	// expect 00:00-01:00 UTC
 	plan, err = p.Plan(time.Hour, clock.Now().Add(time.Hour))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
 
@@ -196,7 +204,7 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -206,11 +214,11 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 	}
 
 	plan, err := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start if car can be charged completely after known prices ")
 
 	plan, err = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start if car can not be charged completely after known prices ")
 }
 
@@ -218,7 +226,7 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 0, 0, 0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -227,11 +235,75 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		tariff: trf,
 	}
 
+	simplePlan := api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}
+
 	plan, err := p.Plan(time.Hour, clock.Now())
-	assert.NoError(t, err)
-	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	require.NoError(t, err)
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-time.Hour))
-	assert.NoError(t, err)
-	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	require.NoError(t, err)
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
+}
+
+func TestContinuousPlanNoTariff(t *testing.T) {
+	clock := clock.NewMock()
+
+	p := &Planner{
+		log:   util.NewLogger("foo"),
+		clock: clock,
+	}
+
+	plan, err := p.Plan(time.Hour, clock.Now())
+	require.NoError(t, err)
+
+	// single-slot plan
+	assert.Len(t, plan, 1)
+	assert.Equal(t, clock.Now(), SlotAt(clock.Now(), plan).Start)
+	assert.Equal(t, clock.Now().Add(time.Hour), SlotAt(clock.Now(), plan).End)
+}
+
+func TestContinuousPlan(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now().Add(time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan, err := p.Plan(150*time.Minute, clock.Now())
+	require.NoError(t, err)
+
+	// 3-slot plan
+	assert.Len(t, plan, 3)
+}
+
+func TestContinuousPlanOutsideRates(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now().Add(time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan, err := p.Plan(30*time.Minute, clock.Now())
+	require.NoError(t, err)
+
+	// 3-slot plan
+	assert.Len(t, plan, 1)
 }

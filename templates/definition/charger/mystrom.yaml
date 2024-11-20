@@ -5,8 +5,6 @@ products:
       generic: Switch
 group: switchsockets
 params:
-  - name: usage
-    choice: ["pv", "charge"]
   - name: host
   - preset: switchsocket
 render: |

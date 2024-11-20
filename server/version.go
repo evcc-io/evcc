@@ -2,9 +2,11 @@ package server
 
 import "fmt"
 
+const DevVersion = "0.0.0"
+
 var (
 	// Version of executable
-	Version = "0.0.1-alpha"
+	Version = DevVersion
 
 	// Commit of executable
 	Commit = ""

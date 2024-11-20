@@ -2,19 +2,23 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM
+      generic: 1PM, EM, Plug S, Pro 3EM in monophase mode
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: host
-    default: 192.0.2.2
   - name: user
   - name: password
   - name: channel
+    default: 0
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
-  {{ if ne .user "" }}user: {{ .user }}{{ end }}
-  {{ if ne .password "" }}password: {{ .password }}{{ end }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
   channel: {{ .channel }}  # shelly device relay channel

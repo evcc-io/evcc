@@ -1,9 +1,9 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"math"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -14,11 +14,11 @@ type calcProvider struct {
 }
 
 func init() {
-	registry.Add("calc", NewCalcFromConfig)
+	registry.AddCtx("calc", NewCalcFromConfig)
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config
@@ -31,7 +31,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	o := &calcProvider{}
-	if i := int(math.Min(float64(len(cc.Add)), 1)) + int(math.Min(float64(len(cc.Mul)), 1)) + int(math.Min(float64(len(cc.Div)), 1)); i > 1 ||
+	if i := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1); i > 1 ||
 		(len(cc.Add) > 0 && cc.Sign != nil) ||
 		(len(cc.Mul) > 0 && cc.Sign != nil) ||
 		(len(cc.Div) > 0 && cc.Sign != nil) {
@@ -39,7 +39,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	for idx, cc := range cc.Add {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
@@ -47,7 +47,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	for idx, cc := range cc.Mul {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
@@ -55,7 +55,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	for idx, cc := range cc.Div {
-		f, err := NewFloatGetterFromConfig(cc)
+		f, err := NewFloatGetterFromConfig(ctx, cc)
 		if err != nil {
 			return nil, fmt.Errorf("div[%d]: %w", idx, err)
 		}
@@ -63,7 +63,7 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	if cc.Sign != nil {
-		f, err := NewFloatGetterFromConfig(*cc.Sign)
+		f, err := NewFloatGetterFromConfig(ctx, *cc.Sign)
 		if err != nil {
 			return nil, fmt.Errorf("sign: %w", err)
 		}
@@ -73,22 +73,28 @@ func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
 	return o, nil
 }
 
-func (o *calcProvider) IntGetter() func() (int64, error) {
+var _ IntProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		f, err := o.floatGetter()
 		return int64(f), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) StringGetter() func() (string, error) {
+var _ StringProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		f, err := o.floatGetter()
 		return fmt.Sprintf("%c", int(f)), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) FloatGetter() func() (float64, error) {
-	return o.floatGetter
+var _ FloatProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) FloatGetter() (func() (float64, error), error) {
+	return o.floatGetter, nil
 }
 
 func (o *calcProvider) floatGetter() (float64, error) {

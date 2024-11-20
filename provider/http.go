@@ -1,10 +1,10 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"io"
-	"math"
-	"strconv"
+	"net/http"
 	"strings"
 	"time"
 
@@ -12,16 +12,17 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
 type HTTP struct {
+	*getter
 	*request.Helper
 	url, method string
 	headers     map[string]string
 	body        string
-	scale       float64
 	cache       time.Duration
 	updated     time.Time
 	pipeline    *pipeline.Pipeline
@@ -30,7 +31,7 @@ type HTTP struct {
 }
 
 func init() {
-	registry.Add("http", NewHTTPProviderFromConfig)
+	registry.AddCtx("http", NewHTTPProviderFromConfig)
 }
 
 // Auth is the authorization config
@@ -39,7 +40,7 @@ type Auth struct {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewHTTPProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -52,6 +53,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Cache             time.Duration
 	}{
 		Headers: make(map[string]string),
+		Method:  http.MethodGet,
 		Scale:   1,
 		Timeout: request.Timeout,
 	}
@@ -60,47 +62,48 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
-	http := NewHTTP(
-		util.NewLogger("http"),
-		cc.Method,
+	log := contextLogger(ctx, util.NewLogger("http"))
+	p := NewHTTP(
+		log,
+		strings.ToUpper(cc.Method),
 		cc.URI,
 		cc.Insecure,
-		cc.Scale,
 		cc.Cache,
 	).
 		WithHeaders(cc.Headers).
 		WithBody(cc.Body)
 
-	http.Client.Timeout = cc.Timeout
+	p.Client.Timeout = cc.Timeout
+
+	p.getter = defaultGetters(p, cc.Scale)
 
 	var err error
 	if cc.Auth.Type != "" {
-		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+		_, err = p.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
 	}
 
 	if err == nil {
 		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(cc.Settings)
-		http = http.WithPipeline(pipe)
+		pipe, err = pipeline.New(log, cc.Settings)
+		p = p.WithPipeline(pipe)
 	}
 
-	return http, err
+	return p, err
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
-	url := util.DefaultScheme(uri, "http")
-	if url != uri {
-		log.WARN.Printf("missing scheme for %s, assuming http", uri)
-	}
-
+func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Duration) *HTTP {
 	p := &HTTP{
 		Helper: request.NewHelper(log),
-		url:    url,
+		url:    uri,
 		method: method,
-		scale:  scale,
 		cache:  cache,
 	}
+
+	// http cache
+	cacheTransport := httpcache.NewMemoryCacheTransport()
+	cacheTransport.Transport = p.Client.Transport
+	p.Client.Transport = cacheTransport
 
 	// ignore the self signed certificate
 	if insecure {
@@ -148,76 +151,51 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 }
 
 // request executes the configured request or returns the cached value
-func (p *HTTP) request(url string, body ...string) ([]byte, error) {
+func (p *HTTP) request(url string, body string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
 		var b io.Reader
-		if len(body) == 1 {
-			b = strings.NewReader(body[0])
+		if p.method != http.MethodGet {
+			b = strings.NewReader(body)
 		}
 
+		url := util.DefaultScheme(url, "http")
+
 		// empty method becomes GET
-		req, err := request.New(strings.ToUpper(p.method), url, b, p.headers)
+		req, err := request.New(p.method, url, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
 
 		p.val, p.err = p.DoBody(req)
+		if p.err != nil {
+			if err := knownErrors(p.val); err != nil {
+				p.err = err
+			}
+		}
 		p.updated = time.Now()
 	}
 
 	return p.val, p.err
 }
 
-// FloatGetter parses float from request
-func (p *HTTP) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
-
-	return func() (float64, error) {
-		s, err := g()
-		if err != nil {
-			return 0, err
-		}
-
-		f, err := strconv.ParseFloat(s, 64)
-		if err == nil {
-			f *= p.scale
-		}
-
-		return f, err
-	}
-}
-
-// IntGetter parses int64 from request
-func (p *HTTP) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
-
-	return func() (int64, error) {
-		f, err := g()
-		return int64(math.Round(f)), err
-	}
-}
+var _ Getters = (*HTTP)(nil)
 
 // StringGetter sends string request
-func (p *HTTP) StringGetter() func() (string, error) {
+func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		b, err := p.request(p.url, p.body)
+		url, err := setFormattedValue(p.url, "", "")
+		if err != nil {
+			return "", err
+		}
+
+		b, err := p.request(url, p.body)
 
 		if err == nil && p.pipeline != nil {
 			b, err = p.pipeline.Process(b)
 		}
 
 		return string(b), err
-	}
-}
-
-// BoolGetter parses bool from request
-func (p *HTTP) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
-
-	return func() (bool, error) {
-		s, err := g()
-		return util.Truish(s), err
-	}
+	}, nil
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
@@ -236,23 +214,38 @@ func (p *HTTP) set(param string, val interface{}) error {
 	return err
 }
 
+var _ SetIntProvider = (*HTTP)(nil)
+
 // IntSetter sends int request
-func (p *HTTP) IntSetter(param string) func(int64) error {
+func (p *HTTP) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
+
+var _ SetFloatProvider = (*HTTP)(nil)
+
+// FloatSetter sends int request
+func (p *HTTP) FloatSetter(param string) (func(float64) error, error) {
+	return func(val float64) error {
+		return p.set(param, val)
+	}, nil
+}
+
+var _ SetStringProvider = (*HTTP)(nil)
 
 // StringSetter sends string request
-func (p *HTTP) StringSetter(param string) func(string) error {
+func (p *HTTP) StringSetter(param string) (func(string) error, error) {
 	return func(val string) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
 
+var _ SetBoolProvider = (*HTTP)(nil)
+
 // BoolSetter sends bool request
-func (p *HTTP) BoolSetter(param string) func(bool) error {
+func (p *HTTP) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return p.set(param, val)
-	}
+	}, nil
 }

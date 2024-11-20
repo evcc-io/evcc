@@ -5,106 +5,114 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
+	protos "github.com/evcc-io/evcc/vehicle/mercedes/pb"
 	"golang.org/x/oauth2"
+	"google.golang.org/protobuf/proto"
 )
 
-const (
-	// BaseURI is the Mercedes api base URI
-	BaseURI        = "https://api.mercedes-benz.com/vehicledata/v2"
-	SandboxBaseURI = "https://api.mercedes-benz.com/vehicledata_tryout/v2"
-)
-
-// API is the Mercedes api client
+// API is an api.Vehicle implementation for Mercedes-Benz cars
 type API struct {
+	region string
+	log    *util.Logger
 	*request.Helper
-	sandbox bool
 }
 
-// NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity *Identity, sandbox bool) *API {
-	v := &API{
-		Helper: request.NewHelper(log),
+func NewAPI(log *util.Logger, identity *Identity) *API {
+	client := request.NewHelper(log)
+
+	client.Transport = &transport.Decorator{
+		Base: &oauth2.Transport{
+			Source: identity,
+			Base:   client.Transport,
+		},
+		Decorator: transport.DecorateHeaders(mbheaders(false, identity.region)),
 	}
 
-	// replace client transport with authenticated transport
-	v.Client.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   v.Client.Transport,
+	return &API{
+		Helper: client,
+		region: identity.region,
+		log:    log,
 	}
-
-	return v
 }
 
-func (v *API) BaseURI() string {
-	if v.sandbox {
-		return SandboxBaseURI
-	}
-	return BaseURI
-}
+func (v *API) Vehicles() ([]string, error) {
+	var res VehiclesResponse
 
-// Soc implements the /soc response
-func (v *API) Soc(vin string) (EVResponse, error) {
-	var res EVResponse
+	url := fmt.Sprintf("%s/v2/vehicles", getBffUri(v.region))
 
-	uri := fmt.Sprintf("%s/vehicles/%s/resources/soc", v.BaseURI(), vin)
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(url, &res)
 	if err != nil {
-		res, err = v.allinOne(vin)
+		return nil, err
 	}
 
-	return res, err
-}
-
-// Range implements the /rangeelectric response
-func (v *API) Range(vin string) (EVResponse, error) {
-	var res EVResponse
-
-	uri := fmt.Sprintf("%s/vehicles/%s/resources/rangeelectric", v.BaseURI(), vin)
-	err := v.GetJSON(uri, &res)
-	if err != nil {
-		res, err = v.allinOne(vin)
-	}
-
-	return res, err
-}
-
-// Odometer implements the /odo response
-func (v *API) Odometer(vin string) (EVResponse, error) {
-	var res EVResponse
-
-	uri := fmt.Sprintf("%s/vehicles/%s/resources/odo", v.BaseURI(), vin)
-	err := v.GetJSON(uri, &res)
-	if err != nil {
-		res, err = v.allinOne(vin)
-	}
-
-	return res, err
-}
-
-// allinOne is a 'fallback' to gather both metrics range and soc.
-// It is used in case for any reason the single endpoints return an error - which happend in the past.
-func (v *API) allinOne(vin string) (EVResponse, error) {
-	var res []EVResponse
-
-	uri := fmt.Sprintf("%s/vehicles/%s/containers/electricvehicle", v.BaseURI(), vin)
-	err := v.GetJSON(uri, &res)
-
-	var evres EVResponse
-
-	for _, r := range res {
-		if r.Soc.Timestamp != 0 {
-			evres.Soc = r.Soc
-			continue
-		}
-
-		if r.RangeElectric.Timestamp != 0 {
-			evres.RangeElectric = r.RangeElectric
-		}
-
-		if r.Odometer.Timestamp != 0 {
-			evres.Odometer = r.Odometer
+	var vehicles []string
+	for _, v := range res.AssignedVehicles {
+		if len(v.Vin) > 0 {
+			vehicles = append(vehicles, v.Vin)
+		} else {
+			vehicles = append(vehicles, v.Fin)
 		}
 	}
 
-	return evres, err
+	return vehicles, err
+}
+
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
+
+	uri := fmt.Sprintf("%s/v1/vehicle/%s/vehicleattributes", getWidgetUri(v.region), vin)
+
+	data, err := v.GetBody(uri)
+	if err != nil {
+		return res, err
+	}
+
+	var message protos.VEPUpdate
+	if err = proto.Unmarshal(data, &message); err != nil {
+		return res, err
+	}
+
+	if val, ok := message.Attributes["odo"]; ok {
+		res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
+		res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
+	}
+
+	if val, ok := message.Attributes["soc"]; ok {
+		res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
+	}
+
+	if val, ok := message.Attributes["rangeelectric"]; ok {
+		res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
+		res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
+	}
+
+	if val, ok := message.Attributes["endofchargetime"]; ok {
+		res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
+	}
+
+	if val, ok := message.Attributes["chargingstatus"]; ok {
+		res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
+	} else {
+		res.EvInfo.Battery.ChargingStatus = 3
+	}
+
+	if val, ok := message.Attributes["maxSoc"]; ok && val != nil {
+		res.EvInfo.Battery.SocLimit = int(val.GetIntValue())
+	}
+
+	if val, ok := message.Attributes["selectedChargeProgram"]; ok && val != nil {
+		selectedChargeProgram := val.GetIntValue()
+		res.EvInfo.Battery.SelectedChargeProgram = int(selectedChargeProgram)
+
+		if cps, ok := message.Attributes["chargePrograms"]; ok && cps != nil {
+			if cpVal := cps.GetChargeProgramsValue(); cpVal != nil && res.EvInfo.Battery.SelectedChargeProgram < len(cpVal.ChargeProgramParameters) {
+				if chargeProgramParam := cpVal.ChargeProgramParameters[res.EvInfo.Battery.SelectedChargeProgram]; chargeProgramParam != nil {
+					res.EvInfo.Battery.SocLimit = int(chargeProgramParam.GetMaxSoc())
+				}
+			}
+		}
+	}
+
+	return res, err
 }

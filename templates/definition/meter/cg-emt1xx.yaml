@@ -1,0 +1,35 @@
+template: cg-emt1xx
+products:
+  - brand: Carlo Gavazzi
+    description:
+      generic: EM110/111/112
+  - brand: Carlo Gavazzi
+    description:
+      generic: ET112
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4 # W
+      type: input
+      decode: int32
+    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .usage "pv" }}
+      address: 0x20 # kWh (-) TOT
+      {{- else }}
+      address: 0x10 # kWh (+) TOT
+      {{- end }}
+      type: input
+      decode: int32
+    scale: 0.1

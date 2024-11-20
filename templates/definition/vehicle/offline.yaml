@@ -11,46 +11,12 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: mode
-    advanced: true
-  - name: minCurrent
-    advanced: true
-  - name: maxCurrent
-    advanced: true
-  - name: identifiers
-    advanced: true
-    type: stringlist
+  - preset: vehicle-identify
 render: |
   type: custom
   features: ["offline"]
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if ne .icon "" }}
-  icon: {{ .icon }}
-  {{- end }}
-  capacity: {{ .capacity }} # kWh
-  {{- if ne .phases "" }}
-  phases: {{ .phases }}
-  {{- end }}
-  soc: # fixed - no Soc available
-    source: js
-    script: 0;
-  onIdentify:
-  {{- if (ne .mode "") }}
-    mode: {{ .mode }}
-  {{- end }}
-    minSoc: 0 # fixed - no Soc available
-    targetSoc: 100 # fixed - no Soc available
-  {{- if (ne .minCurrent "") }}
-    minCurrent: {{ .minCurrent }}
-  {{- end }}
-  {{- if (ne .maxCurrent "") }}
-    maxCurrent: {{ .maxCurrent }}
-  {{- end }}
-  {{- if ne (len .identifiers) 0 }}
-  identifiers:
-  {{-   range .identifiers }}
-  - {{ . }}
-  {{-   end }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
+  soc:
+    source: const
+    value: 0
+  {{ include "vehicle-identify" . }}

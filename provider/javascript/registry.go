@@ -17,6 +17,16 @@ var (
 	registry = make(map[string]*otto.Otto)
 )
 
+// expose mutex to serialize VM access
+func Lock() {
+	mu.Lock()
+}
+
+// expose mutex to serialize VM access
+func Unlock() {
+	mu.Unlock()
+}
+
 // RegisteredVM returns a JS VM. If name is not empty, it will return a shared instance.
 func RegisteredVM(name, init string) (*otto.Otto, error) {
 	mu.Lock()

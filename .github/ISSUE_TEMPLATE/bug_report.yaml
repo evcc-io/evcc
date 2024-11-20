@@ -5,9 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        This issue form is for reporting bugs only!
+        This issue form is for reporting issues only! If you want to start a discussion or ask a question, please use the [discussion forum][df].
 
-        If you want to start a discussion or ask a question, please use the [discussion forum][df].
+        **NOTE** Due to amount of issues raised we will close incomplete issues (unclear description what the issue actually is, missing log file, unsupported platform) without further comments.
 
         [df]: https://github.com/evcc-io/evcc/discussions
   - type: textarea
@@ -47,7 +47,8 @@ body:
       label: Log details
       render: text
       description: >
-        Show evcc log output by running with <code>evcc --log debug</code>
+        Show evcc log output of the issue, see https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis for instructions.
+        In case of issues with physical devices like chargers, meters or vehicles, make sure that the log file has level `trace` enabled for the device.
 
   - type: dropdown
     validations:
@@ -55,11 +56,21 @@ body:
     attributes:
       label: What type of operating system are you running?
       description: >
-        Note that if you're using Docker we ask you to reproduce the problem without Docker first.
+        **NOTE** if you're using HomeAssistant or Docker we ask you to reproduce the problem on plain Linux or Windows first.
       options:
         - Linux
         - Windows
         - Docker container
+        - HomeAssistant Add-on
+
+  - type: checkboxes
+    id: nightly
+    attributes:
+      label: Nightly build
+      description: Check if issue as already been fixed in the latest nightly build
+      options:
+        - label: I have verified that the issue is reproducible with the latest nightly build
+          required: true
 
   - type: input
     attributes:

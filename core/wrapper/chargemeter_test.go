@@ -3,7 +3,7 @@ package wrapper
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestProxyChargeMeter(t *testing.T) {

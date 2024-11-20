@@ -34,11 +34,12 @@ func (ac *AuthCollection) Publish() {
 	defer ac.mu.Unlock()
 
 	val := struct {
-		Vehicles map[string]*AuthProvider `json:"vehicles"`
+		Vehicles map[string]*AuthProvider `json:"vehicles,omitempty"`
 	}{
 		Vehicles: ac.vehicles,
 	}
 
+	// TODO registered global key name
 	ac.paramC <- Param{Key: "auth", Val: val}
 }
 
