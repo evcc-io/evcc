@@ -58,7 +58,7 @@ const (
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
-	mennekesHeartbeatInterval = 8 * time.Second
+	mennekesHeartbeatInterval = 5 * time.Second
 	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
