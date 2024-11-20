@@ -39,17 +39,16 @@
 		<hr />
 		<h5>
 			<div class="inner">
-				<PlanPreviewOptions
+				<CustomSelect
 					v-if="numberPlans"
-					class="text-decoration-underline"
-					:selectedPlan="selectedPreviewPlanTitle"
-					:planOptions="previewPlanOptions"
-					@change-preview-plan="changePreviewPlan"
+					:options="previewPlanOptions"
+					:selected="selectedPreviewPlanTitle"
+					@change="changePreviewPlan"
 				>
-					<span data-testid="plan-preview-title">
+					<span data-testid="plan-preview-title" class="text-decoration-underline">
 						{{ selectedPreviewPlanTitle }}
 					</span>
-				</PlanPreviewOptions>
+				</CustomSelect>
 				<span v-else data-testid="plan-preview-title">
 					{{ $t(`main.targetCharge.${1 === nextPlanId ? "currentPlan" : "preview"}`) }}
 				</span>
@@ -63,13 +62,13 @@
 <script>
 import "@h2d2/shopicons/es/regular/plus";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
-import PlanPreviewOptions from "./PlanPreviewOptions.vue";
 import ChargingPlanStaticSettings from "./ChargingPlanStaticSettings.vue";
 import ChargingPlansRepeatingSettings from "./ChargingPlansRepeatingSettings.vue";
 import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
+import CustomSelect from "./CustomSelect.vue";
 
 const DEFAULT_TARGET_TIME = "7:00";
 const LAST_TARGET_TIME_KEY = "last_target_time";
@@ -78,10 +77,10 @@ export default {
 	name: "ChargingPlansSettings",
 	components: {
 		ChargingPlanPreview,
-		PlanPreviewOptions,
 		ChargingPlanStaticSettings,
 		ChargingPlansRepeatingSettings,
 		ChargingPlanWarnings,
+		CustomSelect,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -123,7 +122,7 @@ export default {
 			return this.plansForPreview.repeating.length !== 0;
 		},
 		selectedPreviewPlanTitle: function () {
-			return this.previewPlanOptions[this.selectedPreviewPlanId - 1].title;
+			return this.previewPlanOptions[this.selectedPreviewPlanId - 1].name;
 		},
 		chargingPlanWarningsProps: function () {
 			return this.collectProps(ChargingPlanWarnings);
@@ -142,30 +141,33 @@ export default {
 
 			if (0 !== this.nextPlanId) {
 				options.push({
-					planId: this.nextPlanId,
-					title: this.$t("main.targetCharge.nextPlan") + " #" + this.nextPlanId,
+					value: this.nextPlanId,
+					name: this.$t("main.targetCharge.nextPlan") + " #" + this.nextPlanId,
+					disabled: false,
 				});
 			}
 
 			// don't show the static plan twice
 			if (1 !== this.nextPlanId) {
 				options.push({
-					planId: 1,
-					title: this.$t("main.targetCharge.preview") + " #1",
+					value: 1,
+					name: this.$t("main.targetCharge.preview") + " #1",
+					disabled: false,
 				});
 			}
 
 			this.plansForPreview.repeating.forEach((plan, index) => {
-				if (0 !== plan.weekdays.length && index + 2 !== this.nextPlanId) {
+				if (index + 2 !== this.nextPlanId) {
 					options.push({
-						planId: index + 2,
-						title: this.$t("main.targetCharge.preview") + " #" + (index + 2),
+						value: index + 2,
+						name: this.$t("main.targetCharge.preview") + " #" + (index + 2),
+						disabled: 0 === plan.weekdays.length,
 					});
 				}
 			});
 
 			return options.sort((a, b) => {
-				return a.planId > b.planId;
+				return a.value > b.value;
 			});
 		},
 	},
@@ -180,7 +182,7 @@ export default {
 	},
 	methods: {
 		changePreviewPlan: function (event) {
-			this.selectedPreviewPlanId = event.planId;
+			this.selectedPreviewPlanId = parseInt(event.target.value);
 			this.fetchPlanPreviewDebounced();
 		},
 		fetchActivePlan: async function () {
