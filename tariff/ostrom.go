@@ -116,15 +116,6 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-func rate(entry ostrom.ForecastInfo) api.Rate {
-	ts := entry.StartTimestamp.Local()
-	return api.Rate{
-		Start: ts,
-		End:   ts.Add(time.Hour),
-		Price: (entry.Marketprice + entry.AdditionalCost) / 100.0, // Both values include VAT
-	}
-}
-
 func (t *Ostrom) getCityId() (int, error) {
 	var city ostrom.CityId
 
@@ -194,24 +185,29 @@ func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 // Unfortunately, the API does not allow to query the price for these yet.
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
-	var val ostrom.ForecastInfo
 	var err error
+	var marketprice float64
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
-		val.Marketprice, err = t.getFixedPrice()
+		marketprice, err = t.getFixedPrice()
 		if err == nil {
-			val.StartTimestamp = now.BeginningOfDay()
+			ts := now.BeginningOfDay().Local()
 			data := make(api.Rates, 48)
 			for i := range data {
-				data[i] = rate(val)
-				val.StartTimestamp = val.StartTimestamp.Add(time.Hour)
+				data[i] = api.Rate{
+					Start: ts,
+					End:   ts.Add(time.Hour),
+					Price: marketprice / 100.0,
+				}
+				ts = data[i].End
 			}
 			mergeRates(t.data, data)
+			once.Do(func() { close(done) })
 		} else {
+			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
 		}
-		once.Do(func() { close(done) })
 	}
 }
 
@@ -239,14 +235,18 @@ func (t *Ostrom) run(done chan error) {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
 
 		data := make(api.Rates, 0, 48)
-		for _, val := range res.Data {
-			data = append(data, rate(val))
+		for i, val := range res.Data {
+			ts := val.StartTimestamp.Local()
+			data[i] = api.Rate{
+				Start: ts,
+				End:   ts.Add(time.Hour),
+				Price: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
+			}
 		}
 
 		mergeRates(t.data, data)
