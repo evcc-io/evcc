@@ -49,7 +49,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 		// repeating plans
 		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
-			if !rp.Active {
+			if !rp.Active || len(rp.Weekdays) == 0 {
 				continue
 			}
 
