@@ -216,10 +216,12 @@ export default {
 			this.$emit("repeating-plan-updated", {
 				id: this.id,
 				save: !this.selectedActive || true === save,
-				weekdays: this.selectedWeekdays,
-				time: this.selectedTime,
-				soc: this.selectedSoc,
-				active: this.selectedActive,
+				plan: {
+					weekdays: this.selectedWeekdays,
+					time: this.selectedTime,
+					soc: this.selectedSoc,
+					active: this.selectedActive,
+				},
 			});
 		},
 	},

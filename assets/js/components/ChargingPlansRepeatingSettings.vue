@@ -67,44 +67,30 @@ export default {
 	methods: {
 		deepEqual,
 		addRepeatingPlan: function () {
-			this.plans.push({
+			const newPlan = {
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
+			};
+			this.plans.push(newPlan);
 
 			// update the plan without storing non-applied changes from other plans
 			const plans = [...this.initialPlans]; // clone array
-			plans.push({
-				weekdays: newPlan.weekdays,
-				time: newPlan.time,
-				soc: newPlan.soc,
-				active: newPlan.active,
-			});
+			plans.push(newPlan);
 			this.updateRepeatingPlans(plans);
 		},
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
 		},
-		updateRepeatingPlan: function (newPlan) {
-			const { id, save } = newPlan;
-			this.plans.splice(id, 1, {
-				weekdays: newPlan.weekdays,
-				time: newPlan.time,
-				soc: newPlan.soc,
-				active: newPlan.active,
-			});
-			this.preview();
+		updateRepeatingPlan: function (newPlanData) {
+			const { id, save, plan } = newPlanData;
+			const removedElements = this.plans.splice(id, 1, plan);
 
 			if (save) {
 				// update the plan without storing non-applied changes from other plans
 				const plans = [...this.initialPlans]; // clone array
-				plans.splice(id, 1, {
-					weekdays: newPlan.weekdays,
-					time: newPlan.time,
-					soc: newPlan.soc,
-					active: newPlan.active,
-				});
+				plans.splice(id, 1, plan);
 				this.updateRepeatingPlans(plans);
 			}
 
