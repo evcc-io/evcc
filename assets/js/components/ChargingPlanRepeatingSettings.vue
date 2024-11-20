@@ -70,7 +70,7 @@
 					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
-					@change="update(false)"
+					@change="update(false, true)"
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -84,7 +84,7 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="repeating-plan-soc"
-					@change="update(false)"
+					@change="update(false, true)"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -106,7 +106,7 @@
 						role="switch"
 						data-testid="repeating-plan-active"
 						:checked="selectedActive"
-						@change="update(true)"
+						@change="update(true, false)"
 					/>
 				</div>
 			</div>
@@ -116,7 +116,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
 					data-testid="repeating-plan-apply"
-					@click="update(true)"
+					@click="update(true, false)"
 				>
 					{{ $t("main.chargingPlan.update") }}
 				</button>
@@ -203,7 +203,7 @@ export default {
 	methods: {
 		changeSelectedWeekdays: function (weekdays) {
 			this.selectedWeekdays = weekdays;
-			this.update();
+			this.update(false, true);
 		},
 		formId: function (name) {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
@@ -212,10 +212,11 @@ export default {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update: function (save) {
+		update: function (save, preview) {
 			this.$emit("repeating-plan-updated", {
 				id: this.id,
 				save: !this.selectedActive || save,
+				preview: preview,
 				plan: {
 					weekdays: this.selectedWeekdays,
 					time: this.selectedTime,

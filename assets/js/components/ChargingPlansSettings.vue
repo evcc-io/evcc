@@ -315,13 +315,28 @@ export default {
 				this.fetchPlanPreviewDebounced();
 			}
 		},
-		previewRepeatingPlans: function (plans) {
+		previewRepeatingPlans: function (plansData) {
+			let { plans, index } = plansData;
+			const l = this.plansForPreview.repeating.length;
+
 			this.plansForPreview.repeating = plans;
-			if (this.selectedPreviewPlanId > plans.length + 1) {
-				this.selectedPreviewPlanId = 1;
+
+			if (l > plans.length) {
+				// plan removed -> adjust selected preview plan to move correctly
+				if (this.selectedPreviewPlanId - 1 === l) {
+					this.selectedPreviewPlanId--;
+					this.fetchPlanPreviewDebounced();
+				} else if (
+					this.selectedPreviewPlanId > index + 2
+				) {
+					this.selectedPreviewPlanId--;
+					this.fetchPlanPreviewDebounced();
+				} else if (this.selectedPreviewPlanId === index + 2) {
+					this.fetchPlanPreviewDebounced();
+				}
 			}
 
-			if (1 !== this.selectedPreviewPlanId) {
+			if (this.selectedPreviewPlanId === index + 2) {
 				this.fetchPlanPreviewDebounced();
 			}
 		},

@@ -79,13 +79,14 @@ export default {
 			const plans = [...this.initialPlans]; // clone array
 			plans.push(newPlan);
 			this.updateRepeatingPlans(plans);
+			this.preview(this.id);
 		},
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
 		},
 		updateRepeatingPlan: function (newPlanData) {
-			const { id, save, plan } = newPlanData;
-			const removedElements = this.plans.splice(id, 1, plan);
+			const { id, save, preview, plan } = newPlanData;
+			this.plans.splice(id, 1, plan);
 
 			if (save) {
 				// update the plan without storing non-applied changes from other plans
@@ -94,9 +95,8 @@ export default {
 				this.updateRepeatingPlans(plans);
 			}
 
-			// do not preview the changes if the active value has been changed and the apply-button has not been pressed
-			if (!save && !deepEqual(removedElements[0], { ...plan, active: !plan.active })) {
-				this.preview();
+			if (preview) {
+				this.preview(id);
 			}
 		},
 		removeRepeatingPlan: function (index) {
@@ -107,10 +107,10 @@ export default {
 			plans.splice(index, 1);
 			this.updateRepeatingPlans(plans);
 
-			this.preview();
+			this.preview(index);
 		},
-		preview: function () {
-			this.$emit("plans-preview", this.plans);
+		preview: function (index) {
+			this.$emit("plans-preview", {plans: this.plans, index: index});
 		},
 	},
 };
