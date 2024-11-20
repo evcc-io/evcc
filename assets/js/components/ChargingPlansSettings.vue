@@ -70,7 +70,6 @@ import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
-import deepEqual from "../utils/deepEqual";
 
 const DEFAULT_TARGET_TIME = "7:00";
 const LAST_TARGET_TIME_KEY = "last_target_time";
@@ -148,6 +147,7 @@ export default {
 				});
 			}
 
+			// don't show the static plan twice
 			if (1 !== this.nextPlanId) {
 				options.push({
 					planId: 1,
