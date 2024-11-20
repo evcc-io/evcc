@@ -247,12 +247,10 @@ export default {
 		isNew(value) {
 			this.enabled = !value;
 		},
-		enabled() {
-			this.preview();
-		},
 	},
 	mounted() {
 		this.initInputFields();
+		this.preview();
 	},
 	methods: {
 		formId: function (name) {
@@ -275,7 +273,6 @@ export default {
 			if (!time) {
 				// no time but existing selection, keep it
 				if (this.selectedDay && this.selectedTime) {
-					this.preview();
 					return;
 				}
 				time = this.defaultTime();
@@ -283,10 +280,6 @@ export default {
 			const date = new Date(time);
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
-
-			if (this.isNew || this.dataChanged) {
-				this.preview();
-			}
 		},
 		dayOptions: function () {
 			const options = [];
@@ -346,7 +339,6 @@ export default {
 				this.$emit("static-plan-removed");
 			}
 			this.enabled = checked;
-			this.preview();
 		},
 		defaultTime: function () {
 			const [hours, minutes] = (

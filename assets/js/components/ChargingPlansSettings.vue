@@ -170,11 +170,6 @@ export default {
 		},
 	},
 	watch: {
-		plans(newPlans, oldPlans) {
-			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
-				this.fetchPlanPreviewDebounced();
-			}
-		},
 		effectivePlanTime() {
 			this.fetchActivePlanDebounced();
 		},
@@ -313,14 +308,20 @@ export default {
 		},
 		previewStaticPlan: function (plan) {
 			this.plansForPreview.static = plan;
-			this.fetchPlanPreviewDebounced();
+
+			if (1 === this.selectedPreviewPlanId) {
+				this.fetchPlanPreviewDebounced();
+			}
 		},
 		previewRepeatingPlans: function (plans) {
 			this.plansForPreview.repeating = plans;
 			if (this.selectedPreviewPlanId > plans.length + 1) {
 				this.selectedPreviewPlanId = 1;
 			}
-			this.fetchPlanPreviewDebounced();
+
+			if (1 !== this.selectedPreviewPlanId) {
+				this.fetchPlanPreviewDebounced();
+			}
 		},
 	},
 };

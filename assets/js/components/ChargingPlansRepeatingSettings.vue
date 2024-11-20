@@ -72,8 +72,6 @@ export default {
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
-			});
-			this.preview();
 
 			// update the plan without storing non-applied changes from other plans
 			const plans = [...this.initialPlans]; // clone array
@@ -84,7 +82,6 @@ export default {
 				active: newPlan.active,
 			});
 			this.updateRepeatingPlans(plans);
-			this.updateRepeatingPlans(this.plans);
 		},
 		updateRepeatingPlans: function (plans) {
 			this.$emit("repeating-plans-updated", plans);
@@ -109,6 +106,11 @@ export default {
 					active: newPlan.active,
 				});
 				this.updateRepeatingPlans(plans);
+			}
+
+			// do not preview the changes if the active value has been changed and the apply-button has not been pressed
+			if (!save && !deepEqual(removedElements[0], { ...plan, active: !plan.active })) {
+				this.preview();
 			}
 		},
 		removeRepeatingPlan: function (index) {
