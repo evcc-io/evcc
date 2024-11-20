@@ -7,7 +7,12 @@
 			data-testid="charging-plan"
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
-				<button class="value-button p-0" :class="buttonColor" @click="openModal">
+				<button
+					class="value-button p-0"
+					:class="buttonColor"
+					data-testid="charging-plan-button"
+					@click="openModal"
+				>
 					<strong v-if="enabled">
 						<span class="targetTimeLabel"> {{ targetTimeLabel }}</span>
 						<div

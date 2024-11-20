@@ -15,7 +15,7 @@ test.afterEach(async () => {
 });
 
 async function setAndVerifyPlan(page, lp, { soc, energy }) {
-  await lp.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+  await lp.getByTestId("charging-plan-button").click();
 
   if (soc) {
     await page.getByTestId("static-plan-soc").selectOption(soc);
@@ -31,6 +31,16 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
   await page.getByTestId("static-plan-active").click();
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lp.getByTestId("charging-plan")).toContainText(soc || energy);
+}
+
+async function verifyRepeatingPlanAvailable(page, lp, expected) {
+  await lp.getByTestId("charging-plan-button").click();
+  if (expected) {
+    await expect(page.getByTestId("repeating-plan-add")).toBeVisible();
+  } else {
+    await expect(page.getByTestId("repeating-plan-add")).not.toBeVisible();
+  }
+  await page.getByRole("button", { name: "Close" }).click();
 }
 
 test.describe("basic functionality", async () => {
@@ -76,7 +86,7 @@ test.describe("basic functionality", async () => {
 
 test.describe("vehicle variations", async () => {
   test.describe("guest vehicle", async () => {
-    test("kWh based plan and limit", async ({ page }) => {
+    test("kWh based plan and limit, no repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp1 = await page.getByTestId("loadpoint").first();
@@ -88,11 +98,14 @@ test.describe("vehicle variations", async () => {
 
       // kWh based plan
       await setAndVerifyPlan(page, lp1, { energy: "25 kWh" });
+
+      // no repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp1, false);
     });
   });
 
   test.describe("vehicle no soc no capacity", async () => {
-    test("kWh based plan and limit", async ({ page }) => {
+    test("kWh based plan and limit, no repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp1 = await page.getByTestId("loadpoint").first();
@@ -108,11 +121,14 @@ test.describe("vehicle variations", async () => {
 
       // kWh based plan
       await setAndVerifyPlan(page, lp1, { energy: "25 kWh" });
+
+      // no repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp1, false);
     });
   });
 
   test.describe("vehicle no soc with capacity", async () => {
-    test("kWh based plan and limit", async ({ page }) => {
+    test("kWh based plan and limit, no repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp1 = await page.getByTestId("loadpoint").first();
@@ -128,11 +144,14 @@ test.describe("vehicle variations", async () => {
 
       // kWh based plan
       await setAndVerifyPlan(page, lp1, { energy: "25 kWh" });
+
+      // no repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp1, false);
     });
   });
 
   test.describe("vehicle with soc no capacity", async () => {
-    test("kWh based plan and soc based limit", async ({ page }) => {
+    test("kWh based plan and soc based limit, no repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp1 = await page.getByTestId("loadpoint").first();
@@ -148,11 +167,14 @@ test.describe("vehicle variations", async () => {
 
       // soc based plan
       await setAndVerifyPlan(page, lp1, { energy: "50 kWh" });
+
+      // no repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp1, false);
     });
   });
 
   test.describe("vehicle with soc with capacity", async () => {
-    test("soc based plan and limit", async ({ page }) => {
+    test("soc based plan and limit, with repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp1 = await page.getByTestId("loadpoint").first();
@@ -168,11 +190,14 @@ test.describe("vehicle variations", async () => {
 
       // soc based plan
       await setAndVerifyPlan(page, lp1, { soc: "60%" });
+
+      // repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp1, true);
     });
   });
 
   test.describe("loadpoint with soc, guest vehicle", async () => {
-    test("kWh based plan and soc based limit", async ({ page }) => {
+    test("kWh based plan and soc based limit, no repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp2 = await page.getByTestId("loadpoint").last();
@@ -185,11 +210,14 @@ test.describe("vehicle variations", async () => {
 
       // soc based plan
       await setAndVerifyPlan(page, lp2, { energy: "50 kWh" });
+
+      // no repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp2, false);
     });
   });
 
   test.describe("loadpoint with soc, vehicle with capacity", async () => {
-    test("soc based plan and limit", async ({ page }) => {
+    test("soc based plan and limit, with repeats", async ({ page }) => {
       await page.goto("/");
 
       const lp2 = await page.getByTestId("loadpoint").last();
@@ -205,6 +233,9 @@ test.describe("vehicle variations", async () => {
 
       // soc based plan
       await setAndVerifyPlan(page, lp2, { soc: "60%" });
+
+      // repeating plans option
+      await verifyRepeatingPlanAvailable(page, lp2, true);
     });
   });
 });
