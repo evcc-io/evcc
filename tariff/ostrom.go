@@ -239,7 +239,7 @@ func (t *Ostrom) run(done chan error) {
 			continue
 		}
 
-		data := make(api.Rates, 0, 48)
+		data := make(api.Rates, 48)
 		for i, val := range res.Data {
 			ts := val.StartTimestamp.Local()
 			data[i] = api.Rate{
