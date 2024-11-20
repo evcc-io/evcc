@@ -110,7 +110,7 @@ export default {
 			this.preview(index);
 		},
 		preview: function (index) {
-			this.$emit("plans-preview", {plans: this.plans, index: index});
+			this.$emit("plans-preview", { plans: this.plans, index: index });
 		},
 	},
 };

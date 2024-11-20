@@ -316,7 +316,7 @@ export default {
 			}
 		},
 		previewRepeatingPlans: function (plansData) {
-			let { plans, index } = plansData;
+			const { plans, index } = plansData;
 			const l = this.plansForPreview.repeating.length;
 
 			this.plansForPreview.repeating = plans;
@@ -326,9 +326,7 @@ export default {
 				if (this.selectedPreviewPlanId - 1 === l) {
 					this.selectedPreviewPlanId--;
 					this.fetchPlanPreviewDebounced();
-				} else if (
-					this.selectedPreviewPlanId > index + 2
-				) {
+				} else if (this.selectedPreviewPlanId > index + 2) {
 					this.selectedPreviewPlanId--;
 					this.fetchPlanPreviewDebounced();
 				} else if (this.selectedPreviewPlanId === index + 2) {
