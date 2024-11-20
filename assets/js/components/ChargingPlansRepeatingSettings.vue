@@ -14,7 +14,7 @@
 			/>
 		</div>
 	</div>
-	<div class="d-flex align-items-center mb-4 pb-2">
+	<div class="d-flex align-items-center pb-4">
 		<button
 			type="button"
 			class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
@@ -54,7 +54,7 @@ export default {
 	},
 	computed: {
 		formIdPrefix: function () {
-			return `chargingplan-${this.id}`;
+			return `chargingplan-lp${this.id}`;
 		},
 	},
 	watch: {

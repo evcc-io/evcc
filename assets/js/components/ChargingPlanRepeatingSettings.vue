@@ -15,7 +15,7 @@
 		<div v-if="id === 0" class="row d-none d-lg-flex mb-2">
 			<div v-if="numberPlans" class="plan-id d-none d-lg-flex"></div>
 			<div class="col-6" :class="numberPlans ? 'col-lg-3' : 'col-lg-4'">
-				<label :for="formId('day')">
+				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
@@ -57,7 +57,7 @@
 				</MultiSelect>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
-				<label :for="formId('day')">
+				<label :for="formId('time')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
@@ -206,7 +206,7 @@ export default {
 			this.update();
 		},
 		formId: function (name) {
-			return `${this.formIdPrefix}-${this.id}-${name}`;
+			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
 		socOption: function (value) {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
