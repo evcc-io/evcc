@@ -70,7 +70,7 @@
 					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
-					@change="update"
+					@change="update(false)"
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -84,7 +84,7 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="repeating-plan-soc"
-					@change="update"
+					@change="update(false)"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -215,7 +215,7 @@ export default {
 		update: function (save) {
 			this.$emit("repeating-plan-updated", {
 				id: this.id,
-				save: !this.selectedActive || true === save,
+				save: !this.selectedActive || save,
 				plan: {
 					weekdays: this.selectedWeekdays,
 					time: this.selectedTime,
