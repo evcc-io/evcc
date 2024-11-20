@@ -3,7 +3,7 @@
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0">
 				<ChargingPlanStaticSettings
-					:id="`${id}_0`"
+					:id="`lp${id}-1`"
 					class="mb-2"
 					v-bind="plans[0] || {}"
 					:capacity="capacity"
@@ -36,7 +36,6 @@
 				</div>
 			</div>
 		</div>
-		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<hr />
 		<h5>
 			<div class="inner">
@@ -56,6 +55,7 @@
 				</span>
 			</div>
 		</h5>
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
