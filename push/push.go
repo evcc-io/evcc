@@ -81,6 +81,8 @@ func (m *Push) Send(title, msg string) {
 		res = m.csv('\t', title, msg)
 	case "title":
 		res = title
+	case "msg":
+		res = msg
 	default:
 		res = msg
 	}
