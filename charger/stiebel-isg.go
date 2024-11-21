@@ -243,11 +243,9 @@ func (wb *StiebelIsg) Soc() (float64, error) {
 
 var _ api.SocLimiter = (*StiebelIsg)(nil)
 
-func (wb *StiebelIsg) TargetSoc() (float64, error) {
-	// TODO soll
-	// soll, _, err := wb.sollIst()
-	// return soll, err
-	return 100, nil
+func (wb *StiebelIsg) GetLimitSoc() (int64, error) {
+	soll, _, err := wb.sollIst()
+	return int64(soll), err
 }
 
 var _ api.Diagnosis = (*StiebelIsg)(nil)
