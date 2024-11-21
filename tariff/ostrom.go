@@ -229,14 +229,14 @@ func (t *Ostrom) run(done chan error) {
 			continue
 		}
 
-		data := make(api.Rates, 48)
-		for i, val := range res.Data {
+		data := make(api.Rates, 0, 48)
+		for _, val := range res.Data {
 			ts := val.StartTimestamp.Local()
-			data[i] = api.Rate{
+			data = append(data, api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
 				Price: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
-			}
+			})
 		}
 
 		mergeRates(t.data, data)
