@@ -77,10 +77,10 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("ostrom").Redact(basic)
 
 	t := &Ostrom{
-		log:          log,
-		basic:        basic,
-		Helper:       request.NewHelper(log),
-		data:         util.NewMonitor[api.Rates](2 * time.Hour),
+		log:    log,
+		basic:  basic,
+		Helper: request.NewHelper(log),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &oauth2.Transport{
