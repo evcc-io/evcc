@@ -79,7 +79,6 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Ostrom{
 		log:          log,
 		basic:        basic,
-		contractType: ostrom.PRODUCT_DYNAMIC,
 		Helper:       request.NewHelper(log),
 		data:         util.NewMonitor[api.Rates](2 * time.Hour),
 	}
