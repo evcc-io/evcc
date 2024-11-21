@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -90,7 +89,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Source: oauth.RefreshTokenSource(nil, t),
 	}
 
-	contracts, err := t.GetContracts()
+	contracts, err := t.getContracts()
 	if err != nil {
 		return nil, err
 	}
@@ -117,14 +116,18 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
+func (t *Ostrom) getContracts() ([]ostrom.Contract, error) {
+	var res ostrom.Contracts
+
+	uri := ostrom.URI_API + "/contracts"
+	err := t.GetJSON(uri, &res)
+	return res.Data, err
+}
+
 func (t *Ostrom) getCityId() (int, error) {
 	var city ostrom.CityId
 
-	params := url.Values{
-		"zip": {t.zip},
-	}
-
-	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_CITYID, params.Encode())
+	uri := fmt.Sprintf("%s?zip=%s", ostrom.URI_GET_CITYID, t.zip)
 	if err := t.GetJSON(uri, &city); err != nil {
 		return 0, err
 	}
@@ -137,12 +140,7 @@ func (t *Ostrom) getCityId() (int, error) {
 func (t *Ostrom) getFixedPrice() (float64, error) {
 	var tariffs ostrom.Tariffs
 
-	params := url.Values{
-		"cityId": {strconv.Itoa(t.cityId)},
-		"usage":  {"1000"},
-	}
-
-	uri := fmt.Sprintf("%s?%s", ostrom.URI_GET_STATIC_PRICE, params.Encode())
+	uri := fmt.Sprintf("%s?usage=1000&cityId=%d", ostrom.URI_GET_STATIC_PRICE, t.cityId)
 	if err := backoff.Retry(func() error {
 		return backoffPermanentError(t.GetJSON(uri, &tariffs))
 	}, bo()); err != nil {
@@ -171,14 +169,6 @@ func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	client := request.NewHelper(t.log)
 	err := client.DoJSON(req, &res)
 	return util.TokenWithExpiry(&res), err
-}
-
-func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
-	var res ostrom.Contracts
-
-	uri := ostrom.URI_API + "/contracts"
-	err := t.GetJSON(uri, &res)
-	return res.Data, err
 }
 
 // This function is used to calculate the prices for the Simplay Fair tarrifs
