@@ -294,7 +294,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: 0
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
