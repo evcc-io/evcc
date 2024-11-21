@@ -55,7 +55,7 @@ func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, 
 		return contracts[0], nil
 	}
 
-	return zero, fmt.Errorf("cannot find contract")
+	return zero, errors.New("cannot find contract")
 }
 
 func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
@@ -98,10 +98,11 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	if err != nil {
 		return nil, err
 	}
-	done := make(chan error)
 
 	t.contractType = contract.Product
 	t.zip = contract.Address.Zip
+
+	done := make(chan error)
 	if t.Type() == api.TariffTypePriceStatic {
 		t.cityId, err = t.getCityId()
 		if err != nil {
@@ -158,9 +159,9 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 }
 
 func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	tokenURL := ostrom.URI_AUTH + "/oauth2/token"
-	dataReader := strings.NewReader("grant_type=client_credentials")
-	req, _ := request.New(http.MethodPost, tokenURL, dataReader, map[string]string{
+	uri := ostrom.URI_AUTH + "/oauth2/token"
+	data := url.Values{"grant_type": {"client_credentials"}}
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Authorization": t.basic,
 		"Content-Type":  request.FormContent,
 		"Accept":        request.JSONContent,
@@ -185,29 +186,28 @@ func (t *Ostrom) GetContracts() ([]ostrom.Contract, error) {
 // Unfortunately, the API does not allow to query the price for these yet.
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
-	var err error
-	var marketprice float64
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
-		marketprice, err = t.getFixedPrice()
-		if err == nil {
-			ts := now.BeginningOfDay().Local()
-			data := make(api.Rates, 48)
-			for i := range data {
-				data[i] = api.Rate{
-					Start: ts,
-					End:   ts.Add(time.Hour),
-					Price: marketprice / 100.0,
-				}
-				ts = data[i].End
-			}
-			mergeRates(t.data, data)
-			once.Do(func() { close(done) })
-		} else {
+		price, err := t.getFixedPrice()
+		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
+			continue
 		}
+
+		data := make(api.Rates, 48)
+		for i := range data {
+			ts := now.BeginningOfDay().Add(time.Duration(i) * time.Hour)
+			data[i] = api.Rate{
+				Start: ts,
+				End:   ts.Add(time.Hour),
+				Price: price / 100.0,
+			}
+		}
+
+		mergeRates(t.data, data)
+		once.Do(func() { close(done) })
 	}
 }
 
