@@ -271,6 +271,6 @@ func (t *Ostrom) Type() api.TariffType {
 	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
 		return api.TariffTypePriceStatic
 	default:
-		return api.TariffTypePriceStatic
+		panic("invalid contract type: " + t.contractType)
 	}
 }
