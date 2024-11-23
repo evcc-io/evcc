@@ -17,7 +17,13 @@ type embed struct {
 	calc func(float64, time.Time) (float64, error)
 }
 
-func (t *embed) init() error {
+func (t *embed) init() (err error) {
+	defer func() {
+		if r := recover(); r != nil && err == nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
 	if t.Formula == "" {
 		return nil
 	}
@@ -27,7 +33,10 @@ func (t *embed) init() error {
 		return err
 	}
 
-	if _, err := vm.Eval(`import "math"`); err != nil {
+	if _, err := vm.Eval(`import (
+		"math"
+		"time"
+	)`); err != nil {
 		return err
 	}
 
