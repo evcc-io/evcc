@@ -17,6 +17,9 @@ params:
       de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
   - name: capacity
     advanced: true
+  - name: phases
+    choice: ["1", "3"]
+    default: "1"
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -30,6 +33,7 @@ render: |
     insecure: true 
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+    {{- if eq .phases "3"}}
   powers:
     - source: http
       uri: http://{{ .host }}/production.json?details=1
@@ -114,6 +118,7 @@ render: |
       insecure: true
       {{- end }}
       jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsVoltage else 0 end
+    {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -137,6 +142,7 @@ render: |
     {{- end }}
     jq: .production | max_by(.wNow).whLifetime
     scale: 0.001
+    {{- if eq .phases "3"}}
   powers:
     - source: http
       uri: http://{{ .host }}/production.json?details=1
@@ -221,6 +227,7 @@ render: |
       insecure: true
       {{- end }}
       jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[2].rmsVoltage else 0 end
+    {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
