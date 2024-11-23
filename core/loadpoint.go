@@ -95,7 +95,7 @@ type Loadpoint struct {
 	Enable, Disable loadpoint.ThresholdConfig
 
 	// TODO deprecated
-	Mode_          api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
+	DefaultMode    api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
 	Title_         string         `mapstructure:"title"`         // UI title
 	Priority_      int            `mapstructure:"priority"`      // Priority
 	GuardDuration_ time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
@@ -239,7 +239,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 	}
 
 	// choose sane default if mode is not set
-	if lp.mode = lp.Mode_; lp.mode == "" {
+	if lp.mode = lp.DefaultMode; lp.mode == "" {
 		lp.mode = api.ModeOff
 	}
 
@@ -280,10 +280,10 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 // migrateSettings migrates loadpoint settings
 func (lp *Loadpoint) migrateSettings() {
 	// One-time migrations MUST be mirrored in restoreSettings
-	if lp.Mode_ != "" {
+	if lp.DefaultMode != "" {
 		lp.log.WARN.Println("deprecated: mode setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Mode); err != nil {
-			lp.settings.SetString(keys.Mode, string(lp.Mode_))
+			lp.settings.SetString(keys.Mode, string(lp.DefaultMode))
 		}
 	}
 	if lp.Title_ != "" {
@@ -608,7 +608,7 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 // defaultMode executes the action
 func (lp *Loadpoint) defaultMode() {
 	lp.RLock()
-	mode := lp.Mode_
+	mode := lp.DefaultMode
 	lp.RUnlock()
 
 	if mode != "" && mode != lp.GetMode() {
@@ -650,6 +650,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
+	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 

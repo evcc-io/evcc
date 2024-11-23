@@ -97,16 +97,16 @@
 				>
 					<PropertyField
 						id="loadpointMode"
-						v-model="values.mode"
+						v-model="values.defaultMode"
 						type="String"
 						class="w-100"
 						required
 						:valid-values="[
-							{ value: '', name: 'Keep last mode' },
-							{ value: 'off', name: $t('main.mode.off') },
-							{ value: 'pv', name: $t('main.mode.pv') },
-							{ value: 'minpv', name: $t('main.mode.minpv') },
-							{ value: 'now', name: $t('main.mode.now') },
+							{ key: '', name: 'Keep last mode' },
+							{ key: 'off', name: $t('main.mode.off') },
+							{ key: 'pv', name: $t('main.mode.pv') },
+							{ key: 'minpv', name: $t('main.mode.minpv') },
+							{ key: 'now', name: $t('main.mode.now') },
 						]"
 					/>
 				</FormRow>
@@ -481,7 +481,7 @@ const defaultValues = {
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
-	mode: "",
+	defaultMode: "",
 	thresholds: {
 		enable: { delay: 1 * nsPerMin, threshold: 0 },
 		disable: { delay: 3 * nsPerMin, threshold: 0 },

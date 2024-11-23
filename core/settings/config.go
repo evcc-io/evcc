@@ -21,8 +21,12 @@ func NewConfigSettingsAdapter(log *util.Logger, conf *config.Config) *ConfigSett
 	return &ConfigSettings{log, conf}
 }
 
-func (s *ConfigSettings) get(key string) any {
-	return s.conf.Named().Other[key]
+func (s *ConfigSettings) get(key string) (any, error) {
+	val := s.conf.Named().Other[key]
+	if val == nil {
+		return nil, errors.New("not found")
+	}
+	return val, nil
 }
 
 func (s *ConfigSettings) set(key string, val any) {
@@ -59,27 +63,43 @@ func (s *ConfigSettings) SetJson(key string, val any) error {
 }
 
 func (s *ConfigSettings) String(key string) (string, error) {
-	return cast.ToStringE(s.get(key))
+	val, err := s.get(key)
+	if err != nil {
+		return "", err
+	}
+	return cast.ToStringE(val)
 }
 
 func (s *ConfigSettings) Int(key string) (int64, error) {
-	return cast.ToInt64E(s.get(key))
+	val, err := s.get(key)
+	if err != nil {
+		return 0, err
+	}
+	return cast.ToInt64E(val)
 }
 
 func (s *ConfigSettings) Float(key string) (float64, error) {
-	val := s.get(key)
-	if val == nil {
-		return 0, errors.New("not found")
+	val, err := s.get(key)
+	if err != nil {
+		return 0, err
 	}
 	return cast.ToFloat64E(val)
 }
 
 func (s *ConfigSettings) Time(key string) (time.Time, error) {
-	return cast.ToTimeE(s.get(key))
+	val, err := s.get(key)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return cast.ToTimeE(val)
 }
 
 func (s *ConfigSettings) Bool(key string) (bool, error) {
-	return cast.ToBoolE(s.get(key))
+	val, err := s.get(key)
+	if err != nil {
+		return false, err
+	}
+	return cast.ToBoolE(val)
 }
 
 func (s *ConfigSettings) Json(key string, res any) error {

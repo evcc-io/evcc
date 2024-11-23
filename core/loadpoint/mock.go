@@ -195,6 +195,20 @@ func (mr *MockAPIMockRecorder) GetCircuitName() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitName", reflect.TypeOf((*MockAPI)(nil).GetCircuitName))
 }
 
+// GetDefaultMode mocks base method.
+func (m *MockAPI) GetDefaultMode() api.ChargeMode {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDefaultMode")
+	ret0, _ := ret[0].(api.ChargeMode)
+	return ret0
+}
+
+// GetDefaultMode indicates an expected call of GetDefaultMode.
+func (mr *MockAPIMockRecorder) GetDefaultMode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultMode", reflect.TypeOf((*MockAPI)(nil).GetDefaultMode))
+}
+
 // GetDefaultVehicle mocks base method.
 func (m *MockAPI) GetDefaultVehicle() string {
 	m.ctrl.T.Helper()
@@ -626,6 +640,18 @@ func (m *MockAPI) SetBatteryBoost(enable bool) error {
 func (mr *MockAPIMockRecorder) SetBatteryBoost(enable any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).SetBatteryBoost), enable)
+}
+
+// SetDefaultMode mocks base method.
+func (m *MockAPI) SetDefaultMode(arg0 api.ChargeMode) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDefaultMode", arg0)
+}
+
+// SetDefaultMode indicates an expected call of SetDefaultMode.
+func (mr *MockAPIMockRecorder) SetDefaultMode(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultMode", reflect.TypeOf((*MockAPI)(nil).SetDefaultMode), arg0)
 }
 
 // SetDisableDelay mocks base method.

@@ -174,7 +174,7 @@ func TestDefaultVehicle(t *testing.T) {
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
-	lp.Mode_ = api.ModeOff // ondisconnect
+	lp.DefaultMode = api.ModeOff // ondisconnect
 	lp.defaultVehicle = dflt
 
 	// populate channels

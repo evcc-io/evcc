@@ -113,6 +113,24 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
+// GetDefaultMode returns the default charge mode
+func (lp *Loadpoint) GetDefaultMode() api.ChargeMode {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.DefaultMode
+}
+
+// SetDefaultMode sets the default charge mode
+func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.DefaultMode != mode {
+		lp.DefaultMode = mode
+		lp.settings.SetString(keys.DefaultMode, string(mode))
+	}
+}
+
 // getChargedEnergy returns session charge energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.RLock()

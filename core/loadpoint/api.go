@@ -58,10 +58,14 @@ type API interface {
 	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64) error
 
-	// GetMode returns the charge mode
+	// GetMode returns the current charge mode
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetDefaultMode returns the default charge mode (for reset)
+	GetDefaultMode() api.ChargeMode
+	// SetDefaultMode sets the default charge mode (for reset)
+	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the enabled phases
 	GetPhases() int
 	// SetPhases sets the enabled phases

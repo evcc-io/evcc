@@ -28,7 +28,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	return loadpoint.DynamicConfig{
 		Title:          lp.GetTitle(),
-		Mode:           string(lp.GetMode()),
+		DefaultMode:    string(lp.GetDefaultMode()),
 		Priority:       lp.GetPriority(),
 		Phases:         lp.GetPhases(),
 		MinCurrent:     lp.GetMinCurrent(),

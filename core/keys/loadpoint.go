@@ -4,6 +4,7 @@ const (
 	// loadpoint settings
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
+	DefaultMode      = "defaultMode" // default charge mode
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
 	MaxCurrent       = "maxCurrent"  // max current
