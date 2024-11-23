@@ -57,7 +57,7 @@ func (t *embed) init() error {
 			return 0, err
 		}
 
-		if _, err := vm.Eval(fmt.Sprintf("ts = time.Unix(%d)", ts.Unix())); err != nil {
+		if _, err := vm.Eval(fmt.Sprintf("ts = time.Unix(%d, 0)", ts.Unix())); err != nil {
 			return 0, err
 		}
 
