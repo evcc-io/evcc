@@ -116,7 +116,7 @@
 					label="Solar behaviour"
 					:help="
 						solarMode === 'default'
-							? `Only charge with solar surplus. Fast start (${fmtDurationNs(values.thresholds.enable.delay, true, 'm')}) and stop (${fmtDurationNs(values.thresholds.disable.delay, true, 'm')}).`
+							? `Only charge with solar surplus. Start after ${fmtDurationNs(values.thresholds.enable.delay, true, 'm')} of surplus. Stop when there is not enough surplus for ${fmtDurationNs(values.thresholds.disable.delay, true, 'm')}.`
 							: 'Define your own enable and disable thresholds and delays.'
 					"
 				>
@@ -125,10 +125,11 @@
 						v-model="solarMode"
 						class="w-100"
 						:options="[
-							{ name: 'default', value: 'default' },
+							{ name: 'maximum solar', value: 'default' },
 							{ name: 'custom', value: 'custom' },
 						]"
 						transparent
+						equal-width
 					/>
 				</FormRow>
 
@@ -262,24 +263,6 @@
 					/>
 				</FormRow>
 
-				<FormRow
-					v-if="!is1p3pSupported"
-					id="loadpointParamPhases"
-					label="Phases"
-					help="Number of phases connected to the charger."
-				>
-					<SelectGroup
-						id="loadpointParamPhases"
-						v-model="values.phases"
-						class="w-100"
-						:options="[
-							{ value: 1, name: '1-phase' },
-							{ value: 3, name: '3-phase' },
-						]"
-						transparent
-					/>
-				</FormRow>
-
 				<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
 					<FormRow
 						id="loadpointMinCurrent"
@@ -323,6 +306,32 @@
 						/>
 					</FormRow>
 				</div>
+
+				<FormRow
+					v-if="chargerSupports1p3p"
+					id="loadpointParamPhases"
+					label="Automatic phases"
+					help="Your charger supports automatic switching between 1- and 3-phase charging. On the main screen you can switch modes while charging."
+				>
+				</FormRow>
+				<FormRow
+					v-else
+					id="loadpointParamPhases"
+					label="Phases"
+					help="Number of phases connected to the charger."
+				>
+					<SelectGroup
+						id="loadpointParamPhases"
+						v-model="values.phases"
+						class="w-100"
+						:options="[
+							{ value: 1, name: '1-phase' },
+							{ value: 3, name: '3-phase' },
+						]"
+						transparent
+						equal-width
+					/>
+				</FormRow>
 
 				<FormRow
 					v-if="showCircuit"
@@ -514,7 +523,7 @@ export default {
 			selectedType: null,
 			values: deepClone(defaultValues),
 			chargerPower: "11kw",
-			solarMode: "summer",
+			solarMode: "default",
 			tab: "solar",
 			powerUnit: POWER_UNIT,
 		};
@@ -529,12 +538,17 @@ export default {
 		isNew() {
 			return this.id === undefined;
 		},
+		charger() {
+			return this.chargers.find((c) => c.name === this.values.charger);
+		},
 		chargerTitle() {
-			const name = this.values.charger;
-			if (!name) return "";
-			const charger = this.chargers.find((c) => c.name === name);
-			const title = charger?.config?.template || "unknown";
-			return `${title} [${name}]`;
+			if (!this.charger) return "";
+			const title = this.charger?.config?.template || "unknown";
+			return `${title} [${this.values.charger}]`;
+		},
+		chargerSupports1p3p() {
+			const value = this.charger?.config?.phases1p3p;
+			return value === "true" || value === true;
 		},
 		meterTitle() {
 			const name = this.values.meter;
@@ -551,7 +565,7 @@ export default {
 		},
 		priorityOptions() {
 			const maxPriority = this.loadpointCount + (this.isNew ? 1 : 0);
-			const result = Array.from({ length: maxPriority + 1 }, (_, i) => ({
+			const result = Array.from({ length: maxPriority }, (_, i) => ({
 				value: i,
 				name: `${i}`,
 			}));
@@ -601,6 +615,9 @@ export default {
 				this.values.thresholds = deepClone(defaultThresholds);
 			}
 		},
+		chargerSupports1p3p() {
+			this.updatePhases();
+		},
 	},
 	methods: {
 		reset() {
@@ -612,6 +629,7 @@ export default {
 				this.values = deepClone(res.data.result);
 				this.updateChargerPower();
 				this.updateSolarMode();
+				this.updatePhases();
 			} catch (e) {
 				console.error(e);
 			}
@@ -642,13 +660,13 @@ export default {
 		async create() {
 			this.saving = true;
 			try {
-				const values = this.transformBeforeSave(this.values);
-				await api.post("config/loadpoints", values);
+				await api.post("config/loadpoints", this.values);
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
 				console.error(e);
-				alert("create failed");
+				const error = e.response?.data?.error;
+				alert(`failed to create loadpoint: ${error}`);
 			}
 			this.saving = false;
 		},
@@ -692,6 +710,17 @@ export default {
 				this.solarMode = "default";
 			} else {
 				this.solarMode = "custom";
+			}
+		},
+		updatePhases() {
+			const { phases } = this.values;
+			if (this.chargerSupports1p3p && this.isNew) {
+				this.values.phases = 0; // automatic
+				return;
+			}
+			if (!this.chargerSupports1p3p && phases === 0) {
+				this.values.phases = 3; // no automatic switching, default to 3-phase
+				return;
 			}
 		},
 	},
