@@ -2,6 +2,7 @@ package settings
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -66,7 +67,11 @@ func (s *ConfigSettings) Int(key string) (int64, error) {
 }
 
 func (s *ConfigSettings) Float(key string) (float64, error) {
-	return cast.ToFloat64E(s.get(key))
+	val := s.get(key)
+	if val == nil {
+		return 0, errors.New("not found")
+	}
+	return cast.ToFloat64E(val)
 }
 
 func (s *ConfigSettings) Time(key string) (time.Time, error) {
