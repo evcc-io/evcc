@@ -6,17 +6,11 @@ const CONFIG = "config-empty.evcc.yaml";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG, "password.sql");
+  await start(CONFIG);
 });
 test.afterAll(async () => {
   await stop();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
 
 async function enableExperimental(page) {
   await page
@@ -30,7 +24,6 @@ async function enableExperimental(page) {
 test.describe("loadpoint", async () => {
   test("create, update and delete", async ({ page }) => {
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     const lpModal = page.getByTestId("loadpoint-modal");
@@ -92,7 +85,7 @@ test.describe("loadpoint", async () => {
     // update loadpoint priority
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expect(lpModal).toBeVisible();
-    await lpModal.getByLabel("Priority").selectOption("2");
+    await lpModal.getByTestId("loadpointParamPriority-1").click();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
 
@@ -102,7 +95,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expect(lpModal).toBeVisible();
-    await expect(lpModal.getByLabel("Priority")).toHaveValue("2");
+    await expect(lpModal.getByTestId("loadpointParamPriority-1")).toHaveClass(/active/);
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport 2");
     await lpModal.getByRole("button", { name: "Close" }).click();
     await expect(lpModal).not.toBeVisible();

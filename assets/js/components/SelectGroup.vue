@@ -8,6 +8,7 @@
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
+			:data-testid="`${id}-${option.value}`"
 			@click="$emit('update:modelValue', option.value)"
 		>
 			{{ option.name }}
