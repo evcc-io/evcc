@@ -7,7 +7,7 @@ test.describe.configure({ mode: "parallel" });
 const CONFIG = "plan.evcc.yaml";
 
 test.beforeEach(async () => {
-  await start(CONFIG, "password.sql");
+  await start(CONFIG);
 });
 
 test.afterEach(async () => {

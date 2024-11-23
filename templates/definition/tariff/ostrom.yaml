@@ -1,0 +1,26 @@
+template: ostrom
+products:
+  - brand: Ostrom
+requirements:
+  description:
+    en: "Create a 'Production Client' in the Ostrom developer portal: https://developer.ostrom-api.io/"
+    de: "Erzeuge einen 'Production Client' in dem Tibber-Entwicklerportal: https://developer.ostrom-api.io/"
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: clientid
+    example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4
+    required: true
+  - name: clientsecret
+    example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4a
+    required: true
+  - name: contract
+    example: 100523456
+    help:
+      de: Nur erforderlich, wenn mehrere Verträge unter einem Benutzer existieren
+      en: Only required if multiple contracts belong to the same user
+render: |
+  type: ostrom
+  ClientId: {{ .clientid }}
+  ClientSecret: {{ .clientsecret }}
+  Contract: {{ .contract }}

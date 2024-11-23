@@ -8,90 +8,28 @@ products:
       generic: EM24
 params:
   - name: usage
-    choice: ["grid", "charge", "pv"]
+    choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
-  type: custom
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x28
-      type: input
-      decode: int32
-    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ if eq .usage "pv" }}0x5c{{ else }}0x3e{{ end }}
-      type: input
-      decode: int32
-    scale: 0.1
+  type: mbmd
+  {{- include "modbus" . }}
+  model: cgem24
+  power: Power
+  energy: Import
   currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x0c
-      type: input
-      decode: uint32
-    scale: 0.001
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x0e
-      type: input
-      decode: uint32
-    scale: 0.001
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x10
-      type: input
-      decode: uint32
-    scale: 0.001
-  voltages:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x0
-      type: input
-      decode: uint32
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x2
-      type: input
-      decode: uint32
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4
-      type: input
-      decode: uint32
-    scale: 0.1
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- if eq .usage "grid" }}
   powers:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x12
-      type: input
-      decode: int32
-    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x14
-      type: input
-      decode: int32
-    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x16
-      type: input
-      decode: int32
-    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  {{- end }}

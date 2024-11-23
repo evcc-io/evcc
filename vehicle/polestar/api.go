@@ -3,8 +3,6 @@ package polestar
 import (
 	"context"
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -17,7 +15,6 @@ import (
 
 const (
 	ApiURI   = "https://pc-api.polestar.com/eu-north-1"
-	ApiURIv1 = ApiURI + "/my-star"
 	ApiURIv2 = ApiURI + "/mystar-v2"
 )
 
@@ -47,7 +44,6 @@ func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
 	}
 
 	err := v.client.WithRequestModifier(func(req *http.Request) {
-		req.URL, _ = url.Parse(strings.ReplaceAll(req.URL.String(), "mystar-v2", "my-star"))
 	}).Query(ctx, &res, nil, graphql.OperationName("getCars"))
 
 	return res.GetConsumerCarsV2, err
