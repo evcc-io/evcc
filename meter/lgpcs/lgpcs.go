@@ -23,30 +23,13 @@ const (
 	MeterURI     = "/v1/user/essinfo/home"
 )
 
-type MeterResponse struct {
-	Statistics EssData
-	Direction  struct {
-		IsGridSelling        int `json:"is_grid_selling_,string"`
-		IsBatteryDischarging int `json:"is_battery_discharging_,string"`
-	}
-}
-
-type EssData struct {
-	GridPower               float64 `json:"grid_power,string"`
-	PvTotalPower            float64 `json:"pcs_pv_total_power,string"`
-	BatConvPower            float64 `json:"batconv_power,string"`
-	BatUserSoc              float64 `json:"bat_user_soc,string"`
-	CurrentGridFeedInEnergy float64 `json:"current_grid_feed_in_energy,string"`
-	CurrentPvGenerationSum  float64 `json:"current_pv_generation_sum,string"`
-}
-
 type Com struct {
 	*request.Helper
 	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
 	authPath string
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
-	dataG    func() (EssData, error)
+	dataG    func() (EssData8, error)
 }
 
 var (
@@ -57,6 +40,21 @@ var (
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
 func GetInstance(uri, registration, password string, cache time.Duration) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
+
+	// check if different uris are provided
+	if password != "" && registration != "" {
+		return nil, errors.New("cannot have registration and password")
+	}
+
+	// check if different uris are provided
+	if uri != "" && instance.uri != uri {
+		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
+	}
+
+	// check if different passwords are provided
+	if password != "" && instance.password != password {
+		return nil, errors.New("password mismatch")
+	}
 
 	var err error
 	once.Do(func() {
@@ -85,21 +83,6 @@ func GetInstance(uri, registration, password string, cache time.Duration) (*Com,
 			err = instance.Login()
 		}
 	})
-
-	// check if different uris are provided
-	if password != "" && registration != "" {
-		return nil, errors.New("cannot have registration and password")
-	}
-
-	// check if different uris are provided
-	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
-	}
-
-	// check if different passwords are provided
-	if password != "" && instance.password != password {
-		return nil, errors.New("password mismatch")
-	}
 
 	return instance, err
 }
@@ -137,22 +120,22 @@ func (m *Com) Login() error {
 }
 
 // Data gives the data read from the pcs.
-func (m *Com) Data() (EssData, error) {
+func (m *Com) Data() (EssData8, error) {
 	return m.dataG()
 }
 
 // refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
-func (m *Com) refreshData() (EssData, error) {
+func (m *Com) refreshData() (EssData8, error) {
 	data := map[string]interface{}{
 		"auth_key": m.authKey,
 	}
 
 	req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return EssData{}, err
+		return EssData8{}, err
 	}
 
-	var resp MeterResponse
+	var resp MeterResponse8
 
 	if err = m.DoJSON(req, &resp); err != nil {
 		// re-login if request returns 405-error
@@ -172,7 +155,7 @@ func (m *Com) refreshData() (EssData, error) {
 	}
 
 	if err != nil {
-		return EssData{}, err
+		return EssData8{}, err
 	}
 
 	res := resp.Statistics

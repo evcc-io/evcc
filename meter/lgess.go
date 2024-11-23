@@ -42,7 +42,7 @@ same hardware instance is accessed with the different usages.
 // LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string     // grid, pv, battery
-	lp    *lgpcs.Com // communication with the lgpcs device
+	conn  *lgpcs.Com // communication with the lgpcs device
 }
 
 func init() {
@@ -75,14 +75,14 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewLgEss creates an LgEss Meter
 func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
-	lp, err := lgpcs.GetInstance(uri, registration, password, cache)
+	conn, err := lgpcs.GetInstance(uri, registration, password, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
 		usage: strings.ToLower(usage),
-		lp:    lp,
+		conn:  conn,
 	}
 
 	// decorate api.MeterEnergy
@@ -102,7 +102,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 
 // CurrentPower implements the api.Meter interface
 func (m *LgEss) CurrentPower() (float64, error) {
-	data, err := m.lp.Data()
+	data, err := m.conn.Data()
 	if err != nil {
 		return 0, err
 	}
@@ -121,7 +121,7 @@ func (m *LgEss) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *LgEss) totalEnergy() (float64, error) {
-	data, err := m.lp.Data()
+	data, err := m.conn.Data()
 	if err != nil {
 		return 0, err
 	}
@@ -136,7 +136,7 @@ func (m *LgEss) totalEnergy() (float64, error) {
 
 // batterySoc implements the api.Battery interface
 func (m *LgEss) batterySoc() (float64, error) {
-	data, err := m.lp.Data()
+	data, err := m.conn.Data()
 	if err != nil {
 		return 0, err
 	}
