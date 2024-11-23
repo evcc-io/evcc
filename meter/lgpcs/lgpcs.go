@@ -41,21 +41,6 @@ var (
 func GetInstance(uri, registration, password string, cache time.Duration) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
-	// check if different uris are provided
-	if password != "" && registration != "" {
-		return nil, errors.New("cannot have registration and password")
-	}
-
-	// check if different uris are provided
-	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
-	}
-
-	// check if different passwords are provided
-	if password != "" && instance.password != password {
-		return nil, errors.New("password mismatch")
-	}
-
 	var err error
 	once.Do(func() {
 		log := util.NewLogger("lgess")
@@ -83,6 +68,21 @@ func GetInstance(uri, registration, password string, cache time.Duration) (*Com,
 			err = instance.Login()
 		}
 	})
+
+	// check if different uris are provided
+	if password != "" && registration != "" {
+		return nil, errors.New("cannot have registration and password")
+	}
+
+	// check if different uris are provided
+	if uri != "" && instance.uri != uri {
+		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
+	}
+
+	// check if different passwords are provided
+	if password != "" && instance.password != password {
+		return nil, errors.New("password mismatch")
+	}
 
 	return instance, err
 }
