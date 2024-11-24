@@ -33,26 +33,20 @@ func (t *embed) init() (err error) {
 		return err
 	}
 
-	if _, err := vm.Eval(`import (
+	if _, err := vm.Eval(fmt.Sprintf(`
+	import (
 		"math"
 		"time"
-	)`); err != nil {
-		return err
-	}
+	)
+	
+	var (
+		price, charges, tax float64
+		ts time.Time
+	)
 
-	if _, err := vm.Eval("var price, charges, tax float64"); err != nil {
-		return err
-	}
-
-	if _, err := vm.Eval("var ts time.Time"); err != nil {
-		return err
-	}
-
-	if _, err := vm.Eval(fmt.Sprintf("charges = %f", t.Charges)); err != nil {
-		return err
-	}
-
-	if _, err := vm.Eval(fmt.Sprintf("tax = %f", t.Tax)); err != nil {
+	charges = %f
+	tax = %f
+	`, t.Charges, t.Tax)); err != nil {
 		return err
 	}
 
@@ -90,7 +84,7 @@ func (t *embed) init() (err error) {
 
 func (t *embed) totalPrice(price float64) float64 {
 	if t.calc != nil {
-		res, _ := t.calc(price, time.Now())
+		res, _ := t.calc(price, time.Time{})
 		return res
 	}
 	return (price + t.Charges) * (1 + t.Tax)
