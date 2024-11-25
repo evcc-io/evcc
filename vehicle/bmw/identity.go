@@ -165,10 +165,9 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	var tok oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &tok)
+	} else {
+		return nil, err
 	}
-        if err != nil {
-                return nil, err
-        }
 
 	tokex := util.TokenWithExpiry(&tok)
 
