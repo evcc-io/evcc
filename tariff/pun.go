@@ -187,19 +187,16 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			return nil, fmt.Errorf("load location: %w", err)
 		}
 
-		start := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
-		end := start.Add(time.Hour)
-
-		priceStr := strings.Replace(p.PUN, ",", ".", -1) // Ersetzen Sie Komma durch Punkt
-		price, err := strconv.ParseFloat(priceStr, 64)
+		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
 
+		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
 		ar := api.Rate{
-			Start: start,
-			End:   end,
-			Price: t.totalPrice(price / 1e3),
+			Start: ts,
+			End:   ts.Add(time.Hour),
+			Price: t.totalPriceAt(price/1e3, ts),
 		}
 		data = append(data, ar)
 	}
