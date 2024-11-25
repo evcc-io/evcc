@@ -57,7 +57,7 @@ func (c *Zendure) CurrentPower() (float64, error) {
 	case "pv":
 		return float64(res.SolarInputPower), nil
 	case "battery":
-		return float64(res.GridInputPower) - float64(res.OutputHomePower), nil
+		return float64(res.packInputPower) - float64(res.outputPackPower), nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", c.usage)
 	}
