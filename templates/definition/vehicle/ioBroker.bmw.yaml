@@ -1,6 +1,7 @@
 template: ioBroker.bmw
 products:
-  - brand: ioBroker.bmw
+  - description:
+      generic: ioBroker.bmw
 group: generic
 requirements:
   description:
