@@ -173,11 +173,11 @@ export default {
 	},
 	watch: {
 		effectivePlanTime() {
-			this.fetchActivePlanDebounced();
+			this.fetchActivePlanDebounced(false);
 		},
 	},
 	mounted() {
-		this.fetchActivePlanDebounced();
+		this.fetchActivePlanDebounced(true);
 		this.fetchPlanPreviewDebounced();
 	},
 	methods: {
@@ -185,17 +185,20 @@ export default {
 			this.selectedPreviewPlanId = parseInt(event.target.value);
 			this.fetchPlanPreviewDebounced();
 		},
-		fetchActivePlan: async function () {
+		fetchActivePlan: async function (onMounted) {
 			await api
 				.get(`loadpoints/${this.id}/plan`)
 				.then((response) => {
-					this.nextPlanId = response.data.result.planId;
+					const planID = response.data.result.planId;
+					if (onMounted && 0 !== planID) {
+						this.selectedPreviewPlanId = planID;
+					}
+					this.nextPlanId = planID;
 				})
 				.catch(function (error) {
 					console.error(error);
 				});
 		},
-
 		fetchStaticPlanPreview: async function (soc, time) {
 			const timeISO = time.toISOString();
 			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
@@ -218,7 +221,6 @@ export default {
 
 				if (this.selectedPreviewPlanId === 1) {
 					const planToPreview = this.plansForPreview.static;
-
 					planToPreview.time = new Date(planToPreview.time);
 
 					if (this.socBasedPlanning) {
@@ -268,13 +270,16 @@ export default {
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchPlan(), 1000);
 		},
-		fetchActivePlanDebounced: async function () {
+		fetchActivePlanDebounced: async function (onMounted) {
 			if (!this.debounceTimer) {
-				await this.fetchActivePlan();
+				await this.fetchActivePlan(onMounted);
 				return;
 			}
 			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.fetchActivePlan(), 1000);
+			this.debounceTimer = setTimeout(
+				async () => await this.fetchActivePlan(onMounted),
+				1000
+			);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
