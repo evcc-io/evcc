@@ -220,7 +220,9 @@ export default {
 		fetchPlan: async function () {
 			try {
 				let planRes = undefined;
-				const planIdToPreview = this.showPreviewOptions ? this.selectedPreviewPlanId : this.nextPlanId;
+				const planIdToPreview = this.showPreviewOptions
+					? this.selectedPreviewPlanId
+					: this.nextPlanId;
 
 				if (planIdToPreview === 1) {
 					const planToPreview = this.plansForPreview.static;
@@ -238,8 +240,7 @@ export default {
 						);
 					}
 				} else {
-					const planToPreview =
-						this.plansForPreview.repeating[planIdToPreview - 2];
+					const planToPreview = this.plansForPreview.repeating[planIdToPreview - 2];
 
 					if (0 === planToPreview.weekdays.length) {
 						return;
@@ -278,10 +279,7 @@ export default {
 				return;
 			}
 			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(
-				async () => await this.fetchActivePlan(),
-				1000
-			);
+			this.debounceTimer = setTimeout(async () => await this.fetchActivePlan(), 1000);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
