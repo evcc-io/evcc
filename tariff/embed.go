@@ -82,15 +82,7 @@ func (t *embed) init() (err error) {
 	return err
 }
 
-// func (t *embed) totalPrice(price float64) float64 {
-// 	if t.calc != nil {
-// 		res, _ := t.calc(price, time.Time{})
-// 		return res
-// 	}
-// 	return (price + t.Charges) * (1 + t.Tax)
-// }
-
-func (t *embed) totalPriceAt(price float64, ts time.Time) float64 {
+func (t *embed) totalPrice(price float64, ts time.Time) float64 {
 	if t.calc != nil {
 		res, _ := t.calc(price, ts.Local())
 		return res

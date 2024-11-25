@@ -196,7 +196,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		ar := api.Rate{
 			Start: ts,
 			End:   ts.Add(time.Hour),
-			Price: t.totalPriceAt(price/1e3, ts),
+			Price: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
 	}

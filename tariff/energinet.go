@@ -89,7 +89,7 @@ func (t *Energinet) run(done chan error) {
 			ar := api.Rate{
 				Start: ts.Local(),
 				End:   ts.Add(time.Hour).Local(),
-				Price: t.totalPriceAt(r.SpotPriceDKK/1e3, ts),
+				Price: t.totalPrice(r.SpotPriceDKK/1e3, ts),
 			}
 			data = append(data, ar)
 		}

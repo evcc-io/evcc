@@ -141,7 +141,7 @@ func (t *EdfTempo) run(done chan error) {
 				ar := api.Rate{
 					Start: ts,
 					End:   ts.Add(time.Hour),
-					Price: t.totalPriceAt(t.prices[strings.ToLower(r.Value)], ts),
+					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)], ts),
 				}
 				data = append(data, ar)
 			}
