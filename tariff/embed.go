@@ -40,13 +40,11 @@ func (t *embed) init() (err error) {
 	)
 	
 	var (
-		price, charges, tax float64
+		price float64
+		charges float64 = %f
+		tax float64 = %f
 		ts time.Time
-	)
-
-	charges = %f
-	tax = %f
-	`, t.Charges, t.Tax)); err != nil {
+	)`, t.Charges, t.Tax)); err != nil {
 		return err
 	}
 
