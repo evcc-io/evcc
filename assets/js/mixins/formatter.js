@@ -210,6 +210,13 @@ export default {
         minute: "numeric",
       }).format(date);
     },
+    fmtWeekdayTime: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
+      }).format(date);
+    },
     fmtMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: "long",

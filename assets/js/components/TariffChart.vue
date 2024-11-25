@@ -1,5 +1,5 @@
 <template>
-	<div class="chart">
+	<div class="chart position-relative">
 		<div
 			v-for="(slot, index) in slots"
 			:key="slot.start"
@@ -25,10 +25,18 @@
 				<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
 			</div>
 			<div class="slot-label">
-				{{ slot.startHour }}
+				<span v-if="!slot.isTarget">{{ slot.startHour }}</span>
 				<br />
-				<span v-if="slot.startHour === 0">{{ slot.day }}</span>
+				<span v-if="showWeekday(index)">{{ slot.day }}</span>
 			</div>
+		</div>
+		<div
+			v-if="targetText"
+			class="position-absolute top-0 d-flex align-items-end target-overlay"
+			:style="{ left: targetLeft }"
+		>
+			<div class="target-marker"></div>
+			<div class="target-time text-nowrap">{{ targetText }}</div>
 		</div>
 	</div>
 </template>
@@ -42,6 +50,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		slots: Array,
+		targetText: String,
+		targetOffset: Number,
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
@@ -64,6 +74,11 @@ export default {
 					min = Math.min(min, price);
 				});
 			return { min, range: max - min };
+		},
+		targetLeft() {
+			const fullHours = Math.floor(this.targetOffset);
+			const hourFraction = this.targetOffset - fullHours;
+			return `${fullHours * 20 + 4 + hourFraction * 12}px`;
 		},
 		avgPrice() {
 			let sum = 0;
@@ -97,6 +112,21 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
+		showWeekday(index) {
+			const slot = this.slots[index];
+			if (!slot) {
+				return false;
+			}
+			for (let i = 0; i < 7; i++) {
+				if (this.slots[index - i]?.isTarget) {
+					return false;
+				}
+			}
+			if (slot.startHour === 0) {
+				return true;
+			}
+			return false;
+		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
 			const height =
@@ -123,9 +153,23 @@ export default {
 .chart {
 	display: flex;
 	height: 140px;
+	overflow-x: auto;
 	align-items: flex-end;
 	overflow-y: none;
 	padding-bottom: 45px;
+}
+.target-overlay {
+	height: 140px;
+	color: var(--bs-gray-light);
+}
+.target-marker {
+	height: 100%;
+	border: 1px solid var(--bs-gray-light);
+	border-width: 0 0 1px 1px;
+	width: 0.75rem;
+	height: 2rem;
+	margin-right: 0.25rem;
+	margin-bottom: 11px;
 }
 .slot {
 	text-align: center;
@@ -139,26 +183,18 @@ export default {
 	transition-property: opacity, background, color;
 	transition-duration: var(--evcc-transition-fast);
 	transition-timing-function: ease-in;
+	width: 20px;
+	flex-grow: 0;
+	flex-shrink: 0;
 }
 @media (max-width: 991px) {
 	.chart {
 		overflow-x: auto;
 	}
-	.slot {
-		width: 20px;
-		flex-grow: 0;
-		flex-shrink: 0;
-	}
 }
 @media (min-width: 992px) {
 	.chart {
-		overflow-x: none;
-		justify-content: stretch;
-	}
-	.slot {
-		flex-grow: 1;
-		flex-shrink: 1;
-		flex-basis: 1;
+		overflow-x: hidden;
 	}
 }
 .slot-bar {
