@@ -40,7 +40,7 @@
 		<h5>
 			<div class="inner">
 				<CustomSelect
-					v-if="numberPlans"
+					v-if="showPreviewOptions"
 					:options="previewPlanOptions"
 					:selected="selectedPreviewPlanTitle"
 					@change="changePreviewPlan"
@@ -50,7 +50,7 @@
 					</span>
 				</CustomSelect>
 				<span v-else data-testid="plan-preview-title">
-					{{ $t(`main.targetCharge.${1 === nextPlanId ? "currentPlan" : "preview"}`) }}
+					{{ $t(`main.targetCharge.currentPlan`) + ` #${nextPlanId}` }}
 				</span>
 			</div>
 		</h5>
@@ -118,6 +118,9 @@ export default {
 		};
 	},
 	computed: {
+		showPreviewOptions: function () {
+			return 0 === this.nextPlanId;
+		},
 		numberPlans: function () {
 			return this.plansForPreview.repeating.length !== 0;
 		},
@@ -173,11 +176,11 @@ export default {
 	},
 	watch: {
 		effectivePlanTime() {
-			this.fetchActivePlanDebounced(false);
+			this.fetchActivePlanDebounced();
 		},
 	},
 	mounted() {
-		this.fetchActivePlanDebounced(true);
+		this.fetchActivePlanDebounced();
 		this.fetchPlanPreviewDebounced();
 	},
 	methods: {
@@ -185,15 +188,14 @@ export default {
 			this.selectedPreviewPlanId = parseInt(event.target.value);
 			this.fetchPlanPreviewDebounced();
 		},
-		fetchActivePlan: async function (onMounted) {
+		fetchActivePlan: async function () {
 			await api
 				.get(`loadpoints/${this.id}/plan`)
 				.then((response) => {
 					const planID = response.data.result.planId;
-					if (onMounted && 0 !== planID) {
-						this.selectedPreviewPlanId = planID;
-					}
+					this.selectedPreviewPlanId = planID;
 					this.nextPlanId = planID;
+					this.fetchPlanPreviewDebounced();
 				})
 				.catch(function (error) {
 					console.error(error);
@@ -218,8 +220,9 @@ export default {
 		fetchPlan: async function () {
 			try {
 				let planRes = undefined;
+				const planIdToPreview = this.showPreviewOptions ? this.selectedPreviewPlanId : this.nextPlanId;
 
-				if (this.selectedPreviewPlanId === 1) {
+				if (planIdToPreview === 1) {
 					const planToPreview = this.plansForPreview.static;
 					planToPreview.time = new Date(planToPreview.time);
 
@@ -236,10 +239,9 @@ export default {
 					}
 				} else {
 					const planToPreview =
-						this.plansForPreview.repeating[this.selectedPreviewPlanId - 2];
+						this.plansForPreview.repeating[planIdToPreview - 2];
 
 					if (0 === planToPreview.weekdays.length) {
-						this.selectedPreviewPlanId = 1;
 						return;
 					}
 
@@ -270,14 +272,14 @@ export default {
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchPlan(), 1000);
 		},
-		fetchActivePlanDebounced: async function (onMounted) {
+		fetchActivePlanDebounced: async function () {
 			if (!this.debounceTimer) {
-				await this.fetchActivePlan(onMounted);
+				await this.fetchActivePlan();
 				return;
 			}
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(
-				async () => await this.fetchActivePlan(onMounted),
+				async () => await this.fetchActivePlan(),
 				1000
 			);
 		},
@@ -316,9 +318,17 @@ export default {
 		previewStaticPlan: function (plan) {
 			this.plansForPreview.static = plan;
 
-			if (1 === this.selectedPreviewPlanId) {
-				this.fetchPlanPreviewDebounced();
+			if (this.showPreviewOptions) {
+				if (1 !== this.selectedPreviewPlanId) {
+					return;
+				}
+			} else {
+				if (1 !== this.nextPlanId) {
+					return;
+				}
 			}
+
+			this.fetchPlanPreviewDebounced();
 		},
 		previewRepeatingPlans: function (plansData) {
 			const { plans, index } = plansData;
@@ -326,21 +336,27 @@ export default {
 
 			this.plansForPreview.repeating = plans;
 
-			if (l > plans.length) {
-				// plan removed -> adjust selected preview plan to move correctly
-				if (this.selectedPreviewPlanId - 1 === l) {
-					this.selectedPreviewPlanId--;
-					this.fetchPlanPreviewDebounced();
-				} else if (this.selectedPreviewPlanId > index + 2) {
-					this.selectedPreviewPlanId--;
-					this.fetchPlanPreviewDebounced();
-				} else if (this.selectedPreviewPlanId === index + 2) {
+			if (this.showPreviewOptions) {
+				// a plan was removed -> adjust selected preview plan to move correctly
+				if (l > plans.length) {
+					if (this.selectedPreviewPlanId - 1 === l) {
+						this.selectedPreviewPlanId--;
+						this.fetchPlanPreviewDebounced();
+					} else if (this.selectedPreviewPlanId > index + 2) {
+						this.selectedPreviewPlanId--;
+						this.fetchPlanPreviewDebounced();
+					} else if (this.selectedPreviewPlanId === index + 2) {
+						this.fetchPlanPreviewDebounced();
+					}
+				} else {
+					if (this.selectedPreviewPlanId === index + 2) {
+						this.fetchPlanPreviewDebounced();
+					}
+				}
+			} else {
+				if (index + 2 === this.nextPlanId) {
 					this.fetchPlanPreviewDebounced();
 				}
-			}
-
-			if (this.selectedPreviewPlanId === index + 2) {
-				this.fetchPlanPreviewDebounced();
 			}
 		},
 	},
