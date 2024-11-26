@@ -96,7 +96,7 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-1 d-flex align-items-center justify-content-start">
+			<div class="col-2 col-lg-1 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -110,7 +110,7 @@
 					/>
 				</div>
 			</div>
-			<div class="col-1 mx-auto d-flex align-items-center justify-content-start">
+			<div class="col-5 col-lg-2 d-flex align-items-center">
 				<button
 					v-if="showApply"
 					type="button"
