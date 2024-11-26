@@ -142,7 +142,7 @@ func (m *Modbus) StringGetter() (func() (string, error), error) {
 			return "", err
 		}
 
-		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
+		return strings.TrimSpace(string(bytes.Trim(b, "\x00"))), nil
 	}, nil
 }
 

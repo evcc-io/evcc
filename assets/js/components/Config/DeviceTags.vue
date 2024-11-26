@@ -10,11 +10,13 @@
 				{{ $t(`config.deviceValue.${entry.name}`) }}
 			</div>
 			<div
-				class="value overflow-hidden text-truncate"
+				class="value overflow-hidden"
 				:class="{
 					'value--error': !!entry.error,
 					'value--warning': entry.warning,
 					'value--muted': entry.muted || entry.value === false,
+					'text-truncate': allowTruncate(entry.name),
+					'flex-shrink-0': !allowTruncate(entry.name),
 				}"
 			>
 				{{ fmtDeviceValue(entry) }}
@@ -23,7 +25,9 @@
 	</div>
 </template>
 <script>
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
+
+const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
 export default {
 	name: "DeviceTags",
@@ -66,7 +70,7 @@ export default {
 				case "phaseVoltages":
 					return value.map((v) => this.fmtNumber(v, 0)).join(" · ") + " V";
 				case "phasePowers":
-					return value.map((v) => this.fmtW(v)).join(", ");
+					return value.map((v) => this.fmtW(v, POWER_UNIT.KW, false)).join(" · ") + " kW";
 				case "chargeStatus":
 					return this.$t(`config.deviceValue.chargeStatus${value}`);
 				case "gridPrice":
@@ -85,6 +89,9 @@ export default {
 						: this.$t("config.deviceValue.no");
 			}
 			return value;
+		},
+		allowTruncate(name) {
+			return !NO_TRUNCATE.includes(name);
 		},
 	},
 };
