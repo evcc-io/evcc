@@ -32,21 +32,32 @@
 		</div>
 		<div
 			v-if="targetText"
-			class="position-absolute top-0 d-flex align-items-end target-overlay"
-			:style="{ left: targetLeft }"
+			class="target-overlay"
+			:class="{
+				'target-overlay--inline': !targetOutOfRange,
+				'target-overlay--out-of-range': targetOutOfRange,
+				'target-overlay--faded': activeIndex !== null,
+			}"
+			:style="{ left: !targetOutOfRange ? targetLeft : null }"
 		>
-			<div class="target-marker"></div>
+			<div v-if="!targetOutOfRange" class="target-marker"></div>
 			<div class="target-time text-nowrap">{{ targetText }}</div>
+			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
 	</div>
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/arrowright";
+import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
 
 export default {
 	name: "TariffChart",
+	components: {
+		PlanEndIcon,
+	},
 	mixins: [formatter],
 	props: {
 		slots: Array,
@@ -79,6 +90,9 @@ export default {
 			const fullHours = Math.floor(this.targetOffset);
 			const hourFraction = this.targetOffset - fullHours;
 			return `${fullHours * 20 + 4 + hourFraction * 12}px`;
+		},
+		targetOutOfRange() {
+			return this.targetOffset > this.slots.length;
 		},
 		avgPrice() {
 			let sum = 0;
@@ -152,22 +166,47 @@ export default {
 <style scoped>
 .chart {
 	display: flex;
-	height: 140px;
+	height: 150px;
 	overflow-x: auto;
 	align-items: flex-end;
 	overflow-y: none;
-	padding-bottom: 45px;
+	padding-bottom: 55px;
 }
 .target-overlay {
-	height: 140px;
-	color: var(--bs-gray-light);
+	color: var(--bs-primary);
+	opacity: 1;
+	transition-property: opacity, color;
+	transition-duration: var(--evcc-transition-fast);
+	pointer-events: none;
+	transition-timing-function: ease-in;
+}
+.target-overlay--inline {
+	height: 130px;
+	position: absolute;
+	top: 0;
+	display: flex;
+	align-items: flex-end;
+}
+.target-overlay--faded {
+	opacity: 0.33;
+}
+.target-overlay--out-of-range {
+	position: sticky;
+	margin-bottom: -37px;
+	margin-left: -4rem;
+	background-color: var(--evcc-box);
+	padding-left: 1rem;
+	right: 0;
+	display: flex;
+	gap: 0.25rem;
+	align-items: center;
 }
 .target-marker {
 	height: 100%;
-	border: 1px solid var(--bs-gray-light);
+	border: 1px solid var(--bs-primary);
 	border-width: 0 0 1px 1px;
 	width: 0.75rem;
-	height: 2rem;
+	height: 1.5rem;
 	margin-right: 0.25rem;
 	margin-bottom: 11px;
 }
