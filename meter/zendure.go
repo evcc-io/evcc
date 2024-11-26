@@ -33,8 +33,7 @@ func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	global := strings.ToUpper(cc.Region) != "EU"
-	conn, err := zendure.NewConnection(cc.Account, cc.Serial, global, cc.Timeout)
+	conn, err := zendure.NewConnection(strings.ToUpper(cc.Region), cc.Account, cc.Serial, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
