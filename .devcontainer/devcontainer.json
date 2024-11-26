@@ -18,7 +18,7 @@
 			"nvmVersion": "latest"
 		}
 	},
-	"postCreateCommand": "make install-ui && make install",
+	"postCreateCommand": "export GOTOOLCHAIN=auto && make install-ui && make install",
 	"customizations": {
 		"vscode": {
 			"extensions": [
