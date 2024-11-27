@@ -36,7 +36,7 @@
 		</div>
 		<hr />
 		<h5>
-			<div class="inner">
+			<div class="inner" data-testid="plan-preview-title">
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
@@ -46,11 +46,11 @@
 					:selected="selectedPreviewId"
 					@change="selectPreviewPlan($event.target.value)"
 				>
-					<span data-testid="plan-preview-title" class="text-decoration-underline">
+					<span class="text-decoration-underline">
 						{{ selectedPreviewPlanTitle }}
 					</span>
 				</CustomSelect>
-				<span v-else data-testid="plan-preview-title">
+				<span v-else>
 					{{ nextPlanTitle }}
 				</span>
 			</div>
