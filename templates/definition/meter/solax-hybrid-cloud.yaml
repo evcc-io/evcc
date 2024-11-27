@@ -23,8 +23,8 @@ params:
     description:
       generic: SolaxCloud TokenID
     help:
-      de: https://www.solaxcloud.com/ -> Support -> Drittanbieter-Ökosystem (alte Website) oder Dienst -> API (neue Website), den Wert von "tokenID" hier in Anführungszeichen eintragen (Beispiel: '20241028488283838')
-      en: https://www.solaxcloud.com/ -> Support -> Third-party Ecology (old site) or Service -> API (new site), put the value of "tokenID" here in single quotes (Example: '20241028488283838')
+      de: "https://www.solaxcloud.com/ -> Support -> Drittanbieter-Ökosystem (alte Website) oder Dienst -> API (neue Website), den Wert von `tokenID` hier in Anführungszeichen eintragen (Beispiel: '20241028488283838')"
+      en: "https://www.solaxcloud.com/ -> Support -> Third-party Ecology (old site) or Service -> API (new site), put the value of `tokenID` here in single quotes (Example: '20241028488283838')"
   - name: serial
     required: true
     description:
