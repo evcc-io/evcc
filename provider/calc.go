@@ -153,10 +153,7 @@ func (o *calcProvider) floatGetter() (float64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("abs: %w", err)
 		}
-		res = v
-		if v < 0 {
-			res *= -1
-		}
+		res = math.Abs(v)
 
 	default:
 		v, err := o.sign()
