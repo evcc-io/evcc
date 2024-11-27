@@ -177,7 +177,7 @@ export default {
 			selectedTime: null,
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
-			enabled: false,
+			active: false,
 		};
 	},
 	computed: {
@@ -245,7 +245,7 @@ export default {
 			}
 		},
 		isNew(value) {
-			this.enabled = !value;
+			this.active = !value;
 		},
 	},
 	mounted() {
@@ -290,11 +290,11 @@ export default {
 			];
 			for (let i = 0; i < 7; i++) {
 				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
-					month: "short",
 					day: "numeric",
+					month: "short",
 				});
 				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "long" });
+					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "short" });
 				options.push({
 					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,
@@ -341,7 +341,7 @@ export default {
 				this.$emit("static-plan-removed");
 				this.preview(true);
 			}
-			this.enabled = checked;
+			this.active = checked;
 		},
 		defaultTime: function () {
 			const [hours, minutes] = (

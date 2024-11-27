@@ -147,6 +147,7 @@ export default {
 		number: Number,
 		weekdays: { type: Array, default: () => [] },
 		time: String,
+		tz: String,
 		soc: Number,
 		showHeader: Boolean,
 		active: Boolean,
@@ -220,6 +221,7 @@ export default {
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,
 				soc: this.selectedSoc,
+				tz: this.tz,
 				active: this.selectedActive,
 			};
 

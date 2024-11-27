@@ -5,7 +5,7 @@
 				<ChargingPlanStaticSettings
 					:id="`lp${id}-1`"
 					class="mb-2"
-					v-bind="plans[0] || {}"
+					v-bind="staticPlan || {}"
 					:capacity="capacity"
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
@@ -72,6 +72,8 @@ import api from "../api";
 import CustomSelect from "./CustomSelect.vue";
 import deepEqual from "../utils/deepEqual";
 
+const TARIFF_CACHE_TIME = 300000; // 5 minutes
+
 export default {
 	name: "ChargingPlansSettings",
 	components: {
@@ -84,7 +86,7 @@ export default {
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
-		plans: { type: Array, default: () => [] },
+		staticPlan: Object,
 		repeatingPlans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
@@ -117,10 +119,7 @@ export default {
 	},
 	computed: {
 		noActivePlan: function () {
-			return !this.staticPlan?.active && this.repeatingPlans.every((plan) => !plan.active);
-		},
-		staticPlan: function () {
-			return this.plans[0];
+			return !this.staticPlan && this.repeatingPlans.every((plan) => !plan.active);
 		},
 		multiplePlans: function () {
 			return this.repeatingPlans.length !== 0;
@@ -168,7 +167,7 @@ export default {
 				this.fetchPlanDebounced();
 			}
 		},
-		plans: {
+		staticPlan: {
 			deep: true,
 			handler: function (vNew, vOld) {
 				if (!deepEqual(vNew, vOld)) {
@@ -220,10 +219,9 @@ export default {
 			const timeISO = time.toISOString();
 			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
 		},
-		fetchRepeatingPreview: async function (weekdays, soc, time) {
-			const timeInUTC = this.fmtDayHourMinute(time, true)[0];
+		fetchRepeatingPreview: async function (weekdays, soc, time, tz) {
 			return await api.get(
-				`loadpoints/${this.id}/plan/repeating/preview/${weekdays}/${timeInUTC}/${soc}`
+				`loadpoints/${this.id}/plan/repeating/preview/${soc}/${weekdays}/${time}/${encodeURIComponent(tz)}`
 			);
 		},
 		fetchStaticPreviewEnergy: async function (energy, time) {
@@ -233,6 +231,9 @@ export default {
 			);
 		},
 		fetchPreviewPlan: async function () {
+			// only show preview of no plan is active
+			if (!this.noActivePlan) return;
+
 			try {
 				let planRes = undefined;
 
@@ -250,11 +251,11 @@ export default {
 					if (!plan) {
 						return;
 					}
-					const { weekdays, soc, time } = plan;
+					const { weekdays, soc, time, tz } = plan;
 					if (weekdays.length === 0) {
 						return;
 					}
-					planRes = await this.fetchRepeatingPreview(weekdays, soc, time);
+					planRes = await this.fetchRepeatingPreview(weekdays, soc, time, tz);
 				}
 				this.plan = planRes.data.result;
 				await this.updateTariff();
@@ -263,12 +264,25 @@ export default {
 			}
 		},
 		updateTariff: async function () {
+			// cache tariff for 5 minutes
+			if (
+				this.tariff?.lastUpdate &&
+				Date.now() - this.tariff.lastUpdate.getTime() <= TARIFF_CACHE_TIME
+			) {
+				return;
+			}
+
 			const tariffRes = await api.get(`tariff/planner`, {
 				validateStatus: function (status) {
 					return status >= 200 && status < 500;
 				},
 			});
-			this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
+			if (tariffRes.status === 404) {
+				this.tariff = { rates: [] };
+			} else {
+				this.tariff = tariffRes.data.result;
+				this.tariff.lastUpdate = new Date();
+			}
 		},
 		fetchPlanPreviewDebounced: async function () {
 			if (!this.debounceTimer) {

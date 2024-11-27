@@ -30,8 +30,9 @@
 <script>
 import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
 import deepEqual from "../utils/deepEqual";
+import formatter from "../mixins/formatter";
 
-const DEFAULT_WEEKDAYS = [1]; // Monday
+const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5]; // weekdays
 const DEFAULT_TARGET_TIME = "07:00";
 const DEFAULT_TARGET_SOC = 80;
 
@@ -40,6 +41,7 @@ export default {
 	components: {
 		ChargingPlanRepeatingSettings,
 	},
+	mixins: [formatter],
 	props: {
 		id: Number,
 		rangePerSoc: Number,
@@ -59,6 +61,7 @@ export default {
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
+				tz: this.timezone(),
 			};
 
 			// update the plan without storing non-applied changes from other plans

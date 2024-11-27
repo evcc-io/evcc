@@ -5,10 +5,17 @@ import (
 )
 
 // GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
-func GetNextOccurrence(weekdays []int, timeStr string) (time.Time, error) {
-	now := time.Now()
+func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
+	// Parse the timezone
+	location, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.Time{}, err
+	}
 
-	planTime, err := time.Parse("15:04", timeStr)
+	// Use the parsed timezone
+	now := time.Now().In(location)
+
+	planTime, err := time.ParseInLocation("15:04", timeStr, location)
 	if err != nil {
 		return time.Time{}, err
 	}

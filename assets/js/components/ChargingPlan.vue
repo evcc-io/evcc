@@ -168,22 +168,18 @@ export default {
 		limitSoc: function () {
 			return this.vehicle?.limitSoc;
 		},
-		plans: function () {
+		staticPlan: function () {
 			if (this.socBasedPlanning) {
-				if (this.vehicle && this.vehicle.plans) {
-					return [{ ...this.vehicle.plans[0], active: true }];
-				} else {
-					return [];
-				}
+				return this.vehicle?.plan;
 			}
 			if (this.planEnergy && this.planTime) {
-				return [{ energy: this.planEnergy, time: this.planTime }];
+				return { energy: this.planEnergy, time: this.planTime };
 			}
-			return [];
+			return null;
 		},
 		repeatingPlans: function () {
 			if (this.vehicle?.repeatingPlans.length > 0) {
-				return this.fmtRepeatingPlansUTC(this.vehicle.repeatingPlans.slice(), false);
+				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
 		},
@@ -300,9 +296,7 @@ export default {
 			}
 		},
 		updateRepeatingPlans: function (plans) {
-			api.post(`${this.apiVehicle}plan/repeating`, {
-				plans: this.fmtRepeatingPlansUTC([...plans], true),
-			});
+			api.post(`${this.apiVehicle}plan/repeating`, { plans });
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

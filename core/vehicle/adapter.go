@@ -111,6 +111,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 				return fmt.Errorf("weekday out of range: %v", day)
 			}
 		}
+		if _, err := time.LoadLocation(plan.Tz); err != nil {
+			return fmt.Errorf("invalid timezone: %v", err)
+		}
 		if _, err := time.Parse("15:04", plan.Time); err != nil {
 			return fmt.Errorf("invalid time: %v", err)
 		}

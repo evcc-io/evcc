@@ -136,6 +136,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		vars := mux.Vars(r)
 
 		hourMinute := vars["time"]
+		tz := vars["tz"]
 
 		var weekdays []int
 		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
@@ -153,7 +154,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		planTime, err := util.GetNextOccurrence(weekdays, hourMinute)
+		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

@@ -1,5 +1,5 @@
 <template>
-	<p class="mt-2 mb-4" data-testid="plan-warnings">
+	<p class="mb-3 root" data-testid="plan-warnings">
 		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
@@ -132,3 +132,9 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.root:empty {
+	display: none;
+}
+</style>

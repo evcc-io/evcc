@@ -28,7 +28,7 @@ type vehicleStruct struct {
 	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
 	Priority       int                       `json:"priority,omitempty"`
 	Features       []string                  `json:"features,omitempty"`
-	Plans          []planStruct              `json:"plans,omitempty"`
+	Plan           *planStruct               `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
 }
 
@@ -38,11 +38,10 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plans []planStruct
+		var plan *planStruct
 
-		// TODO: add support for multiple plans
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plans = append(plans, planStruct{Soc: soc, Time: time})
+			plan = &planStruct{Soc: soc, Time: time}
 		}
 
 		instance := v.Instance()
@@ -59,7 +58,7 @@ func (site *Site) publishVehicles() {
 			MaxCurrent:     ac.MaxCurrent,
 			Priority:       ac.Priority,
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
-			Plans:          plans,
+			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
 		}
 
