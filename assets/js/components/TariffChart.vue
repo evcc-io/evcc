@@ -175,7 +175,7 @@ export default {
 .target-overlay {
 	color: var(--bs-primary);
 	opacity: 1;
-	transition-property: opacity, color;
+	transition-property: opacity, color, left;
 	transition-duration: var(--evcc-transition-fast);
 	pointer-events: none;
 	transition-timing-function: ease-in;

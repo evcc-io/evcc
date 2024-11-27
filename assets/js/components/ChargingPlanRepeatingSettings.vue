@@ -12,9 +12,9 @@
 			</small>
 		</h5>
 
-		<div v-if="id === 0" class="row d-none d-lg-flex mb-2">
-			<div v-if="numberPlans" class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6" :class="numberPlans ? 'col-lg-3' : 'col-lg-4'">
+		<div v-if="showHeader" class="row d-none d-lg-flex mb-2">
+			<div class="plan-id d-none d-lg-flex"></div>
+			<div class="col-6 col-lg-3">
 				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
@@ -34,18 +34,15 @@
 			</div>
 		</div>
 		<div class="row">
-			<div
-				v-if="numberPlans"
-				class="plan-id d-none d-lg-flex align-items-center justify-content-start fs-6"
-			>
-				#{{ id + 2 }}
+			<div class="plan-id d-none d-lg-flex align-items-center justify-content-start fs-6">
+				#{{ number }}
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
-			<div :class="['col-7', numberPlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<MultiSelect
 					:id="formId('weekdays')"
 					:value="selectedWeekdays"
@@ -70,7 +67,7 @@
 					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
-					@change="update(false, true)"
+					@change="update()"
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -84,7 +81,7 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="repeating-plan-soc"
-					@change="update(false, true)"
+					@change="update()"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -106,7 +103,7 @@
 						role="switch"
 						data-testid="repeating-plan-active"
 						:checked="selectedActive"
-						@change="update(true, false)"
+						@change="update(true)"
 					/>
 				</div>
 			</div>
@@ -116,7 +113,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
 					data-testid="repeating-plan-apply"
-					@click="update(true, false)"
+					@click="update(true)"
 				>
 					{{ $t("main.chargingPlan.update") }}
 				</button>
@@ -125,7 +122,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
 					data-testid="repeating-plan-delete"
-					@click="$emit('repeating-plan-removed', id)"
+					@click="$emit('removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -139,7 +136,7 @@ import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../units";
 import MultiSelect from "./MultiSelect.vue";
 import formatter from "../mixins/formatter";
-
+import deepEqual from "../utils/deepEqual";
 export default {
 	name: "ChargingPlanRepeatingSettings",
 	components: {
@@ -147,17 +144,16 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		id: Number,
+		number: Number,
 		weekdays: { type: Array, default: () => [] },
 		time: String,
 		soc: Number,
+		showHeader: Boolean,
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
-		numberPlans: Boolean,
-		dataChanged: Boolean,
 	},
-	emits: ["repeating-plan-updated", "repeating-plan-removed"],
+	emits: ["updated", "removed"],
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
@@ -167,6 +163,14 @@ export default {
 		};
 	},
 	computed: {
+		dataChanged: function () {
+			return (
+				!deepEqual(this.weekdays, this.selectedWeekdays) ||
+				this.time !== this.selectedTime ||
+				this.soc !== this.selectedSoc ||
+				this.active !== this.selectedActive
+			);
+		},
 		showApply: function () {
 			return this.dataChanged && this.selectedActive;
 		},
@@ -182,13 +186,12 @@ export default {
 		dayOptions: function () {
 			return this.getWeekdaysList("long");
 		},
-		number: function () {
-			return this.id + 2;
-		},
 	},
 	watch: {
-		weekdays(newValue) {
-			this.selectedWeekdays = newValue;
+		weekdays(newValue, oldValue) {
+			if (!deepEqual(newValue, oldValue)) {
+				this.selectedWeekdays = newValue;
+			}
 		},
 		time(newValue) {
 			this.selectedTime = newValue;
@@ -203,7 +206,7 @@ export default {
 	methods: {
 		changeSelectedWeekdays: function (weekdays) {
 			this.selectedWeekdays = weekdays;
-			this.update(false, true);
+			this.update();
 		},
 		formId: function (name) {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
@@ -212,18 +215,17 @@ export default {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update: function (save, preview) {
-			this.$emit("repeating-plan-updated", {
-				id: this.id,
-				save: !this.selectedActive || save,
-				preview: preview,
-				plan: {
-					weekdays: this.selectedWeekdays,
-					time: this.selectedTime,
-					soc: this.selectedSoc,
-					active: this.selectedActive,
-				},
-			});
+		update: function (forceSave = false) {
+			const plan = {
+				weekdays: this.selectedWeekdays,
+				time: this.selectedTime,
+				soc: this.selectedSoc,
+				active: this.selectedActive,
+			};
+
+			if (forceSave || !this.selectedActive) {
+				this.$emit("updated", plan);
+			}
 		},
 	},
 };

@@ -1,7 +1,7 @@
 <template>
 	<div class="mb-5 mb-lg-4">
 		<h5
-			v-if="numberPlans"
+			v-if="multiplePlans"
 			class="d-flex gap-3 align-items-baseline d-lg-none mb-4 fw-normal evcc-gray"
 			data-testid="repeating-plan-title"
 		>
@@ -11,8 +11,8 @@
 		</h5>
 
 		<div class="row d-none d-lg-flex mb-2">
-			<div v-if="numberPlans" class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6" :class="numberPlans ? 'col-lg-3' : 'col-lg-4'">
+			<div v-if="multiplePlans" class="plan-id d-none d-lg-flex"></div>
+			<div class="col-6" :class="multiplePlans ? 'col-lg-3' : 'col-lg-4'">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
@@ -33,7 +33,7 @@
 		</div>
 		<div class="row">
 			<div
-				v-if="numberPlans"
+				v-if="multiplePlans"
 				class="plan-id d-none d-lg-flex align-items-center justify-content-start fs-6"
 			>
 				#1
@@ -43,13 +43,13 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div :class="['col-7', numberPlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div :class="['col-7', multiplePlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
 					class="form-select me-2"
 					data-testid="static-plan-day"
-					@change="preview"
+					@change="preview()"
 				>
 					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -70,7 +70,7 @@
 					:step="60 * 5"
 					data-testid="static-plan-time"
 					required
-					@change="preview"
+					@change="preview()"
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -85,7 +85,7 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="static-plan-soc"
-					@change="preview"
+					@change="preview()"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -97,7 +97,7 @@
 					v-model="selectedEnergy"
 					class="form-select mx-0"
 					data-testid="static-plan-energy"
-					@change="preview"
+					@change="preview()"
 				>
 					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
 						{{ opt.text }}
@@ -168,7 +168,7 @@ export default {
 		socPerKwh: Number,
 		capacity: Number,
 		socBasedPlanning: Boolean,
-		numberPlans: Boolean,
+		multiplePlans: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data: function () {
@@ -323,12 +323,14 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		preview: function () {
+		preview: function (force = false) {
+			if (!this.isNew && !force) {
+				return false;
+			}
 			this.$emit("plan-preview", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
-				active: this.enabled,
 			});
 		},
 		toggle: function (e) {
@@ -337,6 +339,7 @@ export default {
 				this.update();
 			} else {
 				this.$emit("static-plan-removed");
+				this.preview(true);
 			}
 			this.enabled = checked;
 		},
