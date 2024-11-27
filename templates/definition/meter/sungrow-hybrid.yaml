@@ -20,6 +20,12 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: gridcurrents
+    type: bool
+    default: true
+    description:
+      de: Deaktivierung verhindert Fehlermeldungen mit älteren Firmware Versionen, verhindert dann aber Lastmanagement.
+      en: Deactivation avoids logging errors with older firmware versions but prevents using load management.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -39,6 +45,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  {{- if ne .gridcurrents "false" }}
   currents:
   - source: calc
     div:
@@ -85,6 +92,7 @@ render: |
         address: 5020 # Phase C voltage, 0.1V
         decode: uint16
       scale: 0.1
+  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
