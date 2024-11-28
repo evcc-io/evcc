@@ -1,44 +1,54 @@
 package util
 
 import (
+	"fmt"
 	"time"
 )
 
 // GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
 func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
-	// Parse the timezone
-	location, err := time.LoadLocation(tz)
+	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, fmt.Errorf("invalid timezone: %w", err)
 	}
 
-	// Use the parsed timezone
-	now := time.Now().In(location)
-
-	planTime, err := time.ParseInLocation("15:04", timeStr, location)
+	parsedTime, err := time.Parse("15:04", timeStr)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, fmt.Errorf("invalid time format, expected HH:MM: %w", err)
 	}
 
-	var nextOccurrence time.Time
-	for _, w := range weekdays {
-		// Calculate the difference in days to the target weekday
-		dayOffset := (w - int(now.Weekday()) + 7) % 7
+	hour, minute := parsedTime.Hour(), parsedTime.Minute()
 
-		// If the user has selected the day of the week that is today, and at the same time the user
-		// has selected a time that would be in the past for today, the next day of the week in a week should be used
-		if dayOffset == 0 && (now.Hour()*60+now.Minute()) > (planTime.Hour()*60+planTime.Minute()) {
-			dayOffset = 7
-		}
+	now := time.Now().In(loc)
 
-		// Adjust the current timestamp to the target weekday and set the time
-		timestamp := now.AddDate(0, 0, dayOffset).Truncate(24 * time.Hour).Add(time.Hour*time.Duration(planTime.Hour()) + time.Minute*time.Duration(planTime.Minute()))
+	target := time.Date(
+		now.Year(), now.Month(), now.Day(),
+		hour, minute, 0, 0, loc,
+	)
 
-		// If this is the first occurrence or an earlier occurrence, update nextOccurrence
-		if nextOccurrence.IsZero() || timestamp.Before(nextOccurrence) {
-			nextOccurrence = timestamp
-		}
+	// If the target time has passed today, start from tomorrow
+	if target.Before(now) {
+		target = target.AddDate(0, 0, 1)
 	}
 
-	return nextOccurrence, nil
+	// Check the next 7 days for a valid match
+	for i := 0; i < 7; i++ {
+		weekday := int(target.Weekday())
+		if contains(weekdays, weekday) {
+			return target, nil
+		}
+		target = target.AddDate(0, 0, 1)
+	}
+
+	return time.Time{}, fmt.Errorf("no valid weekday found")
+}
+
+// helper function to check if a slice contains a value
+func contains(slice []int, val int) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
 }

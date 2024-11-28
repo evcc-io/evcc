@@ -1,47 +1,50 @@
 <template>
-	<div class="chart position-relative">
-		<div
-			v-for="(slot, index) in slots"
-			:key="slot.start"
-			:data-index="index"
-			class="slot user-select-none"
-			:class="{
-				active: slot.charging,
-				hovered: activeIndex === index,
-				toLate: slot.toLate,
-				warning: slot.warning,
-				'cursor-pointer': slot.selectable,
-				faded: activeIndex !== null && activeIndex !== index,
-			}"
-			@touchstart="startLongPress(index)"
-			@touchend="cancelLongPress"
-			@touchmove="cancelLongPress"
-			@mouseenter="hoverSlot(index)"
-			@mouseleave="hoverSlot(null)"
-			@mouseup="hoverSlot(null)"
-			@click="selectSlot(index)"
-		>
-			<div class="slot-bar" :style="priceStyle(slot.price)">
-				<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
+	<div class="root position-relative">
+		<div class="chart position-relative">
+			<div
+				v-for="(slot, index) in slots"
+				:key="slot.start"
+				:data-index="index"
+				class="slot user-select-none"
+				:class="{
+					active: slot.charging,
+					hovered: activeIndex === index,
+					toLate: slot.toLate,
+					warning: slot.warning,
+					'cursor-pointer': slot.selectable,
+					faded: activeIndex !== null && activeIndex !== index,
+				}"
+				@touchstart="startLongPress(index)"
+				@touchend="cancelLongPress"
+				@touchmove="cancelLongPress"
+				@mouseenter="hoverSlot(index)"
+				@mouseleave="hoverSlot(null)"
+				@mouseup="hoverSlot(null)"
+				@click="selectSlot(index)"
+			>
+				<div class="slot-bar" :style="priceStyle(slot.price)">
+					<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
+				</div>
+				<div class="slot-label">
+					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
+						slot.startHour
+					}}</span>
+					<br />
+					<span v-if="showWeekday(index)">{{ slot.day }}</span>
+				</div>
 			</div>
-			<div class="slot-label">
-				<span v-if="!slot.isTarget">{{ slot.startHour }}</span>
-				<br />
-				<span v-if="showWeekday(index)">{{ slot.day }}</span>
+			<div
+				v-if="targetText && !targetNearlyOutOfRange"
+				class="target-inline"
+				:class="{ 'target-inline--faded': activeIndex !== null }"
+				:style="{ left: targetLeft }"
+			>
+				<div class="target-inline-marker"></div>
+				<div class="text-nowrap target-inline-text">{{ targetText }}</div>
 			</div>
 		</div>
-		<div
-			v-if="targetText"
-			class="target-overlay"
-			:class="{
-				'target-overlay--inline': !targetOutOfRange,
-				'target-overlay--out-of-range': targetOutOfRange,
-				'target-overlay--faded': activeIndex !== null,
-			}"
-			:style="{ left: !targetOutOfRange ? targetLeft : null }"
-		>
-			<div v-if="!targetOutOfRange" class="target-marker"></div>
-			<div class="target-time text-nowrap">{{ targetText }}</div>
+		<div v-if="targetText && targetNearlyOutOfRange" ref="targetFixed" class="target-fixed">
+			<div class="text-nowrap">{{ targetText }}</div>
 			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
 	</div>
@@ -52,6 +55,8 @@ import "@h2d2/shopicons/es/regular/arrowright";
 import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
+
+const BAR_WIDTH = 20;
 
 export default {
 	name: "TariffChart",
@@ -89,7 +94,10 @@ export default {
 		targetLeft() {
 			const fullHours = Math.floor(this.targetOffset);
 			const hourFraction = this.targetOffset - fullHours;
-			return `${fullHours * 20 + 4 + hourFraction * 12}px`;
+			return `${fullHours * BAR_WIDTH + 4 + hourFraction * 12}px`;
+		},
+		targetNearlyOutOfRange() {
+			return this.targetOffset > this.slots.length - 4;
 		},
 		targetOutOfRange() {
 			return this.targetOffset > this.slots.length;
@@ -172,7 +180,12 @@ export default {
 	overflow-y: none;
 	padding-bottom: 55px;
 }
-.target-overlay {
+.target-inline {
+	height: 130px;
+	position: absolute;
+	top: 0;
+	display: flex;
+	align-items: flex-end;
 	color: var(--bs-primary);
 	opacity: 1;
 	transition-property: opacity, color, left;
@@ -180,28 +193,21 @@ export default {
 	pointer-events: none;
 	transition-timing-function: ease-in;
 }
-.target-overlay--inline {
-	height: 130px;
-	position: absolute;
-	top: 0;
-	display: flex;
-	align-items: flex-end;
-}
-.target-overlay--faded {
+.target-inline--faded {
 	opacity: 0.33;
 }
-.target-overlay--out-of-range {
-	position: sticky;
-	margin-bottom: -37px;
-	margin-left: -4rem;
+.target-fixed {
+	position: absolute;
 	background-color: var(--evcc-box);
+	color: var(--bs-primary);
 	padding-left: 1rem;
 	right: 0;
+	top: 110px;
 	display: flex;
 	gap: 0.25rem;
 	align-items: center;
 }
-.target-marker {
+.target-inline-marker {
 	height: 100%;
 	border: 1px solid var(--bs-primary);
 	border-width: 0 0 1px 1px;

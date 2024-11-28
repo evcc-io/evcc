@@ -140,7 +140,7 @@ export default {
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
 			const oneHour = 60 * 60 * 1000;
-			for (let i = 0; i < 42; i++) {
+			for (let i = 0; i < 39; i++) {
 				const start = new Date(this.startTime.getTime() + oneHour * i);
 				const startHour = start.getHours();
 				start.setMinutes(0);
