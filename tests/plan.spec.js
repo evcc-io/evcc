@@ -337,3 +337,33 @@ test.describe("warnings", async () => {
     await page.getByTestId("static-plan-time").fill("00:01");
   });
 });
+
+test.describe("repeating", async () => {
+  test("add and remove plans", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = await page.getByTestId("charging-plan-modal");
+
+    // one static plan, no number
+    await expect(modal.getByTestId("plan-entry")).toHaveCount(1);
+    await expect(modal.getByTestId("plan-entry").first()).not.toContainText("#1");
+
+    // add plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
+    await expect(modal.getByTestId("plan-entry").first()).toContainText("#1");
+    await expect(modal.getByTestId("plan-entry").last()).toContainText("#2");
+
+    // remove plan
+    await modal.getByTestId("plan-entry").last().getByRole("button", { name: "Remove" }).click();
+    await expect(modal.getByTestId("plan-entry")).toHaveCount(1);
+    await expect(modal.getByTestId("plan-entry").first()).not.toContainText("#1");
+  });
+});

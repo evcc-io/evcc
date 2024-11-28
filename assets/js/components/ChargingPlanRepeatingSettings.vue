@@ -123,7 +123,7 @@
 					v-else
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
-					data-testid="repeating-plan-delete"
+					aria-label="Remove"
 					tabindex="0"
 					@click="$emit('removed', id)"
 				>

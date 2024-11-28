@@ -1,5 +1,5 @@
 <template>
-	<div v-for="(plan, index) in plans" :key="index" :data-testid="`repeating-plan-${index + 2}`">
+	<div v-for="(plan, index) in plans" :key="index" data-testid="plan-entry">
 		<div>
 			<ChargingPlanRepeatingSettings
 				:showHeader="index === 0"

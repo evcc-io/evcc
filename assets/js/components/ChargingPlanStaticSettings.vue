@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5 mb-lg-4">
+	<div class="mb-5 mb-lg-4" data-testid="plan-entry">
 		<h5
 			v-if="multiplePlans"
 			class="d-flex gap-3 align-items-baseline d-lg-none mb-4 fw-normal evcc-gray"
