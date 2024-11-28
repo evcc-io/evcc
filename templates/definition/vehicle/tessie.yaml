@@ -94,7 +94,8 @@ render: |
     method: POST
   wakeup:
     source: http
-    uri: https://api.tessie.com/{{ .vin }}/wake
+    #uri: https://api.tessie.com/{{ .vin }}/wake #this is not necessary and conflicts with Tessiecharger
+    uri: https://api.tessie.com/{{ .vin }}/command/start_charging?retry_duration=40&wait_for_completion=true
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
