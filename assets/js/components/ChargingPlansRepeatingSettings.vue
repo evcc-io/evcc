@@ -19,6 +19,7 @@
 			type="button"
 			class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 			data-testid="repeating-plan-add"
+			tabindex="0"
 			@click="addPlan"
 		>
 			<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>

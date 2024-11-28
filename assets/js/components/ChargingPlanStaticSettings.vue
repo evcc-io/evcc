@@ -119,6 +119,7 @@
 						data-testid="static-plan-active"
 						:checked="!isNew"
 						:disabled="timeInThePast"
+						tabindex="0"
 						@change="toggle"
 					/>
 				</div>
@@ -130,6 +131,7 @@
 					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
 					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
+					tabindex="0"
 					@click="update"
 				>
 					{{ $t("main.chargingPlan.update") }}

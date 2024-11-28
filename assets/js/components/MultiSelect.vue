@@ -7,17 +7,20 @@
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
 			data-bs-auto-close="outside"
+			tabindex="0"
 		>
 			<slot></slot>
 		</button>
 		<ul ref="dropdown" class="dropdown-menu dropdown-menu-end" :aria-labelledby="id">
 			<template v-if="selectAllLabel">
 				<li class="dropdown-item p-0">
-					<label class="form-check px-3 py-2">
+					<label class="form-check px-3 py-2" :for="formId('all')">
 						<input
+							:id="formId('all')"
 							class="form-check-input ms-0 me-2"
 							type="checkbox"
 							value="all"
+							tabindex="0"
 							:checked="allOptionsSelected"
 							@change="toggleCheckAll()"
 						/>
@@ -34,6 +37,7 @@
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
 						:value="option.value"
+						tabindex="0"
 					/>
 					<div class="form-check-label">
 						{{ option.name }}

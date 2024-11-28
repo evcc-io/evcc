@@ -63,7 +63,7 @@
 					:id="formId('time')"
 					v-model="selectedTime"
 					type="time"
-					class="form-control mx-0"
+					class="form-control mx-0 text-start"
 					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
@@ -103,6 +103,7 @@
 						role="switch"
 						data-testid="repeating-plan-active"
 						:checked="selectedActive"
+						tabindex="0"
 						@change="update(true)"
 					/>
 				</div>
@@ -113,6 +114,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
 					data-testid="repeating-plan-apply"
+					tabindex="0"
 					@click="update(true)"
 				>
 					{{ $t("main.chargingPlan.update") }}
@@ -122,6 +124,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
 					data-testid="repeating-plan-delete"
+					tabindex="0"
 					@click="$emit('removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
