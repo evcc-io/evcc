@@ -137,7 +137,7 @@ vehicles = "My Vehicles"
 yaml = "Configured in evcc.yaml. Not editable in the UI."
 
 [config.messaging]
-description = "Recieve messages about your charging sessions."
+description = "Receive messages about your charging sessions."
 title = "Notifications"
 
 [config.meter]
@@ -622,6 +622,7 @@ downloadCsv = "Download as CSV"
 energy = "Charged"
 loadpoint = "Charging point"
 noData = "No charging sessions this month."
+overview = "Overview"
 price = "Cost"
 reallyDelete = "Do you really want to delete this session?"
 showIndividualEntries = "Show individual sessions"
