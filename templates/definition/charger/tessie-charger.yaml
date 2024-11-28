@@ -1,0 +1,136 @@
+template: tessie-charger
+group: generic
+products:
+  - description:
+      de: Tessie Wallbox
+      en: Tessie Charger
+requirements:
+  description:
+    en: Charger connected via the Tessie API. Allows control of charging state and configuration of maximum current.
+    de: Ladegerät, das über die Tessie-API verbunden ist. Ermöglicht die Steuerung des Ladezustands und die Konfiguration des maximalen Stroms.
+params:
+  - name: vin
+    description:
+      de: Fahrzeug-VIN
+      en: Vehicle VIN
+    required: true
+  - name: token
+    description:
+      de: Tessie API Token
+      en: Tessie API Token
+    required: true
+  - name: maxcurrent
+    description:
+      de: Maximale Stromstärke (A)
+      en: Maximum amperage (A)
+    example: 16
+    type: number
+    advanced: true
+  - name: location
+    description:
+      de: Always (charger is always enabled) otherwise specify the name of the location (work, home, etc.)
+      en: Always (charger is always enabled) otherwise specify the name of the location (work, home, etc.) 
+    example: "always"
+    required: false
+  - name: lat
+    description:
+      de: Breitengrad der adresse
+      en: Latitude of location
+    example: 40.7128
+    type: number
+    advanced: true
+  - name: lon
+    description:
+      de: Längengrad der adresse
+      en: Longitude of location
+    example: -74.0060
+    type: number
+    advanced: true
+
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state{{`{{ if .enabled }}{{ else }}?use_cache=true{{ end }}`}}
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: |
+      if "{{ .location }}" == "always" or
+         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+        .charge_state.charger_power * 1000
+      else
+        0
+      end
+
+  energy:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    cache: 30s
+    jq: |
+      if "{{ .location }}" == "always" or
+         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+        .charge_state.charge_energy_added
+      else
+        0
+      end
+
+  enabled:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state{{`{{ if .enable }}{{ else }}?use_cache=true{{ end }}`}}
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: |
+      if "{{ .location }}" == "always" or
+         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+        .charge_state.charging_state == "Charging"
+      else
+        false
+      end
+
+  status:
+    source: http
+    cache: 20s
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: |
+      if "{{ .location }}" == "always" then
+        if .charge_state.charging_state == "Charging" then "C"
+        elif .charge_state.charging_state == "Complete" then "D"
+        elif .charge_state.charge_port_door_open then "B"
+        else "A"
+        end
+      else
+        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+          if .charge_state.charging_state == "Charging" then "C"
+          elif .charge_state.charging_state == "Complete" then "D"
+          elif .charge_state.charge_port_door_open then "B"
+          else "A"
+          end
+        else
+          "A"
+        end
+      end
+  
+    
+  maxcurrent:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=${maxcurrent}
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+    
+  enable: # set charger enabled state (true/false or 0/1) ok
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .enable }}start{{ else }}stop{{ end }}`}}_charging?retry_duration=40&wait_for_completion=true 
+    headers:
+      Authorization: Bearer {{ .token }}
+    method: POST
+
+
+
