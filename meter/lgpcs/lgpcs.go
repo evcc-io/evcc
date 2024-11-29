@@ -27,9 +27,9 @@ type Com struct {
 	*request.Helper
 	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
 	authPath string
-	password string    // registration number of the LG ESS Inverter - e.g. "DE2001..."
-	authKey  string    // auth_key returned during login and renewed with new login after expiration
-	essType  LgEssType // currently the LG Ess Home 8/10 and Home 15 are supported
+	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
+	authKey  string // auth_key returned during login and renewed with new login after expiration
+	essType  Model  // currently the LG Ess Home 8/10 and Home 15 are supported
 	dataG    func() (EssData, error)
 }
 
@@ -39,7 +39,7 @@ var (
 )
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, registration, password string, cache time.Duration, essType LgEssType) (*Com, error) {
+func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	var err error

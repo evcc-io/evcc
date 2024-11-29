@@ -1,7 +1,7 @@
 package lgpcs
 
-// LgEssTypes
-type LgEssType int64
+// Models
+type Model int
 
 const (
 	LgEss8  = 0 // lgess 8/10
