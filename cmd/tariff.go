@@ -52,6 +52,10 @@ func runTariff(cmd *cobra.Command, args []string) {
 			continue
 		}
 
+		if tf == nil {
+			continue
+		}
+
 		if name == "" {
 			fmt.Println(key + ":")
 		}
