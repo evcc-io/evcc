@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, baseUrl, restart } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -543,5 +543,49 @@ test.describe("repeating", async () => {
     await plan2.getByTestId("repeating-plan-apply").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:30 AM");
+  });
+
+  test("repeating plan persistence", async ({ page }) => {
+    await page.goto("/");
+
+    const tomorrow = getWeekday(1);
+
+    let lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    let modal = await page.getByTestId("charging-plan-modal");
+
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan = modal.getByTestId("plan-entry").nth(1);
+    await plan.getByTestId("repeating-plan-weekdays").click();
+    await plan.getByRole("checkbox", { name: "Select all" }).click(); // check all
+    await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
+    await plan.getByRole("checkbox", { name: tomorrow }).check();
+    await plan.getByTestId("repeating-plan-time").fill("09:20");
+    await plan.getByTestId("repeating-plan-active").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
+
+    await restart(CONFIG);
+    await page.goto("/");
+
+    lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1
+      .getByTestId("charging-plan")
+      .getByRole("button", { name: "tomorrow 9:20 AM" })
+      .click();
+    modal = await page.getByTestId("charging-plan-modal");
+    await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
   });
 });
