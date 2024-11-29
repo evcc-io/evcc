@@ -1,4 +1,4 @@
-template: kostal-plenticore-gen2
+template: kostal-plenticore-hw0200
 products:
   - brand: Kostal
     description:
@@ -10,12 +10,13 @@ linked:
   - template: kostal-ksem
     usage: grid
     excludetemplate: kostal-ksem-inverter
+covers: ["kostal-plenticore-gen2"]
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Das Netzladen steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit Gen.1 Wechselrichtern (z.B. HW-Version 0100).
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Das Netzladen steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit Wechselrichtern der HW-Version 0100).
     en: |
-      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is available using this template, but actually incompatible with Gen.1 inverters (e.g. HW version 0100).
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is available using this template, but is currently incompatible with inverters of HW version 0100.
 params:
   - name: usage
     choice: ["pv", "battery"]
