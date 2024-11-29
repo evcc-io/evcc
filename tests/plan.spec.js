@@ -425,4 +425,49 @@ test.describe("repeating", async () => {
     );
     await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
   });
+
+  test("weekday selection", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = await page.getByTestId("charging-plan-modal");
+
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+
+    // weekday select should have value "Mo-Fr"
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
+      "Mon – Fri"
+    );
+
+    // select all weekdays
+    await modal.getByTestId("repeating-plan-weekdays").click();
+    await modal.getByRole("checkbox", { name: "Select all" }).click();
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
+      "Mon – Sun"
+    );
+
+    // select none
+    await modal.getByRole("checkbox", { name: "Select all" }).click();
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText("–");
+
+    // select specific weekdays
+    await modal.getByRole("checkbox", { name: "Thursday" }).check();
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
+      "Thu"
+    );
+
+    // activate
+    await modal.getByTestId("repeating-plan-time").fill("02:22");
+    await modal.getByTestId("repeating-plan-active").click();
+
+    // specific weekday and time
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("Thu 2:22 AM");
+  });
 });
