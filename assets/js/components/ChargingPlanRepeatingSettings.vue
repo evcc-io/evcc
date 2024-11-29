@@ -48,6 +48,7 @@
 					:value="selectedWeekdays"
 					:options="dayOptions"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
+					data-testid="repeating-plan-weekdays"
 					@update:model-value="changeSelectedWeekdays"
 				>
 					{{ weekdaysLabel }}

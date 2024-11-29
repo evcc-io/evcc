@@ -366,4 +366,63 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("plan-entry")).toHaveCount(1);
     await expect(modal.getByTestId("plan-entry").first()).not.toContainText("#1");
   });
+
+  test("preview static and repeating plan", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = await page.getByTestId("charging-plan-modal");
+
+    // one static plan
+    await expect(modal.getByTestId("plan-entry")).toHaveCount(1);
+
+    await modal.getByTestId("static-plan-day").selectOption({ index: 1 }); // tomorrow
+    await modal.getByTestId("static-plan-time").fill("09:00");
+
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan");
+    await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
+
+    // add repeating plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    await modal.getByTestId("repeating-plan-weekdays").click();
+    await modal.getByRole("checkbox", { name: "Select all" }).check();
+    await modal.getByTestId("repeating-plan-time").fill("11:11");
+
+    // switch between previews
+    await modal
+      .getByTestId("plan-preview-title")
+      .getByRole("combobox")
+      .selectOption("Preview plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("11:11 AM");
+
+    await modal
+      .getByTestId("plan-preview-title")
+      .getByRole("combobox")
+      .selectOption("Preview plan #1");
+    await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
+
+    // activate #1
+    await modal.getByTestId("static-plan-active").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
+    await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
+
+    // activate #2
+    await modal.getByTestId("static-plan-active").click();
+    await modal.getByTestId("repeating-plan-active").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("11:11 AM");
+
+    // back to preview if no active plan
+    await modal.getByTestId("repeating-plan-active").click();
+    await expect(modal.getByTestId("plan-preview-title").locator("option:checked")).toHaveText(
+      "Preview plan #1"
+    );
+    await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
+  });
 });

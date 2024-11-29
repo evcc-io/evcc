@@ -40,11 +40,13 @@
 				:style="{ left: targetLeft }"
 			>
 				<div class="target-inline-marker"></div>
-				<div class="text-nowrap target-inline-text">{{ targetText }}</div>
+				<div class="text-nowrap target-inline-text" data-testid="target-text">
+					{{ targetText }}
+				</div>
 			</div>
 		</div>
 		<div v-if="targetText && targetNearlyOutOfRange" ref="targetFixed" class="target-fixed">
-			<div class="text-nowrap">{{ targetText }}</div>
+			<div class="text-nowrap" data-testid="target-text">{{ targetText }}</div>
 			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
 	</div>

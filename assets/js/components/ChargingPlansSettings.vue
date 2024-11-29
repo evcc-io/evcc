@@ -44,6 +44,7 @@
 					v-else-if="noActivePlan"
 					:options="previewPlanOptions"
 					:selected="selectedPreviewId"
+					data-testid="preview-plan-select"
 					@change="selectPreviewPlan($event.target.value)"
 				>
 					<span class="text-decoration-underline">
