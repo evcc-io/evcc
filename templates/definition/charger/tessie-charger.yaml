@@ -27,11 +27,11 @@ params:
     advanced: true
   - name: location
     description:
-        de: >
+      de: >
       Definieren Sie einen Ort, an dem das Tessie-Ladegerät funktioniert
       (always = immer, kein Geofence) oder einen benutzerdefinierten Ort
       (Hause, Arbeitsplatz,..) mit lat & lon um einen Geofence zu erstellen.
-        en: >
+      en: >
       Define a location where the Tessie charger will work
       (always = always, no geofence) or a custom location (home, work,..)
       with lat and lon below to make a geofence.
