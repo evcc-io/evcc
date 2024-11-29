@@ -27,21 +27,21 @@ params:
     advanced: true
   - name: location
     description:
-      de: Always (charger is always enabled) otherwise specify the name of the location (work, home, etc.)
-      en: Always (charger is always enabled) otherwise specify the name of the location (work, home, etc.) 
-    example: "always"
-    required: false
+      de: Definieren Sie einen Ort, an dem das Tessie-Ladegerät funktioniert: (always = immer, kein Geofence) oder einen benutzerdefinierten Ort (Hause, Arbeitsplatz,..) mit lat & lon um einen Geofence zu erstellen. 
+      en: Define a location were Tessie charger will work: (always = always, no geofence) or a custom location (home, work,..) with lat and lon below to make a geofence 
+    example: "home"
+    required: true
   - name: lat
     description:
-      de: Breitengrad der adresse
-      en: Latitude of location
+      de: Breitengrad der custom adresse
+      en: Latitude of custom location
     example: 40.7128
     type: number
     advanced: true
   - name: lon
     description:
-      de: Längengrad der adresse
-      en: Longitude of location
+      de: Längengrad der custom adresse
+      en: Longitude of custom location
     example: -74.0060
     type: number
     advanced: true
