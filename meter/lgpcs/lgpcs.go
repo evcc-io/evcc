@@ -129,17 +129,17 @@ func (m *Com) Data() (EssData, error) {
 // refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
 func (m *Com) refreshData() (EssData, error) {
 	if m.essType == LgEss8 {
-		var meterData MeterResponse8
-		err := m.refreshMeterData(&meterData)
-		return meterData, err
-	} else {
-		var meterData MeterResponse15
-		err := m.refreshMeterData(&meterData)
-		return meterData, err
+		var res MeterResponse8
+		err := m.update(&res)
+		return res, err
 	}
+
+	var res MeterResponse15
+	err := m.update(&res)
+	return res, err
 }
 
-func (m *Com) refreshMeterData(meterData any) error {
+func (m *Com) update(meterData any) error {
 	data := map[string]interface{}{
 		"auth_key": m.authKey,
 	}
@@ -153,85 +153,21 @@ func (m *Com) refreshMeterData(meterData any) error {
 		// re-login if request returns 405-error
 		var se request.StatusError
 		if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
-			if err = m.Login(); err != nil {
+			if err := m.Login(); err != nil {
 				return err
 			}
 
 			data["auth_key"] = m.authKey
-			if req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding); err != nil {
+			req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
+			if err != nil {
 				return err
 			}
 
-			if err = m.DoJSON(req, meterData); err != nil {
-				return err
-			}
-		} else {
-			return err
+			return m.DoJSON(req, &meterData)
 		}
+
+		return err
 	}
+
 	return nil
-}
-
-// lgess 8/10
-func (m MeterResponse8) GetGridPower() float64 {
-	if m.Direction.IsGridSelling > 0 {
-		return -m.Statistics.GridPower
-	}
-	return m.Statistics.GridPower
-}
-
-func (m MeterResponse8) GetPvTotalPower() float64 {
-	return m.Statistics.PvTotalPower
-}
-
-func (m MeterResponse8) GetBatConvPower() float64 {
-	// discharge battery: batPower is positive, charge battery: batPower is negative
-	if m.Direction.IsBatteryDischarging == 0 {
-		return -m.Statistics.BatConvPower
-	}
-	return m.Statistics.BatConvPower
-}
-
-func (m MeterResponse8) GetBatUserSoc() float64 {
-	return m.Statistics.BatUserSoc
-}
-
-func (m MeterResponse8) GetCurrentGridFeedInEnergy() float64 {
-	return m.Statistics.CurrentGridFeedInEnergy
-}
-
-func (m MeterResponse8) GetCurrentPvGenerationSum() float64 {
-	return m.Statistics.CurrentPvGenerationSum
-}
-
-// lgess 15: power values are in 100W units
-func (m MeterResponse15) GetGridPower() float64 {
-	if m.Direction.IsGridSelling > 0 {
-		return -float64(m.Statistics.GridPower * 100)
-	}
-	return float64(m.Statistics.GridPower * 100)
-}
-
-func (m MeterResponse15) GetPvTotalPower() float64 {
-	return float64(m.Statistics.PvTotalPower * 100)
-}
-
-func (m MeterResponse15) GetBatConvPower() float64 {
-	// discharge battery: batPower is positive, charge battery: batPower is negative
-	if m.Direction.IsBatteryDischarging == 0 {
-		return -float64(m.Statistics.BatConvPower * 100)
-	}
-	return float64(m.Statistics.BatConvPower * 100)
-}
-
-func (m MeterResponse15) GetBatUserSoc() float64 {
-	return float64(m.Statistics.BatUserSoc)
-}
-
-func (m MeterResponse15) GetCurrentGridFeedInEnergy() float64 {
-	return float64(0) // data not provided by Ess15
-}
-
-func (m MeterResponse15) GetCurrentPvGenerationSum() float64 {
-	return float64(0) // data not provided by Ess15
 }
