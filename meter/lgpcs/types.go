@@ -1,5 +1,7 @@
 package lgpcs
 
+import "math"
+
 // Models
 type Model int
 
@@ -106,9 +108,9 @@ func (m MeterResponse15) GetBatUserSoc() float64 {
 }
 
 func (m MeterResponse15) GetCurrentGridFeedInEnergy() float64 {
-	return float64(0) // data not provided by Ess15
+	return math.NaN() // data not provided by Ess15
 }
 
 func (m MeterResponse15) GetCurrentPvGenerationSum() float64 {
-	return float64(0) // data not provided by Ess15
+	return math.NaN() // data not provided by Ess15
 }

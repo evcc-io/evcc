@@ -100,7 +100,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
-	if m.usage == "grid" {
+	if m.usage == "grid" && essType != lgpcs.LgEss15 {
 		totalEnergy = m.totalEnergy
 	}
 
