@@ -2,8 +2,7 @@ template: tessie
 group: generic
 products:
   - description:
-      de: Tessie Wallbox
-      en: Tessie Charger
+      generic: Tessie
 requirements:
   description:
     en: Charger connected via the Tessie API. Allows control of charging state and configuration of maximum current.
