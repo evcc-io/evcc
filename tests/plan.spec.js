@@ -14,6 +14,12 @@ test.afterEach(async () => {
   await stop();
 });
 
+function getWeekday(offset = 1) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return date.toLocaleDateString("en-US", { weekday: "long" });
+}
+
 async function setAndVerifyPlan(page, lp, { soc, energy }) {
   await lp.getByTestId("charging-plan-button").click();
 
@@ -461,6 +467,7 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
       "Thu"
     );
+    await modal.getByTestId("repeating-plan-weekdays").click(); // close
 
     // activate
     await modal.getByTestId("repeating-plan-time").fill("02:22");
@@ -469,5 +476,72 @@ test.describe("repeating", async () => {
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("Thu 2:22 AM");
+  });
+
+  test("next plan", async ({ page }) => {
+    await page.goto("/");
+
+    const yesterday = getWeekday(-1);
+    const tomorrow = getWeekday(1);
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = await page.getByTestId("charging-plan-modal");
+
+    // configure static plan for tomorrow
+    const plan1 = modal.getByTestId("plan-entry").nth(0);
+    await plan1.getByTestId("static-plan-day").selectOption({ index: 1 });
+    await plan1.getByTestId("static-plan-time").fill("09:30");
+    await plan1.getByTestId("static-plan-active").click();
+
+    // add repeating plan for tomorrow
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan2 = modal.getByTestId("plan-entry").nth(1);
+    const days2 = plan2.getByTestId("repeating-plan-weekdays");
+    await days2.click();
+    await days2.getByRole("checkbox", { name: "Select all" }).click();
+    await days2.getByRole("checkbox", { name: "Select all" }).click();
+    await days2.getByRole("checkbox", { name: tomorrow }).check();
+    await days2.click(); // close
+    await plan2.getByTestId("repeating-plan-time").fill("09:20");
+    await plan2.getByTestId("repeating-plan-active").click();
+
+    // add repeating plan for every day
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan3 = modal.getByTestId("plan-entry").last();
+    const days3 = plan3.getByTestId("repeating-plan-weekdays");
+    await days3.click();
+    await days3.getByRole("checkbox", { name: "Select all" }).check();
+    await days3.click(); // close
+    await plan3.getByTestId("repeating-plan-time").fill("09:10");
+    await plan3.getByTestId("repeating-plan-active").click();
+
+    // check next plans
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #3");
+    await expect(modal.getByTestId("target-text")).toContainText("9:10 AM");
+
+    // disable plan #3
+    await plan3.getByTestId("repeating-plan-active").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
+
+    // change plan #2 to yesterday
+    await days2.click();
+    await days2.getByRole("checkbox", { name: tomorrow }).click(); // uncheck
+    await days2.getByRole("checkbox", { name: yesterday }).click(); // check
+    await days2.click(); // close
+    // no changes yet
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
+
+    // apply
+    await plan2.getByTestId("repeating-plan-apply").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
+    await expect(modal.getByTestId("target-text")).toContainText("9:30 AM");
   });
 });
