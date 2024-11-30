@@ -1,0 +1,30 @@
+template: ocpp-autel
+products:
+  - brand: AUTEL
+    description:
+      generic: AC MaxiCharger, AC Compact (OCPP)
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    de: |
+      Anleitung:
+      * In der Autel Charge app, klicken sie auf “OCPP Server”
+      * Geben Sie "Custom" in das Feld ein und wählen Sie "Personalisierung" darunter
+      * Server-URL: ws://[evcc-adresse]:8887/ (Verbindung über das lokale Netzwerk)
+      * Ladegerät-ID: Leer lassen (zur Verwendung der Seriennummer) oder einen benutzerdefinierten Wert definieren, der in der Konfiguration als *stationid* wiederverwendet wird
+      * Autorisierungsschlüssel: leer lassen
+    en: |
+      Setup Guide:
+      * In the Autel Charge app, click on “OCPP Server”
+      * In the search bar type “Custom” and select it.
+      * Server URL: ws://[evcc-address]:8887/ (local network connection)
+      * Charger ID: Leave empty (for use the serial number) or set custom value which is reused in configuration as *stationid*
+      * Authorisation Key: leave empty
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  {{- if ne .remotestart "true" }}
+  remotestart: true # force remotestart
+  {{- end }}
