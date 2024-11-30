@@ -60,9 +60,14 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     jq: |
-      if "{{ .location }}" == "always" or
-         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
-         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+      if "{{ .lat }}" != "" and "{{ .lon }}" != "" then
+        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+           ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+          .charge_state.charger_power * 1000
+        else
+          0
+        end
+      elif "{{ .location }}" == "always" then
         .charge_state.charger_power * 1000
       else
         0
@@ -75,9 +80,14 @@ render: |
       Authorization: Bearer {{ .token }}
     cache: 30s
     jq: |
-      if "{{ .location }}" == "always" or
-         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
-         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+      if "{{ .lat }}" != "" and "{{ .lon }}" != "" then
+        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+           ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+          .charge_state.charge_energy_added
+        else
+          0
+        end
+      elif "{{ .location }}" == "always" then
         .charge_state.charge_energy_added
       else
         0
@@ -89,9 +99,14 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     jq: |
-      if "{{ .location }}" == "always" or
-         ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
-         ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+      if "{{ .lat }}" != "" and "{{ .lon }}" != "" then
+        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+           ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+          .charge_state.charging_state == "Charging"
+        else
+          false
+        end
+      elif "{{ .location }}" == "always" then
         .charge_state.charging_state == "Charging"
       else
         false
@@ -104,14 +119,9 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     jq: |
-      if "{{ .location }}" == "always" then
-        if .charge_state.charging_state == "Charging" then "C"
-        elif .charge_state.charging_state == "Complete" then "D"
-        elif .charge_state.charge_port_door_open then "B"
-        else "A"
-        end
-      else
-        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
+      if "{{ .lat }}" != "" and "{{ .lon }}" != "" then
+        if ((.drive_state.latitude - {{ .lat }} | abs) < 0.001) and
+           ((.drive_state.longitude - {{ .lon }} | abs) < 0.001) then
           if .charge_state.charging_state == "Charging" then "C"
           elif .charge_state.charging_state == "Complete" then "D"
           elif .charge_state.charge_port_door_open then "B"
@@ -120,6 +130,14 @@ render: |
         else
           "A"
         end
+      elif "{{ .location }}" == "always" then
+        if .charge_state.charging_state == "Charging" then "C"
+        elif .charge_state.charging_state == "Complete" then "D"
+        elif .charge_state.charge_port_door_open then "B"
+        else "A"
+        end
+      else
+        "A"
       end
   
   maxcurrent:
@@ -129,9 +147,9 @@ render: |
       Authorization: Bearer {{ .token }}
     method: POST
     
-  enable: # set charger enabled state (true/false or 0/1) ok
+  enable:
     source: http
-    uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .enable }}start{{ else }}stop{{ end }}`}}_charging?retry_duration=40&wait_for_completion=true 
+    uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .enable }}start{{ else }}stop{{ end }}`}}_charging?retry_duration=40&wait_for_completion=true
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
