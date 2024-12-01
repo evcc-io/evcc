@@ -5,8 +5,8 @@ products:
       generic: "Elering"
 requirements:
   description:
-    de: "Nur für Estland verfügbar."
-    en: "Only available for Estonia."
+    de: "Verfügbare Regionen sind Estland, Lettland, Litauen, Finnland, Schweden, Norwegen."
+    en: "Available regions are Estonia, Latvia, Lithuania, Finnland, Sweden, Norway."
 group: price
 params:
   - name: region
