@@ -27,6 +27,7 @@ func init() {
 func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
+		Init   string
 		Script string
 		In     []transformationConfig
 		Out    []transformationConfig
@@ -36,7 +37,7 @@ func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, err
 	}
 
-	vm, err := golang.RegisteredVM(cc.VM, "")
+	vm, err := golang.RegisteredVM(cc.VM, cc.Init)
 	if err != nil {
 		return nil, err
 	}
