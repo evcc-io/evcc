@@ -1,6 +1,12 @@
 template: mini
 products:
   - brand: Mini
+requirements:
+  description:
+    de: |
+      Benötigt `hcaptcha` Token. Dieses muss einmalig unter https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html generiert werden. Das Token ist nur für kurze Zeit gültig. Bitte möglichst schnell nach Generierung in die Konfiguration kopieren und evcc starten.
+    en: |
+      Requires `hcaptcha` token. This must be generated once at https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html. The token is only valid for a short time. Please copy it into the configuration and start evcc as soon as possible after generation.
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
@@ -17,6 +23,8 @@ params:
     advanced: true
   - name: welcomecharge
     advanced: true
+  - name: hcaptcha
+    required: true
 render: |
   type: mini
   {{ include "vehicle-base" . }}
@@ -27,3 +35,4 @@ render: |
   {{- if eq .welcomecharge "true" }}
   features: ["welcomecharge"]
   {{- end }}
+  hcaptcha: {{ .hcaptcha }}

@@ -1,6 +1,6 @@
 <template>
-	<label class="position-relative d-block" :for="id" role="button">
-		<select :id="id" :value="selected" class="custom-select" @change="change">
+	<label class="root position-relative d-block" :for="id" role="button">
+		<select :id="id" :value="selected" class="custom-select" tabindex="0" @change="change">
 			<option
 				v-for="{ name, value, count, disabled } in options"
 				:key="value"
@@ -46,5 +46,13 @@ export default {
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
+}
+.root {
+	border-radius: var(--bs-border-radius);
+}
+.root:focus-within {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
+	outline-offset: var(--bs-focus-ring-width);
 }
 </style>

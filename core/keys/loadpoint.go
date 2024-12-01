@@ -38,6 +38,7 @@ const (
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectivePlanId     = "effectivePlanId"     // effective plan id
 	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
@@ -66,6 +67,9 @@ const (
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+
+	// repeating plans
+	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
 
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled

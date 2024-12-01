@@ -26,5 +26,8 @@
 				"octref.vetur"
 			]
 		}
+	},
+	"remoteEnv": {
+		"GOTOOLCHAIN": "auto"
 	}
 }

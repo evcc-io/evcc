@@ -153,9 +153,9 @@ func (t *Entsoe) run(done chan error) {
 		data := make(api.Rates, 0, len(res))
 		for _, r := range res {
 			ar := api.Rate{
-				Start: r.Start,
-				End:   r.End,
-				Price: t.totalPrice(r.Value),
+				Start: r.Start.Local(),
+				End:   r.End.Local(),
+				Price: t.totalPrice(r.Value, r.Start),
 			}
 			data = append(data, ar)
 		}

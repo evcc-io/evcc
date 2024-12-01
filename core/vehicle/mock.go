@@ -84,6 +84,20 @@ func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
 }
 
+// GetRepeatingPlans mocks base method.
+func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlanStruct {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepeatingPlans")
+	ret0, _ := ret[0].([]api.RepeatingPlanStruct)
+	return ret0
+}
+
+// GetRepeatingPlans indicates an expected call of GetRepeatingPlans.
+func (mr *MockAPIMockRecorder) GetRepeatingPlans() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlans))
+}
+
 // Instance mocks base method.
 func (m *MockAPI) Instance() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -148,4 +162,18 @@ func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
 func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+}
+
+// SetRepeatingPlans mocks base method.
+func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlanStruct) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetRepeatingPlans indicates an expected call of SetRepeatingPlans.
+func (mr *MockAPIMockRecorder) SetRepeatingPlans(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlans), arg0)
 }
