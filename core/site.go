@@ -448,7 +448,7 @@ func (site *Site) updatePvMeters() {
 		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
-			if power < -500 {
+			if power < -500 && power != -2147483648 { // -2147483648 = 0x8000 0000 = -0 : output value of SMA STP when no power is generated 
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
 		} else {
