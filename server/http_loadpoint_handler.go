@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
 
@@ -44,6 +46,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		maxPower := lp.EffectiveMaxPower()
 		planTime := lp.EffectivePlanTime()
+		id := lp.EffectivePlanId()
 
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
@@ -54,11 +57,13 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		res := struct {
+			PlanId   int       `json:"planId"`
 			PlanTime time.Time `json:"planTime"`
 			Duration int64     `json:"duration"`
 			Plan     api.Rates `json:"plan"`
 			Power    float64   `json:"power"`
 		}{
+			PlanId:   id,
 			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
@@ -69,8 +74,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planPreviewHandler returns a plan preview for given parameters
-func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+// staticPlanPreviewHandler returns a plan preview for given parameters
+func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -104,6 +109,59 @@ func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		plan, err := lp.GetPlan(planTime, requiredDuration)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			PlanTime time.Time `json:"planTime"`
+			Duration int64     `json:"duration"`
+			Plan     api.Rates `json:"plan"`
+			Power    float64   `json:"power"`
+		}{
+			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
+		}
+
+		jsonResult(w, res)
+	}
+}
+
+func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		hourMinute := vars["time"]
+		tz := vars["tz"]
+
+		var weekdays []int
+		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
+			weekday, err := strconv.Atoi(weekdayStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
+				return
+			}
+			weekdays = append(weekdays, weekday)
+		}
+
+		soc, err := strconv.ParseFloat(vars["soc"], 64)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		maxPower := lp.EffectiveMaxPower()
+		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan, err := lp.GetPlan(planTime, requiredDuration)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

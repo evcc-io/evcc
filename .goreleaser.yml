@@ -32,6 +32,15 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    overrides:
+      - goos: darwin
+        goarch: arm64
+        ldflags:
+          - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w -B gobuildid
+      - goos: darwin
+        goarch: amd64
+        ldflags:
+          - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w -B gobuildid
 
 env:
   - CGO_ENABLED=0

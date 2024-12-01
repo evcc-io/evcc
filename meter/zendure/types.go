@@ -48,6 +48,7 @@ type Data struct {
 	MasterSwitch    bool   `json:"masterSwitch"`    // true,
 	OutputLimit     int    `json:"outputLimit"`     // 0,
 	OutputPackPower int    `json:"outputPackPower"` // 70,
+	PackInputPower  int    `json:"packInputPower"`  // 70,
 	OutputHomePower int    `json:"outputHomePower"` // 70,
 	PackNum         int    `json:"packNum"`         // 1,
 	PackState       int    `json:"packState"`       // 0,

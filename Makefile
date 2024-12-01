@@ -77,7 +77,7 @@ build::
 	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
-	goreleaser --snapshot --skip-publish --clean
+	goreleaser --snapshot --skip publish --clean
 
 release::
 	goreleaser --clean

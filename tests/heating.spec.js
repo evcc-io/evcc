@@ -4,7 +4,7 @@ import { start, stop, baseUrl } from "./evcc";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start("heating.evcc.yaml", "password.sql");
+  await start("heating.evcc.yaml");
 });
 test.afterAll(async () => {
   await stop();

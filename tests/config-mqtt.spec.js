@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, login } from "./utils";
+import { enableExperimental } from "./utils";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -8,9 +8,8 @@ test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG, "password.sql");
+  await start(CONFIG);
   await page.goto("/#/config");
-  await login(page);
   await enableExperimental(page);
 });
 

@@ -43,6 +43,10 @@ func NewAPI(log *util.Logger, baseURI string, decorator func(*http.Request) erro
 	// api is unbelievably slow when retrieving status
 	v.Client.Timeout = 120 * time.Second
 
+	if transport, ok := v.Client.Transport.(*http.Transport); ok {
+		transport.TLSHandshakeTimeout = 30 * time.Second
+	}
+
 	v.Client.Transport = &transport.Decorator{
 		Decorator: decorator,
 		Base:      v.Client.Transport,

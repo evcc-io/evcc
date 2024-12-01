@@ -20,6 +20,12 @@ params:
     type: duration
     default: 60s
     advanced: true
+  - name: chargepower
+    default: 4200 # W
+    advanced: true
+    help:
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt
+      en: Maximum charging power for forced charging of the battery in Watt
 render: |
   type: custom
   power:
@@ -56,12 +62,12 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2424
+            value: 2424 # Voreinstellung (Dft)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236
+                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -70,34 +76,16 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793
+                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: 2500
+            value: {{ .chargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40797
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 2650
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40799
+                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -106,7 +94,25 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40801
+                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .chargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
       - case: 2 # hold
@@ -114,12 +120,12 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2424
+            value: 2424 # Voreinstellung (Dft)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236
+                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -128,7 +134,16 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793
+                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .chargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -137,7 +152,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795
+                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -146,7 +161,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40797
+                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -155,16 +170,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40799
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40801
+                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
       - case: 3 # charge
@@ -172,48 +178,30 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2289
+            value: 2289 # Batterie laden (BatChaMod)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236
+                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: 2500
+            value: {{ .chargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793
+                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: 2500
+            value: {{ .chargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40797
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 2650
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40799
+                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -222,7 +210,25 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40801
+                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
   capacity: {{ .capacity }} # kWh
