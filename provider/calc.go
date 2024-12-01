@@ -24,7 +24,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		Add  []Config
 		Mul  []Config
 		Div  []Config
-		Abs *Config
+		Abs  *Config
 		Sign *Config
 	}
 
@@ -32,13 +32,18 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		return nil, err
 	}
 
-	o := &calcProvider{}
-	if i := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1); i > 1 ||
-		(i > 0 && cc.Abs != nil) ||
-		(i > 0 && cc.Sign != nil) ||
-		(cc.Abs != nil && cc.Sign != nil) {
+	cnt := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1)
+	if cc.Abs != nil {
+		cnt++
+	}
+	if cc.Sign != nil {
+		cnt++
+	}
+	if cnt != 1 {
 		return nil, errors.New("can only have either add, mul, div, abs or sign")
 	}
+
+	o := &calcProvider{}
 
 	for idx, cc := range cc.Add {
 		f, err := NewFloatGetterFromConfig(ctx, cc)
@@ -161,7 +166,7 @@ func (o *calcProvider) floatGetter() (float64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("sign: %w", err)
 		}
-		res = map[bool]float64{false: -1, true: 1}[v >= 0]
+		res = math.Copysign(1, v)
 	}
 
 	return res, nil
