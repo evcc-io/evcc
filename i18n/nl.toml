@@ -415,6 +415,9 @@ titleMinSoc = "Min lading"
 titleTargetCharge = "Vertrek"
 unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 update = "Toepassen"
+repeating = "herhalend"
+selectAll = "Alles selectreren"
+weekdays = "Weekdagen"
 
 [main.energyflow]
 battery = "Batterij"
