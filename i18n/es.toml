@@ -100,6 +100,8 @@ remove = "Quitar"
 save = "Guardar"
 telemetry = "Telemetría"
 title = "Título"
+showAdvancedSettings = "Mostrar configuración avanzada"
+hideAdvancedSettings = "Ocultar configuración avanzada"
 
 [config.grid]
 title = "Contador de red"
@@ -138,7 +140,7 @@ vehicles = "Mis vehículos"
 yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
 
 [config.messaging]
-description = "Recibe mensajes sobre tus sesiones de carga."
+description = "Recibir mensajes sobre tus sesiones de carga"
 title = "Notificaciónes"
 
 [config.meter]
@@ -653,6 +655,7 @@ solar = "Solar"
 title = "Sesiones de carga"
 total = "Total"
 vehicle = "Vehículo"
+overview = "Resumen"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "CO₂ ⌀ {byGroup}"
