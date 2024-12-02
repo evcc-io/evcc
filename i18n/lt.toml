@@ -81,7 +81,7 @@ url = "URL"
 yes = "taip"
 
 [config.eebus]
-description = "Konfigūracija, leidžianti evcc susisiekti su kitais EEBus įrenginiais."
+description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
 title = "EEBus"
 
 [config.form]
@@ -100,6 +100,8 @@ remove = "Pašalinti"
 save = "Išsaugoti"
 telemetry = "Telemetrija"
 title = "Pavadinimas"
+hideAdvancedSettings = "Slėpti išplėstinius nustatymus"
+showAdvancedSettings = "Rodyti išplėstinius nustatymus"
 
 [config.grid]
 title = "Tinklo skaitiklis"
@@ -203,8 +205,8 @@ general = "Pagrindiniai"
 grid = "Elektros tinklas"
 integrations = "Integracijos"
 loadpoints = "Įkrovikliai"
-meter = "Saulės energijos ir kaupiklio"
-system = "Sisteminiai"
+meter = "Saulės elektrinės ir kaupikliai"
+system = "Sistema"
 vehicles = "Automobiliai"
 
 [config.site]
@@ -213,7 +215,7 @@ save = "Išsaugoti"
 
 [config.sponsor]
 addToken = "Įveskite sponsor token"
-changeToken = "Pakeisti sponsor token"
+changeToken = "Pakeisti rėmėjo token'ą"
 description = "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų."
 descriptionToken = "Tokeną gaunate iš {url}. Taip pat siūlome bandomąjį tokeną testavimui."
 error = "Sponsoriaus tokenas negaliojantis"
@@ -413,6 +415,12 @@ titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
 unsavedChanges = "Yra neišsaugotų pakeitimų. Išsaugoti dabar?"
 update = "Patvirtinti"
+repeatingPlans = "Pasikartojantys planai"
+selectAll = "Pasirinkti visus"
+weekdays = "Darbo dienos"
+addRepeatingPlan = "Pridėti pasikartojantį įkrovimo planą"
+repeating = "kartojasi"
+planNumber = "Planas {number}"
 
 [main.energyflow]
 battery = "Kaupiklis"
@@ -532,6 +540,7 @@ tomorrow = "rytoj"
 update = "Atnaujinti"
 vehicleCapacityDocs = "Išmokite, kaip tai sukonfigūruoti."
 vehicleCapacityRequired = "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
+nextPlan = "Kitas planas"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
@@ -617,8 +626,8 @@ labelRepeat = "Pakartoti slaptažodį"
 newPassword = "Sukurti slaptažodį"
 noMatch = "Slaptažodžiai nesutampa"
 titleNew = "Nustatyti Administratoriaus slaptažodį"
-titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
-updatePassword = "Atnaujinti slaptažodį"
+titleUpdate = "Pakeisti Administratoriaus slaptažodį"
+updatePassword = "Pakeisti slaptažodį"
 
 [session]
 cancel = "Atšaukti"
@@ -669,6 +678,7 @@ solarTitleByGroup = "Saulės {byGroup}"
 title = "Įkrovimo Sesijos"
 total = "Suma"
 vehicle = "Automobilis"
+overview = "Apžvalga"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"

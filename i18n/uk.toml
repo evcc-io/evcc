@@ -68,6 +68,7 @@ soc = "SoC"
 socLimit = "Ліміт"
 url = "URL"
 yes = "так"
+chargeStatusE = "немає електроенергії"
 
 [config.eebus]
 title = "EEBus"
@@ -83,6 +84,8 @@ experimental = "Експериментальний"
 off = "вимкнено"
 save = "зберегти"
 telemetry = "Телеметрія"
+hideAdvancedSettings = "Приховати розширені налаштування"
+showAdvancedSettings = "Показати розширені налаштування"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -96,6 +99,7 @@ labelDatabase = "База даних"
 labelToken = "API Token"
 labelUrl = "URL"
 title = "InfluxDB"
+labelBucket = "Bucket"
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
@@ -202,7 +206,7 @@ becomeSponsor = "Стати спонсором"
 confetti = "Готові до конфетті?"
 confettiPromise = "Ви отримуєте наклейки та цифрові конфетті"
 sticker = "… або наклейки evcc?"
-supportUs = "Наша місія — зробити сонячну енергію нормою. Допоможіть evcc, заплативши стільки, скільки можете."
+supportUs = "Наша місія — зробити заряджання від сонячних батарей нормою. Допоможіть evcc, заплативши стільки, скільки можете."
 thanks = "Дякуємо, {sponsor}! Ваш внесок допомагає розвивати evcc далі."
 titleNoSponsor = "Підтримайте нас"
 titleSponsor = "Ви спонсор"
@@ -299,7 +303,7 @@ co2 = "⌀ CO₂"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
-price = "Σ Ціна"
+price = "Вартість"
 solar = "Сонячна"
 
 [main.loadpointSettings]
@@ -401,21 +405,22 @@ vehicleLimit = "Ліміт транспортного засобу: {soc}"
 
 [main.vehicleStatus]
 charging = "Зарядка…"
-cheapEnergyCharging = "Доступна дешева енергія. Заряджання..."
-cleanEnergyCharging = "Чиста енергія доступна. Заряджання..."
+cheapEnergyCharging = "Доступна дешева енергія."
+cleanEnergyCharging = "Чиста енергія доступна."
 climating = "Виявлено попередню підготовку."
 connected = "Підключено."
 disconnected = "Відключено."
 minCharge = "Мінімальна зарядка до {soc}."
-pvDisable = "Недостатньо надлишку. Пауза через {remaining}…"
-pvEnable = "Надлишок доступний. Початок через {remaining}…"
-scale1p = "Зменшення до 1-фазного живлення через {remaining}…"
-scale3p = "Збільшення до 3-фазного живлення через {remaining}…"
-targetChargeActive = "Запланований заряд активний…"
-targetChargePlanned = "Запланована зарядка починається о {time}."
+pvDisable = "Недостатньо надлишків. Скоро припинення."
+pvEnable = "Надлишки доступні. Скоро почнеться."
+scale1p = "Зменшення до 1-фазного живлення скоро."
+scale3p = "Збільшення до 3-фазного живлення скоро."
+targetChargeActive = "Запланований заряд активний. Орієнтовний фініш через {duration}."
+targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
-vehicleLimitReached = "Ліміт транспортного засобу {soc} досягнуто."
+vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
+unknown = ""
 
 [notifications]
 dismissAll = "Відхилити все"
@@ -453,12 +458,13 @@ downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
 noData = "Ніяких зарядних сесій цього місяця"
-price = "Σ Ціна"
+price = "Вартість"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 solar = "Сонячна"
 title = "Сеанси зарядки"
 total = "Всього"
 vehicle = "Транспортний засіб"
+overview = "Огляд"
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
@@ -544,3 +550,19 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.modbusproxy]
+title = "Modbus Proxy"
+description = "Дозволити кільком клієнтам доступ до одного пристрою Modbus."
+
+[config.mqtt]
+labelBroker = "Broker"
+title = "MQTT"
+
+[config.messaging]
+description = "Отримувати повідомлення про ваші сеанси зарядки"
+title = "Сповіщення"
+
+[sessions.chartTitle]
+solar = "Сонячна частка за рік"
