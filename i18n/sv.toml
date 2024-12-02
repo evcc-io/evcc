@@ -100,6 +100,8 @@ remove = "Ta bort"
 save = "Spara"
 telemetry = "Telemetri"
 title = "Titel"
+showAdvancedSettings = "Visa avancerade inställningar"
+hideAdvancedSettings = "Dölj avancerade inställningar"
 
 [config.grid]
 title = "Elmätare"
@@ -138,7 +140,7 @@ vehicles = "Mina fordon"
 yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
 
 [config.messaging]
-description = "Mottag notiser om dina laddningar."
+description = "Få notiser om dina laddningar."
 title = "Notiser"
 
 [config.meter]
@@ -648,6 +650,7 @@ solar = "Sol"
 title = "Laddningar"
 total = "Total"
 vehicle = "Fordon"
+overview = "Överblick"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
