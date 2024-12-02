@@ -98,6 +98,8 @@ remove = "Eltávolítás"
 save = "Mentés"
 telemetry = "Telemetria"
 title = "Cím"
+hideAdvancedSettings = Speciális beállítások elrejtése
+showAdvancedSettings = Speciális beállítások megjelenítése
 
 [config.grid]
 title = "Hálózati mérő"
@@ -631,6 +633,7 @@ solar = "Napenergia"
 title = "Töltési Folyamatok"
 total = "Összesen"
 vehicle = "Jármű"
+overview = Áttekintés
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
