@@ -43,7 +43,7 @@ labelResidualPower = "Vermogensoverschot"
 title = "Regelgedrag"
 
 [config.deviceValue]
-broker = "Broker"
+broker = Agent
 bucket = "Bucket"
 capacity = "Capaciteit"
 chargeStatus = "Status"
@@ -130,7 +130,7 @@ v2Support = "Terug naar InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
-addPvBattery = "Voeg zonnepanelen of batterij toe"
+addPvBattery = "Voeg zonnepaneel of batterij toe"
 addVehicle = "Voeg voertuig toe"
 configured = "geconfigureerd"
 edit = "bewerken"
@@ -160,12 +160,12 @@ authentication = "Authenticatie"
 description = "Verbind met een MQTT broker om data met andere netwerksystemen uit te wisselen."
 descriptionClientId = "Auteur van de berichten. Wanneer leeg wordt `evcc-[rand]` gebruikt."
 descriptionTopic = "Laat leeg om publicatie te deactiveren."
-labelBroker = "Broker"
+labelBroker = Agent
 labelCaCert = "Servercertificaat (CA)"
 labelCheckInsecure = "Sta self-signed certificaten toe"
 labelClientCert = "Clientcertificaat"
 labelClientId = "Client ID"
-labelClientKey = "Client key"
+labelClientKey = "Gebruikers-sleutel"
 labelInsecure = "Certificaat validatie"
 labelPassword = "Wachtwoord"
 labelTopic = "Onderwerp"
@@ -220,7 +220,7 @@ description = "Het sponsormodel helpt ons het project te onderhouden en nieuwe t
 descriptionToken = "Haal de token op vanaf {url}. We bieden ook een trial-token aan om te testen."
 error = "De sponsortoken is ongeldig."
 labelToken = "Sponsortoken"
-title = "Sponsorship"
+title = Sponsoring
 
 [config.system]
 logs = "Logboeken"
@@ -363,7 +363,7 @@ logsDescription = "Kijk in de logboeken voor foutmeldingen."
 modalTitle = "Hulp nodig?"
 primaryActions = "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen."
 restartButton = "Herstart"
-restartDescription = "Geprobeerd het uit en terug aan te zetten?"
+restartDescription = "Geprobeerd het uit en weer aan te zetten?"
 secondaryActions = "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
 
 [help.restart]
