@@ -20,6 +20,4 @@ render: |
   type: mg
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  {{- if ne .region "EU" }}
   region: {{ .region }}
-  {{- end }}  
