@@ -100,6 +100,8 @@ remove = "Fjern"
 save = "Gem"
 telemetry = "Telemetri"
 title = "Titel"
+hideAdvancedSettings = "Skjul avancerede indstillinger"
+showAdvancedSettings = "Vis avancerede indstillinger"
 
 [config.grid]
 title = "Elnet-måler"
@@ -408,6 +410,12 @@ titleMinSoc = "Min. ladning"
 titleTargetCharge = "Afgang"
 unsavedChanges = "Der er ændringer som ikke er gemt. Skal de benyttes nu?"
 update = "Anvend"
+addRepeatingPlan = "Tilføj plan for gentagelse"
+planNumber = "Plan {number}"
+repeating = "Gentager"
+repeatingPlans = "Gentager plan"
+selectAll = "Vælg alt"
+weekdays = "Ugedage"
 
 [main.energyflow]
 battery = "Batteri"
@@ -527,6 +535,7 @@ tomorrow = "i morgen"
 update = "Opdatering"
 vehicleCapacityDocs = "Lær at indstille det."
 vehicleCapacityRequired = "Køretøjets batterikapacitet skal kendes for at estimere opladningstiden."
+nextPlan = "Næste plan"
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
@@ -648,6 +657,7 @@ solar = "solenergi"
 title = "Opladnings Sessioner"
 total = "Total"
 vehicle = "Køretøj"
+overview = "Overblik"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
