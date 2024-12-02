@@ -415,6 +415,12 @@ titleMinSoc = "Charge min."
 titleTargetCharge = "Départ"
 unsavedChanges = "Il y a des modifications non sauvegardées. Appliquer ?"
 update = "Appliquer"
+planNumber = "Planning {number}"
+repeating = "récurrent"
+weekdays = "Jours de semaine"
+addRepeatingPlan = "Ajouter un planning récurrent"
+repeatingPlans = "Plannings récurrents"
+selectAll = "Sélect. tous"
 
 [main.energyflow]
 battery = "Batterie"
@@ -531,6 +537,7 @@ tomorrow = "demain"
 update = "Mettre à jour"
 vehicleCapacityDocs = "Infos sur la configuration."
 vehicleCapacityRequired = "La capacité de batterie du véhicule est requise pour estimer la durée de charge."
+nextPlan = "Prochain planning"
 
 [main.targetChargePlan]
 chargeDuration = "Durée de charge"
@@ -668,6 +675,7 @@ solarTitleByGroup = "Part solaire {byGroup}"
 title = "Sessions de charge"
 total = "Total"
 vehicle = "Véhicule"
+overview = "Aperçu"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
