@@ -100,6 +100,8 @@ remove = "Verwijderen"
 save = "Opslaan"
 telemetry = "Telemetrie"
 title = "Titel"
+hideAdvancedSettings = "Verberg geavanceerde instellingen"
+showAdvancedSettings = "Toon geavanceerde instellingen"
 
 [config.grid]
 title = "Netmeter"
@@ -138,7 +140,7 @@ vehicles = "Mijn voertuigen"
 yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface."
 
 [config.messaging]
-description = "Ontvang berichten over de voortgang van het laden."
+description = "Ontvang berichten over je oplaadsessies."
 title = "Notificaties"
 
 [config.meter]
@@ -666,6 +668,7 @@ solarTitleByGroup = "Zonne-aandeel {byGroup}"
 title = "Oplaadsessies"
 total = "Totaal"
 vehicle = "Voertuig"
+overview = "Overzicht"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
