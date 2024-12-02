@@ -20,6 +20,11 @@ const (
 	StatInvalid
 )
 
+const (
+	RegionEU = "https://gateway-mg-eu.soimt.com/api.app/v1/"
+	RegionAU = "https://gateway-mg-au.soimt.com/api.app/v1/"
+)
+
 type ConcurrentRequest struct {
 	Status int
 	Result requests.ChargeStatus
@@ -49,16 +54,6 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 
 	return v
 }
-
-/*
-func (v *API) printAnswer() {
-	v.Logger.DEBUG.Printf("SOC:%d ", v.request.Result.ChrgMgmtData.BmsPackSOCDsp)
-	v.Logger.DEBUG.Printf("GUN:%d ", v.request.Result.RvsChargeStatus.ChargingGunState)
-	v.Logger.DEBUG.Printf("Chrg State:%d ", v.request.Result.ChrgMgmtData.BmsChrgSts)
-	v.Logger.DEBUG.Printf("Mileage:%d ", v.request.Result.RvsChargeStatus.Mileage)
-	v.Logger.DEBUG.Printf("Range:%d ", v.request.Result.RvsChargeStatus.FuelRangeElec)
-}
-*/
 
 func (v *API) doRepeatedRequest(url string, baseUrl string, event_id string) error {
 	var req *http.Request
@@ -98,7 +93,7 @@ func (v *API) doRepeatedRequest(url string, baseUrl string, event_id string) err
 // This is running concurrently
 func (v *API) repeatRequest(url string, baseUrl string, event_id string) {
 	var err error
-	var count = 0
+	var count int
 
 	v.request.Status = StatRunning
 	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
@@ -108,8 +103,7 @@ func (v *API) repeatRequest(url string, baseUrl string, event_id string) {
 		count++
 	}
 
-	v.Logger.DEBUG.Printf("Exitig repeated query. Count: %d\n", count)
-	//v.printAnswer()
+	v.Logger.DEBUG.Printf("Exiting repeated query. Count: %d\n", count)
 }
 
 func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
@@ -168,11 +162,10 @@ func (v *API) Wakeup(vin string) error {
 		return err
 	}
 
-	url := v.identity.region.ApiURL + "vehicle/status?vin=" + requests.Sha256(vin)
-	baseUrl := v.identity.region.ApiURL
+	url := v.identity.baseUrl + "vehicle/status?vin=" + requests.Sha256(vin)
 	req, err = requests.CreateRequest(
 		url,
-		baseUrl,
+		v.identity.baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -202,7 +195,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	if v.request.Status == StatValid {
 		v.request.Status = StatInvalid
 		v.Logger.DEBUG.Printf("StatVaild. Returning stored value\n")
-		//v.printAnswer()
+		// v.printAnswer()
 		return v.request.Result, nil
 	} else if v.request.Status == StatRunning {
 		v.Logger.DEBUG.Printf("StatRunning. Exiting\n")
@@ -215,12 +208,11 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		return res, err
 	}
 
-	url := v.identity.region.ApiURL + "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
-	baseUrl := v.identity.region.ApiURL
+	url := v.identity.baseUrl + "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
 	// get charging status of vehicle
 	req, err = requests.CreateRequest(
 		url,
-		baseUrl,
+		v.identity.baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -231,7 +223,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	}
 
 	event_id, err = v.DoRequest(req, &answer)
-
 	if err != nil {
 		v.Logger.DEBUG.Printf("Getting event id failed")
 		return res, err
@@ -244,7 +235,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	req, err = requests.CreateRequest(
 		url,
-		baseUrl,
+		v.identity.baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -261,7 +252,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	if err == api.ErrMustRetry {
 		v.request.Status = StatRunning
 		v.Logger.DEBUG.Printf(" No answer yet. Continue status query in background\n")
-		go v.repeatRequest(url, baseUrl, event_id)
+		go v.repeatRequest(url, v.identity.baseUrl, event_id)
 	} else if err != nil {
 		v.Logger.ERROR.Printf("doRequest failed with %s", err.Error())
 	}

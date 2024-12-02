@@ -48,7 +48,7 @@ func CalculateResponseVerification(str, str2, str3 string) string {
 	return HmacSha256(a4, str5)
 }
 
-func EncryptRequest(url string, baseUrl string, time int64, tenant, token, body, contentType string) string {
+func EncryptRequest(url, baseUrl string, time int64, tenant, token, body, contentType string) string {
 	sendDate := strconv.FormatInt(time, 10)
 	// tenant
 	replace := ""
