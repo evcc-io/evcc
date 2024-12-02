@@ -98,6 +98,8 @@ remove = "Αφαίρεση"
 save = "Αποθήκευση"
 telemetry = "Τηλεμετρία"
 title = "Τίτλος"
+hideAdvancedSettings = "Απόκρυψη ρυθμίσεων για προχωρημένους"
+showAdvancedSettings = "Εμφάνιση ρυθμίσεων για προχωρημένους"
 
 [config.grid]
 title = "Μετρητής δικτύου"
