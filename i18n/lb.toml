@@ -97,6 +97,8 @@ remove = "Ewechhuelen"
 save = "Späicheren"
 telemetry = "Telemetrie"
 title = "Titel"
+hideAdvancedSettings = "Fortgeschratten Astellunge verstoppen"
+showAdvancedSettings = "Fortgeschratten Astellungen uweisen"
 
 [config.grid]
 title = "Netzzieler"

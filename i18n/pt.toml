@@ -100,6 +100,8 @@ remove = "Remover"
 save = "Guardar"
 telemetry = "Telemetria"
 title = "Título"
+hideAdvancedSettings = "Ocultar definições avançadas"
+showAdvancedSettings = "Mostrar definições avançadas"
 
 [config.grid]
 title = "Medidor de rede"

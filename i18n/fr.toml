@@ -100,6 +100,8 @@ remove = "Supprimer"
 save = "Enregistrer"
 telemetry = "Télémétrie"
 title = "Titre"
+showAdvancedSettings = "Afficher les paramètres avancés"
+hideAdvancedSettings = "Masquer les paramètres avancés"
 
 [config.grid]
 title = "Compteur du réseau"
