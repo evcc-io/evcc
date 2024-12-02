@@ -76,6 +76,7 @@ temp = "Isı"
 topic = "Konu"
 url = "URL"
 yes = "evet"
+hemsType = "Sistem"
 
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
@@ -97,6 +98,8 @@ remove = "Kaldır"
 save = "Kaydet"
 telemetry = "Uzölçüm"
 title = "Başlık"
+hideAdvancedSettings = “Gelişmiş ayarları gizle”
+showAdvancedSettings = “Gelişmiş ayarları göster”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -135,7 +138,7 @@ vehicles = "Araçlarım"
 yaml = "evcc.yaml içerisinde yapılandırıldı. Kullanıcı arayüzünde düzenlenemez."
 
 [config.messaging]
-description = "Dolum oturumları ve diğer olaylar hakkında bildirimler al."
+description = "Dolum oturumları hakkında bildirimler al."
 title = "Bildirimler"
 
 [config.meter]
@@ -394,6 +397,12 @@ titleMinSoc = "Asgari doldurma"
 titleTargetCharge = "Ayrılış"
 unsavedChanges = "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?"
 update = "Uygula"
+repeatingPlans = “Tekrarlanan planlar”
+selectAll = “Tümünü seç”
+weekdays = “Hafta günleri”
+addRepeatingPlan = “Tekrar eden plan ekle”
+planNumber = "Plan {number}"
+repeating = “tekrarlanan”
 
 [main.energyflow]
 battery = "Batarya"
@@ -424,7 +433,7 @@ co2 = "⌀ CO₂"
 duration = "Süre"
 fallbackName = "Doldurma noktası"
 power = "Güç"
-price = "Σ Fiyat"
+price = "Maliyet"
 remaining = "Kalan zaman"
 remoteDisabledHard = "{source}: kapatıldı"
 remoteDisabledSoft = "{source}: uyumlu güneş enerjili doldurma kapatıldı"
@@ -439,6 +448,7 @@ smartCostCheap = "Ucuz Şebeke Dolumu"
 smartCostClean = "Temiz Şebeke Dolumu"
 title = "Ayarlar {0}"
 vehicle = "Araç"
+batteryUsage = “Ev Bataryası”
 
 [main.loadpointSettings.limitSoc]
 description = "Araç bağlandığında kullanılan dolum sınırı."
@@ -502,6 +512,7 @@ tomorrow = "yarın"
 update = "Güncelle"
 vehicleCapacityDocs = "Nasıl yapılandırılacağını öğren."
 vehicleCapacityRequired = "Doldurma süresini tahmin etmek için araç batarya kapasitesi gerekli."
+nextPlan = “Sonraki plan”
 
 [main.targetChargePlan]
 chargeDuration = "Doldurma süresi"
@@ -564,6 +575,7 @@ vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
+batteryBoost = "Batarya takviyesi etkin.”
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
@@ -617,12 +629,14 @@ downloadCsv = "CSV olarak indir"
 energy = "Doldurulan"
 loadpoint = "Doldurma Noktası"
 noData = "Bu ay henüz doldurma oturumu yok."
-price = "Σ Fiyat"
+price = "Maliyet"
 reallyDelete = "Bu oturumu gerçekten silmek istiyor musun?"
 solar = "Güneş Enerjisi"
 title = "Doldurma Oturumları"
 total = "Toplam"
 vehicle = "Araç"
+showIndividualEntries = “Bireysel oturumları göster”
+overview = “Genel Bakış”
 
 [sessions.csv]
 chargedenergy = "Enerji (kWh)"
@@ -707,3 +721,50 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[main.loadpointSettings.batteryBoost]
+label = 'Batarya Takviyesi”
+once = “Bu doldurma oturumu için takviye etkin.”
+mode = “Sadece GES ve Asg.+GES modunda kullanılabilir.”
+description = “Ev bataryasından hızlı doldur.”
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Fiyat {byGroup}"
+byGroupVehicle = “Araca Göre”
+byGroupLoadpoint = “Doldurma Noktasına Göre”
+energy = “Doldurulan Enerji”
+energyGrouped = “Güneşe karşı Şebeke Enerjisi”
+energySubSolar = “{value} güneş”
+energySubTotal = "{value} toplam"
+groupedCo2ByGroup = "CO₂-Miktarı {byGroup}"
+groupedPriceByGroup = “Toplam Maliyet {byGroup}"
+historyCo2 = “CO₂ Salınımları”
+historyCo2Sub = "{value} toplam"
+historyPrice = “Doldurma Maliyetleri”
+historyPriceSub = "{value} toplam"
+solar = “Yıl İçindeki Güneş Payı”
+solarByGroup = “Güneş Payı {byGroup}"
+energyGroupedByGroup = "Enerji {byGroup}"
+
+[sessions.group]
+grid = “Şebeke”
+price = "Fiyat"
+self = "Güneş"
+co2 = "Salınım"
+
+[sessions.groupBy]
+none = "Toplam"
+loadpoint = "Doldurma noktası"
+vehicle = "Araç"
+
+[sessions.period]
+total = "Toplam"
+year = "Yıl"
+month = "Ay"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Fiyat"
+solar = "Güneş"
