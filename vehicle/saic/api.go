@@ -60,7 +60,7 @@ func (v *API) printAnswer() {
 }
 */
 
-func (v *API) doRepeatedRequest(url string, event_id string) error {
+func (v *API) doRepeatedRequest(url string, baseUrl string, event_id string) error {
 	var req *http.Request
 
 	answer := requests.Answer{
@@ -73,7 +73,9 @@ func (v *API) doRepeatedRequest(url string, event_id string) error {
 		return err
 	}
 
-	req, err = requests.CreateRequest(url,
+	req, err = requests.CreateRequest(
+		url,
+		baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -94,7 +96,7 @@ func (v *API) doRepeatedRequest(url string, event_id string) error {
 }
 
 // This is running concurrently
-func (v *API) repeatRequest(url string, event_id string) {
+func (v *API) repeatRequest(url string, baseUrl string, event_id string) {
 	var err error
 	var count = 0
 
@@ -102,7 +104,7 @@ func (v *API) repeatRequest(url string, event_id string) {
 	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
 		time.Sleep(2 * time.Second)
 		v.Logger.DEBUG.Printf("Starting repeated query. Count: %d\n", count)
-		err = v.doRepeatedRequest(url, event_id)
+		err = v.doRepeatedRequest(url, baseUrl, event_id)
 		count++
 	}
 
@@ -166,8 +168,11 @@ func (v *API) Wakeup(vin string) error {
 		return err
 	}
 
-	url := requests.BASE_URL_P + "vehicle/status?vin=" + requests.Sha256(vin)
-	req, err = requests.CreateRequest(url,
+	url := v.identity.region.ApiURL + "vehicle/status?vin=" + requests.Sha256(vin)
+	baseUrl := v.identity.region.ApiURL
+	req, err = requests.CreateRequest(
+		url,
+		baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -210,10 +215,12 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		return res, err
 	}
 
-	url := requests.BASE_URL_P + "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
-
+	url := v.identity.region.ApiURL + "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
+	baseUrl := v.identity.region.ApiURL
 	// get charging status of vehicle
-	req, err = requests.CreateRequest(url,
+	req, err = requests.CreateRequest(
+		url,
+		baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -235,7 +242,9 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		return res, api.ErrMustRetry
 	}
 
-	req, err = requests.CreateRequest(url,
+	req, err = requests.CreateRequest(
+		url,
+		baseUrl,
 		http.MethodGet,
 		"",
 		request.JSONContent,
@@ -252,7 +261,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	if err == api.ErrMustRetry {
 		v.request.Status = StatRunning
 		v.Logger.DEBUG.Printf(" No answer yet. Continue status query in background\n")
-		go v.repeatRequest(url, event_id)
+		go v.repeatRequest(url, baseUrl, event_id)
 	} else if err != nil {
 		v.Logger.ERROR.Printf("doRequest failed with %s", err.Error())
 	}

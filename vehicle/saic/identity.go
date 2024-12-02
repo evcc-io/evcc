@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -22,14 +23,16 @@ type Identity struct {
 	User        string
 	Password    string
 	deviceId    string
+	region      Region
 }
 
 // NewIdentity creates SAIC identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger, user, password string, region string) *Identity {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		User:     user,
 		Password: requests.Sha1(password),
+		region:   regions[strings.ToUpper(region)],
 	}
 
 	v.deviceId = lo.RandomString(64, lo.AlphanumericCharset) + "###com.saicmotor.europecar"
@@ -74,7 +77,8 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 
 	// get charging status of vehicle
 	req, err := requests.CreateRequest(
-		requests.BASE_URL_P+"oauth/token",
+		v.region.ApiURL+"oauth/token",
+		v.region.ApiURL,
 		http.MethodPost,
 		data.Encode(),
 		request.FormContent,

@@ -48,12 +48,12 @@ func CalculateResponseVerification(str, str2, str3 string) string {
 	return HmacSha256(a4, str5)
 }
 
-func EncryptRequest(url string, time int64, tenant, token, body, contentType string) string {
+func EncryptRequest(url string, baseUrl string, time int64, tenant, token, body, contentType string) string {
 	sendDate := strconv.FormatInt(time, 10)
 	// tenant
 	replace := ""
 	if len(url) != 0 {
-		replace = strings.Replace(url, BASE_URL_P, "/", -1)
+		replace = strings.Replace(url, baseUrl, "/", -1)
 	}
 
 	encryptedBody := ""
@@ -70,9 +70,9 @@ func EncryptRequest(url string, time int64, tenant, token, body, contentType str
 	return encryptedBody
 }
 
-func DecryptRequest(url string, time int64, tenant, token, body, contentType string) string {
+func DecryptRequest(url string, baseUrl string, time int64, tenant, token, body, contentType string) string {
 	timeStamp := strconv.FormatInt(time, 10)
-	resourcePath := strings.Replace(url, BASE_URL_P, "/", -1)
+	resourcePath := strings.Replace(url, baseUrl, "/", -1)
 	if len(body) != 0 {
 		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + timeStamp + CONTENT_ENCRYPTED + contentType
 		a2 := Md5(sb3)

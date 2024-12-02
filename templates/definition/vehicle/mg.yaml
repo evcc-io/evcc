@@ -9,7 +9,19 @@ params:
       de: Erforderlich
       en: Required
     required: true
+  - name: region
+    description:
+      de: Region
+      en: Region
+    # values:
+    #   - EU
+    #   - AU
+    default: EU
+    advanced: true        
 render: |
   type: mg
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  {{- if ne .region "EU" }}
+  region: {{ .region }}
+  {{- end }}  

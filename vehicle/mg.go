@@ -23,9 +23,11 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Region              string
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Region: "EU",
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,7 +39,7 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("mg").Redact(cc.User, cc.Password, cc.VIN)
-	identity := saic.NewIdentity(log, cc.User, cc.Password)
+	identity := saic.NewIdentity(log, cc.User, cc.Password, cc.Region)
 
 	if err := identity.Login(); err != nil {
 		return nil, err
