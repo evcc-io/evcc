@@ -13,9 +13,7 @@ params:
     description:
       de: Region
       en: Region
-    # values:
-    #   - EU
-    #   - AU
+    validvalues: ["EU", "AU"]
     default: EU
     advanced: true        
 render: |
