@@ -100,6 +100,8 @@ remove = "Odstrani"
 save = "Shrani"
 telemetry = "Telemetrija"
 title = "Naslov"
+hideAdvancedSettings = "Skrij napredne nastavitve"
+showAdvancedSettings = "Prikaži napredne nastavitve"
 
 [config.grid]
 title = "Omrežni meter"
@@ -646,6 +648,7 @@ solar = "Sončna energija"
 title = "Seje polnjenja"
 total = "Skupaj"
 vehicle = "Vozilo"
+overview = "Pregled"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
