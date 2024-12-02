@@ -5,6 +5,7 @@ control = "Kontrola baterii"
 discharge = "Zapobiegaj rozładowaniu w trybie szybkim i planowemu ładowaniu."
 disclaimerHint = "Uwaga:"
 disclaimerText = "te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
+gridChargeTab = "Ładowanie z sieci"
 legendBottomName = "Daj priorytet ładowaniu akumulatora domowego"
 legendBottomSubline = "aż osiągnie {soc}."
 legendMiddleName = "Ustaw priorytet ładowaniu pojazdów"
@@ -16,7 +17,6 @@ legendTopSubline = "gdy poziom naładowania akumulatora domowego jest wyższy ni
 modalTitle = "Bateria domowa"
 notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 usageTab = "Użycie baterii"
-gridChargeTab = "Ładowanie z sieci"
 
 [batterySettings.bufferStart]
 above = "kiedy powyżej {soc}."
@@ -31,23 +31,31 @@ never = "tylko z wystarczającą nadwyżką."
 titleAdd = "Dodaj baterię"
 titleEdit = "Edytuj baterię"
 
+[config.circuits]
+description = "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię."
+title = "Zarządzanie obciążeniem"
+
 [config.control]
+description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
 labelInterval = "Interwał aktualizacji"
 labelResidualPower = "Moc resztkowa"
-description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
 
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Pojemność"
 chargeStatus = "Status"
 chargeStatusA = "nie połączony"
 chargeStatusB = "połączony"
 chargeStatusC = "ładowanie"
+chargeStatusF = "błąd"
 chargedEnergy = "Naładowany"
 configured = "Skonfigurowany"
 currency = "Waluta"
 current = "Prąd"
 enabled = "Włączony"
 energy = "Energia"
+hemsType = "System"
 odometer = "Drogomierz"
 phaseCurrents = "Prąd L1, L2, L3"
 phasePowers = "Moc L1, L2, L3"
@@ -57,10 +65,6 @@ range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
 url = "URL"
-broker = "Broker"
-chargeStatusF = "błąd"
-bucket = "Bucket"
-hemsType = "System"
 
 [config.eebus]
 title = "EEBus"
@@ -96,6 +100,9 @@ title = "Konfiguracja"
 unconfigured = "nie skonfigurowane"
 vehicles = "Moje pojazdy"
 yaml = "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
+
+[config.messaging]
+description = "Otrzymuj wiadomości o sesjach ładowania."
 
 [config.meter]
 cancel = "Anulować"
@@ -478,13 +485,16 @@ downloadCsv = "Pobierz jako CSV"
 energy = "Naładowano"
 loadpoint = "Ładowarka"
 noData = "Brak sesji ładowania w tym miesiącu."
+overview = "Przegląd"
 price = "Koszt"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 solar = "Słoneczna"
 title = "Sesje ładowania"
 total = "Totalny"
 vehicle = "Pojazd"
-overview = "Przegląd"
+
+[sessions.chartTitle]
+solar = "Udział energii słonecznej w ciągu roku"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -572,14 +582,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[config.circuits]
-description = "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię."
-title = "Zarządzanie obciążeniem"
-
-[config.messaging]
-description = "Otrzymuj wiadomości o sesjach ładowania."
-
-[sessions.chartTitle]
-solar = "Udział energii słonecznej w ciągu roku"

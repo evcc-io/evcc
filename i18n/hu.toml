@@ -90,16 +90,16 @@ optional = "opcionális"
 cancel = "Mégse"
 docsLink = "Dokumentáció megtekintése"
 experimental = "Kísérleti"
+hideAdvancedSettings = "Speciális beállítások elrejtése"
 off = "ki"
 on = "be"
 password = "Jelszó"
 readFromFile = "Fájlból olvasás"
 remove = "Eltávolítás"
 save = "Mentés"
+showAdvancedSettings = "Speciális beállítások megjelenítése"
 telemetry = "Telemetria"
 title = "Cím"
-hideAdvancedSettings = Speciális beállítások elrejtése
-showAdvancedSettings = Speciális beállítások megjelenítése
 
 [config.grid]
 title = "Hálózati mérő"
@@ -626,6 +626,7 @@ downloadCsv = "Letöltés mint: CSV"
 energy = "Töltve"
 loadpoint = "Töltőpont"
 noData = "Nincs töltési folyamat ebben a hónapban."
+overview = "Áttekintés"
 price = "Σ Költség"
 reallyDelete = "Biztosan szeretné törölni ezt a folyamatot?"
 showIndividualEntries = "Egyéni munkamenetek megjelenítése"
@@ -633,7 +634,6 @@ solar = "Napenergia"
 title = "Töltési Folyamatok"
 total = "Összesen"
 vehicle = "Jármű"
-overview = Áttekintés
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"

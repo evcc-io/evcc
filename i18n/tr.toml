@@ -61,6 +61,7 @@ enabled = "Etkin"
 energy = "Enerji"
 feedinPrice = "Satış fiyatı"
 gridPrice = "Alım fiyatı"
+hemsType = "Sistem"
 no = "hayır"
 odometer = "Kilometre Sayacı"
 org = "Organizasyon"
@@ -76,7 +77,6 @@ temp = "Isı"
 topic = "Konu"
 url = "URL"
 yes = "evet"
-hemsType = "Sistem"
 
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
@@ -90,16 +90,16 @@ optional = "isteğe bağlı"
 cancel = "İptal"
 docsLink = "Belgelere bak."
 experimental = "Deneysel"
+hideAdvancedSettings = "“Gelişmiş ayarları gizle”"
 off = "kapalı"
 on = "açık"
 password = "Şifre"
 readFromFile = "“Dosyadan oku”"
 remove = "Kaldır"
 save = "Kaydet"
+showAdvancedSettings = "“Gelişmiş ayarları göster”"
 telemetry = "Uzölçüm"
 title = "Başlık"
-hideAdvancedSettings = “Gelişmiş ayarları gizle”
-showAdvancedSettings = “Gelişmiş ayarları göster”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -384,25 +384,25 @@ vehicles = "Park"
 
 [main.chargingPlan]
 active = "Aktif"
+addRepeatingPlan = "“Tekrar eden plan ekle”"
 arrivalTab = "Varış"
 day = "Gün"
 departureTab = "Ayrılış"
 goal = "Doldurma hedefi"
 modalTitle = "Doldurma Planı"
 none = "yok"
+planNumber = "Plan {number}"
 remove = "Kaldır"
+repeating = "“tekrarlanan”"
+repeatingPlans = "“Tekrarlanan planlar”"
+selectAll = "“Tümünü seç”"
 time = "Zaman"
 title = "Plan"
 titleMinSoc = "Asgari doldurma"
 titleTargetCharge = "Ayrılış"
 unsavedChanges = "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?"
 update = "Uygula"
-repeatingPlans = “Tekrarlanan planlar”
-selectAll = “Tümünü seç”
-weekdays = “Hafta günleri”
-addRepeatingPlan = “Tekrar eden plan ekle”
-planNumber = "Plan {number}"
-repeating = “tekrarlanan”
+weekdays = "“Hafta günleri”"
 
 [main.energyflow]
 battery = "Batarya"
@@ -440,6 +440,7 @@ remoteDisabledSoft = "{source}: uyumlu güneş enerjili doldurma kapatıldı"
 solar = "Güneş Enerjisi"
 
 [main.loadpointSettings]
+batteryUsage = "“Ev Bataryası”"
 currents = "Doldurma Akımı"
 default = "varsayılan"
 disclaimerHint = "Not:"
@@ -448,7 +449,12 @@ smartCostCheap = "Ucuz Şebeke Dolumu"
 smartCostClean = "Temiz Şebeke Dolumu"
 title = "Ayarlar {0}"
 vehicle = "Araç"
-batteryUsage = “Ev Bataryası”
+
+[main.loadpointSettings.batteryBoost]
+description = "“Ev bataryasından hızlı doldur.”"
+label = "'Batarya Takviyesi”"
+mode = "“Sadece GES ve Asg.+GES modunda kullanılabilir.”"
+once = "“Bu doldurma oturumu için takviye etkin.”"
 
 [main.loadpointSettings.limitSoc]
 description = "Araç bağlandığında kullanılan dolum sınırı."
@@ -492,6 +498,7 @@ currentPlan = "Etkin plan"
 descriptionEnergy = "{targetEnergy} ne zamana kadar araca doldurulmalı?"
 descriptionSoc = "Araç ne zaman {targetSoc} seviyesine doldurulmalı?"
 inactiveLabel = "Hedeflenen zaman"
+nextPlan = "“Sonraki plan”"
 notReachableInTime = "Hedeflenen zamana {overrun} sonra ulaşılacak."
 onlyInPvMode = "Doldurma planı sadece güneş enerjisi modunda çalışır."
 planDuration = "Doldurma süresi"
@@ -512,7 +519,6 @@ tomorrow = "yarın"
 update = "Güncelle"
 vehicleCapacityDocs = "Nasıl yapılandırılacağını öğren."
 vehicleCapacityRequired = "Doldurma süresini tahmin etmek için araç batarya kapasitesi gerekli."
-nextPlan = “Sonraki plan”
 
 [main.targetChargePlan]
 chargeDuration = "Doldurma süresi"
@@ -549,6 +555,7 @@ vehicleTarget = "Araç sınırı: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "“İzin bekliyorum.”"
+batteryBoost = "Batarya takviyesi etkin."
 charging = "doluyor…"
 cheapEnergyCharging = "Ucuz enerji mevcut."
 cheapEnergyNextStart = "{duration} içinde ucuz enerji."
@@ -575,7 +582,6 @@ vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
-batteryBoost = "Batarya takviyesi etkin.”
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
@@ -629,14 +635,33 @@ downloadCsv = "CSV olarak indir"
 energy = "Doldurulan"
 loadpoint = "Doldurma Noktası"
 noData = "Bu ay henüz doldurma oturumu yok."
+overview = "“Genel Bakış”"
 price = "Maliyet"
 reallyDelete = "Bu oturumu gerçekten silmek istiyor musun?"
+showIndividualEntries = "“Bireysel oturumları göster”"
 solar = "Güneş Enerjisi"
 title = "Doldurma Oturumları"
 total = "Toplam"
 vehicle = "Araç"
-showIndividualEntries = “Bireysel oturumları göster”
-overview = “Genel Bakış”
+
+[sessions.chartTitle]
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Fiyat {byGroup}"
+byGroupLoadpoint = "“Doldurma Noktasına Göre”"
+byGroupVehicle = "“Araca Göre”"
+energy = "“Doldurulan Enerji”"
+energyGrouped = "“Güneşe karşı Şebeke Enerjisi”"
+energyGroupedByGroup = "Enerji {byGroup}"
+energySubSolar = "“{value} güneş”"
+energySubTotal = "{value} toplam"
+groupedCo2ByGroup = "CO₂-Miktarı {byGroup}"
+groupedPriceByGroup = "“Toplam Maliyet {byGroup}\""
+historyCo2 = "“CO₂ Salınımları”"
+historyCo2Sub = "{value} toplam"
+historyPrice = "“Doldurma Maliyetleri”"
+historyPriceSub = "{value} toplam"
+solar = "“Yıl İçindeki Güneş Payı”"
+solarByGroup = "“Güneş Payı {byGroup}\""
 
 [sessions.csv]
 chargedenergy = "Enerji (kWh)"
@@ -658,6 +683,27 @@ vehicle = "Araç"
 allLoadpoints = "tüm doldurma noktaları"
 allVehicles = "Tüm araçlar"
 filter = "Filtrele"
+
+[sessions.group]
+co2 = "Salınım"
+grid = "“Şebeke”"
+price = "Fiyat"
+self = "Güneş"
+
+[sessions.groupBy]
+loadpoint = "Doldurma noktası"
+none = "Toplam"
+vehicle = "Araç"
+
+[sessions.period]
+month = "Ay"
+total = "Toplam"
+year = "Yıl"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Fiyat"
+solar = "Güneş"
 
 [settings]
 title = "Genel Ayarlar"
@@ -721,50 +767,3 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
-
-
-[main.loadpointSettings.batteryBoost]
-label = 'Batarya Takviyesi”
-once = “Bu doldurma oturumu için takviye etkin.”
-mode = “Sadece GES ve Asg.+GES modunda kullanılabilir.”
-description = “Ev bataryasından hızlı doldur.”
-
-[sessions.chartTitle]
-avgCo2ByGroup = "⌀ CO₂ {byGroup}"
-avgPriceByGroup = "⌀ Fiyat {byGroup}"
-byGroupVehicle = “Araca Göre”
-byGroupLoadpoint = “Doldurma Noktasına Göre”
-energy = “Doldurulan Enerji”
-energyGrouped = “Güneşe karşı Şebeke Enerjisi”
-energySubSolar = “{value} güneş”
-energySubTotal = "{value} toplam"
-groupedCo2ByGroup = "CO₂-Miktarı {byGroup}"
-groupedPriceByGroup = “Toplam Maliyet {byGroup}"
-historyCo2 = “CO₂ Salınımları”
-historyCo2Sub = "{value} toplam"
-historyPrice = “Doldurma Maliyetleri”
-historyPriceSub = "{value} toplam"
-solar = “Yıl İçindeki Güneş Payı”
-solarByGroup = “Güneş Payı {byGroup}"
-energyGroupedByGroup = "Enerji {byGroup}"
-
-[sessions.group]
-grid = “Şebeke”
-price = "Fiyat"
-self = "Güneş"
-co2 = "Salınım"
-
-[sessions.groupBy]
-none = "Toplam"
-loadpoint = "Doldurma noktası"
-vehicle = "Araç"
-
-[sessions.period]
-total = "Toplam"
-year = "Yıl"
-month = "Ay"
-
-[sessions.type]
-co2 = "CO₂"
-price = "Fiyat"
-solar = "Güneş"
