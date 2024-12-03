@@ -138,9 +138,9 @@ describe("fmtDuration", () => {
   });
 });
 
-describe("getWeekdaysList", () => {
-  test("should return the correct weekday-order", () => {
-    expect(fmt.getWeekdaysList("long")).toEqual([
+describe("getDaysList", () => {
+  test("should return the correct day-order", () => {
+    expect(fmt.getDaysList("long")).toEqual([
       { name: "Montag", value: 1 },
       { name: "Dienstag", value: 2 },
       { name: "Mittwoch", value: 3 },
@@ -152,20 +152,20 @@ describe("getWeekdaysList", () => {
   });
 });
 
-describe("getShortenedWeekdaysLabel", () => {
+describe("getShortenedDaysLabel", () => {
   test("should format single days", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0])).eq("So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Di, Do, Sa, So");
-    expect(fmt.getShortenedWeekdaysLabel([6])).eq("Sa");
-    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Mi, Sa");
+    expect(fmt.getShortenedDaysLabel([0])).eq("So");
+    expect(fmt.getShortenedDaysLabel([0, 2, 4, 6])).eq("Di, Do, Sa, So");
+    expect(fmt.getShortenedDaysLabel([6])).eq("Sa");
+    expect(fmt.getShortenedDaysLabel([3, 6])).eq("Mi, Sa");
   });
   test("should format ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([1, 2])).eq("Mo, Di");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
+    expect(fmt.getShortenedDaysLabel([1, 2])).eq("Mo, Di");
+    expect(fmt.getShortenedDaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
+    expect(fmt.getShortenedDaysLabel([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
   });
   test("should format single days and ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
+    expect(fmt.getShortenedDaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
+    expect(fmt.getShortenedDaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
   });
 });

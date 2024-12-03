@@ -133,7 +133,7 @@ export default {
 			if (!this.targetTime) {
 				return null;
 			}
-			return this.fmtWeekdayTime(this.targetTime);
+			return this.fmtDayTime(this.targetTime);
 		},
 		slots() {
 			const result = [];
@@ -149,7 +149,7 @@ export default {
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
+				const day = this.dayShort(start);
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
