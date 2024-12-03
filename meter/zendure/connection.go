@@ -77,6 +77,8 @@ func (c *Connection) handler(data string) {
 			c.log.ERROR.Println(err)
 		}
 
+		c.log.TRACE.Printf("!! data: %+v", v)
+
 		return v
 	})
 }
