@@ -167,7 +167,7 @@ import Energyflow from "./Energyflow.vue";
 				:pv="[{ power: 5000 }, { power: 2300 }]"
 			/>
 		</Variant>
-		<Variant title="low input">
+		<Variant title="unknown input">
 			<Energyflow
 				gridConfigured
 				pvConfigured
@@ -176,7 +176,18 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsCompact="[{ power: 1000, icon: 'car', charging: true }]"
 			/>
 		</Variant>
-		<Variant title="low output">
+		<Variant title="unknown input fill">
+			<Energyflow
+				gridConfigured
+				pvConfigured
+				batteryConfigured
+				:pvPower="500"
+				:gridPower="0"
+				:batteryPower="-1000"
+				:loadpointsCompact="[]"
+			/>
+		</Variant>
+		<Variant title="unknown output">
 			<Energyflow
 				gridConfigured
 				pvConfigured
@@ -185,7 +196,7 @@ import Energyflow from "./Energyflow.vue";
 				:loadpointsCompact="[{ power: 1700, icon: 'car', charging: true }]"
 			/>
 		</Variant>
-		<Variant title="low output (&lt; 10%)">
+		<Variant title="unknown output (&lt; 10%)">
 			<Energyflow
 				gridConfigured
 				pvConfigured
