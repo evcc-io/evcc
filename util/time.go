@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// GetNextOccurrence returns the next occurrence of the given time on the specified days.
-func GetNextOccurrence(days []int, timeStr string, tz string) (time.Time, error) {
+// GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
+func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid timezone: %w", err)
@@ -33,14 +33,14 @@ func GetNextOccurrence(days []int, timeStr string, tz string) (time.Time, error)
 
 	// Check the next 7 days for a valid match
 	for i := 0; i < 7; i++ {
-		day := int(target.Weekday())
-		if contains(days, day) {
+		weekday := int(target.Weekday())
+		if contains(weekdays, weekday) {
 			return target, nil
 		}
 		target = target.AddDate(0, 0, 1)
 	}
 
-	return time.Time{}, fmt.Errorf("no valid day found")
+	return time.Time{}, fmt.Errorf("no valid weekday found")
 }
 
 // helper function to check if a slice contains a value

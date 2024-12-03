@@ -14,7 +14,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-function getDay(offset = 1) {
+function getWeekday(offset = 1) {
   const date = new Date();
   date.setDate(date.getDate() + offset);
   return date.toLocaleDateString("en-US", { weekday: "long" });
@@ -396,7 +396,7 @@ test.describe("repeating", async () => {
 
     // add repeating plan
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
-    await modal.getByTestId("repeating-plan-days").click();
+    await modal.getByTestId("repeating-plan-weekdays").click();
     await modal.getByRole("checkbox", { name: "Select all" }).check();
     await modal.getByTestId("repeating-plan-time").fill("11:11");
 
@@ -432,7 +432,7 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
   });
 
-  test("day selection", async ({ page }) => {
+  test("weekday selection", async ({ page }) => {
     await page.goto("/");
 
     const lp1 = await page.getByTestId("loadpoint").first();
@@ -446,34 +446,34 @@ test.describe("repeating", async () => {
 
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
 
-    // day select should have value "Mo-Fr"
-    await expect(modal.getByTestId("repeating-plan-days").getByRole("button")).toHaveText(
+    // weekday select should have value "Mo-Fr"
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
       "Mon – Fri"
     );
 
-    // select all days
-    await modal.getByTestId("repeating-plan-days").click();
+    // select all weekdays
+    await modal.getByTestId("repeating-plan-weekdays").click();
     await modal.getByRole("checkbox", { name: "Select all" }).click();
-    await expect(modal.getByTestId("repeating-plan-days").getByRole("button")).toHaveText(
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
       "Mon – Sun"
     );
 
     // select none
     await modal.getByRole("checkbox", { name: "Select all" }).click();
-    await expect(modal.getByTestId("repeating-plan-days").getByRole("button")).toHaveText("–");
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText("–");
 
-    // select specific days
+    // select specific weekdays
     await modal.getByRole("checkbox", { name: "Thursday" }).check();
-    await expect(modal.getByTestId("repeating-plan-days").getByRole("button")).toHaveText(
+    await expect(modal.getByTestId("repeating-plan-weekdays").getByRole("button")).toHaveText(
       "Thu"
     );
-    await modal.getByTestId("repeating-plan-days").click(); // close
+    await modal.getByTestId("repeating-plan-weekdays").click(); // close
 
     // activate
     await modal.getByTestId("repeating-plan-time").fill("02:22");
     await modal.getByTestId("repeating-plan-active").click();
 
-    // specific day and time
+    // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("Thu 2:22 AM");
   });
@@ -481,8 +481,8 @@ test.describe("repeating", async () => {
   test("next plan", async ({ page }) => {
     await page.goto("/");
 
-    const yesterday = getDay(-1);
-    const tomorrow = getDay(1);
+    const yesterday = getWeekday(-1);
+    const tomorrow = getWeekday(1);
 
     const lp1 = await page.getByTestId("loadpoint").first();
     await lp1
@@ -502,7 +502,7 @@ test.describe("repeating", async () => {
     // add repeating plan for tomorrow
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
     const plan2 = modal.getByTestId("plan-entry").nth(1);
-    const days2 = plan2.getByTestId("repeating-plan-days");
+    const days2 = plan2.getByTestId("repeating-plan-weekdays");
     await days2.click();
     await days2.getByRole("checkbox", { name: "Select all" }).click();
     await days2.getByRole("checkbox", { name: "Select all" }).click();
@@ -514,7 +514,7 @@ test.describe("repeating", async () => {
     // add repeating plan for every day
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
     const plan3 = modal.getByTestId("plan-entry").last();
-    const days3 = plan3.getByTestId("repeating-plan-days");
+    const days3 = plan3.getByTestId("repeating-plan-weekdays");
     await days3.click();
     await days3.getByRole("checkbox", { name: "Select all" }).check();
     await days3.click(); // close
@@ -548,7 +548,7 @@ test.describe("repeating", async () => {
   test("repeating plan persistence", async ({ page }) => {
     await page.goto("/");
 
-    const tomorrow = getDay(1);
+    const tomorrow = getWeekday(1);
 
     let lp1 = await page.getByTestId("loadpoint").first();
     await lp1
@@ -561,7 +561,7 @@ test.describe("repeating", async () => {
 
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
     const plan = modal.getByTestId("plan-entry").nth(1);
-    await plan.getByTestId("repeating-plan-days").click();
+    await plan.getByTestId("repeating-plan-weekdays").click();
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // check all
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
     await plan.getByRole("checkbox", { name: tomorrow }).check();

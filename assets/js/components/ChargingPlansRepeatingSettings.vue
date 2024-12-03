@@ -33,7 +33,7 @@ import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
 import deepEqual from "../utils/deepEqual";
 import formatter from "../mixins/formatter";
 
-const DEFAULT_DAYS = [1, 2, 3, 4, 5]; // days
+const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5]; // weekdays
 const DEFAULT_TARGET_TIME = "07:00";
 const DEFAULT_TARGET_SOC = 80;
 
@@ -58,7 +58,7 @@ export default {
 		deepEqual,
 		addPlan: function () {
 			const newPlan = {
-				days: DEFAULT_DAYS,
+				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,

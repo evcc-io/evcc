@@ -152,7 +152,7 @@ export default {
 				options.push({
 					value: number,
 					name: name(number),
-					disabled: !plan.days.length,
+					disabled: !plan.weekdays.length,
 				});
 			});
 
@@ -220,9 +220,9 @@ export default {
 			const timeISO = time.toISOString();
 			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
 		},
-		fetchRepeatingPreview: async function (days, soc, time, tz) {
+		fetchRepeatingPreview: async function (weekdays, soc, time, tz) {
 			return await api.get(
-				`loadpoints/${this.id}/plan/repeating/preview/${soc}/${days}/${time}/${encodeURIComponent(tz)}`
+				`loadpoints/${this.id}/plan/repeating/preview/${soc}/${weekdays}/${time}/${encodeURIComponent(tz)}`
 			);
 		},
 		fetchStaticPreviewEnergy: async function (energy, time) {
@@ -252,11 +252,11 @@ export default {
 					if (!plan) {
 						return;
 					}
-					const { days, soc, time, tz } = plan;
-					if (days.length === 0) {
+					const { weekdays, soc, time, tz } = plan;
+					if (weekdays.length === 0) {
 						return;
 					}
-					planRes = await this.fetchRepeatingPreview(days, soc, time, tz);
+					planRes = await this.fetchRepeatingPreview(weekdays, soc, time, tz);
 				}
 				this.plan = planRes.data.result;
 				await this.updateTariff();

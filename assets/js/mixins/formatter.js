@@ -163,7 +163,7 @@ export default {
       tomorrow.setDate(tomorrow.getDate() + 1);
       return tomorrow.toDateString() === date.toDateString();
     },
-    dayPrefix: function (date) {
+    weekdayPrefix: function (date) {
       if (this.isToday(date)) {
         return "";
       }
@@ -172,7 +172,7 @@ export default {
           const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
           return rtf.formatToParts(1, "day")[0].value;
         } catch (e) {
-          console.warn("dayPrefix: Intl.RelativeTimeFormat not supported", e);
+          console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
           return "tomorrow";
         }
       }
@@ -180,26 +180,26 @@ export default {
         weekday: "short",
       }).format(date);
     },
-    dayTime: function (date) {
+    weekdayTime: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
         hour: "numeric",
         minute: "numeric",
       }).format(date);
     },
-    dayShort: function (date) {
+    weekdayShort: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
       }).format(date);
     },
     fmtAbsoluteDate: function (date) {
-      const day = this.dayPrefix(date);
+      const weekday = this.weekdayPrefix(date);
       const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
         minute: "numeric",
       }).format(date);
 
-      return `${day} ${hour}`.trim();
+      return `${weekday} ${hour}`.trim();
     },
     fmtFullDateTime: function (date, short) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -210,7 +210,7 @@ export default {
         minute: "numeric",
       }).format(date);
     },
-    fmtDayTime: function (date) {
+    fmtWeekdayTime: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
         hour: "numeric",
@@ -345,57 +345,57 @@ export default {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
     },
-    getDaysList: function (dayFormat) {
-      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: dayFormat });
+    getWeekdaysList: function (weekdayFormat) {
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
       const mondayToSaturday = [7, 8, 9, 10, 11, 12].map((day, index) => {
         return { name: format(new Date(Date.UTC(2021, 5, day))), value: index + 1 };
       });
       const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
       return [...mondayToSaturday, sunday];
     },
-    getShortenedDaysLabel: function (selectedDays) {
-      if (0 === selectedDays.length) {
+    getShortenedWeekdaysLabel: function (selectedWeekdays) {
+      if (0 === selectedWeekdays.length) {
         return "–";
       }
 
-      const days = this.getDaysList("short");
+      const weekdays = this.getWeekdaysList("short");
       let label = "";
 
       // the week in the input-parameter starts with 0 for sunday and ends with 6 for saturday
       // this algorithms works only if the week starts with 1 for monday and ends with 7 for sunday because
       // then we are able to count from 1 to 7 by incrementing the number
       // so we have to transform the input accordingly
-      const selectedDaysTransformed = selectedDays.map(function (dayIndex) {
+      const selectedWeekdaysTransformed = selectedWeekdays.map(function (dayIndex) {
         return 0 === dayIndex ? 7 : dayIndex;
       });
-      function getDayName(dayIndex) {
-        return days.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex)).name;
+      function getWeekdayName(dayIndex) {
+        return weekdays.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex)).name;
       }
 
-      let maxDay = Math.max(...selectedDaysTransformed);
+      let maxWeekday = Math.max(...selectedWeekdaysTransformed);
 
-      for (let dayRangeStart = 1; dayRangeStart < 8; dayRangeStart++) {
-        if (selectedDaysTransformed.includes(dayRangeStart)) {
-          label += getDayName(dayRangeStart);
+      for (let weekdayRangeStart = 1; weekdayRangeStart < 8; weekdayRangeStart++) {
+        if (selectedWeekdaysTransformed.includes(weekdayRangeStart)) {
+          label += getWeekdayName(weekdayRangeStart);
 
-          let dayRangeEnd = dayRangeStart;
-          while (selectedDaysTransformed.includes(dayRangeEnd + 1)) {
-            dayRangeEnd++;
+          let weekdayRangeEnd = weekdayRangeStart;
+          while (selectedWeekdaysTransformed.includes(weekdayRangeEnd + 1)) {
+            weekdayRangeEnd++;
           }
 
-          if (dayRangeEnd - dayRangeStart > 1) {
-            // more than 2 consecutive days selected
-            label += " – " + getDayName(dayRangeEnd);
-            dayRangeStart = dayRangeEnd;
-            if (maxDay !== dayRangeEnd) {
+          if (weekdayRangeEnd - weekdayRangeStart > 1) {
+            // more than 2 consecutive weekdays selected
+            label += " – " + getWeekdayName(weekdayRangeEnd);
+            weekdayRangeStart = weekdayRangeEnd;
+            if (maxWeekday !== weekdayRangeEnd) {
               label += ", ";
             }
-          } else if (dayRangeStart !== dayRangeEnd) {
-            // exactly 2 consecutive days selected
+          } else if (weekdayRangeStart !== weekdayRangeEnd) {
+            // exactly 2 consecutive weekdays selected
             label += ", ";
           } else {
             // exactly 1 single day selected
-            if (maxDay !== dayRangeEnd) {
+            if (maxWeekday !== weekdayRangeEnd) {
               label += ", ";
             }
           }

@@ -49,13 +49,13 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 		// repeating plans
 		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
-			if !rp.Active || len(rp.Days) == 0 {
+			if !rp.Active || len(rp.Weekdays) == 0 {
 				continue
 			}
 
-			time, err := util.GetNextOccurrence(rp.Days, rp.Time, rp.Tz)
+			time, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
 			if err != nil {
-				lp.log.DEBUG.Printf("invalid repeating plan: days=%v, time=%s, tz=%s, error=%v", rp.Days, rp.Time, rp.Tz, err)
+				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
 				continue
 			}
 

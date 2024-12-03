@@ -138,14 +138,14 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		hourMinute := vars["time"]
 		tz := vars["tz"]
 
-		var days []int
-		for _, dayStr := range strings.Split(vars["days"], ",") {
-			day, err := strconv.Atoi(dayStr)
+		var weekdays []int
+		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
+			weekday, err := strconv.Atoi(weekdayStr)
 			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid days format"))
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
 				return
 			}
-			days = append(days, day)
+			weekdays = append(weekdays, weekday)
 		}
 
 		soc, err := strconv.ParseFloat(vars["soc"], 64)
@@ -154,7 +154,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		planTime, err := util.GetNextOccurrence(days, hourMinute, tz)
+		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

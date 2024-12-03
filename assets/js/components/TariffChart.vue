@@ -30,7 +30,7 @@
 						slot.startHour
 					}}</span>
 					<br />
-					<span v-if="showDay(index)">{{ slot.day }}</span>
+					<span v-if="showWeekday(index)">{{ slot.day }}</span>
 				</div>
 			</div>
 			<div
@@ -136,7 +136,7 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
-		showDay(index) {
+		showWeekday(index) {
 			const slot = this.slots[index];
 			if (!slot) {
 				return false;

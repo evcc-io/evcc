@@ -106,9 +106,9 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 
 func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	for _, plan := range plans {
-		for _, day := range plan.Days {
+		for _, day := range plan.Weekdays {
 			if day < 0 || day > 6 {
-				return fmt.Errorf("day out of range: %v", day)
+				return fmt.Errorf("weekday out of range: %v", day)
 			}
 		}
 		if _, err := time.LoadLocation(plan.Tz); err != nil {

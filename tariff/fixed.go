@@ -90,7 +90,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 
 		zones := t.zones.ForDay(dow)
 		if len(zones) == 0 {
-			return nil, fmt.Errorf("no zones for day %d", dow)
+			return nil, fmt.Errorf("no zones for weekday %d", dow)
 		}
 
 		dayStart := start.AddDate(0, 0, i)

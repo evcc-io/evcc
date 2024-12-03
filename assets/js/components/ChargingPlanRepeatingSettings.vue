@@ -15,8 +15,8 @@
 		<div v-if="showHeader" class="row d-none d-lg-flex mb-2">
 			<div class="plan-id d-none d-lg-flex"></div>
 			<div class="col-6 col-lg-3">
-				<label :for="formId('days')">
-					{{ $t("main.chargingPlan.days") }}
+				<label :for="formId('weekdays')">
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-2">
@@ -38,20 +38,20 @@
 				#{{ number }}
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
-				<label :for="formId('days')">
-					{{ $t("main.chargingPlan.days") }}
+				<label :for="formId('weekdays')">
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<MultiSelect
-					:id="formId('days')"
-					:value="selectedDays"
+					:id="formId('weekdays')"
+					:value="selectedWeekdays"
 					:options="dayOptions"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
-					data-testid="repeating-plan-days"
-					@update:model-value="changeSelectedDays"
+					data-testid="repeating-plan-weekdays"
+					@update:model-value="changeSelectedWeekdays"
 				>
-					{{ daysLabel }}
+					{{ weekdaysLabel }}
 				</MultiSelect>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -149,7 +149,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		number: Number,
-		days: { type: Array, default: () => [] },
+		weekdays: { type: Array, default: () => [] },
 		time: String,
 		tz: String,
 		soc: Number,
@@ -161,7 +161,7 @@ export default {
 	emits: ["updated", "removed"],
 	data: function () {
 		return {
-			selectedDays: this.days,
+			selectedWeekdays: this.weekdays,
 			selectedTime: this.time,
 			selectedSoc: this.soc,
 			selectedActive: this.active,
@@ -170,7 +170,7 @@ export default {
 	computed: {
 		dataChanged: function () {
 			return (
-				!deepEqual(this.days, this.selectedDays) ||
+				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
 				this.soc !== this.selectedSoc ||
 				this.active !== this.selectedActive
@@ -179,8 +179,8 @@ export default {
 		showApply: function () {
 			return this.dataChanged && this.selectedActive;
 		},
-		daysLabel: function () {
-			return this.getShortenedDaysLabel(this.selectedDays);
+		weekdaysLabel: function () {
+			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
 		socOptions: function () {
 			// a list of entries from 5 to 100 with a step of 5
@@ -189,13 +189,13 @@ export default {
 				.map(this.socOption);
 		},
 		dayOptions: function () {
-			return this.getDaysList("long");
+			return this.getWeekdaysList("long");
 		},
 	},
 	watch: {
-		days(newValue, oldValue) {
+		weekdays(newValue, oldValue) {
 			if (!deepEqual(newValue, oldValue)) {
-				this.selectedDays = newValue;
+				this.selectedWeekdays = newValue;
 			}
 		},
 		time(newValue) {
@@ -209,8 +209,8 @@ export default {
 		},
 	},
 	methods: {
-		changeSelectedDays: function (days) {
-			this.selectedDays = days;
+		changeSelectedWeekdays: function (weekdays) {
+			this.selectedWeekdays = weekdays;
 			this.update();
 		},
 		formId: function (name) {
@@ -222,7 +222,7 @@ export default {
 		},
 		update: function (forceSave = false) {
 			const plan = {
-				days: this.selectedDays,
+				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,
 				soc: this.selectedSoc,
 				tz: this.tz,

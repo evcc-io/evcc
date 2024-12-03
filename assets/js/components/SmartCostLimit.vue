@@ -173,7 +173,7 @@ export default {
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
-				const day = this.dayShort(start);
+				const day = this.weekdayShort(start);
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging =

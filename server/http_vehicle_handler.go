@@ -111,7 +111,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// addRepeatingPlansHandler handles any information regarding days, hour, minute, soc and isActive
+// addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
 func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
