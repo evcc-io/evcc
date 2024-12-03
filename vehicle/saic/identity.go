@@ -76,8 +76,8 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 
 	// get charging status of vehicle
 	req, err := requests.CreateRequest(
-		v.baseUrl+"oauth/token",
 		v.baseUrl,
+		"oauth/token",
 		http.MethodPost,
 		data.Encode(),
 		request.FormContent,

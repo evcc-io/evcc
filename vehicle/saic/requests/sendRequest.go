@@ -20,8 +20,8 @@ func Decorate(req *http.Request) error {
 }
 
 func CreateRequest(
-	endpoint string,
 	baseUrl string,
+	path string,
 	httpMethod string,
 	request string,
 	contentType string,
@@ -30,10 +30,11 @@ func CreateRequest(
 ) (*http.Request, error) {
 	appSendDate := time.Now().UnixMilli()
 
+	endpoint := baseUrl + path
+
 	if len(request) != 0 {
 		request = EncryptRequest(
-			endpoint,
-			baseUrl,
+			path,
 			appSendDate,
 			TENANT_ID,
 			token,
