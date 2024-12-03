@@ -401,7 +401,7 @@ titleMinSoc = "Min charge"
 titleTargetCharge = "Departure"
 unsavedChanges = "There are unsaved changes. Apply now?"
 update = "Apply"
-days = "Days"
+weekdays = "Weekdays"
 
 [main.energyflow]
 battery = "Battery"

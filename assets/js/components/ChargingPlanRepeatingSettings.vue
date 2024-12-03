@@ -16,7 +16,7 @@
 			<div class="plan-id d-none d-lg-flex"></div>
 			<div class="col-6 col-lg-3">
 				<label :for="formId('weekdays')">
-					{{ $t("main.chargingPlan.days") }}
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-2">
@@ -39,7 +39,7 @@
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('weekdays')">
-					{{ $t("main.chargingPlan.days") }}
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
