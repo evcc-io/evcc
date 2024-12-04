@@ -1,19 +1,19 @@
-template: elering
+template: Nordpool
 products:
-  - brand: Nordpool
+  - brand: Nordpool-Group
     description:
-      generic: "Elering"
+      generic: "Nordpool"
 requirements:
   description:
-    de: "Verfügbare Regionen sind Estland, Lettland, Litauen, Finnland, Schweden, Norwegen."
-    en: "Available regions are Estonia, Latvia, Lithuania, Finnland, Sweden, Norway."
+    de: "Verfügbare Regionen sind Estland, Lettland, Litauen, Finnland, Schweden, Norwegen, Dänemark, Rumänien, Österreich, Belgien, Frankreich, Deutschland, Niederlande, Polen."
+    en: "Available regions are Estonia, Latvia, Lithuania, Finland, Sweden, Norway, Denmark, Romania, Austria, Belgium, France, Germany, Netherlands, Poland."
 group: price
 params:
   - name: region
     example: ee
-    validvalues: ["ee", "lt", "lv", "fi", "no1", "no2", "no3", "no4", "no5" ,"se1", "se2", "se3", "se4"]
+    validvalues: ["at", "be", "dk1", "dk2", "ee", "lt", "lv", "fi", "fr", "ger", "nl", "no1", "no2", "no3", "no4", "no5" ,"pl", "se1", "se2", "se3", "se4", "tel" ]
   - preset: tariff-base
 render: |
-  type: elering
+  type: Nordpool
   region: {{ .region }}
   {{ include "tariff-base" . }}
