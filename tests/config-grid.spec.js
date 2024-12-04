@@ -3,13 +3,13 @@ import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
 import { enableExperimental } from "./utils";
 
-const CONFIG_LP_ONLY = "config-lp-only.evcc.yaml";
+const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(CONFIG_LP_ONLY);
+  await start(CONFIG_ONE_LP);
 });
 test.afterAll(async () => {
   await stop();
@@ -50,7 +50,7 @@ test.describe("grid meter", async () => {
     await expect(meterModal).not.toBeVisible();
 
     // restart
-    await restart(CONFIG_LP_ONLY);
+    await restart(CONFIG_ONE_LP);
     await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("5.0 kW");
 
     // check in main ui

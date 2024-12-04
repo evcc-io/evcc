@@ -411,7 +411,7 @@
 
 				<h6 v-show="showAll">{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
 
-				<div v-show="showAll" v-if="vehicleOptions.length">
+				<div v-if="vehicleOptions.length">
 					<FormRow
 						id="loadpointParamVehicle"
 						:label="$t('config.loadpoint.vehicleLabel')"
@@ -432,6 +432,7 @@
 					</FormRow>
 
 					<FormRow
+						v-show="showAll"
 						id="loadpointPollMode"
 						:label="$t('config.loadpoint.pollModeLabel')"
 						:help="
@@ -463,6 +464,7 @@
 						/>
 					</FormRow>
 					<FormRow
+						v-show="showAll"
 						v-if="values.soc.poll.mode !== 'charging'"
 						id="loadpointPollInterval"
 						class="ms-3 mb-5"
@@ -480,7 +482,7 @@
 						/>
 					</FormRow>
 
-					<div class="d-flex mb-4">
+					<div v-show="showAll" class="d-flex mb-4">
 						<input
 							id="loadpointEstimate"
 							v-model="values.soc.estimate"
@@ -492,7 +494,7 @@
 						</label>
 					</div>
 				</div>
-				<div v-else>
+				<div v-else v-show="showAll">
 					<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 				</div>
 			</div>
@@ -741,6 +743,7 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
+				this.reset();
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
