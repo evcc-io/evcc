@@ -25,7 +25,12 @@
 				</div>
 			</div>
 		</div>
-		<TariffChart :slots="slots" @slot-hovered="slotHovered" />
+		<TariffChart
+			:slots="slots"
+			:target-text="targetText"
+			:target-offset="targetHourOffset"
+			@slot-hovered="slotHovered"
+		/>
 	</div>
 </template>
 
@@ -114,12 +119,28 @@ export default {
 			}
 			return null;
 		},
+		targetHourOffset() {
+			if (!this.targetTime) {
+				return null;
+			}
+			const start = new Date(this.startTime);
+			start.setMinutes(0);
+			start.setSeconds(0);
+			start.setMilliseconds(0);
+			return (this.targetTime.getTime() - start.getTime()) / (60 * 60 * 1000);
+		},
+		targetText() {
+			if (!this.targetTime) {
+				return null;
+			}
+			return this.fmtWeekdayTime(this.targetTime);
+		},
 		slots() {
 			const result = [];
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
 			const oneHour = 60 * 60 * 1000;
-			for (let i = 0; i < 42; i++) {
+			for (let i = 0; i < 39; i++) {
 				const start = new Date(this.startTime.getTime() + oneHour * i);
 				const startHour = start.getHours();
 				start.setMinutes(0);
@@ -132,13 +153,23 @@ export default {
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
+				const isTarget = start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
 				const warning =
 					charging &&
 					this.targetTime &&
 					end > this.targetTime &&
 					this.targetTime < this.endTime;
-				result.push({ day, price, startHour, endHour, charging, toLate, warning });
+				result.push({
+					day,
+					price,
+					startHour,
+					endHour,
+					charging,
+					toLate,
+					warning,
+					isTarget,
+				});
 			}
 			return result;
 		},

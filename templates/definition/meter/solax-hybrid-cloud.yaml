@@ -23,16 +23,16 @@ params:
     description:
       generic: SolaxCloud TokenID
     help:
-      de: Auf https://www.solaxcloud.com/#/api den Wert von "ObtaintokenID" hier eintragen.
-      en: Go to https://www.solaxcloud.com/#/api and take the value of "ObtaintokenID".
+      de: "https://www.solaxcloud.com/ -> Support -> Drittanbieter-Ökosystem (alte Website) oder Dienst -> API (neue Website), den Wert von `tokenID` hier in Anführungszeichen eintragen (Beispiel: '20241028488283838')"
+      en: "https://www.solaxcloud.com/ -> Support -> Third-party Ecology (old site) or Service -> API (new site), put the value of `tokenID` here in single quotes (Example: '20241028488283838')"
   - name: serial
     required: true
     description:
       de: Seriennummer
       en: Serial number
     help:
-      de: Auf https://www.solaxcloud.com/#/inverter die Registriernummer hier eintragen.
-      en: Go to https://www.solaxcloud.com/#/inverter and take the value of registration number.
+      de: https://www.solaxcloud.com/ -> Gerät -> Wechselrichter (neue Website) oder Support (alte Website), Wert von Registrierungsnummer hier eintragen
+      en: https://www.solaxcloud.com/ -> Device -> Inverter (new site) or Support (old site), use the registration number
   - name: capacity
     advanced: true
 render: |

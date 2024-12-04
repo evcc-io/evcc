@@ -1,8 +1,8 @@
-template: lg-ess-home-8-10
+template: lg-ess-home-15
 products:
   - brand: LG
     description:
-      generic: ESS Home 8/10
+      generic: ESS Home 15
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -25,7 +25,7 @@ params:
   - name: capacity
     advanced: true
 render: |
-  type: lgess8
+  type: lgess15
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}

@@ -23,29 +23,13 @@ const (
 	MeterURI     = "/v1/user/essinfo/home"
 )
 
-type MeterResponse struct {
-	Statistics EssData
-	Direction  struct {
-		IsGridSelling        int `json:"is_grid_selling_,string"`
-		IsBatteryDischarging int `json:"is_battery_discharging_,string"`
-	}
-}
-
-type EssData struct {
-	GridPower               float64 `json:"grid_power,string"`
-	PvTotalPower            float64 `json:"pcs_pv_total_power,string"`
-	BatConvPower            float64 `json:"batconv_power,string"`
-	BatUserSoc              float64 `json:"bat_user_soc,string"`
-	CurrentGridFeedInEnergy float64 `json:"current_grid_feed_in_energy,string"`
-	CurrentPvGenerationSum  float64 `json:"current_pv_generation_sum,string"`
-}
-
 type Com struct {
 	*request.Helper
 	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
 	authPath string
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
+	essType  Model  // currently the LG Ess Home 8/10 and Home 15 are supported
 	dataG    func() (EssData, error)
 }
 
@@ -55,7 +39,7 @@ var (
 )
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, registration, password string, cache time.Duration) (*Com, error) {
+func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	var err error
@@ -66,6 +50,7 @@ func GetInstance(uri, registration, password string, cache time.Duration) (*Com,
 			uri:      uri,
 			authPath: UserLoginURI,
 			password: password,
+			essType:  essType,
 		}
 
 		if registration != "" {
@@ -136,54 +121,53 @@ func (m *Com) Login() error {
 	return nil
 }
 
-// Data gives the data read from the pcs.
+// Data gives the cached data read from the pcs.
 func (m *Com) Data() (EssData, error) {
 	return m.dataG()
 }
 
 // refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
 func (m *Com) refreshData() (EssData, error) {
+	if m.essType == LgEss8 {
+		var res MeterResponse8
+		err := m.update(&res)
+		return res, err
+	}
+
+	var res MeterResponse15
+	err := m.update(&res)
+	return res, err
+}
+
+func (m *Com) update(meterData any) error {
 	data := map[string]interface{}{
 		"auth_key": m.authKey,
 	}
 
 	req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return EssData{}, err
+		return err
 	}
 
-	var resp MeterResponse
-
-	if err = m.DoJSON(req, &resp); err != nil {
+	if err := m.DoJSON(req, meterData); err != nil {
 		// re-login if request returns 405-error
 		var se request.StatusError
 		if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
-			err = m.Login()
-
-			if err == nil {
-				data["auth_key"] = m.authKey
-				req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
+			if err := m.Login(); err != nil {
+				return err
 			}
 
-			if err == nil {
-				err = m.DoJSON(req, &resp)
+			data["auth_key"] = m.authKey
+			req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
+			if err != nil {
+				return err
 			}
+
+			return m.DoJSON(req, &meterData)
 		}
+
+		return err
 	}
 
-	if err != nil {
-		return EssData{}, err
-	}
-
-	res := resp.Statistics
-	if resp.Direction.IsGridSelling > 0 {
-		res.GridPower = -res.GridPower
-	}
-
-	// discharge battery: batPower is positive, charge battery: batPower is negative
-	if resp.Direction.IsBatteryDischarging == 0 {
-		res.BatConvPower = -res.BatConvPower
-	}
-
-	return res, nil
+	return nil
 }

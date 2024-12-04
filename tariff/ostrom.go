@@ -213,8 +213,8 @@ func (t *Ostrom) run(done chan error) {
 		end := start.AddDate(0, 0, 2)
 
 		params := url.Values{
-			"startDate":  {start.Format(time.RFC3339)},
-			"endDate":    {end.Format(time.RFC3339)},
+			"startDate":  {start.Format("2006-01-02T15:04:05.000Z07:00")},
+			"endDate":    {end.Format("2006-01-02T15:04:05.000Z07:00")},
 			"resolution": {"HOUR"},
 			"zip":        {t.zip},
 		}

@@ -654,3 +654,7 @@ html.app .modal-dialog {
 	word-wrap: break-word;
 	hyphens: auto;
 }
+
+input::-webkit-date-and-time-value {
+	text-align: left;
+}
