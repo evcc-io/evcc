@@ -5,6 +5,7 @@ requirements:
   description:
     de: Nur für Niederlande verfügbar.
     en: Only available for Netherlands.
+  evcc: ["skiptest"]
 group: price
 params:
   - name: token
