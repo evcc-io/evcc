@@ -96,7 +96,6 @@ export default {
 			this.$nextTick(() => {
 				const firstInput = this.$refs.modalBody.querySelector("input, select, button");
 				if (firstInput) {
-					console.log(firstInput);
 					firstInput.focus();
 				}
 			});

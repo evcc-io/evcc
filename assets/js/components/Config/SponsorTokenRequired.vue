@@ -1,7 +1,7 @@
 <template>
-	<div class="alert alert-success my-4">
+	<div class="alert alert-warning my-4">
 		{{ $t("config.sponsor.tokenRequired") }}
-		<a href="#" role="button" class="text-success" @click.prevent="openModal">
+		<a href="#" role="button" class="text-warning" @click.prevent="openModal">
 			{{ $t("config.sponsor.tokenRequiredLearnMore") }}
 		</a>
 	</div>

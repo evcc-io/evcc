@@ -123,6 +123,7 @@
 					type="button"
 					class="btn btn-link text-muted"
 					data-bs-dismiss="modal"
+					tabindex="0"
 				>
 					{{ $t("config.general.cancel") }}
 				</button>
@@ -130,6 +131,7 @@
 					type="submit"
 					class="btn btn-primary"
 					:disabled="testRunning || saving || sponsorTokenRequired"
+					tabindex="0"
 					@click.prevent="isNew ? create() : update()"
 				>
 					<span

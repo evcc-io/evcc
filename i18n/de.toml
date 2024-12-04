@@ -217,7 +217,7 @@ descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testto
 error = "Das Sponsortoken ist ungültig."
 labelToken = "Sponsortoken"
 title = "Sponsorship"
-tokenRequired = "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät verwenden kannst."
+tokenRequired = "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst."
 tokenRequiredLearnMore = "Mehr erfahren."
 trialToken = "Testtoken"
 

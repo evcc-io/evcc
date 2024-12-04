@@ -253,7 +253,7 @@ descriptionToken = "You get the token from {url}. We also offer a trial token fo
 error = "The sponsor token is not valid."
 labelToken = "Sponsor token"
 title = "Sponsorship"
-tokenRequired = "You must configure a sponsor token before you can use this device."
+tokenRequired = "You must configure a sponsor token before you can create this device."
 tokenRequiredLearnMore = "Learn more."
 trialToken = "Trial token"
 

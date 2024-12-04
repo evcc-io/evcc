@@ -311,7 +311,7 @@
 					v-if="chargerSupports1p3p"
 					id="loadpointParamPhases"
 					label="Automatic phases"
-					help="Your charger supports automatic switching between 1- and 3-phase charging. On the main screen you can switch modes while charging."
+					help="Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging."
 				>
 				</FormRow>
 				<FormRow

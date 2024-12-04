@@ -270,8 +270,14 @@ a:hover {
 	--bs-btn-hover-border-color: var(--bs-gray-medium);
 }
 
-.btn-link:hover {
+.btn-link:hover,
+.btn-link:focus {
 	color: var(--bs-primary);
+}
+
+.btn-link:focus {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
 }
 
 .dark .btn-outline-secondary {
