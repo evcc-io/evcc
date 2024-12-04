@@ -2,6 +2,7 @@
 	<li class="root">
 		<button
 			class="d-flex align-items-center justify-content-center p-3"
+			tabindex="0"
 			@click="$emit('click')"
 		>
 			<shopicon-regular-plus class="me-1"></shopicon-regular-plus>

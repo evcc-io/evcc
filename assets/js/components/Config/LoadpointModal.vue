@@ -69,6 +69,7 @@
 						<button
 							class="btn btn-link btn-sm evcc-default-text"
 							type="button"
+							tabindex="0"
 							@click.prevent="editMeter"
 						>
 							<EditIcon />
@@ -80,6 +81,7 @@
 						class="btn btn-link btn-sm text-gray px-0"
 						style="margin-top: -1rem"
 						type="button"
+						tabindex="0"
 						@click="editMeter"
 					>
 						Add dedicated charger meter
@@ -92,7 +94,7 @@
 
 				<FormRow
 					id="loadpointMode"
-					label="Mode"
+					label="Default mode"
 					help="Charging mode when connecting the vehicle."
 				>
 					<PropertyField
@@ -112,6 +114,7 @@
 				</FormRow>
 
 				<FormRow
+					v-show="showAll"
 					id="loadpointSolarMode"
 					label="Solar behaviour"
 					:help="
@@ -220,6 +223,7 @@
 				</div>
 
 				<FormRow
+					v-show="showAll"
 					v-if="showPriority"
 					id="loadpointParamPriority"
 					label="Priority"
@@ -234,7 +238,7 @@
 					/>
 				</FormRow>
 
-				<h6>
+				<h6 v-show="showAll">
 					Electrical
 					<small class="text-muted">When in doubt, ask your electrician.</small>
 				</h6>
@@ -308,6 +312,7 @@
 				</div>
 
 				<FormRow
+					v-show="showAll"
 					v-if="chargerSupports1p3p"
 					id="loadpointParamPhases"
 					label="Automatic phases"
@@ -316,6 +321,7 @@
 				</FormRow>
 				<FormRow
 					v-else
+					v-show="showAll"
 					id="loadpointParamPhases"
 					label="Phases"
 					help="Number of phases connected to the charger."
@@ -334,6 +340,7 @@
 				</FormRow>
 
 				<FormRow
+					v-show="showAll"
 					v-if="showCircuit"
 					id="loadpointParamCircuit"
 					label="Circuit"
@@ -349,9 +356,9 @@
 					/>
 				</FormRow>
 
-				<h6>Vehicles</h6>
+				<h6 v-show="showAll">Vehicles</h6>
 
-				<div v-if="vehicleOptions.length">
+				<div v-show="showAll" v-if="vehicleOptions.length">
 					<FormRow
 						id="loadpointParamVehicle"
 						label="Default vehicle"
@@ -430,6 +437,16 @@
 					<p class="text-muted">No vehicles are configured.</p>
 				</div>
 			</div>
+
+			<button
+				v-if="!showAll && values.charger"
+				class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
+				type="button"
+				tabindex="0"
+				@click="showAllSelected = true"
+			>
+				Show all settings
+			</button>
 
 			<div v-if="values.charger" class="mt-5 mb-4 d-flex justify-content-between">
 				<button
@@ -525,6 +542,7 @@ export default {
 			chargerPower: "11kw",
 			solarMode: "default",
 			tab: "solar",
+			showAllSelected: false,
 			powerUnit: POWER_UNIT,
 		};
 	},
@@ -537,6 +555,9 @@ export default {
 		},
 		isNew() {
 			return this.id === undefined;
+		},
+		showAll() {
+			return !this.isNew || this.showAllSelected;
 		},
 		charger() {
 			return this.chargers.find((c) => c.name === this.values.charger);
@@ -678,6 +699,7 @@ export default {
 		},
 		close() {
 			this.$emit("close");
+			this.showAllSelected = false;
 			this.isModalVisible = false;
 		},
 		editCharger() {

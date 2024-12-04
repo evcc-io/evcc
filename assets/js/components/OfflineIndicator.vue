@@ -12,6 +12,7 @@
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
 					disabled
+					tabindex="0"
 				>
 					<span
 						class="spinner-border spinner-border-sm m-1 me-2"
@@ -30,6 +31,7 @@
 				<button
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
+					tabindex="0"
 					@click="restart"
 				>
 					<Sync class="restart me-2" />
@@ -62,6 +64,7 @@
 					type="button"
 					class="btn-close mt-1"
 					aria-label="Close"
+					tabindex="0"
 					@click="dismissed = true"
 				></button>
 			</div>

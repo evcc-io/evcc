@@ -98,6 +98,7 @@
 					v-if="isDeletable"
 					type="button"
 					class="btn btn-link text-danger"
+					tabindex="0"
 					@click.prevent="remove"
 				>
 					{{ $t("config.general.delete") }}
@@ -107,6 +108,7 @@
 					type="button"
 					class="btn btn-link text-muted"
 					data-bs-dismiss="modal"
+					tabindex="0"
 				>
 					{{ $t("config.general.cancel") }}
 				</button>
@@ -114,6 +116,7 @@
 					type="submit"
 					class="btn btn-primary"
 					:disabled="testRunning || saving"
+					tabindex="0"
 					@click.prevent="isNew ? create() : update()"
 				>
 					<span

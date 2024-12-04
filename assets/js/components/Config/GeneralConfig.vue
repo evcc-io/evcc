@@ -7,6 +7,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('titleModal')"
 			>
 				<EditIcon size="xs" />
@@ -20,6 +21,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('passwordModal')"
 			>
 				<EditIcon size="xs" />
@@ -34,6 +36,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -48,6 +51,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -66,6 +70,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('sponsorModal')"
 			>
 				<EditIcon size="xs" />
@@ -78,6 +83,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('networkModal')"
 			>
 				<EditIcon size="xs" />
@@ -90,6 +96,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('controlModal')"
 			>
 				<EditIcon size="xs" />
