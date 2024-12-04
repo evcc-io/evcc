@@ -53,7 +53,7 @@ render: |
               .[] |
               {
                 "start": (.datum | strptime("%F %T") | strflocaltime("%FT%T%:z")),
-                "end":   (.datum | strptime("%F %T") | mktime + 3600 | strflocaltime("%FT%T%:z")),
+                "end":   (.datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z")),
                 "price": (.["prijs{{ .provider }}"] | tonumber)
               }
             ] | tostring
@@ -67,7 +67,7 @@ render: |
               .[] |
               {
                 "start": (.datum | strptime("%F %T") | strflocaltime("%FT%T%:z")),
-                "end":   (.datum | strptime("%F %T") | mktime + 3600 | strflocaltime("%FT%T%:z")),
+                "end":   (.datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z")),
                 "price": (.["prijs{{ .provider }}"] | tonumber)
               }
             ] | tostring
