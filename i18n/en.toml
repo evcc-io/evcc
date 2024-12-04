@@ -225,8 +225,10 @@ vehicleLabel = "Default vehicle"
 vehiclesTitle = "Vehicles"
 
 [config.main]
+addGrid = "Add grid meter"
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
+addTariffs = "Add tariffs"
 addVehicle = "Add vehicle"
 configured = "configured"
 edit = "edit"

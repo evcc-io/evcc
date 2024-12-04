@@ -224,8 +224,10 @@ vehicleLabel = "Standard-Fahrzeug"
 vehiclesTitle = "Fahrzeuge"
 
 [config.main]
+addGrid = "Netzzähler hinzufügen"
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
+addTariffs = "Tarife hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
 configured = "konfiguriert"
 edit = "bearbeiten"

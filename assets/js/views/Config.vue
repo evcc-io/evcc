@@ -38,28 +38,28 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
+							v-if="gridMeter?.id"
 							:name="$t('config.grid.title')"
-							:editable="!gridMeter || !!gridMeter.id"
-							:error="deviceError('meter', gridMeter?.name)"
+							editable
+							:error="deviceError('meter', gridMeter.name)"
 							data-testid="grid"
-							@edit="
-								gridMeter?.id ? editMeter(gridMeter.id, 'grid') : newMeter('grid')
-							"
+							@edit="editMeter(gridMeter.id, 'grid')"
 						>
 							<template #icon>
 								<shopicon-regular-powersupply></shopicon-regular-powersupply>
 							</template>
 							<template #tags>
-								<DeviceTags
-									:tags="
-										gridMeter
-											? deviceTags('meter', gridMeter.name)
-											: { configured: { value: false } }
-									"
-								/>
+								<DeviceTags :tags="deviceTags('meter', gridMeter.name)" />
 							</template>
 						</DeviceCard>
+						<NewDeviceButton
+							v-else
+							:title="$t('config.main.addGrid')"
+							data-testid="add-grid"
+							@click="newMeter('grid')"
+						/>
 						<DeviceCard
+							v-if="tariffTags"
 							:name="$t('config.tariffs.title')"
 							editable
 							:error="fatalClass === 'tariff'"
@@ -73,6 +73,12 @@
 								<DeviceTags :tags="tariffTags" />
 							</template>
 						</DeviceCard>
+						<NewDeviceButton
+							v-else
+							:title="$t('config.main.addTariffs')"
+							data-testid="add-tariffs"
+							@click="openModal('tariffsModal')"
+						/>
 					</ul>
 					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
 					<ul class="p-0 config-list">
@@ -469,6 +475,9 @@ export default {
 		},
 		tariffTags() {
 			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
+			if (tariffGrid === undefined && tariffFeedIn === undefined && tariffCo2 === undefined) {
+				return null;
+			}
 			const tags = {};
 			if (currency) {
 				tags.currency = { value: currency };
