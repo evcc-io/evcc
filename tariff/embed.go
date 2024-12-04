@@ -33,13 +33,7 @@ func (t *embed) init() (err error) {
 		return err
 	}
 
-	if _, err := vm.Eval(fmt.Sprintf(`
-	import (
-		"math"
-		"time"
-	)
-	
-	var (
+	if _, err := vm.Eval(fmt.Sprintf(`var (
 		price float64
 		charges float64 = %f
 		tax float64 = %f

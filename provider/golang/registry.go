@@ -29,6 +29,15 @@ func RegisteredVM(name, init string) (*interp.Interpreter, error) {
 			return nil, err
 		}
 
+		if _, err := vm.Eval(`import (
+			"fmt"
+			"math"
+			"strings"
+			"time"
+		)`); err != nil {
+			return nil, err
+		}
+
 		if init != "" {
 			if _, err := vm.Eval(init); err != nil {
 				return nil, err
