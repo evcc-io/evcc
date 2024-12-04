@@ -18,7 +18,6 @@
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
 						<li>aux meters</li>
-						<li>loadpoints and chargers</li>
 						<li>custom/plugin meters and vehicles</li>
 						<li>migration for vehicles, chargers, meters, loadpoints</li>
 						<li>remove mixed mode (evcc.yaml + db) for meters and vehicles</li>
