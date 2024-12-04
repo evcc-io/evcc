@@ -103,6 +103,7 @@ test.describe("loadpoint", async () => {
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await lpModal.getByTestId("chargerPower-22kw").click();
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
 
     // restart
     await restart(CONFIG_EMPTY);
@@ -140,6 +141,7 @@ test.describe("loadpoint", async () => {
       await newLoadpoint(page, title);
       await addDemoCharger(page);
       await lpModal.getByRole("button", { name: "Save" }).click();
+      await expect(lpModal).not.toBeVisible();
     }
 
     // three loadpoints
@@ -152,12 +154,13 @@ test.describe("loadpoint", async () => {
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await lpModal.getByTestId("loadpointParamPriority-2").click();
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
 
     // third loadpoint > priority 1
     await page.getByTestId("loadpoint").nth(2).getByRole("button", { name: "edit" }).click();
     await lpModal.getByTestId("loadpointParamPriority-1").click();
     await lpModal.getByRole("button", { name: "Save" }).click();
-
+    await expect(lpModal).not.toBeVisible();
     // restart
     await restart(CONFIG_ONE_LP);
     await page.reload();
@@ -189,6 +192,7 @@ test.describe("loadpoint", async () => {
     await addDemoCharger(page);
     await expect(lpModal.getByLabel("Default vehicle")).not.toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
 
     // edit loadpoint
     await page.getByTestId("loadpoint").nth(0).getByRole("button", { name: "edit" }).click();
@@ -205,6 +209,7 @@ test.describe("loadpoint", async () => {
     await expect(lpModal).toBeVisible();
     await lpModal.getByLabel("Default vehicle").selectOption(VEHICLE_1);
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
 
     // add second loadpoint
     await newLoadpoint(page, LP_2);
