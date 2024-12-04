@@ -9,7 +9,11 @@
 		@close="close"
 	>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
-			<FormRow id="loadpointParamTitle" label="Title" example="Garage, Carport, etc.">
+			<FormRow
+				id="loadpointParamTitle"
+				:label="$t('config.loadpoint.titleLabel')"
+				:example="$t('config.loadpoint.titleExample')"
+			>
 				<PropertyField
 					id="loadpointParamTitle"
 					v-model="values.title"
@@ -18,7 +22,11 @@
 					required
 				/>
 			</FormRow>
-			<FormRow v-if="values.charger" id="loadpointParamCharger" label="Charger">
+			<FormRow
+				v-if="values.charger"
+				id="loadpointParamCharger"
+				:label="$t('config.loadpoint.chargerLabel')"
+			>
 				<div class="d-flex">
 					<PropertyField
 						id="loadpointParamCharger"
@@ -45,7 +53,7 @@
 					:disabled="values.title?.length === 0"
 					@click.prevent="editCharger"
 				>
-					Add charger
+					{{ $t("config.loadpoint.addCharger") }}
 				</button>
 			</div>
 			<div v-if="values.charger || !isNew">
@@ -53,8 +61,8 @@
 					v-if="values.meter"
 					id="loadpointParamMeter"
 					class="mb-6"
-					label="Energy meter"
-					help="Additional meter if the charger doesn't have an integrated one."
+					:label="$t('config.loadpoint.energyMeterLabel')"
+					:help="$t('config.loadpoint.energyMeterHelp')"
 				>
 					<div class="d-flex">
 						<PropertyField
@@ -84,18 +92,22 @@
 						tabindex="0"
 						@click="editMeter"
 					>
-						Add dedicated charger meter
+						{{ $t("config.loadpoint.addMeter") }}
 					</button>
 				</p>
 			</div>
 
 			<div v-if="values.charger">
-				<h6>Charging</h6>
+				<h6>{{ $t("config.loadpoint.chargingTitle") }}</h6>
 
 				<FormRow
 					id="loadpointMode"
-					label="Default mode"
-					help="Charging mode when connecting the vehicle."
+					:label="$t('config.loadpoint.defaultModeLabel')"
+					:help="
+						values.defaultMode === ''
+							? $t('config.loadpoint.defaultModeHelpKeep')
+							: $t('config.loadpoint.defaultModeHelp')
+					"
 				>
 					<PropertyField
 						id="loadpointMode"
@@ -104,7 +116,7 @@
 						class="w-100"
 						required
 						:valid-values="[
-							{ key: '', name: 'Keep last mode' },
+							{ key: '', name: '---' },
 							{ key: 'off', name: $t('main.mode.off') },
 							{ key: 'pv', name: $t('main.mode.pv') },
 							{ key: 'minpv', name: $t('main.mode.minpv') },
@@ -116,11 +128,22 @@
 				<FormRow
 					v-show="showAll"
 					id="loadpointSolarMode"
-					label="Solar behaviour"
+					:label="$t('config.loadpoint.solarBehaviorLabel')"
 					:help="
 						solarMode === 'default'
-							? `Only charge with solar surplus. Start after ${fmtDurationNs(values.thresholds.enable.delay, true, 'm')} of surplus. Stop when there is not enough surplus for ${fmtDurationNs(values.thresholds.disable.delay, true, 'm')}.`
-							: 'Define your own enable and disable thresholds and delays.'
+							? $t('config.loadpoint.solarBehaviorDefaultHelp', {
+									enableDelay: fmtDurationNs(
+										values.thresholds.enable.delay,
+										true,
+										'm'
+									),
+									disableDelay: fmtDurationNs(
+										values.thresholds.disable.delay,
+										true,
+										'm'
+									),
+								})
+							: $t('config.loadpoint.solarBehaviorCustomHelp')
 					"
 				>
 					<SelectGroup
@@ -128,8 +151,8 @@
 						v-model="solarMode"
 						class="w-100"
 						:options="[
-							{ name: 'maximum solar', value: 'default' },
-							{ name: 'custom', value: 'custom' },
+							{ name: $t('config.loadpoint.solarModeMaximum'), value: 'default' },
+							{ name: $t('config.loadpoint.solarModeCustom'), value: 'custom' },
 						]"
 						transparent
 						equal-width
@@ -141,7 +164,7 @@
 						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
 							<FormRow
 								id="loadpointEnableThreshold"
-								label="Enable grid power"
+								:label="$t('config.loadpoint.thresholdEnableLabel')"
 								style="margin-bottom: 0 !important"
 							>
 								<PropertyField
@@ -155,7 +178,7 @@
 							</FormRow>
 							<FormRow
 								id="loadpointEnableDelay"
-								label="Enable delay"
+								:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
 								style="margin-bottom: 0 !important"
 							>
 								<PropertyField
@@ -171,10 +194,26 @@
 						<div class="form-text evcc-gray">
 							{{
 								values.thresholds.enable.threshold === 0
-									? `Start when minimum charge power surplus is available for ${fmtDurationNs(values.thresholds.enable.delay, true, "m")}.`
+									? $t("config.loadpoint.thresholdEnableHelpZero", {
+											delay: fmtDurationNs(
+												values.thresholds.enable.delay,
+												true,
+												"m"
+											),
+										})
 									: values.thresholds.enable.threshold < 0
-										? `Start charging, when ${fmtW(-1 * values.thresholds.enable.threshold, powerUnit.AUTO)} surplus is available for ${fmtDurationNs(values.thresholds.enable.delay, true, "m")}.`
-										: `Please use a negative value.`
+										? $t("config.loadpoint.thresholdEnableHelpNegative", {
+												surplus: fmtW(
+													-1 * values.thresholds.enable.threshold,
+													powerUnit.AUTO
+												),
+												delay: fmtDurationNs(
+													values.thresholds.enable.delay,
+													true,
+													"m"
+												),
+											})
+										: $t("config.loadpoint.thresholdEnableHelpInvalid")
 							}}
 						</div>
 					</div>
@@ -183,7 +222,7 @@
 						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
 							<FormRow
 								id="loadpointDisableThreshold"
-								label="Disable grid power"
+								:label="$t('config.loadpoint.thresholdDisableLabel')"
 								style="margin-bottom: 0 !important"
 							>
 								<PropertyField
@@ -197,7 +236,7 @@
 							</FormRow>
 							<FormRow
 								id="loadpointDisableDelay"
-								label="Disable delay"
+								:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
 								style="margin-bottom: 0 !important"
 							>
 								<PropertyField
@@ -213,10 +252,26 @@
 						<div class="form-text evcc-gray">
 							{{
 								values.thresholds.disable.threshold === 0
-									? `Stop when minimum charge power can't be satisfied for ${fmtDurationNs(values.thresholds.disable.delay, true, "m")}.`
+									? $t("config.loadpoint.thresholdDisableHelpZero", {
+											delay: fmtDurationNs(
+												values.thresholds.disable.delay,
+												true,
+												"m"
+											),
+										})
 									: values.thresholds.disable.threshold > 0
-										? `Stop charging, when more than ${fmtW(values.thresholds.disable.threshold, powerUnit.AUTO)} is used from the grid for ${fmtDurationNs(values.thresholds.disable.delay, true, "m")}.`
-										: `Please use a positive value.`
+										? $t("config.loadpoint.thresholdDisableHelpPositive", {
+												power: fmtW(
+													values.thresholds.disable.threshold,
+													powerUnit.AUTO
+												),
+												delay: fmtDurationNs(
+													values.thresholds.disable.delay,
+													true,
+													"m"
+												),
+											})
+										: $t("config.loadpoint.thresholdDisableHelpInvalid")
 							}}
 						</div>
 					</div>
@@ -226,8 +281,8 @@
 					v-show="showAll"
 					v-if="showPriority"
 					id="loadpointParamPriority"
-					label="Priority"
-					help="Higher priority charge points get preferred access to solar surplus."
+					:label="$t('config.loadpoint.priorityLabel')"
+					:help="$t('config.loadpoint.priorityHelp')"
 				>
 					<SelectGroup
 						id="loadpointParamPriority"
@@ -239,19 +294,21 @@
 				</FormRow>
 
 				<h6 v-show="showAll">
-					Electrical
-					<small class="text-muted">When in doubt, ask your electrician.</small>
+					{{ $t("config.loadpoint.electricalTitle") }}
+					<small class="text-muted">{{
+						$t("config.loadpoint.electricalSubtitle")
+					}}</small>
 				</h6>
 
 				<FormRow
 					id="chargerPower"
-					label="Charger type"
+					:label="$t('config.loadpoint.chargerTypeLabel')"
 					:help="
 						chargerPower === '11kw'
-							? 'Will use a current range of 6 to 16 A.'
+							? $t('config.loadpoint.chargerPower11kwHelp')
 							: chargerPower === '22kw'
-								? 'Will use a current range of 6 to 32 A.'
-								: 'Define a custom current range.'
+								? $t('config.loadpoint.chargerPower22kwHelp')
+								: $t('config.loadpoint.chargerPowerCustomHelp')
 					"
 				>
 					<SelectGroup
@@ -259,9 +316,9 @@
 						v-model="chargerPower"
 						class="w-100"
 						:options="[
-							{ name: '11 kW', value: '11kw' },
-							{ name: '22 kW', value: '22kw' },
-							{ name: 'other', value: 'other' },
+							{ name: $t('config.loadpoint.chargerPower11kw'), value: '11kw' },
+							{ name: $t('config.loadpoint.chargerPower22kw'), value: '22kw' },
+							{ name: $t('config.loadpoint.chargerPowerCustom'), value: 'other' },
 						]"
 						transparent
 					/>
@@ -270,13 +327,9 @@
 				<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
 					<FormRow
 						id="loadpointMinCurrent"
-						label="Minimum current"
+						:label="$t('config.loadpoint.minCurrentLabel')"
 						class="col-sm-6 mb-sm-0"
-						:help="
-							values.minCurrent < 6
-								? 'Only go below 6 A if you know what you\'re doing.'
-								: null
-						"
+						:help="values.minCurrent < 6 ? $t('config.loadpoint.minCurrentHelp') : null"
 					>
 						<PropertyField
 							id="loadpointMinCurrent"
@@ -291,11 +344,11 @@
 
 					<FormRow
 						id="loadpointMaxCurrent"
-						label="Maximum current"
+						:label="$t('config.loadpoint.maxCurrentLabel')"
 						class="col-sm-6 mb-sm-0"
 						:help="
 							values.maxCurrent < values.minCurrent
-								? 'Must be greater than minimum current.'
+								? $t('config.loadpoint.maxCurrentHelp')
 								: null
 						"
 					>
@@ -315,24 +368,24 @@
 					v-show="showAll"
 					v-if="chargerSupports1p3p"
 					id="loadpointParamPhases"
-					label="Automatic phases"
-					help="Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging."
+					:label="$t('config.loadpoint.phasesAutomatic')"
+					:help="$t('config.loadpoint.phasesAutomaticHelp')"
 				>
 				</FormRow>
 				<FormRow
 					v-else
 					v-show="showAll"
 					id="loadpointParamPhases"
-					label="Phases"
-					help="Number of phases connected to the charger."
+					:label="$t('config.loadpoint.phasesLabel')"
+					:help="$t('config.loadpoint.phasesHelp')"
 				>
 					<SelectGroup
 						id="loadpointParamPhases"
 						v-model="values.phases"
 						class="w-100"
 						:options="[
-							{ value: 1, name: '1-phase' },
-							{ value: 3, name: '3-phase' },
+							{ value: 1, name: $t('config.loadpoint.phases1p') },
+							{ value: 3, name: $t('config.loadpoint.phases3p') },
 						]"
 						transparent
 						equal-width
@@ -343,8 +396,8 @@
 					v-show="showAll"
 					v-if="showCircuit"
 					id="loadpointParamCircuit"
-					label="Circuit"
-					help="Select load management circuit for this charge point."
+					:label="$t('config.loadpoint.circuitLabel')"
+					:help="$t('config.loadpoint.circuitHelp')"
 				>
 					<PropertyField
 						id="loadpointParamCircuit"
@@ -356,16 +409,16 @@
 					/>
 				</FormRow>
 
-				<h6 v-show="showAll">Vehicles</h6>
+				<h6 v-show="showAll">{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
 
 				<div v-show="showAll" v-if="vehicleOptions.length">
 					<FormRow
 						id="loadpointParamVehicle"
-						label="Default vehicle"
+						:label="$t('config.loadpoint.vehicleLabel')"
 						:help="
 							values.vehicle
-								? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
-								: 'Automatically selects the most plausible vehicle. Manual override is possible.'
+								? $t('config.loadpoint.vehicleHelpDefault')
+								: $t('config.loadpoint.vehicleHelpAutoDetection')
 						"
 					>
 						<PropertyField
@@ -380,14 +433,14 @@
 
 					<FormRow
 						id="loadpointPollMode"
-						label="Update behaviour"
+						:label="$t('config.loadpoint.pollModeLabel')"
 						:help="
 							values.soc.poll.mode === 'charging'
-								? 'Only request vehicle status updates when charging.'
+								? $t('config.loadpoint.pollModeChargingHelp')
 								: values.soc.poll.mode === 'connected'
-									? 'Update vehicle status in regular intervals when connected.'
+									? $t('config.loadpoint.pollModeConnectedHelp')
 									: values.soc.poll.mode === 'always'
-										? 'Always request status updates in regular intervals.'
+										? $t('config.loadpoint.pollModeAlwaysHelp')
 										: null
 						"
 					>
@@ -396,9 +449,15 @@
 							v-model="values.soc.poll.mode"
 							class="w-100"
 							:options="[
-								{ value: 'charging', name: 'charging' },
-								{ value: 'connected', name: 'connected' },
-								{ value: 'always', name: 'always' },
+								{
+									value: 'charging',
+									name: $t('config.loadpoint.pollModeCharging'),
+								},
+								{
+									value: 'connected',
+									name: $t('config.loadpoint.pollModeConnected'),
+								},
+								{ value: 'always', name: $t('config.loadpoint.pollModeAlways') },
 							]"
 							transparent
 						/>
@@ -407,8 +466,8 @@
 						v-if="values.soc.poll.mode !== 'charging'"
 						id="loadpointPollInterval"
 						class="ms-3 mb-5"
-						label="Udate interval"
-						help="Time between vehicle API updates. Short intervals may drain the vehicle battery."
+						:label="$t('config.loadpoint.pollIntervalLabel')"
+						:help="$t('config.loadpoint.pollIntervalHelp')"
 					>
 						<PropertyField
 							id="loadpointPollInterval"
@@ -429,12 +488,12 @@
 							type="checkbox"
 						/>
 						<label class="form-check-label ms-2" for="loadpointEstimate">
-							Interpolate charge level between API updates
+							{{ $t("config.loadpoint.estimateLabel") }}
 						</label>
 					</div>
 				</div>
 				<div v-else>
-					<p class="text-muted">No vehicles are configured.</p>
+					<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 				</div>
 			</div>
 
@@ -445,7 +504,7 @@
 				tabindex="0"
 				@click="showAllSelected = true"
 			>
-				Show all settings
+				{{ $t("config.loadpoint.showAllSettings") }}
 			</button>
 
 			<div v-if="values.charger" class="mt-5 mb-4 d-flex justify-content-between">
@@ -604,7 +663,7 @@ export default {
 		},
 		allVehicleOptions() {
 			return [
-				{ key: "", name: "auto detection" },
+				{ key: "", name: this.$t("config.loadpoint.vehicleAutoDetection") },
 				{ key: null, name: null },
 				...this.vehicleOptions,
 			];

@@ -52,8 +52,8 @@
 			<FormRow
 				v-if="ocppUrl"
 				id="chargerOcppUrl"
-				label="OCPP-Server URL"
-				help="Copy this address into your chargers configuration."
+				:label="$t('config.charger.ocppLabel')"
+				:help="$t('config.charger.ocppHelp')"
 			>
 				<input
 					type="text"
