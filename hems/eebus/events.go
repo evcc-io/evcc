@@ -149,7 +149,7 @@ func (c *EEBus) dataUpdateFailsafeDurationMinimum() {
 	c.failsafeDuration = duration
 }
 
-func (c *EEBus) dataUpdateheartbeat() {
+func (c *EEBus) dataUpdateHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
