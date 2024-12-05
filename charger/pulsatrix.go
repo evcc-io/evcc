@@ -194,11 +194,9 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 
 // Heartbeat sends a heartbeat to the pulsatrix SECC
 func (c *Pulsatrix) heartbeat(ctx context.Context) {
-	ticker := time.Tick(3 * time.Minute)
-
-	for {
+	for tick := time.Tick(3 * time.Minute); ; {
 		select {
-		case <-ticker:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}

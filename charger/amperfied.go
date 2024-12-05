@@ -118,10 +118,9 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 }
 
 func (wb *Amperfied) heartbeat(ctx context.Context, timeout time.Duration) {
-	ticker := time.Tick(timeout)
-	for {
+	for tick := time.Tick(timeout); ; {
 		select {
-		case <-ticker:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}

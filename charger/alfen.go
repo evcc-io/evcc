@@ -110,10 +110,9 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 }
 
 func (wb *Alfen) heartbeat(ctx context.Context) {
-	ticker := time.Tick(25 * time.Second)
-	for {
+	for tick := time.Tick(25 * time.Second); ; {
 		select {
-		case <-ticker:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}

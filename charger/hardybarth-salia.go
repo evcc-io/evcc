@@ -154,10 +154,9 @@ func (wb *Salia) heartbeat(ctx context.Context) {
 		backoff.WithInitialInterval(5*time.Second),
 		backoff.WithMaxInterval(time.Minute))
 
-	ticker := time.Tick(30 * time.Second)
-	for {
+	for tick := time.Tick(30 * time.Second); ; {
 		select {
-		case <-ticker:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}

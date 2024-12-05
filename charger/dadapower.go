@@ -87,10 +87,9 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 }
 
 func (wb *Dadapower) heartbeat(ctx context.Context) {
-	ticker := time.Tick(time.Minute)
-	for {
+	for tick := time.Tick(time.Minute); ; {
 		select {
-		case <-ticker:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}
