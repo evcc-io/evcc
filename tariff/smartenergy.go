@@ -54,8 +54,7 @@ func (t *SmartEnergy) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); true; <-tick {
 		var res smartenergy.Prices
 
 		if err := backoff.Retry(func() error {

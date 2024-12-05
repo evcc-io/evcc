@@ -342,12 +342,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 				c.stopTicker = make(chan struct{})
 
 				go func() {
-					ticker := time.NewTicker(5 * time.Minute)
-					for {
+					for tick := time.Tick(5 * time.Minute); ; {
 						select {
 						case <-c.stopTicker:
 							return
-						case <-ticker.C:
+						case <-tick:
 							c.requestLifetimeEnergyUpdate()
 						}
 					}
