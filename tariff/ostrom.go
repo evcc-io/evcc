@@ -176,7 +176,7 @@ func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); true; <-tick {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		price, err := t.getFixedPrice()
 		if err != nil {
 			once.Do(func() { done <- err })
@@ -204,7 +204,7 @@ func (t *Ostrom) runStatic(done chan error) {
 func (t *Ostrom) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); true; <-tick {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res ostrom.Prices
 
 		start := now.BeginningOfDay()

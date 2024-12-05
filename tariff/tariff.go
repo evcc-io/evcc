@@ -91,7 +91,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); true; <-tick {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var data api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()

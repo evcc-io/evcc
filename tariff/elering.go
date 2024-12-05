@@ -65,7 +65,7 @@ func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); true; <-tick {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)

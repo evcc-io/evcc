@@ -75,7 +75,7 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Pun) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); true; <-tick {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var today api.Rates
 		if err := backoff.Retry(func() error {
 			var err error
