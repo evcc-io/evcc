@@ -4,8 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/provider/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
-	"github.com/traefik/yaegi/stdlib"
 )
 
 var (
