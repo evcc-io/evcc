@@ -3,8 +3,8 @@ products:
   - brand: Nordpool spot prices
 requirements:
   description:
-    de: "Nur für Nordics verfügbar."
-    en: "Only available for Nordics."
+    de: ""
+    en: "Fetch Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
   evcc: ["skiptest"]
 group: price
 params:
