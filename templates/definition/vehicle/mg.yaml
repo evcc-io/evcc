@@ -15,7 +15,7 @@ params:
       en: Region
     validvalues: ["EU", "AU"]
     default: EU
-    advanced: true        
+    advanced: true
 render: |
   type: mg
   {{ include "vehicle-base" . }}
