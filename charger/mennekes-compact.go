@@ -117,7 +117,13 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); true; <-tick {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
