@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -54,13 +55,13 @@ const (
 )
 
 func init() {
-	registry.Add("amperfied", NewAmperfiedFromConfig)
+	registry.AddCtx("amperfied", NewAmperfiedFromConfig)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
-func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Phases1p3p         bool
@@ -74,11 +75,11 @@ func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAmperfied(cc.URI, cc.ID, cc.Phases1p3p)
+	return NewAmperfied(ctx, cc.URI, cc.ID, cc.Phases1p3p)
 }
 
 // NewAmperfied creates Amperfied charger
-func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
+func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -103,7 +104,7 @@ func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
+		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
 	}
 
 	var phases1p3p func(int) error
@@ -116,8 +117,15 @@ func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
 	return decorateAmperfied(wb, phases1p3p, phasesG), nil
 }
 
-func (wb *Amperfied) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *Amperfied) heartbeat(ctx context.Context, timeout time.Duration) {
+	ticker := time.Tick(timeout)
+	for {
+		select {
+		case <-ticker:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.Status(); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

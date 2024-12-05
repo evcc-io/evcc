@@ -1,6 +1,8 @@
 package eebus
 
 import (
+	"context"
+
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -149,7 +151,7 @@ func (c *EEBus) dataUpdateFailsafeDurationMinimum() {
 	c.failsafeDuration = duration
 }
 
-func (c *EEBus) dataUpdateHeartbeat() {
+func (c *EEBus) dataUpdateheartbeat(ctx context.Context) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
