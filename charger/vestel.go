@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -60,11 +61,11 @@ type Vestel struct {
 }
 
 func init() {
-	registry.Add("vestel", NewVestelFromConfig)
+	registry.AddCtx("vestel", NewVestelFromConfig)
 }
 
 // NewVestelFromConfig creates a Vestel charger from generic config
-func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewVestelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -73,11 +74,11 @@ func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewVestel(cc.URI, cc.ID)
+	return NewVestel(ctx, cc.URI, cc.ID)
 }
 
 // NewVestel creates a Vestel charger
-func NewVestel(uri string, id uint8) (*Vestel, error) {
+func NewVestel(ctx context.Context, uri string, id uint8) (*Vestel, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -108,13 +109,19 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	if timeout < time.Second {
 		timeout = time.Second
 	}
-	go wb.heartbeat(timeout)
+	go wb.heartbeat(ctx, timeout)
 
 	return wb, nil
 }
 
-func (wb *Vestel) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
