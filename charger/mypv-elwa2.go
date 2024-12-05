@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"sync/atomic"
 	"time"
@@ -44,13 +45,13 @@ const (
 )
 
 func init() {
-	registry.Add("ac-elwa-2", NewMyPvElwa2FromConfig)
+	registry.AddCtx("ac-elwa-2", NewMyPvElwa2FromConfig)
 }
 
 // https://github.com/evcc-io/evcc/discussions/12761
 
 // NewMyPvElwa2FromConfig creates a MyPvElwa2 charger from generic config
-func NewMyPvElwa2FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewMyPvElwa2FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -59,11 +60,11 @@ func NewMyPvElwa2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewMyPvElwa2(cc.URI, cc.ID)
+	return NewMyPvElwa2(ctx, cc.URI, cc.ID)
 }
 
 // NewMyPvElwa2 creates myPV AC Elwa 2 charger
-func NewMyPvElwa2(uri string, slaveID uint8) (api.Charger, error) {
+func NewMyPvElwa2(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -81,7 +82,7 @@ func NewMyPvElwa2(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	go wb.heartbeat(30 * time.Second)
+	go wb.heartbeat(ctx, 30*time.Second)
 
 	return wb, nil
 }
@@ -100,8 +101,14 @@ func (wb *MyPvElwa2) Features() []api.Feature {
 	return []api.Feature{api.IntegratedDevice, api.Heating}
 }
 
-func (wb *MyPvElwa2) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *MyPvElwa2) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
 			enabled, err := wb.Enabled()
 			if err == nil && enabled {
