@@ -373,7 +373,8 @@ export default {
 		},
 		async loadProducts() {
 			try {
-				this.products = (await api.get("config/products/vehicle")).data.result;
+				const opts = { params: { lang: this.$i18n?.locale } };
+				this.products = (await api.get("config/products/vehicle", opts)).data.result;
 			} catch (e) {
 				console.error(e);
 			}

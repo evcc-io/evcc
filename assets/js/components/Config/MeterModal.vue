@@ -305,6 +305,7 @@ export default {
 				const opts = {
 					params: {
 						usage: this.meterType,
+						lang: this.$i18n?.locale,
 					},
 				};
 				this.products = (await api.get("config/products/meter", opts)).data.result;
@@ -313,6 +314,7 @@ export default {
 			}
 		},
 		async loadTemplate() {
+			if (!this.templateName) return;
 			this.template = null;
 			this.loadingTemplate = true;
 			try {

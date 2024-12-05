@@ -491,7 +491,9 @@ reset = "Passwort zurücksetzen?"
 title = "Authentifizierung"
 
 [main]
+startConfiguration = "Konfiguration beginnen"
 vehicles = "Parkplatz"
+welcome = "Hallo Sonnenschein"
 
 [main.chargingPlan]
 active = "Aktiv"

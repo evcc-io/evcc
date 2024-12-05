@@ -24,7 +24,7 @@ async function addDemoCharger(page) {
   await lpModal.getByRole("button", { name: "Add charger" }).click();
 
   const modal = page.getByTestId("charger-modal");
-  await modal.getByLabel("Manufacturer").selectOption("Demowallbox");
+  await modal.getByLabel("Manufacturer").selectOption("Demo charger");
   await modal.getByRole("button", { name: "Save" }).click();
   await expect(modal).not.toBeVisible();
 }
@@ -62,7 +62,7 @@ test.describe("loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Add charger" }).click();
 
     // add charger
-    await chargerModal.getByLabel("Manufacturer").selectOption("Demowallbox");
+    await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
     await chargerModal.getByLabel("Charge status").selectOption("C");
     await chargerModal.getByLabel("Power").fill("11000");
     await chargerModal.getByRole("button", { name: "Save" }).click();

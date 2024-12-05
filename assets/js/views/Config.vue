@@ -35,6 +35,60 @@
 				<GeneralConfig @site-changed="siteChanged" />
 
 				<div v-if="$hiddenFeatures()">
+					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="loadpoint in loadpoints"
+							:key="loadpoint.name"
+							:name="loadpoint.title"
+							:editable="!!loadpoint.id"
+							data-testid="loadpoint"
+							@edit="editLoadpoint(loadpoint.id)"
+						>
+							<template #tags>
+								<DeviceTags :tags="loadpointTags(loadpoint)" />
+							</template>
+							<template #icon>
+								<VehicleIcon
+									v-if="chargerIcon(loadpoint.charger)"
+									:name="chargerIcon(loadpoint.charger)"
+								/>
+								<LoadpointIcon v-else />
+							</template>
+						</DeviceCard>
+
+						<NewDeviceButton
+							data-testid="add-loadpoint"
+							:title="$t('config.main.addLoadpoint')"
+							@click="newLoadpoint"
+						/>
+					</ul>
+
+					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="vehicle in vehicles"
+							:key="vehicle.name"
+							:name="vehicle.config?.title || vehicle.name"
+							:editable="vehicle.id >= 0"
+							:error="deviceError('vehicle', vehicle.name)"
+							data-testid="vehicle"
+							@edit="editVehicle(vehicle.id)"
+						>
+							<template #icon>
+								<VehicleIcon :name="vehicle.config?.icon" />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
+							</template>
+						</DeviceCard>
+						<NewDeviceButton
+							data-testid="add-vehicle"
+							:title="$t('config.main.addVehicle')"
+							@click="newVehicle"
+						/>
+					</ul>
+
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
@@ -120,166 +174,109 @@
 						/>
 					</ul>
 
-					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<ul class="p-0 config-list">
 						<DeviceCard
-							v-for="loadpoint in loadpoints"
-							:key="loadpoint.name"
-							:name="loadpoint.title"
-							:editable="!!loadpoint.id"
-							data-testid="loadpoint"
-							@edit="editLoadpoint(loadpoint.id)"
+							:name="$t('config.mqtt.title')"
+							editable
+							:error="fatalClass === 'mqtt'"
+							data-testid="mqtt"
+							@edit="openModal('mqttModal')"
 						>
+							<template #icon><MqttIcon /></template>
 							<template #tags>
-								<DeviceTags :tags="loadpointTags(loadpoint)" />
-							</template>
-							<template #icon>
-								<VehicleIcon
-									v-if="chargerIcon(loadpoint.charger)"
-									:name="chargerIcon(loadpoint.charger)"
-								/>
-								<LoadpointIcon v-else />
+								<DeviceTags :tags="mqttTags" />
 							</template>
 						</DeviceCard>
-
-						<NewDeviceButton
-							data-testid="add-loadpoint"
-							:title="$t('config.main.addLoadpoint')"
-							@click="newLoadpoint"
-						/>
+						<DeviceCard
+							:name="$t('config.messaging.title')"
+							editable
+							:error="fatalClass === 'messenger'"
+							data-testid="messaging"
+							@edit="openModal('messagingModal')"
+						>
+							<template #icon><NotificationIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="yamlTags('messaging')" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:name="$t('config.influx.title')"
+							editable
+							:error="fatalClass === 'influx'"
+							data-testid="influx"
+							@edit="openModal('influxModal')"
+						>
+							<template #icon><InfluxIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="influxTags" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:name="`${$t('config.eebus.title')} 🧪`"
+							editable
+							:error="fatalClass === 'eebus'"
+							data-testid="eebus"
+							@edit="openModal('eebusModal')"
+						>
+							<template #icon><EebusIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="yamlTags('eebus')" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:name="`${$t('config.circuits.title')} 🧪`"
+							editable
+							:error="fatalClass === 'circuit'"
+							data-testid="circuits"
+							@edit="openModal('circuitsModal')"
+						>
+							<template #icon><CircuitsIcon /></template>
+							<template #tags>
+								<DeviceTags
+									v-if="circuits.length == 0"
+									:tags="yamlTags('circuits')"
+								/>
+								<template
+									v-for="(circuit, idx) in circuits"
+									v-else
+									:key="circuit.name"
+								>
+									<hr v-if="idx > 0" />
+									<p class="my-2 fw-bold">
+										{{ circuit.config?.title }}
+										<code>({{ circuit.name }})</code>
+									</p>
+									<DeviceTags :tags="circuitTags(circuit)" />
+								</template>
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:name="$t('config.modbusproxy.title')"
+							editable
+							:error="fatalClass === 'modbusproxy'"
+							data-testid="modbusproxy"
+							@edit="openModal('modbusProxyModal')"
+						>
+							<template #icon><ModbusProxyIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="yamlTags('modbusproxy')" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:name="$t('config.hems.title')"
+							editable
+							:error="fatalClass === 'hems'"
+							data-testid="hems"
+							@edit="openModal('hemsModal')"
+						>
+							<template #icon><HemsIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="hemsTags" />
+							</template>
+						</DeviceCard>
 					</ul>
-
-					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
-					<div>
-						<ul class="p-0 config-list">
-							<DeviceCard
-								v-for="vehicle in vehicles"
-								:key="vehicle.name"
-								:name="vehicle.config?.title || vehicle.name"
-								:editable="vehicle.id >= 0"
-								:error="deviceError('vehicle', vehicle.name)"
-								data-testid="vehicle"
-								@edit="editVehicle(vehicle.id)"
-							>
-								<template #icon>
-									<VehicleIcon :name="vehicle.config?.icon" />
-								</template>
-								<template #tags>
-									<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
-								</template>
-							</DeviceCard>
-							<NewDeviceButton
-								data-testid="add-vehicle"
-								:title="$t('config.main.addVehicle')"
-								@click="newVehicle"
-							/>
-						</ul>
-
-						<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
-
-						<ul class="p-0 config-list">
-							<DeviceCard
-								:name="$t('config.mqtt.title')"
-								editable
-								:error="fatalClass === 'mqtt'"
-								data-testid="mqtt"
-								@edit="openModal('mqttModal')"
-							>
-								<template #icon><MqttIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="mqttTags" />
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="$t('config.messaging.title')"
-								editable
-								:error="fatalClass === 'messenger'"
-								data-testid="messaging"
-								@edit="openModal('messagingModal')"
-							>
-								<template #icon><NotificationIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="yamlTags('messaging')" />
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="$t('config.influx.title')"
-								editable
-								:error="fatalClass === 'influx'"
-								data-testid="influx"
-								@edit="openModal('influxModal')"
-							>
-								<template #icon><InfluxIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="influxTags" />
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="`${$t('config.eebus.title')} 🧪`"
-								editable
-								:error="fatalClass === 'eebus'"
-								data-testid="eebus"
-								@edit="openModal('eebusModal')"
-							>
-								<template #icon><EebusIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="yamlTags('eebus')" />
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="`${$t('config.circuits.title')} 🧪`"
-								editable
-								:error="fatalClass === 'circuit'"
-								data-testid="circuits"
-								@edit="openModal('circuitsModal')"
-							>
-								<template #icon><CircuitsIcon /></template>
-								<template #tags>
-									<DeviceTags
-										v-if="circuits.length == 0"
-										:tags="yamlTags('circuits')"
-									/>
-									<template
-										v-for="(circuit, idx) in circuits"
-										v-else
-										:key="circuit.name"
-									>
-										<hr v-if="idx > 0" />
-										<p class="my-2 fw-bold">
-											{{ circuit.config?.title }}
-											<code>({{ circuit.name }})</code>
-										</p>
-										<DeviceTags :tags="circuitTags(circuit)" />
-									</template>
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="$t('config.modbusproxy.title')"
-								editable
-								:error="fatalClass === 'modbusproxy'"
-								data-testid="modbusproxy"
-								@edit="openModal('modbusProxyModal')"
-							>
-								<template #icon><ModbusProxyIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="yamlTags('modbusproxy')" />
-								</template>
-							</DeviceCard>
-							<DeviceCard
-								:name="$t('config.hems.title')"
-								editable
-								:error="fatalClass === 'hems'"
-								data-testid="hems"
-								@edit="openModal('hemsModal')"
-							>
-								<template #icon><HemsIcon /></template>
-								<template #tags>
-									<DeviceTags :tags="hemsTags" />
-								</template>
-							</DeviceCard>
-						</ul>
-					</div>
 				</div>
 
 				<hr class="my-5" />
