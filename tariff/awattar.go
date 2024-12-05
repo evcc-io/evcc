@@ -62,8 +62,7 @@ func (t *Awattar) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); true; <-tick {
 		var res awattar.Prices
 
 		// Awattar publishes prices for next day around 13:00 CET/CEST, so up to 35h of price data are available
