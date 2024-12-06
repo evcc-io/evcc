@@ -101,6 +101,7 @@ func (t *Tibber) newSubscriptionClient() {
 			"token": t.token,
 		}).
 		WithRetryTimeout(0).
+		WithTimeout(time.Second).
 		WithLog(t.log.TRACE.Println)
 }
 
@@ -112,11 +113,13 @@ func (t *Tibber) subscribe(done chan error) {
 		}
 	)
 
+	inner := make(chan error)
+
 	_, err := t.client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			once.Do(func() { done <- err })
+			once.Do(func() { inner <- err })
 		}
 
 		var res struct {
@@ -124,7 +127,7 @@ func (t *Tibber) subscribe(done chan error) {
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
-			once.Do(func() { done <- err })
+			once.Do(func() { inner <- err })
 
 			t.log.ERROR.Println(err)
 			return nil
@@ -135,12 +138,26 @@ func (t *Tibber) subscribe(done chan error) {
 		t.updated = time.Now()
 		t.mu.Unlock()
 
-		once.Do(func() { close(done) })
+		once.Do(func() { close(inner) })
 
 		return nil
 	})
 	if err != nil {
 		once.Do(func() { done <- err })
+	}
+
+	select {
+	case err, ok := <-inner:
+		once.Do(func() {
+			if ok {
+				done <- err
+			} else {
+				close(done)
+			}
+		})
+	case <-time.After(request.Timeout):
+		once.Do(func() { done <- api.ErrTimeout })
+		return
 	}
 
 	go func() {
@@ -151,6 +168,9 @@ func (t *Tibber) subscribe(done chan error) {
 }
 
 func (t *Tibber) reconnect() error {
+	defer func() {
+	}()
+
 	const timeout = time.Minute
 
 	t.mu.Lock()
@@ -184,15 +204,15 @@ func (t *Tibber) CurrentPower() (float64, error) {
 	return t.live.Power - t.live.PowerProduction, nil
 }
 
-var _ api.PhaseCurrents = (*Tibber)(nil)
+// var _ api.PhaseCurrents = (*Tibber)(nil)
 
-// Currents implements the api.PhaseCurrents interface
-func (t *Tibber) Currents() (float64, float64, float64, error) {
-	if err := t.reconnect(); err != nil {
-		return 0, 0, 0, err
-	}
+// // Currents implements the api.PhaseCurrents interface
+// func (t *Tibber) Currents() (float64, float64, float64, error) {
+// 	if err := t.reconnect(); err != nil {
+// 		return 0, 0, 0, err
+// 	}
 
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
-}
+// 	t.mu.Lock()
+// 	defer t.mu.Unlock()
+// 	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
+// }
