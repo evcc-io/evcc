@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -37,22 +38,22 @@ type Dadapower struct {
 }
 
 func init() {
-	registry.Add("dadapower", NewDadapowerFromConfig)
+	registry.AddCtx("dadapower", NewDadapowerFromConfig)
 }
 
 // NewDadapowerFromConfig creates a Dadapower charger from generic config
-func NewDadapowerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewDadapowerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDadapower(cc.URI, cc.ID)
+	return NewDadapower(ctx, cc.URI, cc.ID)
 }
 
 // NewDadapower creates a Dadapower charger
-func NewDadapower(uri string, id uint8) (*Dadapower, error) {
+func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -80,13 +81,19 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 		wb.regOffset = (uint16(id) - 1) * 1000
 	}
 
-	go wb.heartbeat()
+	go wb.heartbeat(ctx)
 
 	return wb, nil
 }
 
-func (wb *Dadapower) heartbeat() {
-	for range time.Tick(time.Minute) {
+func (wb *Dadapower) heartbeat(ctx context.Context) {
+	for tick := time.Tick(time.Minute); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
