@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -18,17 +17,20 @@ import (
 )
 
 func init() {
-	registry.Add("tibber-pulse", NewTibberFromConfig)
+	registry.AddCtx("tibber-pulse", NewTibberFromConfig)
 }
 
 type Tibber struct {
 	data *util.Monitor[tibber.LiveMeasurement]
 }
 
-func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
-		Token  string
-		HomeID string
+func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+	cc := struct {
+		Token   string
+		HomeID  string
+		Timeout time.Duration
+	}{
+		Timeout: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -58,18 +60,18 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	ctx2, cancel := context.WithTimeout(ctx, request.Timeout)
 	defer cancel()
 
-	if err := qclient.Query(ctx, &res, nil); err != nil {
+	if err := qclient.Query(ctx2, &res, nil); err != nil {
 		return nil, err
 	}
 
 	t := &Tibber{
-		data: util.NewMonitor[tibber.LiveMeasurement](time.Minute),
+		data: util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
 	}
 
-	// run the client
+	// subscription client
 	client := graphql.NewSubscriptionClient(res.Viewer.WebsocketSubscriptionUrl).
 		WithProtocol(graphql.GraphQLWS).
 		WithWebSocketOptions(graphql.WebsocketOptions{
@@ -97,9 +99,26 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil
 		})
 
-	if err := t.subscribe(client, cc.HomeID); err != nil {
-		return nil, err
+	done := make(chan error, 1)
+	go func(done chan error) {
+		done <- t.subscribe(client, cc.HomeID)
+	}(done)
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return nil, err
+		}
+	case <-time.After(cc.Timeout):
+		return nil, api.ErrTimeout
 	}
+
+	go func() {
+		<-ctx.Done()
+		if err := client.Close(); err != nil {
+			log.ERROR.Println(err)
+		}
+	}()
 
 	go func() {
 		if err := client.Run(); err != nil {
@@ -118,7 +137,6 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) er
 	_, err := client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
-		fmt.Println("!!", string(data), err)
 		if err != nil {
 			return err
 		}
