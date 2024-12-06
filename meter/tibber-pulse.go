@@ -204,15 +204,15 @@ func (t *Tibber) CurrentPower() (float64, error) {
 	return t.live.Power - t.live.PowerProduction, nil
 }
 
-// var _ api.PhaseCurrents = (*Tibber)(nil)
+var _ api.PhaseCurrents = (*Tibber)(nil)
 
-// // Currents implements the api.PhaseCurrents interface
-// func (t *Tibber) Currents() (float64, float64, float64, error) {
-// 	if err := t.reconnect(); err != nil {
-// 		return 0, 0, 0, err
-// 	}
+// Currents implements the api.PhaseCurrents interface
+func (t *Tibber) Currents() (float64, float64, float64, error) {
+	if err := t.reconnect(); err != nil {
+		return 0, 0, 0, err
+	}
 
-// 	t.mu.Lock()
-// 	defer t.mu.Unlock()
-// 	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
-// }
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
+}
