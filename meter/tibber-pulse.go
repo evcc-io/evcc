@@ -27,6 +27,7 @@ type Tibber struct {
 	live          tibber.LiveMeasurement
 	url           string
 	token, homeID string
+	subscription  string
 	client        *graphql.SubscriptionClient
 }
 
@@ -113,9 +114,18 @@ func (t *Tibber) subscribe(done chan error) {
 		}
 	)
 
+	t.mu.Lock()
+	if t.subscription != "" {
+		if err := t.client.Unsubscribe(t.subscription); err != nil {
+			t.log.ERROR.Println(err)
+		}
+		t.subscription = ""
+	}
+	t.mu.Unlock()
+
 	inner := make(chan error, 1)
 
-	_, err := t.client.Subscribe(&query, map[string]any{
+	id, err := t.client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
@@ -146,6 +156,10 @@ func (t *Tibber) subscribe(done chan error) {
 	})
 	if err != nil {
 		onceInner.Do(func() { inner <- err })
+	} else {
+		t.mu.Lock()
+		t.subscription = id
+		t.mu.Unlock()
 	}
 
 	select {
@@ -170,9 +184,6 @@ func (t *Tibber) subscribe(done chan error) {
 }
 
 func (t *Tibber) reconnect() error {
-	defer func() {
-	}()
-
 	const timeout = time.Minute
 
 	t.mu.Lock()
