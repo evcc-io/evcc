@@ -840,11 +840,16 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalconfig.All) error {
+	// collect references for filter for used devices
+	if err := collectRefs(conf); err != nil {
+		return err
+	}
+
 	// TODO: add name/identifier to error for better highlighting in UI
-	if err := configureMeters(conf.Meters); err != nil {
+	if err := configureMeters(conf.Meters, references.meter...); err != nil {
 		return &ClassError{ClassMeter, err}
 	}
-	if err := configureChargers(conf.Chargers); err != nil {
+	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
 		return &ClassError{ClassCharger, err}
 	}
 	if err := configureVehicles(conf.Vehicles); err != nil {
