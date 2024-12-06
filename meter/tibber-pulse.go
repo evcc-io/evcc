@@ -107,19 +107,21 @@ func (t *Tibber) newSubscriptionClient() {
 
 func (t *Tibber) subscribe(done chan error) {
 	var (
-		once  sync.Once
-		query struct {
+		once, onceInner sync.Once
+		query           struct {
 			tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 		}
 	)
 
-	inner := make(chan error)
+	inner := make(chan error, 1)
 
 	_, err := t.client.Subscribe(&query, map[string]any{
 		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			once.Do(func() { inner <- err })
+			onceInner.Do(func() { inner <- err })
+
+			return nil
 		}
 
 		var res struct {
@@ -127,7 +129,7 @@ func (t *Tibber) subscribe(done chan error) {
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
-			once.Do(func() { inner <- err })
+			onceInner.Do(func() { inner <- err })
 
 			t.log.ERROR.Println(err)
 			return nil
@@ -138,12 +140,12 @@ func (t *Tibber) subscribe(done chan error) {
 		t.updated = time.Now()
 		t.mu.Unlock()
 
-		once.Do(func() { close(inner) })
+		onceInner.Do(func() { close(inner) })
 
 		return nil
 	})
 	if err != nil {
-		once.Do(func() { done <- err })
+		onceInner.Do(func() { inner <- err })
 	}
 
 	select {
