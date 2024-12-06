@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,14 +22,7 @@ func init() {
 }
 
 type Tibber struct {
-	mu            sync.Mutex
-	log           *util.Logger
-	updated       time.Time
-	live          tibber.LiveMeasurement
-	url           string
-	token, homeID string
-	subscription  string
-	client        *graphql.SubscriptionClient
+	data *util.Monitor[tibber.LiveMeasurement]
 }
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -72,21 +66,11 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	t := &Tibber{
-		log:    log,
-		url:    res.Viewer.WebsocketSubscriptionUrl,
-		token:  cc.Token,
-		homeID: cc.HomeID,
+		data: util.NewMonitor[tibber.LiveMeasurement](time.Minute),
 	}
 
 	// run the client
-	err := t.reconnect()
-
-	return t, err
-}
-
-// newSubscriptionClient creates graphql subscription client
-func (t *Tibber) newSubscriptionClient() {
-	t.client = graphql.NewSubscriptionClient(t.url).
+	client := graphql.NewSubscriptionClient(res.Viewer.WebsocketSubscriptionUrl).
 		WithProtocol(graphql.GraphQLWS).
 		WithWebSocketOptions(graphql.WebsocketOptions{
 			HTTPClient: &http.Client{
@@ -99,39 +83,44 @@ func (t *Tibber) newSubscriptionClient() {
 			},
 		}).
 		WithConnectionParams(map[string]any{
-			"token": t.token,
+			"token": cc.Token,
 		}).
 		WithRetryTimeout(0).
 		WithTimeout(time.Second).
-		WithLog(t.log.TRACE.Println)
+		WithLog(log.TRACE.Println).
+		OnError(func(_ *graphql.SubscriptionClient, err error) error {
+			// exit the subscription client due to unauthorized error
+			if strings.Contains(err.Error(), "invalid x-hasura-admin-secret/x-hasura-access-key") {
+				return err
+			}
+			log.ERROR.Println(err)
+			return nil
+		})
+
+	if err := t.subscribe(client, cc.HomeID); err != nil {
+		return nil, err
+	}
+
+	go func() {
+		if err := client.Run(); err != nil {
+			log.ERROR.Println(err)
+		}
+	}()
+
+	return t, nil
 }
 
-func (t *Tibber) subscribe(done chan error) {
-	var (
-		once, onceInner sync.Once
-		query           struct {
-			tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
-		}
-	)
-
-	t.mu.Lock()
-	if t.subscription != "" {
-		if err := t.client.Unsubscribe(t.subscription); err != nil {
-			t.log.ERROR.Println(err)
-		}
-		t.subscription = ""
+func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
+	var query struct {
+		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 	}
-	t.mu.Unlock()
 
-	inner := make(chan error, 1)
-
-	id, err := t.client.Subscribe(&query, map[string]any{
-		"homeId": graphql.ID(t.homeID),
+	_, err := client.Subscribe(&query, map[string]any{
+		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
+		fmt.Println("!!", string(data), err)
 		if err != nil {
-			onceInner.Do(func() { inner <- err })
-
-			return nil
+			return err
 		}
 
 		var res struct {
@@ -139,93 +128,34 @@ func (t *Tibber) subscribe(done chan error) {
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
-			onceInner.Do(func() { inner <- err })
-
-			t.log.ERROR.Println(err)
-			return nil
+			return err
 		}
 
-		t.mu.Lock()
-		t.live = res.LiveMeasurement
-		t.updated = time.Now()
-		t.mu.Unlock()
-
-		onceInner.Do(func() { close(inner) })
+		t.data.Set(res.LiveMeasurement)
 
 		return nil
 	})
-	if err != nil {
-		onceInner.Do(func() { inner <- err })
-	} else {
-		t.mu.Lock()
-		t.subscription = id
-		t.mu.Unlock()
-	}
 
-	select {
-	case err, ok := <-inner:
-		once.Do(func() {
-			if ok {
-				done <- err
-			} else {
-				close(done)
-			}
-		})
-	case <-time.After(request.Timeout):
-		once.Do(func() { done <- api.ErrTimeout })
-		return
-	}
-
-	go func() {
-		if err := t.client.Run(); err != nil {
-			once.Do(func() { done <- err })
-		}
-	}()
-}
-
-func (t *Tibber) reconnect() error {
-	const timeout = time.Minute
-
-	t.mu.Lock()
-	if time.Since(t.updated) <= timeout {
-		t.mu.Unlock()
-		return nil
-	}
-	t.mu.Unlock()
-
-	if t.client != nil {
-		if err := t.client.Close(); err != nil {
-			t.log.DEBUG.Println("close:", err)
-		}
-	}
-
-	t.newSubscriptionClient()
-
-	done := make(chan error)
-	go t.subscribe(done)
-
-	return <-done
+	return err
 }
 
 func (t *Tibber) CurrentPower() (float64, error) {
-	if err := t.reconnect(); err != nil {
+	res, err := t.data.Get()
+	if err != nil {
 		return 0, err
 	}
 
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.live.Power - t.live.PowerProduction, nil
+	return res.Power - res.PowerProduction, nil
 }
 
 var _ api.PhaseCurrents = (*Tibber)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (t *Tibber) Currents() (float64, float64, float64, error) {
-	if err := t.reconnect(); err != nil {
+	res, err := t.data.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
+	return res.CurrentL1, res.CurrentL2, res.CurrentL3, nil
 }
