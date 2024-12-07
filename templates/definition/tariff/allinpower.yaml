@@ -1,4 +1,5 @@
 template: allinpower
+deprecated: true
 products:
   - brand: All in Power
 requirements:
