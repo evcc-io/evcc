@@ -3,13 +3,13 @@ products:
   - brand: Nordpool spot prices
 requirements:
   description:
-    de: ""
-    en: "Fetch Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
+    de: "Nordpool Spot Preise im Day-Ahead-Markt für alle Märkte in der Nordpool-Region."
+    en: "Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
   evcc: ["skiptest"]
 group: price
 params:
   - name: region
-    example: SE4
+    example: GER
     validvalues:
       [
         "EE",
@@ -37,7 +37,7 @@ params:
         "SYS",
       ]
   - name: currency
-    example: SEK
+    default: EUR
     validvalues: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
   - preset: tariff-base
 render: |
