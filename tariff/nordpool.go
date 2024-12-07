@@ -72,62 +72,54 @@ func (t *Nordpool) run(done chan error) {
 	var once sync.Once
 	var n nordpool.NordpoolResponse
 	client := request.NewHelper(t.log)
-	t.log.TRACE.Printf("nordpool type: %#v\n", t)
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+
+	for tick := time.Tick(time.Hour); true; <-tick {
 		rd := time.Now().Local()
-		url, _ := nordpool.MakeURL(t.area, rd, t.currency)
+		uri := nordpool.MakeURL(t.area, rd, t.currency)
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(url.String(), &n))
+			return backoffPermanentError(client.GetJSON(uri, &n))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
 			continue
 		}
-		t.log.TRACE.Printf("Returned from url reader with n: %v\n", n)
-		rates := make(api.Rates, 0, len(n.AreaEntries))
+
+		rates := make(api.Rates, 0, 48)
 		for _, ae := range n.AreaEntries {
 			r := api.Rate{
 				Start: ae.Start.Local(),
 				End:   ae.Stop.Local(),
 				Price: t.totalPrice(float64(ae.Entry[t.area])/1000, ae.Start),
 			}
-			t.log.TRACE.Printf("api.Rate: %v\n", r)
 			rates = append(rates, r)
 		}
-		t.log.TRACE.Printf("Merging %v with %v\n", t.data, rates)
-		mergeRates(t.data, rates)
 
-		rd = time.Now().AddDate(0, 0, 1)
-		url, _ = nordpool.MakeURL(t.area, rd, t.currency)
+		uri = nordpool.MakeURL(t.area, time.Now().AddDate(0, 0, 1), t.currency)
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(url.String(), &n))
+			return backoffPermanentError(client.GetJSON(uri, &n))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
 			continue
 		}
-		t.log.TRACE.Printf("Returned from url reader with n: &v\n", n)
-		rates = make(api.Rates, 0, len(n.AreaEntries))
+
 		for _, ae := range n.AreaEntries {
 			r := api.Rate{
 				Start: ae.Start.Local(),
 				End:   ae.Stop.Local(),
 				Price: t.totalPrice(float64(ae.Entry[t.area])/1000, ae.Start),
 			}
-			t.log.TRACE.Printf("api.Rate: %v\n", r)
+
 			rates = append(rates, r)
 		}
-		t.log.TRACE.Printf("Merging %v with %v\n", t.data, rates)
+
 		mergeRates(t.data, rates)
 		once.Do(func() { close(done) })
-
 	}
-
 }
 
 func (t *Nordpool) Rates() (api.Rates, error) {

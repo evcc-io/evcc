@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-func MakeURL(area string, date time.Time, currency string) (u *url.URL, err error) {
-	u, err = url.Parse(BaseURL)
-	q := u.Query()
-	q.Add("market", "DayAhead")
-	q.Add("deliveryArea", area)
-	q.Add("currency", currency)
-	q.Add("date", date.Format("2006-01-02"))
-	u.RawQuery = q.Encode()
-	return u, err
+func MakeURL(area string, date time.Time, currency string) string {
+	data := url.Values{
+		"market":       {"DayAhead"},
+		"deliveryArea": {area},
+		"currency":     {currency},
+		"date":         {date.Format("2006-01-02")},
+	}
+
+	return BaseURL + "?" + data.Encode()
 }
 
 func (d *Date) UnmarshalJSON(b []byte) (err error) {
@@ -35,24 +35,19 @@ func (d *Date) UnmarshalJSON(b []byte) (err error) {
 }
 
 func GetDayAheadData(area string, date time.Time, currency string) (rc int, n *NordpoolResponse, err error) {
-	url, err := MakeURL(area, date, currency)
-	if err != nil {
-		return 0, nil, err
-	}
+	uri := MakeURL(area, date, currency)
 
-	resp, err := http.Get(url.String())
-
+	resp, err := http.Get(uri)
 	if err != nil {
 		return resp.StatusCode, nil, err
 	}
 
 	if resp.StatusCode == 204 {
-		//fmt.Println("No data yet")
+		// fmt.Println("No data yet")
 		return 204, nil, nil
 	}
 
 	b, err := io.ReadAll(resp.Body)
-
 	if err != nil {
 		return 0, nil, err
 	}
