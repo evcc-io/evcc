@@ -43,15 +43,37 @@ params:
 render: |
   type: custom
   forecast:
-    source: http
-    uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ now.Local | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
-    jq: |
-      .multiAreaEntries | [
-        .[] | 
-        {
-          "start": .deliveryStart,
-          "end":   .deliveryEnd,
-          "price": .entryPerArea["{{ .region }}"]
-        }
-      ] | tostring
+    source: go
+    script: |
+      // concat today and tomorrow
+      "[" + strings.Trim(strings.Trim(today, "[]") + "," + strings.Trim(tomorrow, "[]"), ",") + "]"
+    in:
+      - name: today
+        type: string
+        config:
+          source: http
+          uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ now.Local | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          jq: |
+            .multiAreaEntries | [
+              .[] | 
+              {
+                "start": .deliveryStart,
+                "end":   .deliveryEnd,
+                "price": .entryPerArea.{{ .region }}
+              }
+            ] | tostring
+      - name: tomorrow
+        type: string
+        config:
+          source: http
+          uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ addDate (now.Local) 0 0 1 | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          jq: |
+            .multiAreaEntries | [
+              .[] | 
+              {
+                "start": .deliveryStart,
+                "end":   .deliveryEnd,
+                "price": .entryPerArea.{{ .region }}
+              }
+            ] | tostring
   {{ include "tariff-base" . }}
