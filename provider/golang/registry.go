@@ -4,9 +4,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/provider/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
-	"github.com/traefik/yaegi/stdlib"
 )
+
+const Imports = `import (
+	"fmt"
+	"math"
+	"strings"
+	"time"
+)`
 
 var (
 	mu       sync.Mutex
@@ -29,12 +36,7 @@ func RegisteredVM(name, init string) (*interp.Interpreter, error) {
 			return nil, err
 		}
 
-		if _, err := vm.Eval(`import (
-			"fmt"
-			"math"
-			"strings"
-			"time"
-		)`); err != nil {
+		if _, err := vm.Eval(Imports); err != nil {
 			return nil, err
 		}
 

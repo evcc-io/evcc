@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -63,11 +64,11 @@ const (
 )
 
 func init() {
-	registry.Add("mennekes-compact", NewMennekesCompactFromConfig)
+	registry.AddCtx("mennekes-compact", NewMennekesCompactFromConfig)
 }
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
-func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -83,11 +84,11 @@ func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, er
 		return nil, err
 	}
 
-	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
+	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
 
 // NewMennekesCompact creates Mennekes charger
-func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
+func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -110,14 +111,19 @@ func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.P
 	}
 
 	// failsafe
-	go wb.heartbeat(mennekesHeartbeatInterval)
+	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
 	return wb, err
 }
 
-func (wb *MennekesCompact) heartbeat(timeout time.Duration) {
-	tick := time.NewTicker(timeout)
-	for ; true; <-tick.C {
+func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
