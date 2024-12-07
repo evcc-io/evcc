@@ -131,5 +131,98 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      # Self-Use
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0xBE # ON
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43007 # ON/OFF
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 12 #
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43073 # mode
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 700 # 70A
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43117  # max current
+              type: writeholding
+              decode: uint16
+    - case: 2 # hold 
+      # Enable grid charging with 10% (default) target soc to prevent discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0xDE # OFF
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43007 # ON/OFF
+              type: writeholding
+              decode: uint16
+    - case: 3 # charge 
+      # Enable grid charging with 100% target soc
+      set:
+        source: sequence
+        set:
+        #- source: const
+        #  value: 190 # 0xBE-ON 0xDE-OFF
+        #  set:
+        #    source: modbus
+        #    id: 1
+        #    uri: 192.168.188.89:502
+        #    rtu: false
+        #    timeout: 5s
+        #    register:
+        #      address: 43007 # ON/OFF
+        #      type: writeholding
+        #      decode: uint16
+        - source: const
+          value: 48
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43073 # mode
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: -15000 # reason unknown
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43074 # Storage control switch value
+              type: writeholding
+              decode: int16
+        - source: const
+          value: 500 # 50A
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43117 # max current
+              type: writeholding
+              decode: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
