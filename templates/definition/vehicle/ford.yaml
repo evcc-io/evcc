@@ -9,10 +9,7 @@ params:
   - name: domain
     default: com
     validvalues: ["de", "com"]
-  - name: cache
-    default: 15m
 render: |
   type: ford
   {{ include "vehicle-base" . }}
   domain: {{ .domain }}
-  cache: {{ .cache }}
