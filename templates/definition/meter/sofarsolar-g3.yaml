@@ -31,11 +31,11 @@ params:
     advanced: true
   # battery control
   - name: minsoc
-    type: number
+    type: int
     advanced: true
     deprecated: true
   - name: maxsoc
-    type: number
+    type: int
     advanced: true
     deprecated: true
 render: |

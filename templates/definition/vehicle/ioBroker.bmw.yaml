@@ -24,7 +24,7 @@ params:
       generic: ioBroker URL
   - name: id
     default: 0
-    type: number
+    type: int
     help:
       de: Instanz-ID
       en: Instance ID
