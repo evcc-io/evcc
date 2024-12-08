@@ -11,7 +11,8 @@ params:
   - name: bzn
     type: string
     required: true
-    validvalues:
+    type: choice
+    choice: 
       [
         "AT",
         "BE",
