@@ -8,6 +8,7 @@ requirements:
     en: |
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
+  - preset: vehicle-common
   - name: user
     required: true
   - name: password

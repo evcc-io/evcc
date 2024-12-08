@@ -309,10 +309,6 @@ presets:
       - name: capacity
       - name: phases
         advanced: true
-      - name: cache
-        default: 15m
-        advanced: true
-        type: duration
       - name: mode
         advanced: true
       - name: minCurrent
@@ -324,6 +320,10 @@ presets:
         type: stringlist
       - name: priority
         advanced: true
+      - name: cache
+        default: 15m
+        advanced: true
+        type: duration
   vehicle-common:
     params:
       - name: title
@@ -333,10 +333,6 @@ presets:
       - name: capacity
       - name: phases
         advanced: true
-      - name: cache
-        default: 15m
-        advanced: true
-        type: duration
       - name: mode
         advanced: true
       - name: minCurrent
