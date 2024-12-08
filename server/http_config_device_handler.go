@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -33,11 +34,17 @@ func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[str
 	return res, nil
 }
 
-// devicesHandler returns a device configurations by class
-func devicesHandler(w http.ResponseWriter, r *http.Request) {
+// devicesConfigHandler returns a device configurations by class
+func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	class, err := templates.ClassString(vars["class"])
+
+	// TODO exclude loadpoints here
+	if err == nil && class == templates.Loadpoint {
+		err = fmt.Errorf("invalid class %s", class)
+	}
+
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -142,6 +149,8 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO return application/yaml content type if type != template
+
 	jsonResult(w, res)
 }
 
@@ -202,7 +211,7 @@ func newDevice[T any](class templates.Class, req map[string]any, newFromConf new
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice[T](conf, instance))
+	return &conf, h.Add(config.NewConfigurableDevice[T](&conf, instance))
 }
 
 // newDeviceHandler creates a new device by class
@@ -214,6 +223,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// TODO add application/yaml content type, reject type==template
 
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -287,6 +298,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// TODO add application/yaml content type, reject type==template
 
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
