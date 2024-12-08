@@ -97,11 +97,13 @@ publish-release::
 apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
 		cloudsmith push deb evcc/unstable/any-distro/any-version $(file); \
+		cloudsmith push deb evcc/unstable-cached/any-distro/any-version $(file); \
 	)
 
 apt-release::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
 		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
+		cloudsmith push deb evcc/stable-cached/any-distro/any-version $(file); \
 	)
 
 # gokrazy image
