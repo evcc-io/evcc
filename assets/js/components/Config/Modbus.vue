@@ -36,7 +36,7 @@
 		<PropertyField
 			id="modbusId"
 			property="id"
-			type="Number"
+			type="Int"
 			class="me-2"
 			required
 			:model-value="id || defaultId || 1"
@@ -59,7 +59,7 @@
 			<PropertyField
 				id="modbusPort"
 				property="port"
-				type="Number"
+				type="Int"
 				class="me-2 w-50"
 				required
 				:model-value="port || defaultPort || 502"
@@ -116,7 +116,7 @@
 			<PropertyField
 				id="modbusBaudrate"
 				property="baudrate"
-				type="Number"
+				type="Int"
 				class="me-2 w-50"
 				:valid-values="baudrateOptions"
 				required

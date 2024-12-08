@@ -19,7 +19,7 @@ params:
     description:
       de: Leistung
       en: Power
-    type: number
+    type: int
     default: 0
   - name: enabled
     description:
@@ -33,7 +33,7 @@ params:
       en: Maximum amperage (A)
     help:
     example: 16
-    type: number
+    type: int
     advanced: true
 
 render: |

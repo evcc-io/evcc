@@ -200,7 +200,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			}
 		}
 
-		if q.valueType == templates.TypeNumber {
+		if q.valueType == templates.TypeInt {
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number"))

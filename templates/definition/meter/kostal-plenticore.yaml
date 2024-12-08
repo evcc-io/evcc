@@ -36,10 +36,10 @@ params:
   - name: maxacpower
   # battery control
   - name: minsoc
-    type: number
+    type: int
     advanced: true
   - name: maxsoc
-    type: number
+    type: int
     advanced: true
   - name: watchdog
     type: duration

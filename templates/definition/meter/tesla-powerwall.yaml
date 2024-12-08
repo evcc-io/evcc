@@ -36,13 +36,13 @@ params:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
   - name: minsoc
-    type: number
+    type: int
     advanced: true
     help:
       en: the battery reserve percentage to reset to when switching the Battery back to normal operations
       de: die Energyreserve auf die zurückgesetzt wird, wenn die Entladung wieder freigegeben wird
   - name: maxsoc
-    type: number
+    type: int
     advanced: true
     help:
       en: the battery reserve percentage to set to when switching the Battery to charge mode
