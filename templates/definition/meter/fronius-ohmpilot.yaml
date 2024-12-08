@@ -18,8 +18,8 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
-    jq: if .Body.Data.Smartloads.Ohmpilots."{{ .key }}".P_AC_Total == null then 0 else .Body.Data.Smartloads.Ohmpilots."{{ .key }}".P_AC_Total end
+    jq: if .Body.Data.Smartloads.Ohmpilots.{{ .key }}.P_AC_Total == null then 0 else .Body.Data.Smartloads.Ohmpilots.{{ .key }}.P_AC_Total end
   soc:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
-    jq: if .Body.Data.Smartloads.Ohmpilots."{{ .key }}".Temperature == null then 0 else .Body.Data.Smartloads.Ohmpilots."{{ .key }}".Temperature end
+    jq: if .Body.Data.Smartloads.Ohmpilots.{{ .key }}.Temperature == null then 0 else .Body.Data.Smartloads.Ohmpilots.{{ .key }}.Temperature end
