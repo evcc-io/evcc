@@ -2,7 +2,7 @@ package templates
 
 type ParamType int
 
-//go:generate enumer -type ParamType -trimprefix Type -text
+//go:generate go tool enumer -type ParamType -trimprefix Type -text
 const (
 	TypeString ParamType = iota // default type string
 	TypeBool
