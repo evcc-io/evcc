@@ -21,10 +21,7 @@ params:
       de: Instanz-ID
       en: Instance ID
     advanced: true
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
+  - preset: vehicle-features
 render: |
   type: custom
   {{ include "vehicle-common" . }}
@@ -46,12 +43,4 @@ render: |
   odometer:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
-  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
-  features:
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
-  {{- end }}
+  {{ include "vehicle-features" . }}

@@ -20,23 +20,12 @@ params:
     advanced: true
   - name: hcaptcha
     required: true
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
+  - preset: vehicle-features
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
-  features:
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
-  {{- end }}
+  {{ include "vehicle-features" . }}
   hcaptcha: {{ .hcaptcha }}

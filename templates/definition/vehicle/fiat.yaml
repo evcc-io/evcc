@@ -8,14 +8,11 @@ params:
     example: ZFAE...
   - name: pin
     mask: true
-  - name: welcomecharge
-    advanced: true
+  - preset: vehicle-features
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc
   {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  features: ["welcomecharge"]
-  {{- end }}
+  {{ include "vehicle-features" . }}

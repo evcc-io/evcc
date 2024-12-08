@@ -344,6 +344,12 @@ presets:
         type: stringlist
       - name: priority
         advanced: true
+  vehicle-features:
+    params:
+      - name: coarsecurrent
+        advanced: true
+      - name: welcomecharge
+        advanced: true
   vehicle-language:
     params:
       - name: language
