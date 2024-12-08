@@ -5,11 +5,9 @@ products:
       generic: Enyaq
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: timeout
     default: 10s
 render: |
   type: enyaq
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
   timeout: {{ .timeout }}

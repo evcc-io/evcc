@@ -8,7 +8,6 @@ params:
     example: ZFAE...
   - name: pin
     mask: true
-  - preset: vehicle-identify
   - name: welcomecharge
     advanced: true
 render: |
@@ -17,7 +16,6 @@ render: |
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc
   {{- end }}
-  {{ include "vehicle-identify" . }}
   {{- if eq .welcomecharge "true" }}
   features: ["welcomecharge"]
   {{- end }}

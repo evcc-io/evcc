@@ -8,17 +8,9 @@ requirements:
     en: ioBroker BMW Adapter. Requires ioBroker.bmw and ioBroker.simple-api
     de: ioBroker BMW Adapter. Benötigt ioBroker.bmw und ioBroker.simple-api
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
-  - name: capacity
-    type: float
-  - name: phases
-    advanced: true
+  - preset: vehicle-common
   - name: vin
     example: WBMW...
-  - preset: vehicle-identify
   - name: uri
     help:
       generic: ioBroker URL
@@ -36,7 +28,6 @@ params:
 render: |
   type: custom
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-identify" . }}
   soc:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent

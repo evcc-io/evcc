@@ -8,23 +8,15 @@ requirements:
     en: Open source Tesla data logger https://github.com/adriankumpf/teslamate. MQTT broker required.
     de: Open Source Tesla Datenlogger https://github.com/adriankumpf/teslamate. Voraussetzung ist konfigurierter MQTT Broker.
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: id
     description:
       de: Fahrzeug-ID
       en: Vehicle ID
     default: 1
-  - name: capacity
-  - name: phases
-    advanced: true
-  - preset: vehicle-identify
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  {{- include "vehicle-identify" . }}
   soc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/battery_level

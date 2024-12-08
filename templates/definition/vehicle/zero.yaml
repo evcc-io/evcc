@@ -3,8 +3,6 @@ products:
   - brand: Zero Motorcycles
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
 render: |
   type: zero
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

@@ -9,28 +9,24 @@ requirements:
       Requires `hcaptcha` token. This must be generated once at https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html. The token is only valid for a short time. Please copy it into the configuration and start evcc as soon as possible after generation.
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: WBMW...
   - name: region
     description:
       de: Region
       en: Region
-    # values:
-    #   - NA
-    #   - EU
+    validvalues: ["NA", "EU"]
     default: EU
     advanced: true
+  - name: hcaptcha
+    required: true
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
     advanced: true
-  - name: hcaptcha
-    required: true
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}

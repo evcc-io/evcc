@@ -297,15 +297,15 @@ params:
 presets:
   vehicle-base:
     params:
-      - name: title
-      - name: icon
-        default: car
-        advanced: true
       - name: user
         required: true
       - name: password
         required: true
       - name: vin
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
       - name: capacity
       - name: phases
         advanced: true
@@ -313,8 +313,30 @@ presets:
         default: 15m
         advanced: true
         type: duration
-  vehicle-identify:
+      - name: mode
+        advanced: true
+      - name: minCurrent
+        advanced: true
+      - name: maxCurrent
+        advanced: true
+      - name: identifiers
+        advanced: true
+        type: stringlist
+      - name: priority
+        advanced: true
+  vehicle-common:
     params:
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
+      - name: capacity
+      - name: phases
+        advanced: true
+      - name: cache
+        default: 15m
+        advanced: true
+        type: duration
       - name: mode
         advanced: true
       - name: minCurrent

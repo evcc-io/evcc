@@ -5,8 +5,6 @@ products:
       generic: EQ
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
 render: |
   type: smart
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

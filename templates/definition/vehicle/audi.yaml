@@ -4,10 +4,8 @@ products:
   - brand: Audi
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: WAUZZZ...
 render: |
   type: etron
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

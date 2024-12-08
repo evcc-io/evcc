@@ -5,8 +5,6 @@ products:
       generic: CupraConnect Gen3 (Ateca, Leon, Formentor)
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
 render: |
   type: seat
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
