@@ -201,7 +201,7 @@ type Param struct {
 // DefaultValue returns a default or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode int) interface{} {
 	// return empty list to allow iterating over in template
-	if p.Type == TypeStringList {
+	if p.Type == TypeList {
 		return []string{}
 	}
 
