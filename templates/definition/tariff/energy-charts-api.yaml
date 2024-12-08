@@ -9,10 +9,9 @@ requirements:
 group: price
 params:
   - name: bzn
-    type: string
-    required: true
     type: choice
-    choice: 
+    required: true
+    choice:
       [
         "AT",
         "BE",
