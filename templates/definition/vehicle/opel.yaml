@@ -21,6 +21,8 @@ params:
     mask: true
   - name: vin
     example: V...
+  - name: cache
+    default: 15m
 render: |
   type: opel
   vin: {{ .vin }}
@@ -29,3 +31,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
+  cache: {{ .cache }}

@@ -23,6 +23,8 @@ params:
     required: true
   - name: vin
     example: W...
+  - name: cache
+    default: 15m
 render: |
   type: tronity
   vin: {{ .vin }}
@@ -30,3 +32,4 @@ render: |
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
   {{ include "vehicle-common" . }}
+  cache: {{ .cache }}

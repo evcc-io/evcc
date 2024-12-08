@@ -25,6 +25,8 @@ params:
     mask: true
   - name: vin
     example: WF0FXX...
+  - name: cache
+    default: 15m
 render: |
   type: ford-connect
   vin: {{ .vin }}
@@ -35,3 +37,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
+  cache: {{ .cache }}

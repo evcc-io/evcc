@@ -19,10 +19,13 @@ params:
     default: dexters-web.de
     advanced: true
     required: true
+  - name: cache
+    default: 15m
 render: |
   type: ovms
   {{- include "vehicle-common" . }}
   user: {{ .user }}
   password: {{ .password }}
-  vehicleid: {{ .vehicleid }} # vehicle id
+  vehicleid: {{ .vehicleid }}
   server: {{ .server }}
+  cache: {{ .cache }}
