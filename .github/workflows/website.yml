@@ -1,7 +1,7 @@
 name: Deploy data to website
 
 env:
-  GO_VERSION: ^1.23
+  GO_VERSION: ^1.24
 
 on:
   release:
