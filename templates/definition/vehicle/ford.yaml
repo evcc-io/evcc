@@ -4,7 +4,6 @@ products:
   - brand: Ford
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: WF0FXX...
   - name: domain
@@ -13,5 +12,4 @@ params:
 render: |
   type: ford
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
   domain: {{ .domain }}

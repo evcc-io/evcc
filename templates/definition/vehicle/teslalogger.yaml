@@ -8,7 +8,7 @@ requirements:
     de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger
     en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger
 params:
-  - name: title
+  - preset: vehicle-common
   - name: id
     description:
       de: TeslaLogger CarID
@@ -20,18 +20,9 @@ params:
   - name: port
     example: 5000
     default: 5000
-  - name: capacity
-  - name: phases
-    advanced: true
-  - name: icon
-    default: car
-    advanced: true
-  - preset: vehicle-identify
-
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  {{- include "vehicle-identify" . }}
   soc: # battery soc (%)
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
