@@ -252,13 +252,16 @@ export default {
 			return this.fmtW(this.minCurrent * V * this.phasesActive);
 		},
 		minCurrentOptions() {
-			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
+			//rro added custom steps
+			const opt1 = [...range(Math.floor(this.maxCurrent), 10),9,8.9,8,7,6.6,6,4.5,4.0,2.1,1.6,1.2,1.0];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.minCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 6));
 		},
 		maxCurrentOptions() {
-			const opt1 = range(32, Math.ceil(this.minCurrent));
+			//const opt1 = range(32, Math.ceil(this.minCurrent));
+			//rro added custom steps
+			const opt1 = [...range(Math.floor(this.maxCurrent), 10),9,8.9,8,7,6.6,6,4.5,4.0,2.1,1.6,1.2,1.0];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.maxCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 16));
