@@ -1,11 +1,13 @@
 <template>
 	<div
-		class="d-flex justify-content-between gap-4 evcc-gray"
+		class="d-flex justify-content-between gap-3 evcc-gray align-items-start flex-wrap"
 		style="min-height: 24px"
 		data-testid="vehicle-status"
 	>
-		<div class="text-nowrap" data-testid="vehicle-status-charger">{{ chargerStatus }}</div>
-		<div class="d-flex flex-wrap justify-content-end gap-3">
+		<div class="charger-status" data-testid="vehicle-status-charger">
+			{{ chargerStatus }}
+		</div>
+		<div class="d-flex flex-wrap justify-content-end gap-3 flex-grow-1">
 			<!-- pv/phase timer -->
 			<div
 				v-if="pvTimerVisible"
@@ -716,6 +718,9 @@ export default {
 </script>
 
 <style scoped>
+.charger-status {
+	padding-top: 2px;
+}
 .entry {
 	display: flex;
 	align-items: center;
