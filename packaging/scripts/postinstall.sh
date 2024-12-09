@@ -13,16 +13,15 @@ askUserKeepFile() {
 		echo "Shall '$1' be deleted? [Y/n]: "
 		read answer
 		case "$answer" in
-			n*|N*)
-				echo "Ok. We will keep that file. Keep in mind that you may need to alter it if any changes are done upstream. Your answer is saved for the future."
-				return 1
-				;;
-			y*|Y*|"")
-				echo "The file will be deleted."
-				return 0
-				;;
-			*)
-				;;
+		n* | N*)
+			echo "Ok. We will keep that file. Keep in mind that you may need to alter it if any changes are done upstream. Your answer is saved for the future."
+			return 1
+			;;
+		y* | Y* | "")
+			echo "The file will be deleted."
+			return 0
+			;;
+		*) ;;
 		esac
 	done
 }
@@ -53,7 +52,7 @@ if [ "$1" = "configure" ]; then
 		askUserKeepFile "$USR_LOCAL_BIN" || KEEP_USR_LOCAL_BIN=$?
 	fi
 	# Save the user decision
-	cat > "$USER_CHOICE_CONFIG" <<EOF
+	cat >"$USER_CHOICE_CONFIG" <<EOF
 #!/bin/sh
 KEEP_ETC_SERVICE=$KEEP_ETC_SERVICE
 KEEP_USR_LOCAL_BIN=$KEEP_USR_LOCAL_BIN
@@ -71,7 +70,7 @@ EOF
 	fi
 fi
 
-if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ]; then
 	# This will only remove masks created by d-s-h on package removal.
 	deb-systemd-helper unmask evcc.service >/dev/null || true
 
