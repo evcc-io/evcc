@@ -26,7 +26,7 @@ else
 	if [ "$1" = 'evcc' ]; then
 		shift
 		exec evcc "$@"
-	elif expr "$1" : '-.*' >/dev/null; then
+	elif expr "$1" : '-.*' > /dev/null; then
 		exec evcc "$@"
 	else
 		exec "$@"

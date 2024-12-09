@@ -35,7 +35,7 @@ copyDbToUserDir() {
 		fi
 		chown "$EVCC_USER:$EVCC_GROUP" "$EVCC_HOME/evcc.db"
 		touch "$COPIED_FLAG"
-		if [ -n "$(ls -A /etc/systemd/system/evcc.service.d 2>/dev/null)" ]; then
+		if [ -n "$(ls -A /etc/systemd/system/evcc.service.d 2> /dev/null)" ]; then
 			echo "--------------------------------------------------------------------------------"
 			echo "You have overrides defined in /etc/systemd/system/evcc.service.d."
 			echo "This update changes the evcc user to 'evcc' (from root) and the database file"
@@ -56,14 +56,14 @@ copyDbToUserDir() {
 }
 
 if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
-	if [ -d /run/systemd/system ] && /bin/systemctl status evcc.service >/dev/null 2>&1; then
-		deb-systemd-invoke stop evcc.service >/dev/null || true
+	if [ -d /run/systemd/system ] && /bin/systemctl status evcc.service > /dev/null 2>&1; then
+		deb-systemd-invoke stop evcc.service > /dev/null || true
 		touch "$RESTART_FLAG_FILE"
 	fi
-	if ! getent group "$EVCC_GROUP" >/dev/null 2>&1; then
+	if ! getent group "$EVCC_GROUP" > /dev/null 2>&1; then
 		addgroup --system "$EVCC_GROUP" --quiet
 	fi
-	if ! getent passwd "$EVCC_USER" >/dev/null 2>&1; then
+	if ! getent passwd "$EVCC_USER" > /dev/null 2>&1; then
 		adduser --quiet --system --ingroup "$EVCC_GROUP" \
 			--disabled-password --shell /bin/false \
 			--gecos "evcc runtime user" --home "$EVCC_HOME" "$EVCC_USER"
