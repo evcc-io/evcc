@@ -176,6 +176,24 @@ func (wb *Em2Go) Enable(enable bool) error {
 		return err
 	}
 
+	//rro hack t avoud the 9.7A fast load hickup	
+	if  enable {
+		//find a better way from decoration?
+		if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err != nil {
+			wb.log.DEBUG.Printf("_rro_, em2go enable: wait, 6.5, wait, 6.2, wait (50 sec total)")
+			time.Sleep(10 * time.Second)
+			if err := wb.maxCurrentMillis(6.5); err != nil {
+				return err
+			}
+			time.Sleep(15 * time.Second)
+			if err := wb.maxCurrentMillis(6.2); err != nil {
+				return err
+			}
+			time.Sleep(10 * time.Second)
+			wb.log.DEBUG.Printf("_rro_, em2go enable: done")
+		}
+	}
+
 	// re-set 1p if required
 	if wb.workaround && enable {
 		if wb.phases == 1 {
