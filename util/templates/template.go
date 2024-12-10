@@ -106,11 +106,14 @@ func (t *Template) resolveTitles(lang string) {
 	}
 }
 
+// func (t *Template) resolvePreset(p Param,class Class) error {
+// }
+
 // add the referenced base Params and overwrite existing ones
-func (t *Template) ResolvePresets() error {
-	currentParams := make([]Param, len(t.Params))
-	copy(currentParams, t.Params)
-	t.Params = []Param{}
+func (t *Template) ResolvePresets(class Class) error {
+	currentParams := slices.Clone(t.Params)
+	t.Params = make([]Param, 0, len(currentParams))
+
 	for _, p := range currentParams {
 		if p.Preset != "" {
 			base, ok := ConfigDefaults.Presets[p.Preset]

@@ -37,7 +37,7 @@ func init() {
 	}
 }
 
-func FromBytes(b []byte) (Template, error) {
+func fromBytes(b []byte) (Template, error) {
 	// panic if template definition contains unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -51,7 +51,11 @@ func FromBytes(b []byte) (Template, error) {
 		TemplateDefinition: definition,
 	}
 
-	err := tmpl.ResolvePresets()
+	return tmpl, nil
+}
+
+func resolve(tmpl *Template, class Class) error {
+	err := tmpl.ResolvePresets(class)
 	if err == nil {
 		err = tmpl.ResolveGroup()
 	}
@@ -61,8 +65,7 @@ func FromBytes(b []byte) (Template, error) {
 	if err == nil {
 		err = tmpl.Validate()
 	}
-
-	return tmpl, err
+	return err
 }
 
 func load(class Class) (res []Template) {
@@ -79,9 +82,13 @@ func load(class Class) (res []Template) {
 			return err
 		}
 
-		tmpl, err := FromBytes(b)
+		tmpl, err := fromBytes(b)
 		if err != nil {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
+		}
+
+		if err := resolve(&tmpl, class); err != nil {
+			return fmt.Errorf("resolving template '%s' failed: %w", filepath, err)
 		}
 
 		if slices.ContainsFunc(res, func(t Template) bool { return t.Template == tmpl.Template }) {
