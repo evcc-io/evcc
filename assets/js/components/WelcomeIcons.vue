@@ -29,6 +29,7 @@ import "@h2d2/shopicons/es/regular/clock";
 import BatteryBoost from "./MaterialIcon/BatteryBoost.vue";
 import SunUp from "./MaterialIcon/SunUp.vue";
 import DynamicPrice from "./MaterialIcon/DynamicPrice.vue";
+import { markRaw } from "vue";
 
 export default {
 	data() {
@@ -51,9 +52,9 @@ export default {
 				"shopicon-regular-sun",
 				"shopicon-regular-clock",
 				"shopicon-regular-car1",
-				BatteryBoost,
-				SunUp,
-				DynamicPrice,
+				markRaw(BatteryBoost),
+				markRaw(SunUp),
+				markRaw(DynamicPrice),
 			],
 			interval: null,
 		};
@@ -104,8 +105,8 @@ export default {
 
 <style scoped>
 .animated-icon {
-	width: 4rem !important;
-	height: 4rem !important;
+	width: 3.5rem !important;
+	height: 3.5rem !important;
 }
 
 .fade-enter-active,

@@ -493,7 +493,7 @@ title = "Authentifizierung"
 [main]
 startConfiguration = "Konfiguration beginnen"
 vehicles = "Parkplatz"
-welcome = "Hallo Sonnenschein"
+welcome = "Herzlich willkommen!"
 
 [main.chargingPlan]
 active = "Aktiv"
