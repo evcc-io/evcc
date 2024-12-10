@@ -11,7 +11,8 @@ params:
   - preset: vehicle-common
   - name: region
     required: true
-    validvalues: [EMEA, APAC, NORAM]
+    type: choice
+    choice: ["EMEA", "APAC", "NORAM"]
     default: EMEA
   - name: accessToken
     required: true

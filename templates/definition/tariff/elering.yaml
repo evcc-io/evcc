@@ -12,7 +12,8 @@ group: price
 params:
   - name: region
     example: ee
-    validvalues: ["ee", "lt", "lv", "fi"]
+    type: choice
+    choice: ["ee", "lt", "lv", "fi"]
   - preset: tariff-base
 render: |
   type: elering
