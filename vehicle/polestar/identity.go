@@ -192,34 +192,6 @@ exchange:
 	}, err
 }
 
-func (v *Identity) confirmConsent(resumePath, uid string) (string, error) {
-	confirmURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
-	data := url.Values{
-		"pf.submit": []string{"false"},
-		"subject":   []string{uid},
-	}
-
-	req, err := request.New(http.MethodPost, confirmURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Accept":       "application/json",
-	})
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := v.Do(req)
-	if err != nil {
-		return "", err
-	}
-	resp.Body.Close()
-
-	if resp.Request.URL == nil {
-		return "", fmt.Errorf("no redirect url after consent")
-	}
-
-	return resp.Request.URL.Query().Get("code"), nil
-}
-
 // TokenSource implements oauth.TokenSource
 func (v *Identity) TokenSource() oauth2.TokenSource {
 	return oauth2.ReuseTokenSource(nil, v)
