@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -57,11 +58,11 @@ const (
 )
 
 func init() {
-	registry.Add("daheimladen-mb", NewDaheimLadenMBFromConfig)
+	registry.AddCtx("daheimladen-mb", NewDaheimLadenMBFromConfig)
 }
 
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
-func NewDaheimLadenMBFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -70,11 +71,11 @@ func NewDaheimLadenMBFromConfig(other map[string]interface{}) (api.Charger, erro
 		return nil, err
 	}
 
-	return NewDaheimLadenMB(cc.URI, cc.ID)
+	return NewDaheimLadenMB(ctx, cc.URI, cc.ID)
 }
 
 // NewDaheimLadenMB creates DaheimLadenMB charger
-func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
+func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -104,14 +105,20 @@ func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u) * time.Second / 2)
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
 	return wb, err
 }
 
-func (wb *DaheimLadenMB) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *DaheimLadenMB) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

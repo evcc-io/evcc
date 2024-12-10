@@ -1,4 +1,5 @@
 template: allinpower
+deprecated: true
 products:
   - brand: All in Power
 requirements:
@@ -17,7 +18,7 @@ render: |
     uri: https://api.allinpower.nl/troodon/api/p/spot_market/prices/?product_type=ELK
     jq: |
       [.timestamps, .prices] | transpose | map({
-        "start": (.[0] | strptime("%FT%T.%f%z") | strftime("%FT%TZ")),
-        "end": (.[0] | strptime("%FT%T.%f%z") | mktime + 3600 | strftime("%FT%TZ")),
+        "start": .[0] | strptime("%FT%T.%f%z") | strftime("%FT%TZ"),
+        "end":   .[0] | strptime("%FT%T.%f%z") | mktime + 3600 | strftime("%FT%TZ"),
         "price": .[1]
-      }) | tostring'
+      }) | tostring

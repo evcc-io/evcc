@@ -20,11 +20,11 @@ params:
     default: 2
     advanced: true
   - name: minsoc
-    type: number
+    type: int
     default: 20
     advanced: true
   - name: maxsoc
-    type: number
+    type: int
     default: 95
     advanced: true
 render: |

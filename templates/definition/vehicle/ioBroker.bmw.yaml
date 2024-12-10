@@ -8,35 +8,23 @@ requirements:
     en: ioBroker BMW Adapter. Requires ioBroker.bmw and ioBroker.simple-api
     de: ioBroker BMW Adapter. Benötigt ioBroker.bmw und ioBroker.simple-api
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
-  - name: capacity
-    type: float
-  - name: phases
-    advanced: true
+  - preset: vehicle-common
   - name: vin
     example: WBMW...
-  - preset: vehicle-identify
   - name: uri
     help:
       generic: ioBroker URL
   - name: id
     default: 0
-    type: number
+    type: int
     help:
       de: Instanz-ID
       en: Instance ID
     advanced: true
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
+  - preset: vehicle-features
 render: |
   type: custom
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-identify" . }}
   soc:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent
@@ -55,12 +43,4 @@ render: |
   odometer:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
-  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
-  features:
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
-  {{- end }}
+  {{ include "vehicle-features" . }}

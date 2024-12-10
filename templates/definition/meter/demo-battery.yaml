@@ -15,12 +15,12 @@ params:
     description:
       de: Leistung (W)
       en: Power (W)
-    type: number
+    type: int
   - name: soc
     description:
       de: Ladestand (%)
       en: Charge (%)
-    type: number
+    type: int
   - name: controllable
     description:
       de: Steuerbar
@@ -33,25 +33,25 @@ params:
     description:
       de: Zählerstand (kWh)
       en: Meter reading (kWh)
-    type: number
+    type: int
     advanced: true
   - name: currentL1
     description:
       de: L1 Stromstärke (A)
       en: L1 current (A)
-    type: number
+    type: int
     advanced: true
   - name: currentL2
     description:
       de: L2 Stromstärke (A)
       en: L2 current (A)
-    type: number
+    type: int
     advanced: true
   - name: currentL3
     description:
       de: L3 Stromstärke (A)
       en: L3 current (A)
-    type: number
+    type: int
     advanced: true
 
 render: |

@@ -358,7 +358,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			fmt.Println()
 			minAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMinAmperage"),
-				valueType:      templates.TypeNumber,
+				valueType:      templates.TypeInt,
 				minNumberValue: int64(minValue),
 				maxNumberValue: 32,
 				required:       true,
@@ -366,7 +366,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
 			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage"),
-				valueType:      templates.TypeNumber,
+				valueType:      templates.TypeInt,
 				minNumberValue: 6,
 				maxNumberValue: 32,
 				required:       true,
@@ -408,7 +408,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			case 3:
 				amperage := c.askValue(question{
 					label:          c.localizedString("Loadpoint_WallboxMaxAmperage"),
-					valueType:      templates.TypeNumber,
+					valueType:      templates.TypeInt,
 					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
 					required:       true,

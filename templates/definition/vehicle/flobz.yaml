@@ -7,47 +7,25 @@ requirements:
   description:
     generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
   - name: url
-    required: true
     example: http://192.0.2.2
+    required: true
+  - name: vin
+    required: true
+  - preset: vehicle-common
   - name: host
     deprecated: true
   - name: port
     deprecated: true
-  - name: vin
-    required: true
-    help:
-      de: Erforderlich
-      en: Required
-  - name: capacity
-  - name: phases
-    advanced: true
   - name: wakeup_alt
     help:
       de: alternativer wakeup-Code; könnte zu erhöhter Entladung der 12V-Batterie führen.
       en: alternative wakeup-code; could lead to increased discharge of the 12V battery.
     default: false
     advanced: true
-  - preset: vehicle-identify
 render: |
   type: custom
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- include "vehicle-identify" . }}
+  {{- include "vehicle-common" . }}
   soc:
     {{- include "source" . | indent 2 }}
     jq: .energy[0].level

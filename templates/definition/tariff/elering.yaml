@@ -1,4 +1,5 @@
 template: elering
+deprecated: true
 products:
   - brand: Nordpool
     description:

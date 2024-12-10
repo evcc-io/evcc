@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/golang"
+	"github.com/evcc-io/evcc/provider/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
-	"github.com/traefik/yaegi/stdlib"
 )
 
 type embed struct {
@@ -33,18 +34,13 @@ func (t *embed) init() (err error) {
 		return err
 	}
 
-	if _, err := vm.Eval(fmt.Sprintf(`
-	import (
-		"math"
-		"time"
-	)
-	
+	if _, err := vm.Eval(fmt.Sprintf(`%s
 	var (
 		price float64
 		charges float64 = %f
 		tax float64 = %f
 		ts time.Time
-	)`, t.Charges, t.Tax)); err != nil {
+	)`, golang.Imports, t.Charges, t.Tax)); err != nil {
 		return err
 	}
 

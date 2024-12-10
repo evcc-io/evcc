@@ -1082,12 +1082,11 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan updater)
 	go site.loopLoadpoints(loadpointChan)
 
-	ticker := time.NewTicker(interval)
 	site.update(<-loadpointChan) // start immediately
 
-	for {
+	for tick := time.Tick(interval); ; {
 		select {
-		case <-ticker.C:
+		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)

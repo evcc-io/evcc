@@ -2,7 +2,6 @@ package requests
 
 import (
 	"strconv"
-	"strings"
 )
 
 func CalculateRequestVerification(
@@ -48,18 +47,18 @@ func CalculateResponseVerification(str, str2, str3 string) string {
 	return HmacSha256(a4, str5)
 }
 
-func EncryptRequest(url string, time int64, tenant, token, body, contentType string) string {
+func EncryptRequest(path string, time int64, tenant, token, body, contentType string) string {
 	sendDate := strconv.FormatInt(time, 10)
 	// tenant
-	replace := ""
-	if len(url) != 0 {
-		replace = strings.Replace(url, BASE_URL_P, "/", -1)
+	resourcePath := ""
+	if len(path) != 0 {
+		resourcePath = "/" + path
 	}
 
 	encryptedBody := ""
 
 	if len(body) != 0 {
-		sb3 := Md5(replace+tenant+token+USER_TYPE) + sendDate + CONTENT_ENCRYPTED + contentType
+		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + sendDate + CONTENT_ENCRYPTED + contentType
 		a2 := Md5(sb3)
 		a3 := Md5(sendDate)
 		if len(body) != 0 && len(a2) != 0 && len(a3) != 0 {
@@ -70,9 +69,14 @@ func EncryptRequest(url string, time int64, tenant, token, body, contentType str
 	return encryptedBody
 }
 
-func DecryptRequest(url string, time int64, tenant, token, body, contentType string) string {
+func DecryptRequest(path string, time int64, tenant, token, body, contentType string) string {
 	timeStamp := strconv.FormatInt(time, 10)
-	resourcePath := strings.Replace(url, BASE_URL_P, "/", -1)
+	resourcePath := ""
+
+	if len(path) != 0 {
+		resourcePath = "/" + path
+	}
+
 	if len(body) != 0 {
 		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + timeStamp + CONTENT_ENCRYPTED + contentType
 		a2 := Md5(sb3)

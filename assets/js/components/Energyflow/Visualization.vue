@@ -64,13 +64,13 @@
 				/>
 			</div>
 			<div
-				class="site-progress-bar unknown-output"
-				:style="{ width: widthTotal(unknownOutput) }"
+				class="site-progress-bar unknown-power"
+				:style="{ width: widthTotal(unknownPower) }"
 			>
 				<AnimatedNumber
-					v-if="unknownOutput && visualizationReady"
+					v-if="unknownPower && visualizationReady"
 					class="power"
-					:to="unknownOutput"
+					:to="unknownPower"
 					:format="fmtBarValue"
 				/>
 			</div>
@@ -174,6 +174,13 @@ export default {
 		unknownOutput: function () {
 			// input/output mismatch > 10%
 			return this.applyThreshold(Math.max(0, this.inPower - this.outPower), 10);
+		},
+		unknownPower: function () {
+			if (this.unknownImport || this.unknownOutput) {
+				const total = Math.max(this.inPower, this.outPower);
+				return Math.abs(total - this.totalAdjusted);
+			}
+			return 0;
 		},
 		visualizationReady: function () {
 			return this.totalAdjusted > 0 && this.width > 0;
@@ -288,7 +295,7 @@ html.dark .grid-import {
 	background-color: var(--evcc-export);
 	color: var(--bs-dark);
 }
-.unknown-output {
+.unknown-power {
 	background-color: var(--evcc-gray);
 	color: var(--bs-dark);
 }
