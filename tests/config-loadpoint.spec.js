@@ -229,4 +229,49 @@ test.describe("loadpoint", async () => {
       await expect(lpModal).not.toBeVisible();
     }
   });
+
+  test("keep mode", async ({ page }) => {
+    await start(CONFIG_EMPTY);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // add grid meter
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
+    await meterModal.getByLabel("Power").fill("-1000");
+    await meterModal.getByRole("button", { name: "Save" }).click();
+    await expect(meterModal).not.toBeVisible();
+
+    // add a loadpoint with dummy charger,
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    await lpModal.getByLabel("Default mode").selectOption("---");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
+    await restart(CONFIG_EMPTY);
+
+    // change on main ui
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
+    await page.getByRole("button", { name: "Solar", exact: true }).click();
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+
+    // change default mode in config to fast
+    await page.goto("/#/config");
+    // open first loadpoint
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await lpModal.getByLabel("Default mode").selectOption("Fast");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
+    await restart(CONFIG_EMPTY);
+
+    // check loadpoint mode
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
+  });
 });
