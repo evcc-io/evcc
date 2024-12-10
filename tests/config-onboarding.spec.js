@@ -28,7 +28,7 @@ test.describe("onboarding", async () => {
     await expect(admin).not.toBeVisible();
 
     // onboarding
-    await expect(page.locator("body")).toContainText("Hello sunshine");
+    await expect(page.locator("body")).toContainText("Hello aboard!");
     await page.getByRole("link", { name: "Let's start configuration" }).click();
 
     // login
