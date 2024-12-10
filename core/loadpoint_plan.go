@@ -28,8 +28,8 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 }
 
-// finishedPlan deletes the charging plan, either loadpoint or vehicle
-func (lp *Loadpoint) finishedPlan() {
+// finishePlan deletes the charging plan, either loadpoint or vehicle
+func (lp *Loadpoint) finishePlan() {
 	if lp.repeatingPlanning() {
 		return // noting to do
 	} else if !lp.socBasedPlanning() {
@@ -106,7 +106,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
-		lp.finishedPlan()
+		lp.finishePlan()
 		return false
 	}
 
@@ -119,7 +119,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		}
 
-		lp.finishedPlan()
+		lp.finishePlan()
 		return false
 	}
 
