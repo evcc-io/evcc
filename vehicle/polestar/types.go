@@ -3,9 +3,10 @@ package polestar
 import "time"
 
 type Token struct {
-	AccessToken  string `graphql:"access_token"`
-	RefreshToken string `graphql:"refresh_token"`
-	ExpiresIn    int    `graphql:"expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
 }
 
 type ConsumerCar struct {

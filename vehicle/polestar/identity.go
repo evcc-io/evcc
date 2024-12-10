@@ -1,7 +1,9 @@
 package polestar
 
 import (
-	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -10,9 +12,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/hasura/go-graphql-client"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
@@ -20,164 +20,184 @@ import (
 
 // https://github.com/TA2k/ioBroker.polestar
 
-const OAuthURI = "https://polestarid.eu.polestar.com"
-
-// https://polestarid.eu.polestar.com/.well-known/openid-configuration
-var OAuth2Config = &oauth2.Config{
-	ClientID:    "l3oopkc_10",
-	RedirectURL: "https://www.polestar.com/sign-in-callback",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  OAuthURI + "/as/authorization.oauth2",
-		TokenURL: OAuthURI + "/as/token.oauth2",
-	},
-	Scopes: []string{
-		"openid", "profile", "email", "customer:attributes",
-		// "conve:recharge_status", "conve:fuel_status", "conve:odometer_status",
-		// "energy:charging_connection_status", "energy:electric_range", "energy:estimated_charging_time", "energy:recharge_status",
-		// "energy:battery_charge_level", "energy:charging_system_status", "energy:charging_timer", "energy:electric_range", "energy:recharge_status",
-		// "energy:battery_charge_level",
-	},
-}
+const (
+	OAuthURI    = "https://polestarid.eu.polestar.com"
+	ClientID    = "l3oopkc_10"
+	RedirectURI = "https://www.polestar.com/sign-in-callback"
+)
 
 type Identity struct {
 	*request.Helper
 	user, password string
+	jar            *cookiejar.Jar
+	log            *util.Logger
 }
 
 // NewIdentity creates Polestar identity
-func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,
 		password: password,
+		log:      log,
 	}
 
-	v.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
+	log.DEBUG.Printf("initializing polestar identity with user: %s", user)
+
+	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
-
-	token, err := v.login()
-
-	return oauth.RefreshTokenSource(token, v), err
-}
-
-func (v *Identity) login() (*oauth2.Token, error) {
-	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
-
-	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", true)
-	defer func() { v.Client.CheckRedirect = nil }()
-
-	if _, err := v.Get(uri); err != nil {
+	if err != nil {
 		return nil, err
 	}
+	v.jar = jar
+	v.Client.Jar = jar
 
-	resume, err := param()
+	token, err := v.login()
 	if err != nil {
 		return nil, err
 	}
 
-	params := url.Values{
-		"pf.username": []string{v.user},
-		"pf.pass":     []string{v.password},
+	v.Client.Transport = &oauth2.Transport{
+		Source: oauth2.StaticTokenSource(token),
+		Base:   v.Client.Transport,
 	}
 
-	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
+	return v, nil
+}
 
-	var code string
-	var uid string
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		code = req.URL.Query().Get("code")
-		uid = req.URL.Query().Get("uid")
-		return nil
-	}
-	defer func() { v.Client.CheckRedirect = nil }()
+// generates code verifier for PKCE
+func generateCodeVerifier() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
+}
 
-	if _, err := v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err != nil {
+// generates code challenge from verifier
+func generateCodeChallenge(verifier string) string {
+	hash := sha256.Sum256([]byte(verifier))
+	return strings.TrimRight(base64.URLEncoding.EncodeToString(hash[:]), "=")
+}
+
+func (v *Identity) login() (*oauth2.Token, error) {
+	state := lo.RandomString(16, lo.AlphanumericCharset)
+	codeVerifier := generateCodeVerifier()
+	codeChallenge := generateCodeChallenge(codeVerifier)
+
+	// Build authorization URI with all required scopes
+	authURL := fmt.Sprintf("%s/as/authorization.oauth2"+
+		"?client_id=%s"+
+		"&redirect_uri=%s"+
+		"&response_type=code"+
+		"&state=%s"+
+		"&scope=openid%%20profile%%20email"+
+		"&code_challenge=%s"+
+		"&code_challenge_method=S256",
+		OAuthURI, ClientID, RedirectURI, state, codeChallenge)
+
+	// Get resume path with browser-like headers
+	req, err := request.New(http.MethodGet, authURL, nil, map[string]string{
+		"Accept": "application/json",
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	// If the authorization code is empty, this indicates that user consent must be handled
-	// before the code can be obtained. The `confirmConsentAndGetCode` method is called as a
-	// workaround to guide the user through the consent process and retrieve the authorization code.
-	if code == "" {
-		code, err = v.confirmConsentAndGetCode(resume, uid)
+	resp, err := v.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	v.log.TRACE.Printf("auth response URL: %s", resp.Request.URL.String())
+	resp.Body.Close()
+
+	// Extract resume path from redirect URL
+	if resp.Request.URL == nil {
+		return nil, fmt.Errorf("no redirect url")
+	}
+
+	// First we get redirected to the login page
+	if strings.Contains(resp.Request.URL.Path, "/PolestarLogin/login") {
+		// Extract resumePath from the login URL
+		resumePath := resp.Request.URL.Query().Get("resumePath")
+		if resumePath == "" {
+			return nil, fmt.Errorf("resume path not found in login URL: %s", resp.Request.URL.String())
+		}
+		v.log.TRACE.Printf("got resume path: %s", resumePath)
+
+		// Submit credentials directly to the login endpoint
+		loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
+		data := url.Values{
+			"pf.username": []string{v.user},
+			"pf.pass":     []string{v.password},
+			"client_id":   []string{ClientID},
+		}
+
+		req, err = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Accept":       "application/json",
+		})
 		if err != nil {
 			return nil, err
 		}
+
+		resp, err = v.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		v.log.TRACE.Printf("login response URL: %s", resp.Request.URL.String())
+		resp.Body.Close()
+
+		if resp.Request.URL == nil {
+			return nil, fmt.Errorf("no redirect url after login")
+		}
 	}
 
-	var res struct {
-		Token `graphql:"getAuthToken(code: $code)"`
+	// After login, we should get the authorization code directly
+	query := resp.Request.URL.Query()
+	code := query.Get("code")
+	if code != "" {
+		v.log.TRACE.Printf("got authorization code directly")
+		goto exchange
 	}
 
-	if err := graphql.NewClient(ApiURI+"/auth", v.Client).
-		Query(context.Background(), &res, map[string]any{
-			"code": code,
-		}, graphql.OperationName("getAuthToken")); err != nil {
-		return nil, err
-	}
+	return nil, fmt.Errorf("authorization code not found in URL: %s", resp.Request.URL.String())
 
-	token := &oauth2.Token{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-	}
-
-	return token, err
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	var res struct {
-		Token `graphql:"refreshAuthToken(token: $token)"`
-	}
-
-	err := graphql.NewClient(ApiURI+"/auth", v.Client).WithRequestModifier(func(req *http.Request) {
-		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-	}).Query(context.Background(), &res, map[string]any{
-		"token": token.RefreshToken,
-	}, graphql.OperationName("refreshAuthToken"))
-
-	if err == nil {
-		return &oauth2.Token{
-			AccessToken:  res.AccessToken,
-			RefreshToken: res.RefreshToken,
-			Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-		}, nil
-	}
-
-	return v.login()
-}
-
-func (v *Identity) confirmConsentAndGetCode(resume, uid string) (string, error) {
-	// Extract the user ID (UID) from the redirect parameters
-	if uid == "" {
-		return "", fmt.Errorf("failed to extract user ID")
-	}
-
-	// Confirm user consent by submitting the consent form, which rejects cookies
+exchange:
+	// Exchange code for token
 	data := url.Values{
-		"pf.submit": []string{"true"},
-		"subject":   []string{uid},
+		"grant_type":    []string{"authorization_code"},
+		"code":          []string{code},
+		"code_verifier": []string{codeVerifier},
+		"client_id":     []string{ClientID},
+		"redirect_uri":  []string{RedirectURI},
 	}
 
-	// Retrieve the authorization code after consent has been confirmed
-	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-	defer func() { v.Client.CheckRedirect = nil }()
-
-	// Make a POST request to confirm the user consent
-	if _, err := v.Post(fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resume), request.FormContent, strings.NewReader(data.Encode())); err != nil {
-		return "", fmt.Errorf("failed confirming user consent: %w", err)
+	var token Token
+	req, err = request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
+		strings.NewReader(data.Encode()),
+		map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Accept":       "application/json",
+		},
+	)
+	if err == nil {
+		err = v.DoJSON(req, &token)
 	}
 
-	// Extract the authorization code from the response
-	code, err := param()
-	if err != nil || code == "" {
-		return "", fmt.Errorf("failed extracting authorisation code: %w", err)
-	}
+	return &oauth2.Token{
+		AccessToken:  token.AccessToken,
+		TokenType:    "Bearer",
+		RefreshToken: token.RefreshToken,
+		Expiry:       time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
+	}, err
+}
 
-	// Return the retrieved code
-	return code, nil
+// TokenSource implements oauth.TokenSource
+func (v *Identity) TokenSource() oauth2.TokenSource {
+	return oauth2.ReuseTokenSource(nil, v)
+}
+
+// Token implements oauth.TokenSource
+func (v *Identity) Token() (*oauth2.Token, error) {
+	return v.login()
 }
