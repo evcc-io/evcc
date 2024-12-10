@@ -939,6 +939,15 @@ func (lp *Loadpoint) socBasedPlanning() bool {
 	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.vehicleSoc > 0)
 }
 
+// repeatingPlanning returns true if the current plan is a repeating plan
+func (lp *Loadpoint) repeatingPlanning() bool {
+	if !lp.socBasedPlanning() {
+		return false
+	}
+	_, _, id := lp.nextVehiclePlan()
+	return id > 1
+}
+
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
 func (lp *Loadpoint) vehicleHasSoc() bool {
 	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
