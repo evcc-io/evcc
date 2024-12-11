@@ -75,22 +75,16 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"code_challenge_method": {"S256"},
 	}
 
-	// Build authorization URI with all required scopes
-	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
-
 	// Get resume path with browser-like headers
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "application/json",
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	v.log.TRACE.Printf("auth response URL: %s", resp.Request.URL.String())
 	resp.Body.Close()
 
 	// Extract resume path from redirect URL
