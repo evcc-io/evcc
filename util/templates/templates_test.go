@@ -7,17 +7,17 @@ import (
 )
 
 func TestResolveParams(t *testing.T) {
-	presetName := "preset1"
+	presetName := "vehicle_common"
+
+	override := Param{
+		Name: "override",
+		Description: TextLanguage{
+			Generic: "override description",
+		},
+	}
 
 	ConfigDefaults.Presets[presetName] = preset{
-		Params: []Param{
-			{
-				Name: "preset",
-				Description: TextLanguage{
-					Generic: "replacement description",
-				},
-			},
-		},
+		Params: []Param{override},
 	}
 
 	tmpl := Template{
@@ -30,11 +30,10 @@ func TestResolveParams(t *testing.T) {
 					},
 				},
 				{
-					Name:   "preset",
+					Name: override.Name,
+				},
+				{
 					Preset: presetName,
-					Description: TextLanguage{
-						Generic: "preset1 description",
-					},
 				},
 			},
 		},
@@ -42,6 +41,6 @@ func TestResolveParams(t *testing.T) {
 
 	require.NoError(t, tmpl.ResolvePresets(Vehicle))
 
-	_, p := tmpl.ParamByName("preset")
-	require.Equal(t, "replacement description", p.Description.Generic)
+	_, p := tmpl.ParamByName("override")
+	require.Equal(t, override.Description.Generic, p.Description.Generic)
 }
