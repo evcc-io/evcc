@@ -9,7 +9,6 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -172,24 +171,17 @@ exchange:
 		"redirect_uri":  []string{RedirectURI},
 	}
 
-	var token Token
-	req, err = request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
+	var token oauth2.Token
+	req, _ = request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
 		strings.NewReader(data.Encode()),
 		map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
 			"Accept":       "application/json",
 		},
 	)
-	if err == nil {
-		err = v.DoJSON(req, &token)
-	}
 
-	return &oauth2.Token{
-		AccessToken:  token.AccessToken,
-		TokenType:    "Bearer",
-		RefreshToken: token.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
-	}, err
+	err = v.DoJSON(req, &token)
+	return util.TokenWithExpiry(&token), err
 }
 
 // TokenSource implements oauth.TokenSource
