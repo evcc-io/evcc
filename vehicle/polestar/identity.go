@@ -1,9 +1,6 @@
 package polestar
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -65,37 +62,24 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	return v, nil
 }
 
-// generates code verifier for PKCE
-func generateCodeVerifier() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
-}
-
-// generates code challenge from verifier
-func generateCodeChallenge(verifier string) string {
-	hash := sha256.Sum256([]byte(verifier))
-	return strings.TrimRight(base64.URLEncoding.EncodeToString(hash[:]), "=")
-}
-
 func (v *Identity) login() (*oauth2.Token, error) {
-	state := lo.RandomString(16, lo.AlphanumericCharset)
-	codeVerifier := generateCodeVerifier()
-	codeChallenge := generateCodeChallenge(codeVerifier)
+	cv := oauth2.GenerateVerifier()
+
+	data := url.Values{
+		"client_id":             {ClientID},
+		"redirect_uri":          {RedirectURI},
+		"response_type":         {"code"},
+		"state":                 {lo.RandomString(16, lo.AlphanumericCharset)},
+		"scope":                 {"openid", "profile", "email"},
+		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
+		"code_challenge_method": {"S256"},
+	}
 
 	// Build authorization URI with all required scopes
-	authURL := fmt.Sprintf("%s/as/authorization.oauth2"+
-		"?client_id=%s"+
-		"&redirect_uri=%s"+
-		"&response_type=code"+
-		"&state=%s"+
-		"&scope=openid%%20profile%%20email"+
-		"&code_challenge=%s"+
-		"&code_challenge_method=S256",
-		OAuthURI, ClientID, RedirectURI, state, codeChallenge)
+	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
 
 	// Get resume path with browser-like headers
-	req, err := request.New(http.MethodGet, authURL, nil, map[string]string{
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "application/json",
 	})
 	if err != nil {
@@ -152,21 +136,16 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	// After login, we should get the authorization code directly
-	query := resp.Request.URL.Query()
-	code := query.Get("code")
-	if code != "" {
-		v.log.TRACE.Printf("got authorization code directly")
-		goto exchange
+	code := resp.Request.URL.Query().Get("code")
+	if code == "" {
+		return nil, fmt.Errorf("authorization code not found in URL: %s", resp.Request.URL.String())
 	}
 
-	return nil, fmt.Errorf("authorization code not found in URL: %s", resp.Request.URL.String())
-
-exchange:
 	// Exchange code for token
-	data := url.Values{
+	data = url.Values{
 		"grant_type":    []string{"authorization_code"},
 		"code":          []string{code},
-		"code_verifier": []string{codeVerifier},
+		"code_verifier": []string{cv},
 		"client_id":     []string{ClientID},
 		"redirect_uri":  []string{RedirectURI},
 	}
