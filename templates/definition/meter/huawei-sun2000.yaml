@@ -27,6 +27,9 @@ params:
     type: int
     default: 1
     advanced: true
+  - name: maxchargepower
+    default: 10000
+    advanced: true
   - name: capacity
     advanced: true
 render: |
@@ -231,7 +234,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 10000 # W
+            value: {{ .maxchargepower }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
