@@ -1,6 +1,7 @@
 package polestar
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -37,8 +38,6 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		password: password,
 		log:      log,
 	}
-
-	log.DEBUG.Printf("initializing polestar identity with user: %s", user)
 
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -87,19 +86,13 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 	resp.Body.Close()
 
-	// Extract resume path from redirect URL
-	if resp.Request.URL == nil {
-		return nil, fmt.Errorf("no redirect url")
-	}
-
 	// First we get redirected to the login page
 	if strings.Contains(resp.Request.URL.Path, "/PolestarLogin/login") {
 		// Extract resumePath from the login URL
 		resumePath := resp.Request.URL.Query().Get("resumePath")
 		if resumePath == "" {
-			return nil, fmt.Errorf("resume path not found in login URL: %s", resp.Request.URL.String())
+			return nil, errors.New("missing resume path in login url")
 		}
-		v.log.TRACE.Printf("got resume path: %s", resumePath)
 
 		// Submit credentials directly to the login endpoint
 		loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
@@ -109,30 +102,22 @@ func (v *Identity) login() (*oauth2.Token, error) {
 			"client_id":   []string{ClientID},
 		}
 
-		req, err = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
+		req, _ = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
 			"Accept":       "application/json",
 		})
-		if err != nil {
-			return nil, err
-		}
 
 		resp, err = v.Do(req)
 		if err != nil {
 			return nil, err
 		}
-		v.log.TRACE.Printf("login response URL: %s", resp.Request.URL.String())
 		resp.Body.Close()
-
-		if resp.Request.URL == nil {
-			return nil, fmt.Errorf("no redirect url after login")
-		}
 	}
 
 	// After login, we should get the authorization code directly
 	code := resp.Request.URL.Query().Get("code")
 	if code == "" {
-		return nil, fmt.Errorf("authorization code not found in URL: %s", resp.Request.URL.String())
+		return nil, errors.New("missing authorization code")
 	}
 
 	// Exchange code for token
