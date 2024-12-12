@@ -59,7 +59,7 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }}
+                "price": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
       - name: tomorrow
@@ -73,7 +73,7 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }}
+                "price": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
   {{ include "tariff-base" . }}
