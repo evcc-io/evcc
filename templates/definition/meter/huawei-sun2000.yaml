@@ -146,17 +146,26 @@ render: |
     timeout: 30s
     reset: 1 # reset watchdog on normal
     set:
-      source: switch
+      source: sequence
       switch:
       - case: 1 # normal
         set:
-          source: const
+        - source: const
           value: 0 # stop
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47100 # Forcible charge/discharge
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # Disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 12 }}
+            register:
+              address: 47087 # Charge from grid
               type: writesingle
               encoding: uint16
       - case: 2 # hold
