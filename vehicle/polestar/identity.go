@@ -26,7 +26,6 @@ const (
 type Identity struct {
 	*request.Helper
 	user, password string
-	jar            *cookiejar.Jar
 	log            *util.Logger
 }
 
@@ -45,7 +44,6 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	v.jar = jar
 	v.Client.Jar = jar
 
 	token, err := v.login()
