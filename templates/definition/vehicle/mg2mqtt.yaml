@@ -8,6 +8,10 @@ requirements:
     en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
     de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
 params:
+  - name: user
+    required: true
+  - name: vin
+    required: true
   - preset: vehicle-common
   - name: timeout
     default: 1h
