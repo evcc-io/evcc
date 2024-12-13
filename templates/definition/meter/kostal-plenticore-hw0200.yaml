@@ -35,6 +35,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargerate
+    advanced: true  
   # battery control
   - name: watchdog
     type: duration
@@ -104,7 +106,7 @@ render: |
       - case: 3 # charge
         set:
           source: const
-          value: -100 # %
+          value: -{{ .maxchargerate }} # %
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
