@@ -32,6 +32,9 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: cascade
+    default: false
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -164,6 +167,7 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
+          {{- if eq .cascade "false" }}
           - source: const
             value: 0 # Disable
             set:
@@ -173,6 +177,7 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
+          {{- end }}
       - case: 2 # hold
         set:
           source: sequence
