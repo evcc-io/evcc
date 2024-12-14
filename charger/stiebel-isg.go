@@ -73,7 +73,7 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewStiebelIsg(&cc.embed, cc.URI, cc.ID, cc.stiebel.TempConfig)
+	return NewStiebelIsg(&cc.embed, cc.URI, cc.ID, cc.TempConfig)
 }
 
 // NewStiebelIsg creates Stiebel ISG charger
