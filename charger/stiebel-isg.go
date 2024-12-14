@@ -65,7 +65,7 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 		},
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.IntegratedDevice},
+			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
 	}
 
