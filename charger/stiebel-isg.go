@@ -33,7 +33,6 @@ import (
 // StiebelIsg charger implementation
 type StiebelIsg struct {
 	*embed
-	log  *util.Logger
 	conn *modbus.Connection
 	conf stiebel.TempConfig
 }
