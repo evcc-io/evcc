@@ -40,8 +40,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: For inverter cascades (AC charging remains active to charge the storage from other inverters via AC) set to Yes.
-      de: Für Wechselrichterkaskaden (AC-Laden bleibt aktiv zum Laden des Speichers aus anderen WR via AC) auf Ja.
+      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
