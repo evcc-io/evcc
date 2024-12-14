@@ -29,8 +29,9 @@ import (
 
 // SgReady charger implementation
 type SgReady struct {
-	get func() (int64, error)
-	set func(int64) error
+	embed *embed
+	get   func() (int64, error)
+	set   func(int64) error
 }
 
 func init() {
@@ -48,20 +49,26 @@ const (
 
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
+		embed     `mapstructure:",squash"`
 		GetMode   provider.Config
 		SetMode   provider.Config
 		Power     *provider.Config // optional
 		Energy    *provider.Config // optional
 		Temp      *provider.Config // optional
 		LimitTemp *provider.Config // optional
+	}{
+		embed: embed{
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	res, err := NewSgReady(ctx, cc.GetMode, cc.SetMode)
+	res, err := NewSgReady(ctx, &cc.embed, cc.GetMode, cc.SetMode)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +112,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, get, set provider.Config) (api.Charger, error) {
+func NewSgReady(ctx context.Context, embed *embed, get, set provider.Config) (api.Charger, error) {
 	getMode, err := provider.NewIntGetterFromConfig(ctx, get)
 	if err != nil {
 		return nil, err
@@ -117,8 +124,9 @@ func NewSgReady(ctx context.Context, get, set provider.Config) (api.Charger, err
 	}
 
 	return &SgReady{
-		get: getMode,
-		set: setMode,
+		embed: embed,
+		get:   getMode,
+		set:   setMode,
 	}, nil
 }
 
