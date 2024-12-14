@@ -75,8 +75,7 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Pun) run(done chan error) {
 	var once sync.Once
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var today api.Rates
 		if err := backoff.Retry(func() error {
 			var err error
@@ -187,19 +186,16 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			return nil, fmt.Errorf("load location: %w", err)
 		}
 
-		start := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
-		end := start.Add(time.Hour)
-
-		priceStr := strings.Replace(p.PUN, ",", ".", -1) // Ersetzen Sie Komma durch Punkt
-		price, err := strconv.ParseFloat(priceStr, 64)
+		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
 
+		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
 		ar := api.Rate{
-			Start: start,
-			End:   end,
-			Price: t.totalPrice(price / 1e3),
+			Start: ts,
+			End:   ts.Add(time.Hour),
+			Price: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
 	}

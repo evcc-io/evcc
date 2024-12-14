@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -147,7 +149,14 @@ func (p *Javascript) handleSetter(param string, val any) error {
 	return transformOutputs(p.out, v)
 }
 
-func (p *Javascript) evaluate() (any, error) {
+func (p *Javascript) evaluate() (res any, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+		err = backoff.Permanent(err)
+	}()
+
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return nil, err

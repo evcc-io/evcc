@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/traefik/yaegi/interp"
@@ -167,6 +168,7 @@ func (p *Go) evaluate() (res any, err error) {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
 		}
+		err = backoff.Permanent(err)
 	}()
 
 	v, err := p.vm.Eval(p.script)
@@ -186,11 +188,7 @@ func (p *Go) evaluate() (res any, err error) {
 }
 
 func (p *Go) setParam(param string, val any) error {
-	if str, ok := val.(string); ok {
-		val = "\"" + str + "\""
-	}
-
-	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
+	_, err := p.vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
 	return err
 }
 

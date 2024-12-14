@@ -9,36 +9,14 @@ requirements:
     en: Required MQTT broker configuration and a mazda2mqtt installation https://github.com/C64Axel/mazda2mqtt.
     de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: vin
     required: true
-    help:
-      de: Erforderlich
-      en: Required
-  - name: capacity
-  - name: phases
-    advanced: true
   - name: timeout
     default: 720h
-  - preset: vehicle-identify
 render: |
   type: custom
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- include "vehicle-identify" . }}
+  {{- include "vehicle-common" . }}
   soc:
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
