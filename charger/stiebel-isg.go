@@ -37,19 +37,7 @@ type StiebelIsg struct {
 	log  *util.Logger
 	conn *modbus.Connection
 	lp   loadpoint.API
-	conf TempConfig
-}
-
-type TempConfig struct {
-	SollAddr, IstAddr uint16
-	TempDelta         float64
-	ModeAddr          uint16
-	EnableMode        uint16
-	DisableMode       uint16
-	StatusAddr        uint16
-	StatusBits        uint16
-	Speicher          float64
-	Wärmekoeffizient  float64
+	conf stiebel.TempConfig
 }
 
 func init() {
@@ -60,17 +48,16 @@ func init() {
 func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		TempConfig         `mapstructure:",squash"`
+		stiebel.TempConfig `mapstructure:",squash"`
 		embed              `mapstructure:",squash"`
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
-		TempConfig: TempConfig{
+		TempConfig: stiebel.TempConfig{
 			// temp
-			SollAddr:  522, // WW
-			IstAddr:   521, // WW
-			TempDelta: 5,   // °C
+			SollAddr: 522, // WW
+			IstAddr:  521, // WW
 			// enable/disable
 			ModeAddr:    1500, // Betriebsart
 			EnableMode:  3,    // Komfortbetrieb
@@ -86,11 +73,11 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewStiebelIsg(&cc.embed, cc.URI, cc.ID, cc.TempConfig)
+	return NewStiebelIsg(&cc.embed, cc.URI, cc.ID, cc.stiebel.TempConfig)
 }
 
 // NewStiebelIsg creates Stiebel ISG charger
-func NewStiebelIsg(embed *embed, uri string, slaveID uint8, conf TempConfig) (api.Charger, error) {
+func NewStiebelIsg(embed *embed, uri string, slaveID uint8, conf stiebel.TempConfig) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
