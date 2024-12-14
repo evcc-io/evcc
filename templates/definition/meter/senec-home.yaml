@@ -3,6 +3,7 @@ products:
   - brand: SENEC
     description:
       generic: .Home
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
