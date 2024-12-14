@@ -32,9 +32,16 @@ params:
     advanced: true
   - name: capacity
     advanced: true
-  - name: sun2000cascade
+  - name: forceaccharging
     default: false
     advanced: true
+    type: bool
+    description:
+      en: Inverter cascade
+      de: Wechselrichterkaskade
+    help:
+      en: For inverter cascades (AC charging remains active to charge the storage from other inverters via AC) set to Yes.
+      de: Für Wechselrichterkaskaden (AC-Laden bleibt aktiv zum Laden des Speichers aus anderen WR via AC) auf Ja.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -167,7 +174,7 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
-          {{- if eq .sun2000cascade "false" }}
+          {{- if eq .forceaccharging "false" }}
           - source: const
             value: 0 # Disable
             set:
