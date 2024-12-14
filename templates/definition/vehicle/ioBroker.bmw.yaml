@@ -12,6 +12,7 @@ params:
   - name: vin
     example: WBMW...
   - name: uri
+    required: true
     help:
       generic: ioBroker URL
   - name: id
