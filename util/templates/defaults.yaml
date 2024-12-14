@@ -310,7 +310,6 @@ params:
       en: Power limit for grid charging.
       de: Leistungslimit für Netzladung.
     default: 100
-
 presets:
   vehicle-base:
     params:
