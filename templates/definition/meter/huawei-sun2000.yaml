@@ -32,7 +32,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
-  - name: cascade
+  - name: sun2000cascade
     default: false
     advanced: true
 render: |
@@ -167,7 +167,7 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
-          {{- if eq .cascade "false" }}
+          {{- if eq .sun2000cascade "false" }}
           - source: const
             value: 0 # Disable
             set:
