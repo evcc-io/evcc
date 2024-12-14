@@ -75,11 +75,6 @@ func NewStiebelIsgFromConfig(other map[string]interface{}) (api.Charger, error) 
 			ModeAddr:    1500, // Betriebsart
 			EnableMode:  3,    // Komfortbetrieb
 			DisableMode: 2,    // Programmbetrieb
-			// status
-			StatusAddr: 2500,   // Betriebsstatus
-			StatusBits: 1 << 5, // WW Betrieb
-			// medium
-			Wärmekoeffizient: 4.18, // kJ/kgK
 		},
 		embed: embed{
 			Icon_:     "heatpump",
@@ -118,6 +113,44 @@ func NewStiebelIsg(embed *embed, uri string, slaveID uint8, conf TempConfig) (ap
 	return wb, nil
 }
 
+func (wb *StiebelIsg) mode() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.conf.ModeAddr, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return encoding.Uint16(b), nil
+}
+
+// Status implements the api.Charger interface
+func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
+	mode, err := wb.mode()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	status := map[uint16]api.ChargeStatus{wb.conf.EnableMode: api.StatusC, wb.conf.DisableMode: api.StatusB}[mode]
+	return status, nil
+}
+
+// Enabled implements the api.Charger interface
+func (wb *StiebelIsg) Enabled() (bool, error) {
+	mode, err := wb.mode()
+	return mode == wb.conf.EnableMode, err
+}
+
+// Enable implements the api.Charger interface
+func (wb *StiebelIsg) Enable(enable bool) error {
+	mode := map[bool]uint16{true: wb.conf.EnableMode, false: wb.conf.DisableMode}[enable]
+	_, err := wb.conn.WriteSingleRegister(wb.conf.ModeAddr, mode)
+	return err
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *StiebelIsg) MaxCurrent(current int64) error {
+	return nil
+}
+
 func (wb *StiebelIsg) sollIst() (float64, float64, error) {
 	soll, err := wb.conn.ReadInputRegisters(wb.conf.SollAddr, 1)
 	if err != nil {
@@ -134,104 +167,6 @@ func (wb *StiebelIsg) sollIst() (float64, float64, error) {
 	}
 
 	return float64(encoding.Int16(soll)) / 10, float64(encoding.Int16(ist)) / 10, nil
-}
-
-// Status implements the api.Charger interface
-func (wb *StiebelIsg) Status() (api.ChargeStatus, error) {
-	res := api.StatusNone
-
-	soll, ist, err := wb.sollIst()
-	if err != nil {
-		return res, err
-	}
-
-	energyRequired := (soll - ist) * wb.conf.Speicher * wb.conf.Wärmekoeffizient / 3.6e3
-	wb.log.DEBUG.Printf("ist: %.1f°C, soll: %.1f°C, energy required: %.3fkWh", ist, soll, energyRequired)
-
-	charging, err := wb.charging()
-	if err != nil {
-		return res, err
-	}
-
-	// TODO StatusA
-	res = api.StatusB
-
-	// become "connected" if temp is outside of temp delta
-	if soll-ist > wb.conf.TempDelta {
-		res = api.StatusB
-	}
-
-	if charging {
-		res = api.StatusC
-	}
-
-	return res, nil
-}
-
-func (wb *StiebelIsg) charging() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.conf.StatusAddr, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return encoding.Uint16(b)&wb.conf.StatusBits != 0, nil
-}
-
-func (wb *StiebelIsg) mode() (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.conf.ModeAddr, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return encoding.Uint16(b), nil
-}
-
-// Enabled implements the api.Charger interface
-func (wb *StiebelIsg) Enabled() (bool, error) {
-	mode, err := wb.mode()
-	return mode == wb.conf.EnableMode, err
-}
-
-// Enable implements the api.Charger interface
-func (wb *StiebelIsg) Enable(enable bool) error {
-	enabled, err := wb.Enabled()
-	if err != nil {
-		return err
-	}
-
-	if enabled == enable {
-		return nil
-	}
-
-	// don't disable unless pump is silent
-	if enabled && !enable {
-		charging, err := wb.charging()
-		if err != nil {
-			return err
-		}
-
-		if charging {
-			return api.ErrMustRetry
-		}
-	}
-
-	// set new mode
-	value := map[bool]uint16{true: wb.conf.EnableMode, false: wb.conf.DisableMode}[enable]
-
-	mode, err := wb.mode()
-	if mode != value && err == nil {
-		// TODO remove
-		return errors.New("forbidden")
-
-		// _, err = wb.conn.WriteSingleRegister(wb.conf.ModeAddr, value)
-	}
-
-	return err
-}
-
-// MaxCurrent implements the api.Charger interface
-func (wb *StiebelIsg) MaxCurrent(current int64) error {
-	return nil
 }
 
 var _ api.Battery = (*StiebelIsg)(nil)
@@ -335,9 +270,4 @@ func (wb *StiebelIsg) print(reg stiebel.Register, b []byte) {
 
 		fmt.Printf("\t%d %s:\t%.1f%s\n", reg.Addr(), name, f, reg.Unit)
 	}
-}
-
-// LoadpointControl implements loadpoint.Controller
-func (c *StiebelIsg) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
 }
