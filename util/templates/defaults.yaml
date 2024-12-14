@@ -310,15 +310,6 @@ params:
       en: Power limit for grid charging.
       de: Leistungslimit für Netzladung.
     default: 100
-  - name: sun2000cascade
-    type: bool
-    description:
-      en: Inverter cascade
-      de: Wechselrichterkaskade
-    help:
-      en: For inverter cascades (AC charging remains active to charge the storage from other inverters via AC) set to Yes.
-      de: Für Wechselrichterkaskaden (AC-Laden bleibt aktiv zum Laden des Speichers aus anderen WR via AC) auf Ja.
-    usages: ["battery"]
 
 presets:
   vehicle-base:
