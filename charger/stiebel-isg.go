@@ -24,7 +24,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/stiebel"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -36,7 +35,6 @@ type StiebelIsg struct {
 	*embed
 	log  *util.Logger
 	conn *modbus.Connection
-	lp   loadpoint.API
 	conf stiebel.TempConfig
 }
 
@@ -92,7 +90,6 @@ func NewStiebelIsg(embed *embed, uri string, slaveID uint8, conf stiebel.TempCon
 
 	wb := &StiebelIsg{
 		embed: embed,
-		log:   log,
 		conn:  conn,
 		conf:  conf,
 	}
