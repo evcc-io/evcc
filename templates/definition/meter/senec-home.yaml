@@ -64,15 +64,10 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
-    - case: 2 # hold
+    - case: 2 # hold (not implemented)
       set:
-        source: http
-        uri: {{ .schema }}://{{ .host }}/lala.cgi
-        insecure: true
-        method: POST
-        headers:
-        - content-type: application/json
-        body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
+        source: error
+        error: ErrNotAvailable
     - case: 3 # charge
       set:
         source: http
