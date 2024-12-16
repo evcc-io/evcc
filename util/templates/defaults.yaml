@@ -564,6 +564,9 @@ devicegroups:
   generic:
     de: Generische Unterstützung
     en: Generic support
+  heating:
+    de: Wärmeerzeuger
+    en: Heating devices
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets
