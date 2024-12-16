@@ -3,6 +3,9 @@ products:
   - brand: Stiebel
     description:
       generic: LWA/LWZ (SG Ready)
+  - brand: Tecalor
+    description:
+      generic: THZ (SG Ready)
 # requirements:
 #   evcc: ["sponsorship"]
 params:
@@ -22,7 +25,7 @@ render: |
       {{- include "modbus" . | indent 4 }}
       register:
         address: 5000
-        type: holding
+        type: input
         encoding: uint16
   setmode:
     source: switch
