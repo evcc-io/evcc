@@ -12,6 +12,11 @@ group: heating
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    validvalues: ["", "warmwater"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
 render: |
   type: sgready
   getmode:
@@ -97,11 +102,13 @@ render: |
               address: 4002
               type: writesingle
               encoding: uint16
+  {{- if .tempsource }}
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 15
+      address: {{ if eq .tempsource "warmwater" -}} 15 {{- end }}
       type: input
       encoding: int16
     scale: 0.1
+  {{- end }}
