@@ -180,7 +180,7 @@ func (wb *SgReady) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *SgReady) Enable(enable bool) error {
-	mode := map[bool]int64{true: Normal, false: Boost}[enable]
+	mode := map[bool]int64{false: Normal, true: Boost}[enable]
 	err := wb.set(mode)
 	if err == nil {
 		wb._mode = mode
