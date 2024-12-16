@@ -1,16 +1,18 @@
-template: stiebel
+template: stiebel-wpm
 products:
   - brand: Stiebel
     description:
-      generic: LWA/LWZ (SG Ready)
-  - brand: Tecalor
-    description:
-      generic: THZ (SG Ready)
+      generic: WPM (SG Ready)
 # requirements:
 #   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    validvalues: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
 render: |
   type: sgready
   getmode:
@@ -96,11 +98,13 @@ render: |
               address: 4002
               type: holding
               encoding: uint16
+  {{- if .tempsource }}
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 15
+      address: {{ if eq .tempsource "warmwater" -}} 521 {{ else }} 517 {{- end }}
       type: input
       encoding: int16
     scale: 0.1
+  {{- end }}
