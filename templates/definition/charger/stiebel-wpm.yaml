@@ -3,6 +3,7 @@ products:
   - brand: Stiebel Eltron
     description:
       generic: WPM (SG Ready)
+group: heating
 # requirements:
 #   evcc: ["sponsorship"]
 params:

@@ -6,6 +6,7 @@ products:
   - brand: Tecalor
     description:
       generic: THZ (SG Ready)
+group: heating
 # requirements:
 #   evcc: ["sponsorship"]
 params:
