@@ -19,7 +19,7 @@ render: |
       1: 3 # Frostschutz
       2: 1 # Normal
       3: 2 # Forcierter Betrieb
-      4: 1 # Sofortige Ansteuerung
+      4: 2 # Sofortige Ansteuerung
     get:
       source: modbus
       {{- include "modbus" . | indent 4 }}
