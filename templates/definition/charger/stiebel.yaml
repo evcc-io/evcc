@@ -1,8 +1,8 @@
-template: stiebel-iv
+template: stiebel
 products:
   - brand: Stiebel
     description:
-      generic: Integral Ventilation
+      generic: SG Ready
 # requirements:
 #   evcc: ["sponsorship"]
 params:
