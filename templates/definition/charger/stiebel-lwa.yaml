@@ -41,7 +41,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4001
-              type: holding
+              type: writesingle
               encoding: uint16
         - source: const
           value: 0
@@ -50,7 +50,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4002
-              type: holding
+              type: writesingle
               encoding: uint16
     - case: 2 # boost
       set:
@@ -63,7 +63,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4001
-              type: holding
+              type: writesingle
               encoding: uint16
         - source: const
           value: 0
@@ -72,7 +72,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4002
-              type: holding
+              type: writesingle
               encoding: uint16
     - case: 3 # dimm
       set:
@@ -85,7 +85,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4001
-              type: holding
+              type: writesingle
               encoding: uint16
         - source: const
           value: 1
@@ -94,7 +94,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4002
-              type: holding
+              type: writesingle
               encoding: uint16
   temp:
     source: modbus
