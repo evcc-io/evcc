@@ -29,7 +29,7 @@ import (
 
 // SgReady charger implementation
 type SgReady struct {
-	embed    *embed
+	*embed
 	_mode    int64
 	phases   int
 	get      func() (int64, error)
@@ -48,7 +48,7 @@ const (
 	Stop
 )
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSgReady -b api.Charger -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
 
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -118,7 +118,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, set provider.Config, get, maxPower *provider.Config, phases int) (api.Charger, error) {
+func NewSgReady(ctx context.Context, embed *embed, set provider.Config, get, maxPower *provider.Config, phases int) (*SgReady, error) {
 	setMode, err := provider.NewIntSetterFromConfig(ctx, "mode", set)
 	if err != nil {
 		return nil, err

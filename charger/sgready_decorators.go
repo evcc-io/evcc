@@ -6,17 +6,17 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
+func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	switch {
 	case battery == nil && meter == nil && socLimiter == nil:
 		return base
 
 	case battery == nil && meter != nil && meterEnergy == nil && socLimiter == nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Meter
 		}{
-			Charger: base,
+			SgReady: base,
 			Meter: &decorateSgReadyMeterImpl{
 				meter: meter,
 			},
@@ -24,11 +24,11 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery == nil && meter != nil && meterEnergy != nil && socLimiter == nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			SgReady: base,
 			Meter: &decorateSgReadyMeterImpl{
 				meter: meter,
 			},
@@ -39,10 +39,10 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter == nil && socLimiter == nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
@@ -50,11 +50,11 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter != nil && meterEnergy == nil && socLimiter == nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 			api.Meter
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
@@ -65,12 +65,12 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter != nil && meterEnergy != nil && socLimiter == nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
@@ -84,10 +84,10 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery == nil && meter == nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			SocLimiter: &decorateSgReadySocLimiterImpl{
 				socLimiter: socLimiter,
 			},
@@ -95,11 +95,11 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery == nil && meter != nil && meterEnergy == nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Meter
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			Meter: &decorateSgReadyMeterImpl{
 				meter: meter,
 			},
@@ -110,12 +110,12 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery == nil && meter != nil && meterEnergy != nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Meter
 			api.MeterEnergy
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			Meter: &decorateSgReadyMeterImpl{
 				meter: meter,
 			},
@@ -129,11 +129,11 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter == nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
@@ -144,12 +144,12 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter != nil && meterEnergy == nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 			api.Meter
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
@@ -163,13 +163,13 @@ func decorateSgReady(base api.Charger, meter func() (float64, error), meterEnerg
 
 	case battery != nil && meter != nil && meterEnergy != nil && socLimiter != nil:
 		return &struct {
-			api.Charger
+			*SgReady
 			api.Battery
 			api.Meter
 			api.MeterEnergy
 			api.SocLimiter
 		}{
-			Charger: base,
+			SgReady: base,
 			Battery: &decorateSgReadyBatteryImpl{
 				battery: battery,
 			},
