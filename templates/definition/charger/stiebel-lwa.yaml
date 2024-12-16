@@ -107,7 +107,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "warmwater" -}} 15 {{- end }}
+      address: 15
       type: input
       encoding: int16
     scale: 0.1
