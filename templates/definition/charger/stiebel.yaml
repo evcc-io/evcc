@@ -102,4 +102,5 @@ render: |
     register:
       address: 15
       type: input
-      encoding: uint16
+      encoding: int16
+      scale: 0.1
