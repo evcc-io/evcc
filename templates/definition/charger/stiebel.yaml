@@ -2,7 +2,7 @@ template: stiebel
 products:
   - brand: Stiebel
     description:
-      generic: SG Ready
+      generic: LWA/LWZ (SG Ready)
 # requirements:
 #   evcc: ["sponsorship"]
 params:
@@ -98,5 +98,5 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 15
-      type: holding
+      type: input
       encoding: uint16
