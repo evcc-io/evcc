@@ -293,8 +293,15 @@ params:
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: defaultmode
+    type: int
+    usages: ["battery"]
+    description:
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
   - name: maxchargepower
     type: int
+    usages: ["battery"]
     description:
       en: Maximum charge power (W)
       de: Maximale Ladeleistung (W)
@@ -303,6 +310,7 @@ params:
       de: Leistungslimit für Netzladung.
   - name: maxchargerate
     type: int
+    usages: ["battery"]
     description:
       en: Maximum charge power (%)
       de: Maximale Ladeleistung (%)
