@@ -1,6 +1,8 @@
 package loadpoint
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
@@ -15,13 +17,17 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title          string   `json:"title"`
-	DefaultMode    string   `json:"defaultMode"`
-	Priority       int      `json:"priority"`
-	Phases         int      `json:"phases"`
-	MinCurrent     float64  `json:"minCurrent"`
-	MaxCurrent     float64  `json:"maxCurrent"`
-	SmartCostLimit *float64 `json:"smartCostLimit"`
+	Title          string    `json:"title"`
+	DefaultMode    string    `json:"defaultMode"`
+	Priority       int       `json:"priority"`
+	Phases         int       `json:"phases"`
+	MinCurrent     float64   `json:"minCurrent"`
+	MaxCurrent     float64   `json:"maxCurrent"`
+	SmartCostLimit *float64  `json:"smartCostLimit"`
+	PlanEnergy     float64   `json:"planEnergy"`
+	PlanTime       time.Time `json:"planTime"`
+	LimitEnergy    float64   `json:"limitEnergy"`
+	LimitSoc       int       `json:"limitSoc"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
@@ -50,6 +56,9 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetPriority(payload.Priority)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetThresholds(payload.Thresholds)
+	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
+	lp.SetLimitEnergy(payload.LimitEnergy)
+	lp.SetLimitSoc(payload.LimitSoc)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
