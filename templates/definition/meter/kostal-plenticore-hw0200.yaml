@@ -36,8 +36,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargerate
-    advanced: true  
-  # battery control
+    advanced: true
   - name: watchdog
     type: duration
     default: 60s
