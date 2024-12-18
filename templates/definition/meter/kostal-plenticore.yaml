@@ -13,9 +13,9 @@ linked:
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Diese Vorlage ist für Wechselrichter mit der HW Version 0100. Netzladen steht nicht zur verfügung.
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Diese Vorlage ist für Wechselrichter, die mit dem neueren Template nach der Batteriesperre oder Netzladung nicht richtig arbeiten (z.B. häufig Hardwareversion 0100). Das Netzladen der Batterie steht nicht zur Verfügung. Die Steuerung des Wechselrichters erfolgt über das Modbus-Register 1042 (minSoC).
     en: |
-      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. This template is for inverters with HW version 0100. Grid charging is not available.
+      Only a single system may access the inverter! For active battery control the function external battery control via Modbus must be activated using installer access. This template is for inverters having trouble using the newer template after battery discharge lock or grid charging (for example mostly hardware version 0100). Grid charging is not available. Modbus register 1042 (minSoC) is used to control the device.
 params:
   - name: usage
     choice: ["pv", "battery"]

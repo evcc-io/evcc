@@ -1,8 +1,8 @@
-template: kostal-plenticore-hw0200
+template: kostal-plenticore-ng
 products:
   - brand: Kostal
     description:
-      generic: Plenticore Hybrid (Gen2)
+      generic: Plenticore Hybrid (nextgen)
 capabilities: ["battery-control"]
 linked:
   - template: kostal-ksem-inverter
@@ -10,13 +10,13 @@ linked:
   - template: kostal-ksem
     usage: grid
     excludetemplate: kostal-ksem-inverter
-covers: ["kostal-plenticore-gen2"]
+covers: ["kostal-plenticore-hw0200", "kostal-plenticore-gen2"]
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Das Netzladen steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit Wechselrichtern der HW-Version 0100).
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Das Netzladen der Batterie steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit älteren Wechselrichtern (z.B. häufig Hardwareversion 0100). Die Steuerung des Wechselrichters erfolgt über das Modbus-Register 1028 (relative Ladeleistung). Es ist auf aktuelle Firmwarestände der Geräte zu achten und ggf. der minimale Batterieladestand (minSoC) der Hausbatterie auf einen Wert >5 Prozent am Wechselrichter anzuheben.
     en: |
-      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access. The function for grid charging the battery is available using this template, but is currently incompatible with inverters of HW version 0100.
+      Only a single system may access the inverter! For active battery control, the feature external battery control via modbus must be activated using installer access. The function for grid charging the battery is available using this template, but is currently incompatible with some old inverters (for example mostly hardware version 0100). Modbus register 1028 (relative charge rate) is used to control the device. Make sure you have the latest firmware versions for all devices and probably adjust the minimum state of charge for the house battery at the inverter accordingly (>5 percent for minSoC).
 params:
   - name: usage
     choice: ["pv", "battery"]
