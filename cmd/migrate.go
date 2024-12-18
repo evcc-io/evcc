@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -39,78 +41,90 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		log.WARN.Println("migrating:")
 	}
 
-	log.DEBUG.Println("- global settings")
+	log.WARN.Println("- global settings")
 	if reset {
 		settings.Delete(keys.Interval)
 		settings.Delete(keys.SponsorToken)
+		settings.Delete(keys.Title)
 	} else {
 		settings.SetInt(keys.Interval, int64(conf.Interval))
 		settings.SetString(keys.SponsorToken, conf.SponsorToken)
 	}
 
-	log.DEBUG.Println("- network")
+	log.WARN.Println("- network")
 	if reset {
 		settings.Delete(keys.Network)
 	} else {
 		_ = settings.SetJson(keys.Network, conf.Network)
 	}
 
-	log.DEBUG.Println("- mqtt")
+	log.WARN.Println("- mqtt")
 	if reset {
 		settings.Delete(keys.Mqtt)
 	} else {
 		_ = settings.SetJson(keys.Mqtt, conf.Mqtt)
 	}
 
-	log.DEBUG.Println("- influx")
+	log.WARN.Println("- influx")
 	if reset {
 		settings.Delete(keys.Influx)
 	} else {
 		_ = settings.SetJson(keys.Influx, conf.Influx)
 	}
 
-	log.DEBUG.Println("- hems")
+	log.WARN.Println("- hems")
 	if reset {
 		settings.Delete(keys.Hems)
 	} else if conf.HEMS.Type != "" {
 		_ = settings.SetYaml(keys.Hems, conf.HEMS)
 	}
 
-	log.DEBUG.Println("- eebus")
+	log.WARN.Println("- eebus")
 	if reset {
 		settings.Delete(keys.EEBus)
 	} else if conf.EEBus.URI != "" {
 		_ = settings.SetYaml(keys.EEBus, conf.EEBus)
 	}
 
-	log.DEBUG.Println("- modbusproxy")
+	log.WARN.Println("- modbusproxy")
 	if reset {
 		settings.Delete(keys.ModbusProxy)
 	} else if len(conf.ModbusProxy) > 0 {
 		_ = settings.SetYaml(keys.ModbusProxy, conf.ModbusProxy)
 	}
 
-	log.DEBUG.Println("- messaging")
+	log.WARN.Println("- messaging")
 	if reset {
 		settings.Delete(keys.Messaging)
 	} else if len(conf.Messaging.Services) > 0 {
 		_ = settings.SetYaml(keys.Messaging, conf.Messaging)
 	}
 
-	log.DEBUG.Println("- tariffs")
+	log.WARN.Println("- tariffs")
 	if reset {
 		settings.Delete(keys.Tariffs)
 	} else if conf.Tariffs.Grid.Type != "" || conf.Tariffs.FeedIn.Type != "" || conf.Tariffs.Co2.Type != "" || conf.Tariffs.Planner.Type != "" {
 		_ = settings.SetYaml(keys.Tariffs, conf.Tariffs)
 	}
 
-	log.DEBUG.Println("- circuits")
+	log.WARN.Println("- circuits")
 	if reset {
 		settings.Delete(keys.Circuits)
 	} else if len(conf.Circuits) > 0 {
 		_ = settings.SetYaml(keys.Circuits, conf.Circuits)
 	}
 
+	log.WARN.Println("- device configs")
+	if reset {
+		// site keys
+		settings.Delete(keys.GridMeter)
+		settings.Delete(keys.PvMeters)
+		settings.Delete(keys.AuxMeters)
+		settings.Delete(keys.BatteryMeters)
+		// clear config table
+		result := db.Instance.Delete(&config.Config{}, "true")
+		log.WARN.Printf("  %d entries deleted", result.RowsAffected)
+	}
 	// wait for shutdown
 	<-shutdownDoneC()
 }

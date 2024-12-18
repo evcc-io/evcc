@@ -2,8 +2,6 @@ network:
   port: 7070
 
 log: debug
-levels:
-  db: trace
 
 interval: 3s
 
