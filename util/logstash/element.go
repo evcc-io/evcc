@@ -9,7 +9,7 @@ import (
 
 type element string
 
-var re = regexp.MustCompile(`^\[([a-zA-Z0-9-_.]+)\s*\] (\w+) `)
+var re = regexp.MustCompile(`^\[([a-zA-Z0-9-_.:]+)\s*\] (\w+) `)
 
 func (e element) areaLevel() (string, jww.Threshold) {
 	m := re.FindAllStringSubmatch(string(e), 1)
