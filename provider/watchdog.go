@@ -47,16 +47,14 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (P
 }
 
 func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
-	tick := time.NewTicker(o.timeout / 2)
-	for range tick.C {
+	for tick := time.Tick(o.timeout); ; {
 		select {
-		case <-ctx.Done():
-			tick.Stop()
-			return
-		default:
+		case <-tick:
 			if err := set(); err != nil {
 				o.log.ERROR.Println(err)
 			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
