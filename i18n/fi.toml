@@ -78,6 +78,7 @@ temp = "Lämpötila"
 topic = "Aihe"
 url = "URL"
 yes = "kyllä"
+hemsType = "Järjestelmä"
 
 [config.eebus]
 description = "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa."
@@ -98,6 +99,9 @@ remove = "Poista"
 save = "Tallenna"
 telemetry = "Telemetria"
 title = "Otsikko"
+hideAdvancedSettings = "Piilota edistyneet asetukset"
+showAdvancedSettings = "Näytä edistyneet asetukset"
+readFromFile = "Lue tiedostosta"
 
 [config.grid]
 title = "Sähköverkonmittari"
@@ -121,6 +125,8 @@ labelUser = "Käyttäjätunnus"
 title = "InfluxDB"
 v1Support = "Tarvitsetko tukea InfluxDB 1.x:lle?"
 v2Support = "Takaisin InfluxDB 2.x:ään"
+labelCheckInsecure = "Salli itse allekirjoitetut varmenteet"
+labelInsecure = "Varmenteen vahvistaminen"
 
 [config.main]
 addLoadpoint = "Lisää latauspiste"
@@ -163,6 +169,9 @@ labelTopic = "Aihe"
 labelUser = "Käyttäjätunnus"
 publishing = "Julkaise"
 title = "MQTT"
+labelCaCert = "Palvelinvarmenne (CA)"
+labelClientCert = "Asiakasvarmenne"
+labelClientKey = "Asiakasavain"
 
 [config.network]
 descriptionHost = "Ota mDNS käyttöön käyttämällä .local-liitettä. Olennaista mobiilisovelluksen ja joidenkin OCPP-laturien löytämisen kannalta."
@@ -397,6 +406,12 @@ titleMinSoc = "Minimi lataus"
 titleTargetCharge = "Lähtö"
 unsavedChanges = "Tallentamattomia muutoksia. Asetetaanko nyt?"
 update = "Aseta"
+addRepeatingPlan = "Lisää toistuva suunnitelma"
+planNumber = "Suunnitelma {number}"
+repeating = "toistetaan"
+repeatingPlans = "Toistuvat suunnitelmat"
+selectAll = "Valitse kaikki"
+weekdays = "Päivät"
 
 [main.energyflow]
 battery = "Akku"
@@ -427,7 +442,7 @@ co2 = "⌀ CO₂"
 duration = "Kesto"
 fallbackName = "Latauspiste"
 power = "Teho"
-price = "Σ Hinta"
+price = "Kustannus"
 remaining = "Jäljellä"
 remoteDisabledHard = "{source}: sammui"
 remoteDisabledSoft = "{source}: sammutti adaptiivisen aurinkolatauksen"
@@ -442,6 +457,7 @@ smartCostCheap = "Edullinen verkosta lataus"
 smartCostClean = "Hiilineutraali verkosta lataaminen"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
+batteryUsage = "Kodin akku"
 
 [main.loadpointSettings.limitSoc]
 description = "Latausraja mitä käytetään kun ajoneuvo yhdistetty."
@@ -506,6 +522,7 @@ tomorrow = "huomenna"
 update = "Päivittää"
 vehicleCapacityDocs = "Opi kuinka voit muokata sitä."
 vehicleCapacityRequired = "Ajoneuvon akun kapasiteetti tarvitaan latausajan arviota varten."
+nextPlan = "Seuraava suunnitelma"
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
@@ -566,6 +583,7 @@ vehicleLimit = "Ajoneuvon latausraja"
 vehicleLimitReached = "Ajoneuvon raja saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 welcome = "Lyhyt aloitus lataus yhteyden vahvistamiseksi."
+batteryBoost = "Akun tehostus aktiivinen."
 
 [notifications]
 dismissAll = "Hylkää kaikki"
@@ -619,12 +637,14 @@ downloadCsv = "Lataa CSV muodossa"
 energy = "Ladattu"
 loadpoint = "Latauspiste"
 noData = "Ei lataustapahtumia tässä kuussa."
-price = "Σ Hinta"
+price = "Kustannus"
 reallyDelete = "Haluatko varmasti poistaa tämän istunnon?"
 solar = "Aurinkoenergia"
 title = "Lataustapahtumat"
 total = "Yhteensä"
 vehicle = "Ajoneuvo"
+overview = "Yleiskatsaus"
+showIndividualEntries = "Näytä yksittäiset tapahtumat"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -720,3 +740,50 @@ title = "Virhe käynnistyksessä"
 cancel = "Peruuta"
 template = "Valmistaja"
 test = "Testi"
+
+
+[sessions.chartTitle]
+solarByGroup = "Aurinkoenergian osuus {byGroup}"
+energySubSolar = "{value} auringosta"
+historyPrice = "Latauskustannukset"
+historyPriceSub = "{value} yhteensä"
+energy = "Ladattu energia"
+energyGrouped = "Aurinkoenergia vs. verkonenergia"
+energyGroupedByGroup = "Energia {byGroup}"
+energySubTotal = "{value} yhteensä"
+groupedCo2ByGroup = "CO₂-määrä {byGroup}"
+groupedPriceByGroup = "Kokonaiskustannukset {byGroup}"
+historyCo2 = "CO₂-päästöt"
+historyCo2Sub = "{value} yhteensä"
+solar = "Aurinkoenergian osuus vuoden aikana"
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+avgPriceByGroup = "⌀ Hinta {byGroup}"
+byGroupLoadpoint = "latauspisteen mukaan"
+byGroupVehicle = "ajoneuvolla"
+
+[main.loadpointSettings.batteryBoost]
+once = "Tehostus on aktiivinen tälle latausistunnolle."
+mode = "Saatavilla vain pv- ja min + pv-tilassa."
+description = "Nopea lataus kodin akusta."
+label = "Akun tehostaminen"
+
+[sessions.group]
+grid = "Verkko"
+self = "Aurinko"
+co2 = "Päästöt"
+price = "Hinta"
+
+[sessions.groupBy]
+loadpoint = "Latauspiste"
+vehicle = "Ajoneuvo"
+none = "Yhteensä"
+
+[sessions.period]
+month = "Kuukausi"
+total = "Yhteensä"
+year = "Vuosi"
+
+[sessions.type]
+co2 = "CO₂"
+price = "Hinta"
+solar = "Aurinko"
