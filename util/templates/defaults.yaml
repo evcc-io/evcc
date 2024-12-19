@@ -318,6 +318,7 @@ params:
       en: Power limit for grid charging.
       de: Leistungslimit für Netzladung.
     default: 100
+
 presets:
   vehicle-base:
     params:
@@ -572,6 +573,9 @@ devicegroups:
   generic:
     de: Generische Unterstützung
     en: Generic support
+  heating:
+    de: Wärmeerzeuger
+    en: Heating devices
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets
