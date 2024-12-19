@@ -39,6 +39,10 @@ body:
       render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
+        
+        To create a config without secrets you can use `evcc dump --cfg`
+        
+        Please ensure you have **no passwords** and **no sponsortoken** in your report
 
   - type: textarea
     validations:
