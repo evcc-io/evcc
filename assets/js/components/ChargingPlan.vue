@@ -134,7 +134,6 @@ export default {
 		planTimeUnreachable: Boolean,
 		planOverrun: Number,
 		rangePerSoc: Number,
-		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedPlanning: Boolean,
 		socBasedCharging: Boolean,
