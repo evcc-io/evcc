@@ -41,13 +41,16 @@ test.describe("battery meter", async () => {
     await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
+    await expect(meterModal).not.toBeVisible();
     await expect(page.getByTestId("battery")).toBeVisible(1);
     await expect(page.getByTestId("battery")).toContainText("openems");
 
     // edit #1
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
+    await expect(meterModal).toBeVisible();
     await meterModal.getByLabel("Battery capacity in kWh").fill("20");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
+    await expect(meterModal).not.toBeVisible();
 
     const battery = page.getByTestId("battery");
     await expect(battery).toBeVisible(1);

@@ -17,6 +17,7 @@
 				class="btn-check"
 				name="modbusConnection"
 				value="tcpip"
+				tabindex="0"
 				autocomplete="off"
 			/>
 			<label class="btn btn-outline-primary" for="modbusTcpIp">Network</label>
@@ -27,6 +28,7 @@
 				class="btn-check"
 				name="modbusConnection"
 				value="serial"
+				tabindex="0"
 				autocomplete="off"
 			/>
 			<label class="btn btn-outline-primary" for="modbusSerial">Serial / USB</label>
@@ -84,6 +86,7 @@
 					class="btn-check"
 					name="modbusProtocol"
 					value="tcp"
+					tabindex="0"
 					autocomplete="off"
 				/>
 				<label class="btn btn-outline-primary" for="modbusTcp">TCP</label>
@@ -94,6 +97,7 @@
 					class="btn-check"
 					name="modbusProtocol"
 					value="rtu"
+					tabindex="0"
 					autocomplete="off"
 				/>
 				<label class="btn btn-outline-primary" for="modbusRtu">RTU</label>
