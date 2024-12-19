@@ -21,6 +21,7 @@
 						type="radio"
 						class="btn-check"
 						name="networkSchema"
+						tabindex="0"
 						value="http"
 						autocomplete="off"
 					/>
@@ -31,6 +32,7 @@
 						type="radio"
 						class="btn-check"
 						name="networkSchema"
+						tabindex="0"
 						value="https"
 						autocomplete="off"
 					/>
