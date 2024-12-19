@@ -415,6 +415,12 @@ titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 unsavedChanges = "Hay cambios sin guardar. ¿Aplicar ahora?"
 update = "Aplicar"
+planNumber = "Plan {number}"
+repeating = "repitiendo"
+repeatingPlans = "Planes recurrentes"
+selectAll = "Seleccionar todo"
+addRepeatingPlan = "Añadir plan recurrente"
+weekdays = "Días"
 
 [main.energyflow]
 battery = "Batería"
@@ -534,6 +540,7 @@ tomorrow = "mañana"
 update = "Actualizar"
 vehicleCapacityDocs = "Aprende a configurarlo"
 vehicleCapacityRequired = "La capacidad de la batería del vehículo es necesaria para estimar el tiempo de carga"
+nextPlan = "Próximo plan"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
