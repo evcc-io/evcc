@@ -138,7 +138,7 @@ vehicles = "Járműveim"
 yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
 
 [config.messaging]
-description = "Értesítési üzenetek beállítása a töltési folyamatokról."
+description = Értesítési üzenetek beállítása a töltési folyamatokról.
 title = "Értesítések"
 
 [config.meter]
@@ -397,6 +397,12 @@ titleMinSoc = "Min töltés"
 titleTargetCharge = "Indulás"
 unsavedChanges = "Vannak nem mentett módosítások. Alkalmazza most?"
 update = "Alkalmazás"
+weekdays = Napok
+repeating = ismétlődő
+selectAll = Összes kiválasztása
+repeatingPlans = Ismétlődő tervek
+addRepeatingPlan = Ismétlődő terv hozzáadása
+planNumber = Terv {number}
 
 [main.energyflow]
 battery = "Battery"
@@ -512,6 +518,7 @@ tomorrow = "holnap"
 update = "Frissítés"
 vehicleCapacityDocs = "Ismerje meg, hogyan kell konfigurálni."
 vehicleCapacityRequired = "A jármű akkumulátor kapacitása szükséges a hozzávetőleges idő meghatározásához."
+nextPlan = Következő terv
 
 [main.targetChargePlan]
 chargeDuration = "Töltési idő"
