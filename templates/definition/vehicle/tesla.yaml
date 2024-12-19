@@ -16,6 +16,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: clientId
+    advanced: true
   - name: accessToken
     required: true
     mask: true
