@@ -13,9 +13,8 @@ params:
     id: 247
   - name: battery
     default: 1
-    validvalues:
-      - 1
-      - 2
+    type: choice
+    choice: [1, 2]
   - name: capacity
     advanced: true
   - name: maxacpower

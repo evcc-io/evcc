@@ -222,7 +222,8 @@ params:
       de: "'de' für Deutsch und 'en' für Englisch"
       en: "'en' for English and 'de' for German"
     default: en
-    validvalues: ["de", "en"]
+    type: choice
+    choice: ["en", "de"]
   - name: icon
     description:
       de: Icon
@@ -231,7 +232,7 @@ params:
       de: "Icon in der Benutzeroberfläche"
       en: "Icon as shown in user interface"
     type: choice
-    validvalues:
+    choice:
       - car
       - bike
       - bus
