@@ -123,7 +123,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Number", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -132,13 +132,13 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Number", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
 		},
 		endAlign() {
-			return ["Number", "Float", "Duration"].includes(this.type);
+			return ["Int", "Float", "Duration"].includes(this.type);
 		},
 		step() {
 			if (this.type === "Float" || this.type === "Duration") {

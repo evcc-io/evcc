@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type calcProvider struct {
 	add, mul, div []func() (float64, error)
-	sign          func() (float64, error)
+	abs, sign     func() (float64, error)
 }
 
 func init() {
@@ -23,6 +24,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		Add  []Config
 		Mul  []Config
 		Div  []Config
+		Abs  *Config
 		Sign *Config
 	}
 
@@ -30,13 +32,18 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		return nil, err
 	}
 
-	o := &calcProvider{}
-	if i := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1); i > 1 ||
-		(len(cc.Add) > 0 && cc.Sign != nil) ||
-		(len(cc.Mul) > 0 && cc.Sign != nil) ||
-		(len(cc.Div) > 0 && cc.Sign != nil) {
-		return nil, errors.New("can only have either add, mul, div or sign")
+	cnt := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1)
+	if cc.Abs != nil {
+		cnt++
 	}
+	if cc.Sign != nil {
+		cnt++
+	}
+	if cnt != 1 {
+		return nil, errors.New("can only have either add, mul, div, abs or sign")
+	}
+
+	o := &calcProvider{}
 
 	for idx, cc := range cc.Add {
 		f, err := NewFloatGetterFromConfig(ctx, cc)
@@ -60,6 +67,14 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 			return nil, fmt.Errorf("div[%d]: %w", idx, err)
 		}
 		o.div = append(o.div, f)
+	}
+
+	if cc.Abs != nil {
+		f, err := NewFloatGetterFromConfig(ctx, *cc.Abs)
+		if err != nil {
+			return nil, fmt.Errorf("abs: %w", err)
+		}
+		o.abs = f
 	}
 
 	if cc.Sign != nil {
@@ -139,12 +154,19 @@ func (o *calcProvider) floatGetter() (float64, error) {
 			}
 		}
 
+	case o.abs != nil:
+		v, err := o.abs()
+		if err != nil {
+			return 0, fmt.Errorf("abs: %w", err)
+		}
+		res = math.Abs(v)
+
 	default:
 		v, err := o.sign()
 		if err != nil {
 			return 0, fmt.Errorf("sign: %w", err)
 		}
-		res = map[bool]float64{false: -1, true: 1}[v >= 0]
+		res = math.Copysign(1, v)
 	}
 
 	return res, nil

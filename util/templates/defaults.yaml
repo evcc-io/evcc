@@ -10,7 +10,7 @@ params:
     description:
       generic: Modbus ID
     default: 1
-    type: number
+    type: int
   - name: modbusdevice
     description:
       de: Gerätename
@@ -27,7 +27,7 @@ params:
       de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
       en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
-    type: number
+    type: int
   - name: modbuscomset
     description:
       de: ComSet
@@ -60,7 +60,7 @@ params:
     help:
       de: Port
       en: Port
-    type: number
+    type: int
   - name: interface
     description:
       de: Netzwerkschnittstelle
@@ -123,7 +123,7 @@ params:
       de: Die maximale Anzahl der Phasen welche genutzt werden können
       en: The maximum number of phases which can be used
     example: 3
-    type: number
+    type: int
   - name: connector
     description:
       de: Ladepunkt (falls >1 Ladepunkt)
@@ -162,7 +162,7 @@ params:
       de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
       en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'
     example: 25
-    type: number
+    type: int
   - name: targetsoc
     description:
       de: Zielladestand (Soc) in %
@@ -171,7 +171,7 @@ params:
       de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
       en: Until which state of charge (Soc) should the vehicle be charged
     example: 80
-    type: number
+    type: int
   - name: mincurrent
     description:
       de: Minimale Stromstärke in Ampere (A)
@@ -180,7 +180,7 @@ params:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The minimum amperage per connected phase with which the car should be charged
     example: 6
-    type: number
+    type: int
   - name: maxcurrent
     description:
       de: Maximale Stromstärke in Ampere (A)
@@ -189,7 +189,7 @@ params:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The maximum amperage per connected phase with which the car shuold be charged
     example: 16
-    type: number
+    type: int
   - name: identifiers
     description:
       de: Identifikation
@@ -205,7 +205,7 @@ params:
     help:
       de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
       en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
-    type: number
+    type: int
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -213,7 +213,7 @@ params:
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
       en: Power values above this value will be considered as charging pow
-    type: number
+    type: int
   - name: language
     description:
       de: Sprache
@@ -293,28 +293,46 @@ params:
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
-
+  - name: defaultmode
+    type: int
+    usages: ["battery"]
+    description:
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
+  - name: maxchargepower
+    type: int
+    usages: ["battery"]
+    description:
+      en: Maximum charge power (W)
+      de: Maximale Ladeleistung (W)
+    help:
+      en: Power limit for grid charging.
+      de: Leistungslimit für Netzladung.
+  - name: maxchargerate
+    type: int
+    usages: ["battery"]
+    description:
+      en: Maximum charge power (%)
+      de: Maximale Ladeleistung (%)
+    help:
+      en: Power limit for grid charging.
+      de: Leistungslimit für Netzladung.
+    default: 100
 presets:
   vehicle-base:
     params:
-      - name: title
-      - name: icon
-        default: car
-        advanced: true
       - name: user
         required: true
       - name: password
         required: true
       - name: vin
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
       - name: capacity
       - name: phases
         advanced: true
-      - name: cache
-        default: 15m
-        advanced: true
-        type: duration
-  vehicle-identify:
-    params:
       - name: mode
         advanced: true
       - name: minCurrent
@@ -326,19 +344,49 @@ presets:
         type: stringlist
       - name: priority
         advanced: true
+      - name: cache
+        default: 15m
+        advanced: true
+        type: duration
+  vehicle-common:
+    params:
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
+      - name: capacity
+      - name: phases
+        advanced: true
+      - name: mode
+        advanced: true
+      - name: minCurrent
+        advanced: true
+      - name: maxCurrent
+        advanced: true
+      - name: identifiers
+        advanced: true
+        type: stringlist
+      - name: priority
+        advanced: true
+  vehicle-features:
+    params:
+      - name: coarsecurrent
+        advanced: true
+      - name: welcomecharge
+        advanced: true
   vehicle-language:
     params:
       - name: language
   tariff-base:
     params:
       - name: charges
-        type: number
+        type: int
         advanced: true
         help:
           de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
           en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
       - name: tax
-        type: number
+        type: int
         advanced: true
         help:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)

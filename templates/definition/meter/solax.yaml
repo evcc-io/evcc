@@ -19,11 +19,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: defaultmode
-    description:
-      de: Standardmodus für die aktive Batteriesteuerung
-      en: Default mode for battery control
     default: 0 # "SelfUse"
-    usages: ["battery"]
     advanced: true
 render: |
   type: custom

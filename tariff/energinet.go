@@ -64,8 +64,7 @@ func (t *Energinet) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res energinet.Prices
 
 		ts := time.Now().Truncate(time.Hour)

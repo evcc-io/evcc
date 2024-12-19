@@ -666,6 +666,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
+	// planner
+	lp.publish(keys.PlanActive, lp.planActive)
+
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
 
@@ -939,6 +942,15 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 func (lp *Loadpoint) socBasedPlanning() bool {
 	v := lp.GetVehicle()
 	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.vehicleSoc > 0)
+}
+
+// repeatingPlanning returns true if the current plan is a repeating plan
+func (lp *Loadpoint) repeatingPlanning() bool {
+	if !lp.socBasedPlanning() {
+		return false
+	}
+	_, _, id := lp.nextVehiclePlan()
+	return id > 1
 }
 
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle

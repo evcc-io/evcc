@@ -22,7 +22,7 @@ func bo() backoff.BackOff {
 func backoffPermanentError(err error) error {
 	var se request.StatusError
 	if errors.As(err, &se) {
-		if code := se.StatusCode(); code >= 400 && code < 500 {
+		if code := se.StatusCode(); code >= 400 && code <= 599 {
 			return backoff.Permanent(se)
 		}
 	}

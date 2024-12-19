@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
@@ -185,7 +186,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 	if p.jq != nil {
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
-			return b, err
+			return b, backoff.Permanent(err)
 		}
 		b = []byte(fmt.Sprintf("%v", v))
 	}

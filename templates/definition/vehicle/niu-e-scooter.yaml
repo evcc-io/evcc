@@ -19,7 +19,6 @@ params:
     required: true
   - name: capacity
     default: 4
-  - preset: vehicle-identify
 render: |
   type: niu
   {{- if .title }}
@@ -32,4 +31,3 @@ render: |
   password: {{ .password }} # NIU app password
   serial: {{ .serial }} # NIU E-Scooter serial number like shown in app
   capacity: {{ .capacity }}
-  {{ include "vehicle-identify" . }}

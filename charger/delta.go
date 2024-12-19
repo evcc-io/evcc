@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sync"
@@ -59,11 +60,11 @@ const (
 )
 
 func init() {
-	registry.Add("delta", NewDeltaFromConfig)
+	registry.AddCtx("delta", NewDeltaFromConfig)
 }
 
 // NewDeltaFromConfig creates a Delta charger from generic config
-func NewDeltaFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewDeltaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`
@@ -78,11 +79,11 @@ func NewDeltaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewDelta(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Connector)
+	return NewDelta(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Connector)
 }
 
 // NewDelta creates Delta charger
-func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, connector uint16) (api.Charger, error) {
+func NewDelta(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, connector uint16) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -124,15 +125,21 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 			return nil, fmt.Errorf("failsafe timeout: %w", err)
 		}
 		if u := encoding.Uint16(b); u > 0 {
-			go wb.heartbeat(time.Duration(u) * time.Second / 2)
+			go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 		}
 	}
 
 	return wb, nil
 }
 
-func (wb *Delta) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *Delta) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {
