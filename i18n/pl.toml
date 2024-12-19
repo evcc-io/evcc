@@ -292,6 +292,7 @@ titleMinSoc = "Minimalne ładowanie"
 titleTargetCharge = "Wyjazd"
 unsavedChanges = "Są niezapisane zmiany. Zastosować teraz?"
 update = "Wykorzystać"
+weekdays = "Dni"
 
 [main.energyflow]
 battery = "Bateria"

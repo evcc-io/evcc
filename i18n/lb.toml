@@ -408,6 +408,12 @@ titleMinSoc = "Min. Oplueden"
 titleTargetCharge = "Depart"
 unsavedChanges = "Net gespäichert Ännerungen leie vir. Elo uwennen?"
 update = "Uwennen"
+planNumber = "Planifkatioun {number}"
+repeating = "widderhuelend"
+repeatingPlans = "Widderhuelend Planifikatiounen"
+selectAll = "All auswielen"
+addRepeatingPlan = "Widderhuelte Planifikatioun derbäi fügen"
+weekdays = "Deeg"
 
 [main.energyflow]
 battery = "Batterie"
@@ -522,6 +528,7 @@ tomorrow = "muer"
 update = "Aktualiséieren"
 vehicleCapacityDocs = "Léier wéi du et konfiguréiers."
 vehicleCapacityRequired = "D'Kapazitéit vun der Batterie vum Gefier ass néideg fir d'Dauer vum Oplueden anzeschätzen."
+nextPlan = "Nächst Planifikatioun"
 
 [main.targetChargePlan]
 chargeDuration = "Dauer vum Oplueden"
@@ -532,7 +539,7 @@ unknownPrice = "nach onbekannt"
 
 [main.targetEnergy]
 label = "Luedzil"
-noLimit = "keng"
+noLimit = "keent"
 
 [main.vehicle]
 addVehicle = "Gefier derbäi fügen"
@@ -659,6 +666,7 @@ solarTitleByGroup = "Sonnenundeel {byGroup}"
 title = "Opluedsessiounen"
 total = "Total"
 vehicle = "Gefier"
+overview = "Iwwersiicht"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"
@@ -749,7 +757,7 @@ label = "Telemetrie"
 auto = "System"
 dark = "däischter"
 label = "Design"
-light = "liicht"
+light = "hell"
 
 [settings.unit]
 km = "km"

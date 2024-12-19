@@ -140,7 +140,7 @@ vehicles = "Meus Veículos"
 yaml = "Configurado em evcc.yaml. Não editável na UI."
 
 [config.messaging]
-description = "Receba as mensagens sobre suas sessões de carregamento."
+description = "Receber mensagens sobre as sessões de carregamento."
 title = "Notificações"
 
 [config.meter]
@@ -411,6 +411,12 @@ titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 unsavedChanges = "Há mudanças não salvas. Aplicar agora?"
 update = "Aplicar"
+repeatingPlans = "Repetição de planos"
+selectAll = "Selecionar tudo"
+repeating = "recorrente"
+weekdays = "Dias"
+addRepeatingPlan = "Adicionar planificação repetida"
+planNumber = "Planeamento {número}"
 
 [main.energyflow]
 battery = "Bateria"
@@ -529,6 +535,7 @@ tomorrow = "amanhã"
 update = "Atualizar"
 vehicleCapacityDocs = "Aprender a configurá-la."
 vehicleCapacityRequired = "A capacidade da bateria do veículo é necessária para estimar o tempo de carregamento."
+nextPlan = "Próximo plano"
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de recarga"
@@ -667,6 +674,7 @@ solarTitleByGroup = "“Parte solar {byGroup}”"
 title = "Sessões de recarga"
 total = "Total"
 vehicle = "Veículo"
+overview = " Vista geral"
 
 [sessions.chartTitle]
 avgCo2ByGroup = "⌀ CO₂ {byGroup}"

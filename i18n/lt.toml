@@ -420,7 +420,7 @@ titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
 unsavedChanges = "Yra neišsaugotų pakeitimų. Išsaugoti dabar?"
 update = "Patvirtinti"
-weekdays = "Darbo dienos"
+weekdays = "Dienos"
 
 [main.energyflow]
 battery = "Kaupiklis"
