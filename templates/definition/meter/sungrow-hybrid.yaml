@@ -20,6 +20,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargerate
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -237,7 +239,7 @@ render: |
                 address: 5627 # BDC rated power
                 type: input
                 decode: uint16
-              scale: 100
+              scale: {{ .maxchargerate }}
           out:
           - name: power
             type: int
