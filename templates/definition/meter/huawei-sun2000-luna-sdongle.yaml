@@ -1,26 +1,38 @@
 template: huawei-sun2000-luna-sdongle
-covers: ["huawei-dongle-powersensor", "huawei-sun2000-rs485"]
+covers:
+  - huawei-dongle-powersensor
+  - huawei-sun2000-rs485
 products:
   - brand: Huawei
     description:
       generic: SUN2000 + Luna2000
-capabilities: ["battery-control"]
+capabilities:
+  - battery-control
 requirements:
   description:
-    de: |
+    de: >
       Grid und Batterie erfordern den PowerSensor.
+
       "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
-    en: |
+    en: >
       Grid and Battery require the PowerSensor.
+
       Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
+
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
-    choice: ["grid", "pv", "battery"]
+    choice:
+      - grid
+      - pv
+      - battery
     allinone: true
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice:
+      - rs485
+      - tcpip
   - name: timeout
     default: 15s
   - name: storageunit
@@ -40,10 +52,13 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
-render: |
+      en: Keep AC charging active to charge the storage from other inverters via AC.
+        Prevents stand-by.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für
+        Wechselrichterkaskaden. Verhindert Stand-by.
+render: >
   type: custom
+
   {{- if eq .usage "grid" }}
   power:
     source: modbus
@@ -90,6 +105,7 @@ render: |
       decode: int32nan
     scale: -0.01
   {{- end }}
+
   {{- if eq .usage "pv" }}
   power:
     source: modbus
@@ -110,6 +126,7 @@ render: |
       decode: uint32nan
     scale: 0.01
   {{- end }}
+
   {{- if eq .usage "battery" }}
   power:
     source: modbus
@@ -239,10 +256,10 @@ render: |
                   type: writemultiple
                   encoding: uint32
             - source: const
-              value: {{ .maxacchargepower }} # W
+              value: {{ .maxchargepower }} # W
               set:
                 source: modbus
-                {{- include "modbus". | indent 12 }}
+                {{- include "modbus" . | indent 12 }}
                 register:
                   address: 47242 # maximum ac charging power
                   type: writemultiple
