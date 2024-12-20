@@ -70,7 +70,7 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewKSE creates KSE charger
 func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
