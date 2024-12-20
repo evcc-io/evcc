@@ -37,6 +37,7 @@ func (lp *Loadpoint) finishPlan() {
 	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
 	}
+	lp.log.DEBUG.Println("plan: deleting expired plan")
 }
 
 // remainingPlanEnergy returns missing energy amount in kWh
@@ -105,7 +106,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
-		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
 	}
