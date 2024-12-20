@@ -299,6 +299,9 @@ params:
     description:
       de: Standardmodus für die aktive Batteriesteuerung
       en: Default mode for battery control
+    help:
+      de: Standardmodus für die aktive Batteriesteuerung auf die der Wechselrichter wieder nach einem Laden des Speichers oder Unterbinden der Entladung zurückfällt.
+      en: Default mode for battery control to which the inverter falls back after charging the battery or after stopping discharge.
   - name: maxchargepower
     type: int
     usages: ["battery"]
