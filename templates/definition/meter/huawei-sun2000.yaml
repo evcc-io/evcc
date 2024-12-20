@@ -36,6 +36,7 @@ params:
     default: false
     advanced: true
     type: bool
+    usages: ["battery"]
     description:
       en: Inverter cascade
       de: Wechselrichterkaskade
