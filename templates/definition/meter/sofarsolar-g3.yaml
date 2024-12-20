@@ -30,14 +30,10 @@ params:
   - name: capacity
     advanced: true
   - name: defaultmode
-    description:
-      de: Standardmodus für die aktive Batteriesteuerung
-      en: Default mode for battery control
     help:
       de: Standardmodus für die aktive Batteriesteuerung. Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
       en: Default mode for battery control. Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
-    usages: ["battery"]
     advanced: true
   # battery control
   - name: minsoc
