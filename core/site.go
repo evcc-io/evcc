@@ -109,6 +109,9 @@ type Site struct {
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
 
+	// external battery control
+	batteryModeExternal api.BatteryMode // Battery mode (external, runtime only, not persisted)
+	
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 

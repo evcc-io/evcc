@@ -63,4 +63,16 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	
+	//
+	// battery control external
+	//
+
+	// GetBatteryModeExternal returns the external battery mode
+	GetBatteryModeExternal() api.BatteryMode
+	// SetBatteryModeExternal sets the external battery mode
+	SetBatteryModeExternal(api.BatteryMode)
+	// GetBatteryModeExternalModified returns the seconds since last modification
+	GetBatteryModeExternalModified() int
+	
 }
