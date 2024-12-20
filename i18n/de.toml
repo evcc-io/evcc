@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Ladestand"
+batteryLevel = "Ladestand der Batterie "
 capacity = "{energy} von {total}"
 control = "Batteriesteuerung"
 discharge = "Verhindere Entladung im Schnell-Modus und bei geplantem Laden."
@@ -137,7 +137,7 @@ vehicles = "Meine Fahrzeuge"
 yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
 
 [config.messaging]
-description = "Erhalte Benachrichtigungen über Ladevorgänge und andere Ereignisse."
+description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."
 title = "Benachrichtigungen"
 
 [config.meter]
@@ -402,7 +402,7 @@ titleMinSoc = "Min. Ladung"
 titleTargetCharge = "Abfahrt"
 unsavedChanges = "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?"
 update = "Anwenden"
-weekdays = "Wochentage"
+weekdays = "Tage"
 
 [main.energyflow]
 battery = "Batterie"

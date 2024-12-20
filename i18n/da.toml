@@ -415,7 +415,7 @@ titleMinSoc = "Min. ladning"
 titleTargetCharge = "Afgang"
 unsavedChanges = "Der er ændringer som ikke er gemt. Skal de benyttes nu?"
 update = "Anvend"
-weekdays = "Ugedage"
+weekdays = "Dag"
 
 [main.energyflow]
 battery = "Batteri"
