@@ -24,17 +24,15 @@ test.describe("tariffs", async () => {
     await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
-    await expect(page.getByTestId("tariffs")).toBeVisible();
-    await expect(page.getByTestId("tariffs")).toContainText(
-      ["Tariffs", "Currency", "EUR"].join("")
-    );
+    await expect(page.getByTestId("tariffs")).not.toBeVisible();
+    await expect(page.getByTestId("add-tariffs")).toBeVisible();
   });
 
   test("tariffs via ui", async ({ page }) => {
     await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
-    await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("add-tariffs").click();
     const modal = await page.getByTestId("tariffs-modal");
     await expect(modal).toBeVisible();
     await page.waitForLoadState("networkidle");

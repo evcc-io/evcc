@@ -38,7 +38,7 @@ type All struct {
 	Vehicles     []config.Named
 	Tariffs      Tariffs
 	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
 
