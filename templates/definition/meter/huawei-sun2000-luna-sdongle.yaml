@@ -35,12 +35,21 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: maxchargepower
-    default: 5000
-    advanced: true
+  - name: maxdischargepower
+    default: 2500 # W
+    description:
+      de: Maximale Entladeleistung im Normalbetrieb
+    help:
+      de: Maximale Leistung, welche die Luna im Normalbetrieb abgeben kann. (2500W default)
+  - name: powerfromgrid
+    default: 2500 # W
+    description:
+      de: Ladeleistung vom AC-Netz. (2500W default)
+    help:
+      de: Maximale Leistung, welche vom Netz gezogen werden darf.
   - name: capacity
     advanced: true
-  - name: forceaccharging
+  - name: holdaccharging
     default: true
     advanced: true
     type: bool
@@ -179,11 +188,11 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47086 # Battery Working Mode "Maximaler Eigenverbrauch"
+                address: 47086 # battery working mode "Maximaler Eigenverbrauch"
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 5000 # W
+            value: {{ .maxdischargepower }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -191,14 +200,14 @@ render: |
                 address: 47077 # maximum discharging power
                 type: writemultiple
                 encoding: uint32
-          {{- if eq .forceaccharging "false" }}
+          {{- if eq .holdaccharging "false" }}
           - source: const
-            value: 0 # Disable
+            value: 0 # eisable
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47087 # Charge from grid
+                address: 47087 # charge from grid
                 type: writesingle
                 encoding: uint16
           {{- end }}
@@ -221,7 +230,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47086 # Battery Working Mode "Maximaler Eigenverbrauch"
+                address: 47086 # battery working mode "Maximaler Eigenverbrauch"
                 type: writesingle
                 encoding: uint16
       - case: 3 # charge
@@ -238,7 +247,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 5000 # W
+            value: {{ .maxdischargepower }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -247,7 +256,7 @@ render: |
                 type: writemultiple
                 encoding: uint32
           - source: const
-            value: {{ .maxchargepower }} # W
+            value: {{ .powerfromgrid }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -255,5 +264,16 @@ render: |
                 address: 47242 # maximum ac charging power
                 type: writemultiple
                 encoding: uint32
+          {{- if eq .holdaccharging "false" }}
+          - source: const
+            value: 1 # enable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47087 # charge from grid
+                type: writesingle
+                encoding: uint16
+          {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
