@@ -210,4 +210,6 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130
 
-replace github.com/WulfgarW/sensonet => ../wsensonet
+// replace github.com/WulfgarW/sensonet => ../wsensonet
+
+replace github.com/WulfgarW/sensonet => github.com/andig/sensonet-1 v0.0.2-0.20241221141704-b9d5353336c1
