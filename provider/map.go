@@ -8,9 +8,9 @@ import (
 )
 
 type mapProvider struct {
-	ctx    context.Context
-	values map[int64]int64
-	set    Config
+	ctx      context.Context
+	values   map[int64]int64
+	get, set Config
 }
 
 func init() {
@@ -20,8 +20,8 @@ func init() {
 // NewMapFromConfig creates type conversion provider
 func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Values map[int64]int64
-		Set    Config
+		Values   map[int64]int64
+		Get, Set Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -34,11 +34,32 @@ func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provid
 
 	o := &mapProvider{
 		ctx:    ctx,
+		get:    cc.Get,
 		set:    cc.Set,
 		values: cc.Values,
 	}
 
 	return o, nil
+}
+
+var _ IntProvider = (*mapProvider)(nil)
+
+func (o *mapProvider) IntGetter() (func() (int64, error), error) {
+	get, err := NewIntGetterFromConfig(o.ctx, o.get)
+
+	return func() (int64, error) {
+		val, err := get()
+		if err != nil {
+			return 0, err
+		}
+
+		res, ok := o.values[val]
+		if !ok {
+			return 0, fmt.Errorf("map: value not found: %d", val)
+		}
+
+		return res, nil
+	}, err
 }
 
 var _ SetIntProvider = (*mapProvider)(nil)
