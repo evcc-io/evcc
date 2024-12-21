@@ -1,6 +1,3 @@
-run:
-  go: "1.24"
-
 issues:
   exclude:
     - .regActualCurrent. is unused
