@@ -88,12 +88,14 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemID := homes[0].SystemID
-	var heatingPar sensonet.HeatingParStruct
-	var hotwaterPar sensonet.HotwaterParStruct
-	heatingPar.ZoneIndex = cc.HeatingZone
-	heatingPar.VetoSetpoint = cc.HeatingSetpoint
-	heatingPar.VetoDuration = -1.0 // negative value means: use default
-	hotwaterPar.Index = -1         // negative value means: use default
+	heatingPar := sensonet.HeatingParStruct{
+		ZoneIndex:    cc.HeatingZone,
+		VetoSetpoint: cc.HeatingSetpoint,
+		VetoDuration: -1, // negative value means: use default
+	}
+	hotwaterPar := sensonet.HotwaterParStruct{
+		Index: -1, // negative value means: use default
+	}
 
 	set := func(mode int64) error {
 		switch mode {
