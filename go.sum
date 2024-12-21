@@ -37,6 +37,8 @@ github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrR
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
+github.com/andig/sensonet-1 v0.0.2-0.20241221141704-b9d5353336c1 h1:l7vFbfYyhkGqlk91kySa3kqPJSE1eYWBAEm+X/v/Q00=
+github.com/andig/sensonet-1 v0.0.2-0.20241221141704-b9d5353336c1/go.mod h1:txWeNF3TKSUNkaeQZXT//BiZPY4+xOZ4VXsFN+taQe4=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
