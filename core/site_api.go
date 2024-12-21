@@ -374,19 +374,14 @@ func (site *Site) setBatteryModeExternal(mode api.BatteryMode) {
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
-
-	site.log.DEBUG.Printf("set battery mode external: %s", string(mode))
-
-	if _, err := api.BatteryModeString(mode.String()); err != nil {
-		site.log.ERROR.Printf("invalid battery mode external: %s", string(mode))
-		return
-	}
-
+	
 	// apply immediately
 	if site.batteryModeExternal != mode {
 		site.setBatteryModeExternal(mode)
-
+		site.log.DEBUG.Printf("set battery mode external: %s", mode.String())
 		// reset timers
+	} else {
+		site.log.DEBUG.Printf("triggered reset of timer for battery mode external")
 	}
 	batteryModeExternalTimer = time.Now()
 }
@@ -396,9 +391,10 @@ func (site *Site) GetBatteryModeExternalModified() int {
 	site.RLock()
 	defer site.RUnlock()
 	if !(batteryModeExternalTimer.IsZero()) {
+		// calculate seconds since last external battery mode control message
 		return int(time.Since(batteryModeExternalTimer).Seconds())
 	}
-	site.log.DEBUG.Printf("time-out for  battery mode external")
-	site.setBatteryModeExternal(api.BatteryUnknown) //reset batteryMode to normal (no external updates)
+	//define externalBatteryMode
+	site.setBatteryModeExternal(api.BatteryUnknown) 
 	return -1
 }

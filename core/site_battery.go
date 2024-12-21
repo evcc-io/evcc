@@ -94,7 +94,7 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
 	
-	// Netzladung innerhalb der letzten 5 Minuten wiederholt von extern gesetzt?
+	// Netzladung innerhalb der letzte Minute von extern gesetzt?
 	if (site.GetBatteryModeExternalModified()>0 && site.GetBatteryModeExternalModified()<60) {
 		if (site.GetBatteryModeExternal()==api.BatteryCharge) {
 			return true
@@ -108,7 +108,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 		return false
 	}
 
-	// Batteriesperre innerhalb der letzten 5 Minuten wiederholt von extern gesetzt?
+	// Batteriesperre innerhalb der letzten Minute von extern gesetzt?
 	if (site.GetBatteryModeExternalModified()>0 && site.GetBatteryModeExternalModified()<60) {
 		if (site.GetBatteryModeExternal()==api.BatteryHold) {
 			return true
