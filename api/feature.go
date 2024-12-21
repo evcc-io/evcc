@@ -2,7 +2,7 @@ package api
 
 type Feature int
 
-//go:generate enumer -type Feature -text
+//go:generate go tool enumer -type Feature -text
 const (
 	_ Feature = iota
 	Offline
