@@ -205,6 +205,7 @@ require (
 
 tool (
 	github.com/dmarkham/enumer
+	github.com/evcc-io/evcc/cmd/decorate
 	go.uber.org/mock/mockgen
 )
 

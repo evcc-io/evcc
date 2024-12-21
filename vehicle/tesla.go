@@ -38,6 +38,7 @@ func init() {
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
+		Credentials  ClientCredentials
 		Tokens       Tokens
 		VIN          string
 		CommandProxy string
@@ -51,6 +52,14 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.Credentials.ID != "" {
+		tesla.OAuth2Config.ClientID = cc.Credentials.ID
+	}
+
+	if cc.Credentials.Secret != "" {
+		tesla.OAuth2Config.ClientSecret = cc.Credentials.Secret
 	}
 
 	token, err := cc.Tokens.Token()
