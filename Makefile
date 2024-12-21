@@ -38,12 +38,6 @@ clean::
 
 install::
 	go install $$(go list -e -f '{{join .Imports " "}}' tools.go)
-	go env
-	go env GOPATH
-	ls $$(go env GOPATH)/bin
-	echo $$PATH
-	which decorate
-	decorate
 
 install-ui::
 	npm ci
