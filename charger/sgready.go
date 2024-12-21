@@ -74,7 +74,28 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	res, err := NewSgReady(ctx, &cc.embed, cc.SetMode, cc.GetMode, cc.MaxPower, cc.Phases)
+	set, err := provider.NewIntSetterFromConfig(ctx, "mode", cc.SetMode)
+	if err != nil {
+		return nil, err
+	}
+
+	var get func() (int64, error)
+	if cc.GetMode != nil {
+		get, err = provider.NewIntGetterFromConfig(ctx, *cc.GetMode)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var maxPower func(int64) error
+	if cc.MaxPower != nil {
+		maxPower, err = provider.NewIntSetterFromConfig(ctx, "maxpower", *cc.MaxPower)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res, err := NewSgReady(ctx, &cc.embed, set, get, maxPower, cc.Phases)
 	if err != nil {
 		return nil, err
 	}
@@ -118,33 +139,14 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, set provider.Config, get, maxPower *provider.Config, phases int) (*SgReady, error) {
-	setMode, err := provider.NewIntSetterFromConfig(ctx, "mode", set)
-	if err != nil {
-		return nil, err
-	}
-
+func NewSgReady(ctx context.Context, embed *embed, set func(int64) error, get func() (int64, error), maxPower func(int64) error, phases int) (*SgReady, error) {
 	res := &SgReady{
-		embed:  embed,
-		_mode:  Normal,
-		set:    setMode,
-		phases: phases,
-	}
-
-	if get != nil {
-		getMode, err := provider.NewIntGetterFromConfig(ctx, *get)
-		if err != nil {
-			return nil, err
-		}
-		res.get = getMode
-	}
-
-	if maxPower != nil {
-		maxPower, err := provider.NewIntSetterFromConfig(ctx, "maxpower", *maxPower)
-		if err != nil {
-			return nil, err
-		}
-		res.maxPower = maxPower
+		embed:    embed,
+		_mode:    Normal,
+		set:      set,
+		get:      get,
+		maxPower: maxPower,
+		phases:   phases,
 	}
 
 	return res, nil
