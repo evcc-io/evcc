@@ -47,6 +47,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	cc := struct {
 		embed                      `mapstructure:",squash"`
 		sensonet.CredentialsStruct `mapstructure:",squash"`
+		HeatingZone                int
+		HeatingSetpoint            float32
 		Phases                     int
 	}{
 		embed: embed{
@@ -86,10 +88,24 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemID := homes[0].SystemID
+	var heatingPar sensonet.HeatingParStruct
+	var hotwaterPar sensonet.HotwaterParStruct
+	heatingPar.ZoneIndex = cc.HeatingZone
+	heatingPar.VetoSetpoint = cc.HeatingSetpoint
+	heatingPar.VetoDuration = -1.0 // negative value means: use default
+	hotwaterPar.Index = -1         // negative value means: use default
 
-	set := func(int64) error {
-		_, err := conn.StartStrategybased(systemID, sensonet.STRATEGY_HOTWATER_THEN_HEATING, nil, nil)
-		return err
+	set := func(mode int64) error {
+		switch mode {
+		case Normal:
+			_, err := conn.StopStrategybased(systemID, 0, &heatingPar, &hotwaterPar)
+			return err
+		case Boost:
+			_, err := conn.StartStrategybased(systemID, sensonet.STRATEGY_HOTWATER_THEN_HEATING, &heatingPar, &hotwaterPar)
+			return err
+		default:
+			return api.ErrNotAvailable
+		}
 	}
 
 	res := &SgReady{
