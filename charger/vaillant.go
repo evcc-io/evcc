@@ -80,8 +80,15 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
+	homes, err := conn.GetHomes()
+	if err != nil {
+		return nil, err
+	}
+
+	systemID := homes[0].SystemID
+
 	set := func(int64) error {
-		_, err := conn.StartStrategybased("", sensonet.STRATEGY_HOTWATER_THEN_HEATING, nil, nil)
+		_, err := conn.StartStrategybased(systemID, sensonet.STRATEGY_HOTWATER_THEN_HEATING, nil, nil)
 		return err
 	}
 
