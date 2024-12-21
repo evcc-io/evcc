@@ -110,11 +110,5 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}
 	}
 
-	res := &SgReady{
-		embed:  &cc.embed,
-		phases: cc.Phases,
-		set:    set,
-	}
-
-	return res, nil
+	return NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
 }
