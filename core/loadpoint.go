@@ -164,7 +164,7 @@ type Loadpoint struct {
 	planEnergy     float64   // Plan charge energy in kWh (dumb vehicles)
 	planSlotEnd    time.Time // current plan slot end time
 	planActive     bool      // charge plan exists and has a currently active slot
-	planActiveTime time.Time      // needed to calculate the EffectivePlanTime
+	planActiveTime time.Time // needed to calculate the EffectivePlanTime
 	planActiveSoc  int       // needed to calculate the EffectivePlanSoc
 
 	// cached state
