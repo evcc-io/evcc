@@ -156,8 +156,8 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	return float64(encoding.Int32LswFirst(b)) / 100, err
+// / 100 ergibt bei 16A ladeleistung 16kw in einer Stunde, richtig ist aber 11kwh, daher Strom /100000 * 400Volt * Wurzel3 für Drehstrom (1.73) = 11.072kw , alternativ würde / 145 dem sehr nahe kommen
+	return float64(encoding.Int32LswFirst(b)) / 145, err
 }
 
 // currents implements the api.PhaseCurrents interface
