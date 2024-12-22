@@ -12,48 +12,140 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
+discharge = 
+control = 
+gridChargeTab = 
+usageTab = 
 
 [batterySettings.bufferStart]
 full = "når det er nesten fullt"
 low = "når det er noe fullt"
 medium = "når det er halvfullt"
 never = "bare med nok PV-overskudd"
+above = 
 
 [config]
 
 [config.battery]
+titleAdd = 
+titleEdit = 
 
 [config.deviceValue]
+capacity = 
+power = 
+chargeStatusB = 
+chargeStatusA = 
+currency = 
+gridPrice = 
+feedinPrice = 
+configured = 
+no = 
+org = 
+phasePowers = 
+yes = 
+url = 
+topic = 
+broker = 
+controllable = 
+temp = 
+chargeStatus = 
+socLimit = 
+chargeStatusF = 
+bucket = 
+odometer = 
+phaseVoltages = 
+co2 = 
+chargeStatusC = 
+chargedEnergy = 
+chargeStatusE = 
+current = 
+enabled = 
+phaseCurrents = 
+currentRange = 
+energy = 
+soc = 
+hemsType = 
+range = 
+powerRange = 
 
 [config.form]
 example = "Eksempel"
 optional = "valgfritt"
 
 [config.general]
+save = 
+showAdvancedSettings = 
+hideAdvancedSettings = 
+password = 
+telemetry = 
+title = 
+docsLink = 
+cancel = 
+off = 
+experimental = 
+on = 
+remove = 
+readFromFile = 
 
 [config.grid]
+titleAdd = 
+title = 
+titleEdit = 
 
 [config.main]
 addVehicle = "Legg til kjøretøy"
 edit = "rediger"
 title = "Oppsett"
 vehicles = "Mine kjøretøy"
+yaml = 
+addLoadpoint = 
+unconfigured = 
+addPvBattery = 
+configured = 
 
 [config.meter]
+cancel = 
+template = 
+delete = 
+validateSave = 
+titleChoice = 
+save = 
 
 [config.options]
 
 [config.options.endianness]
+big = 
+little = 
 
 [config.options.schema]
+https = 
+http = 
 
 [config.pv]
+titleAdd = 
+titleEdit = 
 
 [config.section]
+general = 
+loadpoints = 
+meter = 
+vehicles = 
+integrations = 
+system = 
+grid = 
 
 [config.system]
+restartRequiredMessage = 
+restartingMessage = 
+logs = 
+restart = 
+restartRequiredDescription = 
+restartingDescription = 
 
 [config.title]
+description = 
+title = 
+label = 
 
 [config.validation]
 failed = "mislykket"
@@ -105,8 +197,19 @@ savingsTitle = "Besparelser"
 savingsTotalEnergy = "{total} kWh ladet"
 since = "siden {since}"
 tabTitle = "Mine data"
+co2Title = 
+moneySaved = 
+referenceLabel = 
+co2Saved = 
+configurePriceCo2 = 
+referenceGrid = 
+periodLabel = 
 
 [footer.savings.period]
+30d = 
+365d = 
+thisYear = 
+total = 
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
@@ -117,6 +220,11 @@ supportUs = "Vårt oppdrag: gjør solenergi til normen. Hjelp oss ved å støtte
 thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
 titleNoSponsor = "Støtt oss"
 titleSponsor = "Du er en støttespiller"
+becomeSponsorExtended = 
+trial = 
+victron = 
+titleTrial = 
+titleVictron = 
 
 [footer.telemetry]
 optIn = "Jeg ønsker å bidra med mine data."
@@ -145,6 +253,8 @@ login = "Kjøretøysinnlogginger"
 needHelp = "Trenger du hjelp?"
 sessions = "Ladeøkter"
 settings = "Innstillinger"
+logout = 
+nativeSettings = 
 
 [header.theme]
 auto = "Design: system"
@@ -161,6 +271,8 @@ primaryActions = "Er det noe som ikke virker som det skal? Dette er gode ressurs
 restartButton = "Start på ny"
 restartDescription = "Prøvd å slå av og på igjen?"
 secondaryActions = "Vedvarer problemet? Her har du mer drastiske tiltak."
+logsButton = 
+logsDescription = 
 
 [help.restart]
 cancel = "Avbryt"
@@ -170,8 +282,28 @@ disclaimer = "Merk: evcc vil avsluttes og be operativsystemet om å starte enhet
 modalTitle = "Er du sikker på at du vil utføre omstart?"
 
 [log]
+search = 
+noResults = 
+download = 
+update = 
+levelLabel = 
+areas = 
+title = 
+areaLabel = 
+showAll = 
+selectAll = 
+nAreas = 
 
 [loginModal]
+error = 
+title = 
+cancel = 
+login = 
+iframeIssue = 
+reset = 
+password = 
+iframeHint = 
+invalid = 
 
 [main]
 vehicles = "Parkering"
@@ -184,6 +316,19 @@ none = "ingen"
 title = "Plan"
 titleMinSoc = "Min.-lading"
 titleTargetCharge = "Avgang"
+time = 
+goal = 
+day = 
+unsavedChanges = 
+repeatingPlans = 
+update = 
+remove = 
+repeating = 
+planNumber = 
+selectAll = 
+addRepeatingPlan = 
+active = 
+weekdays = 
 
 [main.energyflow]
 battery = "Batteri"
@@ -197,8 +342,13 @@ noEnergy = "Ingen telleverksdata"
 pvExport = "Lysnetteksport"
 pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
+cheapBatteryGridCharge = 
+cleanBatteryGridCharge = 
+batteryHold = 
 
 [main.heatingStatus]
+waitForVehicle = 
+charging = 
 
 [main.loadpoint]
 avgPrice = "⌀-pris"
@@ -209,6 +359,9 @@ fallbackName = "Ladepunkt"
 power = "Effekt"
 price = "Σ-pris"
 solar = "Solenergi"
+remoteDisabledSoft = 
+remaining = 
+remoteDisabledHard = 
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -216,8 +369,14 @@ default = "forvalg"
 disclaimerHint = "Merknad:"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
+batteryUsage = 
+smartCostCheap = 
+smartCostClean = 
+onlyForSocBasedCharging = 
 
 [main.loadpointSettings.limitSoc]
+description = 
+label = 
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. ladestrøm"
@@ -236,12 +395,14 @@ phases_1 = "1-fase"
 phases_1_hint = "({min} til {max})"
 phases_3 = "3-fase"
 phases_3_hint = "({min} til {max})"
+no1p3pSupport = 
 
 [main.mode]
 minpv = "Min+Sol-e."
 now = "Raskt"
 off = "Stopp"
 pv = "Sol"
+smart = 
 
 [main.provider]
 login = "logg inn"
@@ -249,6 +410,8 @@ logout = "logg ut"
 
 [main.targetCharge]
 activate = "Aktiver"
+co2Limit = "CO₂-grense på {co2}"
+costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
 descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
 descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}?"
 inactiveLabel = "Stopptidspunkt"
@@ -258,6 +421,7 @@ planDuration = "Ladetid"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} til {end}"
 planUnknown = "ikke kjent enda"
+priceLimit = "prisgrense på {price}"
 setTargetTime = "ingen"
 targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
 targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
@@ -265,6 +429,15 @@ title = "Mål-tid"
 today = "i dag"
 tomorrow = "i morgen"
 update = "Oppdater"
+currentPlan = 
+nextPlan = 
+vehicleCapacityDocs = 
+targetIsAboveVehicleLimit = 
+vehicleCapacityRequired = 
+notReachableInTime = 
+preview = 
+remove = 
+targetIsAboveLimit = 
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
@@ -289,6 +462,7 @@ temp = "Temp."
 tempLimit = "Temp.-grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
+notReachable = 
 
 [main.vehicleSoc]
 charging = "lader"
@@ -315,16 +489,42 @@ targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 unknown = "ukjent"
 vehicleLimitReached = "Kjøretøygrense på {soc} nådd."
 waitForVehicle = "Klar. Venter på kjøretøy..."
+batteryBoost = 
+cheapEnergyNextStart = 
+awaitingAuthorization = 
+cleanEnergyNextStart = 
+cheapEnergySet = 
+vehicleLimit = 
+disconnectRequired = 
+finished = 
+cleanEnergySet = 
+welcome = 
 
 [notifications]
 dismissAll = "Forkast alle"
 modalTitle = "Merknader"
+logs = 
 
 [offline]
 message = "Ikke koblet til en server."
 reload = "Last inn igjen?"
+restart = 
+restartNeeded = 
+restarting = 
+configurationError = 
 
 [passwordModal]
+titleNew = 
+titleUpdate = 
+updatePassword = 
+description = 
+empty = 
+newPassword = 
+error = 
+labelCurrent = 
+labelNew = 
+noMatch = 
+labelRepeat = 
 
 [session]
 cancel = "Avbryt"
@@ -358,6 +558,8 @@ solar = "Solenergi"
 title = "Ladeøkter"
 total = "Totalt"
 vehicle = "Kjøretøy"
+overview = 
+showIndividualEntries = 
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -369,6 +571,11 @@ meterstart = "Start-målerstand (kWh)"
 meterstop = "Stopp-målerstand (kWh)"
 odometer = "Kilometerstand"
 vehicle = "Kjøretøy"
+co2perkwh = 
+chargeduration = 
+priceperkwh = 
+solarpercentage = 
+price = 
 
 [sessions.filter]
 allLoadpoints = "alle ladepunkter"
@@ -379,6 +586,9 @@ filter = "Filter"
 title = "Innstillinger"
 
 [settings.fullscreen]
+exit = 
+label = 
+enter = 
 
 [settings.hiddenFeatures]
 label = "Eksperimentelt"
@@ -417,6 +627,11 @@ modalTitle = "Smart lysnettlading"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgrense"
+cheapTitle = 
+cleanTitle = 
+saved = 
+applyToAll = 
+batteryDescription = 
 
 [startupError]
 configFile = "Brukt oppsettsfil:"
@@ -434,3 +649,138 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
+
+
+[sessions.group]
+price = 
+self = 
+co2 = 
+grid = 
+
+[main.loadpointSettings.batteryBoost]
+description = 
+label = 
+mode = 
+once = 
+
+[config.influx]
+labelPassword = 
+labelUrl = 
+description = 
+labelOrg = 
+labelDatabase = 
+labelBucket = 
+labelToken = 
+labelCheckInsecure = 
+labelInsecure = 
+descriptionToken = 
+v1Support = 
+labelUser = 
+v2Support = 
+title = 
+
+[config.modbusproxy]
+title = 
+description = 
+
+[config.mqtt]
+authentication = 
+labelTopic = 
+labelUser = 
+descriptionTopic = 
+description = 
+descriptionClientId = 
+labelClientKey = 
+labelBroker = 
+labelCheckInsecure = 
+title = 
+publishing = 
+labelInsecure = 
+labelClientCert = 
+labelCaCert = 
+labelClientId = 
+labelPassword = 
+
+[sessions.type]
+co2 = 
+solar = 
+price = 
+
+[config.hems]
+title = 
+description = 
+
+[config.messaging]
+description = 
+title = 
+
+[config.network]
+labelPort = 
+descriptionSchema = 
+labelSchema = 
+labelHost = 
+descriptionPort = 
+title = 
+descriptionHost = 
+
+[config.sponsor]
+addToken = 
+description = 
+descriptionToken = 
+labelToken = 
+changeToken = 
+error = 
+title = 
+
+[sessions.chartTitle]
+energyGroupedByGroup = 
+groupedCo2ByGroup = 
+historyCo2Sub = 
+historyCo2 = 
+groupedPriceByGroup = 
+historyPriceSub = 
+solar = 
+solarByGroup = 
+energySubSolar = 
+historyPrice = 
+energySubTotal = 
+byGroupVehicle = 
+avgPriceByGroup = 
+byGroupLoadpoint = 
+avgCo2ByGroup = 
+energy = 
+energyGrouped = 
+
+[sessions.groupBy]
+loadpoint = 
+none = 
+vehicle = 
+
+[config.circuits]
+title = 
+description = 
+
+[config.control]
+descriptionInterval = 
+descriptionResidualPower = 
+description = 
+title = 
+labelResidualPower = 
+labelInterval = 
+
+[config.tariffs]
+description = 
+title = 
+
+[sessions.period]
+total = 
+year = 
+month = 
+
+[config.eebus]
+description = 
+title = 
+
+[config.options.boolean]
+no = 
+yes = 

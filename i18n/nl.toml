@@ -418,6 +418,9 @@ titleTargetCharge = "Vertrek"
 unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 update = "Toepassen"
 weekdays = "Weekdagen"
+repeatingPlans = 
+addRepeatingPlan = 
+planNumber = 
 
 [main.energyflow]
 battery = "Batterij"
@@ -507,6 +510,8 @@ logout = "afmelden"
 
 [main.targetCharge]
 activate = "Activeren"
+co2Limit = "CO₂ limiet van {co2}"
+costLimitIgnore = "De geconfigureerde {limit} zal genegeerd worden tijdens deze periode."
 currentPlan = "Geactiveerd laadplan"
 descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen zijn?"
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}?"
@@ -519,6 +524,7 @@ planPeriodLabel = "Periode"
 planPeriodValue = "{start} tot {end}"
 planUnknown = "nog niet bekend"
 preview = "Planning"
+priceLimit = "prijslimiet van {price}"
 remove = "Verwijder"
 setTargetTime = "geen"
 targetIsAboveLimit = "De ingestelde laadlimiet {limit} wordt genegeerd gedurende deze periode."
@@ -531,6 +537,7 @@ tomorrow = "Morgen"
 update = "Updaten"
 vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
 vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
+nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"

@@ -14,6 +14,8 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari bateriei"
+usageTab = 
+gridChargeTab = 
 
 [batterySettings.bufferStart]
 above = "cand e peste {soc}"
@@ -43,16 +45,52 @@ power = "Putere"
 range = "Autonomie"
 soc = "Stare de încărcare"
 socLimit = "Limită"
+bucket = 
+broker = 
+chargeStatusA = 
+chargeStatusB = 
+co2 = 
+currency = 
+feedinPrice = 
+temp = 
+yes = 
+chargeStatusE = 
+currentRange = 
+chargeStatusC = 
+powerRange = 
+controllable = 
+chargeStatusF = 
+configured = 
+topic = 
+gridPrice = 
+org = 
+no = 
+hemsType = 
+url = 
 
 [config.form]
 example = "Exemplu"
 optional = "optional"
 
 [config.general]
+off = 
+hideAdvancedSettings = 
+docsLink = 
+experimental = 
+showAdvancedSettings = 
+on = 
+password = 
+cancel = 
+readFromFile = 
+telemetry = 
+save = 
+title = 
+remove = 
 
 [config.grid]
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
+title = 
 
 [config.main]
 addLoadpoint = "Adăugați punct de încărcare"
@@ -63,6 +101,7 @@ title = "Configuratie"
 unconfigured = "neconfigurat"
 vehicles = "Masinile mele"
 yaml = "Configurat în evcc.yaml. Nu poate fi editat în interfața "
+configured = 
 
 [config.meter]
 cancel = "Anulare"
@@ -75,22 +114,42 @@ validateSave = "Valideaza si salveaza"
 [config.options]
 
 [config.options.endianness]
+big = 
+little = 
 
 [config.options.schema]
+http = 
+https = 
 
 [config.pv]
 titleAdd = "Adauga SmartMeter"
 titleEdit = "Editeaza SmartMeter"
 
 [config.section]
+system = 
+vehicles = 
+meter = 
+integrations = 
+loadpoints = 
+grid = 
+general = 
 
 [config.site]
 cancel = "Anuleaza"
 save = "Salveaza"
 
 [config.system]
+restartRequiredMessage = 
+restartingDescription = 
+restart = 
+restartingMessage = 
+restartRequiredDescription = 
+logs = 
 
 [config.title]
+label = 
+title = 
+description = 
 
 [config.validation]
 failed = "esuat"
@@ -154,6 +213,7 @@ tabTitle = "Datele mele"
 30d = "ultimele 30 de zile"
 365d = "ultimul an"
 total = "de la inceput"
+thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "Sponsorizează-ne"
@@ -164,6 +224,11 @@ supportUs = "Țelul nostru este ca energia solara să devina standard. Ajută ș
 thanks = "Multumim, {sponsor}! Contribuția ta ajuta la dezvoltarea evcc."
 titleNoSponsor = "Sponsorizeaza-ne"
 titleSponsor = "Ești sponsor"
+titleTrial = 
+titleVictron = 
+becomeSponsorExtended = 
+victron = 
+trial = 
 
 [footer.telemetry]
 optIn = "Vreau să trimit datele mele."
@@ -192,6 +257,8 @@ login = "Login Masina"
 needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de Incărcare"
 settings = "Configurare"
+nativeSettings = 
+logout = 
 
 [help]
 discussionsButton = "Discutii GitHub"
@@ -203,6 +270,8 @@ primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit s
 restartButton = "Restart"
 restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 secondaryActions = "Inca nu ati rezolvat problema? Iata niste alte optiuni"
+logsButton = 
+logsDescription = 
 
 [help.restart]
 cancel = "Anuleaza"
@@ -212,8 +281,28 @@ disclaimer = "Nota: evcc se va inchide si se va baza pe OS sa restarteze servici
 modalTitle = "Esti sigur ca vrei sa dai restart?"
 
 [log]
+areaLabel = 
+search = 
+areas = 
+download = 
+nAreas = 
+levelLabel = 
+noResults = 
+selectAll = 
+showAll = 
+update = 
+title = 
 
 [loginModal]
+password = 
+title = 
+reset = 
+iframeHint = 
+cancel = 
+error = 
+login = 
+invalid = 
+iframeIssue = 
 
 [main]
 vehicles = "Parcare"
@@ -232,6 +321,13 @@ title = "Plan"
 titleMinSoc = "Incarcare minima"
 titleTargetCharge = "Plecare"
 update = "Aplica"
+selectAll = 
+repeating = 
+planNumber = 
+repeatingPlans = 
+addRepeatingPlan = 
+unsavedChanges = 
+weekdays = 
 
 [main.energyflow]
 battery = "Baterie"
@@ -246,6 +342,8 @@ noEnergy = "Lipsă date contor"
 pvExport = "Export in rețea"
 pvProduction = "Producție"
 selfConsumption = "Consum propriu"
+cheapBatteryGridCharge = 
+cleanBatteryGridCharge = 
 
 [main.heatingStatus]
 charging = "Incalzeste..."
@@ -273,6 +371,9 @@ disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare."
 title = "Setări {0}"
 vehicle = "Vehicul"
+batteryUsage = 
+smartCostClean = 
+smartCostCheap = 
 
 [main.loadpointSettings.limitSoc]
 description = "Limita de incarcare care e folosita cand e conectat a aceasta masina."
@@ -302,6 +403,7 @@ minpv = "Min+Solar"
 now = "Rapid"
 off = "Oprit"
 pv = "Solar"
+smart = 
 
 [main.provider]
 login = "autentificare"
@@ -309,6 +411,8 @@ logout = "deconectează"
 
 [main.targetCharge]
 activate = "Activează"
+co2Limit = "limita CO₂ de {co2}"
+costLimitIgnore = "{limit} configurata de va fi ingnorata in acest timp."
 currentPlan = "Plan activ"
 descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?"
 descriptionSoc = "Când ar trebui vehiculul să fie încărcat la {targetSoc}?"
@@ -321,6 +425,7 @@ planPeriodLabel = "Perioada"
 planPeriodValue = "{start} la {end}"
 planUnknown = "necunoscut"
 preview = "Rezuma planul"
+priceLimit = "pretul limita de {price}"
 remove = "Elimina"
 setTargetTime = "nimic"
 targetIsAboveLimit = "Limita configurata - {limit}, va fi ignorata in timpul incarcarii."
@@ -333,6 +438,7 @@ tomorrow = "mâine"
 update = "Actualizare"
 vehicleCapacityDocs = "Invata cum sa configurezi."
 vehicleCapacityRequired = "Capacitatea bateriei masinii e necesara pentru a estima timpul de incarcare."
+nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Timp de încărcare"
@@ -357,6 +463,7 @@ temp = "Temp."
 tempLimit = "Temp. limit"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
+notReachable = 
 
 [main.vehicleSoc]
 charging = "încarcă"
@@ -383,16 +490,43 @@ targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
 vehicleLimitReached = "Limita {soc} a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
+finished = 
+cheapEnergyNextStart = 
+cheapEnergySet = 
+welcome = 
+cleanEnergyNextStart = 
+disconnectRequired = 
+vehicleLimit = 
+batteryBoost = 
+cleanEnergySet = 
+awaitingAuthorization = 
+unknown = 
 
 [notifications]
 dismissAll = "Închide tot"
 modalTitle = "Notificări"
+logs = 
 
 [offline]
 message = "Nu se poate conecta la server."
 reload = "Reîncarcă?"
+configurationError = 
+restart = 
+restarting = 
+restartNeeded = 
 
 [passwordModal]
+titleUpdate = 
+newPassword = 
+labelCurrent = 
+updatePassword = 
+empty = 
+description = 
+titleNew = 
+labelNew = 
+error = 
+noMatch = 
+labelRepeat = 
 
 [session]
 cancel = "Anulează"
@@ -426,6 +560,8 @@ solar = "Solar"
 title = "Sesiuni încărcare"
 total = "Total"
 vehicle = "Vehicul"
+overview = 
+showIndividualEntries = 
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -437,6 +573,11 @@ meterstart = "Start contor (kWh)"
 meterstop = "Stop contor (kWh)"
 odometer = "Kilometraj (km)"
 vehicle = "Vehicul"
+price = 
+priceperkwh = 
+co2perkwh = 
+chargeduration = 
+solarpercentage = 
 
 [sessions.filter]
 allLoadpoints = "toate punctele de incarcare"
@@ -447,6 +588,9 @@ filter = "Filtru"
 title = "Configuratie"
 
 [settings.fullscreen]
+label = 
+enter = 
+exit = 
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -491,6 +635,11 @@ modalTitle = "Incarcare Smart Grid"
 none = "nimic"
 priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
+batteryDescription = 
+cleanTitle = 
+cheapTitle = 
+applyToAll = 
+saved = 
 
 [startupError]
 configFile = "Fișier configurare folosit:"
@@ -508,3 +657,138 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
+
+
+[main.loadpointSettings.batteryBoost]
+description = 
+label = 
+mode = 
+once = 
+
+[config.mqtt]
+labelCaCert = 
+labelClientCert = 
+labelClientKey = 
+descriptionTopic = 
+publishing = 
+title = 
+labelCheckInsecure = 
+labelInsecure = 
+labelBroker = 
+description = 
+labelTopic = 
+descriptionClientId = 
+labelClientId = 
+authentication = 
+labelPassword = 
+labelUser = 
+
+[config.options.boolean]
+yes = 
+no = 
+
+[config.sponsor]
+addToken = 
+labelToken = 
+error = 
+changeToken = 
+description = 
+title = 
+descriptionToken = 
+
+[config.tariffs]
+description = 
+title = 
+
+[sessions.chartTitle]
+energySubTotal = 
+solar = 
+energySubSolar = 
+historyPriceSub = 
+solarByGroup = 
+energyGroupedByGroup = 
+byGroupLoadpoint = 
+byGroupVehicle = 
+energy = 
+avgCo2ByGroup = 
+avgPriceByGroup = 
+energyGrouped = 
+groupedPriceByGroup = 
+historyCo2Sub = 
+historyCo2 = 
+historyPrice = 
+groupedCo2ByGroup = 
+
+[config.influx]
+labelToken = 
+descriptionToken = 
+labelBucket = 
+labelDatabase = 
+v1Support = 
+title = 
+labelUser = 
+labelOrg = 
+v2Support = 
+labelInsecure = 
+labelCheckInsecure = 
+labelPassword = 
+labelUrl = 
+description = 
+
+[sessions.period]
+month = 
+total = 
+year = 
+
+[sessions.groupBy]
+loadpoint = 
+none = 
+vehicle = 
+
+[sessions.type]
+solar = 
+price = 
+co2 = 
+
+[config.messaging]
+description = 
+title = 
+
+[config.network]
+descriptionSchema = 
+title = 
+descriptionHost = 
+labelSchema = 
+labelPort = 
+labelHost = 
+descriptionPort = 
+
+[config.circuits]
+title = 
+description = 
+
+[config.modbusproxy]
+description = 
+title = 
+
+[config.control]
+labelInterval = 
+descriptionInterval = 
+descriptionResidualPower = 
+labelResidualPower = 
+description = 
+title = 
+
+[config.eebus]
+title = 
+description = 
+
+[config.hems]
+description = 
+title = 
+
+[sessions.group]
+grid = 
+co2 = 
+price = 
+self = 

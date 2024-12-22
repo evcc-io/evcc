@@ -12,46 +12,161 @@ legendTopAutostart = "s'inicia automaticament"
 legendTopName = "càrrega soportada per bateria"
 legendTopSubline = "sensa interrupcions"
 modalTitle = "Configuració bateria"
+discharge = 
+control = 
+gridChargeTab = 
+usageTab = 
 
 [batterySettings.bufferStart]
 full = "quan gairebé ple"
 low = "quan una mica ple"
 medium = "quan mig ple"
 never = "només amb prous excedents"
+above = 
 
 [config]
 
 [config.battery]
+titleEdit = 
+titleAdd = 
 
 [config.deviceValue]
+phasePowers = 
+broker = 
+chargeStatusC = 
+chargeStatusB = 
+phaseVoltages = 
+chargeStatusA = 
+co2 = 
+bucket = 
+controllable = 
+odometer = 
+chargedEnergy = 
+capacity = 
+configured = 
+currency = 
+yes = 
+enabled = 
+range = 
+feedinPrice = 
+current = 
+topic = 
+url = 
+energy = 
+phaseCurrents = 
+chargeStatusE = 
+currentRange = 
+soc = 
+chargeStatusF = 
+chargeStatus = 
+powerRange = 
+org = 
+gridPrice = 
+socLimit = 
+power = 
+temp = 
+no = 
+hemsType = 
 
 [config.form]
+optional = 
+example = 
 
 [config.general]
+cancel = 
+hideAdvancedSettings = 
+password = 
+remove = 
+showAdvancedSettings = 
+save = 
+off = 
+telemetry = 
+on = 
+readFromFile = 
+title = 
+experimental = 
+docsLink = 
 
 [config.grid]
+titleAdd = 
+titleEdit = 
+title = 
 
 [config.main]
+addVehicle = 
+unconfigured = 
+addPvBattery = 
+configured = 
+addLoadpoint = 
+title = 
+vehicles = 
+yaml = 
+edit = 
 
 [config.meter]
+delete = 
+cancel = 
+titleChoice = 
+save = 
+validateSave = 
+template = 
 
 [config.options]
 
 [config.options.endianness]
+little = 
+big = 
 
 [config.options.schema]
+http = 
+https = 
 
 [config.pv]
+titleAdd = 
+titleEdit = 
 
 [config.section]
+integrations = 
+loadpoints = 
+grid = 
+system = 
+general = 
+vehicles = 
+meter = 
 
 [config.system]
+restartingDescription = 
+restart = 
+logs = 
+restartRequiredDescription = 
+restartingMessage = 
+restartRequiredMessage = 
 
 [config.title]
+description = 
+label = 
+title = 
 
 [config.validation]
+label = 
+running = 
+unknown = 
+validate = 
+failed = 
+success = 
 
 [config.vehicle]
+save = 
+generic = 
+cancel = 
+validateSave = 
+scooter = 
+titleEdit = 
+offline = 
+titleAdd = 
+online = 
+delete = 
+template = 
 
 [footer]
 
@@ -82,8 +197,19 @@ savingsTitle = "Estalvi"
 savingsTotalEnergy = "{total} kWh carregats"
 since = "desde {since}"
 tabTitle = "Les meves dades"
+referenceLabel = 
+co2Saved = 
+co2Title = 
+periodLabel = 
+referenceGrid = 
+configurePriceCo2 = 
+moneySaved = 
 
 [footer.savings.period]
+30d = 
+thisYear = 
+365d = 
+total = 
 
 [footer.sponsor]
 becomeSponsor = "Convertir-se en patrocinador"
@@ -94,6 +220,11 @@ supportUs = "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'n
 thanks = "Gràcies pel teu patrocini, {sponsor}! Això ens ajudarà a continuar desenvolupant evcc."
 titleNoSponsor = "Dona'ns suport"
 titleSponsor = "Ets un seguidor"
+trial = 
+titleTrial = 
+titleVictron = 
+becomeSponsorExtended = 
+victron = 
 
 [footer.telemetry]
 optIn = "També voldria contribuir amb les meves dades."
@@ -122,6 +253,8 @@ login = "Login de vehicle"
 needHelp = "Necessites ajuda?"
 sessions = "Processos de càrrega"
 settings = "Paràmetres"
+nativeSettings = 
+logout = 
 
 [help]
 discussionsButton = "Debats en GitHub"
@@ -133,6 +266,8 @@ primaryActions = "Si quelcom no funciona com hauria, podeu obtenir ajuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has provat d'apagar i tornar a engegar?"
 secondaryActions = "¿Segeixes sense poder resoldre el teu problema? Aquí tens altres opcions més contundents."
+logsButton = 
+logsDescription = 
 
 [help.restart]
 cancel = "Cancel·lar"
@@ -142,8 +277,28 @@ disclaimer = "Nota: evcc es pararà i dependrà del sistema operatiu per reinici
 modalTitle = "¿Segur que vols tornar començar?"
 
 [log]
+showAll = 
+update = 
+areas = 
+title = 
+areaLabel = 
+nAreas = 
+levelLabel = 
+noResults = 
+download = 
+selectAll = 
+search = 
 
 [loginModal]
+reset = 
+invalid = 
+error = 
+iframeIssue = 
+login = 
+cancel = 
+title = 
+password = 
+iframeHint = 
 
 [main]
 vehicles = "Estacionament"
@@ -156,6 +311,19 @@ none = "no definit"
 title = "Plà"
 titleMinSoc = "Càrrega mínima"
 titleTargetCharge = "Sortides"
+time = 
+update = 
+goal = 
+remove = 
+repeatingPlans = 
+selectAll = 
+active = 
+day = 
+unsavedChanges = 
+planNumber = 
+repeating = 
+addRepeatingPlan = 
+weekdays = 
 
 [main.energyflow]
 battery = "Bateria"
@@ -169,8 +337,13 @@ noEnergy = "Sense lectures"
 pvExport = "Excedent"
 pvProduction = "Producció"
 selfConsumption = "Autoconsum"
+cleanBatteryGridCharge = 
+batteryHold = 
+cheapBatteryGridCharge = 
 
 [main.heatingStatus]
+waitForVehicle = 
+charging = 
 
 [main.loadpoint]
 avgPrice = "Preu ⌀"
@@ -181,14 +354,24 @@ fallbackName = "Punt de càrrega"
 power = "Potència"
 price = "Σ Preu"
 solar = "Solar"
+remoteDisabledHard = 
+remaining = 
+remoteDisabledSoft = 
 
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
 default = "defecte"
 title = "Configuracions {0}"
 vehicle = "Vehicle"
+batteryUsage = 
+smartCostCheap = 
+smartCostClean = 
+disclaimerHint = 
+onlyForSocBasedCharging = 
 
 [main.loadpointSettings.limitSoc]
+label = 
+description = 
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrent de carrega màxima "
@@ -207,12 +390,14 @@ phases_1 = "monofàsica"
 phases_1_hint = "({min} a {max})"
 phases_3 = "trifàsica"
 phases_3_hint = "({min} a {max})"
+no1p3pSupport = 
 
 [main.mode]
 minpv = "Min+Sol"
 now = "Ràpid"
 off = "Apagat"
 pv = "Solar"
+smart = 
 
 [main.provider]
 login = "iniciar sessió"
@@ -220,6 +405,8 @@ logout = "tancar sessió"
 
 [main.targetCharge]
 activate = "Activar"
+co2Limit = "Límit de CO₂ del {co2}"
+costLimitIgnore = "El {limit} configurat serà ignorat durant aquest període."
 descriptionEnergy = "Fins quan s'ha d'haver carregat {targetEnergy} el vehicle?"
 descriptionSoc = "Fins quan s'ha d'haver carregat el vehicle al {targetSoc}?"
 inactiveLabel = "hora objectiu"
@@ -227,6 +414,7 @@ planDuration = "Temps de càrrega"
 planPeriodLabel = "Període"
 planPeriodValue = "de {start} a {end}"
 planUnknown = "encara no se sap"
+priceLimit = "límit en el preu de {price}"
 setTargetTime = "cap"
 targetIsInThePast = "Tria un temps en el futur, Marty."
 targetIsTooFarInTheFuture = "Ajustarém el pla quan sapiguém més sobre el futur."
@@ -234,6 +422,16 @@ title = "hora objectiu"
 today = "avui"
 tomorrow = "matí"
 update = "Actualitzar"
+onlyInPvMode = 
+preview = 
+vehicleCapacityRequired = 
+remove = 
+notReachableInTime = 
+nextPlan = 
+vehicleCapacityDocs = 
+targetIsAboveVehicleLimit = 
+currentPlan = 
+targetIsAboveLimit = 
 
 [main.targetChargePlan]
 chargeDuration = "Temps de càrrega"
@@ -256,6 +454,9 @@ none = "Cap vehicle"
 targetSoc = "Objectiu de càrrega"
 unknown = "Vehicle convidat"
 vehicleSoc = "Nivell de càrrega"
+temp = 
+notReachable = 
+tempLimit = 
 
 [main.vehicleSoc]
 charging = "carregant"
@@ -281,16 +482,43 @@ targetChargePlanned = "La càrrega objectiu comença a {time}."
 targetChargeWaitForVehicle = "Càrrega objectiu llesta. Esperar vehicle."
 vehicleLimitReached = "Límit de vehicle {soc} assolit."
 waitForVehicle = "A punt per carregar. Esperant vehicle."
+unknown = 
+finished = 
+vehicleLimit = 
+cheapEnergyNextStart = 
+batteryBoost = 
+awaitingAuthorization = 
+disconnectRequired = 
+cheapEnergySet = 
+cleanEnergyNextStart = 
+cleanEnergySet = 
+welcome = 
 
 [notifications]
 dismissAll = "Eliminar notificacions"
 modalTitle = "Notificacions"
+logs = 
 
 [offline]
 message = "No connectat amb servidor."
 reload = "Actualitzar?"
+restart = 
+restartNeeded = 
+configurationError = 
+restarting = 
 
 [passwordModal]
+updatePassword = 
+labelRepeat = 
+labelNew = 
+description = 
+titleNew = 
+empty = 
+noMatch = 
+labelCurrent = 
+newPassword = 
+titleUpdate = 
+error = 
 
 [session]
 cancel = "Cancelar"
@@ -318,6 +546,14 @@ reallyDelete = "Realment vols esborrar aquesta sessió?"
 solar = "Solar"
 title = "Sessions de càrrega"
 vehicle = "Vehicle"
+total = 
+csvMonth = 
+csvTotal = 
+showIndividualEntries = 
+overview = 
+noData = 
+chargeDuration = 
+avgPower = 
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -329,13 +565,24 @@ meterstart = "Mesura inicial (kWh)"
 meterstop = "Mesura final (kWh)"
 odometer = "Kilometratge (km)"
 vehicle = "Vehicle"
+chargeduration = 
+co2perkwh = 
+priceperkwh = 
+solarpercentage = 
+price = 
 
 [sessions.filter]
+allLoadpoints = 
+filter = 
+allVehicles = 
 
 [settings]
 title = "Configuració"
 
 [settings.fullscreen]
+exit = 
+enter = 
+label = 
 
 [settings.hiddenFeatures]
 label = "En proves"
@@ -374,6 +621,11 @@ modalTitle = "Xarxa intel·ligent de càrrega"
 none = "cap"
 priceLabel = "Preu de l'energia"
 priceLimit = "Límit de preu"
+saved = 
+batteryDescription = 
+cleanTitle = 
+applyToAll = 
+cheapTitle = 
 
 [startupError]
 configFile = "Arxiu de configuració utilitzat:"
@@ -391,3 +643,138 @@ title = "Error a l'inici"
 cancel = "Cancel·lar"
 template = "Fabricant"
 test = "Prova"
+
+
+[config.influx]
+labelUser = 
+labelCheckInsecure = 
+labelBucket = 
+labelToken = 
+title = 
+v1Support = 
+v2Support = 
+labelUrl = 
+labelDatabase = 
+descriptionToken = 
+labelInsecure = 
+labelPassword = 
+labelOrg = 
+description = 
+
+[config.network]
+labelPort = 
+descriptionSchema = 
+title = 
+descriptionPort = 
+descriptionHost = 
+labelSchema = 
+labelHost = 
+
+[sessions.chartTitle]
+byGroupVehicle = 
+avgCo2ByGroup = 
+energy = 
+energySubTotal = 
+energyGroupedByGroup = 
+historyCo2Sub = 
+historyCo2 = 
+groupedPriceByGroup = 
+groupedCo2ByGroup = 
+historyPrice = 
+solar = 
+solarByGroup = 
+historyPriceSub = 
+avgPriceByGroup = 
+energySubSolar = 
+byGroupLoadpoint = 
+energyGrouped = 
+
+[config.hems]
+description = 
+title = 
+
+[config.messaging]
+description = 
+title = 
+
+[config.mqtt]
+labelUser = 
+labelPassword = 
+labelTopic = 
+publishing = 
+title = 
+labelInsecure = 
+description = 
+authentication = 
+descriptionClientId = 
+labelCheckInsecure = 
+descriptionTopic = 
+labelBroker = 
+labelClientCert = 
+labelCaCert = 
+labelClientId = 
+labelClientKey = 
+
+[config.options.boolean]
+no = 
+yes = 
+
+[config.sponsor]
+title = 
+addToken = 
+labelToken = 
+error = 
+description = 
+descriptionToken = 
+changeToken = 
+
+[main.loadpointSettings.batteryBoost]
+description = 
+once = 
+label = 
+mode = 
+
+[sessions.type]
+solar = 
+price = 
+co2 = 
+
+[sessions.period]
+month = 
+year = 
+total = 
+
+[sessions.group]
+self = 
+co2 = 
+grid = 
+price = 
+
+[sessions.groupBy]
+loadpoint = 
+vehicle = 
+none = 
+
+[config.circuits]
+description = 
+title = 
+
+[config.control]
+descriptionInterval = 
+title = 
+labelInterval = 
+description = 
+labelResidualPower = 
+descriptionResidualPower = 
+
+[config.eebus]
+description = 
+title = 
+
+[config.modbusproxy]
+description = 
+title = 
+
+[config.tariffs]
+description = 
+title = 

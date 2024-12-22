@@ -12,48 +12,140 @@ legendTopAutostart = "автоматично стартиране"
 legendTopName = "зареждане използвайки батерия"
 legendTopSubline = "без прекъсвания"
 modalTitle = "Настройки на батерия"
+control = 
+discharge = 
+usageTab = 
+gridChargeTab = 
 
 [batterySettings.bufferStart]
 full = "при почти заредена батерия"
 low = "при донякъде заредена батерия"
 medium = "при наполовина заредена батерия"
 never = "само при наличие на излишък"
+above = 
 
 [config]
 
 [config.battery]
+titleAdd = 
+titleEdit = 
 
 [config.deviceValue]
+phaseVoltages = 
+power = 
+socLimit = 
+configured = 
+currency = 
+co2 = 
+controllable = 
+range = 
+phaseCurrents = 
+chargedEnergy = 
+soc = 
+broker = 
+currentRange = 
+energy = 
+current = 
+gridPrice = 
+chargeStatusE = 
+feedinPrice = 
+chargeStatusF = 
+chargeStatusA = 
+chargeStatus = 
+capacity = 
+bucket = 
+chargeStatusB = 
+chargeStatusC = 
+enabled = 
+hemsType = 
+odometer = 
+phasePowers = 
+no = 
+org = 
+temp = 
+yes = 
+url = 
+topic = 
+powerRange = 
 
 [config.form]
 example = "Пример"
 optional = "незадължителен"
 
 [config.general]
+showAdvancedSettings = 
+docsLink = 
+telemetry = 
+hideAdvancedSettings = 
+password = 
+on = 
+save = 
+off = 
+remove = 
+title = 
+readFromFile = 
+cancel = 
+experimental = 
 
 [config.grid]
+titleEdit = 
+title = 
+titleAdd = 
 
 [config.main]
 addVehicle = "Добави автомобил"
 edit = "редактирай"
 title = "Конфигурация"
 vehicles = "Моите Автомобили"
+unconfigured = 
+addPvBattery = 
+yaml = 
+configured = 
+addLoadpoint = 
 
 [config.meter]
+cancel = 
+validateSave = 
+save = 
+template = 
+titleChoice = 
+delete = 
 
 [config.options]
 
 [config.options.endianness]
+little = 
+big = 
 
 [config.options.schema]
+http = 
+https = 
 
 [config.pv]
+titleAdd = 
+titleEdit = 
 
 [config.section]
+general = 
+vehicles = 
+grid = 
+integrations = 
+meter = 
+system = 
+loadpoints = 
 
 [config.system]
+logs = 
+restartRequiredDescription = 
+restartRequiredMessage = 
+restartingDescription = 
+restartingMessage = 
+restart = 
 
 [config.title]
+label = 
+title = 
+description = 
 
 [config.validation]
 failed = "неуспешен"
@@ -105,8 +197,19 @@ savingsTitle = "Спестявате"
 savingsTotalEnergy = "{total} kWh заредени"
 since = "от {since}"
 tabTitle = "Моите данни"
+co2Saved = 
+co2Title = 
+referenceGrid = 
+configurePriceCo2 = 
+periodLabel = 
+moneySaved = 
+referenceLabel = 
 
 [footer.savings.period]
+365d = 
+30d = 
+total = 
+thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "Станете Спонсор"
@@ -117,6 +220,11 @@ supportUs = "Нашата мисия е да направим слънчеват
 thanks = "Благодарим Ви, {sponsor}! С ваша помощ продължаваме да развиваме evcc."
 titleNoSponsor = "Подкрепете ни"
 titleSponsor = "Вие сте спонсор"
+becomeSponsorExtended = 
+victron = 
+titleTrial = 
+titleVictron = 
+trial = 
 
 [footer.telemetry]
 optIn = "Искам да споделям моите данни."
@@ -137,84 +245,529 @@ modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
 [header]
+blog = 
+github = 
+login = 
+about = 
+logout = 
+docs = 
+nativeSettings = 
+sessions = 
+needHelp = 
 
 [help]
+issueDescription = 
+modalTitle = 
+restartButton = 
+issueButton = 
+restartDescription = 
+documentationButton = 
+logsDescription = 
+logsButton = 
+secondaryActions = 
+discussionsButton = 
+primaryActions = 
 
 [help.restart]
+description = 
+modalTitle = 
+cancel = 
+disclaimer = 
+confirm = 
 
 [log]
+levelLabel = 
+search = 
+update = 
+areas = 
+nAreas = 
+noResults = 
+selectAll = 
+title = 
+download = 
+showAll = 
+areaLabel = 
 
 [loginModal]
+title = 
+reset = 
+password = 
+iframeIssue = 
+login = 
+cancel = 
+error = 
+iframeHint = 
+invalid = 
 
 [main]
+vehicles = 
 
 [main.chargingPlan]
+unsavedChanges = 
+time = 
+title = 
+modalTitle = 
+arrivalTab = 
+day = 
+addRepeatingPlan = 
+repeating = 
+planNumber = 
+repeatingPlans = 
+selectAll = 
+update = 
+departureTab = 
+active = 
+weekdays = 
+none = 
+goal = 
+titleTargetCharge = 
+titleMinSoc = 
+remove = 
 
 [main.energyflow]
+batteryDischarge = 
+noEnergy = 
+batteryHold = 
+loadpoints = 
+battery = 
+batteryCharge = 
+pvExport = 
+pvProduction = 
+homePower = 
+selfConsumption = 
+gridImport = 
+batteryTooltip = 
+cleanBatteryGridCharge = 
+cheapBatteryGridCharge = 
 
 [main.heatingStatus]
+waitForVehicle = 
+charging = 
 
 [main.loadpoint]
+remoteDisabledHard = 
+co2 = 
+power = 
+duration = 
+remaining = 
+avgPrice = 
+solar = 
+charged = 
+fallbackName = 
+price = 
+remoteDisabledSoft = 
 
 [main.loadpointSettings]
+batteryUsage = 
+title = 
+onlyForSocBasedCharging = 
+currents = 
+smartCostCheap = 
+disclaimerHint = 
+smartCostClean = 
+vehicle = 
+default = 
 
 [main.loadpointSettings.limitSoc]
+label = 
+description = 
 
 [main.loadpointSettings.maxCurrent]
+label = 
 
 [main.loadpointSettings.minCurrent]
+label = 
 
 [main.loadpointSettings.minSoc]
+label = 
+description = 
 
 [main.loadpointSettings.phasesConfigured]
+label = 
+phases_1 = 
+phases_0 = 
+no1p3pSupport = 
+phases_1_hint = 
+phases_3 = 
+phases_3_hint = 
 
 [main.mode]
+smart = 
+minpv = 
+off = 
+pv = 
+now = 
 
 [main.provider]
+login = 
+logout = 
 
 [main.targetCharge]
+planPeriodValue = 
+planUnknown = 
+tomorrow = 
+planPeriodLabel = 
+priceLimit = 
+targetIsTooFarInTheFuture = 
+activate = 
+costLimitIgnore = 
+currentPlan = 
+descriptionSoc = 
+nextPlan = 
+targetIsAboveVehicleLimit = 
+targetIsInThePast = 
+vehicleCapacityRequired = 
+remove = 
+inactiveLabel = 
+notReachableInTime = 
+onlyInPvMode = 
+co2Limit = 
+today = 
+targetIsAboveLimit = 
+planDuration = 
+title = 
+preview = 
+vehicleCapacityDocs = 
+descriptionEnergy = 
+setTargetTime = 
+update = 
 
 [main.targetChargePlan]
+priceLabel = 
+chargeDuration = 
+timeRange = 
+co2Label = 
+unknownPrice = 
 
 [main.targetEnergy]
+label = 
+noLimit = 
 
 [main.vehicle]
+changeVehicle = 
+fallbackName = 
+detectionActive = 
+targetSoc = 
+tempLimit = 
+none = 
+addVehicle = 
+temp = 
+unknown = 
+notReachable = 
+vehicleSoc = 
+moreActions = 
 
 [main.vehicleSoc]
+connected = 
+charging = 
+ready = 
+disconnected = 
+vehicleLimit = 
 
 [main.vehicleStatus]
+charging = 
+disconnected = 
+targetChargeActive = 
+connected = 
+finished = 
+disconnectRequired = 
+pvDisable = 
+climating = 
+cleanEnergyCharging = 
+pvEnable = 
+scale1p = 
+targetChargeWaitForVehicle = 
+minCharge = 
+batteryBoost = 
+waitForVehicle = 
+cheapEnergyCharging = 
+awaitingAuthorization = 
+cleanEnergyNextStart = 
+cheapEnergyNextStart = 
+cheapEnergySet = 
+cleanEnergySet = 
+scale3p = 
+vehicleLimit = 
+vehicleLimitReached = 
+targetChargePlanned = 
+unknown = 
+welcome = 
 
 [notifications]
+logs = 
+dismissAll = 
+modalTitle = 
 
 [offline]
+message = 
+restart = 
+configurationError = 
+restartNeeded = 
+restarting = 
 
 [passwordModal]
+labelRepeat = 
+titleNew = 
+description = 
+titleUpdate = 
+newPassword = 
+error = 
+empty = 
+labelCurrent = 
+labelNew = 
+updatePassword = 
+noMatch = 
 
 [session]
+finished = 
+started = 
+meterstart = 
+odometer = 
+meterstop = 
+price = 
+title = 
+co2 = 
+meter = 
+delete = 
+cancel = 
+date = 
 
 [sessions]
+energy = 
+showIndividualEntries = 
+overview = 
+avgPower = 
+downloadCsv = 
+avgPrice = 
+loadpoint = 
+total = 
+csvTotal = 
+solar = 
+reallyDelete = 
+title = 
+noData = 
+chargeDuration = 
+price = 
+csvMonth = 
+co2 = 
+vehicle = 
+date = 
 
 [sessions.csv]
+created = 
+vehicle = 
+identifier = 
+finished = 
+meterstop = 
+priceperkwh = 
+chargedenergy = 
+price = 
+chargeduration = 
+odometer = 
+meterstart = 
+loadpoint = 
+co2perkwh = 
+solarpercentage = 
 
 [sessions.filter]
+allLoadpoints = 
+allVehicles = 
+filter = 
 
 [settings]
+title = 
 
 [settings.fullscreen]
+label = 
+exit = 
+enter = 
 
 [settings.hiddenFeatures]
+label = 
+value = 
 
 [settings.language]
+auto = 
+label = 
 
 [settings.sponsorToken]
+expires = 
+hint = 
+getNew = 
 
 [settings.telemetry]
+label = 
 
 [settings.theme]
+label = 
+light = 
+dark = 
+auto = 
 
 [settings.unit]
+mi = 
+label = 
+km = 
 
 [smartCost]
 activeHours = "{charging} от {total}"
+activeHoursLabel = 
+batteryDescription = 
+cheapTitle = 
+cleanTitle = 
+co2Limit = 
+loadpointDescription = 
+modalTitle = 
+priceLimit = 
+priceLabel = 
+none = 
+co2Label = 
+saved = 
+applyToAll = 
 
 [startupError]
+fixAndRestart = 
+configFile = 
+discussions = 
+lineError = 
+lineErrorLink = 
+configuration = 
+title = 
+restartButton = 
+description = 
+hint = 
+
+
+[main.loadpointSettings.batteryBoost]
+description = 
+once = 
+label = 
+mode = 
+
+[sessions.chartTitle]
+historyPriceSub = 
+avgPriceByGroup = 
+avgCo2ByGroup = 
+energy = 
+energyGrouped = 
+energyGroupedByGroup = 
+byGroupVehicle = 
+energySubTotal = 
+groupedCo2ByGroup = 
+historyCo2 = 
+historyCo2Sub = 
+solar = 
+historyPrice = 
+groupedPriceByGroup = 
+byGroupLoadpoint = 
+solarByGroup = 
+energySubSolar = 
+
+[sessions.groupBy]
+vehicle = 
+none = 
+loadpoint = 
+
+[sessions.period]
+month = 
+total = 
+year = 
+
+[config.hems]
+description = 
+title = 
+
+[config.influx]
+descriptionToken = 
+labelBucket = 
+description = 
+labelToken = 
+title = 
+labelCheckInsecure = 
+labelDatabase = 
+labelPassword = 
+v1Support = 
+labelInsecure = 
+labelUrl = 
+v2Support = 
+labelUser = 
+labelOrg = 
+
+[config.modbusproxy]
+description = 
+title = 
+
+[config.mqtt]
+description = 
+labelClientCert = 
+labelCaCert = 
+labelPassword = 
+labelClientKey = 
+labelUser = 
+labelTopic = 
+labelInsecure = 
+labelClientId = 
+labelCheckInsecure = 
+descriptionClientId = 
+descriptionTopic = 
+labelBroker = 
+publishing = 
+authentication = 
+title = 
+
+[config.network]
+descriptionHost = 
+descriptionPort = 
+title = 
+labelSchema = 
+labelHost = 
+descriptionSchema = 
+labelPort = 
+
+[config.options.boolean]
+yes = 
+no = 
+
+[config.sponsor]
+changeToken = 
+addToken = 
+description = 
+descriptionToken = 
+labelToken = 
+title = 
+error = 
+
+[sessions.type]
+co2 = 
+solar = 
+price = 
+
+[sessions.group]
+self = 
+co2 = 
+price = 
+grid = 
+
+[config.control]
+description = 
+descriptionInterval = 
+descriptionResidualPower = 
+labelInterval = 
+title = 
+labelResidualPower = 
+
+[config.tariffs]
+title = 
+description = 
+
+[config.messaging]
+description = 
+title = 
+
+[config.circuits]
+title = 
+description = 
+
+[config.eebus]
+title = 
+description = 

@@ -32,6 +32,7 @@ titleEdit = "Редагувати батарею"
 
 [config.circuits]
 title = "Керування навантаженням"
+description = 
 
 [config.control]
 description = "Зазвичай стандартні значення підходять. Змінюйте їх, лише якщо знаєте, що робите."
@@ -39,6 +40,7 @@ descriptionInterval = "Цикл оновлення контуру керуван
 labelInterval = "Інтервал оновлення"
 labelResidualPower = "Залишкова потужність"
 title = "Контрольна поведінка"
+descriptionResidualPower = 
 
 [config.deviceValue]
 broker = "Брокер"
@@ -69,9 +71,18 @@ soc = "SoC"
 socLimit = "Ліміт"
 url = "URL"
 yes = "так"
+org = 
+topic = 
+feedinPrice = 
+co2 = 
+gridPrice = 
+powerRange = 
+temp = 
+hemsType = 
 
 [config.eebus]
 title = "EEBus"
+description = 
 
 [config.form]
 example = "Наприклад"
@@ -86,13 +97,20 @@ off = "вимкнено"
 save = "зберегти"
 showAdvancedSettings = "Показати розширені налаштування"
 telemetry = "Телеметрія"
+password = 
+on = 
+title = 
+readFromFile = 
+remove = 
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
 titleEdit = "Редагувати лічильник електромережі"
+title = 
 
 [config.hems]
 title = "HEMS"
+description = 
 
 [config.influx]
 labelBucket = "Bucket"
@@ -100,6 +118,15 @@ labelDatabase = "База даних"
 labelToken = "API Token"
 labelUrl = "URL"
 title = "InfluxDB"
+labelCheckInsecure = 
+labelInsecure = 
+labelUser = 
+description = 
+labelOrg = 
+descriptionToken = 
+labelPassword = 
+v1Support = 
+v2Support = 
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
@@ -110,6 +137,7 @@ title = "Конфігурація"
 unconfigured = "не налаштовано"
 vehicles = "Мій транспорт"
 yaml = "Налаштовано в evcc.yaml. Не можна редагувати в інтерфейсі користувача."
+configured = 
 
 [config.messaging]
 description = "Отримувати повідомлення про ваші сеанси зарядки"
@@ -130,6 +158,20 @@ title = "Modbus Proxy"
 [config.mqtt]
 labelBroker = "Broker"
 title = "MQTT"
+description = 
+labelCaCert = 
+labelUser = 
+descriptionClientId = 
+labelPassword = 
+labelInsecure = 
+authentication = 
+labelClientId = 
+labelCheckInsecure = 
+descriptionTopic = 
+labelTopic = 
+publishing = 
+labelClientKey = 
+labelClientCert = 
 
 [config.options]
 
@@ -146,14 +188,30 @@ titleAdd = "Додати сонячний лічильник"
 titleEdit = "Редагувати сонячний лічильник"
 
 [config.section]
+loadpoints = 
+integrations = 
+grid = 
+system = 
+vehicles = 
+general = 
+meter = 
 
 [config.site]
 cancel = "Скасувати"
 save = "Зберегти"
 
 [config.system]
+restart = 
+restartRequiredMessage = 
+restartRequiredDescription = 
+logs = 
+restartingMessage = 
+restartingDescription = 
 
 [config.title]
+description = 
+title = 
+label = 
 
 [config.validation]
 failed = "не вдалося"
@@ -207,11 +265,17 @@ savingsTitle = "Економія"
 savingsTotalEnergy = "{total} кВт/год заряджено"
 since = "оскільки {since}"
 tabTitle = "Мої дані"
+co2Saved = 
+configurePriceCo2 = 
+moneySaved = 
+referenceLabel = 
+referenceGrid = 
 
 [footer.savings.period]
 30d = "за останні 30 днів"
 365d = "за останні 365 днів"
 total = "з самого початку"
+thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "Стати спонсором"
@@ -222,6 +286,11 @@ supportUs = "Наша місія — зробити заряджання від 
 thanks = "Дякуємо, {sponsor}! Ваш внесок допомагає розвивати evcc далі."
 titleNoSponsor = "Підтримайте нас"
 titleSponsor = "Ви спонсор"
+becomeSponsorExtended = 
+titleTrial = 
+trial = 
+victron = 
+titleVictron = 
 
 [footer.telemetry]
 optIn = "Я хочу внести свої дані."
@@ -252,6 +321,7 @@ nativeSettings = "Змінити сервер"
 needHelp = "Потрібна Допомога?"
 sessions = "Сеанси Зарядки"
 settings = "Налаштування"
+logout = 
 
 [help]
 discussionsButton = "Обговорення GitHub"
@@ -263,6 +333,8 @@ primaryActions = "Щось не працює так, як повинно? Це �
 restartButton = "Перезапустити"
 restartDescription = "Спробували вимкнути і знову увімкнути?"
 secondaryActions = "Все ще не можете вирішити свою проблему? Ось кілька жорсткіших варіантів."
+logsButton = 
+logsDescription = 
 
 [help.restart]
 cancel = "Скасувати"
@@ -272,8 +344,28 @@ disclaimer = "Примітка: evcc завершить роботу і покл
 modalTitle = "Ви впевнені, що хочете перезапустити?"
 
 [log]
+selectAll = 
+nAreas = 
+title = 
+update = 
+levelLabel = 
+showAll = 
+search = 
+areas = 
+noResults = 
+areaLabel = 
+download = 
 
 [loginModal]
+reset = 
+error = 
+cancel = 
+login = 
+title = 
+password = 
+iframeHint = 
+iframeIssue = 
+invalid = 
 
 [main]
 vehicles = "Паркування"
@@ -292,6 +384,13 @@ titleMinSoc = "Мінімальна плата"
 titleTargetCharge = "Від'їзд"
 unsavedChanges = "Є незбережені зміни. Застосувати зараз?"
 update = "Застосувати"
+planNumber = 
+repeating = 
+repeatingPlans = 
+selectAll = 
+weekdays = 
+addRepeatingPlan = 
+goal = 
 
 [main.energyflow]
 battery = "Батарея"
@@ -305,8 +404,13 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
+cheapBatteryGridCharge = 
+batteryHold = 
+cleanBatteryGridCharge = 
 
 [main.heatingStatus]
+waitForVehicle = 
+charging = 
 
 [main.loadpoint]
 avgPrice = "⌀ Ціна"
@@ -317,6 +421,9 @@ fallbackName = "Точка зарядки"
 power = "Потужність"
 price = "Вартість"
 solar = "Сонячна"
+remoteDisabledHard = 
+remaining = 
+remoteDisabledSoft = 
 
 [main.loadpointSettings]
 currents = "Струм Зарядки"
@@ -325,6 +432,9 @@ disclaimerHint = "Примітка:"
 onlyForSocBasedCharging = "Ці параметри доступні лише для автомобілів із відомим рівнем заряду."
 title = "Налаштування {0}"
 vehicle = "Транспортний засіб"
+batteryUsage = 
+smartCostClean = 
+smartCostCheap = 
 
 [main.loadpointSettings.limitSoc]
 description = "Ліміт заряджання, який використовується, коли цей автомобіль під’єднано."
@@ -347,12 +457,14 @@ phases_1 = "1 фаза"
 phases_1_hint = "({min} до {max})"
 phases_3 = "3 фаза"
 phases_3_hint = "({min} до {max})"
+no1p3pSupport = 
 
 [main.mode]
 minpv = "Мін+Сонце"
 now = "Швидко"
 off = "Вимк."
 pv = "Сонячна"
+smart = 
 
 [main.provider]
 login = "увійти"
@@ -360,6 +472,8 @@ logout = "вийти"
 
 [main.targetCharge]
 activate = "Активувати"
+co2Limit = "Ліміт CO₂ для {co2}"
+costLimitIgnore = "Налаштований {ліміт} буде ігноруватися протягом цього періоду."
 currentPlan = "Активний план"
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}?"
 descriptionEnergy = "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?"
@@ -371,6 +485,7 @@ planDuration = "Час зарядки"
 planPeriodLabel = "Період"
 planPeriodValue = "{start} до {end}"
 planUnknown = "ще не відомо"
+priceLimit = "ліміт ціни {price}"
 setTargetTime = "жодного"
 targetIsInThePast = "Виберіть час у майбутньому."
 targetIsTooFarInTheFuture = "Ми скоригуємо план, як тільки дізнаємося більше про майбутнє."
@@ -379,6 +494,13 @@ today = "сьогодні"
 tomorrow = "завтра"
 update = "Оновлення"
 vehicleCapacityDocs = "Дізнайтеся, як це налаштувати."
+remove = 
+preview = 
+targetIsAboveLimit = 
+nextPlan = 
+notReachableInTime = 
+targetIsAboveVehicleLimit = 
+vehicleCapacityRequired = 
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
@@ -430,16 +552,42 @@ targetChargeWaitForVehicle = "Запланований заряд готовий
 unknown = ""
 vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
+batteryBoost = 
+cheapEnergyNextStart = 
+cleanEnergyNextStart = 
+cleanEnergySet = 
+awaitingAuthorization = 
+cheapEnergySet = 
+vehicleLimit = 
+disconnectRequired = 
+welcome = 
+finished = 
 
 [notifications]
 dismissAll = "Відхилити все"
 modalTitle = "Сповіщення"
+logs = 
 
 [offline]
 message = "Не підключено до сервера."
 reload = "Перезавантажити?"
+restartNeeded = 
+restart = 
+restarting = 
+configurationError = 
 
 [passwordModal]
+titleUpdate = 
+labelNew = 
+titleNew = 
+error = 
+newPassword = 
+updatePassword = 
+noMatch = 
+empty = 
+description = 
+labelRepeat = 
+labelCurrent = 
 
 [session]
 cancel = "Скасувати"
@@ -474,9 +622,26 @@ solar = "Сонячна"
 title = "Сеанси зарядки"
 total = "Всього"
 vehicle = "Транспортний засіб"
+showIndividualEntries = 
 
 [sessions.chartTitle]
 solar = "Сонячна частка за рік"
+avgCo2ByGroup = 
+energyGroupedByGroup = 
+energySubTotal = 
+solarByGroup = 
+energySubSolar = 
+byGroupVehicle = 
+byGroupLoadpoint = 
+energyGrouped = 
+avgPriceByGroup = 
+energy = 
+groupedCo2ByGroup = 
+historyPriceSub = 
+groupedPriceByGroup = 
+historyCo2Sub = 
+historyPrice = 
+historyCo2 = 
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
@@ -488,6 +653,11 @@ meterstart = "Лічильник пуску (кВт/год)"
 meterstop = "Лічильник зупинки (кВт/год)"
 odometer = "Пробіг (км)"
 vehicle = "Транспортний засіб"
+solarpercentage = 
+priceperkwh = 
+co2perkwh = 
+price = 
+chargeduration = 
 
 [sessions.filter]
 allLoadpoints = "всі точки зарядки"
@@ -500,6 +670,7 @@ title = "Інтерфейс користувача"
 [settings.fullscreen]
 exit = "Вийти з повноекранного режиму"
 label = "Повноекранний"
+enter = 
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -545,6 +716,10 @@ modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
+cheapTitle = 
+cleanTitle = 
+saved = 
+batteryDescription = 
 
 [startupError]
 configFile = "Використаний файл конфігурації:"
@@ -562,3 +737,57 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[main.loadpointSettings.batteryBoost]
+label = 
+description = 
+mode = 
+once = 
+
+[config.network]
+labelPort = 
+labelSchema = 
+descriptionSchema = 
+title = 
+labelHost = 
+descriptionHost = 
+descriptionPort = 
+
+[config.sponsor]
+descriptionToken = 
+labelToken = 
+changeToken = 
+description = 
+error = 
+addToken = 
+title = 
+
+[config.tariffs]
+title = 
+description = 
+
+[config.options.boolean]
+yes = 
+no = 
+
+[sessions.period]
+year = 
+total = 
+month = 
+
+[sessions.groupBy]
+none = 
+loadpoint = 
+vehicle = 
+
+[sessions.group]
+grid = 
+co2 = 
+self = 
+price = 
+
+[sessions.type]
+co2 = 
+solar = 
+price = 

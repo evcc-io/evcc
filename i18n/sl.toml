@@ -410,6 +410,12 @@ titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
 unsavedChanges = "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?"
 update = "Uporabi"
+repeatingPlans = 
+selectAll = 
+planNumber = 
+addRepeatingPlan = 
+repeating = 
+weekdays = 
 
 [main.energyflow]
 battery = "Baterija"
@@ -499,6 +505,8 @@ logout = "odjava"
 
 [main.targetCharge]
 activate = "Aktiviraj"
+co2Limit = "Omejitev CO₂ {co2}"
+costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
 currentPlan = "Aktivni načrt"
 descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?"
@@ -511,6 +519,7 @@ planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "še ni znano"
 preview = "Predogled načrta"
+priceLimit = "cenovna omejitev {price}"
 remove = "Odstrani"
 setTargetTime = "brez"
 targetIsAboveLimit = "Konfigurirana omejitev polnjenja {limit} se ne bo upoštevala v tem obdobju."
@@ -523,6 +532,7 @@ tomorrow = "jutri"
 update = "Posodobitev"
 vehicleCapacityDocs = "Naučite se konfigurirati."
 vehicleCapacityRequired = "Za oceno časa polnjenja je potrebna kapaciteta baterije vozila."
+nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"
