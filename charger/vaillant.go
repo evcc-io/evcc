@@ -26,16 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// Vaillant charger implementation
-type Vaillant struct {
-	*embed
-	_mode    int64
-	phases   int
-	get      func() (int64, error)
-	set      func(int64) error
-	maxPower func(int64) error
-}
-
 func init() {
 	registry.AddCtx("vaillant", NewVaillantFromConfig)
 }
