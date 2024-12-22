@@ -40,8 +40,6 @@ func init() {
 	registry.AddCtx("vaillant", NewVaillantFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
-
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
