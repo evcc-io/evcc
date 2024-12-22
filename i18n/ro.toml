@@ -28,6 +28,10 @@ never = "numai cand exista surplus suficient"
 titleAdd = "adăugați contorul de baterie"
 titleEdit = "Editați contorul de baterie."
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
 capacity = "Capacitatea"
 chargeStatus = "Stare"
@@ -44,6 +48,8 @@ range = "Autonomie"
 soc = "Stare de încărcare"
 socLimit = "Limită"
 
+[config.eebus]
+
 [config.form]
 example = "Exemplu"
 optional = "optional"
@@ -53,6 +59,10 @@ optional = "optional"
 [config.grid]
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
+
+[config.hems]
+
+[config.influx]
 
 [config.main]
 addLoadpoint = "Adăugați punct de încărcare"
@@ -64,6 +74,8 @@ unconfigured = "neconfigurat"
 vehicles = "Masinile mele"
 yaml = "Configurat în evcc.yaml. Nu poate fi editat în interfața "
 
+[config.messaging]
+
 [config.meter]
 cancel = "Anulare"
 delete = "șterge"
@@ -72,7 +84,15 @@ template = "Producător"
 titleChoice = "Ce vrei să adaugi?"
 validateSave = "Valideaza si salveaza"
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -88,7 +108,11 @@ titleEdit = "Editeaza SmartMeter"
 cancel = "Anuleaza"
 save = "Salveaza"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -274,6 +298,8 @@ onlyForSocBasedCharging = "Aceste optiuni sunt active doar pentru masini carora 
 title = "Setări {0}"
 vehicle = "Vehicul"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 description = "Limita de incarcare care e folosita cand e conectat a aceasta masina."
 label = "Limita default"
@@ -309,6 +335,8 @@ logout = "deconectează"
 
 [main.targetCharge]
 activate = "Activează"
+co2Limit = "limita CO₂ de {co2}"
+costLimitIgnore = "{limit} configurata de va fi ingnorata in acest timp."
 currentPlan = "Plan activ"
 descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?"
 descriptionSoc = "Când ar trebui vehiculul să fie încărcat la {targetSoc}?"
@@ -321,6 +349,7 @@ planPeriodLabel = "Perioada"
 planPeriodValue = "{start} la {end}"
 planUnknown = "necunoscut"
 preview = "Rezuma planul"
+priceLimit = "pretul limita de {price}"
 remove = "Elimina"
 setTargetTime = "nimic"
 targetIsAboveLimit = "Limita configurata - {limit}, va fi ignorata in timpul incarcarii."
@@ -427,6 +456,8 @@ title = "Sesiuni încărcare"
 total = "Total"
 vehicle = "Vehicul"
 
+[sessions.chartTitle]
+
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
 created = "Creat"
@@ -442,6 +473,14 @@ vehicle = "Vehicul"
 allLoadpoints = "toate punctele de incarcare"
 allVehicles = "toate masinile"
 filter = "Filtru"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Configuratie"

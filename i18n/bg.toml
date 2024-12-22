@@ -23,7 +23,13 @@ never = "само при наличие на излишък"
 
 [config.battery]
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
+
+[config.eebus]
 
 [config.form]
 example = "Пример"
@@ -33,15 +39,29 @@ optional = "незадължителен"
 
 [config.grid]
 
+[config.hems]
+
+[config.influx]
+
 [config.main]
 addVehicle = "Добави автомобил"
 edit = "редактирай"
 title = "Конфигурация"
 vehicles = "Моите Автомобили"
 
+[config.messaging]
+
 [config.meter]
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -51,7 +71,11 @@ vehicles = "Моите Автомобили"
 
 [config.section]
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -158,6 +182,8 @@ modalUpdateStatusStart = "Инсталацията започна:"
 
 [main.loadpointSettings]
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
@@ -194,9 +220,19 @@ modalUpdateStatusStart = "Инсталацията започна:"
 
 [sessions]
 
+[sessions.chartTitle]
+
 [sessions.csv]
 
 [sessions.filter]
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 
