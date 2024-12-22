@@ -37,11 +37,11 @@ title = "Zarządzanie obciążeniem"
 
 [config.control]
 description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
+descriptionInterval = ""
+descriptionResidualPower = ""
 labelInterval = "Interwał aktualizacji"
 labelResidualPower = "Moc resztkowa"
-descriptionInterval = 
-descriptionResidualPower = 
-title = 
+title = ""
 
 [config.deviceValue]
 broker = "Broker"
@@ -51,39 +51,39 @@ chargeStatus = "Status"
 chargeStatusA = "nie połączony"
 chargeStatusB = "połączony"
 chargeStatusC = "ładowanie"
+chargeStatusE = ""
 chargeStatusF = "błąd"
 chargedEnergy = "Naładowany"
+co2 = ""
 configured = "Skonfigurowany"
+controllable = ""
 currency = "Waluta"
 current = "Prąd"
+currentRange = ""
 enabled = "Włączony"
 energy = "Energia"
+feedinPrice = ""
+gridPrice = ""
 hemsType = "System"
+no = ""
 odometer = "Drogomierz"
+org = ""
 phaseCurrents = "Prąd L1, L2, L3"
 phasePowers = "Moc L1, L2, L3"
 phaseVoltages = "Napięcie L1, L2, L3"
 power = "Moc"
+powerRange = ""
 range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
+temp = ""
+topic = ""
 url = "URL"
-controllable = 
-chargeStatusE = 
-co2 = 
-org = 
-yes = 
-gridPrice = 
-no = 
-currentRange = 
-feedinPrice = 
-temp = 
-powerRange = 
-topic = 
+yes = ""
 
 [config.eebus]
+description = ""
 title = "EEBus"
-description = 
 
 [config.form]
 example = "Przykład"
@@ -91,54 +91,58 @@ optional = "opcjonalny"
 
 [config.general]
 cancel = "Anulować"
+docsLink = ""
 experimental = "Eksperymentalny"
+hideAdvancedSettings = ""
+off = ""
+on = ""
+password = ""
+readFromFile = ""
+remove = ""
 save = "Zapisz"
+showAdvancedSettings = ""
 telemetry = "Telemetria"
-showAdvancedSettings = 
-hideAdvancedSettings = 
-off = 
-title = 
-remove = 
-on = 
-password = 
-docsLink = 
-readFromFile = 
+title = ""
 
 [config.grid]
+title = ""
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
-title = 
+
+[config.hems]
+description = ""
+title = ""
 
 [config.influx]
+description = ""
+descriptionToken = ""
 labelBucket = "Bucket"
+labelCheckInsecure = ""
 labelDatabase = "Baza danych"
+labelInsecure = ""
+labelOrg = ""
 labelPassword = "Hasło"
 labelToken = "API Token"
 labelUrl = "URL"
+labelUser = ""
 title = "InfluxDB"
-labelCheckInsecure = 
-labelUser = 
-v2Support = 
-labelOrg = 
-descriptionToken = 
-v1Support = 
-description = 
-labelInsecure = 
+v1Support = ""
+v2Support = ""
 
 [config.main]
 addLoadpoint = "Dodaj ładowarkę"
 addPvBattery = "Dodaj licznik energii słonecznej lub baterii"
 addVehicle = "Dodaj pojazd"
+configured = ""
 edit = "edytować"
 title = "Konfiguracja"
 unconfigured = "nie skonfigurowane"
 vehicles = "Moje pojazdy"
 yaml = "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
-configured = 
 
 [config.messaging]
 description = "Otrzymuj wiadomości o sesjach ładowania."
-title = 
+title = ""
 
 [config.meter]
 cancel = "Anulować"
@@ -149,75 +153,92 @@ titleChoice = "Co chcesz dodać?"
 validateSave = "Sprawdź i zapisz"
 
 [config.modbusproxy]
+description = ""
 title = "Modbus Proxy"
-description = 
 
 [config.mqtt]
+authentication = ""
+description = ""
+descriptionClientId = ""
+descriptionTopic = ""
+labelBroker = ""
+labelCaCert = ""
+labelCheckInsecure = ""
+labelClientCert = ""
 labelClientId = "Client ID"
+labelClientKey = ""
+labelInsecure = ""
 labelPassword = "Hasło"
+labelTopic = ""
+labelUser = ""
+publishing = ""
 title = "MQTT"
-description = 
-descriptionClientId = 
-descriptionTopic = 
-labelBroker = 
-labelClientCert = 
-authentication = 
-labelCheckInsecure = 
-labelCaCert = 
-labelInsecure = 
-labelTopic = 
-labelClientKey = 
-labelUser = 
-publishing = 
 
 [config.network]
+descriptionHost = ""
+descriptionPort = ""
+descriptionSchema = ""
+labelHost = ""
 labelPort = "Port"
-title = 
-labelSchema = 
-descriptionPort = 
-labelHost = 
-descriptionHost = 
-descriptionSchema = 
+labelSchema = ""
+title = ""
 
 [config.options]
+
+[config.options.boolean]
+no = ""
+yes = ""
 
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
 
 [config.options.schema]
-https = 
-http = 
+http = ""
+https = ""
 
 [config.pv]
 titleAdd = "Dodaj licznik energii słonecznej"
 titleEdit = "Edytuj licznik energii słonecznej"
 
 [config.section]
-general = 
-vehicles = 
-integrations = 
-meter = 
-grid = 
-loadpoints = 
-system = 
+general = ""
+grid = ""
+integrations = ""
+loadpoints = ""
+meter = ""
+system = ""
+vehicles = ""
 
 [config.site]
 cancel = "Anulować"
 save = "Zapisz"
 
+[config.sponsor]
+addToken = ""
+changeToken = ""
+description = ""
+descriptionToken = ""
+error = ""
+labelToken = ""
+title = ""
+
 [config.system]
-restartingMessage = 
-restart = 
-restartRequiredMessage = 
-logs = 
-restartingDescription = 
-restartRequiredDescription = 
+logs = ""
+restart = ""
+restartRequiredDescription = ""
+restartRequiredMessage = ""
+restartingDescription = ""
+restartingMessage = ""
+
+[config.tariffs]
+description = ""
+title = ""
 
 [config.title]
-label = 
-description = 
-title = 
+description = ""
+label = ""
+title = ""
 
 [config.validation]
 failed = "nie udało się"
@@ -280,11 +301,12 @@ tabTitle = "Moje dane"
 [footer.savings.period]
 30d = "ostatnie 30 dni"
 365d = "ostatnie 365 dni"
+thisYear = ""
 total = "cały czas"
-thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "Zostań sponsorem"
+becomeSponsorExtended = ""
 confetti = "Gotowy na konfetti?"
 confettiPromise = "Będą naklejki i cyfrowe konfetti"
 sticker = "… lub naklejki evcc?"
@@ -292,11 +314,10 @@ supportUs = "Nasza misja: Spraw, aby ładowanie słoneczne stało się standarde
 thanks = "Dzięki za wsparcie, {sponsor}! Pomaga nam to w dalszym rozwoju."
 titleNoSponsor = "Wesprzyj nas"
 titleSponsor = "Jesteś sponsorem"
-becomeSponsorExtended = 
-titleVictron = 
-titleTrial = 
-trial = 
-victron = 
+titleTrial = ""
+titleVictron = ""
+trial = ""
+victron = ""
 
 [footer.telemetry]
 optIn = "Chcę udostępnić swoje dane."
@@ -322,11 +343,11 @@ blog = "Blog"
 docs = "Dokumentacja"
 github = "GitHub"
 login = "Dane logowania pojazdu"
+logout = ""
 nativeSettings = "Zmień serwer"
 needHelp = "Potrzebuję Pomocy?"
 sessions = "Sesje ładowania"
 settings = "Ustawienia"
-logout = 
 
 [header.theme]
 auto = "Wygląd: system"
@@ -338,13 +359,13 @@ discussionsButton = "Dyskusje na GitHub'ie"
 documentationButton = "Dokumentacja"
 issueButton = "Zgłoś błąd"
 issueDescription = "Znalazłeś dziwne lub niewłaściwe zachowanie?"
+logsButton = ""
+logsDescription = ""
 modalTitle = "Potrzebuję pomocy?"
 primaryActions = "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzyskać pomoc."
 restartButton = "Uruchom ponownie"
 restartDescription = "Próbowałeś go wyłączyć i włączyć ponownie?"
 secondaryActions = "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
-logsDescription = 
-logsButton = 
 
 [help.restart]
 cancel = "Anulować"
@@ -354,41 +375,46 @@ disclaimer = "Uwaga: evcc zakończy działanie i będzie polegać na systemie op
 modalTitle = "Czy na pewno chcesz uruchomić ponownie?"
 
 [log]
-showAll = 
-areaLabel = 
-levelLabel = 
-search = 
-update = 
-noResults = 
-nAreas = 
-selectAll = 
-title = 
-areas = 
-download = 
+areaLabel = ""
+areas = ""
+download = ""
+levelLabel = ""
+nAreas = ""
+noResults = ""
+search = ""
+selectAll = ""
+showAll = ""
+title = ""
+update = ""
 
 [loginModal]
-invalid = 
-error = 
-cancel = 
-iframeHint = 
-login = 
-title = 
-iframeIssue = 
-reset = 
-password = 
+cancel = ""
+error = ""
+iframeHint = ""
+iframeIssue = ""
+invalid = ""
+login = ""
+password = ""
+reset = ""
+title = ""
 
 [main]
 vehicles = "Garaż"
 
 [main.chargingPlan]
 active = "Aktywny"
+addRepeatingPlan = ""
 arrivalTab = "Przyjazd"
 day = "Dzień"
 departureTab = "Wyjazd"
 goal = "Cel ładowania"
 modalTitle = "Plan ładowania"
 none = "nic"
+planNumber = ""
 remove = "Wyjąć"
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
 time = "Czas"
 title = "Plan"
 titleMinSoc = "Minimalne ładowanie"
@@ -396,11 +422,6 @@ titleTargetCharge = "Wyjazd"
 unsavedChanges = "Są niezapisane zmiany. Zastosować teraz?"
 update = "Wykorzystać"
 weekdays = "Dni"
-planNumber = 
-addRepeatingPlan = 
-repeating = 
-repeatingPlans = 
-selectAll = 
 
 [main.energyflow]
 battery = "Bateria"
@@ -408,6 +429,8 @@ batteryCharge = "Ładowanie baterii"
 batteryDischarge = "Rozładowanie baterii"
 batteryHold = "Bateria (locked)"
 batteryTooltip = "{energy} z {total} ({soc})"
+cheapBatteryGridCharge = ""
+cleanBatteryGridCharge = ""
 gridImport = "Z sieci"
 homePower = "Zużycie"
 loadpoints = "Ładowarka | Ładowarka | {count} Ładowarki"
@@ -415,8 +438,6 @@ noEnergy = "Brak danych licznika"
 pvExport = "Eksport na siec"
 pvProduction = "Produkcja"
 selfConsumption = "Konsumpcja własna"
-cleanBatteryGridCharge = 
-cheapBatteryGridCharge = 
 
 [main.heatingStatus]
 charging = "Ogrzewanie…"
@@ -438,6 +459,7 @@ remoteDisabledSoft = "{source}: adaptacyjne ładowanie słonecznie wyłączone"
 solar = "Słoneczna"
 
 [main.loadpointSettings]
+batteryUsage = ""
 currents = "Prąd Ładowania"
 default = "domyślny"
 disclaimerHint = "Uwaga:"
@@ -446,7 +468,12 @@ smartCostCheap = "Tanie ładowanie sieciowe"
 smartCostClean = "Czyste ładowanie sieci"
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
-batteryUsage = 
+
+[main.loadpointSettings.batteryBoost]
+description = ""
+label = ""
+mode = ""
+once = ""
 
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
@@ -476,7 +503,7 @@ minpv = "Min+Słońce"
 now = "Szybko"
 off = "Stop"
 pv = "Słońce"
-smart = 
+smart = ""
 
 [main.provider]
 login = "zaloguj się"
@@ -491,6 +518,7 @@ descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
 descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}?"
 inactiveLabel = "Czas docelowy"
 modalTitle = "Ustaw docelowy czas"
+nextPlan = ""
 notReachableInTime = "Cel zostanie osiągnięty {overrun} później."
 onlyInPvMode = "Plan ładowania działa tylko w trybie solarnym."
 planDuration = "Czas ładowania"
@@ -511,7 +539,6 @@ tomorrow = "jutro"
 update = "Aktualizować"
 vehicleCapacityDocs = "Dowiedz się, jak to skonfigurować."
 vehicleCapacityRequired = "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
-nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
@@ -546,12 +573,20 @@ ready = "gotowy"
 vehicleLimit = "Limit pojazdu: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = ""
+batteryBoost = ""
 charging = "Ładuje się..."
 cheapEnergyCharging = "Dostępna tania energia."
+cheapEnergyNextStart = ""
+cheapEnergySet = ""
 cleanEnergyCharging = "Czysta energia dostępna."
+cleanEnergyNextStart = ""
+cleanEnergySet = ""
 climating = "Wykryto wstępne przygotowanie"
 connected = "Połączony."
+disconnectRequired = ""
 disconnected = "Rozłączony."
+finished = ""
 minCharge = "Minimalne ładowanie do {soc}."
 pvDisable = "Za mało nadwyżki. Wkrótce przerwa."
 pvEnable = "Dostępne nadwyżki. Zaczynamy wkrótce."
@@ -560,45 +595,37 @@ scale3p = "Wkrótce przejdziemy na ładowanie 3-fazowe."
 targetChargeActive = "Plan ładowania aktywny. Szacunkowy czas zakończenia za {duration}."
 targetChargePlanned = "Zaplanowane ładowanie zacznie się {duration}."
 targetChargeWaitForVehicle = "Zaplanowane ładowanie gotowy. Czekajem na pojazd..."
+unknown = ""
+vehicleLimit = ""
 vehicleLimitReached = "Osiągnięto limit pojazdu."
 waitForVehicle = "Gotowe. Czekam na pojazd..."
-finished = 
-cleanEnergyNextStart = 
-batteryBoost = 
-unknown = 
-vehicleLimit = 
-welcome = 
-cheapEnergyNextStart = 
-disconnectRequired = 
-awaitingAuthorization = 
-cheapEnergySet = 
-cleanEnergySet = 
+welcome = ""
 
 [notifications]
 dismissAll = "Odrzuć wszystkie"
+logs = ""
 modalTitle = "Powiadomienia"
-logs = 
 
 [offline]
+configurationError = ""
 message = "Brak połączenia z serwerem."
 reload = "Przeładować?"
-configurationError = 
-restart = 
-restarting = 
-restartNeeded = 
+restart = ""
+restartNeeded = ""
+restarting = ""
 
 [passwordModal]
-description = 
-empty = 
-updatePassword = 
-labelNew = 
-titleUpdate = 
-labelRepeat = 
-newPassword = 
-labelCurrent = 
-error = 
-titleNew = 
-noMatch = 
+description = ""
+empty = ""
+error = ""
+labelCurrent = ""
+labelNew = ""
+labelRepeat = ""
+newPassword = ""
+noMatch = ""
+titleNew = ""
+titleUpdate = ""
+updatePassword = ""
 
 [session]
 cancel = "Anuluj"
@@ -629,33 +656,35 @@ noData = "Brak sesji ładowania w tym miesiącu."
 overview = "Przegląd"
 price = "Koszt"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
+showIndividualEntries = ""
 solar = "Słoneczna"
 title = "Sesje ładowania"
 total = "Totalny"
 vehicle = "Pojazd"
-showIndividualEntries = 
 
 [sessions.chartTitle]
+avgCo2ByGroup = ""
+avgPriceByGroup = ""
+byGroupLoadpoint = ""
+byGroupVehicle = ""
+energy = ""
+energyGrouped = ""
+energyGroupedByGroup = ""
+energySubSolar = ""
+energySubTotal = ""
+groupedCo2ByGroup = ""
+groupedPriceByGroup = ""
+historyCo2 = ""
+historyCo2Sub = ""
+historyPrice = ""
+historyPriceSub = ""
 solar = "Udział energii słonecznej w ciągu roku"
-energyGroupedByGroup = 
-byGroupVehicle = 
-energy = 
-energySubSolar = 
-energySubTotal = 
-groupedPriceByGroup = 
-groupedCo2ByGroup = 
-historyPrice = 
-historyCo2Sub = 
-historyPriceSub = 
-energyGrouped = 
-historyCo2 = 
-avgPriceByGroup = 
-byGroupLoadpoint = 
-avgCo2ByGroup = 
-solarByGroup = 
+solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
+chargeduration = ""
+co2perkwh = ""
 created = "Stworzony"
 finished = "Zakończony"
 identifier = "Identyfikator"
@@ -663,25 +692,44 @@ loadpoint = "Ładowarka"
 meterstart = "Licznik początek (kWh)"
 meterstop = "Licznik koniec (kWh)"
 odometer = "Przebieg (km)"
+price = ""
+priceperkwh = ""
+solarpercentage = ""
 vehicle = "Pojazd"
-chargeduration = 
-solarpercentage = 
-price = 
-co2perkwh = 
-priceperkwh = 
 
 [sessions.filter]
 allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
 
+[sessions.group]
+co2 = ""
+grid = ""
+price = ""
+self = ""
+
+[sessions.groupBy]
+loadpoint = ""
+none = ""
+vehicle = ""
+
+[sessions.period]
+month = ""
+total = ""
+year = ""
+
+[sessions.type]
+co2 = ""
+price = ""
+solar = ""
+
 [settings]
 title = "Interfejs użytkownika"
 
 [settings.fullscreen]
-label = 
-exit = 
-enter = 
+enter = ""
+exit = ""
+label = ""
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -748,52 +796,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[sessions.group]
-self = 
-price = 
-co2 = 
-grid = 
-
-[main.loadpointSettings.batteryBoost]
-description = 
-label = 
-mode = 
-once = 
-
-[config.sponsor]
-description = 
-addToken = 
-labelToken = 
-title = 
-changeToken = 
-descriptionToken = 
-error = 
-
-[sessions.groupBy]
-loadpoint = 
-none = 
-vehicle = 
-
-[sessions.type]
-price = 
-co2 = 
-solar = 
-
-[sessions.period]
-month = 
-total = 
-year = 
-
-[config.tariffs]
-description = 
-title = 
-
-[config.hems]
-description = 
-title = 
-
-[config.options.boolean]
-yes = 
-no = 

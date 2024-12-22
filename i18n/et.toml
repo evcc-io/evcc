@@ -2,757 +2,762 @@
 batteryLevel = "Akutase"
 capacity = "{energy} / {total}"
 control = "Akuhaldus"
-disclaimerHint = 
-legendTopSubline = 
-legendBottomSubline = 
-legendTopName = 
-usageTab = 
-discharge = 
-modalTitle = 
-legendTopAutostart = 
-disclaimerText = 
-gridChargeTab = 
-legendMiddleName = 
-legendBottomName = 
-legendMiddleSubline = 
-
-
-[main.loadpoint]
-duration = 
-price = 
-remaining = 
-remoteDisabledHard = 
-co2 = 
-power = 
-remoteDisabledSoft = 
-solar = 
-avgPrice = 
-fallbackName = 
-charged = 
-
-[main.loadpointSettings]
-default = 
-smartCostClean = 
-title = 
-smartCostCheap = 
-onlyForSocBasedCharging = 
-batteryUsage = 
-vehicle = 
-disclaimerHint = 
-currents = 
-
-[main.loadpointSettings.phasesConfigured]
-label = 
-no1p3pSupport = 
-phases_0 = 
-phases_1 = 
-phases_3_hint = 
-phases_1_hint = 
-phases_3 = 
-
-[main.loadpointSettings.minSoc]
-label = 
-description = 
-
-[main.mode]
-now = 
-minpv = 
-smart = 
-pv = 
-off = 
-
-[main.provider]
-logout = 
-login = 
-
-[main.targetCharge]
-activate = 
-co2Limit = 
-costLimitIgnore = 
-priceLimit = 
-targetIsAboveVehicleLimit = 
-targetIsInThePast = 
-nextPlan = 
-notReachableInTime = 
-inactiveLabel = 
-planDuration = 
-onlyInPvMode = 
-planUnknown = 
-vehicleCapacityDocs = 
-planPeriodLabel = 
-planPeriodValue = 
-preview = 
-vehicleCapacityRequired = 
-descriptionEnergy = 
-title = 
-tomorrow = 
-today = 
-targetIsTooFarInTheFuture = 
-update = 
-remove = 
-targetIsAboveLimit = 
-descriptionSoc = 
-setTargetTime = 
-currentPlan = 
-
-[main.targetEnergy]
-label = 
-noLimit = 
-
-[main.vehicle]
-moreActions = 
-changeVehicle = 
-addVehicle = 
-detectionActive = 
-fallbackName = 
-none = 
-notReachable = 
-targetSoc = 
-tempLimit = 
-temp = 
-unknown = 
-vehicleSoc = 
-
-[main.vehicleStatus]
-charging = 
-cleanEnergySet = 
-disconnectRequired = 
-pvEnable = 
-pvDisable = 
-targetChargePlanned = 
-batteryBoost = 
-awaitingAuthorization = 
-cheapEnergySet = 
-cheapEnergyNextStart = 
-scale3p = 
-disconnected = 
-targetChargeActive = 
-targetChargeWaitForVehicle = 
-unknown = 
-vehicleLimit = 
-waitForVehicle = 
-vehicleLimitReached = 
-welcome = 
-climating = 
-connected = 
-minCharge = 
-finished = 
-scale1p = 
-cheapEnergyCharging = 
-cleanEnergyCharging = 
-cleanEnergyNextStart = 
-
-[passwordModal]
-empty = 
-noMatch = 
-labelRepeat = 
-labelNew = 
-newPassword = 
-error = 
-labelCurrent = 
-titleNew = 
-titleUpdate = 
-updatePassword = 
-description = 
-
-[session]
-date = 
-co2 = 
-started = 
-price = 
-title = 
-delete = 
-finished = 
-meter = 
-meterstart = 
-meterstop = 
-odometer = 
-cancel = 
-
-[sessions]
-avgPower = 
-csvMonth = 
-total = 
-chargeDuration = 
-avgPrice = 
-co2 = 
-overview = 
-noData = 
-price = 
-vehicle = 
-csvTotal = 
-downloadCsv = 
-solar = 
-loadpoint = 
-reallyDelete = 
-showIndividualEntries = 
-title = 
-date = 
-energy = 
-
-[sessions.chartTitle]
-avgPriceByGroup = 
-avgCo2ByGroup = 
-energy = 
-energyGrouped = 
-byGroupVehicle = 
-energySubSolar = 
-energyGroupedByGroup = 
-energySubTotal = 
-groupedPriceByGroup = 
-historyCo2 = 
-byGroupLoadpoint = 
-groupedCo2ByGroup = 
-historyCo2Sub = 
-historyPrice = 
-historyPriceSub = 
-solar = 
-solarByGroup = 
-
-[sessions.csv]
-loadpoint = 
-meterstart = 
-price = 
-vehicle = 
-solarpercentage = 
-priceperkwh = 
-chargeduration = 
-co2perkwh = 
-identifier = 
-finished = 
-created = 
-meterstop = 
-odometer = 
-chargedenergy = 
-
-[sessions.filter]
-filter = 
-allVehicles = 
-allLoadpoints = 
-
-[sessions.groupBy]
-none = 
-vehicle = 
-loadpoint = 
-
-[sessions.period]
-month = 
-year = 
-total = 
-
-[sessions.type]
-price = 
-co2 = 
-solar = 
-
-[settings.fullscreen]
-enter = 
-exit = 
-label = 
-
-[settings.sponsorToken]
-getNew = 
-hint = 
-expires = 
-
-[settings.theme]
-label = 
-light = 
-auto = 
-dark = 
-
-[smartCost]
-cheapTitle = 
-co2Label = 
-co2Limit = 
-priceLimit = 
-activeHoursLabel = 
-applyToAll = 
-batteryDescription = 
-loadpointDescription = 
-modalTitle = 
-none = 
-saved = 
-priceLabel = 
-activeHours = 
-cleanTitle = 
-
-[startupError]
-discussions = 
-fixAndRestart = 
-lineErrorLink = 
-title = 
-configFile = 
-hint = 
-restartButton = 
-lineError = 
-description = 
-configuration = 
+discharge = ""
+disclaimerHint = ""
+disclaimerText = ""
+gridChargeTab = ""
+legendBottomName = ""
+legendBottomSubline = ""
+legendMiddleName = ""
+legendMiddleSubline = ""
+legendTopAutostart = ""
+legendTopName = ""
+legendTopSubline = ""
+modalTitle = ""
+usageTab = ""
 
 [batterySettings.bufferStart]
-above = 
-full = 
-never = 
+above = ""
+full = ""
+never = ""
+
+[config]
 
 [config.battery]
-titleAdd = 
-titleEdit = 
-
-[config.control]
-description = 
-title = 
-labelResidualPower = 
-descriptionInterval = 
-labelInterval = 
-descriptionResidualPower = 
+titleAdd = ""
+titleEdit = ""
 
 [config.circuits]
-title = 
-description = 
+description = ""
+title = ""
+
+[config.control]
+description = ""
+descriptionInterval = ""
+descriptionResidualPower = ""
+labelInterval = ""
+labelResidualPower = ""
+title = ""
 
 [config.deviceValue]
-bucket = 
-chargeStatusF = 
-controllable = 
-configured = 
-co2 = 
-currentRange = 
-gridPrice = 
-hemsType = 
-energy = 
-feedinPrice = 
-odometer = 
-range = 
-powerRange = 
-socLimit = 
-soc = 
-url = 
-yes = 
-topic = 
-temp = 
-phasePowers = 
-chargeStatus = 
-current = 
-enabled = 
-chargeStatusB = 
-phaseVoltages = 
-power = 
-no = 
-chargedEnergy = 
-capacity = 
-currency = 
-broker = 
-phaseCurrents = 
-chargeStatusC = 
-chargeStatusA = 
-org = 
-chargeStatusE = 
+broker = ""
+bucket = ""
+capacity = ""
+chargeStatus = ""
+chargeStatusA = ""
+chargeStatusB = ""
+chargeStatusC = ""
+chargeStatusE = ""
+chargeStatusF = ""
+chargedEnergy = ""
+co2 = ""
+configured = ""
+controllable = ""
+currency = ""
+current = ""
+currentRange = ""
+enabled = ""
+energy = ""
+feedinPrice = ""
+gridPrice = ""
+hemsType = ""
+no = ""
+odometer = ""
+org = ""
+phaseCurrents = ""
+phasePowers = ""
+phaseVoltages = ""
+power = ""
+powerRange = ""
+range = ""
+soc = ""
+socLimit = ""
+temp = ""
+topic = ""
+url = ""
+yes = ""
 
 [config.eebus]
-description = 
-title = 
+description = ""
+title = ""
 
 [config.form]
-example = 
-optional = 
+example = ""
+optional = ""
 
 [config.general]
-off = 
-experimental = 
-docsLink = 
-cancel = 
-on = 
-readFromFile = 
-password = 
-telemetry = 
-save = 
-title = 
-remove = 
-hideAdvancedSettings = 
-showAdvancedSettings = 
+cancel = ""
+docsLink = ""
+experimental = ""
+hideAdvancedSettings = ""
+off = ""
+on = ""
+password = ""
+readFromFile = ""
+remove = ""
+save = ""
+showAdvancedSettings = ""
+telemetry = ""
+title = ""
 
 [config.grid]
-title = 
-titleAdd = 
-titleEdit = 
-
-[config.influx]
-labelBucket = 
-description = 
-labelInsecure = 
-labelDatabase = 
-labelToken = 
-labelUrl = 
-labelUser = 
-labelOrg = 
-labelPassword = 
-title = 
-v1Support = 
-labelCheckInsecure = 
-descriptionToken = 
-v2Support = 
+title = ""
+titleAdd = ""
+titleEdit = ""
 
 [config.hems]
-title = 
-description = 
+description = ""
+title = ""
+
+[config.influx]
+description = ""
+descriptionToken = ""
+labelBucket = ""
+labelCheckInsecure = ""
+labelDatabase = ""
+labelInsecure = ""
+labelOrg = ""
+labelPassword = ""
+labelToken = ""
+labelUrl = ""
+labelUser = ""
+title = ""
+v1Support = ""
+v2Support = ""
 
 [config.main]
-addLoadpoint = 
-addPvBattery = 
-addVehicle = 
-configured = 
-edit = 
-vehicles = 
-title = 
-unconfigured = 
-yaml = 
+addLoadpoint = ""
+addPvBattery = ""
+addVehicle = ""
+configured = ""
+edit = ""
+title = ""
+unconfigured = ""
+vehicles = ""
+yaml = ""
 
 [config.messaging]
-title = 
-description = 
+description = ""
+title = ""
 
 [config.meter]
-delete = 
-cancel = 
-template = 
-save = 
-validateSave = 
-titleChoice = 
+cancel = ""
+delete = ""
+save = ""
+template = ""
+titleChoice = ""
+validateSave = ""
 
 [config.modbusproxy]
-title = 
-description = 
+description = ""
+title = ""
 
 [config.mqtt]
-authentication = 
-description = 
-labelBroker = 
-labelCheckInsecure = 
-labelCaCert = 
-labelClientId = 
-labelClientCert = 
-publishing = 
-labelPassword = 
-labelTopic = 
-title = 
-labelInsecure = 
-labelClientKey = 
-labelUser = 
-descriptionTopic = 
-descriptionClientId = 
+authentication = ""
+description = ""
+descriptionClientId = ""
+descriptionTopic = ""
+labelBroker = ""
+labelCaCert = ""
+labelCheckInsecure = ""
+labelClientCert = ""
+labelClientId = ""
+labelClientKey = ""
+labelInsecure = ""
+labelPassword = ""
+labelTopic = ""
+labelUser = ""
+publishing = ""
+title = ""
 
 [config.network]
-descriptionSchema = 
-labelHost = 
-labelPort = 
-descriptionPort = 
-title = 
-labelSchema = 
-descriptionHost = 
+descriptionHost = ""
+descriptionPort = ""
+descriptionSchema = ""
+labelHost = ""
+labelPort = ""
+labelSchema = ""
+title = ""
 
-[config.options.endianness]
-big = 
-little = 
+[config.options]
 
 [config.options.boolean]
-yes = 
-no = 
+no = ""
+yes = ""
 
-[config.pv]
-titleAdd = 
-titleEdit = 
+[config.options.endianness]
+big = ""
+little = ""
 
 [config.options.schema]
-http = 
-https = 
+http = ""
+https = ""
+
+[config.pv]
+titleAdd = ""
+titleEdit = ""
 
 [config.section]
-integrations = 
-loadpoints = 
-grid = 
-general = 
-meter = 
-system = 
-vehicles = 
+general = ""
+grid = ""
+integrations = ""
+loadpoints = ""
+meter = ""
+system = ""
+vehicles = ""
 
 [config.sponsor]
-addToken = 
-changeToken = 
-description = 
-title = 
-error = 
-descriptionToken = 
-labelToken = 
+addToken = ""
+changeToken = ""
+description = ""
+descriptionToken = ""
+error = ""
+labelToken = ""
+title = ""
 
 [config.system]
-logs = 
-restart = 
-restartRequiredMessage = 
-restartingMessage = 
-restartingDescription = 
-restartRequiredDescription = 
+logs = ""
+restart = ""
+restartRequiredDescription = ""
+restartRequiredMessage = ""
+restartingDescription = ""
+restartingMessage = ""
 
 [config.tariffs]
-description = 
-title = 
+description = ""
+title = ""
 
 [config.title]
-title = 
-description = 
-label = 
+description = ""
+label = ""
+title = ""
 
 [config.validation]
-failed = 
-running = 
-success = 
-unknown = 
-validate = 
-label = 
+failed = ""
+label = ""
+running = ""
+success = ""
+unknown = ""
+validate = ""
 
 [config.vehicle]
-cancel = 
-offline = 
-online = 
-generic = 
-delete = 
-save = 
-titleEdit = 
-scooter = 
-template = 
-validateSave = 
-titleAdd = 
+cancel = ""
+delete = ""
+generic = ""
+offline = ""
+online = ""
+save = ""
+scooter = ""
+template = ""
+titleAdd = ""
+titleEdit = ""
+validateSave = ""
+
+[footer]
 
 [footer.community]
-greenEnergySub2 = 
-greenShareSub1 = 
-powerSub1 = 
-power = 
-powerSub2 = 
-greenShareSub2 = 
-tabTitle = 
-greenEnergySub1 = 
-greenEnergy = 
-greenShare = 
+greenEnergy = ""
+greenEnergySub1 = ""
+greenEnergySub2 = ""
+greenShare = ""
+greenShareSub1 = ""
+greenShareSub2 = ""
+power = ""
+powerSub1 = ""
+powerSub2 = ""
+tabTitle = ""
 
 [footer.savings]
-co2Title = 
-co2Saved = 
-priceTitle = 
-periodLabel = 
-referenceGrid = 
-referenceLabel = 
-tabTitle = 
-configurePriceCo2 = 
-percentGrid = 
-footerShort = 
-moneySaved = 
-percentTitle = 
-modalTitle = 
-percentSelf = 
-footerLong = 
+co2Saved = ""
+co2Title = ""
+configurePriceCo2 = ""
+footerLong = ""
+footerShort = ""
+modalTitle = ""
+moneySaved = ""
+percentGrid = ""
+percentSelf = ""
+percentTitle = ""
+periodLabel = ""
+priceTitle = ""
+referenceGrid = ""
+referenceLabel = ""
+tabTitle = ""
 
 [footer.savings.period]
-365d = 
-30d = 
-total = 
-thisYear = 
+30d = ""
+365d = ""
+thisYear = ""
+total = ""
 
 [footer.sponsor]
-becomeSponsor = 
-sticker = 
-becomeSponsorExtended = 
-confetti = 
-confettiPromise = 
-titleTrial = 
-titleVictron = 
-titleNoSponsor = 
-supportUs = 
-thanks = 
-trial = 
-titleSponsor = 
-victron = 
+becomeSponsor = ""
+becomeSponsorExtended = ""
+confetti = ""
+confettiPromise = ""
+sticker = ""
+supportUs = ""
+thanks = ""
+titleNoSponsor = ""
+titleSponsor = ""
+titleTrial = ""
+titleVictron = ""
+trial = ""
+victron = ""
 
 [footer.telemetry]
-optIn = 
-optInMoreDetailsLink = 
-optInSponsorship = 
-optInMoreDetails = 
+optIn = ""
+optInMoreDetails = ""
+optInMoreDetailsLink = ""
+optInSponsorship = ""
 
 [footer.version]
-modalTitle = 
-modalNoReleaseNotes = 
-modalInstalledVersion = 
-modalDownload = 
-modalUpdateNow = 
-modalUpdate = 
-modalCancel = 
-modalUpdateStarted = 
-modalUpdateStatusStart = 
-availableLong = 
+availableLong = ""
+modalCancel = ""
+modalDownload = ""
+modalInstalledVersion = ""
+modalNoReleaseNotes = ""
+modalTitle = ""
+modalUpdate = ""
+modalUpdateNow = ""
+modalUpdateStarted = ""
+modalUpdateStatusStart = ""
 
 [header]
-login = 
-nativeSettings = 
-sessions = 
-logout = 
-about = 
-needHelp = 
-blog = 
-docs = 
-github = 
+about = ""
+blog = ""
+docs = ""
+github = ""
+login = ""
+logout = ""
+nativeSettings = ""
+needHelp = ""
+sessions = ""
 
 [help]
-issueButton = 
-primaryActions = 
-restartDescription = 
-modalTitle = 
-discussionsButton = 
-documentationButton = 
-secondaryActions = 
-logsButton = 
-logsDescription = 
-issueDescription = 
-restartButton = 
-
-[log]
-areaLabel = 
-download = 
-search = 
-areas = 
-selectAll = 
-levelLabel = 
-showAll = 
-title = 
-nAreas = 
-noResults = 
-update = 
-
-[loginModal]
-iframeHint = 
-iframeIssue = 
-title = 
-reset = 
-login = 
-cancel = 
-password = 
-error = 
-invalid = 
-
-[main]
-vehicles = 
-
-[main.chargingPlan]
-active = 
-arrivalTab = 
-day = 
-remove = 
-unsavedChanges = 
-addRepeatingPlan = 
-repeating = 
-planNumber = 
-repeatingPlans = 
-selectAll = 
-title = 
-titleMinSoc = 
-update = 
-goal = 
-departureTab = 
-time = 
-none = 
-titleTargetCharge = 
-modalTitle = 
-weekdays = 
-
-[main.energyflow]
-batteryHold = 
-batteryTooltip = 
-cheapBatteryGridCharge = 
-gridImport = 
-cleanBatteryGridCharge = 
-homePower = 
-loadpoints = 
-noEnergy = 
-pvExport = 
-pvProduction = 
-batteryDischarge = 
-battery = 
-selfConsumption = 
-batteryCharge = 
-
-[main.loadpointSettings.minCurrent]
-label = 
-
-[main.targetChargePlan]
-priceLabel = 
-co2Label = 
-chargeDuration = 
-timeRange = 
-unknownPrice = 
-
-[main.vehicleSoc]
-connected = 
-charging = 
-disconnected = 
-ready = 
-vehicleLimit = 
-
-[offline]
-message = 
-restart = 
-restarting = 
-restartNeeded = 
-configurationError = 
-
-[notifications]
-logs = 
-dismissAll = 
-modalTitle = 
-
-[sessions.group]
-grid = 
-self = 
-price = 
-co2 = 
-
-[settings.hiddenFeatures]
-value = 
-label = 
-
-[main.loadpointSettings.limitSoc]
-description = 
-label = 
-
-[main.loadpointSettings.maxCurrent]
-label = 
-
-[settings]
-title = 
-
-[settings.language]
-auto = 
-label = 
-
-[settings.telemetry]
-label = 
-
-[settings.unit]
-km = 
-label = 
-mi = 
+discussionsButton = ""
+documentationButton = ""
+issueButton = ""
+issueDescription = ""
+logsButton = ""
+logsDescription = ""
+modalTitle = ""
+primaryActions = ""
+restartButton = ""
+restartDescription = ""
+secondaryActions = ""
 
 [help.restart]
-disclaimer = 
-cancel = 
-confirm = 
-modalTitle = 
-description = 
+cancel = ""
+confirm = ""
+description = ""
+disclaimer = ""
+modalTitle = ""
 
-[main.loadpointSettings.batteryBoost]
-label = 
-once = 
-description = 
-mode = 
+[log]
+areaLabel = ""
+areas = ""
+download = ""
+levelLabel = ""
+nAreas = ""
+noResults = ""
+search = ""
+selectAll = ""
+showAll = ""
+title = ""
+update = ""
+
+[loginModal]
+cancel = ""
+error = ""
+iframeHint = ""
+iframeIssue = ""
+invalid = ""
+login = ""
+password = ""
+reset = ""
+title = ""
+
+[main]
+vehicles = ""
+
+[main.chargingPlan]
+active = ""
+addRepeatingPlan = ""
+arrivalTab = ""
+day = ""
+departureTab = ""
+goal = ""
+modalTitle = ""
+none = ""
+planNumber = ""
+remove = ""
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
+time = ""
+title = ""
+titleMinSoc = ""
+titleTargetCharge = ""
+unsavedChanges = ""
+update = ""
+weekdays = ""
+
+[main.energyflow]
+battery = ""
+batteryCharge = ""
+batteryDischarge = ""
+batteryHold = ""
+batteryTooltip = ""
+cheapBatteryGridCharge = ""
+cleanBatteryGridCharge = ""
+gridImport = ""
+homePower = ""
+loadpoints = ""
+noEnergy = ""
+pvExport = ""
+pvProduction = ""
+selfConsumption = ""
 
 [main.heatingStatus]
-waitForVehicle = 
-charging = 
+charging = ""
+waitForVehicle = ""
+
+[main.loadpoint]
+avgPrice = ""
+charged = ""
+co2 = ""
+duration = ""
+fallbackName = ""
+power = ""
+price = ""
+remaining = ""
+remoteDisabledHard = ""
+remoteDisabledSoft = ""
+solar = ""
+
+[main.loadpointSettings]
+batteryUsage = ""
+currents = ""
+default = ""
+disclaimerHint = ""
+onlyForSocBasedCharging = ""
+smartCostCheap = ""
+smartCostClean = ""
+title = ""
+vehicle = ""
+
+[main.loadpointSettings.batteryBoost]
+description = ""
+label = ""
+mode = ""
+once = ""
+
+[main.loadpointSettings.limitSoc]
+description = ""
+label = ""
+
+[main.loadpointSettings.maxCurrent]
+label = ""
+
+[main.loadpointSettings.minCurrent]
+label = ""
+
+[main.loadpointSettings.minSoc]
+description = ""
+label = ""
+
+[main.loadpointSettings.phasesConfigured]
+label = ""
+no1p3pSupport = ""
+phases_0 = ""
+phases_1 = ""
+phases_1_hint = ""
+phases_3 = ""
+phases_3_hint = ""
+
+[main.mode]
+minpv = ""
+now = ""
+off = ""
+pv = ""
+smart = ""
+
+[main.provider]
+login = ""
+logout = ""
+
+[main.targetCharge]
+activate = ""
+co2Limit = ""
+costLimitIgnore = ""
+currentPlan = ""
+descriptionEnergy = ""
+descriptionSoc = ""
+inactiveLabel = ""
+nextPlan = ""
+notReachableInTime = ""
+onlyInPvMode = ""
+planDuration = ""
+planPeriodLabel = ""
+planPeriodValue = ""
+planUnknown = ""
+preview = ""
+priceLimit = ""
+remove = ""
+setTargetTime = ""
+targetIsAboveLimit = ""
+targetIsAboveVehicleLimit = ""
+targetIsInThePast = ""
+targetIsTooFarInTheFuture = ""
+title = ""
+today = ""
+tomorrow = ""
+update = ""
+vehicleCapacityDocs = ""
+vehicleCapacityRequired = ""
+
+[main.targetChargePlan]
+chargeDuration = ""
+co2Label = ""
+priceLabel = ""
+timeRange = ""
+unknownPrice = ""
+
+[main.targetEnergy]
+label = ""
+noLimit = ""
+
+[main.vehicle]
+addVehicle = ""
+changeVehicle = ""
+detectionActive = ""
+fallbackName = ""
+moreActions = ""
+none = ""
+notReachable = ""
+targetSoc = ""
+temp = ""
+tempLimit = ""
+unknown = ""
+vehicleSoc = ""
+
+[main.vehicleSoc]
+charging = ""
+connected = ""
+disconnected = ""
+ready = ""
+vehicleLimit = ""
+
+[main.vehicleStatus]
+awaitingAuthorization = ""
+batteryBoost = ""
+charging = ""
+cheapEnergyCharging = ""
+cheapEnergyNextStart = ""
+cheapEnergySet = ""
+cleanEnergyCharging = ""
+cleanEnergyNextStart = ""
+cleanEnergySet = ""
+climating = ""
+connected = ""
+disconnectRequired = ""
+disconnected = ""
+finished = ""
+minCharge = ""
+pvDisable = ""
+pvEnable = ""
+scale1p = ""
+scale3p = ""
+targetChargeActive = ""
+targetChargePlanned = ""
+targetChargeWaitForVehicle = ""
+unknown = ""
+vehicleLimit = ""
+vehicleLimitReached = ""
+waitForVehicle = ""
+welcome = ""
+
+[notifications]
+dismissAll = ""
+logs = ""
+modalTitle = ""
+
+[offline]
+configurationError = ""
+message = ""
+restart = ""
+restartNeeded = ""
+restarting = ""
+
+[passwordModal]
+description = ""
+empty = ""
+error = ""
+labelCurrent = ""
+labelNew = ""
+labelRepeat = ""
+newPassword = ""
+noMatch = ""
+titleNew = ""
+titleUpdate = ""
+updatePassword = ""
+
+[session]
+cancel = ""
+co2 = ""
+date = ""
+delete = ""
+finished = ""
+meter = ""
+meterstart = ""
+meterstop = ""
+odometer = ""
+price = ""
+started = ""
+title = ""
+
+[sessions]
+avgPower = ""
+avgPrice = ""
+chargeDuration = ""
+co2 = ""
+csvMonth = ""
+csvTotal = ""
+date = ""
+downloadCsv = ""
+energy = ""
+loadpoint = ""
+noData = ""
+overview = ""
+price = ""
+reallyDelete = ""
+showIndividualEntries = ""
+solar = ""
+title = ""
+total = ""
+vehicle = ""
+
+[sessions.chartTitle]
+avgCo2ByGroup = ""
+avgPriceByGroup = ""
+byGroupLoadpoint = ""
+byGroupVehicle = ""
+energy = ""
+energyGrouped = ""
+energyGroupedByGroup = ""
+energySubSolar = ""
+energySubTotal = ""
+groupedCo2ByGroup = ""
+groupedPriceByGroup = ""
+historyCo2 = ""
+historyCo2Sub = ""
+historyPrice = ""
+historyPriceSub = ""
+solar = ""
+solarByGroup = ""
+
+[sessions.csv]
+chargedenergy = ""
+chargeduration = ""
+co2perkwh = ""
+created = ""
+finished = ""
+identifier = ""
+loadpoint = ""
+meterstart = ""
+meterstop = ""
+odometer = ""
+price = ""
+priceperkwh = ""
+solarpercentage = ""
+vehicle = ""
+
+[sessions.filter]
+allLoadpoints = ""
+allVehicles = ""
+filter = ""
+
+[sessions.group]
+co2 = ""
+grid = ""
+price = ""
+self = ""
+
+[sessions.groupBy]
+loadpoint = ""
+none = ""
+vehicle = ""
+
+[sessions.period]
+month = ""
+total = ""
+year = ""
+
+[sessions.type]
+co2 = ""
+price = ""
+solar = ""
+
+[settings]
+title = ""
+
+[settings.fullscreen]
+enter = ""
+exit = ""
+label = ""
+
+[settings.hiddenFeatures]
+label = ""
+value = ""
+
+[settings.language]
+auto = ""
+label = ""
+
+[settings.sponsorToken]
+expires = ""
+getNew = ""
+hint = ""
+
+[settings.telemetry]
+label = ""
+
+[settings.theme]
+auto = ""
+dark = ""
+label = ""
+light = ""
+
+[settings.unit]
+km = ""
+label = ""
+mi = ""
+
+[smartCost]
+activeHours = ""
+activeHoursLabel = ""
+applyToAll = ""
+batteryDescription = ""
+cheapTitle = ""
+cleanTitle = ""
+co2Label = ""
+co2Limit = ""
+loadpointDescription = ""
+modalTitle = ""
+none = ""
+priceLabel = ""
+priceLimit = ""
+saved = ""
+
+[startupError]
+configFile = ""
+configuration = ""
+description = ""
+discussions = ""
+fixAndRestart = ""
+hint = ""
+lineError = ""
+lineErrorLink = ""
+restartButton = ""
+title = ""

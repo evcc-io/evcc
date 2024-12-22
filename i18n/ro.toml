@@ -5,6 +5,7 @@ control = "Controlul bateriei"
 discharge = "“Preveniți descărcarea în modul rapid și încărcarea planificată.”"
 disclaimerHint = "Nota:"
 disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
+gridChargeTab = ""
 legendBottomName = "prioritate casa"
 legendBottomSubline = "neutilizat pentru incarcare"
 legendMiddleName = "in primul rand vehiculul"
@@ -14,8 +15,7 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari bateriei"
-usageTab = 
-gridChargeTab = 
+usageTab = ""
 
 [batterySettings.bufferStart]
 above = "cand e peste {soc}"
@@ -30,78 +30,118 @@ never = "numai cand exista surplus suficient"
 titleAdd = "adăugați contorul de baterie"
 titleEdit = "Editați contorul de baterie."
 
+[config.circuits]
+description = ""
+title = ""
+
+[config.control]
+description = ""
+descriptionInterval = ""
+descriptionResidualPower = ""
+labelInterval = ""
+labelResidualPower = ""
+title = ""
+
 [config.deviceValue]
+broker = ""
+bucket = ""
 capacity = "Capacitatea"
 chargeStatus = "Stare"
+chargeStatusA = ""
+chargeStatusB = ""
+chargeStatusC = ""
+chargeStatusE = ""
+chargeStatusF = ""
 chargedEnergy = "Încărcat"
+co2 = ""
+configured = ""
+controllable = ""
+currency = ""
 current = "Curent"
+currentRange = ""
 enabled = "Activat"
 energy = "Energie"
+feedinPrice = ""
+gridPrice = ""
+hemsType = ""
+no = ""
 odometer = "Kilometraj"
+org = ""
 phaseCurrents = "Curent L1, L2, L3"
 phasePowers = "Putere L1, L2, L3"
 phaseVoltages = "Voltaj L1, L2, L3"
 power = "Putere"
+powerRange = ""
 range = "Autonomie"
 soc = "Stare de încărcare"
 socLimit = "Limită"
-bucket = 
-broker = 
-chargeStatusA = 
-chargeStatusB = 
-co2 = 
-currency = 
-feedinPrice = 
-temp = 
-yes = 
-chargeStatusE = 
-currentRange = 
-chargeStatusC = 
-powerRange = 
-controllable = 
-chargeStatusF = 
-configured = 
-topic = 
-gridPrice = 
-org = 
-no = 
-hemsType = 
-url = 
+temp = ""
+topic = ""
+url = ""
+yes = ""
+
+[config.eebus]
+description = ""
+title = ""
 
 [config.form]
 example = "Exemplu"
 optional = "optional"
 
 [config.general]
-off = 
-hideAdvancedSettings = 
-docsLink = 
-experimental = 
-showAdvancedSettings = 
-on = 
-password = 
-cancel = 
-readFromFile = 
-telemetry = 
-save = 
-title = 
-remove = 
+cancel = ""
+docsLink = ""
+experimental = ""
+hideAdvancedSettings = ""
+off = ""
+on = ""
+password = ""
+readFromFile = ""
+remove = ""
+save = ""
+showAdvancedSettings = ""
+telemetry = ""
+title = ""
 
 [config.grid]
+title = ""
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
-title = 
+
+[config.hems]
+description = ""
+title = ""
+
+[config.influx]
+description = ""
+descriptionToken = ""
+labelBucket = ""
+labelCheckInsecure = ""
+labelDatabase = ""
+labelInsecure = ""
+labelOrg = ""
+labelPassword = ""
+labelToken = ""
+labelUrl = ""
+labelUser = ""
+title = ""
+v1Support = ""
+v2Support = ""
 
 [config.main]
 addLoadpoint = "Adăugați punct de încărcare"
 addPvBattery = "Adăugați solar sau baterie"
 addVehicle = "Adauga masina"
+configured = ""
 edit = "Editeaza"
 title = "Configuratie"
 unconfigured = "neconfigurat"
 vehicles = "Masinile mele"
 yaml = "Configurat în evcc.yaml. Nu poate fi editat în interfața "
-configured = 
+
+[config.messaging]
+description = ""
+title = ""
 
 [config.meter]
 cancel = "Anulare"
@@ -111,45 +151,93 @@ template = "Producător"
 titleChoice = "Ce vrei să adaugi?"
 validateSave = "Valideaza si salveaza"
 
+[config.modbusproxy]
+description = ""
+title = ""
+
+[config.mqtt]
+authentication = ""
+description = ""
+descriptionClientId = ""
+descriptionTopic = ""
+labelBroker = ""
+labelCaCert = ""
+labelCheckInsecure = ""
+labelClientCert = ""
+labelClientId = ""
+labelClientKey = ""
+labelInsecure = ""
+labelPassword = ""
+labelTopic = ""
+labelUser = ""
+publishing = ""
+title = ""
+
+[config.network]
+descriptionHost = ""
+descriptionPort = ""
+descriptionSchema = ""
+labelHost = ""
+labelPort = ""
+labelSchema = ""
+title = ""
+
 [config.options]
 
+[config.options.boolean]
+no = ""
+yes = ""
+
 [config.options.endianness]
-big = 
-little = 
+big = ""
+little = ""
 
 [config.options.schema]
-http = 
-https = 
+http = ""
+https = ""
 
 [config.pv]
 titleAdd = "Adauga SmartMeter"
 titleEdit = "Editeaza SmartMeter"
 
 [config.section]
-system = 
-vehicles = 
-meter = 
-integrations = 
-loadpoints = 
-grid = 
-general = 
+general = ""
+grid = ""
+integrations = ""
+loadpoints = ""
+meter = ""
+system = ""
+vehicles = ""
 
 [config.site]
 cancel = "Anuleaza"
 save = "Salveaza"
 
+[config.sponsor]
+addToken = ""
+changeToken = ""
+description = ""
+descriptionToken = ""
+error = ""
+labelToken = ""
+title = ""
+
 [config.system]
-restartRequiredMessage = 
-restartingDescription = 
-restart = 
-restartingMessage = 
-restartRequiredDescription = 
-logs = 
+logs = ""
+restart = ""
+restartRequiredDescription = ""
+restartRequiredMessage = ""
+restartingDescription = ""
+restartingMessage = ""
+
+[config.tariffs]
+description = ""
+title = ""
 
 [config.title]
-label = 
-title = 
-description = 
+description = ""
+label = ""
+title = ""
 
 [config.validation]
 failed = "esuat"
@@ -212,11 +300,12 @@ tabTitle = "Datele mele"
 [footer.savings.period]
 30d = "ultimele 30 de zile"
 365d = "ultimul an"
+thisYear = ""
 total = "de la inceput"
-thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "Sponsorizează-ne"
+becomeSponsorExtended = ""
 confetti = "Ești pregătit să sărbătorești?"
 confettiPromise = "Primești abțibilduri si confetti digital"
 sticker = "… sau abțibilduri evcc?"
@@ -224,11 +313,10 @@ supportUs = "Țelul nostru este ca energia solara să devina standard. Ajută ș
 thanks = "Multumim, {sponsor}! Contribuția ta ajuta la dezvoltarea evcc."
 titleNoSponsor = "Sponsorizeaza-ne"
 titleSponsor = "Ești sponsor"
-titleTrial = 
-titleVictron = 
-becomeSponsorExtended = 
-victron = 
-trial = 
+titleTrial = ""
+titleVictron = ""
+trial = ""
+victron = ""
 
 [footer.telemetry]
 optIn = "Vreau să trimit datele mele."
@@ -254,24 +342,24 @@ blog = "Blog"
 docs = "Documentație"
 github = "GitHub"
 login = "Login Masina"
+logout = ""
+nativeSettings = ""
 needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de Incărcare"
 settings = "Configurare"
-nativeSettings = 
-logout = 
 
 [help]
 discussionsButton = "Discutii GitHub"
 documentationButton = "Documentatie"
 issueButton = "Raporteaza un Bug"
 issueDescription = "Functionare bizara sau gresita ?"
+logsButton = ""
+logsDescription = ""
 modalTitle = "Ai nevoie de ajutor ?"
 primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor."
 restartButton = "Restart"
 restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 secondaryActions = "Inca nu ati rezolvat problema? Iata niste alte optiuni"
-logsButton = 
-logsDescription = 
 
 [help.restart]
 cancel = "Anuleaza"
@@ -281,53 +369,53 @@ disclaimer = "Nota: evcc se va inchide si se va baza pe OS sa restarteze servici
 modalTitle = "Esti sigur ca vrei sa dai restart?"
 
 [log]
-areaLabel = 
-search = 
-areas = 
-download = 
-nAreas = 
-levelLabel = 
-noResults = 
-selectAll = 
-showAll = 
-update = 
-title = 
+areaLabel = ""
+areas = ""
+download = ""
+levelLabel = ""
+nAreas = ""
+noResults = ""
+search = ""
+selectAll = ""
+showAll = ""
+title = ""
+update = ""
 
 [loginModal]
-password = 
-title = 
-reset = 
-iframeHint = 
-cancel = 
-error = 
-login = 
-invalid = 
-iframeIssue = 
+cancel = ""
+error = ""
+iframeHint = ""
+iframeIssue = ""
+invalid = ""
+login = ""
+password = ""
+reset = ""
+title = ""
 
 [main]
 vehicles = "Parcare"
 
 [main.chargingPlan]
 active = "Activ"
+addRepeatingPlan = ""
 arrivalTab = "Ajungere"
 day = "Zi"
 departureTab = "Plecare"
 goal = "Scopul incarcarii"
 modalTitle = "Plan de incarcare"
 none = "nimic"
+planNumber = ""
 remove = "Elimina"
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
 time = "Timp"
 title = "Plan"
 titleMinSoc = "Incarcare minima"
 titleTargetCharge = "Plecare"
+unsavedChanges = ""
 update = "Aplica"
-selectAll = 
-repeating = 
-planNumber = 
-repeatingPlans = 
-addRepeatingPlan = 
-unsavedChanges = 
-weekdays = 
+weekdays = ""
 
 [main.energyflow]
 battery = "Baterie"
@@ -335,6 +423,8 @@ batteryCharge = "Incarca bateria"
 batteryDischarge = "Descărcare baterie"
 batteryHold = "Baterie (inchisa)"
 batteryTooltip = "{energy} din {total} ({soc})"
+cheapBatteryGridCharge = ""
+cleanBatteryGridCharge = ""
 gridImport = "Folosirea rețelei"
 homePower = "Consum"
 loadpoints = "Încarcator| Încarcator | {count} încarcatoare"
@@ -342,8 +432,6 @@ noEnergy = "Lipsă date contor"
 pvExport = "Export in rețea"
 pvProduction = "Producție"
 selfConsumption = "Consum propriu"
-cheapBatteryGridCharge = 
-cleanBatteryGridCharge = 
 
 [main.heatingStatus]
 charging = "Incalzeste..."
@@ -365,15 +453,21 @@ remoteDisabledSoft = "{source}: incarcarea solar-adaptiva e oprita"
 solar = "Solar"
 
 [main.loadpointSettings]
+batteryUsage = ""
 currents = "Curent încărcare"
 default = "default"
 disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare."
+smartCostCheap = ""
+smartCostClean = ""
 title = "Setări {0}"
 vehicle = "Vehicul"
-batteryUsage = 
-smartCostClean = 
-smartCostCheap = 
+
+[main.loadpointSettings.batteryBoost]
+description = ""
+label = ""
+mode = ""
+once = ""
 
 [main.loadpointSettings.limitSoc]
 description = "Limita de incarcare care e folosita cand e conectat a aceasta masina."
@@ -403,7 +497,7 @@ minpv = "Min+Solar"
 now = "Rapid"
 off = "Oprit"
 pv = "Solar"
-smart = 
+smart = ""
 
 [main.provider]
 login = "autentificare"
@@ -418,6 +512,7 @@ descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcat�
 descriptionSoc = "Când ar trebui vehiculul să fie încărcat la {targetSoc}?"
 inactiveLabel = "Timp dorit"
 modalTitle = "Programare ora dorită"
+nextPlan = ""
 notReachableInTime = "Telul nu a fost atins la timp. Estimare: {endTime}."
 onlyInPvMode = "Planul de incarcare merge doar in mod Solar."
 planDuration = "Timp de încărcare"
@@ -438,7 +533,6 @@ tomorrow = "mâine"
 update = "Actualizare"
 vehicleCapacityDocs = "Invata cum sa configurezi."
 vehicleCapacityRequired = "Capacitatea bateriei masinii e necesara pentru a estima timpul de incarcare."
-nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Timp de încărcare"
@@ -458,12 +552,12 @@ detectionActive = "Detectare vehicul…"
 fallbackName = "vehicul"
 moreActions = "Mai multe acțiuni"
 none = "Lipsă Vehicul"
+notReachable = ""
 targetSoc = "Limită"
 temp = "Temp."
 tempLimit = "Temp. limit"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
-notReachable = 
 
 [main.vehicleSoc]
 charging = "încarcă"
@@ -473,12 +567,20 @@ ready = "pregătit"
 vehicleLimit = "Limită vehicul: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = ""
+batteryBoost = ""
 charging = "Încarcă…"
 cheapEnergyCharging = "Energie ieftina disponibila. {price} (limit {limit})"
+cheapEnergyNextStart = ""
+cheapEnergySet = ""
 cleanEnergyCharging = "Energie curata disponibila. {co2} (limit {limit})"
+cleanEnergyNextStart = ""
+cleanEnergySet = ""
 climating = "Preconditionare detectata."
 connected = "Conectat."
+disconnectRequired = ""
 disconnected = "Deconectat."
+finished = ""
 guard = "Incarcarea incepe in {remaining}…"
 minCharge = "Incarcare minima {soc}."
 pvDisable = "Surplus insuficient FV. Pauza in {remaining}…"
@@ -488,45 +590,37 @@ scale3p = "Schimbam încărcarea la 3 faze în {remaining}…"
 targetChargeActive = "Încarcare țintă activă…"
 targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
+unknown = ""
+vehicleLimit = ""
 vehicleLimitReached = "Limita {soc} a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
-finished = 
-cheapEnergyNextStart = 
-cheapEnergySet = 
-welcome = 
-cleanEnergyNextStart = 
-disconnectRequired = 
-vehicleLimit = 
-batteryBoost = 
-cleanEnergySet = 
-awaitingAuthorization = 
-unknown = 
+welcome = ""
 
 [notifications]
 dismissAll = "Închide tot"
+logs = ""
 modalTitle = "Notificări"
-logs = 
 
 [offline]
+configurationError = ""
 message = "Nu se poate conecta la server."
 reload = "Reîncarcă?"
-configurationError = 
-restart = 
-restarting = 
-restartNeeded = 
+restart = ""
+restartNeeded = ""
+restarting = ""
 
 [passwordModal]
-titleUpdate = 
-newPassword = 
-labelCurrent = 
-updatePassword = 
-empty = 
-description = 
-titleNew = 
-labelNew = 
-error = 
-noMatch = 
-labelRepeat = 
+description = ""
+empty = ""
+error = ""
+labelCurrent = ""
+labelNew = ""
+labelRepeat = ""
+newPassword = ""
+noMatch = ""
+titleNew = ""
+titleUpdate = ""
+updatePassword = ""
 
 [session]
 cancel = "Anulează"
@@ -554,17 +648,38 @@ downloadCsv = "Descarcă ca CSV"
 energy = "Încărcat"
 loadpoint = "Punct încărcare"
 noData = "Nu exista sesiuni de incarcare luna aceasta."
+overview = ""
 price = "Σ Pret"
 reallyDelete = "Esti sigur că dorești să ștergi această sesiune?"
+showIndividualEntries = ""
 solar = "Solar"
 title = "Sesiuni încărcare"
 total = "Total"
 vehicle = "Vehicul"
-overview = 
-showIndividualEntries = 
+
+[sessions.chartTitle]
+avgCo2ByGroup = ""
+avgPriceByGroup = ""
+byGroupLoadpoint = ""
+byGroupVehicle = ""
+energy = ""
+energyGrouped = ""
+energyGroupedByGroup = ""
+energySubSolar = ""
+energySubTotal = ""
+groupedCo2ByGroup = ""
+groupedPriceByGroup = ""
+historyCo2 = ""
+historyCo2Sub = ""
+historyPrice = ""
+historyPriceSub = ""
+solar = ""
+solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = ""
+co2perkwh = ""
 created = "Creat"
 finished = "Terminat"
 identifier = "Identificator"
@@ -572,25 +687,44 @@ loadpoint = "Punct de încărcare"
 meterstart = "Start contor (kWh)"
 meterstop = "Stop contor (kWh)"
 odometer = "Kilometraj (km)"
+price = ""
+priceperkwh = ""
+solarpercentage = ""
 vehicle = "Vehicul"
-price = 
-priceperkwh = 
-co2perkwh = 
-chargeduration = 
-solarpercentage = 
 
 [sessions.filter]
 allLoadpoints = "toate punctele de incarcare"
 allVehicles = "toate masinile"
 filter = "Filtru"
 
+[sessions.group]
+co2 = ""
+grid = ""
+price = ""
+self = ""
+
+[sessions.groupBy]
+loadpoint = ""
+none = ""
+vehicle = ""
+
+[sessions.period]
+month = ""
+total = ""
+year = ""
+
+[sessions.type]
+co2 = ""
+price = ""
+solar = ""
+
 [settings]
 title = "Configuratie"
 
 [settings.fullscreen]
-label = 
-enter = 
-exit = 
+enter = ""
+exit = ""
+label = ""
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -628,6 +762,10 @@ mi = "mile"
 [smartCost]
 activeHours = "{charging} din {total}"
 activeHoursLabel = "Ore de functionare"
+applyToAll = ""
+batteryDescription = ""
+cheapTitle = ""
+cleanTitle = ""
 co2Label = "emisii CO₂"
 co2Limit = "limita CO₂"
 loadpointDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
@@ -635,11 +773,7 @@ modalTitle = "Incarcare Smart Grid"
 none = "nimic"
 priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
-batteryDescription = 
-cleanTitle = 
-cheapTitle = 
-applyToAll = 
-saved = 
+saved = ""
 
 [startupError]
 configFile = "Fișier configurare folosit:"
@@ -657,138 +791,3 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
-
-
-[main.loadpointSettings.batteryBoost]
-description = 
-label = 
-mode = 
-once = 
-
-[config.mqtt]
-labelCaCert = 
-labelClientCert = 
-labelClientKey = 
-descriptionTopic = 
-publishing = 
-title = 
-labelCheckInsecure = 
-labelInsecure = 
-labelBroker = 
-description = 
-labelTopic = 
-descriptionClientId = 
-labelClientId = 
-authentication = 
-labelPassword = 
-labelUser = 
-
-[config.options.boolean]
-yes = 
-no = 
-
-[config.sponsor]
-addToken = 
-labelToken = 
-error = 
-changeToken = 
-description = 
-title = 
-descriptionToken = 
-
-[config.tariffs]
-description = 
-title = 
-
-[sessions.chartTitle]
-energySubTotal = 
-solar = 
-energySubSolar = 
-historyPriceSub = 
-solarByGroup = 
-energyGroupedByGroup = 
-byGroupLoadpoint = 
-byGroupVehicle = 
-energy = 
-avgCo2ByGroup = 
-avgPriceByGroup = 
-energyGrouped = 
-groupedPriceByGroup = 
-historyCo2Sub = 
-historyCo2 = 
-historyPrice = 
-groupedCo2ByGroup = 
-
-[config.influx]
-labelToken = 
-descriptionToken = 
-labelBucket = 
-labelDatabase = 
-v1Support = 
-title = 
-labelUser = 
-labelOrg = 
-v2Support = 
-labelInsecure = 
-labelCheckInsecure = 
-labelPassword = 
-labelUrl = 
-description = 
-
-[sessions.period]
-month = 
-total = 
-year = 
-
-[sessions.groupBy]
-loadpoint = 
-none = 
-vehicle = 
-
-[sessions.type]
-solar = 
-price = 
-co2 = 
-
-[config.messaging]
-description = 
-title = 
-
-[config.network]
-descriptionSchema = 
-title = 
-descriptionHost = 
-labelSchema = 
-labelPort = 
-labelHost = 
-descriptionPort = 
-
-[config.circuits]
-title = 
-description = 
-
-[config.modbusproxy]
-description = 
-title = 
-
-[config.control]
-labelInterval = 
-descriptionInterval = 
-descriptionResidualPower = 
-labelResidualPower = 
-description = 
-title = 
-
-[config.eebus]
-title = 
-description = 
-
-[config.hems]
-description = 
-title = 
-
-[sessions.group]
-grid = 
-co2 = 
-price = 
-self = 

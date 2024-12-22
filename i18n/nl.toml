@@ -402,14 +402,17 @@ vehicles = "Parking"
 
 [main.chargingPlan]
 active = "Actief"
+addRepeatingPlan = ""
 arrivalTab = "Aankomst"
 day = "Dag"
 departureTab = "Vertrek"
 goal = "Hoeveelheid"
 modalTitle = "Laad Plan"
 none = "geen"
+planNumber = ""
 remove = "Verwijderen"
 repeating = "herhalend"
+repeatingPlans = ""
 selectAll = "Alles selectreren"
 time = "Tijd"
 title = "Plan"
@@ -418,9 +421,6 @@ titleTargetCharge = "Vertrek"
 unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 update = "Toepassen"
 weekdays = "Weekdagen"
-repeatingPlans = 
-addRepeatingPlan = 
-planNumber = 
 
 [main.energyflow]
 battery = "Batterij"
@@ -517,6 +517,7 @@ descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen z
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
+nextPlan = ""
 notReachableInTime = "Laaddoel zal {overrun} later bereikt zijn."
 onlyInPvMode = "Laadplan werkt alleen in PV modus"
 planDuration = "Oplaadtijd"
@@ -537,7 +538,6 @@ tomorrow = "Morgen"
 update = "Updaten"
 vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
 vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
-nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"

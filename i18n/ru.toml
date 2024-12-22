@@ -5,6 +5,7 @@ control = "Управление батареей"
 discharge = "Предотвратить разряд в быстром режиме и запланированной зарядке."
 disclaimerHint = "Примечание:"
 disclaimerText = "Эти настройки влияют только на режим солнечной батареи. Поведение зарядки изменяется соответствующе."
+gridChargeTab = ""
 legendBottomName = "домашний приоритет"
 legendBottomSubline = "не используется для зарядки"
 legendMiddleName = "сначала автомобиль"
@@ -14,159 +15,246 @@ legendTopAutostart = "запускается автоматически"
 legendTopName = "зарядка с поддержкой от аккумулятора"
 legendTopSubline = "без перебоев"
 modalTitle = "Настройки батареи"
-gridChargeTab = 
-usageTab = 
+usageTab = ""
 
 [batterySettings.bufferStart]
+above = ""
 full = "когда почти полная"
 low = "когда около полная"
 medium = "когда на половину полная"
 never = "только при достаточном избытке"
-above = 
 
 [config]
 
 [config.battery]
-titleEdit = 
-titleAdd = 
+titleAdd = ""
+titleEdit = ""
+
+[config.circuits]
+description = ""
+title = ""
+
+[config.control]
+description = ""
+descriptionInterval = ""
+descriptionResidualPower = ""
+labelInterval = ""
+labelResidualPower = ""
+title = ""
 
 [config.deviceValue]
-capacity = 
-chargeStatus = 
-chargedEnergy = 
-controllable = 
-chargeStatusA = 
-currency = 
-no = 
-phaseCurrents = 
-soc = 
-url = 
-phaseVoltages = 
-bucket = 
-current = 
-socLimit = 
-gridPrice = 
-odometer = 
-org = 
-yes = 
-enabled = 
-range = 
-energy = 
-feedinPrice = 
-broker = 
-temp = 
-powerRange = 
-power = 
-phasePowers = 
-chargeStatusC = 
-chargeStatusE = 
-co2 = 
-chargeStatusB = 
-chargeStatusF = 
-configured = 
-currentRange = 
-hemsType = 
-topic = 
+broker = ""
+bucket = ""
+capacity = ""
+chargeStatus = ""
+chargeStatusA = ""
+chargeStatusB = ""
+chargeStatusC = ""
+chargeStatusE = ""
+chargeStatusF = ""
+chargedEnergy = ""
+co2 = ""
+configured = ""
+controllable = ""
+currency = ""
+current = ""
+currentRange = ""
+enabled = ""
+energy = ""
+feedinPrice = ""
+gridPrice = ""
+hemsType = ""
+no = ""
+odometer = ""
+org = ""
+phaseCurrents = ""
+phasePowers = ""
+phaseVoltages = ""
+power = ""
+powerRange = ""
+range = ""
+soc = ""
+socLimit = ""
+temp = ""
+topic = ""
+url = ""
+yes = ""
+
+[config.eebus]
+description = ""
+title = ""
 
 [config.form]
 example = "Пример"
 optional = "опционально"
 
 [config.general]
-cancel = 
-off = 
-save = 
-docsLink = 
-showAdvancedSettings = 
-telemetry = 
-hideAdvancedSettings = 
-experimental = 
-remove = 
-readFromFile = 
-title = 
-password = 
-on = 
+cancel = ""
+docsLink = ""
+experimental = ""
+hideAdvancedSettings = ""
+off = ""
+on = ""
+password = ""
+readFromFile = ""
+remove = ""
+save = ""
+showAdvancedSettings = ""
+telemetry = ""
+title = ""
 
 [config.grid]
-titleEdit = 
-titleAdd = 
-title = 
+title = ""
+titleAdd = ""
+titleEdit = ""
+
+[config.hems]
+description = ""
+title = ""
+
+[config.influx]
+description = ""
+descriptionToken = ""
+labelBucket = ""
+labelCheckInsecure = ""
+labelDatabase = ""
+labelInsecure = ""
+labelOrg = ""
+labelPassword = ""
+labelToken = ""
+labelUrl = ""
+labelUser = ""
+title = ""
+v1Support = ""
+v2Support = ""
 
 [config.main]
+addLoadpoint = ""
+addPvBattery = ""
 addVehicle = "Добавить транспортное средство"
+configured = ""
 edit = "редактировать"
 title = "Конфигурация"
+unconfigured = ""
 vehicles = "Мои транспортные средства"
-configured = 
-yaml = 
-addPvBattery = 
-addLoadpoint = 
-unconfigured = 
+yaml = ""
+
+[config.messaging]
+description = ""
+title = ""
 
 [config.meter]
-validateSave = 
-titleChoice = 
-delete = 
-cancel = 
-save = 
-template = 
+cancel = ""
+delete = ""
+save = ""
+template = ""
+titleChoice = ""
+validateSave = ""
+
+[config.modbusproxy]
+description = ""
+title = ""
+
+[config.mqtt]
+authentication = ""
+description = ""
+descriptionClientId = ""
+descriptionTopic = ""
+labelBroker = ""
+labelCaCert = ""
+labelCheckInsecure = ""
+labelClientCert = ""
+labelClientId = ""
+labelClientKey = ""
+labelInsecure = ""
+labelPassword = ""
+labelTopic = ""
+labelUser = ""
+publishing = ""
+title = ""
+
+[config.network]
+descriptionHost = ""
+descriptionPort = ""
+descriptionSchema = ""
+labelHost = ""
+labelPort = ""
+labelSchema = ""
+title = ""
 
 [config.options]
 
+[config.options.boolean]
+no = ""
+yes = ""
+
 [config.options.endianness]
-big = 
-little = 
+big = ""
+little = ""
 
 [config.options.schema]
-https = 
-http = 
+http = ""
+https = ""
 
 [config.pv]
-titleEdit = 
-titleAdd = 
+titleAdd = ""
+titleEdit = ""
 
 [config.section]
-integrations = 
-general = 
-vehicles = 
-grid = 
-meter = 
-system = 
-loadpoints = 
+general = ""
+grid = ""
+integrations = ""
+loadpoints = ""
+meter = ""
+system = ""
+vehicles = ""
+
+[config.sponsor]
+addToken = ""
+changeToken = ""
+description = ""
+descriptionToken = ""
+error = ""
+labelToken = ""
+title = ""
 
 [config.system]
-logs = 
-restartRequiredDescription = 
-restart = 
-restartRequiredMessage = 
-restartingDescription = 
-restartingMessage = 
+logs = ""
+restart = ""
+restartRequiredDescription = ""
+restartRequiredMessage = ""
+restartingDescription = ""
+restartingMessage = ""
+
+[config.tariffs]
+description = ""
+title = ""
 
 [config.title]
-description = 
-label = 
-title = 
+description = ""
+label = ""
+title = ""
 
 [config.validation]
-failed = 
-running = 
-unknown = 
-validate = 
-success = 
-label = 
+failed = ""
+label = ""
+running = ""
+success = ""
+unknown = ""
+validate = ""
 
 [config.vehicle]
-online = 
-titleEdit = 
-scooter = 
-offline = 
-template = 
-save = 
-validateSave = 
-titleAdd = 
-cancel = 
-delete = 
-generic = 
+cancel = ""
+delete = ""
+generic = ""
+offline = ""
+online = ""
+save = ""
+scooter = ""
+template = ""
+titleAdd = ""
+titleEdit = ""
+validateSave = ""
 
 [footer]
 
@@ -183,36 +271,37 @@ powerSub2 = "заряжаются..."
 tabTitle = "Данные комьюнити"
 
 [footer.savings]
+co2Saved = ""
+co2Title = ""
+configurePriceCo2 = ""
 footerLong = "{percent} солнечной энергии"
 footerShort = "{percent} солнечной"
 modalTitle = "Обзор потребленной электроэнергии"
+moneySaved = ""
 percentGrid = "{self} кВт/ч из сети"
 percentSelf = "{self} кВт/ч солнечной"
 percentTitle = "Солнечная энергия"
+periodLabel = ""
 priceFeedIn = "{feedInPrice} в сеть"
 priceGrid = "{gridPrice} из сети"
 priceTitle = "Цена электроэнергии"
+referenceGrid = ""
+referenceLabel = ""
 savingsComparedToGrid = "в сравнении с потреблением из сети"
 savingsTitle = "Сэкономлено"
 savingsTotalEnergy = "{total} кВт/ч заряжено"
 since = "c {since}"
 tabTitle = "Мои данные"
-co2Title = 
-referenceGrid = 
-co2Saved = 
-moneySaved = 
-periodLabel = 
-configurePriceCo2 = 
-referenceLabel = 
 
 [footer.savings.period]
-30d = 
-total = 
-365d = 
-thisYear = 
+30d = ""
+365d = ""
+thisYear = ""
+total = ""
 
 [footer.sponsor]
 becomeSponsor = "Стать спонсором"
+becomeSponsorExtended = ""
 confetti = "Готовы к конфети?"
 confettiPromise = "Ты получишь стикеры или цифровое конфети"
 sticker = "... или стикеры evcc?"
@@ -220,11 +309,10 @@ supportUs = "Наша миссия — сделать солнечную эне�
 thanks = "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc."
 titleNoSponsor = "Поддержать нас"
 titleSponsor = "Ты нас поддерживаешь"
-becomeSponsorExtended = 
-titleTrial = 
-titleVictron = 
-trial = 
-victron = 
+titleTrial = ""
+titleVictron = ""
+trial = ""
+victron = ""
 
 [footer.telemetry]
 optIn = "Я хочу поделиться своими данными."
@@ -249,86 +337,90 @@ about = "О нас"
 blog = "Блог"
 docs = "Документация"
 github = "GitHub"
+login = ""
+logout = ""
+nativeSettings = ""
+needHelp = ""
 sessions = "Сеансы зарядки"
 settings = "Настройки"
-nativeSettings = 
-needHelp = 
-login = 
-logout = 
 
 [help]
-issueDescription = 
-discussionsButton = 
-documentationButton = 
-restartButton = 
-primaryActions = 
-logsDescription = 
-logsButton = 
-secondaryActions = 
-restartDescription = 
-issueButton = 
-modalTitle = 
+discussionsButton = ""
+documentationButton = ""
+issueButton = ""
+issueDescription = ""
+logsButton = ""
+logsDescription = ""
+modalTitle = ""
+primaryActions = ""
+restartButton = ""
+restartDescription = ""
+secondaryActions = ""
 
 [help.restart]
-cancel = 
-description = 
-modalTitle = 
-confirm = 
-disclaimer = 
+cancel = ""
+confirm = ""
+description = ""
+disclaimer = ""
+modalTitle = ""
 
 [log]
-download = 
-areas = 
-levelLabel = 
-noResults = 
-selectAll = 
-showAll = 
-title = 
-areaLabel = 
-nAreas = 
-update = 
-search = 
+areaLabel = ""
+areas = ""
+download = ""
+levelLabel = ""
+nAreas = ""
+noResults = ""
+search = ""
+selectAll = ""
+showAll = ""
+title = ""
+update = ""
 
 [loginModal]
-error = 
-login = 
-reset = 
-password = 
-iframeIssue = 
-cancel = 
-invalid = 
-iframeHint = 
-title = 
+cancel = ""
+error = ""
+iframeHint = ""
+iframeIssue = ""
+invalid = ""
+login = ""
+password = ""
+reset = ""
+title = ""
 
 [main]
 vehicles = "Парковка"
 
 [main.chargingPlan]
-unsavedChanges = 
-arrivalTab = 
-addRepeatingPlan = 
-planNumber = 
-weekdays = 
-selectAll = 
-repeatingPlans = 
-repeating = 
-active = 
-modalTitle = 
-none = 
-remove = 
-time = 
-title = 
-update = 
-day = 
-goal = 
-departureTab = 
-titleTargetCharge = 
-titleMinSoc = 
+active = ""
+addRepeatingPlan = ""
+arrivalTab = ""
+day = ""
+departureTab = ""
+goal = ""
+modalTitle = ""
+none = ""
+planNumber = ""
+remove = ""
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
+time = ""
+title = ""
+titleMinSoc = ""
+titleTargetCharge = ""
+unsavedChanges = ""
+update = ""
+weekdays = ""
 
 [main.energyflow]
 battery = "Батарея"
 batteryCharge = "Батарея заряжается"
 batteryDischarge = "Батарея разряжается"
+batteryHold = ""
+batteryTooltip = ""
+cheapBatteryGridCharge = ""
+cleanBatteryGridCharge = ""
 gridImport = "Потребление из сети"
 homePower = "Потребление"
 loadpoints = "Зарядная станция | Зарядная станция | {count} зарядные станции"
@@ -336,42 +428,44 @@ noEnergy = "Нет данных счетчика"
 pvExport = "Экспорт в сеть"
 pvProduction = "Генерация"
 selfConsumption = "Собственное потребление"
-cleanBatteryGridCharge = 
-batteryHold = 
-cheapBatteryGridCharge = 
-batteryTooltip = 
 
 [main.heatingStatus]
-waitForVehicle = 
-charging = 
+charging = ""
+waitForVehicle = ""
 
 [main.loadpoint]
+avgPrice = ""
 charged = "Заряжено"
+co2 = ""
 duration = "Длительность"
 fallbackName = "Зарядная станция"
 power = "Мощность"
-price = 
-remoteDisabledSoft = 
-solar = 
-co2 = 
-remaining = 
-avgPrice = 
-remoteDisabledHard = 
+price = ""
+remaining = ""
+remoteDisabledHard = ""
+remoteDisabledSoft = ""
+solar = ""
 
 [main.loadpointSettings]
+batteryUsage = ""
 currents = "Ток зарядки"
 default = "по умолчанию"
 disclaimerHint = "Заметка:"
+onlyForSocBasedCharging = ""
+smartCostCheap = ""
+smartCostClean = ""
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
-smartCostClean = 
-batteryUsage = 
-smartCostCheap = 
-onlyForSocBasedCharging = 
+
+[main.loadpointSettings.batteryBoost]
+description = ""
+label = ""
+mode = ""
+once = ""
 
 [main.loadpointSettings.limitSoc]
-description = 
-label = 
+description = ""
+label = ""
 
 [main.loadpointSettings.maxCurrent]
 label = "Макс. ток"
@@ -380,24 +474,24 @@ label = "Макс. ток"
 label = "Мин. ток"
 
 [main.loadpointSettings.minSoc]
+description = ""
 label = "Мин. заряд %"
-description = 
 
 [main.loadpointSettings.phasesConfigured]
 label = "Фазы"
+no1p3pSupport = ""
 phases_0 = "авто переключение"
 phases_1 = "1 фаза"
 phases_1_hint = "({min} до {max})"
 phases_3 = "3 фазы"
 phases_3_hint = "({min} до {max})"
-no1p3pSupport = 
 
 [main.mode]
 minpv = "Мин+солн. эн"
 now = "Быстро"
 off = "Выкл"
 pv = "Солн. эн"
-smart = 
+smart = ""
 
 [main.provider]
 login = "войти"
@@ -405,71 +499,82 @@ logout = "выйти"
 
 [main.targetCharge]
 activate = "Активировать"
+co2Limit = ""
+costLimitIgnore = ""
+currentPlan = ""
+descriptionEnergy = ""
 descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}?"
 inactiveLabel = "Запланированное время"
 modalTitle = "Установить запланированное время"
+nextPlan = ""
+notReachableInTime = ""
+onlyInPvMode = ""
+planDuration = ""
+planPeriodLabel = ""
+planPeriodValue = ""
+planUnknown = ""
+preview = ""
+priceLimit = ""
+remove = ""
 setTargetTime = "ни одного"
+targetIsAboveLimit = ""
+targetIsAboveVehicleLimit = ""
 targetIsInThePast = "Выбери время в будущем."
+targetIsTooFarInTheFuture = ""
 title = "Запланированное время"
 today = "сегодня"
 tomorrow = "завтра"
-planDuration = 
-vehicleCapacityDocs = 
-onlyInPvMode = 
-targetIsAboveVehicleLimit = 
-co2Limit = 
-planPeriodValue = 
-costLimitIgnore = 
-preview = 
-update = 
-targetIsTooFarInTheFuture = 
-vehicleCapacityRequired = 
-planUnknown = 
-priceLimit = 
-nextPlan = 
-remove = 
-planPeriodLabel = 
-targetIsAboveLimit = 
-descriptionEnergy = 
-notReachableInTime = 
-currentPlan = 
+update = ""
+vehicleCapacityDocs = ""
+vehicleCapacityRequired = ""
 
 [main.targetChargePlan]
-co2Label = 
-timeRange = 
-priceLabel = 
-chargeDuration = 
-unknownPrice = 
+chargeDuration = ""
+co2Label = ""
+priceLabel = ""
+timeRange = ""
+unknownPrice = ""
 
 [main.targetEnergy]
 label = "Лимит"
 noLimit = "ни одного"
 
 [main.vehicle]
+addVehicle = ""
 changeVehicle = "Сменить транспортное средство"
 detectionActive = "Определение транспортного средства..."
 fallbackName = "Транспортное средство"
+moreActions = ""
 none = "Нет транспортного средства"
+notReachable = ""
 targetSoc = "Лимит"
+temp = ""
+tempLimit = ""
 unknown = "Гостевое транспортное средство"
 vehicleSoc = "Заряд"
-addVehicle = 
-tempLimit = 
-notReachable = 
-temp = 
-moreActions = 
 
 [main.vehicleSoc]
 charging = "заряжается"
 connected = "подключено"
 disconnected = "отключено"
 ready = "готово"
-vehicleLimit = 
+vehicleLimit = ""
 
 [main.vehicleStatus]
+awaitingAuthorization = ""
+batteryBoost = ""
 charging = "Зарядка..."
+cheapEnergyCharging = ""
+cheapEnergyNextStart = ""
+cheapEnergySet = ""
+cleanEnergyCharging = ""
+cleanEnergyNextStart = ""
+cleanEnergySet = ""
+climating = ""
 connected = "Подключено."
+disconnectRequired = ""
 disconnected = "Отключено."
+finished = ""
 minCharge = "Минимальная зарядка до {soc}."
 pvDisable = "Недостаточно избытка. Пауза через {remaining}..."
 pvEnable = "Доступен избыток. Начинаю через {remaining}..."
@@ -478,125 +583,154 @@ scale3p = "Увеличиваю до трех фаз через {remaining}..."
 targetChargeActive = "Плановая зарядка активна..."
 targetChargePlanned = "Плановая зарядка начнется в {time}."
 targetChargeWaitForVehicle = "Плановая зарядка готова. Ожидаю транспортное средство..."
+unknown = ""
+vehicleLimit = ""
+vehicleLimitReached = ""
 waitForVehicle = "Готов. Ожидание транспортного средства..."
-unknown = 
-welcome = 
-cleanEnergyNextStart = 
-vehicleLimitReached = 
-finished = 
-vehicleLimit = 
-batteryBoost = 
-cheapEnergyCharging = 
-awaitingAuthorization = 
-cheapEnergySet = 
-cheapEnergyNextStart = 
-cleanEnergyCharging = 
-cleanEnergySet = 
-climating = 
-disconnectRequired = 
+welcome = ""
 
 [notifications]
 dismissAll = "Отклонить все"
+logs = ""
 modalTitle = "Уведомления"
-logs = 
 
 [offline]
+configurationError = ""
 message = "Не подключено к серверу."
 reload = "Перезагрузить?"
-configurationError = 
-restart = 
-restartNeeded = 
-restarting = 
+restart = ""
+restartNeeded = ""
+restarting = ""
 
 [passwordModal]
-labelRepeat = 
-labelCurrent = 
-labelNew = 
-newPassword = 
-titleNew = 
-noMatch = 
-empty = 
-updatePassword = 
-error = 
-titleUpdate = 
-description = 
+description = ""
+empty = ""
+error = ""
+labelCurrent = ""
+labelNew = ""
+labelRepeat = ""
+newPassword = ""
+noMatch = ""
+titleNew = ""
+titleUpdate = ""
+updatePassword = ""
 
 [session]
 cancel = "Скасувати"
+co2 = ""
+date = ""
 delete = "Видалити"
 finished = "Завершено"
+meter = ""
 meterstart = "Початок лічильника"
 meterstop = "Зупинка лічильника"
 odometer = "Пробіг"
+price = ""
 started = "Розпочато"
-co2 = 
-title = 
-date = 
-meter = 
-price = 
+title = ""
 
 [sessions]
+avgPower = ""
+avgPrice = ""
+chargeDuration = ""
+co2 = ""
+csvMonth = ""
+csvTotal = ""
 date = "Период"
 downloadCsv = "Загрузить CSV"
 energy = "Заряжено"
 loadpoint = "Зарядная станция"
+noData = ""
+overview = ""
+price = ""
+reallyDelete = ""
+showIndividualEntries = ""
+solar = ""
 title = "Сессии зарядки"
+total = ""
 vehicle = "Транспортное средство"
-reallyDelete = 
-avgPower = 
-total = 
-csvMonth = 
-overview = 
-avgPrice = 
-chargeDuration = 
-co2 = 
-showIndividualEntries = 
-solar = 
-noData = 
-csvTotal = 
-price = 
+
+[sessions.chartTitle]
+avgCo2ByGroup = ""
+avgPriceByGroup = ""
+byGroupLoadpoint = ""
+byGroupVehicle = ""
+energy = ""
+energyGrouped = ""
+energyGroupedByGroup = ""
+energySubSolar = ""
+energySubTotal = ""
+groupedCo2ByGroup = ""
+groupedPriceByGroup = ""
+historyCo2 = ""
+historyCo2Sub = ""
+historyPrice = ""
+historyPriceSub = ""
+solar = ""
+solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "Электроэнергия (кВт/ч)"
+chargeduration = ""
+co2perkwh = ""
 created = "Создано"
 finished = "Закончено"
 identifier = "Идентификатор"
 loadpoint = "Зарядная станция"
+meterstart = ""
+meterstop = ""
 odometer = "Пробег (км)"
+price = ""
+priceperkwh = ""
+solarpercentage = ""
 vehicle = "Транспортное средство"
-co2perkwh = 
-price = 
-chargeduration = 
-meterstop = 
-solarpercentage = 
-priceperkwh = 
-meterstart = 
 
 [sessions.filter]
-filter = 
-allLoadpoints = 
-allVehicles = 
+allLoadpoints = ""
+allVehicles = ""
+filter = ""
+
+[sessions.group]
+co2 = ""
+grid = ""
+price = ""
+self = ""
+
+[sessions.groupBy]
+loadpoint = ""
+none = ""
+vehicle = ""
+
+[sessions.period]
+month = ""
+total = ""
+year = ""
+
+[sessions.type]
+co2 = ""
+price = ""
+solar = ""
 
 [settings]
 title = "Настройки"
 
 [settings.fullscreen]
-label = 
-enter = 
-exit = 
+enter = ""
+exit = ""
+label = ""
 
 [settings.hiddenFeatures]
-label = 
-value = 
+label = ""
+value = ""
 
 [settings.language]
 auto = "Автоматически"
 label = "Язык"
 
 [settings.sponsorToken]
-hint = 
-expires = 
-getNew = 
+expires = ""
+getNew = ""
+hint = ""
 
 [settings.telemetry]
 label = "Телеметрия"
@@ -613,20 +747,20 @@ label = "Единицы измерения"
 mi = "мили"
 
 [smartCost]
-activeHours = 
-priceLabel = 
-saved = 
-none = 
-cheapTitle = 
-co2Limit = 
-priceLimit = 
-activeHoursLabel = 
-applyToAll = 
-co2Label = 
-modalTitle = 
-batteryDescription = 
-cleanTitle = 
-loadpointDescription = 
+activeHours = ""
+activeHoursLabel = ""
+applyToAll = ""
+batteryDescription = ""
+cheapTitle = ""
+cleanTitle = ""
+co2Label = ""
+co2Limit = ""
+loadpointDescription = ""
+modalTitle = ""
+none = ""
+priceLabel = ""
+priceLimit = ""
+saved = ""
 
 [startupError]
 configFile = "Используемый конфигурационный файл:"
@@ -639,138 +773,3 @@ lineError = "Ошибка в {0}."
 lineErrorLink = "линия {0}"
 restartButton = "Рестарт"
 title = "Ошибка запуска"
-
-
-[main.loadpointSettings.batteryBoost]
-mode = 
-description = 
-label = 
-once = 
-
-[config.influx]
-labelCheckInsecure = 
-labelInsecure = 
-labelPassword = 
-labelUser = 
-descriptionToken = 
-title = 
-labelBucket = 
-description = 
-v2Support = 
-labelUrl = 
-v1Support = 
-labelDatabase = 
-labelToken = 
-labelOrg = 
-
-[config.mqtt]
-descriptionTopic = 
-descriptionClientId = 
-labelCaCert = 
-labelClientId = 
-labelInsecure = 
-labelCheckInsecure = 
-description = 
-labelPassword = 
-labelClientKey = 
-title = 
-labelTopic = 
-publishing = 
-labelUser = 
-labelClientCert = 
-labelBroker = 
-authentication = 
-
-[config.sponsor]
-description = 
-error = 
-title = 
-descriptionToken = 
-addToken = 
-labelToken = 
-changeToken = 
-
-[sessions.chartTitle]
-energySubTotal = 
-avgPriceByGroup = 
-historyCo2 = 
-groupedCo2ByGroup = 
-historyCo2Sub = 
-energyGroupedByGroup = 
-avgCo2ByGroup = 
-byGroupLoadpoint = 
-groupedPriceByGroup = 
-energyGrouped = 
-historyPrice = 
-solarByGroup = 
-energySubSolar = 
-historyPriceSub = 
-byGroupVehicle = 
-energy = 
-solar = 
-
-[sessions.groupBy]
-loadpoint = 
-vehicle = 
-none = 
-
-[sessions.type]
-price = 
-solar = 
-co2 = 
-
-[sessions.group]
-grid = 
-price = 
-co2 = 
-self = 
-
-[config.control]
-description = 
-descriptionResidualPower = 
-labelInterval = 
-title = 
-descriptionInterval = 
-labelResidualPower = 
-
-[config.hems]
-description = 
-title = 
-
-[config.circuits]
-title = 
-description = 
-
-[config.network]
-labelSchema = 
-descriptionSchema = 
-labelHost = 
-title = 
-descriptionHost = 
-descriptionPort = 
-labelPort = 
-
-[config.messaging]
-description = 
-title = 
-
-[config.eebus]
-description = 
-title = 
-
-[config.options.boolean]
-no = 
-yes = 
-
-[config.tariffs]
-title = 
-description = 
-
-[config.modbusproxy]
-description = 
-title = 
-
-[sessions.period]
-month = 
-total = 
-year = 

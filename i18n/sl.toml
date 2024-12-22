@@ -397,25 +397,25 @@ vehicles = "Parkiranje"
 
 [main.chargingPlan]
 active = "Aktivno"
+addRepeatingPlan = ""
 arrivalTab = "Prihod"
 day = "Dan"
 departureTab = "Odhod"
 goal = "Cilj polnjenja"
 modalTitle = "Načrt polnjenja"
 none = "brez"
+planNumber = ""
 remove = "Odstrani"
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
 time = "Čas"
 title = "Načrt"
 titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
 unsavedChanges = "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?"
 update = "Uporabi"
-repeatingPlans = 
-selectAll = 
-planNumber = 
-addRepeatingPlan = 
-repeating = 
-weekdays = 
+weekdays = ""
 
 [main.energyflow]
 battery = "Baterija"
@@ -512,6 +512,7 @@ descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?"
 inactiveLabel = "Ciljni čas"
 modalTitle = "Nastavite ciljni čas"
+nextPlan = ""
 notReachableInTime = "Cilj bo dosežen {overrun} pozneje."
 onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 planDuration = "Čas polnjenja"
@@ -532,7 +533,6 @@ tomorrow = "jutri"
 update = "Posodobitev"
 vehicleCapacityDocs = "Naučite se konfigurirati."
 vehicleCapacityRequired = "Za oceno časa polnjenja je potrebna kapaciteta baterije vozila."
-nextPlan = 
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"

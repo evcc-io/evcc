@@ -1,6 +1,11 @@
 [batterySettings]
 batteryLevel = "电池等级"
 capacity = "{energy} / {total}"
+control = ""
+discharge = ""
+disclaimerHint = ""
+disclaimerText = ""
+gridChargeTab = ""
 legendBottomName = "家庭优先"
 legendBottomSubline = "不用充电"
 legendMiddleName = "交通工具优先"
@@ -11,142 +16,225 @@ legendTopName = "电池支持充电"
 legendTopSubline = "勿打扰"
 modalTitle = "电池配置"
 note = "注意:这些设置仅影响太阳能模式.充电行为会相应调整."
-discharge = 
-disclaimerText = 
-disclaimerHint = 
-control = 
-gridChargeTab = 
-usageTab = 
+usageTab = ""
 
 [batterySettings.bufferStart]
+above = ""
 full = "当快满的时候"
 low = "当有点满的时候"
 medium = "半满时"
 never = "只要有足够的剩余"
-above = 
 
 [config]
 
 [config.battery]
-titleAdd = 
-titleEdit = 
+titleAdd = ""
+titleEdit = ""
+
+[config.circuits]
+description = ""
+title = ""
+
+[config.control]
+description = ""
+descriptionInterval = ""
+descriptionResidualPower = ""
+labelInterval = ""
+labelResidualPower = ""
+title = ""
 
 [config.deviceValue]
-controllable = 
-chargeStatusF = 
-configured = 
-topic = 
-range = 
-odometer = 
-energy = 
-chargeStatusA = 
-currency = 
-temp = 
-chargedEnergy = 
-enabled = 
-chargeStatus = 
-phaseCurrents = 
-broker = 
-power = 
-chargeStatusB = 
-soc = 
-feedinPrice = 
-yes = 
-url = 
-gridPrice = 
-chargeStatusE = 
-chargeStatusC = 
-bucket = 
-phaseVoltages = 
-org = 
-no = 
-co2 = 
-phasePowers = 
-socLimit = 
-current = 
-currentRange = 
-capacity = 
-hemsType = 
-powerRange = 
+broker = ""
+bucket = ""
+capacity = ""
+chargeStatus = ""
+chargeStatusA = ""
+chargeStatusB = ""
+chargeStatusC = ""
+chargeStatusE = ""
+chargeStatusF = ""
+chargedEnergy = ""
+co2 = ""
+configured = ""
+controllable = ""
+currency = ""
+current = ""
+currentRange = ""
+enabled = ""
+energy = ""
+feedinPrice = ""
+gridPrice = ""
+hemsType = ""
+no = ""
+odometer = ""
+org = ""
+phaseCurrents = ""
+phasePowers = ""
+phaseVoltages = ""
+power = ""
+powerRange = ""
+range = ""
+soc = ""
+socLimit = ""
+temp = ""
+topic = ""
+url = ""
+yes = ""
+
+[config.eebus]
+description = ""
+title = ""
 
 [config.form]
 example = "示例"
 optional = "可选"
 
 [config.general]
-save = 
-showAdvancedSettings = 
-on = 
-experimental = 
-cancel = 
-remove = 
-password = 
-title = 
-hideAdvancedSettings = 
-telemetry = 
-off = 
-docsLink = 
-readFromFile = 
+cancel = ""
+docsLink = ""
+experimental = ""
+hideAdvancedSettings = ""
+off = ""
+on = ""
+password = ""
+readFromFile = ""
+remove = ""
+save = ""
+showAdvancedSettings = ""
+telemetry = ""
+title = ""
 
 [config.grid]
-titleAdd = 
-titleEdit = 
-title = 
+title = ""
+titleAdd = ""
+titleEdit = ""
+
+[config.hems]
+description = ""
+title = ""
+
+[config.influx]
+description = ""
+descriptionToken = ""
+labelBucket = ""
+labelCheckInsecure = ""
+labelDatabase = ""
+labelInsecure = ""
+labelOrg = ""
+labelPassword = ""
+labelToken = ""
+labelUrl = ""
+labelUser = ""
+title = ""
+v1Support = ""
+v2Support = ""
 
 [config.main]
+addLoadpoint = ""
+addPvBattery = ""
 addVehicle = "添加车辆"
+configured = ""
 edit = "编辑"
 title = "配置"
+unconfigured = ""
 vehicles = "我的车辆"
-yaml = 
-addPvBattery = 
-unconfigured = 
-configured = 
-addLoadpoint = 
+yaml = ""
+
+[config.messaging]
+description = ""
+title = ""
 
 [config.meter]
-template = 
-cancel = 
-titleChoice = 
-save = 
-validateSave = 
-delete = 
+cancel = ""
+delete = ""
+save = ""
+template = ""
+titleChoice = ""
+validateSave = ""
+
+[config.modbusproxy]
+description = ""
+title = ""
+
+[config.mqtt]
+authentication = ""
+description = ""
+descriptionClientId = ""
+descriptionTopic = ""
+labelBroker = ""
+labelCaCert = ""
+labelCheckInsecure = ""
+labelClientCert = ""
+labelClientId = ""
+labelClientKey = ""
+labelInsecure = ""
+labelPassword = ""
+labelTopic = ""
+labelUser = ""
+publishing = ""
+title = ""
+
+[config.network]
+descriptionHost = ""
+descriptionPort = ""
+descriptionSchema = ""
+labelHost = ""
+labelPort = ""
+labelSchema = ""
+title = ""
 
 [config.options]
 
+[config.options.boolean]
+no = ""
+yes = ""
+
 [config.options.endianness]
-little = 
-big = 
+big = ""
+little = ""
 
 [config.options.schema]
-https = 
-http = 
+http = ""
+https = ""
 
 [config.pv]
-titleEdit = 
-titleAdd = 
+titleAdd = ""
+titleEdit = ""
 
 [config.section]
-general = 
-vehicles = 
-loadpoints = 
-integrations = 
-system = 
-meter = 
-grid = 
+general = ""
+grid = ""
+integrations = ""
+loadpoints = ""
+meter = ""
+system = ""
+vehicles = ""
+
+[config.sponsor]
+addToken = ""
+changeToken = ""
+description = ""
+descriptionToken = ""
+error = ""
+labelToken = ""
+title = ""
 
 [config.system]
-restartRequiredMessage = 
-restartRequiredDescription = 
-restart = 
-logs = 
-restartingMessage = 
-restartingDescription = 
+logs = ""
+restart = ""
+restartRequiredDescription = ""
+restartRequiredMessage = ""
+restartingDescription = ""
+restartingMessage = ""
+
+[config.tariffs]
+description = ""
+title = ""
 
 [config.title]
-label = 
-description = 
-title = 
+description = ""
+label = ""
+title = ""
 
 [config.validation]
 failed = "失败"
@@ -209,11 +297,12 @@ tabTitle = "我的数据"
 [footer.savings.period]
 30d = "过去 30 天"
 365d = "过去 365 天"
+thisYear = ""
 total = "整天"
-thisYear = 
 
 [footer.sponsor]
 becomeSponsor = "成为赞助商"
+becomeSponsorExtended = ""
 confetti = "准备好庆祝了吗?"
 confettiPromise = "你会得到贴纸和数字纸屑"
 sticker = "… 或者 evcc 贴纸?"
@@ -221,11 +310,10 @@ supportUs = "我们的使命是让太阳能成为常态。通过支付对您有�
 thanks = "谢谢你, {sponsor}! 您的贡献有助于进一步发展evcc"
 titleNoSponsor = "支持我们"
 titleSponsor = "你是支持者"
-trial = 
-becomeSponsorExtended = 
-titleVictron = 
-victron = 
-titleTrial = 
+titleTrial = ""
+titleVictron = ""
+trial = ""
+victron = ""
 
 [footer.telemetry]
 optIn = "我想贡献我的数据"
@@ -251,24 +339,24 @@ blog = "博客"
 docs = " 文档"
 github = "GitHub"
 login = "车辆登录"
+logout = ""
+nativeSettings = ""
 needHelp = "需要帮助?"
 sessions = "充电期"
 settings = "设置"
-nativeSettings = 
-logout = 
 
 [help]
 discussionsButton = "GitHub 讨论"
 documentationButton = "文档"
 issueButton = "报告 bug"
 issueDescription = "发现奇怪或错误的行为?"
+logsButton = ""
+logsDescription = ""
 modalTitle = "需要帮助?"
 primaryActions = "有些东西没有按照它应该的方式工作 ?这些都是获得帮助的好地方."
 restartButton = "重启"
 restartDescription = "试过关机再开?"
 secondaryActions = "仍然无法解决您的问题?这里有一些更严厉的选择."
-logsButton = 
-logsDescription = 
 
 [help.restart]
 cancel = "取消"
@@ -278,59 +366,62 @@ disclaimer = "注意: evcc 将终止并依靠操作系统重新启动服务."
 modalTitle = "你确定要重启吗?"
 
 [log]
-showAll = 
-update = 
-selectAll = 
-search = 
-areaLabel = 
-download = 
-nAreas = 
-areas = 
-noResults = 
-levelLabel = 
-title = 
+areaLabel = ""
+areas = ""
+download = ""
+levelLabel = ""
+nAreas = ""
+noResults = ""
+search = ""
+selectAll = ""
+showAll = ""
+title = ""
+update = ""
 
 [loginModal]
-cancel = 
-invalid = 
-iframeHint = 
-password = 
-iframeIssue = 
-error = 
-title = 
-reset = 
-login = 
+cancel = ""
+error = ""
+iframeHint = ""
+iframeIssue = ""
+invalid = ""
+login = ""
+password = ""
+reset = ""
+title = ""
 
 [main]
 vehicles = "停车中"
 
 [main.chargingPlan]
+active = ""
+addRepeatingPlan = ""
 arrivalTab = "抵达"
+day = ""
 departureTab = "离开"
+goal = ""
 modalTitle = "充电计划"
 none = "无"
+planNumber = ""
+remove = ""
+repeating = ""
+repeatingPlans = ""
+selectAll = ""
+time = ""
 title = "计划"
 titleMinSoc = "平均充电"
 titleTargetCharge = "离开"
-time = 
-planNumber = 
-repeating = 
-weekdays = 
-remove = 
-unsavedChanges = 
-repeatingPlans = 
-addRepeatingPlan = 
-selectAll = 
-active = 
-day = 
-goal = 
-update = 
+unsavedChanges = ""
+update = ""
+weekdays = ""
 
 [main.energyflow]
 battery = "电池"
 batteryCharge = "电池充电"
 batteryDischarge = "电池放电"
+batteryHold = ""
 batteryTooltip = "{energy} / {total} ({soc})"
+cheapBatteryGridCharge = ""
+cleanBatteryGridCharge = ""
 gridImport = "电网使用"
 homePower = "消耗"
 loadpoints = "充电器| 充电器 | {count} 充电器"
@@ -338,13 +429,10 @@ noEnergy = "无仪表数据"
 pvExport = "电网导出"
 pvProduction = "生产"
 selfConsumption = "内耗"
-cheapBatteryGridCharge = 
-cleanBatteryGridCharge = 
-batteryHold = 
 
 [main.heatingStatus]
-charging = 
-waitForVehicle = 
+charging = ""
+waitForVehicle = ""
 
 [main.loadpoint]
 avgPrice = "⌀ 价格"
@@ -354,25 +442,31 @@ duration = "时长"
 fallbackName = "充电积分"
 power = "电力"
 price = "Σ 价格"
+remaining = ""
+remoteDisabledHard = ""
+remoteDisabledSoft = ""
 solar = "太阳能"
-remoteDisabledHard = 
-remoteDisabledSoft = 
-remaining = 
 
 [main.loadpointSettings]
+batteryUsage = ""
 currents = "充电货币"
 default = "默认"
 disclaimerHint = "笔记:"
+onlyForSocBasedCharging = ""
+smartCostCheap = ""
+smartCostClean = ""
 title = "设置 {0}"
 vehicle = "车辆"
-onlyForSocBasedCharging = 
-batteryUsage = 
-smartCostClean = 
-smartCostCheap = 
+
+[main.loadpointSettings.batteryBoost]
+description = ""
+label = ""
+mode = ""
+once = ""
 
 [main.loadpointSettings.limitSoc]
-description = 
-label = 
+description = ""
+label = ""
 
 [main.loadpointSettings.maxCurrent]
 label = "最大电流"
@@ -386,19 +480,19 @@ label = "最小充电 %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "阶段"
+no1p3pSupport = ""
 phases_0 = "自动切换"
 phases_1 = "阶段1"
 phases_1_hint = "({min} -> {max})"
 phases_3 = "阶段3"
 phases_3_hint = "({min} -> {max})"
-no1p3pSupport = 
 
 [main.mode]
 minpv = "最小太阳能"
 now = "快"
 off = "关"
 pv = "太阳能"
-smart = 
+smart = ""
 
 [main.provider]
 login = "登录"
@@ -408,16 +502,23 @@ logout = "注销"
 activate = "激活"
 co2Limit = "{co2} 的 CO2 限值"
 costLimitIgnore = "在此期间配置的{limit}将被忽略"
+currentPlan = ""
 descriptionEnergy = "{targetEnergy} 应该什么时候装载到车辆上?"
 descriptionSoc = "什么时候应该向车辆收取{targetSoc}的费用?"
 inactiveLabel = "目标时间"
+nextPlan = ""
+notReachableInTime = ""
 onlyInPvMode = "充电计划仅适用于太阳能模式."
 planDuration = "充电时间"
 planPeriodLabel = "时期"
 planPeriodValue = "{start} - {end}"
 planUnknown = "还不知道"
+preview = ""
 priceLimit = "价格限制 {price}"
+remove = ""
 setTargetTime = "无"
+targetIsAboveLimit = ""
+targetIsAboveVehicleLimit = ""
 targetIsInThePast = "选择将来的时间,马蒂."
 targetIsTooFarInTheFuture = "一旦我们对未来有了更多的了解,我们就会调整计划."
 title = "目标时间"
@@ -426,13 +527,6 @@ tomorrow = "明天"
 update = "更新"
 vehicleCapacityDocs = "了解如何配置它."
 vehicleCapacityRequired = "需要车辆电池容量来估计充电时间."
-remove = 
-targetIsAboveVehicleLimit = 
-currentPlan = 
-targetIsAboveLimit = 
-nextPlan = 
-preview = 
-notReachableInTime = 
 
 [main.targetChargePlan]
 chargeDuration = "充电时间"
@@ -452,12 +546,12 @@ detectionActive = "检查车辆…"
 fallbackName = "车辆"
 moreActions = "更多操作"
 none = "没有车辆"
+notReachable = ""
 targetSoc = "限制"
 temp = "临时."
 tempLimit = "临时限制"
 unknown = "来访车辆"
 vehicleSoc = "充电"
-notReachable = 
 
 [main.vehicleSoc]
 charging = "充电中"
@@ -467,12 +561,20 @@ ready = "就绪"
 vehicleLimit = "车辆限制: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = ""
+batteryBoost = ""
 charging = "充电中…"
 cheapEnergyCharging = "收取廉价能源: {price} (限制 {limit})"
+cheapEnergyNextStart = ""
+cheapEnergySet = ""
 cleanEnergyCharging = "充电清洁能源: {co2} (限制 {limit})"
+cleanEnergyNextStart = ""
+cleanEnergySet = ""
 climating = "检测到预处理."
 connected = "已连接."
+disconnectRequired = ""
 disconnected = "已断开"
+finished = ""
 guard = "“正在为{remaining}切换保护."
 minCharge = "最低收费为 {soc}."
 pvDisable = "盈余不足. 在{remaining}中暂停…"
@@ -482,45 +584,37 @@ scale3p = "在{remaining}中增加到三相充电…"
 targetChargeActive = "目标充电激活…"
 targetChargePlanned = "目标充电从 {time}开始."
 targetChargeWaitForVehicle = "目标充电准备就绪. 等车…"
+unknown = ""
+vehicleLimit = ""
 vehicleLimitReached = "达到车辆限制 {soc} ."
 waitForVehicle = "准备好了. 等车…"
-vehicleLimit = 
-awaitingAuthorization = 
-welcome = 
-batteryBoost = 
-cleanEnergyNextStart = 
-disconnectRequired = 
-finished = 
-cheapEnergyNextStart = 
-cheapEnergySet = 
-cleanEnergySet = 
-unknown = 
+welcome = ""
 
 [notifications]
 dismissAll = "全部解除"
+logs = ""
 modalTitle = "通知"
-logs = 
 
 [offline]
+configurationError = ""
 message = "没有连接到服务器."
 reload = "重新加载?"
-configurationError = 
-restartNeeded = 
-restart = 
-restarting = 
+restart = ""
+restartNeeded = ""
+restarting = ""
 
 [passwordModal]
-labelRepeat = 
-error = 
-newPassword = 
-titleUpdate = 
-noMatch = 
-updatePassword = 
-titleNew = 
-empty = 
-labelNew = 
-description = 
-labelCurrent = 
+description = ""
+empty = ""
+error = ""
+labelCurrent = ""
+labelNew = ""
+labelRepeat = ""
+newPassword = ""
+noMatch = ""
+titleNew = ""
+titleUpdate = ""
+updatePassword = ""
 
 [session]
 cancel = "取消"
@@ -548,17 +642,38 @@ downloadCsv = "下载为 CSV"
 energy = "已充"
 loadpoint = "充电点数"
 noData = "这个月不充电."
+overview = ""
 price = "总价"
 reallyDelete = "你真的要删除这个会话吗?"
+showIndividualEntries = ""
 solar = "太阳能"
 title = "充电周期"
 total = "总计"
 vehicle = "车辆"
-overview = 
-showIndividualEntries = 
+
+[sessions.chartTitle]
+avgCo2ByGroup = ""
+avgPriceByGroup = ""
+byGroupLoadpoint = ""
+byGroupVehicle = ""
+energy = ""
+energyGrouped = ""
+energyGroupedByGroup = ""
+energySubSolar = ""
+energySubTotal = ""
+groupedCo2ByGroup = ""
+groupedPriceByGroup = ""
+historyCo2 = ""
+historyCo2Sub = ""
+historyPrice = ""
+historyPriceSub = ""
+solar = ""
+solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "能源 (kWh)"
+chargeduration = ""
+co2perkwh = ""
 created = "已创建"
 finished = "已完成"
 identifier = "标识"
@@ -566,25 +681,44 @@ loadpoint = "充电积分"
 meterstart = "计量开始(kWh)"
 meterstop = "计量结束(kWh)"
 odometer = "里程 (km)"
+price = ""
+priceperkwh = ""
+solarpercentage = ""
 vehicle = "车辆"
-chargeduration = 
-priceperkwh = 
-co2perkwh = 
-price = 
-solarpercentage = 
 
 [sessions.filter]
 allLoadpoints = "全部充电积分"
 allVehicles = "全部车辆"
 filter = "过滤"
 
+[sessions.group]
+co2 = ""
+grid = ""
+price = ""
+self = ""
+
+[sessions.groupBy]
+loadpoint = ""
+none = ""
+vehicle = ""
+
+[sessions.period]
+month = ""
+total = ""
+year = ""
+
+[sessions.type]
+co2 = ""
+price = ""
+solar = ""
+
 [settings]
 title = "设置"
 
 [settings.fullscreen]
-exit = 
-enter = 
-label = 
+enter = ""
+exit = ""
+label = ""
 
 [settings.hiddenFeatures]
 label = "实验"
@@ -616,6 +750,10 @@ mi = "英里"
 [smartCost]
 activeHours = "{charging} / {total}"
 activeHoursLabel = "运行小时"
+applyToAll = ""
+batteryDescription = ""
+cheapTitle = ""
+cleanTitle = ""
 co2Label = "CO₂ 排放"
 co2Limit = "CO₂ 限制"
 loadpointDescription = "在太阳能模式下实现临时快速充电."
@@ -623,11 +761,7 @@ modalTitle = "智能电网充电"
 none = "无"
 priceLabel = "电价"
 priceLimit = "限价"
-saved = 
-cheapTitle = 
-applyToAll = 
-cleanTitle = 
-batteryDescription = 
+saved = ""
 
 [startupError]
 configFile = "使用的配置文件:"
@@ -640,138 +774,3 @@ lineError = "{0}错误."
 lineErrorLink = "行 {0}"
 restartButton = "重启"
 title = "启动错误"
-
-
-[main.loadpointSettings.batteryBoost]
-description = 
-label = 
-once = 
-mode = 
-
-[config.influx]
-labelCheckInsecure = 
-labelUrl = 
-labelToken = 
-labelOrg = 
-labelPassword = 
-descriptionToken = 
-labelBucket = 
-description = 
-labelUser = 
-title = 
-v2Support = 
-labelInsecure = 
-labelDatabase = 
-v1Support = 
-
-[config.mqtt]
-descriptionTopic = 
-labelBroker = 
-authentication = 
-labelUser = 
-descriptionClientId = 
-labelClientCert = 
-description = 
-labelCaCert = 
-labelTopic = 
-labelInsecure = 
-labelClientId = 
-labelClientKey = 
-publishing = 
-labelPassword = 
-title = 
-labelCheckInsecure = 
-
-[config.network]
-labelSchema = 
-labelHost = 
-title = 
-labelPort = 
-descriptionPort = 
-descriptionSchema = 
-descriptionHost = 
-
-[config.options.boolean]
-yes = 
-no = 
-
-[sessions.chartTitle]
-byGroupLoadpoint = 
-energySubTotal = 
-historyCo2 = 
-groupedCo2ByGroup = 
-historyCo2Sub = 
-historyPrice = 
-energySubSolar = 
-avgCo2ByGroup = 
-energy = 
-energyGrouped = 
-energyGroupedByGroup = 
-avgPriceByGroup = 
-groupedPriceByGroup = 
-byGroupVehicle = 
-solarByGroup = 
-historyPriceSub = 
-solar = 
-
-[sessions.groupBy]
-vehicle = 
-loadpoint = 
-none = 
-
-[config.circuits]
-description = 
-title = 
-
-[config.control]
-description = 
-descriptionInterval = 
-labelInterval = 
-descriptionResidualPower = 
-labelResidualPower = 
-title = 
-
-[config.hems]
-title = 
-description = 
-
-[config.messaging]
-title = 
-description = 
-
-[config.sponsor]
-descriptionToken = 
-error = 
-changeToken = 
-addToken = 
-description = 
-title = 
-labelToken = 
-
-[config.eebus]
-title = 
-description = 
-
-[config.tariffs]
-description = 
-title = 
-
-[config.modbusproxy]
-description = 
-title = 
-
-[sessions.period]
-month = 
-total = 
-year = 
-
-[sessions.type]
-solar = 
-co2 = 
-price = 
-
-[sessions.group]
-self = 
-grid = 
-co2 = 
-price = 
