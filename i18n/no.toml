@@ -1,11 +1,8 @@
 [batterySettings]
 batteryLevel = "Ladenivå"
 capacity = "{energy} av {total}"
-control = ""
-discharge = ""
 disclaimerHint = "Merk:"
 disclaimerText = "Kun relevant i PV-modus. Ladeadferden justeres deretter."
-gridChargeTab = ""
 legendBottomName = "Hjemmelading har prioritet"
 legendBottomSubline = "ikke bruk til lading"
 legendMiddleName = "kjøretøy først"
@@ -15,10 +12,8 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
-usageTab = ""
 
 [batterySettings.bufferStart]
-above = ""
 full = "når det er nesten fullt"
 low = "når det er noe fullt"
 medium = "når det er halvfullt"
@@ -27,213 +22,62 @@ never = "bare med nok PV-overskudd"
 [config]
 
 [config.battery]
-titleAdd = ""
-titleEdit = ""
 
 [config.circuits]
-description = ""
-title = ""
 
 [config.control]
-description = ""
-descriptionInterval = ""
-descriptionResidualPower = ""
-labelInterval = ""
-labelResidualPower = ""
-title = ""
 
 [config.deviceValue]
-broker = ""
-bucket = ""
-capacity = ""
-chargeStatus = ""
-chargeStatusA = ""
-chargeStatusB = ""
-chargeStatusC = ""
-chargeStatusE = ""
-chargeStatusF = ""
-chargedEnergy = ""
-co2 = ""
-configured = ""
-controllable = ""
-currency = ""
-current = ""
-currentRange = ""
-enabled = ""
-energy = ""
-feedinPrice = ""
-gridPrice = ""
-hemsType = ""
-no = ""
-odometer = ""
-org = ""
-phaseCurrents = ""
-phasePowers = ""
-phaseVoltages = ""
-power = ""
-powerRange = ""
-range = ""
-soc = ""
-socLimit = ""
-temp = ""
-topic = ""
-url = ""
-yes = ""
 
 [config.eebus]
-description = ""
-title = ""
 
 [config.form]
 example = "Eksempel"
 optional = "valgfritt"
 
 [config.general]
-cancel = ""
-docsLink = ""
-experimental = ""
-hideAdvancedSettings = ""
-off = ""
-on = ""
-password = ""
-readFromFile = ""
-remove = ""
-save = ""
-showAdvancedSettings = ""
-telemetry = ""
-title = ""
 
 [config.grid]
-title = ""
-titleAdd = ""
-titleEdit = ""
 
 [config.hems]
-description = ""
-title = ""
 
 [config.influx]
-description = ""
-descriptionToken = ""
-labelBucket = ""
-labelCheckInsecure = ""
-labelDatabase = ""
-labelInsecure = ""
-labelOrg = ""
-labelPassword = ""
-labelToken = ""
-labelUrl = ""
-labelUser = ""
-title = ""
-v1Support = ""
-v2Support = ""
 
 [config.main]
-addLoadpoint = ""
-addPvBattery = ""
 addVehicle = "Legg til kjøretøy"
-configured = ""
 edit = "rediger"
 title = "Oppsett"
-unconfigured = ""
 vehicles = "Mine kjøretøy"
-yaml = ""
 
 [config.messaging]
-description = ""
-title = ""
 
 [config.meter]
-cancel = ""
-delete = ""
-save = ""
-template = ""
-titleChoice = ""
-validateSave = ""
 
 [config.modbusproxy]
-description = ""
-title = ""
 
 [config.mqtt]
-authentication = ""
-description = ""
-descriptionClientId = ""
-descriptionTopic = ""
-labelBroker = ""
-labelCaCert = ""
-labelCheckInsecure = ""
-labelClientCert = ""
-labelClientId = ""
-labelClientKey = ""
-labelInsecure = ""
-labelPassword = ""
-labelTopic = ""
-labelUser = ""
-publishing = ""
-title = ""
 
 [config.network]
-descriptionHost = ""
-descriptionPort = ""
-descriptionSchema = ""
-labelHost = ""
-labelPort = ""
-labelSchema = ""
-title = ""
 
 [config.options]
 
 [config.options.boolean]
-no = ""
-yes = ""
 
 [config.options.endianness]
-big = ""
-little = ""
 
 [config.options.schema]
-http = ""
-https = ""
 
 [config.pv]
-titleAdd = ""
-titleEdit = ""
 
 [config.section]
-general = ""
-grid = ""
-integrations = ""
-loadpoints = ""
-meter = ""
-system = ""
-vehicles = ""
 
 [config.sponsor]
-addToken = ""
-changeToken = ""
-description = ""
-descriptionToken = ""
-error = ""
-labelToken = ""
-title = ""
 
 [config.system]
-logs = ""
-restart = ""
-restartRequiredDescription = ""
-restartRequiredMessage = ""
-restartingDescription = ""
-restartingMessage = ""
 
 [config.tariffs]
-description = ""
-title = ""
 
 [config.title]
-description = ""
-label = ""
-title = ""
 
 [config.validation]
 failed = "mislykket"
@@ -271,22 +115,15 @@ powerSub2 = "lader..."
 tabTitle = "Interessefellesskap"
 
 [footer.savings]
-co2Saved = ""
-co2Title = ""
-configurePriceCo2 = ""
 footerLong = "{percent} solcelleenergi"
 footerShort = "{percent} solenergi"
 modalTitle = "Oversikt over ladeenergi"
-moneySaved = ""
 percentGrid = "{self} kWh lysnett"
 percentSelf = "{self} kWt sol"
 percentTitle = "Solenergi"
-periodLabel = ""
 priceFeedIn = "{feedInPrice} subsidiering"
 priceGrid = "{gridPrice} lysnett"
 priceTitle = "Kraftpris"
-referenceGrid = ""
-referenceLabel = ""
 savingsComparedToGrid = "sammenlignet med lysnett"
 savingsTitle = "Besparelser"
 savingsTotalEnergy = "{total} kWh ladet"
@@ -294,14 +131,9 @@ since = "siden {since}"
 tabTitle = "Mine data"
 
 [footer.savings.period]
-30d = ""
-365d = ""
-thisYear = ""
-total = ""
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
-becomeSponsorExtended = ""
 confetti = "Klar for konfetti?"
 confettiPromise = "Du får klistremerker og digital konfetti"
 sticker = "... eller evcc-klistremerker?"
@@ -309,10 +141,6 @@ supportUs = "Vårt oppdrag: gjør solenergi til normen. Hjelp oss ved å støtte
 thanks = "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre."
 titleNoSponsor = "Støtt oss"
 titleSponsor = "Du er en støttespiller"
-titleTrial = ""
-titleVictron = ""
-trial = ""
-victron = ""
 
 [footer.telemetry]
 optIn = "Jeg ønsker å bidra med mine data."
@@ -338,8 +166,6 @@ blog = "Blogg"
 docs = "Dokumentasjon"
 github = "GitHub"
 login = "Kjøretøysinnlogginger"
-logout = ""
-nativeSettings = ""
 needHelp = "Trenger du hjelp?"
 sessions = "Ladeøkter"
 settings = "Innstillinger"
@@ -354,8 +180,6 @@ discussionsButton = "GitHub-diskusjoner"
 documentationButton = "Dokumentasjon"
 issueButton = "Rapporter feil"
 issueDescription = "Funnet noe merkelig eller feil?"
-logsButton = ""
-logsDescription = ""
 modalTitle = "Trenger du hjelp?"
 primaryActions = "Er det noe som ikke virker som det skal? Dette er gode ressurser å starte med."
 restartButton = "Start på ny"
@@ -370,62 +194,26 @@ disclaimer = "Merk: evcc vil avsluttes og be operativsystemet om å starte enhet
 modalTitle = "Er du sikker på at du vil utføre omstart?"
 
 [log]
-areaLabel = ""
-areas = ""
-download = ""
-levelLabel = ""
-nAreas = ""
-noResults = ""
-search = ""
-selectAll = ""
-showAll = ""
-title = ""
-update = ""
 
 [loginModal]
-cancel = ""
-error = ""
-iframeHint = ""
-iframeIssue = ""
-invalid = ""
-login = ""
-password = ""
-reset = ""
-title = ""
 
 [main]
 vehicles = "Parkering"
 
 [main.chargingPlan]
-active = ""
-addRepeatingPlan = ""
 arrivalTab = "Ankomst"
-day = ""
 departureTab = "Avgang"
-goal = ""
 modalTitle = "Ladeplan"
 none = "ingen"
-planNumber = ""
-remove = ""
-repeating = ""
-repeatingPlans = ""
-selectAll = ""
-time = ""
 title = "Plan"
 titleMinSoc = "Min.-lading"
 titleTargetCharge = "Avgang"
-unsavedChanges = ""
-update = ""
-weekdays = ""
 
 [main.energyflow]
 battery = "Batteri"
 batteryCharge = "Batterilading"
 batteryDischarge = "Batteri utlading"
-batteryHold = ""
 batteryTooltip = "{energy} av {total} ({soc})"
-cheapBatteryGridCharge = ""
-cleanBatteryGridCharge = ""
 gridImport = "Lysnettimport"
 homePower = "Forbruk"
 loadpoints = "Lader| Lader | {count} ladere"
@@ -435,8 +223,6 @@ pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
 
 [main.heatingStatus]
-charging = ""
-waitForVehicle = ""
 
 [main.loadpoint]
 avgPrice = "⌀-pris"
@@ -446,31 +232,18 @@ duration = "Varighet"
 fallbackName = "Ladepunkt"
 power = "Effekt"
 price = "Σ-pris"
-remaining = ""
-remoteDisabledHard = ""
-remoteDisabledSoft = ""
 solar = "Solenergi"
 
 [main.loadpointSettings]
-batteryUsage = ""
 currents = "Ladestrøm"
 default = "forvalg"
 disclaimerHint = "Merknad:"
-onlyForSocBasedCharging = ""
-smartCostCheap = ""
-smartCostClean = ""
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
 
 [main.loadpointSettings.batteryBoost]
-description = ""
-label = ""
-mode = ""
-once = ""
 
 [main.loadpointSettings.limitSoc]
-description = ""
-label = ""
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. ladestrøm"
@@ -484,7 +257,6 @@ label = "Min. lading%"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
-no1p3pSupport = ""
 phases_0 = "automatisk veksling"
 phases_1 = "1-fase"
 phases_1_hint = "({min} til {max})"
@@ -496,7 +268,6 @@ minpv = "Min+Sol-e."
 now = "Raskt"
 off = "Stopp"
 pv = "Sol"
-smart = ""
 
 [main.provider]
 login = "logg inn"
@@ -506,32 +277,23 @@ logout = "logg ut"
 activate = "Aktiver"
 co2Limit = "CO₂-grense på {co2}"
 costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
-currentPlan = ""
 descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
 descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}?"
 inactiveLabel = "Stopptidspunkt"
 modalTitle = "Sett mål-tid"
-nextPlan = ""
-notReachableInTime = ""
 onlyInPvMode = "Ladeplan fungerer kun i solcellemodus."
 planDuration = "Ladetid"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} til {end}"
 planUnknown = "ikke kjent enda"
-preview = ""
 priceLimit = "prisgrense på {price}"
-remove = ""
 setTargetTime = "ingen"
-targetIsAboveLimit = ""
-targetIsAboveVehicleLimit = ""
 targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
 targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
 title = "Mål-tid"
 today = "i dag"
 tomorrow = "i morgen"
 update = "Oppdater"
-vehicleCapacityDocs = ""
-vehicleCapacityRequired = ""
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
@@ -551,7 +313,6 @@ detectionActive = "Oppdager kjøretøy ..."
 fallbackName = "Kjøretøy"
 moreActions = "Flere handlinger"
 none = "Ingen kjøretøy"
-notReachable = ""
 targetSoc = "Grense"
 temp = "Temp."
 tempLimit = "Temp.-grense"
@@ -566,20 +327,12 @@ ready = "klar"
 vehicleLimit = "Kjøretøygrense: {soc}"
 
 [main.vehicleStatus]
-awaitingAuthorization = ""
-batteryBoost = ""
 charging = "Lading..."
 cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"
-cheapEnergyNextStart = ""
-cheapEnergySet = ""
 cleanEnergyCharging = "Ren energi tilgjengelig. Lader …"
-cleanEnergyNextStart = ""
-cleanEnergySet = ""
 climating = "Klimaanlegg på forhånd oppdaget."
 connected = "Tilkoblet."
-disconnectRequired = ""
 disconnected = "Frakoblet."
-finished = ""
 minCharge = "Minimumslading til {soc}."
 pvDisable = "Ikke nok overskudd. Pause i {remaining}..."
 pvEnable = "Overskudd tilgjengelig. Starter om {remaining}..."
@@ -589,36 +342,18 @@ targetChargeActive = "Målladning aktiv ..."
 targetChargePlanned = "Mållading starter på {time}."
 targetChargeWaitForVehicle = "Mållading klar. Venter på kjøretøy..."
 unknown = "ukjent"
-vehicleLimit = ""
 vehicleLimitReached = "Kjøretøygrense på {soc} nådd."
 waitForVehicle = "Klar. Venter på kjøretøy..."
-welcome = ""
 
 [notifications]
 dismissAll = "Forkast alle"
-logs = ""
 modalTitle = "Merknader"
 
 [offline]
-configurationError = ""
 message = "Ikke koblet til en server."
 reload = "Last inn igjen?"
-restart = ""
-restartNeeded = ""
-restarting = ""
 
 [passwordModal]
-description = ""
-empty = ""
-error = ""
-labelCurrent = ""
-labelNew = ""
-labelRepeat = ""
-newPassword = ""
-noMatch = ""
-titleNew = ""
-titleUpdate = ""
-updatePassword = ""
 
 [session]
 cancel = "Avbryt"
@@ -646,38 +381,17 @@ downloadCsv = "Last ned som CSV"
 energy = "Oppladet"
 loadpoint = "Ladepunkt"
 noData = "Ingen ladeøkter denne måneden."
-overview = ""
 price = "Σ-pris"
 reallyDelete = "Slett denne økten?"
-showIndividualEntries = ""
 solar = "Solenergi"
 title = "Ladeøkter"
 total = "Totalt"
 vehicle = "Kjøretøy"
 
 [sessions.chartTitle]
-avgCo2ByGroup = ""
-avgPriceByGroup = ""
-byGroupLoadpoint = ""
-byGroupVehicle = ""
-energy = ""
-energyGrouped = ""
-energyGroupedByGroup = ""
-energySubSolar = ""
-energySubTotal = ""
-groupedCo2ByGroup = ""
-groupedPriceByGroup = ""
-historyCo2 = ""
-historyCo2Sub = ""
-historyPrice = ""
-historyPriceSub = ""
-solar = ""
-solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
-chargeduration = ""
-co2perkwh = ""
 created = "Opprettet"
 finished = "Fullført"
 identifier = "Identifikator"
@@ -685,9 +399,6 @@ loadpoint = "Ladepunkt"
 meterstart = "Start-målerstand (kWh)"
 meterstop = "Stopp-målerstand (kWh)"
 odometer = "Kilometerstand"
-price = ""
-priceperkwh = ""
-solarpercentage = ""
 vehicle = "Kjøretøy"
 
 [sessions.filter]
@@ -696,33 +407,17 @@ allVehicles = "alle kjøretøy"
 filter = "Filter"
 
 [sessions.group]
-co2 = ""
-grid = ""
-price = ""
-self = ""
 
 [sessions.groupBy]
-loadpoint = ""
-none = ""
-vehicle = ""
 
 [sessions.period]
-month = ""
-total = ""
-year = ""
 
 [sessions.type]
-co2 = ""
-price = ""
-solar = ""
 
 [settings]
 title = "Innstillinger"
 
 [settings.fullscreen]
-enter = ""
-exit = ""
-label = ""
 
 [settings.hiddenFeatures]
 label = "Eksperimentelt"
@@ -754,10 +449,6 @@ mi = "mil"
 [smartCost]
 activeHours = "{charging} av {total}"
 activeHoursLabel = "Aktive timer"
-applyToAll = ""
-batteryDescription = ""
-cheapTitle = ""
-cleanTitle = ""
 co2Label = "CO₂-utslipp"
 co2Limit = "CO₂-grense"
 loadpointDescription = "Slår på midlertidig hurtiglading i solcellemodus."
@@ -765,7 +456,6 @@ modalTitle = "Smart lysnettlading"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgrense"
-saved = ""
 
 [startupError]
 configFile = "Brukt oppsettsfil:"

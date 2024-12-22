@@ -5,7 +5,6 @@ control = "Ovládání baterie"
 discharge = "Zabránit vybití v rychlém režimu a plánovaném nabíjení."
 disclaimerHint = "Poznámka:"
 disclaimerText = "Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
-gridChargeTab = ""
 legendBottomName = "priorita domu"
 legendBottomSubline = "nepoužito pro dobíjení"
 legendMiddleName = "nejdříve vozidlo"
@@ -15,7 +14,6 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
-usageTab = ""
 
 [batterySettings.bufferStart]
 above = "když je nad {soc}"
@@ -31,102 +29,46 @@ titleAdd = "Přidat měřič baterie"
 titleEdit = "Upravit měřič baterie"
 
 [config.circuits]
-description = ""
-title = ""
 
 [config.control]
-description = ""
-descriptionInterval = ""
-descriptionResidualPower = ""
-labelInterval = ""
-labelResidualPower = ""
-title = ""
 
 [config.deviceValue]
-broker = ""
-bucket = ""
 capacity = "Kapacita"
 chargeStatus = "Stav"
-chargeStatusA = ""
-chargeStatusB = ""
-chargeStatusC = ""
-chargeStatusE = ""
-chargeStatusF = ""
 chargedEnergy = "Nabito"
-co2 = ""
 configured = "Nastaveno"
-controllable = ""
 currency = "Měna"
 current = "Proud"
-currentRange = ""
 enabled = "Zapnuto"
 energy = "Energie"
-feedinPrice = ""
-gridPrice = ""
-hemsType = ""
-no = ""
 odometer = "Ujetých km"
-org = ""
 phaseCurrents = "Proud L1, L2, L3"
 phasePowers = "Výkon L1, L2, L3"
 phaseVoltages = "Napětí L1, L2, L3"
 power = "Výkon"
-powerRange = ""
 range = "Rozsah"
 soc = "SoC"
 socLimit = "Strop"
-temp = ""
-topic = ""
-url = ""
-yes = ""
 
 [config.eebus]
 description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."
-title = ""
 
 [config.form]
 example = "Příklad"
 optional = "volitelné"
 
 [config.general]
-cancel = ""
-docsLink = ""
-experimental = ""
-hideAdvancedSettings = ""
-off = ""
-on = ""
 password = "Heslo"
-readFromFile = ""
 remove = "Odebrat"
 save = "Uložit"
-showAdvancedSettings = ""
-telemetry = ""
-title = ""
 
 [config.grid]
-title = ""
 titleAdd = "Přidat měřič spotřeby ze sítě"
 titleEdit = "Editovat měřič spotřeby ze sítě"
 
 [config.hems]
-description = ""
-title = ""
 
 [config.influx]
-description = ""
-descriptionToken = ""
-labelBucket = ""
-labelCheckInsecure = ""
-labelDatabase = ""
-labelInsecure = ""
-labelOrg = ""
-labelPassword = ""
-labelToken = ""
-labelUrl = ""
-labelUser = ""
-title = ""
-v1Support = ""
-v2Support = ""
 
 [config.main]
 addLoadpoint = "Přidat nabíjecí bod"
@@ -140,8 +82,6 @@ vehicles = "Má vozidla"
 yaml = "Konfigurováno v evcc.yaml. Není editovatelné v UI."
 
 [config.messaging]
-description = ""
-title = ""
 
 [config.meter]
 cancel = "Zrušit"
@@ -152,92 +92,36 @@ titleChoice = "Co chcete přidat?"
 validateSave = "Zkontrolovat a uložit"
 
 [config.modbusproxy]
-description = ""
-title = ""
 
 [config.mqtt]
-authentication = ""
-description = ""
-descriptionClientId = ""
-descriptionTopic = ""
-labelBroker = ""
-labelCaCert = ""
-labelCheckInsecure = ""
-labelClientCert = ""
-labelClientId = ""
-labelClientKey = ""
-labelInsecure = ""
-labelPassword = ""
-labelTopic = ""
-labelUser = ""
-publishing = ""
-title = ""
 
 [config.network]
-descriptionHost = ""
-descriptionPort = ""
-descriptionSchema = ""
-labelHost = ""
-labelPort = ""
-labelSchema = ""
-title = ""
 
 [config.options]
 
 [config.options.boolean]
-no = ""
-yes = ""
 
 [config.options.endianness]
-big = ""
-little = ""
 
 [config.options.schema]
-http = ""
-https = ""
 
 [config.pv]
 titleAdd = "Přidat měřič solární energie"
 titleEdit = "Editovat měřič solární energie"
 
 [config.section]
-general = ""
-grid = ""
-integrations = ""
-loadpoints = ""
-meter = ""
-system = ""
-vehicles = ""
 
 [config.site]
 cancel = "Zrušit"
 save = "Uložit"
 
 [config.sponsor]
-addToken = ""
-changeToken = ""
-description = ""
-descriptionToken = ""
-error = ""
-labelToken = ""
-title = ""
 
 [config.system]
-logs = ""
-restart = ""
-restartRequiredDescription = ""
-restartRequiredMessage = ""
-restartingDescription = ""
-restartingMessage = ""
 
 [config.tariffs]
-description = ""
-title = ""
 
 [config.title]
-description = ""
-label = ""
-title = ""
 
 [config.validation]
 failed = "selhalo"
@@ -300,12 +184,10 @@ tabTitle = "Moje údaje"
 [footer.savings.period]
 30d = "posledních 30 dní"
 365d = "posledních 365 dní"
-thisYear = ""
 total = "celkem"
 
 [footer.sponsor]
 becomeSponsor = "Staň se sponzorem"
-becomeSponsorExtended = ""
 confetti = "Připraven na konfety?"
 confettiPromise = "Budou nálepky a digitální konfety"
 sticker = "... nebo evcc nálepky?"
@@ -313,10 +195,6 @@ supportUs = "Našim clem je udělat ze soláru standard. Pomozte EVCC zaplacení
 thanks = "Děkujeme, {sponsor}! Tvůj příspěvěk pomáhá vyvíjet evcc i nadále."
 titleNoSponsor = "Podpořte nás"
 titleSponsor = "Jste podporovatel"
-titleTrial = ""
-titleVictron = ""
-trial = ""
-victron = ""
 
 [footer.telemetry]
 optIn = "Chci přispět svými daty."
@@ -342,7 +220,6 @@ blog = "Blog"
 docs = "Dokumentace"
 github = "GitHub"
 login = "Přihlašovací údaje k vozidlu"
-logout = ""
 nativeSettings = "Změna serveru"
 needHelp = "Potřebujete poradit?"
 sessions = "Průběhy nabíjení"
@@ -353,8 +230,6 @@ discussionsButton = "GitHub diskuse"
 documentationButton = "Dokumentace"
 issueButton = "Nahlásit bug"
 issueDescription = "Našli jste podivné nebo nesprávné chování?"
-logsButton = ""
-logsDescription = ""
 modalTitle = "Protřebujete pomoc?"
 primaryActions = "Něco nefunguje, jak má? Tohle jsou dobrá místa, kde získat pomoc."
 restartButton = "Restartovat"
@@ -369,53 +244,27 @@ disclaimer = "Poznámka: evcc se ukončí a spoléhá na to, že operační syst
 modalTitle = "Opravdu chcete restartovat?"
 
 [log]
-areaLabel = ""
-areas = ""
-download = ""
-levelLabel = ""
-nAreas = ""
-noResults = ""
-search = ""
-selectAll = ""
-showAll = ""
-title = ""
-update = ""
 
 [loginModal]
-cancel = ""
-error = ""
-iframeHint = ""
-iframeIssue = ""
-invalid = ""
-login = ""
-password = ""
-reset = ""
-title = ""
 
 [main]
 vehicles = "Parkoviště"
 
 [main.chargingPlan]
 active = "Aktivní"
-addRepeatingPlan = ""
 arrivalTab = "Příchod"
 day = "Den"
 departureTab = "Odchod"
 goal = "Cílový stav nabíjení"
 modalTitle = "Plán nabíjení"
 none = "Žádný"
-planNumber = ""
 remove = "Odebrat"
-repeating = ""
-repeatingPlans = ""
-selectAll = ""
 time = "Čas"
 title = "Plán"
 titleMinSoc = "Min. nabíjení"
 titleTargetCharge = "Odjezd"
 unsavedChanges = "Jsou zde neuložené změny. Použít nyní?"
 update = "Nastavit"
-weekdays = ""
 
 [main.energyflow]
 battery = "Baterie"
@@ -423,8 +272,6 @@ batteryCharge = "Nabíjení baterie"
 batteryDischarge = "Vybíjení baterie"
 batteryHold = "Baterie (zamknuto)"
 batteryTooltip = "{energy} z {total} ({soc})"
-cheapBatteryGridCharge = ""
-cleanBatteryGridCharge = ""
 gridImport = "Používaní sítě"
 homePower = "Spotřeba"
 loadpoints = "Nabíječka | Nabíječka | {count} nabíječek"
@@ -453,7 +300,6 @@ remoteDisabledSoft = "{source}: adaptivní nabíjení ze slunce vypnuto"
 solar = "Slunce"
 
 [main.loadpointSettings]
-batteryUsage = ""
 currents = "Nabíjecí proud"
 default = "výchozí"
 disclaimerHint = "Poznámka:"
@@ -464,10 +310,6 @@ title = "Nastavení {0}"
 vehicle = "Vozidlo"
 
 [main.loadpointSettings.batteryBoost]
-description = ""
-label = ""
-mode = ""
-once = ""
 
 [main.loadpointSettings.limitSoc]
 description = "Nabíjecí strop, který je použit, když je vozidlo připojeno."
@@ -497,7 +339,6 @@ minpv = "Min+Solar"
 now = "Rychlé"
 off = "Vypnuto"
 pv = "Solar"
-smart = ""
 
 [main.provider]
 login = "přihlásit"
@@ -511,7 +352,6 @@ currentPlan = "Aktivní plán"
 descriptionEnergy = "Dokud nebude {targetEnergy} nabito do vozidla?"
 descriptionSoc = "Kdy by mělo být vozidlo nabito na {targetSoc}?"
 inactiveLabel = "Cílový čas"
-nextPlan = ""
 notReachableInTime = "Cíl není dosažitelný. Bude ukončeno: {endTime}."
 onlyInPvMode = "Nabíjecí plán funguje pouze v solárním režimu"
 planDuration = "Nabíjecí čas"
@@ -566,20 +406,12 @@ ready = "připraveno"
 vehicleLimit = "Limit vozidla: {soc}"
 
 [main.vehicleStatus]
-awaitingAuthorization = ""
-batteryBoost = ""
 charging = "Nabíjení..."
 cheapEnergyCharging = "Nabíjení levnou energií: {price} (limit {limit})"
-cheapEnergyNextStart = ""
-cheapEnergySet = ""
 cleanEnergyCharging = "Nabíjení čistou energií: {co2} (limit {limit})"
-cleanEnergyNextStart = ""
-cleanEnergySet = ""
 climating = "Detekováno předehřívání."
 connected = "Připojeno."
-disconnectRequired = ""
 disconnected = "Odpojeno."
-finished = ""
 minCharge = "Minimální nabití na {soc}."
 pvDisable = "Nedostatek energie ze slunce. Přerušuji za {remaining}…"
 pvEnable = "Energie ze slunce obnovena. Zahajuji za {remaining}…"
@@ -588,37 +420,18 @@ scale3p = "Zvyšuji na třífázové nabíjení za {remaining}…"
 targetChargeActive = "Nabíjení na cílovou hodnotu aktivní..."
 targetChargePlanned = "Nabíjení na cílovou hodnotu začne v {time}."
 targetChargeWaitForVehicle = "Cílové nabíjení připraveno. Čekám na vozidlo..."
-unknown = ""
-vehicleLimit = ""
 vehicleLimitReached = "Limit vozidla {soc} dosažen."
 waitForVehicle = "Připraveno. Čekám na vozidlo..."
-welcome = ""
 
 [notifications]
 dismissAll = "Zrušit vše"
-logs = ""
 modalTitle = "Oznámení"
 
 [offline]
-configurationError = ""
 message = "Nepřipojeno na server."
 reload = "Obnovit?"
-restart = ""
-restartNeeded = ""
-restarting = ""
 
 [passwordModal]
-description = ""
-empty = ""
-error = ""
-labelCurrent = ""
-labelNew = ""
-labelRepeat = ""
-newPassword = ""
-noMatch = ""
-titleNew = ""
-titleUpdate = ""
-updatePassword = ""
 
 [session]
 cancel = "Zrušit"
@@ -646,38 +459,17 @@ downloadCsv = "Stáhnout jako CSV"
 energy = "Nabito"
 loadpoint = "Nabíjecí bod"
 noData = "Tento měsíc žádná nabíjecí relace"
-overview = ""
 price = "Σ Cena"
 reallyDelete = "Opravdu chcete smazat tuto relaci?"
-showIndividualEntries = ""
 solar = "Solar"
 title = "Nabíjecí relace"
 total = "Celkem"
 vehicle = "Vozidlo"
 
 [sessions.chartTitle]
-avgCo2ByGroup = ""
-avgPriceByGroup = ""
-byGroupLoadpoint = ""
-byGroupVehicle = ""
-energy = ""
-energyGrouped = ""
-energyGroupedByGroup = ""
-energySubSolar = ""
-energySubTotal = ""
-groupedCo2ByGroup = ""
-groupedPriceByGroup = ""
-historyCo2 = ""
-historyCo2Sub = ""
-historyPrice = ""
-historyPriceSub = ""
-solar = ""
-solarByGroup = ""
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
-chargeduration = ""
-co2perkwh = ""
 created = "Vytvořeno"
 finished = "Ukončeno"
 identifier = "Identifikátor"
@@ -685,9 +477,6 @@ loadpoint = "Nabíjecí bod"
 meterstart = "Počáteční stav měřiče (kWh)"
 meterstop = "Konečný stav měřiče (kWh)"
 odometer = "Tachometr (km)"
-price = ""
-priceperkwh = ""
-solarpercentage = ""
 vehicle = "Vozidlo"
 
 [sessions.filter]
@@ -696,33 +485,17 @@ allVehicles = "všechny vozidla"
 filter = "Filtr"
 
 [sessions.group]
-co2 = ""
-grid = ""
-price = ""
-self = ""
 
 [sessions.groupBy]
-loadpoint = ""
-none = ""
-vehicle = ""
 
 [sessions.period]
-month = ""
-total = ""
-year = ""
 
 [sessions.type]
-co2 = ""
-price = ""
-solar = ""
 
 [settings]
 title = "Základní nastavení"
 
 [settings.fullscreen]
-enter = ""
-exit = ""
-label = ""
 
 [settings.hiddenFeatures]
 label = "Experimentální"
