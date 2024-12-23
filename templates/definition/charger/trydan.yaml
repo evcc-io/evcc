@@ -1,0 +1,11 @@
+template: trydan
+products:
+  - brand: V2C Trydan
+requirements:
+  description:
+    en: V2C trydan
+params:
+  - name: host
+render: |
+  type: trydan
+  uri: http://{{ .host }}
