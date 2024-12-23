@@ -20,7 +20,7 @@ params:
     example: http://192.168.178.27
     help:
       de: URL des Tesla BLE HTTP Proxy
-      en: URL of the Tesla BLE HTTP Proxy 
+      en: URL of the Tesla BLE HTTP Proxy
   - name: port
     example: 8080
     default: 8080
