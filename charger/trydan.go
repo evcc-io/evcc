@@ -200,8 +200,9 @@ func (c Trydan) Enabled() (bool, error) {
 	return ret, err
 }
 
-func (c Trydan) Set(parameter string, value int) error {
+func setValue[T int | int64](c *Trydan, parameter string, value T) error {
 	uri := fmt.Sprintf("%s/write/%s=%d", c.uri, parameter, value)
+	c.log.DEBUG.Printf("Trydan Set URI: %s Value: %d", uri, value)
 	res, err := c.GetBody(uri)
 	if err == nil {
 		resStr := string(res[:])
@@ -210,6 +211,14 @@ func (c Trydan) Set(parameter string, value int) error {
 		}
 	}
 	return err
+}
+
+func (c *Trydan) setValueInt(parameter string, value int) error {
+	return setValue(c, parameter, value)
+}
+
+func (c *Trydan) setValueInt64(parameter string, value int64) error {
+	return setValue(c, parameter, value)
 }
 
 // Enable implements the api.Charger interface
@@ -225,12 +234,12 @@ func (c Trydan) Enable(enable bool) error {
 		_enable = 0
 	}
 	c.log.DEBUG.Printf("Trydan Set Paused: %d", _enable)
-	err := c.Set("Paused", _enable)
+	err := c.setValueInt("Paused", _enable)
 	if err != nil {
 		return err
 	}
 	c.log.DEBUG.Printf("Trydan Set Locked: %d", _enable)
-	err = c.Set("Locked", _enable)
+	err = c.setValueInt("Locked", _enable)
 	if err != nil {
 		return err
 	}
@@ -246,7 +255,7 @@ func (c Trydan) MaxCurrent(current int64) error {
 		  source: http
 		  uri: http://192.168.1.111/write/Intensity=${maxcurrent:%d}
 	*/
-	err := c.Set("Intensity", c.current)
+	err := c.setValueInt64("Intensity", current)
 	if err == nil {
 		c.current = int(current)
 	}
