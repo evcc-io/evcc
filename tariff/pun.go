@@ -1,11 +1,15 @@
 package tariff
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net/http"
 	"net/http/cookiejar"
-	"net/url"
+
+	// "net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/net/html"
+	// "golang.org/x/net/html"
 )
 
 type Pun struct {
@@ -104,7 +108,10 @@ func (t *Pun) run(done chan error) {
 		data := append(today, res...)
 
 		mergeRates(t.data, data)
-		once.Do(func() { close(done) })
+		once.Do(func() {
+			close(done)
+			t.log.DEBUG.Println(`PUN hourly tariffs import completed`)
+		})
 	}
 }
 
@@ -127,44 +134,70 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	client := request.NewClient(t.log)
 	client.Jar, _ = cookiejar.New(nil)
 
-	// Erster Request
-	uri := "https://storico.mercatoelettrico.org/It/WebServerDataStore/MGP_Prezzi/" + day.Format("20060102") + "MGPPrezzi.xml"
-	resp, err := client.Get(uri)
+	// Request the ZIP file
+	uri := "https://gme.mercatoelettrico.org/DesktopModules/GmeDownload/API/ExcelDownload/downloadzipfile?DataInizio=" + day.Format("20060102") + "&DataFine=" + day.Format("20060102") + "&Date=" + day.Format("20060102") + "&Mercato=MGP&Settore=Prezzi&FiltroDate=InizioFine"
+
+	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	formData, err := parseFormFields(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("form fields: %w", err)
+	req.Header = http.Header{
+		"moduleid":           []string{"12103"},
+		"Referer":            []string{"https://gme.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Download?valore=Prezzi"},
+		"sec-ch-ua-mobile":   []string{"?0"},
+		"sec-ch-ua-platform": []string{"Windows"},
+		"sec-fetch-dest":     []string{"empty"},
+		"sec-fetch-mode":     []string{"cors"},
+		"sec-fetch-site":     []string{"same-origin"},
+		"sec-gpc":            []string{"1"},
+		"tabid":              []string{"1749"},
+		"userid":             []string{"-1"},
 	}
 
-	redirectURL := resp.Request.URL.String()
+	t.log.TRACE.Println(`PUN Zip file requested`)
 
-	// Hinzufügen der spezifizierten Parameter
-	formData.Set("ctl00$ContentPlaceHolder1$CBAccetto1", "on")
-	formData.Set("ctl00$ContentPlaceHolder1$CBAccetto2", "on")
-	formData.Set("ctl00$ContentPlaceHolder1$Button1", "Accetto")
-
-	// Formular senden
-	resp, err = client.PostForm(redirectURL, formData)
-	if err != nil {
-		fmt.Println("Error submitting form:", err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Erneuter Request auf die ursprüngliche URL
-	resp, err = client.Get(uri)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	t.log.TRACE.Println(`PUN Zip file request status:`, resp.Status)
 	defer resp.Body.Close()
 
-	// Verarbeitung der erhaltenen Daten
+	// Process the ZIP file
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	t.log.TRACE.Println(`Decompressing Zip file`)
+
+	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		return nil, err
+	}
+	t.log.TRACE.Println(`Zip file decompressed, now looking for the XML file`)
+
+	if len(zipReader.File) != 1 {
+		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
+	}
+
+	zipFile := zipReader.File[0]
+	f, err := zipFile.Open()
+	if err != nil {
+		return nil, err
+	}
+	t.log.TRACE.Println(`Opening XML file`)
+	defer f.Close()
+
+	xmlFile, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	t.log.TRACE.Println(`Reading XML file`)
+
+	// Processing the received data
 	var dataSet NewDataSet
-	if err := xml.NewDecoder(resp.Body).Decode(&dataSet); err != nil {
+	if err := xml.NewDecoder(bytes.NewReader(xmlFile)).Decode(&dataSet); err != nil {
 		return nil, err
 	}
 
@@ -179,6 +212,12 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		hour, err := strconv.Atoi(p.Ora)
 		if err != nil {
 			return nil, fmt.Errorf("parse hour: %w", err)
+		}
+
+		// Adjust hour to handle edge case where p.Ora is "00"
+		if hour == 0 {
+			hour = 24
+			date = date.AddDate(0, 0, -1)
 		}
 
 		location, err := time.LoadLocation("Europe/Rome")
@@ -198,39 +237,9 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			Price: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
+		t.log.TRACE.Println(`PUN data:`, ar.Start, ar.End, ar.Price)
 	}
 
 	data.Sort()
-	return data, nil
-}
-
-func parseFormFields(body io.Reader) (url.Values, error) {
-	data := url.Values{}
-	doc, err := html.Parse(body)
-	if err != nil {
-		return data, err
-	}
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "input" {
-			var inputType, inputName, inputValue string
-			for _, a := range n.Attr {
-				if a.Key == "type" {
-					inputType = a.Val
-				} else if a.Key == "name" {
-					inputName = a.Val
-				} else if a.Key == "value" {
-					inputValue = a.Val
-				}
-			}
-			if inputType == "hidden" && inputName != "" {
-				data.Set(inputName, inputValue)
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
 	return data, nil
 }
