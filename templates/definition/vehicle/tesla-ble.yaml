@@ -10,7 +10,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: vin
-    required: true  
+    required: true
     example: W...
   - name: url
     required: true
