@@ -1,6 +1,10 @@
 <template>
 	<li class="root">
-		<button class="d-flex align-items-center justify-content-center p-3" @click="$emit('add')">
+		<button
+			class="d-flex align-items-center justify-content-center p-3"
+			tabindex="0"
+			@click="$emit('click')"
+		>
 			<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
 			{{ title }}
 		</button>
@@ -11,11 +15,11 @@
 import "@h2d2/shopicons/es/regular/plus";
 
 export default {
-	name: "AddDeviceButton",
+	name: "NewDeviceButton",
 	props: {
 		title: String,
 	},
-	emits: ["add"],
+	emits: ["click"],
 };
 </script>
 
@@ -30,7 +34,8 @@ export default {
 	padding: 1rem 1rem 0.5rem;
 	transition: border-color var(--evcc-transition-fast) linear;
 }
-.root:hover {
+.root:hover,
+.root:focus-within {
 	border-color: var(--evcc-default-text);
 	color: var(--evcc-default-text);
 }
@@ -41,5 +46,8 @@ button {
 	height: 100%;
 	width: 100%;
 	color: inherit;
+}
+button:focus {
+	outline: none;
 }
 </style>
