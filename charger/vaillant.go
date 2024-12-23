@@ -53,14 +53,15 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	client := request.NewClient(util.NewLogger("vaillant"))
+	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
+	client := request.NewClient(log)
 
-	identity, err := sensonet.NewIdentity(client, &cc.CredentialsStruct)
+	identity, err := sensonet.NewIdentity(client, cc.Realm)
 	if err != nil {
 		return nil, err
 	}
 
-	ts, err := identity.Login()
+	ts, err := identity.Login(cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
