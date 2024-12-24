@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"log"
-
 	_ "time/tzdata" // embed timezones for windows, see https://pkg.go.dev/time/tzdata
 
 	"github.com/evcc-io/evcc/cmd"
