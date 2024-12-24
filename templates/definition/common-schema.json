@@ -202,7 +202,7 @@
             "number",
             "float",
             "int",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]
@@ -293,9 +293,9 @@
           "enum": [
             "string",
             "bool",
-            "number",
+            "int",
             "float",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]
