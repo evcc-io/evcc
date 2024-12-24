@@ -10,7 +10,8 @@ group: price
 params:
   - name: region
     example: dk1
-    validvalues: ["dk1", "dk2"]
+    type: choice
+    choice: ["dk1", "dk2"]
   - preset: tariff-base
 render: |
   type: energinet
