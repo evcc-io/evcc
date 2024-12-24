@@ -83,6 +83,8 @@ telemetry = "Telemetria"
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
 
+[config.hems]
+
 [config.influx]
 labelBucket = "Bucket"
 labelDatabase = "Baza danych"
@@ -125,6 +127,8 @@ labelPort = "Port"
 
 [config.options]
 
+[config.options.boolean]
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -141,7 +145,11 @@ titleEdit = "Edytuj licznik energii słonecznej"
 cancel = "Anulować"
 save = "Zapisz"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -292,6 +300,7 @@ titleMinSoc = "Minimalne ładowanie"
 titleTargetCharge = "Wyjazd"
 unsavedChanges = "Są niezapisane zmiany. Zastosować teraz?"
 update = "Wykorzystać"
+weekdays = "Dni"
 
 [main.energyflow]
 battery = "Bateria"
@@ -335,6 +344,8 @@ smartCostCheap = "Tanie ładowanie sieciowe"
 smartCostClean = "Czyste ładowanie sieci"
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
+
+[main.loadpointSettings.batteryBoost]
 
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
@@ -511,6 +522,14 @@ vehicle = "Pojazd"
 allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Interfejs użytkownika"

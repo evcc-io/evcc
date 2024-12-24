@@ -15,6 +15,8 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - preset: vehicle-common
+  - name: clientId
+    advanced: true
   - name: accessToken
     required: true
     mask: true
@@ -36,6 +38,8 @@ params:
 render: |
   type: tesla
   vin: {{ .vin }}
+  credentials:  
+    id: {{ .clientId }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}

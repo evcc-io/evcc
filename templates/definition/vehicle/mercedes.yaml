@@ -9,6 +9,8 @@ requirements:
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
   - preset: vehicle-common
+  - name: user
+    required: true
   - name: region
     required: true
     type: choice
@@ -22,6 +24,8 @@ params:
     mask: true
   - name: vin
     example: V...
+  - name: cache
+    default: 15m
 render: |
   type: mercedes
   vin: {{ .vin }}

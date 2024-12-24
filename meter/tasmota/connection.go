@@ -52,9 +52,9 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 
 	c.statusSnsG = provider.ResettableCached(func() (StatusSNSResponse, error) {
 		parameters := url.Values{
-			"user":     []string{c.user},
-			"password": []string{c.password},
-			"cmnd":     []string{"Status 8"},
+			"user":     {c.user},
+			"password": {c.password},
+			"cmnd":     {"Status 8"},
 		}
 		var res StatusSNSResponse
 		err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res)
@@ -63,9 +63,9 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 
 	c.statusStsG = provider.ResettableCached(func() (StatusSTSResponse, error) {
 		parameters := url.Values{
-			"user":     []string{c.user},
-			"password": []string{c.password},
-			"cmnd":     []string{"Status 0"},
+			"user":     {c.user},
+			"password": {c.password},
+			"cmnd":     {"Status 0"},
 		}
 		var res StatusSTSResponse
 		err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res)
@@ -120,9 +120,9 @@ func (c *Connection) Enable(enable bool) error {
 		}
 
 		parameters := url.Values{
-			"user":     []string{c.user},
-			"password": []string{c.password},
-			"cmnd":     []string{cmd},
+			"user":     {c.user},
+			"password": {c.password},
+			"cmnd":     {cmd},
 		}
 
 		var res PowerResponse

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "test": "TZ=Europe/Berlin vitest",
-    "lint": "prettier assets './**/*.{yml,yaml}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0",
+    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0",
     "dev": "vite",
     "histoire": "histoire dev",
     "playwright": "playwright test --ui",
@@ -47,6 +47,7 @@
     "histoire": "^0.17.0",
     "markty-toml": "^0.1.1",
     "prettier": "^3.0.0",
+    "prettier-plugin-sh": "^0.14.0",
     "prettier-plugin-toml": "^2.0.1",
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
