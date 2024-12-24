@@ -87,7 +87,7 @@ type EmConfig struct {
 	PhaseSwitchingMode int  `json:"phase_switching_mode"`
 }
 
-//go:generate enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
+//go:generate go tool enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
 type ExternalControl int
 
 const (
