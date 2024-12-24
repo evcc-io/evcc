@@ -28,6 +28,11 @@ builds:
       - goos: windows
         goarch: arm64
     overrides:
+      - goos: windows
+        goarch: amd64
+        flags:
+          - -trimpath
+          - -tags=release,timetzdata
       - goos: darwin
         goarch: arm64
         ldflags:
