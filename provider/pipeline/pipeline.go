@@ -184,6 +184,10 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 	}
 
 	if p.jq != nil {
+		// TODO make this optional
+		if len(bytes.TrimSpace(b)) == 0 {
+			return b, nil
+		}
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
 			return b, backoff.Permanent(err)
