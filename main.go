@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"log"
 
+	_ "time/tzdata" // embed timezones for windows, see https://pkg.go.dev/time/tzdata
+
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server/assets"
 	_ "golang.org/x/crypto/x509roots/fallback" // fallback certificates
