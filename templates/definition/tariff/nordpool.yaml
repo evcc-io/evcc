@@ -53,6 +53,7 @@ render: |
         config:
           source: http
           uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ now.Local | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          allowempty: true
           jq: |
             .multiAreaEntries | [
               .[] | 
@@ -67,6 +68,7 @@ render: |
         config:
           source: http
           uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ addDate (now.Local) 0 0 1 | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          allowempty: true
           jq: |
             .multiAreaEntries | [
               .[] | 
