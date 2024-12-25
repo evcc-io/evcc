@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 func init() {
@@ -55,18 +56,15 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
 	client := request.NewClient(log)
+	clientCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
 
-	identity, err := sensonet.NewIdentity(client, cc.Realm)
+	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
+	token, err := oc.PasswordCredentialsToken(clientCtx, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	ts, err := identity.Login(cc.User, cc.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := sensonet.NewConnection(client, ts)
+	conn, err := sensonet.NewConnection(client, oc.TokenSource(clientCtx, token))
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +87,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
-			_, err := conn.StopStrategybased(systemID, 0, &heatingPar, &hotwaterPar)
+			_, err := conn.StopStrategybased(systemID, &heatingPar, &hotwaterPar)
 			return err
 		case Boost:
 			strategy := sensonet.STRATEGY_HOTWATER_THEN_HEATING

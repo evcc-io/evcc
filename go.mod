@@ -8,7 +8,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.10.0
-	github.com/WulfgarW/sensonet v0.0.2-0.20241212184816-18cb23f466e6
+	github.com/WulfgarW/sensonet v0.0.2-0.20241223212731-a6f5f75e6bc3
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -210,6 +210,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130
 
-// replace github.com/WulfgarW/sensonet => ../wsensonet
-
-replace github.com/WulfgarW/sensonet => github.com/andig/sensonet-1 v0.0.2-0.20241221141704-b9d5353336c1
+replace github.com/WulfgarW/sensonet => ../wsensonet
