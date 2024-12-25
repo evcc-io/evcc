@@ -2,6 +2,7 @@ template: trydan
 products:
   - brand: V2C Trydan
 requirements:
+  evcc: ["sponsorship"]
   description:
     en: V2C trydan
 params:
