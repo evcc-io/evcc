@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 
-	// "net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	// "golang.org/x/net/html"
 )
 
 type Pun struct {
@@ -102,7 +100,6 @@ func (t *Pun) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			continue
-			//res = api.Rates{} // use empty rates if tomorrow data is not available
 		}
 
 		// merge today and tomorrow data
