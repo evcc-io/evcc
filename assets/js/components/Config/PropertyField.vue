@@ -168,7 +168,7 @@ export default {
 			return this.type === "Bool";
 		},
 		array() {
-			return this.type === "StringList";
+			return this.type === "List";
 		},
 		select() {
 			return this.validValues.length > 0;

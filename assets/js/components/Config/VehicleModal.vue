@@ -193,7 +193,7 @@
 										<PropertyField
 											id="vehicleParamIdentifiers"
 											v-model="values.identifiers"
-											type="StringList"
+											type="List"
 											property="identifiers"
 											size="w-100"
 											class="me-2"
