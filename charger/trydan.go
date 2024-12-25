@@ -40,7 +40,6 @@ type RealTimeData struct {
 
 // Trydan charger implementation
 type Trydan struct {
-	log *util.Logger
 	*request.Helper
 	uri     string
 	statusG provider.Cacheable[RealTimeData]
@@ -74,10 +73,8 @@ func NewTrydanFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTrydan creates Trydan charger
 func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("trydan")
 	c := &Trydan{
-		log:    log,
-		Helper: request.NewHelper(log),
+		Helper: request.NewHelper(util.NewLogger("trydan")),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
@@ -85,8 +82,6 @@ func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
 		var res RealTimeData
 		uri := fmt.Sprintf("%s/RealTimeData", c.uri)
 		err := c.GetJSON(uri, &res)
-		log.DEBUG.Printf("Trydan status response %#v", res)
-
 		return res, err
 	}, cache)
 
@@ -107,64 +102,46 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 	case 2:
 		return api.StatusC, nil
 	default:
-		return api.StatusF, nil
+		return api.StatusNone, fmt.Errorf("unknown status: %d", state)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (c Trydan) Enabled() (bool, error) {
 	data, err := c.statusG.Get()
-	ret := data.Paused == 0 && data.Locked == 0
-	c.log.DEBUG.Printf("Trydan Enabled: %t Paused: %d Locked: %d", ret, data.Paused, data.Locked)
-	return ret, err
+	return data.Paused == 0 && data.Locked == 0, err
 }
 
-func setValue[T int | int64](c *Trydan, parameter string, value T) error {
-	uri := fmt.Sprintf("%s/write/%s=%d", c.uri, parameter, value)
-	c.log.DEBUG.Printf("Trydan Set URI: %s Value: %d", uri, value)
+func (c *Trydan) setValue(param string, value int) error {
+	uri := fmt.Sprintf("%s/write/%s=%d", c.uri, param, value)
 	res, err := c.GetBody(uri)
-	if err == nil {
-		resStr := string(res[:])
-		if resStr != "OK" {
-			err = fmt.Errorf("command failed: %s", res)
-		}
+	if str := string(res); err == nil && str != "OK" {
+		err = fmt.Errorf("command failed: %s", res)
 	}
 	return err
 }
 
-func (c *Trydan) setValueInt(parameter string, value int) error {
-	return setValue(c, parameter, value)
-}
-
-func (c *Trydan) setValueInt64(parameter string, value int64) error {
-	return setValue(c, parameter, value)
-}
-
 // Enable implements the api.Charger interface
 func (c Trydan) Enable(enable bool) error {
-	var _enable = 1
-
-	if enable {
-		_enable = 0
+	var pause int
+	if !enable {
+		pause = 1
 	}
-	c.log.DEBUG.Printf("Trydan Set Paused: %d", _enable)
-	err := c.setValueInt("Paused", _enable)
-	if err != nil {
+
+	if err := c.setValue("Paused", pause); err != nil {
 		return err
 	}
-	c.log.DEBUG.Printf("Trydan Set Locked: %d", _enable)
-	err = c.setValueInt("Locked", _enable)
-	if err != nil {
+	if err := c.setValue("Locked", pause); err != nil {
 		return err
 	}
 	c.enabled = enable
-	c.log.DEBUG.Printf("Trydan Enable: %t", c.enabled)
+
 	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c Trydan) MaxCurrent(current int64) error {
-	err := c.setValueInt64("Intensity", current)
+	err := c.setValue("Intensity", int(current))
 	if err == nil {
 		c.current = int(current)
 	}
