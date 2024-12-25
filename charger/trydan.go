@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 type RealTimeData struct {
@@ -73,6 +74,10 @@ func NewTrydanFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTrydan creates Trydan charger
 func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	c := &Trydan{
 		Helper: request.NewHelper(util.NewLogger("trydan")),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
