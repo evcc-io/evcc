@@ -83,7 +83,7 @@ func (t *Pun) run(done chan error) {
 		var today api.Rates
 		if err := backoff.Retry(func() error {
 			var err error
-
+			t.log.TRACE.Println(`Current day PUN hourly tariffs import started`)
 			today, err = t.getData(time.Now())
 
 			return err
@@ -95,13 +95,14 @@ func (t *Pun) run(done chan error) {
 		}
 
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
+			t.log.TRACE.Println(`Next day PUN hourly tariffs import started`)
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
 		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
-			t.log.ERROR.Println(err)
 			continue
+			//res = api.Rates{} // use empty rates if tomorrow data is not available
 		}
 
 		// merge today and tomorrow data
@@ -158,7 +159,8 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	t.log.TRACE.Println(`PUN Zip file requested`)
 
 	resp, err := client.Do(req)
-	if err != nil {
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.log.TRACE.Println(`PUN Zip file request failed:`, err)
 		return nil, err
 	}
 	t.log.TRACE.Println(`PUN Zip file request status:`, resp.Status)
