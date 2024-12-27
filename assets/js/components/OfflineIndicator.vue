@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="modal-backdrop" v-if="offline" />
+		<div v-if="offline" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
 			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
@@ -22,7 +22,11 @@
 				</button>
 				{{ $t("offline.restarting") }}
 			</div>
-			<div v-else-if="restartNeeded" class="d-flex align-items-center">
+			<div
+				v-else-if="restartNeeded"
+				class="d-flex align-items-center"
+				data-testid="restart-needed"
+			>
 				<button
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
@@ -40,6 +44,7 @@
 			<div
 				v-else-if="showError"
 				class="d-flex align-items-start container px-4 justify-content-center"
+				data-testid="fatal-error"
 			>
 				<shopicon-regular-car1
 					size="m"
@@ -83,14 +88,6 @@ export default {
 	data() {
 		return { dismissed: false };
 	},
-	watch: {
-		offline: function () {
-			if (!this.offline) {
-				restartComplete();
-				this.dismissed = false;
-			}
-		},
-	},
 	computed: {
 		restartNeeded() {
 			return restart.restartNeeded;
@@ -109,6 +106,14 @@ export default {
 				this.fatal?.error &&
 				!this.dismissed
 			);
+		},
+	},
+	watch: {
+		offline: function () {
+			if (!this.offline) {
+				restartComplete();
+				this.dismissed = false;
+			}
 		},
 	},
 	methods: {

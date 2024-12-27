@@ -44,6 +44,10 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing token")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
@@ -72,14 +76,12 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
 	v := map[string]interface{}{
 		"id": graphql.ID(t.homeID),
 	}
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res struct {
 			Viewer struct {
 				Home struct {
@@ -94,7 +96,7 @@ func (t *Tibber) run(done chan error) {
 			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
 			return t.client.Query(ctx, &res, v)
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -103,9 +105,8 @@ func (t *Tibber) run(done chan error) {
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }
@@ -115,7 +116,7 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 	for _, r := range pi {
 		price := r.Total
 		if t.Charges != 0 || t.Tax != 0 {
-			price = t.totalPrice(r.Energy)
+			price = t.totalPrice(r.Energy, r.StartsAt)
 		}
 		ar := api.Rate{
 			Start: r.StartsAt.Local(),

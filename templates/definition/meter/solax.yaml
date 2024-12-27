@@ -17,6 +17,10 @@ params:
     baudrate: 19200
   - name: capacity
     advanced: true
+  - name: maxacpower
+  - name: defaultmode
+    default: 0 # "SelfUse"
+    advanced: true
 render: |
   type: custom
   power:
@@ -35,7 +39,7 @@ render: |
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
     source: calc
@@ -59,7 +63,8 @@ render: |
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
-    scale: 10
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
@@ -82,7 +87,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: 0 # self use mode
+        value: {{ .defaultmode }}
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -134,7 +139,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

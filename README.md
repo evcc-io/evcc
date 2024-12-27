@@ -8,14 +8,14 @@
 
 evcc is an extensible EV Charge Controller and home energy management system. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
-![Screenshot](docs/screenshot.png)
+![Screenshot](docs/screenshot.webp)
 
 ## Features
 
 - simple and clean user interface
 - wide range of supported [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - ABL eMH1, Alfen (Eve), Bender (CC612/613), cFos (PowerBrain), Daheimladen, Ebee (Wallbox), Ensto (Chago Wallbox), [EVSEWifi/ smartWB](https://www.evse-wifi.de), Garo (GLB, GLB+, LS4), go-eCharger, HardyBarth (eCB1, cPH1, cPH2), Heidelberg (Energy Control), Innogy (eBox), Juice (Charger Me), KEBA/BMW, Mennekes (Amedio, Amtron Premium/Xtra, Amtron ChargeConrol), older NRGkicks (before 2022/2023), [openWB (includes Pro)](https://openwb.de/), Optec (Mobility One), PC Electric (includes Garo), Siemens, TechniSat (Technivolt), [Tinkerforge Warp Charger](https://www.warp-charger.com), Ubitricity (Heinz), Vestel, Wallbe, Webasto (Live), Mobile Charger Connect and many more
-  - experimental EEBus support (Elli, PMCC)
+  - ABL eMH1, Alfen (Eve), Bender (CC612/613), cFos (PowerBrain), Daheimladen, Ebee (Wallbox), Ensto (Chago Wallbox), [EVSEWifi/ smartWB](https://www.evse-wifi.de), Garo (GLB, GLB+, LS4), go-eCharger, HardyBarth (eCB1, cPH1, cPH2), Heidelberg (Energy Control), Innogy (eBox), Juice (Charger Me), KEBA/BMW, Mennekes (Amedio, Amtron Premium/Xtra, Amtron ChargeConrol), older NRGkicks (before 2022/2023), NRGKick Gen2,[openWB (includes Pro)](https://openwb.de/), Optec (Mobility One), PC Electric (includes Garo), Siemens, TechniSat (Technivolt), [Tinkerforge Warp Charger](https://www.warp-charger.com), Ubitricity (Heinz), Vestel, Wallbe, Webasto (Live), Mobile Charger Connect and many more
+  - EEBus support (Elli, PMCC)
   - experimental OCPP support
   - Build-your-own: Phoenix Contact (includes ESL Walli), [EVSE DIN](http://evracing.cz/simple-evse-wallbox)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
@@ -25,7 +25,7 @@ evcc is an extensible EV Charge Controller and home energy management system. Fe
   - Sunspec-compatible inverter or home battery devices: Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...
   - and various others: Discovergy, Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
 - [vehicle](https://docs.evcc.io/docs/devices/vehicles) integration (state of charge, remote charge, battery and preconditioning status):
-  - Audi, BMW, Citroën, Dacia, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, ~~Mercedes~~, Mini, Nissan, Opel, Peugeot, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, ...
+  - Audi, BMW, Citroën, Dacia, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mercedes-Benz, Mini, Nissan, Opel, Peugeot, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, ...
   - Services: OVMS, Tronity
   - Scooters: Niu, ~~Silence~~
 - [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle:
@@ -55,4 +55,4 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
-The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
+Learn more about our [sponsorship model](https://docs.evcc.io/docs/sponsorship).

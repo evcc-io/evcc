@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
@@ -20,12 +21,20 @@ const (
 	vehicleDetectDuration = 10 * time.Minute
 )
 
+// availableVehicles is the slice of vehicles from the coordinator that are available
+func (lp *Loadpoint) availableVehicles() []api.Vehicle {
+	if lp.coordinator == nil {
+		return nil
+	}
+	return lp.coordinator.GetVehicles(true)
+}
+
 // coordinatedVehicles is the slice of vehicles from the coordinator
 func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 	if lp.coordinator == nil {
 		return nil
 	}
-	return lp.coordinator.GetVehicles()
+	return lp.coordinator.GetVehicles(false)
 }
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
@@ -296,7 +305,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 			lp.updateSession(func(session *session.Session) {
 				session.Odometer = &odo
 			})
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !loadpoint.AcceptableError(err) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
 	}

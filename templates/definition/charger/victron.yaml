@@ -2,9 +2,8 @@ template: victron
 products:
   - brand: Victron
     description:
-      generic: EV Charging Station
+      generic: EV Charging Station (via GX)
 requirements:
-  evcc: ["sponsorship"]
   description:
     en: Enter the host of the GX device (not the charger). The charger has to be in manual mode and Modbus has to be configured for ID 100.
     de: Trage den Host des GX-Gerätes (nicht der Wallbox) ein. Die Wallbox muss sich im Modus "Manual" befinden und Modbus ID 100 konfiguriert sein.

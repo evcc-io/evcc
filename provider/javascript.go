@@ -1,6 +1,10 @@
 package provider
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -16,11 +20,11 @@ type Javascript struct {
 }
 
 func init() {
-	registry.Add("js", NewJavascriptProviderFromConfig)
+	registry.AddCtx("js", NewJavascriptProviderFromConfig)
 }
 
 // NewJavascriptProviderFromConfig creates a Javascript provider
-func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewJavascriptProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -37,12 +41,12 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, er
 		return nil, err
 	}
 
-	in, err := configureInputs(cc.In)
+	in, err := configureInputs(ctx, cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := configureOutputs(cc.Out)
+	out, err := configureOutputs(ctx, cc.Out)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +129,10 @@ func (p *Javascript) handleGetter() (any, error) {
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
+	if err := transformInputs(p.in, p.setParamSync); err != nil {
+		return err
+	}
+
 	javascript.Lock()
 	if err := p.setParam(param, val); err != nil {
 		javascript.Unlock()
@@ -141,7 +149,14 @@ func (p *Javascript) handleSetter(param string, val any) error {
 	return transformOutputs(p.out, v)
 }
 
-func (p *Javascript) evaluate() (any, error) {
+func (p *Javascript) evaluate() (res any, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+		err = backoff.Permanent(err)
+	}()
+
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return nil, err

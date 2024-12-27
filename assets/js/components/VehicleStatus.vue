@@ -1,11 +1,13 @@
 <template>
 	<div
-		class="d-flex justify-content-between gap-4 evcc-gray"
+		class="d-flex justify-content-between gap-3 evcc-gray align-items-start flex-wrap"
 		style="min-height: 24px"
 		data-testid="vehicle-status"
 	>
-		<div class="text-nowrap" data-testid="vehicle-status-charger">{{ chargerStatus }}</div>
-		<div class="d-flex flex-wrap justify-content-end gap-3">
+		<div class="charger-status" data-testid="vehicle-status-charger">
+			{{ chargerStatus }}
+		</div>
+		<div class="d-flex flex-wrap justify-content-end gap-3 flex-grow-1">
 			<!-- pv/phase timer -->
 			<div
 				v-if="pvTimerVisible"
@@ -66,6 +68,33 @@
 			>
 				<ClimaterIcon />
 			</div>
+			<div
+				v-if="vehicleWelcomeActive"
+				ref="vehicleWelcome"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-welcome"
+			>
+				<WelcomeIcon />
+			</div>
+			<div
+				v-if="awaitingAuthorizationVisible"
+				ref="awaitingAuthorization"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-awaiting-authorization"
+			>
+				<RfidWaitIcon />
+			</div>
+			<div
+				v-if="disconnectRequiredVisible"
+				ref="disconnectRequired"
+				class="entry text-warning"
+				data-bs-toggle="tooltip"
+				data-testid="vehicle-status-disconnect-required"
+			>
+				<ReconnectIcon />
+			</div>
 
 			<!-- smart cost -->
 			<button
@@ -76,6 +105,7 @@
 				:class="smartCostClass"
 				data-testid="vehicle-status-smartcost"
 				data-bs-toggle="tooltip"
+				data-bs-trigger="hover"
 				@click="smartCostClicked"
 			>
 				<DynamicPriceIcon v-if="smartCostPrice" />
@@ -89,6 +119,18 @@
 				</div>
 			</button>
 
+			<!-- battery boost -->
+			<button
+				v-if="batteryBoostVisible"
+				ref="batteryBoost"
+				type="button"
+				class="entry"
+				data-testid="vehicle-status-batteryboost"
+				data-bs-toggle="tooltip"
+				@click="batteryBoostClicked"
+			>
+				<BatteryBoostIcon />
+			</button>
 			<!-- plan -->
 			<button
 				v-if="planActiveVisible"
@@ -130,34 +172,46 @@ import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
-import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
-import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
 import ClimaterIcon from "./MaterialIcon/Climater.vue";
-import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
-import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
-import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
-import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
+import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
+import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
+import ReconnectIcon from "./MaterialIcon/Reconnect.vue";
+import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
+import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
+import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
+import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
+import WelcomeIcon from "./MaterialIcon/Welcome.vue";
+import BatteryBoostIcon from "./MaterialIcon/BatteryBoost.vue";
+const REASON_AUTH = "waitingforauthorization";
+const REASON_DISCONNECT = "disconnectrequired";
 
 export default {
 	name: "VehicleStatus",
 	components: {
-		DynamicPriceIcon,
-		PlanStartIcon,
-		PlanEndIcon,
 		ClimaterIcon,
-		VehicleLimitIcon,
-		VehicleMinSocIcon,
+		DynamicPriceIcon,
+		PlanEndIcon,
+		PlanStartIcon,
+		ReconnectIcon,
+		RfidWaitIcon,
 		SunDownIcon,
 		SunUpIcon,
+		VehicleLimitIcon,
+		VehicleMinSocIcon,
+		WelcomeIcon,
+		BatteryBoostIcon,
 	},
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
+		batteryBoostActive: Boolean,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
+		chargerStatusReason: String,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -177,12 +231,13 @@ export default {
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,
 		smartCostDisabled: Boolean,
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
 		tariffCo2: Number,
 		tariffGrid: Number,
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		vehicleLimitSoc: Number,
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
@@ -194,45 +249,17 @@ export default {
 			planActiveTooltip: null,
 			minSocTooltip: null,
 			vehicleClimaterTooltip: null,
+			vehicleWelcomeTooltip: null,
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
+			awaitingAuthorizationTooltip: null,
+			disconnectRequiredTooltip: null,
+			batteryBoostTooltip: null,
+			interval: null,
+			planProjectedEndDuration: null,
+			smartCostNextStartDuration: null,
+			planProjectedStartDuration: null,
 		};
-	},
-	mounted() {
-		this.updatePlanStartTooltip();
-		this.updatePlanActiveTooltip();
-		this.updateMinSocTooltip();
-		this.updatePhaseTooltip();
-		this.updatePvTooltip();
-		this.updateVehicleClimaterTooltip();
-		this.updateSmartCostTooltip();
-		this.updateVehicleLimitTooltip();
-	},
-	watch: {
-		planActiveTooltipContent() {
-			this.$nextTick(this.updatePlanActiveTooltip);
-		},
-		planStartTooltipContent() {
-			this.$nextTick(this.updatePlanStartTooltip);
-		},
-		minSocTooltipContent() {
-			this.$nextTick(this.updateMinSocTooltip);
-		},
-		phaseTimerContent() {
-			this.$nextTick(this.updatePhaseTooltip);
-		},
-		pvTimerContent() {
-			this.$nextTick(this.updatePvTooltip);
-		},
-		vehicleClimaterTooltipContent() {
-			this.$nextTick(this.updateVehicleClimaterTooltip);
-		},
-		smartCostTooltipContent() {
-			this.$nextTick(this.updateSmartCostTooltip);
-		},
-		vehicleLimitTooltipContent() {
-			this.$nextTick(this.updateVehicleLimitTooltip);
-		},
 	},
 	computed: {
 		phaseTimerActive() {
@@ -271,6 +298,24 @@ export default {
 		vehicleLimitVisible() {
 			const limit = this.effectiveLimitSoc || 100;
 			return this.connected && this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
+		},
+		awaitingAuthorizationVisible() {
+			return this.chargerStatusReason === REASON_AUTH;
+		},
+		awaitingAuthorizationTooltipContent() {
+			if (!this.awaitingAuthorizationVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.awaitingAuthorization");
+		},
+		disconnectRequiredVisible() {
+			return this.chargerStatusReason === REASON_DISCONNECT;
+		},
+		disconnectRequiredTooltipContent() {
+			if (!this.disconnectRequiredVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.disconnectRequired");
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -324,12 +369,22 @@ export default {
 		planStartVisible() {
 			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
 		},
+		batteryBoostVisible() {
+			return this.batteryBoostActive;
+		},
+		batteryBoostTooltipContent() {
+			if (!this.batteryBoostVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.batteryBoost");
+		},
 		planStartTooltipContent() {
 			if (!this.planStartVisible) {
 				return "";
 			}
-			const duration = this.fmtDurationToTime(new Date(this.planProjectedStart));
-			return this.$t("main.vehicleStatus.targetChargePlanned", { duration });
+			return this.$t("main.vehicleStatus.targetChargePlanned", {
+				duration: this.planProjectedStartDuration,
+			});
 		},
 		planActiveVisible() {
 			return this.planProjectedEnd && this.planActive && !this.chargingPlanDisabled;
@@ -347,11 +402,11 @@ export default {
 				});
 			}
 			return this.$t("main.vehicleStatus.targetChargeActive", {
-				duration: this.fmtDurationToTime(new Date(this.planProjectedEnd)),
+				duration: this.planProjectedEndDuration,
 			});
 		},
 		smartCostVisible() {
-			return !!this.smartCostLimit;
+			return this.smartCostLimit !== null;
 		},
 		smartCostTooltipContent() {
 			if (!this.smartCostVisible) {
@@ -363,7 +418,7 @@ export default {
 			}
 			if (this.smartCostNextStart) {
 				return this.$t(`${prefix}EnergyNextStart`, {
-					duration: this.fmtDurationToTime(new Date(this.smartCostNextStart)),
+					duration: this.smartCostNextStartDuration,
 				});
 			}
 			return this.$t(`${prefix}EnergySet`);
@@ -399,7 +454,16 @@ export default {
 			return "";
 		},
 		vehicleClimaterTooltipContent() {
+			if (!this.vehicleClimaterActive) {
+				return "";
+			}
 			return this.$t("main.vehicleStatus.climating");
+		},
+		vehicleWelcomeTooltipContent() {
+			if (!this.vehicleWelcomeActive) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.welcome");
 		},
 		chargerStatus() {
 			const t = (key, data) => {
@@ -430,93 +494,92 @@ export default {
 
 			return t("connected");
 		},
-		message: function () {
-			const t = (key, data) => {
-				if (this.heating) {
-					// check for special heating status translation
-					const name = `main.heatingStatus.${key}`;
-					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name, data);
-					}
-				}
-				return this.$t(`main.vehicleStatus.${key}`, data);
-			};
-
-			if (!this.connected) {
-				return t("disconnected");
-			}
-			// min charge active
-			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
-				return t("minCharge", { soc: this.fmtPercentage(this.minSoc) });
-			}
-
-			// plan
-			if (!this.chargingPlanDisabled && this.effectivePlanTime) {
-				if (this.planActive && this.charging) {
-					return t("targetChargeActive");
-				}
-				if (this.planActive && this.enabled) {
-					return t("targetChargeWaitForVehicle");
-				}
-				if (this.planProjectedStart) {
-					return t("targetChargePlanned", {
-						time: this.fmtAbsoluteDate(new Date(this.planProjectedStart)),
-					});
-				}
-			}
-
-			// clean or cheap energy
-			if (this.charging && this.smartCostActive) {
-				return this.smartCostType === CO2_TYPE
-					? t("cleanEnergyCharging", {
-							co2: this.fmtCo2Short(this.tariffCo2),
-							limit: this.fmtCo2Short(this.smartCostLimit),
-						})
-					: t("cheapEnergyCharging", {
-							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
-							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
-						});
-			}
-
-			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
-				return t("pvEnable", {
-					remaining: this.fmtDuration(this.pvRemainingInterpolated),
-				});
-			}
-
-			if (this.enabled && this.vehicleClimaterActive) {
-				return t("climating");
-			}
-
-			if (this.enabled && !this.charging) {
-				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
-					return t("vehicleLimitReached", {
-						soc: this.fmtPercentage(this.vehicleLimitSoc),
-					});
-				}
-				return t("waitForVehicle");
-			}
-
-			if (this.pvTimerActive && this.charging && this.pvAction === "disable") {
-				return t("pvDisable", {
-					remaining: this.fmtDuration(this.pvRemainingInterpolated),
-				});
-			}
-
-			if (this.phaseTimerActive) {
-				return t(this.phaseAction, {
-					remaining: this.fmtDuration(this.phaseRemainingInterpolated),
-				});
-			}
-
-			if (this.charging) {
-				return t("charging");
-			}
-
-			return t("connected");
+	},
+	watch: {
+		planActiveTooltipContent() {
+			this.$nextTick(this.updatePlanActiveTooltip);
+		},
+		planStartTooltipContent() {
+			this.$nextTick(this.updatePlanStartTooltip);
+		},
+		minSocTooltipContent() {
+			this.$nextTick(this.updateMinSocTooltip);
+		},
+		phaseTimerContent() {
+			this.$nextTick(this.updatePhaseTooltip);
+		},
+		pvTimerContent() {
+			this.$nextTick(this.updatePvTooltip);
+		},
+		vehicleClimaterTooltipContent() {
+			this.$nextTick(this.updateVehicleClimaterTooltip);
+		},
+		vehicleWelcomeTooltipContent() {
+			this.$nextTick(this.updateVehicleWelcomeTooltip);
+		},
+		smartCostTooltipContent() {
+			this.$nextTick(this.updateSmartCostTooltip);
+		},
+		vehicleLimitTooltipContent() {
+			this.$nextTick(this.updateVehicleLimitTooltip);
+		},
+		awaitingAuthorizationTooltipContent() {
+			this.$nextTick(this.updateAwaitingAuthorizationTooltip);
+		},
+		disconnectRequiredTooltipContent() {
+			this.$nextTick(this.updateDisconnectRequiredTooltip);
+		},
+		batteryBoostTooltipContent() {
+			this.$nextTick(this.updateBatteryBoostTooltip);
+		},
+		planProjectedStart() {
+			this.updateDurations();
+		},
+		planProjectedEnd() {
+			this.updateDurations();
+		},
+		smartCostNextStart() {
+			this.updateDurations();
 		},
 	},
+	mounted() {
+		this.updatePlanStartTooltip();
+		this.updatePlanActiveTooltip();
+		this.updateMinSocTooltip();
+		this.updatePhaseTooltip();
+		this.updatePvTooltip();
+		this.updateVehicleClimaterTooltip();
+		this.updateVehicleWelcomeTooltip();
+		this.updateSmartCostTooltip();
+		this.updateVehicleLimitTooltip();
+		this.updateAwaitingAuthorizationTooltip();
+		this.updateDisconnectRequiredTooltip();
+		this.updateDurations();
+
+		this.interval = setInterval(this.updateDurations, 1000 * 60);
+		this.updateBatteryBoostTooltip();
+	},
+	beforeUnmount() {
+		clearInterval(this.interval);
+	},
 	methods: {
+		updateDurations() {
+			if (this.planProjectedStart) {
+				this.planProjectedStartDuration = this.fmtDurationToTime(
+					new Date(this.planProjectedStart)
+				);
+			}
+			if (this.planProjectedEnd) {
+				this.planProjectedEndDuration = this.fmtDurationToTime(
+					new Date(this.planProjectedEnd)
+				);
+			}
+			if (this.smartCostNextStart) {
+				this.smartCostNextStartDuration = this.fmtDurationToTime(
+					new Date(this.smartCostNextStart)
+				);
+			}
+		},
 		openLoadpointSettings() {
 			this.$emit("open-loadpoint-settings");
 		},
@@ -541,6 +604,10 @@ export default {
 		smartCostClicked() {
 			this.openLoadpointSettings();
 			this.smartCostTooltip?.hide();
+		},
+		batteryBoostClicked() {
+			this.batteryBoostTooltip?.hide();
+			this.openLoadpointSettings();
 		},
 		updatePvTooltip() {
 			this.pvTooltip = this.updateTooltip(
@@ -587,6 +654,20 @@ export default {
 				this.$refs.vehicleClimater
 			);
 		},
+		updateBatteryBoostTooltip() {
+			this.batteryBoostTooltip = this.updateTooltip(
+				this.batteryBoostTooltip,
+				this.batteryBoostTooltipContent,
+				this.$refs.batteryBoost
+			);
+		},
+		updateVehicleWelcomeTooltip() {
+			this.vehicleWelcomeTooltip = this.updateTooltip(
+				this.vehicleWelcomeTooltip,
+				this.vehicleWelcomeTooltipContent,
+				this.$refs.vehicleWelcome
+			);
+		},
 		updateSmartCostTooltip() {
 			this.smartCostTooltip = this.updateTooltip(
 				this.smartCostTooltip,
@@ -603,6 +684,20 @@ export default {
 				true
 			);
 		},
+		updateAwaitingAuthorizationTooltip() {
+			this.awaitingAuthorizationTooltip = this.updateTooltip(
+				this.awaitingAuthorizationTooltip,
+				this.awaitingAuthorizationTooltipContent,
+				this.$refs.awaitingAuthorization
+			);
+		},
+		updateDisconnectRequiredTooltip() {
+			this.updateTooltip(
+				this.disconnectRequiredTooltip,
+				this.disconnectRequiredTooltipContent,
+				this.$refs.disconnectRequired
+			);
+		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
 			if (!content || !ref) {
 				if (instance) {
@@ -610,18 +705,22 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
+			let newInstance = instance;
+			if (!newInstance) {
 				const trigger = hoverOnly ? "hover" : "hover focus";
-				instance = new Tooltip(ref, { title: " ", trigger });
+				newInstance = new Tooltip(ref, { title: " ", trigger });
 			}
-			instance.setContent({ ".tooltip-inner": content });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": content });
+			return newInstance;
 		},
 	},
 };
 </script>
 
 <style scoped>
+.charger-status {
+	padding-top: 2px;
+}
 .entry {
 	display: flex;
 	align-items: center;

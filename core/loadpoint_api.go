@@ -57,6 +57,9 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
+		lp.batteryBoost = boostDisabled
+		lp.publish(keys.BatteryBoost, false)
+
 		// reset timers
 		switch mode {
 		case api.ModeNow, api.ModeOff:
@@ -276,6 +279,89 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 	}
 }
 
+// GetEnableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetEnableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Enable.Delay
+}
+
+// SetEnableDelay sets loadpoint enable delay
+func (lp *Loadpoint) SetEnableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set enable delay:", delay)
+
+	if lp.Enable.Delay != delay {
+		lp.Enable.Delay = delay
+		lp.publish(keys.EnableDelay, delay)
+	}
+}
+
+// GetDisableDelay gets the loadpoint enable delay
+func (lp *Loadpoint) GetDisableDelay() time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Disable.Delay
+}
+
+// SetDisableDelay sets loadpoint disable delay
+func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set disable delay:", delay)
+
+	if lp.Disable.Delay != delay {
+		lp.Disable.Delay = delay
+		lp.publish(keys.DisableDelay, delay)
+	}
+}
+
+// getBatteryBoost returns the battery boost
+func (lp *Loadpoint) getBatteryBoost() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoost
+}
+
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() bool {
+	return lp.getBatteryBoost() > 0
+}
+
+// setBatteryBoost returns the battery boost
+func (lp *Loadpoint) setBatteryBoost(boost int) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.batteryBoost = boost
+}
+
+// SetBatteryBoost sets the battery boost
+func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if enable && lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
+		return errors.New("battery boost is only available in PV modes")
+	}
+
+	lp.log.DEBUG.Println("set battery boost:", enable)
+
+	if enable != (lp.batteryBoost != boostDisabled) {
+		lp.publish(keys.BatteryBoost, enable)
+
+		lp.batteryBoost = boostDisabled
+		if enable {
+			lp.batteryBoost = boostStart
+			lp.requestUpdate()
+		}
+	}
+
+	return nil
+}
+
 // RemoteControl sets remote status demand
 func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
@@ -489,23 +575,29 @@ func (lp *Loadpoint) StartVehicleDetection() {
 }
 
 // GetSmartCostLimit gets the smart cost limit
-func (lp *Loadpoint) GetSmartCostLimit() float64 {
+func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartCostLimit
 }
 
 // SetSmartCostLimit sets the smart cost limit
-func (lp *Loadpoint) SetSmartCostLimit(val float64) {
+func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", val)
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
 
-	if lp.smartCostLimit != val {
+	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
-		lp.settings.SetFloat(keys.SmartCostLimit, lp.smartCostLimit)
-		lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+
+		if val == nil {
+			lp.settings.SetString(keys.SmartCostLimit, "")
+			lp.publish(keys.SmartCostLimit, nil)
+		} else {
+			lp.settings.SetFloat(keys.SmartCostLimit, *val)
+			lp.publish(keys.SmartCostLimit, *val)
+		}
 	}
 }
 

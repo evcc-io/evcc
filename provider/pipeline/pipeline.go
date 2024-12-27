@@ -5,9 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
@@ -15,25 +17,28 @@ import (
 )
 
 type Pipeline struct {
-	log    *util.Logger
-	re     *regexp.Regexp
-	jq     *gojq.Query
-	dflt   string
-	unpack string
-	decode string
+	log        *util.Logger
+	re         *regexp.Regexp
+	jq         *gojq.Query
+	allowEmpty bool
+	dflt       string
+	unpack     string
+	decode     string
 }
 
 type Settings struct {
-	Regex   string
-	Default string
-	Jq      string
-	Unpack  string
-	Decode  string
+	AllowEmpty bool
+	Regex      string
+	Default    string
+	Jq         string
+	Unpack     string
+	Decode     string
 }
 
 func New(log *util.Logger, cc Settings) (*Pipeline, error) {
 	p := &Pipeline{
-		log: log,
+		log:        log,
+		allowEmpty: cc.AllowEmpty,
 	}
 
 	var err error
@@ -140,7 +145,7 @@ func (p *Pipeline) unpackValue(value []byte) (string, error) {
 
 // decode a hex string to a proper value
 // TODO reuse similar code from Modbus
-func (p *Pipeline) decodeValue(value []byte) (interface{}, error) {
+func (p *Pipeline) decodeValue(value []byte) (float64, error) {
 	switch p.decode {
 	case "float32", "ieee754":
 		return rs485.RTUIeee754ToFloat64(value), nil
@@ -164,10 +169,14 @@ func (p *Pipeline) decodeValue(value []byte) (interface{}, error) {
 		return rs485.RTUInt32ToFloat64Swapped(value), nil
 	}
 
-	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
+	return 0, fmt.Errorf("invalid decoding: %s", p.decode)
 }
 
 func (p *Pipeline) Process(in []byte) ([]byte, error) {
+	if p.allowEmpty && len(bytes.TrimSpace(in)) == 0 {
+		return nil, nil
+	}
+
 	b := p.transformXML(in)
 
 	if p.re != nil {
@@ -184,7 +193,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 	if p.jq != nil {
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
-			return b, err
+			return b, backoff.Permanent(err)
 		}
 		b = []byte(fmt.Sprintf("%v", v))
 	}
@@ -202,7 +211,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 		if err != nil {
 			return b, err
 		}
-		b = []byte(fmt.Sprintf("%v", v))
+		b = []byte(strconv.FormatFloat(v, 'f', -1, 64))
 	}
 
 	return b, nil

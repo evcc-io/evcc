@@ -1,3 +1,5 @@
+version: 2
+
 dist: release
 release:
   disable: true
@@ -25,6 +27,20 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    overrides:
+      - goos: windows
+        goarch: amd64
+        flags:
+          - -trimpath
+          - -tags=release,timetzdata
+      - goos: darwin
+        goarch: arm64
+        ldflags:
+          - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w -B gobuildid
+      - goos: darwin
+        goarch: amd64
+        ldflags:
+          - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w -B gobuildid
 
 archives:
   - builds:
@@ -48,7 +64,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
+  version_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
@@ -72,6 +88,9 @@ nfpms:
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service

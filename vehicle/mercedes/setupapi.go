@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/google/uuid"
@@ -75,20 +74,20 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 
 func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token, error) {
 	data := url.Values{
-		"client_id":  []string{ClientId},
-		"grant_type": []string{"password"},
-		"password":   []string{fmt.Sprintf("%s:%s", nonce, pin)},
-		"scope":      []string{"openid email phone profile offline_access ciam-uid"},
-		"username":   []string{vs.account},
+		"client_id":  {ClientId},
+		"grant_type": {"password"},
+		"password":   {fmt.Sprintf("%s:%s", nonce, pin)},
+		"scope":      {"openid email phone profile offline_access ciam-uid"},
+		"username":   {vs.account},
 	}
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, vs.region))
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err := vs.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	return (*oauth2.Token)(&res), nil
+	return util.TokenWithExpiry(&res), nil
 }

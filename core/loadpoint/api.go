@@ -67,9 +67,11 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectivePlanId returns the effective plan id
+	EffectivePlanId() int
 	// EffectivePlanTime returns the effective plan time
 	EffectivePlanTime() time.Time
-	// EffectiveMinPower returns the min charging power for a single phase
+	// EffectiveMinPower returns the min charging power for the minimum active phases
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
@@ -102,6 +104,20 @@ type API interface {
 	// SetDisableThreshold sets loadpoint disable threshold
 	SetDisableThreshold(threshold float64)
 
+	// GetEnableDelay gets the loadpoint enable delay
+	GetEnableDelay() time.Duration
+	// SetEnableDelay sets loadpoint enable delay
+	SetEnableDelay(delay time.Duration)
+	// GetDisableDelay gets the loadpoint disable delay
+	GetDisableDelay() time.Duration
+	// SetDisableDelay sets loadpoint disable delay
+	SetDisableDelay(delay time.Duration)
+
+	// GetBatteryBoost returns the battery boost
+	GetBatteryBoost() bool
+	// SetBatteryBoost sets the battery boost
+	SetBatteryBoost(enable bool) error
+
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
@@ -110,9 +126,9 @@ type API interface {
 	//
 
 	// GetSmartChargingActive determines if smart charging is active
-	GetSmartCostLimit() float64
+	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
-	SetSmartCostLimit(limit float64)
+	SetSmartCostLimit(limit *float64)
 
 	//
 	// power and energy

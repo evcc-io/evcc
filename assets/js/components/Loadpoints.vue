@@ -24,6 +24,7 @@
 					:multipleLoadpoints="loadpoints.length > 1"
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -60,7 +61,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 import Loadpoint from "./Loadpoint.vue";
 
 export default {
-	name: "Site",
+	name: "Loadpoints",
 	components: { Loadpoint },
 	props: {
 		loadpoints: Array,
@@ -71,6 +72,7 @@ export default {
 		currency: String,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		batteryConfigured: Boolean,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

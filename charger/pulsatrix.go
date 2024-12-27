@@ -35,11 +35,11 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"nhooyr.io/websocket"
 )
 
 // pulsatrix charger implementation
@@ -49,7 +49,6 @@ type Pulsatrix struct {
 	conn    *websocket.Conn
 	uri     string
 	enabled bool
-	quit    chan struct{}
 	data    *util.Monitor[pulsatrixData]
 }
 
@@ -115,19 +114,19 @@ func (c *Pulsatrix) connectWs() error {
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
 	}
-	c.quit = make(chan struct{})
+
 	go c.wsReader()
-	go c.heartbeat()
+	go c.heartbeat(ctx)
 
 	return nil
 }
 
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnectWs() {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = time.Second
-	bo.MaxInterval = 1 * time.Minute
-	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(time.Second),
+		backoff.WithMaxInterval(time.Minute),
+		backoff.WithMaxElapsedTime(0)) // retry forever; default is 15 min
 	if err := backoff.Retry(c.connectWs, bo); err != nil {
 		c.log.ERROR.Println(err)
 	}
@@ -151,7 +150,6 @@ func (c *Pulsatrix) wsReader() {
 	c.mu.Lock()
 	c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
 	c.conn = nil
-	close(c.quit)
 	c.mu.Unlock()
 
 	c.reconnectWs()
@@ -195,18 +193,16 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 }
 
 // Heartbeat sends a heartbeat to the pulsatrix SECC
-func (c *Pulsatrix) heartbeat() {
-	ticker := time.NewTicker(3 * time.Minute)
-	defer ticker.Stop()
-
-	for {
+func (c *Pulsatrix) heartbeat(ctx context.Context) {
+	for tick := time.Tick(3 * time.Minute); ; {
 		select {
-		case <-ticker.C:
-			if err := c.Enable(c.enabled); err != nil {
-				c.log.ERROR.Println(err)
-			}
-		case <-c.quit:
+		case <-tick:
+		case <-ctx.Done():
 			return
+		}
+
+		if err := c.Enable(c.enabled); err != nil {
+			c.log.ERROR.Println(err)
 		}
 	}
 }

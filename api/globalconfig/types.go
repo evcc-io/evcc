@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/charger/eebus"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -30,7 +31,7 @@ type All struct {
 	Go           []Go
 	Influx       Influx
 	EEBus        eebus.Config
-	HEMS         config.Typed
+	HEMS         Hems
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named
@@ -57,6 +58,20 @@ type ModbusProxy struct {
 	modbus.Settings `mapstructure:",squash"`
 }
 
+var _ api.Redactor = (*Hems)(nil)
+
+type Hems config.Typed
+
+func (c Hems) Redacted() any {
+	return struct {
+		Type string `json:"type,omitempty"`
+	}{
+		Type: c.Type,
+	}
+}
+
+var _ api.Redactor = (*Mqtt)(nil)
+
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -68,9 +83,9 @@ func (m Mqtt) Redacted() any {
 	return struct {
 		Broker   string `json:"broker"`
 		Topic    string `json:"topic"`
-		User     string `json:"user"`
-		ClientID string `json:"clientID"`
-		Insecure bool   `json:"insecure"`
+		User     string `json:"user,omitempty"`
+		ClientID string `json:"clientID,omitempty"`
+		Insecure bool   `json:"insecure,omitempty"`
 	}{
 		Broker:   m.Broker,
 		Topic:    m.Topic,
@@ -88,6 +103,7 @@ type Influx struct {
 	Org      string `json:"org"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+	Insecure bool   `json:"insecure"`
 }
 
 // Redacted implements the redactor interface used by the tee publisher
@@ -98,11 +114,13 @@ func (c Influx) Redacted() any {
 		Database string `json:"database"`
 		Org      string `json:"org"`
 		User     string `json:"user"`
+		Insecure bool   `json:"insecure"`
 	}{
 		URL:      c.URL,
 		Database: c.Database,
 		Org:      c.Org,
 		User:     c.User,
+		Insecure: c.Insecure,
 	}
 }
 

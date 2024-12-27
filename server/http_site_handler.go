@@ -126,9 +126,28 @@ func handler[T any](conv func(string) (T, error), set func(T) error, get func() 
 	}
 }
 
+// ptrHandler updates pointer api
+func ptrHandler[T any](conv func(string) (T, error), set func(*T) error, get func() *T) http.HandlerFunc {
+	return handler(func(s string) (*T, error) {
+		var val *T
+		v, err := conv(s)
+		if err == nil {
+			val = &v
+		} else if s == "" {
+			err = nil
+		}
+		return val, err
+	}, set, get)
+}
+
 // floatHandler updates float-param api
 func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc {
 	return handler(parseFloat, set, get)
+}
+
+// floatPtrHandler updates float-pointer api
+func floatPtrHandler(set func(*float64) error, get func() *float64) http.HandlerFunc {
+	return ptrHandler(parseFloat, set, get)
 }
 
 // intHandler updates int-param api
@@ -141,8 +160,13 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	return handler(strconv.ParseBool, set, get)
 }
 
-// boolGetHandler retrieves bool api values
-func boolGetHandler(get func() bool) http.HandlerFunc {
+// durationHandler updates duration-param api
+func durationHandler(set func(time.Duration) error, get func() time.Duration) http.HandlerFunc {
+	return handler(util.ParseDuration, set, get)
+}
+
+// getHandler returns api results
+func getHandler[T any](get func() T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonResult(w, get())
 	}
@@ -152,11 +176,16 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		var val *float64
 
-		val, err := parseFloat(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if r.Method != http.MethodDelete {
+			f, err := parseFloat(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = &f
 		}
 
 		for _, lp := range site.Loadpoints() {

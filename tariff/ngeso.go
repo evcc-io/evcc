@@ -57,7 +57,6 @@ func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Ngeso) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
-	bo := newBackoff()
 
 	// Use national results by default.
 	var tReq ngeso.CarbonForecastRequest
@@ -74,12 +73,11 @@ func (t *Ngeso) run(done chan error) {
 	}
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
 			return res, backoffPermanentError(err)
-		}, bo)
+		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
 
@@ -97,9 +95,8 @@ func (t *Ngeso) run(done chan error) {
 			}
 			data = append(data, ar)
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

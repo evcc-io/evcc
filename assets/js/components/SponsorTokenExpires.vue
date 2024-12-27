@@ -1,6 +1,6 @@
 <template>
 	<div v-if="expiresSoon" class="alert alert-warning my-4" role="alert">
-		<i18n-t tag="div" keypath="settings.sponsorToken.expires">
+		<i18n-t tag="div" keypath="settings.sponsorToken.expires" scope="global">
 			<template #inXDays>
 				{{ inXDays }}
 			</template>
@@ -11,7 +11,7 @@
 			</template>
 		</i18n-t>
 
-		<em class="d-block mt-2" v-if="!isTrial">
+		<em v-if="!isTrial" class="d-block mt-2">
 			{{ $t("settings.sponsorToken.hint") }}
 		</em>
 	</div>

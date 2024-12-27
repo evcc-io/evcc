@@ -1,0 +1,28 @@
+template: vaillant
+products:
+  - brand: Vaillant
+    description:
+      generic: SensoNET (SG Ready)
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+  description:
+    de: Die Boost Funktion erwärmt Warmwasser und optional eine Boostzone. Die Boostzone wird durch die ID identifiziert. Die Boost Temperatur wird in Grad Celsius angegeben.
+    en: The boost function heats hot water and optionally a boost zone. The boost zone is identified by the ID. The boost temperature is specified in degrees Celsius.
+params:
+  - name: user
+  - name: password
+  - name: zone
+    type: int
+    help:
+      de: Id der Boostzone (zusätzlich zu Warmwasser)
+      en: Boost zone id (in addition to hot water)
+  - name: setpoint
+    type: float
+    help:
+      de: Boost Temperatur (zusätzlich zu Warmwasser)
+      en: Boost temperature setpoint (in addition to hot water)
+render: |
+  type: vaillant
+  user: {{ .user }}
+  password: {{ .password }}

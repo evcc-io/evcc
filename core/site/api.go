@@ -11,9 +11,6 @@ type API interface {
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
 
-	// GetCircuit returns the assigned circuit
-	GetCircuit() api.Circuit
-
 	// Meta
 	GetTitle() string
 	SetTitle(string)
@@ -26,6 +23,10 @@ type API interface {
 	GetBatteryMeterRefs() []string
 	SetBatteryMeterRefs([]string)
 
+	// circuits
+	GetCircuit() api.Circuit
+	SetCircuit(api.Circuit)
+
 	//
 	// battery
 	//
@@ -36,8 +37,11 @@ type API interface {
 	SetBufferSoc(float64) error
 	GetBufferStartSoc() float64
 	SetBufferStartSoc(float64) error
-	GetMaxGridSupplyWhileBatteryCharging() float64
-	SetMaxGridSupplyWhileBatteryCharging(float64) error
+
+	// GetBatteryGridChargeLimit get the grid charge limit
+	GetBatteryGridChargeLimit() *float64
+	// SetBatteryGridChargeLimit sets the grid charge limit
+	SetBatteryGridChargeLimit(limit *float64)
 
 	//
 	// power and energy

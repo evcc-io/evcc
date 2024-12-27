@@ -17,9 +17,11 @@ const (
 
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
+	ModbusChoiceUDP      = "udp"
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
+	ModbusKeyUDP         = "udp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -37,7 +39,7 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -54,15 +56,16 @@ const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
 	RequirementMQTT        = "mqtt"        // MQTT Setup is required
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
+	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
 )
 
-var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship}
+var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // TextLanguage contains language-specific texts
@@ -129,6 +132,19 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 	return json.Marshal(s)
 }
 
+func (r Requirements) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		EVCC        []string `json:",omitempty"`
+		Description string   `json:",omitempty"`
+	}{
+		EVCC:        r.EVCC,
+		Description: r.Description.String(encoderLanguage),
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
+}
+
 // Requirements
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
@@ -168,10 +184,9 @@ type Param struct {
 	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
-	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "stringlist"
+	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
-	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
 
@@ -185,7 +200,7 @@ type Param struct {
 // DefaultValue returns a default or example value depending on the renderMode
 func (p *Param) DefaultValue(renderMode int) interface{} {
 	// return empty list to allow iterating over in template
-	if p.Type == TypeStringList {
+	if p.Type == TypeList {
 		return []string{}
 	}
 
@@ -245,7 +260,7 @@ type TemplateDefinition struct {
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
-	Requirements Requirements     `json:"-"`
+	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template

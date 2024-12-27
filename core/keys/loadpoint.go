@@ -12,6 +12,9 @@ const (
 	LimitEnergy      = "limitEnergy" // limit energy
 	EnableThreshold  = "enableThreshold"
 	DisableThreshold = "disableThreshold"
+	EnableDelay      = "enableDelay"
+	DisableDelay     = "disableDelay"
+	BatteryBoost     = "batteryBoost"
 
 	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
@@ -21,6 +24,7 @@ const (
 	ChargerFeature        = "chargerFeature"        // charger feature
 	ChargerPhysicalPhases = "chargerPhysicalPhases" // charger phases
 	ChargerPhases1p3p     = "chargerPhases1p3p"     // phase switcher (1p3p chargers)
+	ChargerStatusReason   = "chargerStatusReason"   // either awaiting authorization or disconnect required
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
@@ -34,6 +38,7 @@ const (
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectivePlanId     = "effectivePlanId"     // effective plan id
 	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
@@ -60,8 +65,11 @@ const (
 	PlanSoc            = "planSoc"            // charge plan soc goal
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
-	PlanProjectedEnd   = "planProjectedEnd"   //charge plan ends (end of last slot)
+	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+
+	// repeating plans
+	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
 
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
@@ -76,4 +84,5 @@ const (
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
 	VehicleLimitSoc        = "vehicleLimitSoc"        // vehicle api soc limit
 	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
+	VehicleWelcomeActive   = "vehicleWelcomeActive"   // vehicle might need welcome charge
 )

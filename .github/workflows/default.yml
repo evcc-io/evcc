@@ -1,7 +1,7 @@
 name: Default
 
 env:
-  GO_VERSION: ^1.22
+  GO_VERSION: ^1.23
 
 on:
   push:
@@ -74,7 +74,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
 
       - run: mkdir dist && touch dist/empty
@@ -148,7 +148,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
 
       - name: Install
@@ -199,7 +199,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
 
       - name: Build UI
@@ -207,16 +207,6 @@ jobs:
 
       - name: Build Go
         run: make build
-
-      - uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install playwright
-        run: npx playwright install --with-deps chromium
 
       - name: Run tests
         run: npx playwright test

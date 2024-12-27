@@ -82,16 +82,14 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Amber) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
-	tick := time.NewTicker(time.Minute)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res []amber.PriceInfo
 		uri := fmt.Sprintf("%s&endDate=%s", t.uri, time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -109,12 +107,14 @@ func (t *Amber) run(done chan error) {
 					End:   endTime.Local(),
 					Price: r.PerKwh / 1e2,
 				}
+				if r.AdvancedPrice != nil {
+					ar.Price = r.AdvancedPrice.Predicted / 1e2
+				}
 				data = append(data, ar)
 			}
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

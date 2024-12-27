@@ -1,29 +1,34 @@
 <template>
-	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
-		<span class="d-flex flex-nowrap">
-			<BatteryIcon v-if="isBattery" :soc="soc" />
-			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
-			<component :is="`shopicon-regular-${icon}`" v-else></component>
-		</span>
-		<span class="text-nowrap flex-grow-1 ms-3 text-truncate">
-			{{ name }}
-		</span>
-		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div
-				ref="details"
-				class="fw-normal"
-				:class="{ 'text-decoration-underline': detailsClickable }"
-				data-testid="energyflow-entry-details"
-				data-bs-toggle="tooltip"
-				:tabindex="detailsClickable ? 0 : undefined"
-				@click="detailsClicked"
-			>
-				<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+	<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
+		<div class="d-flex justify-content-between">
+			<span class="d-flex flex-nowrap">
+				<BatteryIcon v-if="isBattery" v-bind="iconProps" />
+				<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
+				<component :is="`shopicon-regular-${icon}`" v-else></component>
+			</span>
+			<div class="d-block text-nowrap flex-grow-1 ms-3 text-truncate">
+				{{ name }}
 			</div>
-			<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
-				<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
-			</div>
-		</span>
+			<span class="text-end text-nowrap ps-1 fw-bold d-flex">
+				<div
+					ref="details"
+					class="fw-normal"
+					:class="{ 'text-decoration-underline': detailsClickable }"
+					data-testid="energyflow-entry-details"
+					data-bs-toggle="tooltip"
+					:tabindex="detailsClickable ? 0 : undefined"
+					@click="detailsClicked"
+				>
+					<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+				</div>
+				<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
+					<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
+				</div>
+			</span>
+		</div>
+		<div v-if="$slots.subline" class="ms-4 ps-3">
+			<slot name="subline" />
+		</div>
 	</div>
 </template>
 
@@ -44,11 +49,10 @@ export default {
 	props: {
 		name: { type: String },
 		icon: { type: String },
-		vehicleIcons: { type: Array },
+		iconProps: { type: Object, default: () => ({}) },
 		power: { type: Number },
 		powerTooltip: { type: Array },
-		powerInKw: { type: Boolean },
-		soc: { type: Number },
+		powerUnit: { type: String },
 		details: { type: Number },
 		detailsFmt: { type: Function },
 		detailsTooltip: { type: Array },
@@ -93,7 +97,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return this.fmtKw(watt, this.powerInKw);
+			return this.fmtW(watt, this.powerUnit);
 		},
 		updatePowerTooltip() {
 			this.powerTooltipInstance = this.updateTooltip(
@@ -119,12 +123,13 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
-				instance = new Tooltip(ref, { html: true, title: " " });
+			let newInstance = instance;
+			if (!newInstance) {
+				newInstance = new Tooltip(ref, { html: true, title: " " });
 			}
 			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
-			instance.setContent({ ".tooltip-inner": html });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": html });
+			return newInstance;
 		},
 		powerClicked: function ($event) {
 			if (this.powerTooltip) {

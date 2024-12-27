@@ -22,7 +22,13 @@ never = "只要有足够的剩余"
 
 [config.battery]
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
+
+[config.eebus]
 
 [config.form]
 example = "示例"
@@ -32,15 +38,29 @@ optional = "可选"
 
 [config.grid]
 
+[config.hems]
+
+[config.influx]
+
 [config.main]
 addVehicle = "添加车辆"
 edit = "编辑"
 title = "配置"
 vehicles = "我的车辆"
 
+[config.messaging]
+
 [config.meter]
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -50,7 +70,11 @@ vehicles = "我的车辆"
 
 [config.section]
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -221,6 +245,8 @@ disclaimerHint = "笔记:"
 title = "设置 {0}"
 vehicle = "车辆"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
@@ -367,6 +393,8 @@ title = "充电周期"
 total = "总计"
 vehicle = "车辆"
 
+[sessions.chartTitle]
+
 [sessions.csv]
 chargedenergy = "能源 (kWh)"
 created = "已创建"
@@ -382,6 +410,14 @@ vehicle = "车辆"
 allLoadpoints = "全部充电积分"
 allVehicles = "全部车辆"
 filter = "过滤"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "设置"

@@ -6,6 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -15,24 +16,89 @@ params:
     default: 502
   - name: integer
     deprecated: true
+  - name: maxacpower
+  - name: maxchargerate
+    advanced: true
   - name: capacity
     advanced: true
 render: |
-  # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
+  type: custom
+  # sunspec model 203 (int+sf)/ 213 (float) meter
   {{- if eq .usage "grid" }}
-  type: mbmd
-  uri: {{ .host }}:{{ .port }}
-  id: 200
-  model: sunspec
-  power: Power
-  energy: Import
-  currents: # currents are signed already
-    - CurrentL1
-    - CurrentL2
-    - CurrentL3
+  power:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: 200
+    value:
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: 200
+    value:
+      - 203:TotWhImp
+      - 213:TotWhImp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:AphC
+        - 213:AphC
+  voltages:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:PhVphC
+        - 213:PhVphC
+  powers:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 200
+      value:
+        - 203:WphC
+        - 213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
-  type: custom
   power:
     source: calc
     add:
@@ -44,9 +110,9 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:2:DCW # mppt 2
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: custom
   power:
     source: calc
     add:
@@ -59,12 +125,108 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
+  energy:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
   soc:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    value: 124:ChaState
-  {{- if .capacity }}
+    value: 124:0:ChaState
+  batterymode: # model 124
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 0
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
+        - source: const
+          value: 0 # s
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InOutWRte_RvrtTms
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: -{{ .maxchargerate }} # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
+        - source: const
+          value: 0 # s
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InOutWRte_RvrtTms
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

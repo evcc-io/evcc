@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
+import { enableExperimental } from "./utils";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 
@@ -8,27 +9,12 @@ test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(CONFIG_EMPTY, "password.sql");
+  await start(CONFIG_EMPTY);
 });
 test.afterAll(async () => {
   await stop();
   await stopSimulator();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
 
 test.describe("main screen", async () => {
   test("modes", async ({ page }) => {
@@ -46,7 +32,6 @@ test.describe("grid meter", async () => {
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("grid")).toHaveCount(1);

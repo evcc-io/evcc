@@ -2,10 +2,7 @@ template: ford-connect
 products:
   - brand: Ford
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: clientid
     description:
       generic: FordConnect API Client ID
@@ -28,11 +25,8 @@ params:
     mask: true
   - name: vin
     example: WF0FXX...
-  - name: capacity
-    default: 10
-  - name: phases
-    advanced: true
-  - preset: vehicle-identify
+  - name: cache
+    default: 15m
 render: |
   type: ford-connect
   vin: {{ .vin }}
@@ -43,4 +37,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-identify" . }}
+  cache: {{ .cache }}

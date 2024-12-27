@@ -1,0 +1,8 @@
+template: zero
+products:
+  - brand: Zero Motorcycles
+params:
+  - preset: vehicle-base
+render: |
+  type: zero
+  {{ include "vehicle-base" . }}

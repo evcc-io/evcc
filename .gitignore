@@ -6,6 +6,7 @@ __debug_bin*
 *.py
 *.log
 *.json
+!.devcontainer/devcontainer.json
 *.yaml
 !templates/**/*.yaml
 !templates/**/*-schema.json
@@ -39,3 +40,5 @@ asset-stats.html
 /test-results/
 /playwright-report/
 /playwright/.cache/
+.gitpod.yml
+/evcc.db

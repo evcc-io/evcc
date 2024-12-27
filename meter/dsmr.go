@@ -71,7 +71,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate decorate -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -139,8 +139,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = 5 * time.Minute
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(5 * time.Minute))
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)

@@ -28,6 +28,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 
 		<div
@@ -97,7 +98,7 @@ import Mode from "./Mode.vue";
 import Vehicle from "./Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "./LabelAndValue.vue";
-import formatter from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import collector from "../mixins/collector";
 import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
 import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
@@ -132,6 +133,8 @@ export default {
 		remoteDisabledSource: String,
 		chargeDuration: Number,
 		charging: Boolean,
+		batteryBoost: Boolean,
+		batteryConfigured: Boolean,
 
 		// session
 		sessionEnergy: Number,
@@ -141,6 +144,7 @@ export default {
 		sessionSolarPercentage: Number,
 
 		// charger
+		chargerStatusReason: String,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
 		chargerIcon: String,
@@ -170,6 +174,7 @@ export default {
 
 		// details
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		chargePower: Number,
 		chargedEnergy: Number,
 		chargeRemainingDuration: Number,
@@ -190,7 +195,7 @@ export default {
 		phaseRemaining: Number,
 		pvRemaining: Number,
 		pvAction: String,
-		smartCostLimit: { type: Number, default: 0 },
+		smartCostLimit: { type: Number, default: null },
 		smartCostType: String,
 		smartCostActive: Boolean,
 		smartCostNextStart: String,
@@ -271,6 +276,12 @@ export default {
 		hasSmartCost: function () {
 			return smartCostAvailable(this.smartCostType);
 		},
+		batteryBoostAvailable: function () {
+			return this.batteryConfigured && this.$hiddenFeatures();
+		},
+		batteryBoostActive: function () {
+			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+		},
 	},
 	watch: {
 		phaseRemaining() {
@@ -334,13 +345,14 @@ export default {
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
+		setBatteryBoost: function (batteryBoost) {
+			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
+		},
 		fmtPower(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtKw(value, inKw);
+			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
 		fmtEnergy(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtKWh(value, inKw);
+			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(

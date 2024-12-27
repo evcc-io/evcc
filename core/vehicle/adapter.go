@@ -103,3 +103,38 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 
 	return nil
 }
+
+func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+	for _, plan := range plans {
+		for _, day := range plan.Weekdays {
+			if day < 0 || day > 6 {
+				return fmt.Errorf("weekday out of range: %v", day)
+			}
+		}
+		if _, err := time.LoadLocation(plan.Tz); err != nil {
+			return fmt.Errorf("invalid timezone: %v", err)
+		}
+		if _, err := time.Parse("15:04", plan.Time); err != nil {
+			return fmt.Errorf("invalid time: %v", err)
+		}
+	}
+
+	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
+
+	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
+
+	v.publish()
+
+	return nil
+}
+
+func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
+	var plans []api.RepeatingPlanStruct
+
+	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
+	if err == nil {
+		return plans
+	}
+
+	return []api.RepeatingPlanStruct{}
+}

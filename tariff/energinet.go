@@ -42,6 +42,10 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Energinet{
 		embed:  &cc.embed,
 		log:    util.NewLogger("energinet"),
@@ -59,10 +63,8 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Energinet) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
-	bo := newBackoff()
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res energinet.Prices
 
 		ts := time.Now().Truncate(time.Hour)
@@ -73,7 +75,7 @@ func (t *Energinet) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -82,17 +84,16 @@ func (t *Energinet) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Records))
 		for _, r := range res.Records {
-			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
+			ts, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
 			ar := api.Rate{
-				Start: date.Local(),
-				End:   date.Add(time.Hour).Local(),
-				Price: t.totalPrice(r.SpotPriceDKK / 1e3),
+				Start: ts.Local(),
+				End:   ts.Add(time.Hour).Local(),
+				Price: t.totalPrice(r.SpotPriceDKK/1e3, ts),
 			}
 			data = append(data, ar)
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

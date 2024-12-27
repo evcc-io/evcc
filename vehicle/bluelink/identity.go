@@ -182,10 +182,10 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 	if err == nil {
 		data := url.Values{
-			"username":     []string{user},
-			"password":     []string{password},
-			"credentialId": []string{""},
-			"rememberMe":   []string{"on"},
+			"username":     {user},
+			"password":     {password},
+			"credentialId": {""},
+			"rememberMe":   {"on"},
 		}
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
@@ -275,7 +275,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
+func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -288,14 +288,12 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 		"code":         {accCode},
 	}
 
-	var token oauth.Token
+	var token oauth2.Token
 
-	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
-	if err == nil {
-		err = v.DoJSON(req, &token)
-	}
+	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
 
-	return token, err
+	return util.TokenWithExpiry(&token), err
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -314,12 +312,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	return (*oauth2.Token)(&res), err
+	return util.TokenWithExpiry(&res), err
 }
 
 func (v *Identity) Login(user, password, language string) (err error) {
@@ -347,9 +345,9 @@ func (v *Identity) Login(user, password, language string) (err error) {
 	}
 
 	if err == nil {
-		var token oauth.Token
+		var token *oauth2.Token
 		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
 	}
 
@@ -401,7 +399,7 @@ func (v *Identity) stamp() (string, error) {
 	}
 
 	enc := make([]byte, 0, 50)
-	for i := 0; i < len(cfb); i++ {
+	for i := range cfb {
 		enc = append(enc, cfb[i]^raw[i])
 	}
 

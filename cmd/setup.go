@@ -18,9 +18,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
@@ -132,8 +133,15 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	return err
 }
 
-func configureCircuits(static []config.Named, names ...string) error {
-	children := slices.Clone(static)
+func configureCircuits(conf []config.Named) error {
+	// migrate settings
+	if settings.Exists(keys.Circuits) {
+		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
+			return err
+		}
+	}
+
+	children := slices.Clone(conf)
 
 	// TODO: check for circular references
 NEXT:
@@ -153,7 +161,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -176,52 +184,6 @@ NEXT:
 		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
 	}
 
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Circuit)
-	if err != nil {
-		return err
-	}
-
-	children2 := slices.Clone(configurable)
-
-NEXT2:
-	for i, conf := range children2 {
-		cc := conf.Named()
-
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
-			return nil
-		}
-
-		if parent := cast.ToString(cc.Property("parent")); parent != "" {
-			if _, err := config.Circuits().ByName(parent); err != nil {
-				continue
-			}
-		}
-
-		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := core.NewCircuitFromConfig(log, cc.Other)
-		if err != nil {
-			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
-		}
-
-		// ensure config has title
-		if instance.GetTitle() == "" {
-			//lint:ignore SA1019 as Title is safe on ascii
-			instance.SetTitle(strings.Title(cc.Name))
-		}
-
-		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return err
-		}
-
-		children2 = slices.Delete(children2, i, i+1)
-		goto NEXT2
-	}
-
-	if len(children2) > 0 {
-		return fmt.Errorf("missing parent circuit: %s", children2[0].Named().Name)
-	}
-
 	var rootFound bool
 	for _, dev := range config.Circuits().Devices() {
 		c := dev.Instance()
@@ -242,6 +204,8 @@ NEXT2:
 }
 
 func configureMeters(static []config.Named, names ...string) error {
+	var eg errgroup.Group
+
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
@@ -255,14 +219,20 @@ func configureMeters(static []config.Named, names ...string) error {
 			log.WARN.Printf("create meter %d: %v", i+1, err)
 		}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-		}
+		eg.Go(func() error {
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-		if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-			return &DeviceError{cc.Name, err}
-		}
+			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
+			if err != nil {
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+			}
+
+			if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
+			return nil
+		})
 	}
 
 	// append devices from database
@@ -272,29 +242,33 @@ func configureMeters(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		cc := conf.Named()
+		eg.Go(func() error {
+			cc := conf.Named()
 
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
+			if err != nil {
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+			}
+
+			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
 			return nil
-		}
-
-		// TOTO add fake devices
-
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-		}
-
-		if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return &DeviceError{cc.Name, err}
-		}
+		})
 	}
 
-	return nil
+	return eg.Wait()
 }
 
 func configureChargers(static []config.Named, names ...string) error {
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -309,8 +283,10 @@ func configureChargers(static []config.Named, names ...string) error {
 			log.WARN.Printf("create charger %d: %v", i+1, err)
 		}
 
-		g.Go(func() error {
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+		eg.Go(func() error {
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
 			}
@@ -330,16 +306,16 @@ func configureChargers(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		g.Go(func() error {
+		eg.Go(func() error {
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
 			}
 
-			// TOTO add fake devices
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
@@ -352,11 +328,13 @@ func configureChargers(static []config.Named, names ...string) error {
 		})
 	}
 
-	return g.Wait()
+	return eg.Wait()
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
-	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {
@@ -379,7 +357,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 func configureVehicles(static []config.Named, names ...string) error {
 	var mu sync.Mutex
-	g, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 
 	// stable-sort vehicles by name
 	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
@@ -397,7 +375,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create vehicle %d: %w", i+1, err)
 		}
 
-		g.Go(func() error {
+		eg.Go(func() error {
 			instance, err := vehicleInstance(cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
@@ -421,7 +399,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
 	for _, conf := range configurable {
-		g.Go(func() error {
+		eg.Go(func() error {
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -441,7 +419,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 		})
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return err
 	}
 
@@ -487,9 +465,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup persistence
-	if err == nil {
-		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
-	}
+	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// setup translations
 	if err == nil {
@@ -498,7 +474,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup machine id
-	if conf.Plant != "" {
+	if err == nil && conf.Plant != "" {
 		// TODO decide wrapping
 		err = machine.CustomID(conf.Plant)
 	}
@@ -562,7 +538,7 @@ func configureDatabase(conf globalconfig.DB) error {
 
 	// persist unsaved settings every 30 minutes
 	go func() {
-		for range time.Tick(30 * time.Minute) {
+		for range time.Tick(time.Minute) {
 			persistSettings()
 		}
 	}()
@@ -598,6 +574,7 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 		conf.User,
 		conf.Password,
 		conf.Database,
+		conf.Insecure,
 	)
 
 	return influx, nil
@@ -625,7 +602,11 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 
 	log := util.NewLogger("mqtt")
 
-	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
+	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
+		if !runAsService {
+			return
+		}
+
 		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 
@@ -664,7 +645,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
@@ -684,7 +665,7 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 	// 	}
 	// }
 
-	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
+	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, conf.Other, site, httpd)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
 	}
@@ -776,7 +757,7 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	}
 
 	for _, service := range conf.Services {
-		impl, err := push.NewFromConfig(service.Type, service.Other)
+		impl, err := push.NewFromConfig(context.TODO(), service.Type, service.Other)
 		if err != nil {
 			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
 		}
@@ -788,12 +769,30 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	return messageChan, nil
 }
 
+func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
+
+	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
+	if err != nil {
+		var ce *util.ConfigError
+		if errors.As(err, &ce) {
+			return nil, err
+		}
+
+		// wrap non-config tariff errors to prevent fatals
+		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
+		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+	}
+
+	return instance, nil
+}
+
 func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
-	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
+	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
 	}
@@ -824,13 +823,13 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
-	g, _ := errgroup.WithContext(context.Background())
-	g.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	g.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	g.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	g.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	var eg errgroup.Group
+	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
 
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
 

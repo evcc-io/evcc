@@ -1,24 +1,32 @@
 template: mini
 products:
   - brand: Mini
+requirements:
+  description:
+    de: |
+      Benötigt `hcaptcha` Token. Dieses muss einmalig unter https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html generiert werden. Das Token ist nur für kurze Zeit gültig. Bitte möglichst schnell nach Generierung in die Konfiguration kopieren und evcc starten.
+    en: |
+      Requires `hcaptcha` token. This must be generated once at https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html. The token is only valid for a short time. Please copy it into the configuration and start evcc as soon as possible after generation.
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: WBMW...
   - name: region
     description:
       de: Region
       en: Region
-    # values:
-    #   - NA
-    #   - EU
+    type: choice
+    choice: ["EU", "NA"]
     default: EU
     advanced: true
+  - name: hcaptcha
+    required: true
+  - preset: vehicle-features
 render: |
   type: mini
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
+  hcaptcha: {{ .hcaptcha }}
+  {{ include "vehicle-features" . }}

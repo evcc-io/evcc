@@ -1,0 +1,37 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+	"name": "evcc",
+	"image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"moby": true,
+			"installDockerBuildx": true,
+			"installDockerComposeSwitch": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "v2"
+		},
+		"ghcr.io/devcontainers/features/node:1": {
+			"nodeGypDependencies": true,
+			"installYarnUsingApt": true,
+			"version": "lts",
+			"pnpmVersion": "latest",
+			"nvmVersion": "latest"
+		},
+		"ghcr.io/devcontainers/features/go:1": {
+			"version": "latest"
+		}
+	},
+	"postCreateCommand": "make install-ui && make install",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"esbenp.prettier-vscode",
+				"octref.vetur"
+			]
+		}
+	},
+	"remoteEnv": {
+		"GOTOOLCHAIN": "auto"
+	}
+}

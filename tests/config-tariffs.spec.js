@@ -1,10 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
+import { enableExperimental } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();
@@ -12,30 +14,14 @@ test.afterEach(async () => {
 
 const SELECT_ALL = "ControlOrMeta+KeyA";
 
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
-
 async function goToConfig(page) {
   await page.goto("/#/config");
-  await login(page);
   await enableExperimental(page);
 }
 
 test.describe("tariffs", async () => {
   test("tariffs not configured", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
@@ -45,7 +31,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs via ui", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
     await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
@@ -54,7 +40,7 @@ test.describe("tariffs", async () => {
     await page.waitForLoadState("networkidle");
 
     // default content
-    await expect(modal).toContainText("# currency: EUR");
+    await expect(modal).toContainText("#currency: EUR");
 
     // clear and enter invalid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();
@@ -103,7 +89,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs from evcc.yaml", async ({ page }) => {
-    await start(CONFIG_WITH_TARIFFS, "password.sql");
+    await start(CONFIG_WITH_TARIFFS);
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();

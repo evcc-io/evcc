@@ -39,11 +39,10 @@ func NewGroupeEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *GroupeE) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
+
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res []struct {
 			StartTimestamp time.Time `json:"start_timestamp"`
 			EndTimestamp   time.Time `json:"end_timestamp"`
@@ -55,7 +54,7 @@ func (t *GroupeE) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -71,9 +70,8 @@ func (t *GroupeE) run(done chan error) {
 			}
 			data = append(data, ar)
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

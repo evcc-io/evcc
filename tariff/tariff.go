@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -19,19 +20,24 @@ type Tariff struct {
 	log    *util.Logger
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
+	typ    api.TariffType
 }
 
 var _ api.Tariff = (*Tariff)(nil)
 
 func init() {
-	registry.Add(api.Custom, NewConfigurableFromConfig)
+	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-func NewConfigurableFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	var cc struct {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
+	cc := struct {
 		embed    `mapstructure:",squash"`
 		Price    *provider.Config
 		Forecast *provider.Config
+		Type     api.TariffType `mapstructure:"tariff"`
+		Cache    time.Duration
+	}{
+		Cache: 15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -42,6 +48,10 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Tariff, error)
 		return nil, fmt.Errorf("must have either price or forecast")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	var (
 		err       error
 		priceG    func() (float64, error)
@@ -49,14 +59,16 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Tariff, error)
 	)
 
 	if cc.Price != nil {
-		priceG, err = provider.NewFloatGetterFromConfig(*cc.Price)
+		priceG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Price)
 		if err != nil {
 			return nil, fmt.Errorf("price: %w", err)
 		}
+
+		priceG = provider.Cached(priceG, cc.Cache)
 	}
 
 	if cc.Forecast != nil {
-		forecastG, err = provider.NewStringGetterFromConfig(*cc.Forecast)
+		forecastG, err = provider.NewStringGetterFromConfig(ctx, *cc.Forecast)
 		if err != nil {
 			return nil, fmt.Errorf("forecast: %w", err)
 		}
@@ -65,6 +77,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Tariff, error)
 	t := &Tariff{
 		log:    util.NewLogger("tariff"),
 		embed:  &cc.embed,
+		typ:    cc.Type,
 		priceG: priceG,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -80,10 +93,8 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Tariff, error)
 
 func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var data api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
@@ -94,19 +105,17 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 				return backoff.Permanent(err)
 			}
 			for i, r := range data {
-				data[i].Price = t.totalPrice(r.Price)
+				data[i].Price = t.totalPrice(r.Price, r.Start)
 			}
 			return nil
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
 			continue
 		}
 
-		data.Sort()
-
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }
@@ -128,12 +137,12 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 	res := make(api.Rates, 48)
 	start := now.BeginningOfHour()
 
-	for i := 0; i < len(res); i++ {
+	for i := range res {
 		slot := start.Add(time.Duration(i) * time.Hour)
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price),
+			Price: t.totalPrice(price, slot),
 		}
 	}
 
@@ -151,8 +160,12 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
-	if t.priceG != nil {
+	switch {
+	case t.typ != 0:
+		return t.typ
+	case t.priceG != nil:
 		return api.TariffTypePriceDynamic
+	default:
+		return api.TariffTypePriceForecast
 	}
-	return api.TariffTypePriceForecast
 }

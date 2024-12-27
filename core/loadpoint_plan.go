@@ -28,9 +28,11 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 }
 
-// deletePlan deletes the charging plan, either loadpoint or vehicle
-func (lp *Loadpoint) deletePlan() {
-	if !lp.socBasedPlanning() {
+// finishPlan deletes the charging plan, either loadpoint or vehicle
+func (lp *Loadpoint) finishPlan() {
+	if lp.repeatingPlanning() {
+		return // noting to do
+	} else if !lp.socBasedPlanning() {
 		lp.setPlanEnergy(time.Time{}, 0)
 	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
@@ -64,7 +66,7 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, soc := vehicle.Settings(lp.log, lp.GetVehicle()).GetPlanSoc()
+		_, soc, _ := lp.nextVehiclePlan()
 		return float64(soc), true
 	}
 
@@ -87,9 +89,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
-	var planStart time.Time
-	var planEnd time.Time
+	var planStart, planEnd time.Time
 	var planOverrun time.Duration
+
 	defer func() {
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
@@ -100,8 +102,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if planTime.IsZero() {
 		return false
 	}
-	if lp.clock.Until(planTime) < 0 && !lp.planActive {
-		lp.deletePlan()
+
+	// keep overrunning plans as long as a vehicle is connected
+	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+		lp.log.DEBUG.Println("plan: deleting expired plan")
+		lp.finishPlan()
 		return false
 	}
 
@@ -114,7 +119,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		}
 
-		lp.deletePlan()
+		lp.finishPlan()
 		return false
 	}
 
@@ -166,7 +171,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("plan: continuing until end of slot")
 			return true
-		case requiredDuration < smallGapDuration:
+		case requiredDuration < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:

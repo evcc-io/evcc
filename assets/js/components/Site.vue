@@ -31,6 +31,8 @@
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
+				:batteryConfigured="batteryConfigured"
+				:batterySoc="batterySoc"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -72,7 +74,8 @@ export default {
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
-		batterySmartCostLimit: Number,
+		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeActive: Boolean,
 		batteryMode: String,
 		battery: Array,
 		gridCurrents: Array,

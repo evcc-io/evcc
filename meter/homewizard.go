@@ -22,6 +22,7 @@ func init() {
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI   string
+		Usage string
 		Cache time.Duration
 	}{
 		Cache: time.Second,
@@ -31,12 +32,12 @@ func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.URI, cc.Cache)
+	return NewHomeWizard(cc.URI, cc.Usage, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard meter
-func NewHomeWizard(uri string, cache time.Duration) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri, cache)
+func NewHomeWizard(uri string, usage string, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, usage, cache)
 	if err != nil {
 		return nil, err
 	}
@@ -60,4 +61,18 @@ var _ api.MeterEnergy = (*HomeWizard)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *HomeWizard) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+var _ api.PhaseCurrents = (*HomeWizard)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *HomeWizard) Currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
+}
+
+var _ api.PhaseVoltages = (*HomeWizard)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *HomeWizard) Voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
 }

@@ -30,7 +30,7 @@ type OpenWB struct {
 	authS         func(string) error
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate decorate -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -91,7 +91,10 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	if err != nil {
 		return nil, err
 	}
-	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
+	statusG, err := provider.NewCombinedProvider(pluggedG, chargingG).StringGetter()
+	if err != nil {
+		return nil, err
+	}
 
 	// setters
 	currentTopic := openwb.SlaveChargeCurrentTopic

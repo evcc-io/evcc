@@ -1,0 +1,57 @@
+template: demo-charger
+group: generic
+products:
+  - description:
+      de: Demowallbox
+      en: Demo charger
+requirements:
+  description:
+    en: For demonstration purposes. Charger with a fixed set of values.
+    de: Zu Demonstrationszwecken. Wallbox mit festen Werten.
+params:
+  - name: status
+    description:
+      de: Ladezustand
+      en: Charge status
+    type: choice
+    choice: [A, B, C, D, E, F]
+    default: A
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    type: int
+    default: 0
+  - name: enabled
+    description:
+      de: Ladebereit
+      en: Enabled
+    type: bool
+    default: true
+  - name: maxcurrent
+    description:
+      de: Maximale Stromstärke (A)
+      en: Maximum amperage (A)
+    help:
+    example: 16
+    type: int
+    advanced: true
+
+render: |
+  type: custom
+  enable:
+    source: js
+    script:
+  enabled:
+    source: const
+    value: {{ .enabled }}
+  status:
+    source: const
+    value: {{ .status }}
+  maxcurrent:
+    source: js
+    script: |
+      {{ .maxcurrent }}
+  power:
+    source: const
+    value: {{ .power }}

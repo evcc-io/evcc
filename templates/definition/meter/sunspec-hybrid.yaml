@@ -13,73 +13,74 @@ params:
     choice: ["tcpip", "rs485"]
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
-  {{- if eq .usage "grid" }}
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
+  {{- if eq .usage "grid" }}
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 
+    value:
       - 203:W
       - 213:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 
+    value:
       - 203:TotWhImp
       - 213:TotWhImp
+    scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:AphA
         - 213:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:AphB
         - 213:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:AphC
         - 213:AphC
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:PhVphC
         - 213:PhVphC
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:WphA
         - 213:WphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:WphB
         - 213:WphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: 
+      value:
         - 203:WphC
         - 213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
-  type: custom
   power:
     source: calc
     add:
@@ -100,9 +101,9 @@ render: |
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCWH # mppt 2
         scale: 0.001
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: custom
   power:
     source: calc
     add:

@@ -51,6 +51,10 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing domain")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))
 	if err != nil {
 		return nil, err
@@ -85,11 +89,8 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Entsoe) run(done chan error) {
 	var once sync.Once
 
-	bo := newBackoff()
-
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
 		if err := backoff.Retry(func() error {
@@ -127,7 +128,7 @@ func (t *Entsoe) run(done chan error) {
 			default:
 				return backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
 			}
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -151,15 +152,14 @@ func (t *Entsoe) run(done chan error) {
 		data := make(api.Rates, 0, len(res))
 		for _, r := range res {
 			ar := api.Rate{
-				Start: r.Start,
-				End:   r.End,
-				Price: t.totalPrice(r.Value),
+				Start: r.Start.Local(),
+				End:   r.End.Local(),
+				Price: t.totalPrice(r.Value, r.Start),
 			}
 			data = append(data, ar)
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

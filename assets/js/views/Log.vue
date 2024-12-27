@@ -38,44 +38,42 @@
 					</div>
 					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
 						<input
+							v-model="search"
 							type="search"
 							class="form-control search"
 							:placeholder="$t('log.search')"
-							v-model="search"
+							data-testid="log-search"
 						/>
 					</div>
 					<div class="filterLevel col-6 col-lg-2">
 						<select
 							class="form-select"
-							v-model="level"
 							:aria-label="$t('log.levelLabel')"
-							@change="updateLogs()"
+							:value="level"
+							@input="changeLevel"
 						>
-							<option v-for="level in levels" :key="level" :value="level">
-								{{ level }}
+							<option v-for="l in levels" :key="l" :value="l">
+								{{ l.toUpperCase() }}
 							</option>
 						</select>
 					</div>
 					<div class="filterAreas col-6 col-lg-2">
-						<select
-							class="form-select"
-							v-model="area"
-							:aria-label="$t('log.areaLabel')"
-							@focus="updateAreas()"
-							@change="updateLogs()"
+						<MultiSelect
+							id="logAreasSelect"
+							:modelValue="areas"
+							:options="areaOptions"
+							:selectAllLabel="$t('log.selectAll')"
+							@update:model-value="changeAreas"
+							@open="updateAreas()"
 						>
-							<option value="">{{ $t("log.areas") }}</option>
-							<hr />
-							<option v-for="area in areas" :key="area" :value="area">
-								{{ area }}
-							</option>
-						</select>
+							{{ areasLabel }}
+						</MultiSelect>
 					</div>
 				</div>
 				<hr class="my-0" />
 				<div
-					class="overflow-y-scroll pt-2 pb-4 flex-grow-1 d-flex flex-column"
 					ref="log"
+					class="overflow-y-scroll pt-2 pb-4 flex-grow-1 d-flex flex-column"
 					@scroll="onScroll"
 				>
 					<div v-if="showMoreButton" class="my-2">
@@ -112,14 +110,15 @@ import "@h2d2/shopicons/es/regular/download";
 import TopHeader from "../components/TopHeader.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
+import MultiSelect from "../components/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 
-const LEVELS = ["FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
-const DEFAULT_LEVEL = "DEBUG";
+const LEVELS = ["fatal", "error", "warn", "info", "debug", "trace"];
+const DEFAULT_LEVEL = "debug";
 const DEFAULT_COUNT = 1000;
 
-const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.join("|")})`);
+const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
 export default {
 	name: "Log",
@@ -127,25 +126,21 @@ export default {
 		TopHeader,
 		Play,
 		Record,
+		MultiSelect,
+	},
+	props: {
+		areas: { type: Array, default: () => [] },
+		level: { type: String, default: DEFAULT_LEVEL },
 	},
 	data() {
 		return {
 			lines: [],
-			areas: [],
+			availableAreas: [],
 			search: "",
-			level: DEFAULT_LEVEL,
-			area: "",
 			timeout: null,
 			levels: LEVELS,
 			busy: false,
 		};
-	},
-	mounted() {
-		this.startInterval();
-		this.updateAreas();
-	},
-	unmounted() {
-		this.stopInterval();
 	},
 	computed: {
 		filteredLines() {
@@ -168,6 +163,18 @@ export default {
 				return { key, className, line };
 			});
 		},
+		areaOptions() {
+			return this.availableAreas.map((area) => ({ name: area, value: area }));
+		},
+		areasLabel() {
+			if (this.areas.length === 0) {
+				return this.$t("log.areas");
+			} else if (this.areas.length === 1) {
+				return this.areas[0];
+			} else {
+				return this.$t("log.nAreas", { count: this.areas.length });
+			}
+		},
 		showMoreButton() {
 			return this.lines.length === DEFAULT_COUNT;
 		},
@@ -179,15 +186,30 @@ export default {
 			if (this.level) {
 				params.append("level", this.level);
 			}
-			if (this.area) {
-				params.append("area", this.area);
-			}
+			this.areas.forEach((area) => {
+				params.append("area", area);
+			});
 			params.append("format", "txt");
 			return `./api/system/log?${params.toString()}`;
 		},
 		autoFollow() {
 			return this.timeout !== null;
 		},
+	},
+	watch: {
+		areas() {
+			this.updateLogs();
+		},
+		level() {
+			this.updateLogs();
+		},
+	},
+	mounted() {
+		this.startInterval();
+		this.updateAreas();
+	},
+	unmounted() {
+		this.stopInterval();
 	},
 	methods: {
 		async updateLogs(showAll) {
@@ -198,8 +220,8 @@ export default {
 				this.busy = true;
 				const response = await api.get("/system/log", {
 					params: {
-						level: this.level?.toLocaleLowerCase() || null,
-						area: this.area || null,
+						level: this.level || null,
+						area: this.areas.length ? this.areas : null,
 						count: showAll ? null : DEFAULT_COUNT,
 					},
 				});
@@ -232,7 +254,7 @@ export default {
 		async updateAreas() {
 			try {
 				const response = await api.get("/system/log/areas");
-				this.areas = response.data?.result || [];
+				this.availableAreas = response.data?.result || [];
 			} catch (e) {
 				console.error(e);
 			}
@@ -259,6 +281,22 @@ export default {
 				this.scrollToBottom();
 				this.startInterval();
 			}
+		},
+		updateQuery({ level, areas }) {
+			let newLevel = level || this.level;
+			let newAreas = areas || this.areas;
+			// reset to default level
+			if (newLevel === DEFAULT_LEVEL) newLevel = undefined;
+			newAreas = newAreas.length ? newAreas.join(",") : undefined;
+			this.$router.push({
+				query: { level: newLevel, areas: newAreas },
+			});
+		},
+		changeLevel(event) {
+			this.updateQuery({ level: event.target.value });
+		},
+		changeAreas(areas) {
+			this.updateQuery({ areas });
 		},
 	},
 };
@@ -301,7 +339,7 @@ export default {
 	--opacity: 1;
 	opacity: var(--opacity);
 	animation-name: fadeIn;
-	animation-duration: 1s;
+	animation-duration: var(--transition-duration-fast);
 	animation-fill-mode: forwards;
 	animation-timing-function: ease-out;
 	text-indent: 1rem hanging;
@@ -323,9 +361,9 @@ export default {
 	color: var(--bs-danger);
 }
 .log-debug {
-	--opacity: 0.6;
+	--opacity: 0.7;
 }
 .log-trace {
-	--opacity: 0.4;
+	--opacity: 0.5;
 }
 </style>

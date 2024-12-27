@@ -52,7 +52,7 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -87,9 +87,9 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 		return nil, err
 	}
 
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 10 * time.Millisecond
-	bo.MaxElapsedTime = time.Second
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(10*time.Millisecond),
+		backoff.WithMaxElapsedTime(time.Second))
 
 	m := &RCT{
 		usage: strings.ToLower(usage),

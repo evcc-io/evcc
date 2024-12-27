@@ -50,6 +50,8 @@ func (r Register) Length() (uint16, error) {
 		return 2, nil
 	case strings.Contains(enc, "64"):
 		return 4, nil
+	case strings.EqualFold(enc, "bytes"):
+		return 0, nil
 	default:
 		return 0, fmt.Errorf("invalid register length: %s", enc)
 	}
@@ -113,6 +115,8 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 		return asFloat64(encoding.Float32), nil
 	case "float32s", "ieee754s":
 		return asFloat64(encoding.Float32LswFirst), nil
+	case "float32nans":
+		return decodeNaN32(asFloat64(encoding.Float32LswFirst), 0xffffff7f), nil
 
 	// 64 bit
 	case "int64":

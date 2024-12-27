@@ -50,7 +50,11 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.ClientID == "" || cc.ClientSecret == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
+	}
+
+	if err := cc.init(); err != nil {
+		return nil, err
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
@@ -93,19 +97,17 @@ func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		"Accept":        request.JSONContent,
 	})
 
-	var res oauth.Token
+	var res oauth2.Token
 	client := request.NewHelper(t.log)
 	err := client.DoJSON(req, &res)
 
-	return (*oauth2.Token)(&res), err
+	return util.TokenWithExpiry(&res), err
 }
 
 func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res struct {
 			Data struct {
 				Values []struct {
@@ -125,7 +127,7 @@ func (t *EdfTempo) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -138,14 +140,13 @@ func (t *EdfTempo) run(done chan error) {
 				ar := api.Rate{
 					Start: ts,
 					End:   ts.Add(time.Hour),
-					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)]),
+					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)], ts),
 				}
 				data = append(data, ar)
 			}
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

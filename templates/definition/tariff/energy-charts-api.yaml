@@ -5,12 +5,13 @@ requirements:
   description:
     de: "Day-ahead Energiepreise (je kWh) an der Börse. Kann ohne vorherige Anmeldung auf https://api.energy-charts.info/ abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet."
     en: "Day-ahead forecast of energy prices (per kWh) on the exchange. No prior registration for https://api.energy-charts.info/ necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
+  evcc: ["skiptest"]
 group: price
 params:
   - name: bzn
-    type: string
+    type: choice
     required: true
-    validvalues:
+    choice:
       [
         "AT",
         "BE",
@@ -39,5 +40,10 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{"{{"}} now | dateModify "+24h" | date "2006-01-02" {{"}}"}}
-    jq: '[.unix_seconds, .price] | transpose | map({ "start": (.[0] | todate), "end": ((.[0]+3600) | todate), "price": (.[1]/1000)}) | tostring'
+    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
+    jq: |
+      [.unix_seconds, .price] | transpose | map({
+        "start": .[0] | todate,
+        "end":   .[0]+3600 | todate,
+        "price": .[1]/1000
+      }) | tostring

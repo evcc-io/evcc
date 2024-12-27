@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -21,11 +22,11 @@ type Modbus struct {
 }
 
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.AddCtx("modbus", NewModbusFromConfig)
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
@@ -41,27 +42,24 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	modbus.Lock()
+	defer modbus.Unlock()
+
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// set non-default timeout
-	if cc.Timeout > 0 {
-		conn.Timeout(cc.Timeout)
-	}
+	conn.Timeout(cc.Timeout)
 
 	// set non-default delay
-	if cc.Delay > 0 {
-		conn.Delay(cc.Delay)
-	}
+	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
-	if cc.ConnectDelay > 0 {
-		conn.ConnectDelay(cc.ConnectDelay)
-	}
+	conn.ConnectDelay(cc.ConnectDelay)
 
-	log := util.NewLogger("modbus")
+	log := contextLogger(ctx, util.NewLogger("modbus"))
 	conn.Logger(log.TRACE)
 
 	if err := cc.Register.Error(); err != nil {
@@ -144,7 +142,7 @@ func (m *Modbus) StringGetter() (func() (string, error), error) {
 			return "", err
 		}
 
-		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
+		return strings.TrimSpace(string(bytes.Trim(b, "\x00"))), nil
 	}, nil
 }
 
@@ -235,4 +233,25 @@ func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
 
 		return set(ival)
 	}, err
+}
+
+var _ SetBytesProvider = (*Modbus)(nil)
+
+// BytesSetter implements SetBytesProvider
+func (m *Modbus) BytesSetter(_ string) (func([]byte) error, error) {
+	op, err := m.reg.Operation()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val []byte) error {
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteMultipleRegisters:
+			_, err = m.conn.WriteMultipleRegisters(op.Addr, uint16(len(val)/2), val)
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
 }

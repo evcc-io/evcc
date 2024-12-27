@@ -10,7 +10,7 @@ params:
     description:
       generic: Modbus ID
     default: 1
-    type: number
+    type: int
   - name: modbusdevice
     description:
       de: Gerätename
@@ -27,7 +27,7 @@ params:
       de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
       en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
-    type: number
+    type: int
   - name: modbuscomset
     description:
       de: ComSet
@@ -60,7 +60,7 @@ params:
     help:
       de: Port
       en: Port
-    type: number
+    type: int
   - name: interface
     description:
       de: Netzwerkschnittstelle
@@ -92,9 +92,21 @@ params:
     help:
       de: Akkukapazität in kWh
       en: Battery capacity in kWh
-    example: "50"
+    example: 50
     type: float
     usages: ["vehicle", "battery"]
+  - name: maxacpower
+    description:
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    help:
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    default: 0
+    example: 5000
+    type: float
+    usages: ["pv"]
+    advanced: true
   - name: vin
     description:
       de: Fahrzeugidentifikationsnummer
@@ -111,7 +123,7 @@ params:
       de: Die maximale Anzahl der Phasen welche genutzt werden können
       en: The maximum number of phases which can be used
     example: 3
-    type: number
+    type: int
   - name: connector
     description:
       de: Ladepunkt (falls >1 Ladepunkt)
@@ -128,30 +140,6 @@ params:
     advanced: true
     type: duration
     example: 5m
-  - name: cloud
-    description:
-      de: evcc Cloud
-      en: evcc Cloud
-    help:
-      de: |
-        Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen,
-        wird dies über die evcc Cloud gemacht. Die Zugangsdaten und VIN werden sicher und verschlüsselt
-        übertragen und in der Cloud nicht gespeichert.
-
-        Die Vorteile sind:
-        - Falls sich etwas an der Online API des Fahrzeugherstellers ändert, können Updates für alle Benutzer viel schneller zur Verfügung gestellt werden
-        - Man muss nicht auf eine neue Version von evcc warten und dann ein lokales Update von evcc durchführen
-      en: |
-        Instead of connecting to the vehicle manufacturers online API from your local installation,
-        this will use the evcc Cloud instead. Your credentials and VIN will be transfered encrypted and
-        securely and won't be stored in the cloud.
-
-        The benefits are:
-        - If the vehicles online API changes, we can update this for all users more quickly
-        - No waiting for a new evcc version in this case and then requiring an update
-    requirements:
-      evcc: ["sponsorship"]
-    type: bool
   - name: timeout
     description:
       de: Zeitüberschreitung
@@ -174,7 +162,7 @@ params:
       de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
       en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'
     example: 25
-    type: number
+    type: int
   - name: targetsoc
     description:
       de: Zielladestand (Soc) in %
@@ -183,7 +171,7 @@ params:
       de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
       en: Until which state of charge (Soc) should the vehicle be charged
     example: 80
-    type: number
+    type: int
   - name: mincurrent
     description:
       de: Minimale Stromstärke in Ampere (A)
@@ -192,7 +180,7 @@ params:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The minimum amperage per connected phase with which the car should be charged
     example: 6
-    type: number
+    type: int
   - name: maxcurrent
     description:
       de: Maximale Stromstärke in Ampere (A)
@@ -201,7 +189,7 @@ params:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The maximum amperage per connected phase with which the car shuold be charged
     example: 16
-    type: number
+    type: int
   - name: identifiers
     description:
       de: Identifikation
@@ -209,7 +197,7 @@ params:
     help:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
       en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
-    type: stringlist
+    type: list
   - name: priority
     description:
       de: Priorität
@@ -217,7 +205,7 @@ params:
     help:
       de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
       en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
-    type: number
+    type: int
   - name: standbypower
     description:
       de: Standby-Leistung in W
@@ -225,7 +213,7 @@ params:
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
       en: Power values above this value will be considered as charging pow
-    type: number
+    type: int
   - name: language
     description:
       de: Sprache
@@ -234,7 +222,8 @@ params:
       de: "'de' für Deutsch und 'en' für Englisch"
       en: "'en' for English and 'de' for German"
     default: en
-    validvalues: ["de", "en"]
+    type: choice
+    choice: ["en", "de"]
   - name: icon
     description:
       de: Icon
@@ -243,7 +232,7 @@ params:
       de: "Icon in der Benutzeroberfläche"
       en: "Icon as shown in user interface"
     type: choice
-    validvalues:
+    choice:
       - car
       - bike
       - bus
@@ -289,28 +278,66 @@ params:
     help:
       en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
       de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+  - name: coarsecurrent
+    type: bool
+    help:
+      en: 1A current control
+      de: 1A Ladestromvorgabe
+    description:
+      en: Vehicle supports 1A current steps only
+      de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
+  - name: welcomecharge
+    type: bool
+    description:
+      en: Charge on connection
+      de: Laden bei Verbindung
+    help:
+      en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
+      de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: defaultmode
+    type: int
+    usages: ["battery"]
+    description:
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for battery control
+    help:
+      de: Standardmodus für die aktive Batteriesteuerung auf die der Wechselrichter wieder nach einem Laden des Speichers oder Unterbinden der Entladung zurückfällt.
+      en: Default mode for battery control to which the inverter falls back after charging the battery or after stopping discharge.
+  - name: maxchargepower
+    type: int
+    usages: ["battery"]
+    description:
+      en: Maximum charge power (W)
+      de: Maximale Ladeleistung (W)
+    help:
+      en: Power limit for grid charging.
+      de: Leistungslimit für Netzladung.
+  - name: maxchargerate
+    type: int
+    usages: ["battery"]
+    description:
+      en: Maximum charge power (%)
+      de: Maximale Ladeleistung (%)
+    help:
+      en: Power limit for grid charging.
+      de: Leistungslimit für Netzladung.
+    default: 100
 
 presets:
   vehicle-base:
     params:
-      - name: title
-      - name: icon
-        default: car
-        advanced: true
       - name: user
         required: true
       - name: password
         required: true
       - name: vin
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
       - name: capacity
       - name: phases
         advanced: true
-      - name: cache
-        default: 15m
-        advanced: true
-        type: duration
-  vehicle-identify:
-    params:
       - name: mode
         advanced: true
       - name: minCurrent
@@ -319,8 +346,35 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        type: stringlist
       - name: priority
+        advanced: true
+      - name: cache
+        default: 15m
+        advanced: true
+  vehicle-common:
+    params:
+      - name: title
+      - name: icon
+        default: car
+        advanced: true
+      - name: capacity
+      - name: phases
+        advanced: true
+      - name: mode
+        advanced: true
+      - name: minCurrent
+        advanced: true
+      - name: maxCurrent
+        advanced: true
+      - name: identifiers
+        advanced: true
+      - name: priority
+        advanced: true
+  vehicle-features:
+    params:
+      - name: coarsecurrent
+        advanced: true
+      - name: welcomecharge
         advanced: true
   vehicle-language:
     params:
@@ -328,15 +382,24 @@ presets:
   tariff-base:
     params:
       - name: charges
-        type: number
+        type: int
+        advanced: true
         help:
           de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
           en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
       - name: tax
-        type: number
+        type: int
+        advanced: true
         help:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
           en: Additional percentage charge (e.g. 0.2 for 20%)
+      - name: formula
+        type: string
+        advanced: true
+        help:
+          de: Individuelle Formel zur Berechnung des Preises
+          en: Individual formula for calculating the price
+        example: "math.Max((price + charges) * (1 + tax), 0.0)"
   eebus:
     params:
       - name: ski
@@ -344,7 +407,6 @@ presets:
           de: SKI (Subject Key Identifier)
           en: SKI (Subject Key Identifier)
       - name: ip
-        deprecated: true
   switchsocket:
     params:
       - name: standbypower
@@ -368,32 +430,58 @@ presets:
       - name: stationid
         type: string
         help:
-          en: The chargers unique station id (or chargepoint id). This id must also be part of the charger OCPP configuration ws://<evcc-address>:8887/<stationid>.
-          de: Die Stations-ID der Wallbox (oder des Ladepunkts). Diese ID muss auch Teil der Wallboxkonfiguration für OCPP sein ws://<evcc-address>:8887/<stationid>.
-        advanced: true
+          en: "Station ID of the charging point. Only required if multiple OCPP charging stations are set up to assign them correctly. A single OCPP charging station can also be automatically assigned. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form ws://<evcc-address>:8887/<stationid>. Most charging stations automatically add the ID internally."
+          de: "Station ID des Ladepunktes. Nur erforderlich wenn mehrere OCPP-Ladestationen eingerichtet sind um diese korrekt zuzuweisen. Eine einzelne OCPP-Ladestation kann auch automatisch zugeordnet werden. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form ws://<evcc-adresse>:8887/<stationid> anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
         example: EVB-P12354
       - name: connector
         help:
-          de: Ladepunkt, normalerweise 1 für den ersten Anschluss.
-          en: Connector number, usually 1 for first connector.
-        advanced: true
+          de: Anschlussnummer bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
+          en: Connector number for charging stations with multiple connectors. Counting starts at 1 for the first connector.
         default: 1
-      - name: idtag
-        type: string
-        help:
-          en: Token-ID returned to the charger for authorisation of charging sessions
-          de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+      - name: remotestart
         advanced: true
-        example: 04E6B78921BBA0
-      - name: connecttimeout
+        type: bool
         description:
-          de: Zeitlimit für Registrierung des Ladepunktes
-          en: Timeout for initial connection
+          de: Immer eine Remote-Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug angeschlossen wird
+          en: Always start a remote transaction (RemoteStartTransaction) as soon as a vehicle is connected
+        help:
+          de: Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren! Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten. Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist. Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen!
+          en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary!
+      - name: idtag
+        advanced: true
+        type: string
+        description:
+          en: Identifier used for authentication of external transactions (RemoteStartTransaction)
+          de: Identifikator zur Authentifizierung von externen Transaktionen (RemoteStartTransaction)
+        help:
+          de: Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert.
+          en: This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions.
+        example: evcc
+      - name: connecttimeout
         advanced: true
         type: duration
         default: 5m
+        description:
+          de: Zeitlimit für die Registrierung des Ladepunktes
+          en: Timeout for the registration of the charging point
       - name: timeout
-        default: 2m
+        advanced: true
+        type: duration
+        deprecated: true
+      - name: meterinterval
+        advanced: true
+        type: duration
+        default: 10s
+        description:
+          de: Übertragungsintervall der Zählerwerte (MeterValueSampleInterval)
+          en: Transmission interval of meter values (MeterValueSampleInterval)
+      - name: metervalues
+        advanced: true
+        type: string
+        description:
+          de: Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)
+          en: Manual specification of the meter values to be configured (MeterValuesSampledData)
+        example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
 
   mqtt:
     params:
@@ -427,6 +515,7 @@ modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]
     tcpip: ["tcpip"]
+    udp: ["udp"]
   types:
     rs485serial:
       description:
@@ -468,11 +557,26 @@ modbus:
         - reference: true
           name: port
           default: 502
+    udp:
+      description:
+        generic: UDP
+      params:
+        - reference: true
+          referencename: modbusid
+          name: id
+        - reference: true
+          name: host
+        - reference: true
+          name: port
+          default: 502
 
 devicegroups:
   generic:
     de: Generische Unterstützung
     en: Generic support
+  heating:
+    de: Wärmeerzeuger
+    en: Heating devices
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets

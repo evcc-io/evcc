@@ -3,8 +3,8 @@ products:
   - brand: Dacia
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
+  - preset: vehicle-features
 render: |
   type: dacia
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-features" . }}

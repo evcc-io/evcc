@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -35,6 +36,11 @@ func (d *dumper) DumpWithHeader(name string, device interface{}) {
 
 func (d *dumper) Dump(name string, v interface{}) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
+	var isHeating bool
+	if fd, ok := v.(api.FeatureDescriber); ok {
+		isHeating = slices.Contains(fd.Features(), api.Heating)
+	}
 
 	// meter
 
@@ -95,15 +101,27 @@ func (d *dumper) Dump(name string, v interface{}) {
 			}
 		}
 
-		if err != nil {
-			fmt.Fprintf(w, "Soc:\t%v\n", err)
+		if isHeating {
+			if err != nil {
+				fmt.Fprintf(w, "Temp:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Temp:\t%.0f°C\n", soc)
+			}
 		} else {
-			fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
+			if err != nil {
+				fmt.Fprintf(w, "Soc:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
+			}
 		}
 	}
 
 	if v, ok := v.(api.BatteryCapacity); ok {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
+	}
+
+	if v, ok := v.(api.MaxACPower); ok {
+		fmt.Fprintf(w, "Max AC power:\t%.0fW\n", v.MaxACPower())
 	}
 
 	// charger
@@ -114,6 +132,19 @@ func (d *dumper) Dump(name string, v interface{}) {
 		} else {
 			fmt.Fprintf(w, "Charge status:\t%v\n", status)
 		}
+	}
+
+	if v, ok := v.(api.StatusReasoner); ok {
+		if status, err := v.StatusReason(); err != nil {
+			fmt.Fprintf(w, "Status reason:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Status reason:\t%v\n", status)
+		}
+	}
+
+	// controllable battery
+	if _, ok := v.(api.BatteryController); ok {
+		fmt.Fprintf(w, "Controllable:\ttrue\n")
 	}
 
 	if v, ok := v.(api.Charger); ok {
@@ -191,10 +222,18 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		if limitSoc, err := v.GetLimitSoc(); err != nil {
-			fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
+		if isHeating {
+			if limitSoc, err := v.GetLimitSoc(); err != nil {
+				fmt.Fprintf(w, "Max Temp:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Max Temp:\t%d°C\n", limitSoc)
+			}
 		} else {
-			fmt.Fprintf(w, "Limit Soc:\t%d%%\n", limitSoc)
+			if limitSoc, err := v.GetLimitSoc(); err != nil {
+				fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "Limit Soc:\t%d%%\n", limitSoc)
+			}
 		}
 	}
 

@@ -60,9 +60,11 @@ type StatusResponse struct {
 				Value int
 				Unit  string
 			}
-			StateOfCharge   float64 // 75
-			EndOfChargeTime int     // Minutes after midnight
-			TotalRange      int     // 17
+			StateOfCharge         float64 // 75
+			EndOfChargeTime       int     // Minutes after midnight
+			TotalRange            int     // 17
+			SocLimit              int     // 50-100
+			SelectedChargeProgram int
 		}
 		Timestamp time.Time
 	}

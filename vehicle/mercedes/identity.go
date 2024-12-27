@@ -65,21 +65,20 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	}
 
 	if !token.Valid() {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - Add expiry")
 		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
 	}
 
 	// database token
 	if !token.Valid() {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - database token check started")
 		var tok oauth2.Token
 		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+			v.log.DEBUG.Println("identity.NewIdentity - database token found")
 			token = &tok
 		}
 	}
 
 	if !token.Valid() && token.RefreshToken != "" {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - refreshToken started")
+		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
 		if tok, err := v.RefreshToken(token); err == nil {
 			token = tok
 		}
@@ -106,19 +105,19 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	defer v.mu.Unlock()
 
 	data := url.Values{
-		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
 	}
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	tok := (*oauth2.Token)(&res)
+	tok := util.TokenWithExpiry(&res)
 	v.TokenSource = oauth.RefreshTokenSource(tok, v)
 
 	err := settings.SetJson(v.settingsKey(), tok)

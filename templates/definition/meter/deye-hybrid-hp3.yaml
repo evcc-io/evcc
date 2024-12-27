@@ -18,10 +18,12 @@ params:
   - name: capacity
     advanced: true
   - name: minsoc
-    type: number
+    type: int
+    default: 20
     advanced: true
   - name: maxsoc
-    type: number
+    type: int
+    default: 95
     advanced: true
 render: |
   type: custom
@@ -135,10 +137,10 @@ render: |
     - case: 1 # normal
       set:
         source: sequence
-        set: 
+        set:
         - source: const
           value: {{ .minsoc }} 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -147,7 +149,7 @@ render: |
               decode: int32s
         - source: const
           value: 0
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -156,7 +158,7 @@ render: |
               decode: int32s
         - source: const
           value: 2355 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -165,7 +167,7 @@ render: |
               decode: int32s
         - source: const
           value: 0 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -178,7 +180,7 @@ render: |
         set:
         - source: const
           value: {{ .maxsoc }}
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -187,7 +189,7 @@ render: |
               decode: int32s
         - source: const
           value: 0
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -196,7 +198,7 @@ render: |
               decode: int32s
         - source: const
           value: 2355 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -205,7 +207,7 @@ render: |
               decode: int32s
         - source: const
           value: 0 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -218,7 +220,7 @@ render: |
         set:
         - source: const
           value: {{ .maxsoc }}
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
@@ -227,7 +229,7 @@ render: |
               decode: int32s
         - source: const
           value: 0
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -236,7 +238,7 @@ render: |
               decode: int32s
         - source: const
           value: 2355 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
@@ -245,16 +247,12 @@ render: |
               decode: int32s
         - source: const
           value: 1 
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 172 
               type: writemultiple
               decode: int32s  
-  minsoc: {{.minsoc}}
-  maxsoc: {{.maxsoc}}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

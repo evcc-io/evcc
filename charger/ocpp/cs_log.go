@@ -6,9 +6,23 @@ import (
 )
 
 func (cs *CS) print(s string) {
+	// for _, p := range []string{
+	// 	"completed request",
+	// 	"dispatched request",
+	// 	"enqueued CALL",
+	// 	"handling incoming",
+	// 	"sent CALL",
+	// 	"started timeout",
+	// 	"timeout canceled",
+	// } {
+	// 	if strings.HasPrefix(s, p) {
+	// 		return
+	// 	}
+	// }
+
 	var ok bool
 	if s, ok = strings.CutPrefix(s, "sent JSON message to"); ok {
-		s = "sent" + s
+		s = "send" + s
 	} else if s, ok = strings.CutPrefix(s, "received JSON message from"); ok {
 		s = "recv" + s
 	}

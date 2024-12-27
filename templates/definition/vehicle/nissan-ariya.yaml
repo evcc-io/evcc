@@ -5,9 +5,7 @@ products:
       generic: Ariya
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
 render: |
   type: nissan
   version: v2
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

@@ -1,43 +1,27 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { enableExperimental } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_GRID_ONLY, "password.sql");
+  await start(CONFIG_GRID_ONLY);
 });
 test.afterAll(async () => {
   await stop();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
 
 test.describe("basics", async () => {
   test("navigation to config", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("topnavigation-button").click();
     await page.getByRole("link", { name: "Configuration" }).click();
-    await login(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
   test.skip("alert box should always be visible", async ({ page }) => {
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
     await expect(page.getByRole("alert")).toBeVisible();
   });
@@ -51,7 +35,6 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");

@@ -7,7 +7,7 @@
 		@open="open"
 	>
 		<p>{{ $t("config.control.description") }}</p>
-		<p class="text-danger" v-if="error">{{ error }}</p>
+		<p v-if="error" class="text-danger">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="save">
 			<FormRow
 				id="controlInterval"
@@ -49,26 +49,6 @@
 						class="form-control text-end"
 					/>
 					<span id="controlResidualPowerUnit" class="input-group-text">W</span>
-				</div>
-			</FormRow>
-
-			<FormRow
-				id="controlMaxGridSupply"
-				:label="$t('config.control.labelMaxGridSupply')"
-				:help="$t('config.control.descriptionMaxGridSupply')"
-				docsLink="/docs/reference/configuration/site#maxgridsupplywhilebatterycharging"
-			>
-				<div class="input-group w-50 w-sm-25">
-					<input
-						id="controlMaxGridSupply"
-						v-model="values.maxGridSupply"
-						type="number"
-						step="1"
-						required
-						aria-describedby="controlMaxGridSupplyUnit"
-						class="form-control text-end"
-					/>
-					<span id="controlMaxGridSupplyUnit" class="input-group-text">W</span>
 				</div>
 			</FormRow>
 
@@ -124,25 +104,16 @@ export default {
 		residualPowerChanged() {
 			return this.values.residualPower !== this.serverValues.residualPower;
 		},
-		maxGridSupplyChanged() {
-			return this.values.maxGridSupply !== this.serverValues.maxGridSupply;
-		},
 		nothingChanged() {
-			return (
-				!this.intervalChanged && !this.residualPowerChanged && !this.maxGridSupplyChanged
-			);
+			return !this.intervalChanged && !this.residualPowerChanged;
 		},
 	},
 	methods: {
 		reset() {
-			const {
-				interval,
-				residualPower,
-				maxGridSupplyWhileBatteryCharging: maxGridSupply,
-			} = store?.state || {};
+			const { interval, residualPower } = store?.state || {};
 			this.saving = false;
 			this.error = "";
-			this.values = { interval, residualPower, maxGridSupply };
+			this.values = { interval, residualPower };
 			this.serverValues = { ...this.values };
 		},
 		async open() {
@@ -154,8 +125,6 @@ export default {
 				url = `/config/interval/${encodeURIComponent(this.values.interval)}`;
 			} else if (name === "residualPower") {
 				url = `/residualpower/${encodeURIComponent(this.values.residualPower)}`;
-			} else if (name === "maxGridSupply") {
-				url = `/maxgridsupply/${encodeURIComponent(this.values.maxGridSupply)}`;
 			}
 			await api.post(url);
 		},
@@ -168,9 +137,6 @@ export default {
 				}
 				if (this.residualPowerChanged) {
 					await this.saveValue("residualPower");
-				}
-				if (this.maxGridSupplyChanged) {
-					await this.saveValue("maxGridSupply");
 				}
 				this.$emit("changed");
 				this.$refs.modal.close();

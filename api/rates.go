@@ -1,7 +1,7 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"slices"
 	"time"
 )
@@ -31,10 +31,14 @@ func (r Rates) Sort() {
 // Current returns the rates current rate or error
 func (r Rates) Current(now time.Time) (Rate, error) {
 	for _, rr := range r {
-		if (rr.Start.Before(now) || rr.Start.Equal(now)) && rr.End.After(now) {
+		if !rr.Start.After(now) && rr.End.After(now) {
 			return rr, nil
 		}
 	}
 
-	return Rate{}, errors.New("no matching rate")
+	if len(r) == 0 {
+		return Rate{}, fmt.Errorf("no matching rate for: %s", now.Local().Format(time.RFC3339))
+	}
+	return Rate{}, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
+		now.Local().Format(time.RFC3339), len(r), r[0].Start.Local().Format(time.RFC3339), r[len(r)-1].End.Local().Format(time.RFC3339))
 }

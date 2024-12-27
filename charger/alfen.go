@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"math"
 	"sync"
@@ -52,13 +53,13 @@ const (
 )
 
 func init() {
-	registry.Add("alfen", NewAlfenFromConfig)
+	registry.AddCtx("alfen", NewAlfenFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate decorate -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
-func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewAlfenFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -67,11 +68,11 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlfen(cc.URI, cc.ID)
+	return NewAlfen(ctx, cc.URI, cc.ID)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
+func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	go wb.heartbeat()
+	go wb.heartbeat(ctx)
 
 	_, v2, v3, err := wb.Voltages()
 
@@ -108,8 +109,14 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 	return decorateAlfen(wb, phasesS, phasesG), err
 }
 
-func (wb *Alfen) heartbeat() {
-	for range time.Tick(25 * time.Second) {
+func (wb *Alfen) heartbeat(ctx context.Context) {
+	for tick := time.Tick(25 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {

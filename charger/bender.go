@@ -84,7 +84,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -315,7 +315,9 @@ func (wb *BenderCC) soc() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return float64(binary.BigEndian.Uint16(b)), nil
+		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
+			return float64(soc), nil
+		}
 	}
 
 	return 0, api.ErrNotAvailable

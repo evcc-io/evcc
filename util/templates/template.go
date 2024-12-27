@@ -9,8 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/evcc-io/evcc/util"
-	"github.com/go-sprout/sprout"
+	"github.com/Masterminds/sprig/v3"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -208,7 +207,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -222,7 +221,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 		}
 
 		switch p.Type {
-		case TypeStringList:
+		case TypeList:
 			for _, e := range v.([]string) {
 				t.Params[index].Values = append(p.Values, yamlQuote(e))
 			}
@@ -241,7 +240,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	for _, param := range t.Params {
 		if !param.IsRequired() {
 			switch param.Type {
-			case TypeStringList:
+			case TypeList:
 				if len(param.Values) == 0 {
 					continue
 				}
@@ -267,9 +266,9 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode int, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
+func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
-	if err := util.DecodeOther(other, &values); err != nil {
+	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
 	}
 

@@ -39,7 +39,7 @@ export default {
 		options: function () {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += this.step) {
-				let text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
+				const text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
 				result.push({ soc, text });
 			}
 			return result;

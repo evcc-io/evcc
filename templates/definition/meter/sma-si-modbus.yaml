@@ -3,9 +3,6 @@ products:
   - brand: SMA
     description:
       generic: Sunny Island (Modbus)
-  - brand: SMA
-    description:
-      generic: Sunny Boy Storage 1.5/2.0/2.5 (Modbus)
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -15,14 +12,20 @@ params:
     port: 502
     id: 3
     help:
-      en: The Modbus TCP-Server needs to be enabled on this inverter
-      de: Der Modbus TCP-Server muss an diesem Wechselrichter aktiviert sein
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
   - name: capacity
     advanced: true
   - name: watchdog
     type: duration
     default: 60s
     advanced: true
+  - name: chargepower
+    default: 4200 # W
+    advanced: true
+    help:
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt
+      en: Maximum charging power for forced charging of the battery in Watt
 render: |
   type: custom
   power:
@@ -92,7 +95,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: -2147483648 # Wirkleistungsvorgabe
+            value: -{{ .chargepower }} # Wirkleistungsvorgabe
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -109,6 +112,4 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}

@@ -20,8 +20,11 @@ params:
   - name: port
     default: 5033
   - name: user
+    required: true
   - name: password
+    required: true
   - name: key
+    required: true
   - name: battery
     deprecated: true
   - name: dischargelimit
@@ -31,7 +34,7 @@ params:
     help:
       de: Limitiert die Entladeleistung im 'Halten' Batteriemodus
       en: Limits discharge power in 'Hold' battery mode
-    type: number
+    type: int
     advanced: true
   - name: capacity
     advanced: true

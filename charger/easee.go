@@ -50,7 +50,9 @@ type Easee struct {
 	log                     *util.Logger
 	mux                     sync.RWMutex
 	lastEnergyPollMux       sync.Mutex
+	maxChargerCurrent       float64
 	dynamicChargerCurrent   float64
+	dynamicCircuitCurrent   [3]float64
 	current                 float64
 	chargerEnabled          bool
 	smartCharging           bool
@@ -60,7 +62,6 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
-	outputPhase             int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -208,8 +209,7 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = time.Minute
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
@@ -313,8 +313,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
-	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P1:
+		c.dynamicCircuitCurrent[0] = value.(float64)
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P2:
+		c.dynamicCircuitCurrent[1] = value.(float64)
+	case easee.DYNAMIC_CIRCUIT_CURRENT_P3:
+		c.dynamicCircuitCurrent[2] = value.(float64)
+	case easee.MAX_CHARGER_CURRENT:
+		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -336,12 +342,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 				c.stopTicker = make(chan struct{})
 
 				go func() {
-					ticker := time.NewTicker(5 * time.Minute)
-					for {
+					for tick := time.Tick(5 * time.Minute); ; {
 						select {
 						case <-c.stopTicker:
 							return
-						case <-ticker.C:
+						case <-tick:
 							c.requestLifetimeEnergyUpdate()
 						}
 					}
@@ -650,6 +655,9 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
 	cur := float64(current)
+	if c.maxChargerCurrent != 0 {
+		cur = min(cur, c.maxChargerCurrent)
+	}
 	data := easee.ChargerSettings{
 		DynamicChargerCurrent: &cur,
 	}
@@ -781,7 +789,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 	} else {
 		// charger level
 		if phases == 3 {
-			phases = 2 // mode 2 means 3p
+			phases = 2 // mode 2 means auto
 		}
 
 		// change phaseMode only if necessary
@@ -795,10 +803,9 @@ func (c *Easee) Phases1p3p(phases int) error {
 			if _, err = c.postJSONAndWait(uri, data); err != nil {
 				return err
 			}
-
-			// disable charger to activate changed settings (loadpoint will reenable it)
-			err = c.Enable(false)
 		}
+		// disable charger to activate changed settings (loadpoint will reenable it)
+		err = c.Enable(false)
 	}
 
 	return err
@@ -810,7 +817,22 @@ var _ api.PhaseGetter = (*Easee)(nil)
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.outputPhase, nil
+	var phases int
+	if c.circuit != 0 {
+		// circuit level controlled charger
+		for _, dcc := range c.dynamicCircuitCurrent {
+			if dcc > 0 {
+				phases++
+			}
+		}
+	} else {
+		// charger level
+		phases = c.phaseMode
+		if phases == 2 { // map automatic to 3p
+			phases = 3
+		}
+	}
+	return phases, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)

@@ -5,8 +5,8 @@ products:
       generic: "#1"
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
+  - preset: vehicle-features
 render: |
   type: smart-hello
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
+  {{ include "vehicle-features" . }}

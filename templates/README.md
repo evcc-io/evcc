@@ -2,7 +2,7 @@
 
 ## Folders
 
-- defintion: hold all device templates definitons in yaml files
+- definition: hold all device templates definitions in yaml files
   - charger: all charger templates
   - meter: all meter templates
   - vehicle: all vehicle templates
@@ -180,9 +180,9 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values. If `help` is provided, than that help text is presented as the question
-- `number`: for int values
+- `int`: for int values
 - `float`: for float values
-- `stringlist`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
+- `list`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
 - `chargemodes`: for a selection of charge modes (including `None` which results in the param not being set)
 
 ### `advanced`

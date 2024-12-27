@@ -69,14 +69,26 @@ func (lp *Loadpoint) ActivePhases() int {
 	// sanity check - we should not assume less active phases than actually measured
 	if measured > 0 && active < measured {
 		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
-	} else {
-		lp.log.DEBUG.Printf("!! active phases: %dp = min(%dp measured %dp vehicle %dp physical %dp charger)", active, measured, vehicle, physical, charger)
 	}
 
 	return active
 }
 
-// maxActivePhases returns the maximum number of active phases for the meter.
+// minActivePhases returns the minimum number of active phases for the loadpoint.
+func (lp *Loadpoint) minActivePhases() int {
+	lp.Lock()
+	configuredPhases := lp.configuredPhases
+	lp.Unlock()
+
+	// 1p3p supported or limit 1p
+	if lp.hasPhaseSwitching() || configuredPhases == 1 {
+		return 1
+	}
+
+	return lp.maxActivePhases()
+}
+
+// maxActivePhases returns the maximum number of active phases for the loadpoint.
 func (lp *Loadpoint) maxActivePhases() int {
 	physical := lp.GetPhases()
 	measured := lp.getMeasuredPhases()
@@ -84,13 +96,15 @@ func (lp *Loadpoint) maxActivePhases() int {
 	charger := lp.getChargerPhysicalPhases()
 
 	// during 1p or unknown config, 1p measured is not a restriction
-	if physical <= 1 || vehicle == 1 {
+	if physical <= 1 || vehicle == 1 || charger == 1 {
 		measured = 0
 	}
 
 	// if 1p3p supported then assume configured limit or 3p
 	if lp.hasPhaseSwitching() {
+		lp.Lock()
 		physical = lp.configuredPhases
+		lp.Unlock()
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))

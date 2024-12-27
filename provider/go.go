@@ -1,9 +1,12 @@
 package provider
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"reflect"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/traefik/yaegi/interp"
@@ -18,11 +21,11 @@ type Go struct {
 }
 
 func init() {
-	registry.Add("go", NewGoProviderFromConfig)
+	registry.AddCtx("go", NewGoProviderFromConfig)
 }
 
 // NewGoProviderFromConfig creates a Go provider
-func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -39,12 +42,12 @@ func NewGoProviderFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	in, err := configureInputs(cc.In)
+	in, err := configureInputs(ctx, cc.In)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := configureOutputs(cc.Out)
+	out, err := configureOutputs(ctx, cc.Out)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +147,10 @@ func (p *Go) handleGetter() (any, error) {
 }
 
 func (p *Go) handleSetter(param string, val any) error {
+	if err := transformInputs(p.in, p.setParam); err != nil {
+		return err
+	}
+
 	if err := p.setParam(param, val); err != nil {
 		return err
 	}
@@ -161,11 +168,16 @@ func (p *Go) evaluate() (res any, err error) {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
 		}
+		err = backoff.Permanent(err)
 	}()
 
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return nil, err
+	}
+
+	if !v.IsValid() {
+		return nil, errors.New("missing result")
 	}
 
 	if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface) && v.IsNil() {
@@ -176,11 +188,7 @@ func (p *Go) evaluate() (res any, err error) {
 }
 
 func (p *Go) setParam(param string, val any) error {
-	if str, ok := val.(string); ok {
-		val = "\"" + str + "\""
-	}
-
-	_, err := p.vm.Eval(fmt.Sprintf("%s := %v;", param, val))
+	_, err := p.vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
 	return err
 }
 

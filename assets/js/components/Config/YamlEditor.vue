@@ -1,12 +1,12 @@
 <template>
 	<VueMonacoEditor
 		v-if="active"
+		ref="editor"
 		class="editor"
 		language="yaml"
 		:theme="theme"
 		:options="options"
 		:value="modelValue"
-		ref="editor"
 		@update:value="$emit('update:modelValue', $event)"
 		@mount="ready"
 	>
@@ -28,12 +28,12 @@ import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
 const $html = document.querySelector("html");
 export default {
 	name: "YamlEditor",
+	components: { VueMonacoEditor },
 	props: {
 		modelValue: String,
 		errorLine: Number,
 		disabled: Boolean,
 	},
-	components: { VueMonacoEditor },
 	emits: ["update:modelValue"],
 	data() {
 		return {
@@ -52,17 +52,6 @@ export default {
 			active: true,
 		};
 	},
-	mounted() {
-		this.updateTheme();
-		$html.addEventListener("themechange", this.updateTheme);
-	},
-	watch: {
-		errorLine() {
-			// force rerender to update decorations
-			this.active = false;
-			this.$nextTick(() => (this.active = true));
-		},
-	},
 	computed: {
 		options() {
 			return { ...this.defaultOptions, readOnly: this.disabled };
@@ -71,9 +60,20 @@ export default {
 			return (this.modelValue || "").split("\n").length;
 		},
 	},
+	watch: {
+		errorLine() {
+			// force rerender to update decorations
+			this.active = false;
+			this.$nextTick(() => (this.active = true));
+		},
+	},
+	mounted() {
+		this.updateTheme();
+		$html.addEventListener("themechange", this.updateTheme);
+	},
 	beforeMount() {
 		loader.config({
-			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" },
+			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" },
 		});
 		loader.init();
 	},
