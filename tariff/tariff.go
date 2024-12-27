@@ -20,6 +20,7 @@ type Tariff struct {
 	log    *util.Logger
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
+	typ    api.TariffType
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -33,6 +34,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed    `mapstructure:",squash"`
 		Price    *provider.Config
 		Forecast *provider.Config
+		Type     api.TariffType `mapstructure:"tariff"`
 		Cache    time.Duration
 	}{
 		Cache: 15 * time.Minute,
@@ -51,9 +53,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	var (
-		err       error
-		priceG    func() (float64, error)
-		forecastG func() (string, error)
+		err    error
+		priceG func() (float64, error)
 	)
 
 	if cc.Price != nil {
@@ -65,21 +66,20 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		priceG = provider.Cached(priceG, cc.Cache)
 	}
 
-	if cc.Forecast != nil {
-		forecastG, err = provider.NewStringGetterFromConfig(ctx, *cc.Forecast)
-		if err != nil {
-			return nil, fmt.Errorf("forecast: %w", err)
-		}
-	}
-
 	t := &Tariff{
 		log:    util.NewLogger("tariff"),
 		embed:  &cc.embed,
+		typ:    cc.Type,
 		priceG: priceG,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	if forecastG != nil {
+	if cc.Forecast != nil {
+		forecastG, err := provider.NewStringGetterFromConfig(ctx, *cc.Forecast)
+		if err != nil {
+			return nil, fmt.Errorf("forecast: %w", err)
+		}
+
 		done := make(chan error)
 		go t.run(forecastG, done)
 		err = <-done
@@ -157,6 +157,9 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
+	if t.typ != 0 {
+		return t.typ
+	}
 	if t.priceG != nil {
 		return api.TariffTypePriceDynamic
 	}

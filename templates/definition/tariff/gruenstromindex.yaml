@@ -16,6 +16,7 @@ params:
       en: "Token for accessing the API from https://console.corrently.io"
 render: |
   type: custom
+  tariff: co2
   forecast:
     source: http
     uri: https://api.corrently.io/v2.0/gsi/prediction?zip={{ .zip }}&token={{ .token }}
