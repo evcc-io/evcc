@@ -20,6 +20,7 @@ type Tariff struct {
 	log    *util.Logger
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
+	typ    api.TariffType
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -33,6 +34,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed    `mapstructure:",squash"`
 		Price    *provider.Config
 		Forecast *provider.Config
+		Type     api.TariffType `mapstructure:"tariff"`
 		Cache    time.Duration
 	}{
 		Cache: 15 * time.Minute,
@@ -75,6 +77,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	t := &Tariff{
 		log:    util.NewLogger("tariff"),
 		embed:  &cc.embed,
+		typ:    cc.Type,
 		priceG: priceG,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -157,8 +160,12 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
-	if t.priceG != nil {
+	switch {
+	case t.typ != 0:
+		return t.typ
+	case t.priceG != nil:
 		return api.TariffTypePriceDynamic
+	default:
+		return api.TariffTypePriceForecast
 	}
-	return api.TariffTypePriceForecast
 }
