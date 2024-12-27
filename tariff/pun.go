@@ -93,7 +93,6 @@ func (t *Pun) run(done chan error) {
 		}
 
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
-			t.log.TRACE.Println(`Next day PUN hourly tariffs import started`)
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
 		}, bo())
@@ -153,14 +152,11 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		"userid":             []string{"-1"},
 	}
 
-	t.log.TRACE.Println(`PUN Zip file requested`)
-
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		t.log.TRACE.Println(`PUN Zip file request failed:`, err)
 		return nil, err
 	}
-	t.log.TRACE.Println(`PUN Zip file request status:`, resp.Status)
 	defer resp.Body.Close()
 
 	// Process the ZIP file
@@ -174,7 +170,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.log.TRACE.Println(`Zip file decompressed, now looking for the XML file`)
 
 	if len(zipReader.File) != 1 {
 		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
@@ -192,7 +187,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.log.TRACE.Println(`Reading XML file`)
 
 	// Processing the received data
 	var dataSet NewDataSet
@@ -236,7 +230,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			Price: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
-		t.log.TRACE.Println(`PUN data:`, ar.Start, ar.End, ar.Price)
 	}
 
 	data.Sort()
