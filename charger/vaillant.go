@@ -19,6 +19,10 @@ package charger
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
@@ -29,6 +33,13 @@ import (
 
 func init() {
 	registry.AddCtx("vaillant", NewVaillantFromConfig)
+}
+
+type Vaillant struct {
+	*SgReady
+	log      *util.Logger
+	conn     *sensonet.Connection
+	systemId string
 }
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
@@ -73,7 +84,27 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	systemID := homes[0].SystemID
+	systemId := homes[0].SystemID
+
+	system, err := conn.GetSystem(systemId)
+	if err != nil {
+		return nil, err
+	}
+
+	var strategy int
+	hotWater := len(system.State.Dhw)+len(system.State.DomesticHotWater) > 0
+
+	switch {
+	case hotWater && cc.HeatingSetpoint != 0:
+		strategy = sensonet.STRATEGY_HOTWATER_THEN_HEATING
+	case hotWater:
+		strategy = sensonet.STRATEGY_HOTWATER
+	case cc.HeatingSetpoint != 0:
+		strategy = sensonet.STRATEGY_HEATING
+	default:
+		return nil, errors.New("could not determine boost strategy, need either hot water or heating zone and setpoint")
+	}
+
 	heatingPar := sensonet.HeatingParStruct{
 		ZoneIndex:    cc.HeatingZone,
 		VetoSetpoint: cc.HeatingSetpoint,
@@ -86,19 +117,83 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
-			_, err := conn.StopStrategybased(systemID, &heatingPar, &hotwaterPar)
+			_, err := conn.StopStrategybased(systemId, &heatingPar, &hotwaterPar)
 			return err
 		case Boost:
-			strategy := sensonet.STRATEGY_HOTWATER
-			if cc.HeatingSetpoint != 0 {
-				strategy = sensonet.STRATEGY_HOTWATER_THEN_HEATING
-			}
-			_, err := conn.StartStrategybased(systemID, strategy, &heatingPar, &hotwaterPar)
+			_, err := conn.StartStrategybased(systemId, strategy, &heatingPar, &hotwaterPar)
 			return err
 		default:
 			return api.ErrNotAvailable
 		}
 	}
 
-	return NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &Vaillant{
+		log:      log,
+		conn:     conn,
+		systemId: systemId,
+		SgReady:  sgr,
+	}
+
+	return res, nil
+}
+
+func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
+	var i int
+	for _, z := range zz {
+		rt := reflect.TypeOf(z)
+		rv := reflect.ValueOf(z)
+
+		if rt.Kind() == reflect.Slice && rv.Len() == 0 {
+			continue
+		}
+		i++
+
+		typ := strings.TrimPrefix(strings.TrimPrefix(fmt.Sprintf("%T", z), "[]sensonet."), prefix)
+
+		fmt.Println()
+		fmt.Printf("%d.%d. %s\n", chapter, i+1, typ)
+
+		if rt.Kind() == reflect.Slice {
+			for j := 0; j < rv.Len(); j++ {
+				fmt.Printf("%d.%d.%d. %s %d\n", chapter, i+1, j+1, typ, j)
+				fmt.Printf("%+v\n", rv.Index(j))
+			}
+		} else {
+			fmt.Printf("%+v\n", z)
+		}
+	}
+}
+
+func (v *Vaillant) Diagnose() {
+	sys, err := v.conn.GetSystem(v.systemId)
+	if err != nil {
+		v.log.ERROR.Println(err)
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("1. State")
+	fmt.Println()
+	fmt.Println("1.1. System")
+	fmt.Printf("%+v\n", sys.State.System)
+	v.print(1, "State", sys.State.Zones, sys.State.Circuits, sys.State.Dhw, sys.State.DomesticHotWater)
+
+	fmt.Println()
+	fmt.Println("2. Properties")
+	fmt.Println()
+	fmt.Println("2.1. System")
+	fmt.Printf("%+v\n", sys.Properties.System)
+	v.print(2, "Properties", sys.Properties.Zones, sys.Properties.Circuits, sys.Properties.Dhw, sys.Properties.DomesticHotWater)
+
+	fmt.Println()
+	fmt.Println("3. Configuration")
+	fmt.Println()
+	fmt.Println("3.1. System")
+	fmt.Printf("%+v\n", sys.Configuration.System)
+	v.print(3, "Configuration", sys.Configuration.Zones, sys.Configuration.Circuits, sys.Configuration.Dhw, sys.Configuration.DomesticHotWater)
 }
