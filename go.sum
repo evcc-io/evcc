@@ -25,6 +25,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMx
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
 github.com/WulfgarW/sensonet v0.0.2-0.20241226193935-3414de4a54fe h1:71CVWUNP3zeiJQQY7qYUzfUsY2DKiO5MVcEBe06b7fU=
 github.com/WulfgarW/sensonet v0.0.2-0.20241226193935-3414de4a54fe/go.mod h1:QZodMch+UskApzlhhGa5ydSY0v5knlF4uQ5WO78xrEs=
+github.com/WulfgarW/sensonet v0.0.2-0.20241227142753-e3daa6676671 h1:AGt9LeuNaiZlQMGH6Y5M6Jhb2V6osoQGp+qLqfyxWVQ=
+github.com/WulfgarW/sensonet v0.0.2-0.20241227142753-e3daa6676671/go.mod h1:QZodMch+UskApzlhhGa5ydSY0v5knlF4uQ5WO78xrEs=
 github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5/go.mod h1:SkGFH1ia65gfNATL8TAiHDNxPzPdmEL5uirI2Uyuz6c=
 github.com/ahmetb/go-linq/v3 v3.2.0 h1:BEuMfp+b59io8g5wYzNoFe9pWPalRklhlhbiU3hYZDE=
 github.com/ahmetb/go-linq/v3 v3.2.0/go.mod h1:haQ3JfOeWK8HpVxMtHHEMPVgBKiYyQ+f1/kLZh/cj9U=
