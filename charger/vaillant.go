@@ -89,9 +89,9 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			_, err := conn.StopStrategybased(systemID, &heatingPar, &hotwaterPar)
 			return err
 		case Boost:
-			strategy := sensonet.STRATEGY_HOTWATER_THEN_HEATING
-			if cc.HeatingSetpoint == 0 {
-				strategy = sensonet.STRATEGY_HOTWATER
+			strategy := sensonet.STRATEGY_HOTWATER
+			if cc.HeatingSetpoint != 0 {
+				strategy = sensonet.STRATEGY_HOTWATER_THEN_HEATING
 			}
 			_, err := conn.StartStrategybased(systemID, strategy, &heatingPar, &hotwaterPar)
 			return err
