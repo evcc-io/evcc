@@ -64,6 +64,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
 	client := request.NewClient(log)
 	clientCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
