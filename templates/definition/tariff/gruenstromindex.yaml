@@ -21,7 +21,7 @@ render: |
     source: http
     uri: https://api.corrently.io/v2.0/gsi/prediction?zip={{ .zip }}&token={{ .token }}
     jq: |
-      [ .forecast[] | {
+      [ .forecast.[] | {
         start: .timeframe.start / 1000 | todate, 
         end:   .timeframe.end / 1000 | todate, 
         price: .co2_g_standard
