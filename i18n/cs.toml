@@ -28,6 +28,10 @@ never = "pouze když je dost přebytků"
 titleAdd = "Přidat měřič baterie"
 titleEdit = "Upravit měřič baterie"
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
 capacity = "Kapacita"
 chargeStatus = "Stav"
@@ -62,6 +66,10 @@ save = "Uložit"
 titleAdd = "Přidat měřič spotřeby ze sítě"
 titleEdit = "Editovat měřič spotřeby ze sítě"
 
+[config.hems]
+
+[config.influx]
+
 [config.main]
 addLoadpoint = "Přidat nabíjecí bod"
 addPvBattery = "Přidat solar nebo baterii"
@@ -73,6 +81,8 @@ unconfigured = "není konfigurováno"
 vehicles = "Má vozidla"
 yaml = "Konfigurováno v evcc.yaml. Není editovatelné v UI."
 
+[config.messaging]
+
 [config.meter]
 cancel = "Zrušit"
 delete = "Smazat"
@@ -81,7 +91,15 @@ template = "Výrobce"
 titleChoice = "Co chcete přidat?"
 validateSave = "Zkontrolovat a uložit"
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -97,7 +115,11 @@ titleEdit = "Editovat měřič solární energie"
 cancel = "Zrušit"
 save = "Uložit"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -287,6 +309,8 @@ smartCostClean = "Nabíjení čistou energií ze sítě"
 title = "Nastavení {0}"
 vehicle = "Vozidlo"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 description = "Nabíjecí strop, který je použit, když je vozidlo připojeno."
 label = "Výchozí strop"
@@ -322,6 +346,8 @@ logout = "odhlásit"
 
 [main.targetCharge]
 activate = "Aktivovat"
+co2Limit = "CO₂ strop z {co2}"
+costLimitIgnore = "Nastavených {limit} bude během opakování ignorováno"
 currentPlan = "Aktivní plán"
 descriptionEnergy = "Dokud nebude {targetEnergy} nabito do vozidla?"
 descriptionSoc = "Kdy by mělo být vozidlo nabito na {targetSoc}?"
@@ -333,6 +359,7 @@ planPeriodLabel = "Opakování"
 planPeriodValue = "{start} do {end}"
 planUnknown = "doposud není známo"
 preview = "Náhled plánu"
+priceLimit = "cenový strop z {price}"
 remove = "Odebrat"
 setTargetTime = "žádný"
 targetIsAboveLimit = "Nastavený nabíjecí strop {limit} bude během tohoto opakování ignorován"
@@ -439,6 +466,8 @@ title = "Nabíjecí relace"
 total = "Celkem"
 vehicle = "Vozidlo"
 
+[sessions.chartTitle]
+
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
 created = "Vytvořeno"
@@ -454,6 +483,14 @@ vehicle = "Vozidlo"
 allLoadpoints = "všechny nabíjecí body"
 allVehicles = "všechny vozidla"
 filter = "Filtr"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Základní nastavení"

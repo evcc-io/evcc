@@ -197,7 +197,7 @@ params:
     help:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
       en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
-    type: stringlist
+    type: list
   - name: priority
     description:
       de: Priorität
@@ -321,6 +321,7 @@ params:
       en: Power limit for grid charging.
       de: Leistungslimit für Netzladung.
     default: 100
+
 presets:
   vehicle-base:
     params:
@@ -344,13 +345,11 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        type: stringlist
       - name: priority
         advanced: true
       - name: cache
         default: 15m
         advanced: true
-        type: duration
   vehicle-common:
     params:
       - name: title
@@ -368,7 +367,6 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        type: stringlist
       - name: priority
         advanced: true
   vehicle-features:
@@ -575,6 +573,9 @@ devicegroups:
   generic:
     de: Generische Unterstützung
     en: Generic support
+  heating:
+    de: Wärmeerzeuger
+    en: Heating devices
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets

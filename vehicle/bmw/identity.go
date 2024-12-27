@@ -181,9 +181,9 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"redirect_uri":  []string{RedirectURI},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
+		"redirect_uri":  {RedirectURI},
+		"refresh_token": {token.RefreshToken},
+		"grant_type":    {"refresh_token"},
 	}
 
 	return v.retrieveToken(data)
