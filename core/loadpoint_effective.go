@@ -80,7 +80,7 @@ func (lp *Loadpoint) EffectivePlanSoc() int {
 	return soc
 }
 
-// EffectivePlanSoc returns the id for the current plan
+// EffectivePlanId returns the id for the current plan
 func (lp *Loadpoint) EffectivePlanId() int {
 	if lp.socBasedPlanning() {
 		_, _, id := lp.nextVehiclePlan()

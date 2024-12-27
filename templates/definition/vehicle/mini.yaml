@@ -15,7 +15,8 @@ params:
     description:
       de: Region
       en: Region
-    validvalues: ["NA", "EU"]
+    type: choice
+    choice: ["EU", "NA"]
     default: EU
     advanced: true
   - name: hcaptcha

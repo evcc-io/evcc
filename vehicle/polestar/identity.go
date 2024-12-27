@@ -95,9 +95,9 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		// Submit credentials directly to the login endpoint
 		loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
 		data := url.Values{
-			"pf.username": []string{v.user},
-			"pf.pass":     []string{v.password},
-			"client_id":   []string{ClientID},
+			"pf.username": {v.user},
+			"pf.pass":     {v.password},
+			"client_id":   {ClientID},
 		}
 
 		req, _ = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
@@ -120,11 +120,11 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	// Exchange code for token
 	data = url.Values{
-		"grant_type":    []string{"authorization_code"},
-		"code":          []string{code},
-		"code_verifier": []string{cv},
-		"client_id":     []string{ClientID},
-		"redirect_uri":  []string{RedirectURI},
+		"grant_type":    {"authorization_code"},
+		"code":          {code},
+		"code_verifier": {cv},
+		"client_id":     {ClientID},
+		"redirect_uri":  {RedirectURI},
 	}
 
 	var token oauth2.Token

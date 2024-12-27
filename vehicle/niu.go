@@ -74,11 +74,11 @@ func (v *Niu) login() error {
 	md5hash := hex.EncodeToString(hash.Sum(nil))
 
 	data := url.Values{
-		"account":    []string{v.user},
-		"password":   []string{md5hash},
-		"grant_type": []string{"password"},
-		"scope":      []string{"base"},
-		"app_id":     []string{"niu_8xt1afu6"},
+		"account":    {v.user},
+		"password":   {md5hash},
+		"grant_type": {"password"},
+		"scope":      {"base"},
+		"app_id":     {"niu_8xt1afu6"},
 	}
 
 	uri := niu.AuthURI + "/v3/api/oauth2/token"

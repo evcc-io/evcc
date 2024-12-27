@@ -83,6 +83,8 @@ telemetry = "Telemetria"
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
 
+[config.hems]
+
 [config.influx]
 labelBucket = "Bucket"
 labelDatabase = "Baza danych"
@@ -125,6 +127,8 @@ labelPort = "Port"
 
 [config.options]
 
+[config.options.boolean]
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -141,7 +145,11 @@ titleEdit = "Edytuj licznik energii słonecznej"
 cancel = "Anulować"
 save = "Zapisz"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -337,6 +345,8 @@ smartCostClean = "Czyste ładowanie sieci"
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
 label = "Domyślny limit"
@@ -372,6 +382,8 @@ logout = "wyloguj"
 
 [main.targetCharge]
 activate = "Aktywować"
+co2Limit = "Limit CO₂ z {co2}"
+costLimitIgnore = "Skonfigurowany {limit} będzie ignorowany w tym okresie."
 currentPlan = "Plan aktywny"
 descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
 descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}?"
@@ -384,6 +396,7 @@ planPeriodLabel = "Okres"
 planPeriodValue = "{start} do {end}"
 planUnknown = "jeszcze nie wiadomo"
 preview = "Podgląd planu"
+priceLimit = "limit ceny {cena}"
 remove = "Usuń"
 setTargetTime = "brak"
 targetIsAboveLimit = "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany."
@@ -509,6 +522,14 @@ vehicle = "Pojazd"
 allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Interfejs użytkownika"
