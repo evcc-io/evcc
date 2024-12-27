@@ -81,7 +81,6 @@ func (t *Pun) run(done chan error) {
 		var today api.Rates
 		if err := backoff.Retry(func() error {
 			var err error
-			t.log.TRACE.Println(`Current day PUN hourly tariffs import started`)
 			today, err = t.getData(time.Now())
 
 			return err
@@ -105,10 +104,7 @@ func (t *Pun) run(done chan error) {
 		data := append(today, res...)
 
 		mergeRates(t.data, data)
-		once.Do(func() {
-			close(done)
-			t.log.DEBUG.Println(`PUN hourly tariffs import completed`)
-		})
+		once.Do(func() {close(done)})
 	}
 }
 
@@ -164,8 +160,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.log.TRACE.Println(`Decompressing Zip file`)
-
+	
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return nil, err
@@ -180,7 +175,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.log.TRACE.Println(`Opening XML file`)
 	defer f.Close()
 
 	xmlFile, err := io.ReadAll(f)
