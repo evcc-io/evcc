@@ -74,10 +74,6 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		stat.EvInfo.Schedules[0].EndTime = time.Now().Format("15:04") // only hour and minutes
 	}
 
-	// make sure the other charge schedules are disabled in case user changed them
-	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
-	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
-
 	// post new schedule
 	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
 
@@ -94,18 +90,14 @@ func (c *Controller) ConfigureChargeSchedule(schedule *ScheduleData) {
 	schedule.EnableScheduleType = true
 	schedule.RepeatSchedule = true
 	schedule.ScheduleType = "CHARGE"
-	schedule.ScheduledDays.Friday = true
-	schedule.ScheduledDays.Monday = true
-	schedule.ScheduledDays.Saturday = true
-	schedule.ScheduledDays.Sunday = true
-	schedule.ScheduledDays.Thursday = true
-	schedule.ScheduledDays.Tuesday = true
-	schedule.ScheduledDays.Wednesday = true
-}
 
-func (c *Controller) DisableConflictingChargeSchedule(schedule *ScheduleData) {
-	// make sure the other charge schedules are disabled in case user changed them
-	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
-		schedule.EnableScheduleType = false
-	}
+	// only enable for current day to avoid undesired charge start in the future
+	weekday := time.Now().Weekday()
+	schedule.ScheduledDays.Monday = (weekday == time.Monday)
+	schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
+	schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
+	schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
+	schedule.ScheduledDays.Friday = (weekday == time.Friday)
+	schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
+	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 }
