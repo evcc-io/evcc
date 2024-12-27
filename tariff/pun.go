@@ -86,8 +86,6 @@ func (t *Pun) run(done chan error) {
 			return err
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
-
-			t.log.ERROR.Println(err)
 			continue
 		}
 
