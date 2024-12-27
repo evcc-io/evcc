@@ -2,7 +2,7 @@ template: vaillant
 products:
   - brand: Vaillant
     description:
-      generic: Sensonet (SG Ready)
+      generic: SensoNET (SG Ready)
 group: heating
 requirements:
   # evcc: ["sponsorship"]
