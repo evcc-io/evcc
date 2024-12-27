@@ -20,4 +20,4 @@ render: |
   forecast:
     source: http
     uri: https://api.corrently.io/v2.0/gsi/prediction?zip={{ .zip }}&token={{ .token }}
-    jq: '[.forecast[] | {start: (.timeframe.start / 1e3 | todate), end: (.timeframe.end / 1e3 | todate), price: (.co2_g_standard)}] | tostring'
+    jq: '[.forecast[] | {start: .timeframe.start / 1e3 | todate, end: .timeframe.end / 1e3 | todate, price: .co2_g_standard}] | tostring'
