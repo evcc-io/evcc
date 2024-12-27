@@ -42,6 +42,8 @@ type Vaillant struct {
 	systemId string
 }
 
+//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Battery,Soc,func() (float64, error)"
+
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -143,7 +145,26 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		SgReady:  sgr,
 	}
 
-	return res, nil
+	var temp func() (float64, error)
+	if hotWater {
+		temp = func() (float64, error) {
+			system, err := conn.GetSystem(systemId)
+			if err != nil {
+				return 0, err
+			}
+
+			switch {
+			case len(system.State.Dhw) > 0:
+				return system.State.Dhw[0].CurrentDhwTemperature, nil
+			case len(system.State.DomesticHotWater) > 0:
+				return system.State.DomesticHotWater[0].CurrentDomesticHotWaterTemperature, nil
+			default:
+				return 0, api.ErrNotAvailable
+			}
+		}
+	}
+
+	return decorateVaillant(res, temp), nil
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
