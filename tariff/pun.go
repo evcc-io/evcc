@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
-
 	"slices"
 	"strconv"
 	"strings"
@@ -86,6 +85,8 @@ func (t *Pun) run(done chan error) {
 			return err
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
+
+			t.log.ERROR.Println(err)
 			continue
 		}
 
@@ -95,6 +96,7 @@ func (t *Pun) run(done chan error) {
 		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
+			t.log.ERROR.Println(err)
 			continue
 		}
 
