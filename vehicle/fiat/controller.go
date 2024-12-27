@@ -74,6 +74,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		stat.EvInfo.Schedules[0].EndTime = time.Now().Format("15:04") // only hour and minutes
 	}
 
+	// make sure the other charge schedules are disabled in case user changed them
+	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
+	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
+
 	// post new schedule
 	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
 
@@ -100,4 +104,11 @@ func (c *Controller) ConfigureChargeSchedule(schedule *ScheduleData) {
 	schedule.ScheduledDays.Friday = (weekday == time.Friday)
 	schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
 	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
+}
+
+func (c *Controller) DisableConflictingChargeSchedule(schedule *ScheduleData) {
+	// make sure the other charge schedules are disabled in case user changed them
+	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
+		schedule.EnableScheduleType = false
+	}
 }
