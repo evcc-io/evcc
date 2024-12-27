@@ -34,19 +34,18 @@ func init() {
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed                      `mapstructure:",squash"`
-		sensonet.CredentialsStruct `mapstructure:",squash"`
-		HeatingZone                int
-		HeatingSetpoint            float32
-		Phases                     int
+		embed           `mapstructure:",squash"`
+		User, Password  string
+		Realm           string
+		HeatingZone     int
+		HeatingSetpoint float32
+		Phases          int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		CredentialsStruct: sensonet.CredentialsStruct{
-			Realm: sensonet.REALM_GERMANY,
-		},
+		Realm:  sensonet.REALM_GERMANY,
 		Phases: 1,
 	}
 
