@@ -160,11 +160,12 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
-	if t.typ != 0 {
+	switch {
+	case t.typ != 0:
 		return t.typ
-	}
-	if t.priceG != nil {
+	case t.priceG != nil:
 		return api.TariffTypePriceDynamic
+	default:
+		return api.TariffTypePriceForecast
 	}
-	return api.TariffTypePriceForecast
 }
