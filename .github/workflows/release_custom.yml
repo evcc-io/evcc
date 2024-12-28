@@ -3,10 +3,10 @@ name: docker build custom
 env:
   GO_VERSION: ^1.23
 
-on:
-  push:
-    tags:
-      - "*"
+# on:
+#   push:
+#     tags:
+#       - "*"
 
 jobs:
   call-build-workflow:
