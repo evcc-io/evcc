@@ -37,6 +37,7 @@ type typeStruct struct {
 var a struct {
 	api.Meter
 	api.EnergyImport
+	api.EnergyExport
 	api.PhaseCurrents
 	api.PhaseVoltages
 	api.PhasePowers
@@ -55,7 +56,7 @@ func typ(i any) string {
 }
 
 var dependents = map[string][]string{
-	typ(&a.Meter):         {typ(&a.EnergyImport), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPower)},
+	typ(&a.Meter):         {typ(&a.EnergyImport), typ(&a.EnergyExport), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPower)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
 	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},
