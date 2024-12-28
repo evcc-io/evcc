@@ -596,6 +596,7 @@ vehicleLimit = "Fordonsgräns."
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."
+unknown = ""
 
 [notifications]
 dismissAll = "Avvisa alla"
