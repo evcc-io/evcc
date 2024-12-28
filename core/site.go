@@ -577,8 +577,8 @@ func (site *Site) updateExtMeters() {
 
 		// ext export energy
 		var export float64
-		if m, ok := meter.(api.EnergyImport); err == nil && ok {
-			export, err = m.EnergyImport()
+		if m, ok := meter.(api.EnergyExport); err == nil && ok {
+			export, err = m.EnergyExport()
 			if err != nil {
 				site.log.ERROR.Printf("ext meter %d export: %v", i+1, err)
 			}
