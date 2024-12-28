@@ -105,9 +105,9 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, api.ErrSponsorRequired
+	// }
 
 	done := make(chan struct{})
 
