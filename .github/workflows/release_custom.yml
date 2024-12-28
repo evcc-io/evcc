@@ -1,4 +1,4 @@
-name: Release_custom
+name: docker build custom
 
 env:
   GO_VERSION: ^1.23
@@ -51,104 +51,104 @@ jobs:
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: ${{ steps.meta.outputs.tags }}
 
-  apt:
-    name: Github & APT
-    needs:
-      - call-build-workflow
-    runs-on: ubuntu-latest
+  # apt:
+  #   name: Github & APT
+  #   needs:
+  #     - call-build-workflow
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-        id: go
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
+  #       id: go
 
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
+  #     - name: Patch ASN1
+  #       run: make patch-asn1-sudo
 
-      - name: Get dist from cache
-        uses: actions/cache/restore@v4
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
+  #     - name: Get dist from cache
+  #       uses: actions/cache/restore@v4
+  #       id: cache-dist
+  #       with:
+  #         path: dist
+  #         key: ${{ runner.os }}-${{ github.sha }}-dist
 
-      # gokrazy image
-      # - name: Prepare Image
-      #   run: |
-      #     make prepare-image
-      #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
-      #     mkdir /home/runner/.config/gokrazy
-      #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
+  #     # gokrazy image
+  #     # - name: Prepare Image
+  #     #   run: |
+  #     #     make prepare-image
+  #     #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
+  #     #     mkdir /home/runner/.config/gokrazy
+  #     #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
 
-      # - name: Build Image
-      #   run: make image
+  #     # - name: Build Image
+  #     #   run: make image
 
-      # - name: Build Root Filesystem
-      #   run: make image-rootfs
+  #     # - name: Build Root Filesystem
+  #     #   run: make image-rootfs
 
-      - name: Create Github Release
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: latest
-          args: release --clean
-        env:
-          # use GH_TOKEN for access to evcc-io/homebrew-tap
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
+  #     - name: Create Github Release
+  #       uses: goreleaser/goreleaser-action@v6
+  #       with:
+  #         version: latest
+  #         args: release --clean
+  #       env:
+  #         # use GH_TOKEN for access to evcc-io/homebrew-tap
+  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  #         TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: 3.12
 
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
+  #     - name: Install Cloudsmith CLI
+  #       run: pip install --upgrade cloudsmith-cli
 
-      - name: Publish .deb to Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: make apt-release
+  #     - name: Publish .deb to Cloudsmith
+  #       env:
+  #         CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+  #       run: make apt-release
 
-  demo:
-    name: Demo
-    needs:
-      - docker
-    runs-on: ubuntu-latest
-    env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --local-only --config packaging/fly.toml
+  # demo:
+  #   name: Demo
+  #   needs:
+  #     - docker
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: superfly/flyctl-actions/setup-flyctl@master
+  #     - run: flyctl deploy --local-only --config packaging/fly.toml
 
-  hassio:
-    name: Hassio Addon
-    needs:
-      - docker
-    runs-on: ubuntu-latest
+  # hassio:
+  #   name: Hassio Addon
+  #   needs:
+  #     - docker
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@master
-        with:
-          repository: evcc-io/hassio-addon
-          token: ${{ secrets.GH_TOKEN }}
-          path: ./hassio
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@master
+  #       with:
+  #         repository: evcc-io/hassio-addon
+  #         token: ${{ secrets.GH_TOKEN }}
+  #         path: ./hassio
 
-      - name: Update version
-        run: |
-          sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
+  #     - name: Update version
+  #       run: |
+  #         sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
 
-      - name: Push
-        run: |
-          cd ./hassio
-          git add .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -am "Mirror evcc release"
-          git push
+  #     - name: Push
+  #       run: |
+  #         cd ./hassio
+  #         git add .
+  #         git config user.name github-actions
+  #         git config user.email github-actions@github.com
+  #         git commit -am "Mirror evcc release"
+  #         git push
