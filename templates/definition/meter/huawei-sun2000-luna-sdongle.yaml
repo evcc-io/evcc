@@ -11,13 +11,28 @@ capabilities:
 requirements:
   description:
     de: |
-      Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Netz und Batterie erfordern den PowerSensor.
+      "Modbus/TCP" erfordert die Freischaltung über den "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+
+      Um Netzladen zu aktivieren, muss zunächst ein Zeitfenster in der Fusion Solar App oder im Web erstellt werden. Gehen Sie wie folgt vor:
+      1. Gehe zu "Geräte" -> "Dongle-XXX" -> "Parametereinstellungen" 
+      2. Setze "Arbeitsmodus" auf Zeitsteuerung.
+      3. Erstelle ein Zeitfenster von 00:00 - 23:59 – Laden – Wiederholen "täglich".
+      4. Bestätige die Einstellungen.
+      5. Nach der Übernahme den Arbeitsmodus wieder auf "Maximaler Eigenverbrauch" zurückstellen und bestätigen.
     en: |
-      Grid and Battery require the PowerSensor.
-      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
+      Grid and battery require the PowerSensor.
+      "Modbus/TCP" requires activation via "Installer Access" in the communication settings of the inverter. 
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+
+      To enable grid charging, a time window must first be created in the Fusion Solar app or web interface. Proceed as follows:
+      1. Go to "Devices" -> "Dongle-XXX" -> "Parameter Settings" 
+      2. Set "Operating Mode" to Time Control.
+      3. Create a time window from 00:00 - 23:59 – Charge – Repeat "Daily".
+      4. Confirm the settings.
+      5. Once applied, switch the operating mode back to "Maximum Self-Consumption" and confirm.
+
 params:
   - name: usage
     choice:
@@ -40,7 +55,7 @@ params:
     description:
       de: Maximale Entladeleistung im Normalbetrieb
     help:
-      de: Maximale Leistung, welche die Luna im Normalbetrieb abgeben kann. (2500W default)
+      de: Maximale Leistung, welche die Luna im Normalbetrieb abgeben kann. (2500W default für 5kWh Speicher)
   - name: powerfromgrid
     default: 2500 # W
     description:
@@ -58,7 +73,7 @@ params:
       de: Wechselrichterkaskade
     help:
       en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für z.b. Wechselrichterkaskaden. Verhindert Stand-by.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
