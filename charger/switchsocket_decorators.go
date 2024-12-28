@@ -6,19 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error)) api.Charger {
+func decorateSwitchSocket(base *SwitchSocket, energyImport func() (float64, error)) api.Charger {
 	switch {
-	case meterEnergy == nil:
+	case energyImport == nil:
 		return base
 
-	case meterEnergy != nil:
+	case energyImport != nil:
 		return &struct {
 			*SwitchSocket
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			SwitchSocket: base,
-			MeterEnergy: &decorateSwitchSocketMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateSwitchSocketEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error
 	return nil
 }
 
-type decorateSwitchSocketMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateSwitchSocketEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateSwitchSocketMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateSwitchSocketEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }

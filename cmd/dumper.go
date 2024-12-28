@@ -52,8 +52,8 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterEnergy); ok {
-		if energy, err := v.TotalEnergy(); err != nil {
+	if v, ok := v.(api.EnergyImport); ok {
+		if energy, err := v.EnergyImport(); err != nil {
 			fmt.Fprintf(w, "Energy:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Energy:\t%.1fkWh\n", energy)

@@ -7,16 +7,21 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,EnergyImport,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
 
-// MeterEnergy provides total energy in kWh
-type MeterEnergy interface {
-	TotalEnergy() (float64, error)
+// EnergyImport provides imported energy in kWh
+type EnergyImport interface {
+	EnergyImport() (float64, error)
+}
+
+// EnergyExport provides exported energy in kWh
+type EnergyExport interface {
+	EnergyExport() (float64, error)
 }
 
 // PhaseCurrents provides per-phase current A

@@ -104,9 +104,9 @@ func (c *FritzDECT) Enable(enable bool) error {
 	return err
 }
 
-var _ api.MeterEnergy = (*FritzDECT)(nil)
+var _ api.EnergyImport = (*FritzDECT)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *FritzDECT) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+// EnergyImport implements the api.EnergyImport interface
+func (c *FritzDECT) EnergyImport() (float64, error) {
+	return c.conn.EnergyImport()
 }

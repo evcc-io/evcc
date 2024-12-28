@@ -210,10 +210,10 @@ func (wb *WebastoNext) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*WebastoNext)(nil)
+var _ api.EnergyImport = (*WebastoNext)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *WebastoNext) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *WebastoNext) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegEnergyMeter, 2)
 	if err != nil {
 		return 0, err

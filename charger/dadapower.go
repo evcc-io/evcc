@@ -189,10 +189,10 @@ func (wb *Dadapower) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*Dadapower)(nil)
+var _ api.EnergyImport = (*Dadapower)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Dadapower) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Dadapower) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyImportTotal+wb.regOffset, 4)
 	if err != nil {
 		return 0, err

@@ -321,7 +321,7 @@ func (site *Site) restoreSettings() error {
 
 func meterCapabilities(name string, meter interface{}) string {
 	_, power := meter.(api.Meter)
-	_, energy := meter.(api.MeterEnergy)
+	_, energy := meter.(api.EnergyImport)
 	_, currents := meter.(api.PhaseCurrents)
 
 	name += ":"
@@ -393,7 +393,7 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
-		_, energy := lp.charger.(api.MeterEnergy)
+		_, energy := lp.charger.(api.EnergyImport)
 		_, currents := lp.charger.(api.PhaseCurrents)
 		_, phases := lp.charger.(api.PhaseSwitcher)
 		_, wakeup := lp.charger.(api.Resurrector)
@@ -457,8 +457,8 @@ func (site *Site) updatePvMeters() {
 
 		// energy (production)
 		var energy float64
-		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-			energy, err = m.TotalEnergy()
+		if m, ok := meter.(api.EnergyImport); err == nil && ok {
+			energy, err = m.EnergyImport()
 			if err != nil {
 				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
 			}
@@ -566,8 +566,8 @@ func (site *Site) updateExtMeters() {
 
 		// ext energy
 		var energy float64
-		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-			energy, err = m.TotalEnergy()
+		if m, ok := meter.(api.EnergyImport); err == nil && ok {
+			energy, err = m.EnergyImport()
 			if err != nil {
 				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
 			}
@@ -605,8 +605,8 @@ func (site *Site) updateBatteryMeters() error {
 
 		// battery energy (discharge)
 		var energy float64
-		if m, ok := meter.(api.MeterEnergy); ok {
-			energy, err = m.TotalEnergy()
+		if m, ok := meter.(api.EnergyImport); ok {
+			energy, err = m.EnergyImport()
 			if err != nil {
 				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
 			}
@@ -727,8 +727,8 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid energy (import)
-	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
-		if f, err := energyMeter.TotalEnergy(); err == nil {
+	if energyMeter, ok := site.gridMeter.(api.EnergyImport); ok {
+		if f, err := energyMeter.EnergyImport(); err == nil {
 			site.publish(keys.GridEnergy, f)
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)

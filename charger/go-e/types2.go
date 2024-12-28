@@ -44,7 +44,7 @@ func (g *StatusResponse2) ChargedEnergy() float64 {
 	return g.Wh / 1e3
 }
 
-func (g *StatusResponse2) TotalEnergy() float64 {
+func (g *StatusResponse2) EnergyImport() float64 {
 	return float64(g.Eto) / 1e3
 }
 

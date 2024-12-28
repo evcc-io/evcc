@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil:
+	case energyImport == nil && meter == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
+	case energyImport == nil && meter != nil && phaseCurrents == nil:
 		return &struct {
 			*KebaUdp
 			api.Meter
@@ -22,22 +22,33 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
+	case energyImport != nil && meter == nil:
 		return &struct {
 			*KebaUdp
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			KebaUdp: base,
-			Meter: &decorateKebaUdpMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaUdpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateKebaUdpEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
+	case energyImport != nil && meter != nil && phaseCurrents == nil:
+		return &struct {
+			*KebaUdp
+			api.EnergyImport
+			api.Meter
+		}{
+			KebaUdp: base,
+			EnergyImport: &decorateKebaUdpEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateKebaUdpMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case energyImport == nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*KebaUdp
 			api.Meter
@@ -52,19 +63,19 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
+	case energyImport != nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*KebaUdp
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			KebaUdp: base,
+			EnergyImport: &decorateKebaUdpEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateKebaUdpMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateKebaUdpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateKebaUdpPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -75,20 +86,20 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 	return nil
 }
 
+type decorateKebaUdpEnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decorateKebaUdpEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decorateKebaUdpMeterImpl struct {
 	meter func() (float64, error)
 }
 
 func (impl *decorateKebaUdpMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decorateKebaUdpMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateKebaUdpMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decorateKebaUdpPhaseCurrentsImpl struct {

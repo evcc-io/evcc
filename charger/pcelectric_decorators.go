@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decoratePCE(base *PCElectric, meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil:
+	case energyImport == nil && meter == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil:
+	case energyImport == nil && meter != nil && phaseCurrents == nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -22,22 +22,33 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
+	case energyImport != nil && meter == nil:
 		return &struct {
 			*PCElectric
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			PCElectric: base,
-			Meter: &decoratePCEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decoratePCEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
+	case energyImport != nil && meter != nil && phaseCurrents == nil:
+		return &struct {
+			*PCElectric
+			api.EnergyImport
+			api.Meter
+		}{
+			PCElectric: base,
+			EnergyImport: &decoratePCEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decoratePCEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case energyImport == nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -52,19 +63,19 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil:
+	case energyImport != nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*PCElectric
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			PCElectric: base,
+			EnergyImport: &decoratePCEEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decoratePCEMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -75,20 +86,20 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 	return nil
 }
 
+type decoratePCEEnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decoratePCEEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decoratePCEMeterImpl struct {
 	meter func() (float64, error)
 }
 
 func (impl *decoratePCEMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decoratePCEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decoratePCEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decoratePCEPhaseCurrentsImpl struct {

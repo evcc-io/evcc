@@ -712,7 +712,7 @@ type decorateModbusMbmdMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateModbusMbmdMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateModbusMbmdMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }
 

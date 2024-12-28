@@ -190,6 +190,6 @@ type decoratePowerWallMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decoratePowerWallMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decoratePowerWallMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }

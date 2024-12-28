@@ -61,7 +61,7 @@ func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -191,7 +191,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	if wb.isWallbe {
 		b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWallbe, 4)

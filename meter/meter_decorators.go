@@ -2852,7 +2852,7 @@ type decorateMeterMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateMeterMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateMeterMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }
 

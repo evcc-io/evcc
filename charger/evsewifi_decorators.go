@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
+func decorateEVSE(base *EVSEWifi, meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	switch {
-	case chargerEx == nil && identifier == nil && meter == nil:
+	case chargerEx == nil && energyImport == nil && identifier == nil && meter == nil:
 		return base
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
 			api.Meter
@@ -22,22 +22,33 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport != nil && identifier == nil && meter == nil:
 		return &struct {
 			*EVSEWifi
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.EnergyImport
+			api.Meter
+		}{
+			EVSEWifi: base,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
 			api.Meter
@@ -52,156 +63,16 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Meter
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter == nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
-			api.Meter
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
@@ -211,82 +82,70 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
+			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.EnergyImport
+			api.Meter
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
-			api.Meter
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
 			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
@@ -299,13 +158,113 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx != nil && energyImport == nil && identifier == nil && meter == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
 			api.ChargerEx
 			api.Meter
-			api.MeterEnergy
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier == nil && meter == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Meter
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Meter
 			api.PhaseCurrents
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Meter
+			api.PhaseCurrents
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Meter
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
@@ -315,114 +274,25 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
 			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter == nil:
+	case chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.Identifier
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
-			api.Meter
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
+			api.ChargerEx
+			api.EnergyImport
 			api.Meter
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
@@ -432,40 +302,17 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.Identifier
+			api.ChargerEx
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
@@ -478,24 +325,24 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.Identifier
+			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -505,31 +352,57 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter == nil:
+	case chargerEx == nil && energyImport == nil && identifier != nil && meter == nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
 			api.Identifier
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.Identifier
+			api.Meter
+		}{
+			EVSEWifi: base,
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx == nil && energyImport != nil && identifier != nil && meter == nil:
+		return &struct {
+			*EVSEWifi
+			api.EnergyImport
+			api.Identifier
+		}{
+			EVSEWifi: base,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
@@ -539,40 +412,36 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
 			api.Identifier
 			api.Meter
 			api.PhaseCurrents
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			EVSEWifi: base,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
@@ -585,45 +454,14 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateEVSEIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateEVSEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*EVSEWifi
-			api.ChargerEx
 			api.Identifier
 			api.Meter
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
-			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
 			},
@@ -635,18 +473,17 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
@@ -654,26 +491,46 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*EVSEWifi
-			api.ChargerEx
 			api.Identifier
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			EVSEWifi: base,
-			ChargerEx: &decorateEVSEChargerExImpl{
-				chargerEx: chargerEx,
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateEVSEIdentifierImpl{
 				identifier: identifier,
@@ -689,13 +546,188 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx != nil && energyImport == nil && identifier != nil && meter == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Identifier
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*EVSEWifi
 			api.ChargerEx
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier != nil && meter == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.Identifier
+			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -709,8 +741,36 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateEVSEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateEVSEPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*EVSEWifi
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			EVSEWifi: base,
+			ChargerEx: &decorateEVSEChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateEVSEEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateEVSEIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateEVSEPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -732,6 +792,14 @@ func (impl *decorateEVSEChargerExImpl) MaxCurrentMillis(p0 float64) error {
 	return impl.chargerEx(p0)
 }
 
+type decorateEVSEEnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decorateEVSEEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decorateEVSEIdentifierImpl struct {
 	identifier func() (string, error)
 }
@@ -746,14 +814,6 @@ type decorateEVSEMeterImpl struct {
 
 func (impl *decorateEVSEMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decorateEVSEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateEVSEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decorateEVSEPhaseCurrentsImpl struct {

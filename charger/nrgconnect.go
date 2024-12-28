@@ -185,10 +185,10 @@ func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	return res.ChargingPower * 1e3, err
 }
 
-var _ api.MeterEnergy = (*NRGKickConnect)(nil)
+var _ api.EnergyImport = (*NRGKickConnect)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (nrg *NRGKickConnect) EnergyImport() (float64, error) {
 	res, err := nrg.measurementsG.Get()
 	if err != nil {
 		return 0, err
@@ -217,7 +217,7 @@ func (nrg *NRGKickConnect) Currents() (float64, float64, float64, error) {
 }
 
 // ChargedEnergy implements the ChargeRater interface
-// NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
+// NOTE: apparently shows energy of a stopped charging session, hence substituted by EnergyImport
 // func (nrg *NRGKickConnect) ChargedEnergy() (float64, error) {
 // 	var res connect.Measurements
 // 	err := nrg.GetJSON(nrg.apiURL(connect.MeasurementsPath), &res)

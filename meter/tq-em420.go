@@ -147,9 +147,9 @@ func (m *TqEM420) CurrentPower() (float64, error) {
 	return (res.SmartMeter.Values.ActivePowerP - res.SmartMeter.Values.ActivePowerM) / 1e3, err
 }
 
-var _ api.MeterEnergy = (*TqEM420)(nil)
+var _ api.EnergyImport = (*TqEM420)(nil)
 
-func (m *TqEM420) TotalEnergy() (float64, error) {
+func (m *TqEM420) EnergyImport() (float64, error) {
 	res, err := m.dataG()
 	return res.SmartMeter.Values.ActiveEnergyP / 1e6, err
 }

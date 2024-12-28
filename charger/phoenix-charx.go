@@ -45,7 +45,7 @@ func init() {
 	registry.Add("phoenix-charx", NewPhoenixCharxFromConfig)
 }
 
-//go:generate decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
 func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -200,7 +200,7 @@ func (wb *PhoenixCharx) currentPower() (float64, error) {
 	return float64(encoding.Int32(b)) / 1e3, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnergy), 4)
 	if err != nil {

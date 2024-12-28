@@ -106,6 +106,6 @@ type decorateLgEssMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateLgEssMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateLgEssMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }

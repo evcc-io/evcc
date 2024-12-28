@@ -20,7 +20,7 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go run ./decorate.go -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ./decorate.go -f decorateTest -b api.Charger -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -36,7 +36,7 @@ type typeStruct struct {
 
 var a struct {
 	api.Meter
-	api.MeterEnergy
+	api.EnergyImport
 	api.PhaseCurrents
 	api.PhaseVoltages
 	api.PhasePowers
@@ -55,7 +55,7 @@ func typ(i any) string {
 }
 
 var dependents = map[string][]string{
-	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPower)},
+	typ(&a.Meter):         {typ(&a.EnergyImport), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPower)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
 	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},

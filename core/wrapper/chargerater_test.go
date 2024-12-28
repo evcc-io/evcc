@@ -74,7 +74,7 @@ func TestWrappedMeter(t *testing.T) {
 	clck := clock.NewMock()
 	cr.clck = clck
 
-	me.EXPECT().TotalEnergy().Return(2.0, nil)
+	me.EXPECT().EnergyImport().Return(2.0, nil)
 
 	cr.StartCharge(false)
 
@@ -84,7 +84,7 @@ func TestWrappedMeter(t *testing.T) {
 	clck.Add(time.Hour)
 	cr.SetChargePower(0)
 
-	me.EXPECT().TotalEnergy().Return(3.0, nil)
+	me.EXPECT().EnergyImport().Return(3.0, nil)
 
 	cr.StopCharge()
 
@@ -97,12 +97,12 @@ func TestWrappedMeter(t *testing.T) {
 	cr.SetChargePower(1e3)
 
 	// continue
-	me.EXPECT().TotalEnergy().Return(10.0, nil)
+	me.EXPECT().EnergyImport().Return(10.0, nil)
 
 	cr.StartCharge(true)
 	clck.Add(time.Hour) // actual timing ignored as energy comes from meter
 
-	me.EXPECT().TotalEnergy().Return(12.0, nil)
+	me.EXPECT().EnergyImport().Return(12.0, nil)
 
 	cr.StopCharge()
 

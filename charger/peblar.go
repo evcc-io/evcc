@@ -205,7 +205,7 @@ func (wb *Peblar) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*Peblar)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.EnergyImport interface
 func (wb *Peblar) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(peblarRegSessionEnergy, 4)
 	if err != nil {
@@ -215,8 +215,8 @@ func (wb *Peblar) ChargedEnergy() (float64, error) {
 	return float64(encoding.Int64(b)) / 1e3, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Peblar) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Peblar) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(peblarRegEnergyTotal, 4)
 	if err != nil {
 		return 0, err

@@ -24,14 +24,14 @@ func (sh *EnergyMeter) CurrentPower() (float64, error) {
 	return res.TotalPower, nil
 }
 
-// TotalEnergy implements the api.Meter interface
-func (sh *EnergyMeter) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.Meter interface
+func (sh *EnergyMeter) EnergyImport() (float64, error) {
 	var res Gen2EmDataStatusResponse
 	if err := sh.Connection.execGen2Cmd("EMData.GetStatus", false, &res); err != nil {
 		return 0, err
 	}
 
-	return res.TotalEnergy / 1000, nil
+	return res.EnergyImport / 1000, nil
 }
 
 var _ api.PhaseCurrents = (*EnergyMeter)(nil)

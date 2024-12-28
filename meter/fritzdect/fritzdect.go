@@ -121,10 +121,10 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return power / 1000, err // mW ==> W
 }
 
-var _ api.MeterEnergy = (*Connection)(nil)
+var _ api.EnergyImport = (*Connection)(nil)
 
-// CurrentPower implements the api.MeterEnergy interface
-func (c *Connection) TotalEnergy() (float64, error) {
+// CurrentPower implements the api.EnergyImport interface
+func (c *Connection) EnergyImport() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
 	if err != nil {

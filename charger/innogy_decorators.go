@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateInnogy(base *Innogy, energyImport func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meterEnergy == nil && phaseVoltages == nil:
+	case energyImport == nil && phaseVoltages == nil:
 		return base
 
-	case meterEnergy != nil && phaseVoltages == nil:
+	case energyImport != nil && phaseVoltages == nil:
 		return &struct {
 			*Innogy
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Innogy: base,
-			MeterEnergy: &decorateInnogyMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateInnogyEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meterEnergy == nil && phaseVoltages != nil:
+	case energyImport == nil && phaseVoltages != nil:
 		return &struct {
 			*Innogy
 			api.PhaseVoltages
@@ -33,15 +33,15 @@ func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVolt
 			},
 		}
 
-	case meterEnergy != nil && phaseVoltages != nil:
+	case energyImport != nil && phaseVoltages != nil:
 		return &struct {
 			*Innogy
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseVoltages
 		}{
 			Innogy: base,
-			MeterEnergy: &decorateInnogyMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateInnogyEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseVoltages: &decorateInnogyPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
@@ -52,12 +52,12 @@ func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVolt
 	return nil
 }
 
-type decorateInnogyMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateInnogyEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateInnogyMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateInnogyEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }
 
 type decorateInnogyPhaseVoltagesImpl struct {

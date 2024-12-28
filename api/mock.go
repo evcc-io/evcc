@@ -394,19 +394,19 @@ func (m *MockMeterEnergy) EXPECT() *MockMeterEnergyMockRecorder {
 	return m.recorder
 }
 
-// TotalEnergy mocks base method.
-func (m *MockMeterEnergy) TotalEnergy() (float64, error) {
+// EnergyImport mocks base method.
+func (m *MockMeterEnergy) EnergyImport() (float64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalEnergy")
+	ret := m.ctrl.Call(m, "EnergyImport")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalEnergy indicates an expected call of TotalEnergy.
-func (mr *MockMeterEnergyMockRecorder) TotalEnergy() *gomock.Call {
+// EnergyImport indicates an expected call of EnergyImport.
+func (mr *MockMeterEnergyMockRecorder) EnergyImport() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalEnergy", reflect.TypeOf((*MockMeterEnergy)(nil).TotalEnergy))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnergyImport", reflect.TypeOf((*MockMeterEnergy)(nil).EnergyImport))
 }
 
 // MockPhaseCurrents is a mock of PhaseCurrents interface.

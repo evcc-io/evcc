@@ -56,7 +56,7 @@ type decorateDsmrMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateDsmrMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateDsmrMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }
 

@@ -1596,7 +1596,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
-	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
+	if _, ok := lp.chargeMeter.(api.EnergyImport); ok {
 		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
 	}
 }

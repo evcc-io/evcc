@@ -199,7 +199,7 @@ func (wb *ABB) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*ABB)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.EnergyImport interface
 func (wb *ABB) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(abbRegEnergy, 2)
 	if err != nil {

@@ -184,10 +184,10 @@ func (wb *Weidmüller) CurrentPower() (float64, error) {
 	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
-var _ api.MeterEnergy = (*Weidmüller)(nil)
+var _ api.EnergyImport = (*Weidmüller)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Weidmüller) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Weidmüller) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

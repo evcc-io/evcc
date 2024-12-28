@@ -106,6 +106,6 @@ type decorateRCTMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateRCTMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateRCTMeterEnergyImpl) EnergyImport() (float64, error) {
 	return impl.meterEnergy()
 }

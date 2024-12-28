@@ -274,7 +274,7 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-func (conn *Connector) TotalEnergy() (float64, error) {
+func (conn *Connector) EnergyImport() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
 	}

@@ -49,10 +49,10 @@ func (m *Blueprint) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterEnergy = (*Blueprint)(nil)
+var _ api.EnergyImport = (*Blueprint)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *Blueprint) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (m *Blueprint) EnergyImport() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 

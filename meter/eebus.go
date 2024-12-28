@@ -127,7 +127,7 @@ func (c *EEBus) CurrentPower() (float64, error) {
 	return c.power.Get()
 }
 
-func (c *EEBus) TotalEnergy() (float64, error) {
+func (c *EEBus) EnergyImport() (float64, error) {
 	return c.energy.Get()
 }
 

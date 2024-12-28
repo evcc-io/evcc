@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return base
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -22,7 +22,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -33,7 +33,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -48,7 +48,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -59,7 +59,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -74,7 +74,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -89,7 +89,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -108,7 +108,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Resurrector
@@ -119,7 +119,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -134,7 +134,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -149,7 +149,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -168,7 +168,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -183,7 +183,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -202,7 +202,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -221,7 +221,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -244,7 +244,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -255,7 +255,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -270,7 +270,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -285,7 +285,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -304,7 +304,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -319,7 +319,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -338,7 +338,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -357,7 +357,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -380,7 +380,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -395,7 +395,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -414,7 +414,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -433,7 +433,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -456,7 +456,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -475,7 +475,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -498,7 +498,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -521,7 +521,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -548,7 +548,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -559,7 +559,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -574,7 +574,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -589,7 +589,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -608,7 +608,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -623,7 +623,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -642,7 +642,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -661,7 +661,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -684,7 +684,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -699,7 +699,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -718,7 +718,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -737,7 +737,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -760,7 +760,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -779,7 +779,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -802,7 +802,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -825,7 +825,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -852,7 +852,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -867,7 +867,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -886,7 +886,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -905,7 +905,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -928,7 +928,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -947,7 +947,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -970,7 +970,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -993,7 +993,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1020,7 +1020,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1039,7 +1039,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1062,7 +1062,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1085,7 +1085,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1112,7 +1112,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1135,7 +1135,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1162,7 +1162,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1189,7 +1189,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -1220,70 +1220,745 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.Identifier
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.Resurrector
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.Identifier
+			api.Resurrector
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.Identifier
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.Identifier
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
+		return &struct {
+			*Charger
+			api.Battery
+			api.ChargerEx
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+			api.Resurrector
+		}{
+			Charger: base,
+			Battery: &decorateCustomBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateCustomChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateCustomIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			Resurrector: &decorateCustomResurrectorImpl{
+				resurrector: resurrector,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+		return &struct {
+			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1291,88 +1966,88 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1380,91 +2055,91 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1472,29 +2147,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1503,25 +2175,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1530,25 +2202,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1557,19 +2229,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1577,9 +2252,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1588,32 +2260,32 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
@@ -1621,26 +2293,29 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1648,19 +2323,16 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
@@ -1668,6 +2340,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1675,41 +2350,38 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
@@ -1718,30 +2390,33 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1749,22 +2424,19 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 		}{
 			Charger: base,
@@ -1773,6 +2445,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1780,44 +2455,41 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
@@ -1826,30 +2498,33 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1857,22 +2532,19 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.Resurrector
 		}{
 			Charger: base,
@@ -1881,6 +2553,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1888,33 +2563,30 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1923,13 +2595,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
@@ -1939,13 +2611,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1954,19 +2626,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -1974,9 +2649,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -1985,14 +2657,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
@@ -2002,6 +2674,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -2009,9 +2684,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -2020,7 +2692,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2035,7 +2707,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2054,7 +2726,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2073,7 +2745,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2096,7 +2768,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2115,7 +2787,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2138,7 +2810,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2161,7 +2833,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2188,7 +2860,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2207,7 +2879,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2230,7 +2902,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2253,7 +2925,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2280,7 +2952,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2303,7 +2975,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2330,7 +3002,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2357,7 +3029,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2388,7 +3060,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2407,7 +3079,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2430,7 +3102,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2453,7 +3125,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2480,7 +3152,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2503,7 +3175,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2530,7 +3202,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2557,7 +3229,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2588,7 +3260,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2611,7 +3283,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2638,7 +3310,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2665,7 +3337,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2696,7 +3368,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2723,7 +3395,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2754,7 +3426,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2785,7 +3457,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -2820,83 +3492,86 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -2904,29 +3579,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -2935,25 +3607,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -2962,25 +3634,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -2989,19 +3661,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3009,9 +3684,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3020,21 +3692,21 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3043,25 +3715,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3070,25 +3742,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3097,19 +3769,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3117,9 +3792,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3128,22 +3800,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3155,12 +3827,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3168,13 +3840,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3186,26 +3858,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3217,13 +3889,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3231,6 +3903,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3238,9 +3913,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3252,36 +3924,36 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
@@ -3290,30 +3962,33 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3321,22 +3996,19 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Charger: base,
@@ -3345,6 +4017,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3352,33 +4027,30 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3387,13 +4059,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
@@ -3403,13 +4075,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3418,19 +4090,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3438,9 +4113,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3449,14 +4121,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 		}{
@@ -3466,6 +4138,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3473,9 +4148,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3484,25 +4156,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3511,13 +4183,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
@@ -3527,13 +4199,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3542,19 +4214,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3562,9 +4237,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3573,14 +4245,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.Resurrector
 		}{
@@ -3590,6 +4262,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3597,9 +4272,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3608,12 +4280,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3621,13 +4293,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3639,13 +4311,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3656,13 +4328,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3674,13 +4346,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3688,6 +4360,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3695,9 +4370,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3709,14 +4381,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.Resurrector
@@ -3727,6 +4399,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -3734,9 +4409,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -3748,7 +4420,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -3763,7 +4435,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3782,7 +4454,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -3801,7 +4473,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3824,7 +4496,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -3843,7 +4515,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3866,7 +4538,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -3889,7 +4561,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3916,7 +4588,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -3935,7 +4607,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3958,7 +4630,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -3981,7 +4653,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4008,7 +4680,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -4031,7 +4703,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4058,7 +4730,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -4085,7 +4757,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4116,7 +4788,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4135,7 +4807,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4158,7 +4830,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4181,7 +4853,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4208,7 +4880,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4231,7 +4903,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4258,7 +4930,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4285,7 +4957,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4316,7 +4988,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4339,7 +5011,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4366,7 +5038,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4393,7 +5065,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4424,7 +5096,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4451,7 +5123,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4482,7 +5154,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4513,7 +5185,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -4548,83 +5220,86 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -4632,29 +5307,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4663,25 +5335,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4690,25 +5362,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4717,19 +5389,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -4737,9 +5412,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4748,21 +5420,21 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -4771,25 +5443,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -4798,25 +5470,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -4825,19 +5497,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -4845,9 +5520,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -4856,22 +5528,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4883,12 +5555,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -4896,13 +5568,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4914,26 +5586,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4945,13 +5617,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -4959,6 +5631,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -4966,9 +5641,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -4980,36 +5652,36 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
@@ -5018,30 +5690,33 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5049,22 +5724,19 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Charger: base,
@@ -5073,6 +5745,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5080,33 +5755,30 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5115,13 +5787,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
@@ -5131,13 +5803,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5146,19 +5818,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5166,9 +5841,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5177,14 +5849,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
@@ -5194,6 +5866,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5201,9 +5876,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5212,25 +5884,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -5239,13 +5911,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
@@ -5255,13 +5927,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -5270,19 +5942,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5290,9 +5965,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -5301,14 +5973,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseVoltages
 			api.Resurrector
 		}{
@@ -5318,6 +5990,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5325,9 +6000,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
@@ -5336,12 +6008,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -5349,13 +6021,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5367,13 +6039,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -5384,13 +6056,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5402,13 +6074,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -5416,6 +6088,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5423,9 +6098,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5437,14 +6109,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
@@ -5455,6 +6127,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -5462,9 +6137,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -5476,7 +6148,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -5495,7 +6167,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5518,7 +6190,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -5541,7 +6213,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5568,7 +6240,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -5591,7 +6263,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5618,7 +6290,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -5645,7 +6317,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5676,7 +6348,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -5699,7 +6371,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5726,7 +6398,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -5753,7 +6425,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5784,7 +6456,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -5811,7 +6483,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5842,7 +6514,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -5873,7 +6545,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5908,7 +6580,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -5931,7 +6603,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -5958,7 +6630,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -5985,7 +6657,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6016,7 +6688,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6043,7 +6715,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6074,7 +6746,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6105,7 +6777,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6140,7 +6812,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6167,7 +6839,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6198,7 +6870,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6229,7 +6901,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6264,7 +6936,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6295,7 +6967,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6330,7 +7002,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6365,7 +7037,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
@@ -6404,21 +7076,21 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6427,25 +7099,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6454,25 +7126,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6481,19 +7153,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -6501,9 +7176,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6512,22 +7184,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6539,12 +7211,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -6552,13 +7224,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6570,26 +7242,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6601,13 +7273,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -6615,6 +7287,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -6622,9 +7297,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6636,22 +7308,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6663,12 +7335,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -6676,13 +7348,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6694,26 +7366,26 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6725,13 +7397,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -6739,6 +7411,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -6746,9 +7421,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6760,23 +7432,23 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6791,12 +7463,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -6805,13 +7477,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6826,27 +7498,27 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
 			api.Resurrector
 		}{
 			Charger: base,
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6861,13 +7533,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery == nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -6876,6 +7548,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -6883,9 +7558,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6900,25 +7572,25 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6927,13 +7599,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -6943,13 +7615,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6958,19 +7630,22 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -6978,9 +7653,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -6989,14 +7661,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -7006,6 +7678,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7013,9 +7688,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7024,12 +7696,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7037,13 +7709,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7055,13 +7727,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7072,13 +7744,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7090,13 +7762,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7104,6 +7776,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7111,9 +7786,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7125,14 +7797,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7143,6 +7815,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7150,9 +7825,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7164,12 +7836,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -7177,13 +7849,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7195,13 +7867,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -7212,13 +7884,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7230,13 +7902,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -7244,6 +7916,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7251,9 +7926,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7265,14 +7937,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 			api.Resurrector
@@ -7283,6 +7955,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7290,9 +7965,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7304,12 +7976,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7318,13 +7990,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7339,13 +8011,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7357,13 +8029,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7378,13 +8050,13 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx == nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7393,6 +8065,9 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Charger: base,
 			Battery: &decorateCustomBatteryImpl{
 				battery: battery,
+			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
@@ -7400,9 +8075,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -7417,14 +8089,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
+	case battery != nil && chargerEx != nil && energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Battery
 			api.ChargerEx
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
@@ -7437,14 +8109,14 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			ChargerEx: &decorateCustomChargerExImpl{
 				chargerEx: chargerEx,
 			},
+			EnergyImport: &decorateCustomEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateCustomIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateCustomMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -7480,6 +8152,14 @@ func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(p0 float64) error {
 	return impl.chargerEx(p0)
 }
 
+type decorateCustomEnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decorateCustomEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decorateCustomIdentifierImpl struct {
 	identifier func() (string, error)
 }
@@ -7494,14 +8174,6 @@ type decorateCustomMeterImpl struct {
 
 func (impl *decorateCustomMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decorateCustomMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateCustomMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decorateCustomPhaseCurrentsImpl struct {

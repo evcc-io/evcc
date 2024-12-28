@@ -42,8 +42,8 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
-	if m, ok := m.(api.MeterEnergy); ok {
-		totalEnergy = m.TotalEnergy
+	if m, ok := m.(api.EnergyImport); ok {
+		totalEnergy = m.EnergyImport
 	}
 
 	// decorate battery reading

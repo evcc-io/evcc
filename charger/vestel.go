@@ -216,10 +216,10 @@ func (wb *Vestel) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*Vestel)(nil)
+var _ api.EnergyImport = (*Vestel)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Vestel) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Vestel) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

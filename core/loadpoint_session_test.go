@@ -46,7 +46,7 @@ func TestSession(t *testing.T) {
 	}
 
 	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	me.EXPECT().EnergyImport().Return(1.0, nil)
 	lp.createSession()
 	assert.NotNil(t, lp.session)
 
@@ -61,7 +61,7 @@ func TestSession(t *testing.T) {
 	// stop charging
 	clock.Add(time.Hour)
 	lp.sessionEnergy.Update(1.23)
-	me.EXPECT().TotalEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
+	me.EXPECT().EnergyImport().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -76,7 +76,7 @@ func TestSession(t *testing.T) {
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
 	lp.sessionEnergy.Update(lp.getChargedEnergy() * 2)
-	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
+	me.EXPECT().EnergyImport().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
