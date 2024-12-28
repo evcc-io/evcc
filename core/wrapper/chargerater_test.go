@@ -61,7 +61,7 @@ func TestWrappedMeter(t *testing.T) {
 	defer ctrl.Finish()
 
 	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
+	me := api.NewMockEnergyImport(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter

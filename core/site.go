@@ -751,12 +751,21 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	// grid energy (import)
-	if energyMeter, ok := site.gridMeter.(api.EnergyImport); ok {
-		if f, err := energyMeter.EnergyImport(); err == nil {
-			site.publish(keys.GridEnergy, f)
+	// grid import
+	if m, ok := site.gridMeter.(api.EnergyImport); ok {
+		if f, err := m.EnergyImport(); err == nil {
+			site.publish(keys.GridImport, f)
 		} else {
-			site.log.ERROR.Printf("grid energy: %v", err)
+			site.log.ERROR.Printf("grid import: %v", err)
+		}
+	}
+
+	// grid export
+	if m, ok := site.gridMeter.(api.EnergyExport); ok {
+		if f, err := m.EnergyExport(); err == nil {
+			site.publish(keys.GridExport, f)
+		} else {
+			site.log.ERROR.Printf("grid export: %v", err)
 		}
 	}
 
