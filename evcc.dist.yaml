@@ -62,7 +62,7 @@ meters:
     rtu: true # rs485 device connected using ethernet adapter
     id: 2
     power: Power # default value, optionally override
-    energy: Sum # default value, optionally override
+    import: Sum # default value, optionally override
   - name: pv
     type: ...
   - name: battery

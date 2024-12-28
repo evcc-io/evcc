@@ -19,7 +19,7 @@ render: |
       decode: int32
     scale: 0.01
     timeout: 5s
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

@@ -56,7 +56,7 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -101,7 +101,7 @@ render: |
       address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
       type: holding
       decode: int32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -127,7 +127,7 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}

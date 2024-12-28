@@ -24,7 +24,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.ImportImport,ImportImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -39,7 +39,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 
 		// optional measurements
 		Power  *provider.Config
-		Energy *provider.Config
+		Import *provider.Config
 
 		Currents, Voltages []provider.Config
 	}
@@ -132,7 +132,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	// decorate measurements
-	powerG, energyG, err := meter.BuildMeasurements(ctx, cc.Power, cc.Energy)
+	powerG, importG, _, err := meter.BuildMeasurements(ctx, cc.Power, cc.Import, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, energyG, currentsG, voltagesG), nil
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, importG, currentsG, voltagesG), nil
 }
 
 // NewConfigurable creates a new charger

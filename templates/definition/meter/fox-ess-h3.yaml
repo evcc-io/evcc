@@ -46,7 +46,7 @@ render: |
         type: holding
         decode: int16
       scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

@@ -14,7 +14,7 @@ render: |
     source: http
     uri: http://{{ .host }}:8050/getOutputData
     jq: .data.p1+.data.p2
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}:8050/getOutputData
     jq: .data.te1+.data.te2

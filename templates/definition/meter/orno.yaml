@@ -14,7 +14,7 @@ render: |
   {{- include "modbus" . }}
   model: orno3p
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

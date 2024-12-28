@@ -26,7 +26,7 @@ render: |
       type: input
       decode: int32
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -87,7 +87,7 @@ render: |
       type: input
       address: 33057 # Total DC output power (PV Power)
       decode: uint32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -117,7 +117,7 @@ render: |
         scale: 2
       - source: const
         value: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

@@ -29,7 +29,7 @@ render: |
       type: holding
       decode: int32
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -66,7 +66,7 @@ render: |
         address: 35117 # Ppv4 PV4 Power
         type: holding
         decode: uint32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -92,7 +92,7 @@ render: |
       type: holding
       decode: uint16
   {{- if eq .battery "1" }}
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration

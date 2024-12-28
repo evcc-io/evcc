@@ -28,7 +28,7 @@ render: |
   {{- include "modbus" . }}
   model: cgex3x0
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

@@ -29,7 +29,7 @@ render: |
       address: 32080 # Active generation power AC
       type: holding
       decode: int32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}

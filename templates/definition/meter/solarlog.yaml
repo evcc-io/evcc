@@ -48,7 +48,7 @@ render: |
       address: 3502 # Pac
       type: input
       decode: uint32s
-  energy:
+  import:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1

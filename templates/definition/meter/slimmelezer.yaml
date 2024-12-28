@@ -41,7 +41,7 @@ render: |
       - content-type: application/json
       jq: .value
       scale: -{{ .scale }}
-  energy:
+  import:
     source: calc
     add:
     - source: http

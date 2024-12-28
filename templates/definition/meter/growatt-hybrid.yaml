@@ -46,7 +46,7 @@ render: |
         type: input
         decode: uint32
       scale: -0.1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -64,7 +64,7 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -92,7 +92,7 @@ render: |
         type: input
         decode: uint32
       scale: -0.1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration

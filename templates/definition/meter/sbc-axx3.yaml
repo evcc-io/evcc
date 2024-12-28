@@ -13,7 +13,7 @@ render: |
   {{- include "modbus" . }}
   model: sbc
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

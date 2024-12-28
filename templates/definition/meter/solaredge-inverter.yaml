@@ -27,7 +27,7 @@ render: |
     subdevice: 1 # Metering device
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -94,7 +94,7 @@ render: |
     value:
       - 101:W
       - 103:W
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}

@@ -59,7 +59,7 @@ render: |
       type: holding
       decode: int16
     scale: 0.01
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -76,7 +76,7 @@ render: |
       address: 0x40A5 # TotalPVPower
       type: holding
       decode: int16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -93,7 +93,7 @@ render: |
       address: 0x40A6 # TotalBatteryPower
       type: holding
       decode: int16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

@@ -21,7 +21,7 @@ render: |
     {{- if eq .usage "pv" }}
     scale: -1
     {{- end }}
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

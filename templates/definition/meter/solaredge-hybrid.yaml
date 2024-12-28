@@ -38,7 +38,7 @@ render: |
     subdevice: 1 # Metering device
     value: 203:W
     scale: -1
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}

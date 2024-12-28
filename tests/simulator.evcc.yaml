@@ -38,7 +38,7 @@ meters:
       source: http
       uri: http://localhost:7072/api/state
       jq: .loadpoints[0].power
-    energy:
+    import:
       source: http
       uri: http://localhost:7072/api/state
       jq: .loadpoints[0].energy

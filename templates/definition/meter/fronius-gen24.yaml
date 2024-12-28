@@ -32,7 +32,7 @@ render: |
     value:
       - 203:W
       - 213:W
-  energy:
+  import:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 200
@@ -125,7 +125,7 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
-  energy:
+  import:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1

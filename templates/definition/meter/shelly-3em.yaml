@@ -20,7 +20,7 @@ render: |
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.power) | add
-  energy:
+  import:
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total) | add

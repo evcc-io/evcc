@@ -32,7 +32,7 @@ render: |
       type: input
       decode: int32s
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -56,7 +56,7 @@ render: |
         address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration

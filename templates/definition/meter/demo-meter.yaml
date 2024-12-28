@@ -47,7 +47,7 @@ render: |
     source: const
     value: {{ .power }}
   {{- if .energy }}
-  energy:
+  import:
     source: const
     value: {{ .energy}}
   {{- end }}
