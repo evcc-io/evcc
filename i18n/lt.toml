@@ -601,6 +601,7 @@ vehicleLimit = "Automobilyje nustatytas limitas."
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
+unknown = ""
 
 [notifications]
 dismissAll = "Išvalyti visus"
