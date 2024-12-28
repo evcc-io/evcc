@@ -65,10 +65,10 @@ func TestWrappedMeter(t *testing.T) {
 
 	type EnergyDecorator struct {
 		api.Meter
-		api.MeterEnergy
+		api.EnergyImport
 	}
 
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &EnergyDecorator{Meter: mm, EnergyImport: me}
 
 	cr := NewChargeRater(util.NewLogger("foo"), cm)
 	clck := clock.NewMock()

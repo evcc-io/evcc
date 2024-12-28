@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateRCT(base *RCT, energyImport func() (float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
-	case battery == nil && meterEnergy == nil:
+	case battery == nil && energyImport == nil:
 		return base
 
-	case battery == nil && meterEnergy != nil:
+	case battery == nil && energyImport != nil:
 		return &struct {
 			*RCT
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			RCT: base,
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateRCTEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && energyImport == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -33,22 +33,22 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && energyImport != nil:
 		return &struct {
 			*RCT
 			api.Battery
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			RCT: base,
 			Battery: &decorateRCTBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateRCTEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && energyImport == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -63,12 +63,12 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && energyImport != nil:
 		return &struct {
 			*RCT
 			api.Battery
 			api.BatteryCapacity
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			RCT: base,
 			Battery: &decorateRCTBatteryImpl{
@@ -77,8 +77,8 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateRCTEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 	}
@@ -102,10 +102,10 @@ func (impl *decorateRCTBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
 }
 
-type decorateRCTMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateRCTEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateRCTMeterEnergyImpl) EnergyImport() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateRCTEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }

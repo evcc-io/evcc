@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
+func decorateDsmr(base api.Meter, energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case meterEnergy == nil && phaseCurrents == nil:
+	case energyImport == nil && phaseCurrents == nil:
 		return base
 
-	case meterEnergy != nil && phaseCurrents == nil:
+	case energyImport != nil && phaseCurrents == nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Meter: base,
-			MeterEnergy: &decorateDsmrMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateDsmrEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meterEnergy == nil && phaseCurrents != nil:
+	case energyImport == nil && phaseCurrents != nil:
 		return &struct {
 			api.Meter
 			api.PhaseCurrents
@@ -33,15 +33,15 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurr
 			},
 		}
 
-	case meterEnergy != nil && phaseCurrents != nil:
+	case energyImport != nil && phaseCurrents != nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			MeterEnergy: &decorateDsmrMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateDsmrEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateDsmrPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -52,12 +52,12 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurr
 	return nil
 }
 
-type decorateDsmrMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateDsmrEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateDsmrMeterEnergyImpl) EnergyImport() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateDsmrEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }
 
 type decorateDsmrPhaseCurrentsImpl struct {

@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateModbusMbmd(base api.Meter, energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
-	case battery == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && energyImport == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
 
-	case battery == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && energyImport != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case battery == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery == nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.PhaseCurrents
@@ -33,22 +33,22 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery == nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && energyImport == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.PhaseVoltages
@@ -59,47 +59,28 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && energyImport != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case battery == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery == nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -108,7 +89,26 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery == nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.PhaseCurrents
@@ -123,16 +123,16 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery == nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -142,7 +142,7 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery == nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.PhaseCurrents
@@ -150,29 +150,6 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
@@ -184,195 +161,17 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.Battery
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.MeterEnergy
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
+			api.EnergyImport
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -385,11 +184,188 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.EnergyImport
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.EnergyImport
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.EnergyImport
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -397,9 +373,6 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			Meter: base,
 			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -412,188 +385,21 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryCapacity
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.MeterEnergy
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateModbusMbmdBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
+			api.EnergyImport
 			api.PhaseCurrents
 			api.PhasePowers
+			api.PhaseVoltages
 		}{
 			Meter: base,
 			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -601,16 +407,16 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
 		}{
 			Meter: base,
 			Battery: &decorateModbusMbmdBatteryImpl{
@@ -619,25 +425,168 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.EnergyImport
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
-				phasePowers: phasePowers,
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.EnergyImport
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.EnergyImport
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
 			api.PhaseCurrents
 			api.PhasePowers
-			api.PhaseVoltages
 		}{
 			Meter: base,
 			Battery: &decorateModbusMbmdBatteryImpl{
@@ -652,17 +601,40 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.MeterEnergy
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -674,8 +646,36 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && energyImport != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.EnergyImport
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateModbusMbmdBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			EnergyImport: &decorateModbusMbmdEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -708,12 +708,12 @@ func (impl *decorateModbusMbmdBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
 }
 
-type decorateModbusMbmdMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateModbusMbmdEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateModbusMbmdMeterEnergyImpl) EnergyImport() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateModbusMbmdEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }
 
 type decorateModbusMbmdPhaseCurrentsImpl struct {

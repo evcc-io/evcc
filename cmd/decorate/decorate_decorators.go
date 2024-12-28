@@ -14,10 +14,10 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 	case meterEnergy != nil && phaseSwitcher == nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
+			EnergyImport: &decorateTestMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -36,11 +36,11 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 	case meterEnergy != nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseSwitcher
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
+			EnergyImport: &decorateTestMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 			PhaseSwitcher: &decorateTestPhaseSwitcherImpl{
@@ -66,12 +66,12 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 	case meterEnergy != nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
+			EnergyImport: &decorateTestMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 			PhaseGetter: &decorateTestPhaseGetterImpl{
