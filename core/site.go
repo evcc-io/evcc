@@ -45,14 +45,16 @@ type updater interface {
 // meterMeasurement is used as slice element for publishing structured data
 type meterMeasurement struct {
 	Power         float64 `json:"power"`
-	Energy        float64 `json:"energy,omitempty"`
+	Import        float64 `json:"import,omitempty"`
+	Export        float64 `json:"export,omitempty"`
 	ExcessDCPower float64 `json:"excessdcpower,omitempty"`
 }
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
 	Power        float64 `json:"power"`
-	Energy       float64 `json:"energy,omitempty"`
+	Import       float64 `json:"import,omitempty"`
+	Export       float64 `json:"export,omitempty"`
 	Soc          float64 `json:"soc,omitempty"`
 	Capacity     float64 `json:"capacity,omitempty"`
 	Controllable bool    `json:"controllable"`
@@ -455,12 +457,12 @@ func (site *Site) updatePvMeters() {
 			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
-		// energy (production)
-		var energy float64
-		if m, ok := meter.(api.EnergyImport); err == nil && ok {
-			energy, err = m.EnergyImport()
+		// export (production)
+		var export float64
+		if m, ok := meter.(api.EnergyExport); err == nil && ok {
+			export, err = m.EnergyExport()
 			if err != nil {
-				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("pv %d export: %v", i+1, err)
 			}
 		}
 
@@ -479,7 +481,7 @@ func (site *Site) updatePvMeters() {
 
 		mm[i] = meterMeasurement{
 			Power:         power,
-			Energy:        energy,
+			Export:        export, // no import for pv
 			ExcessDCPower: excessDC,
 		}
 
@@ -498,8 +500,8 @@ func (site *Site) updatePvMeters() {
 	site.excessDCPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
 		return acc - math.Abs(m.ExcessDCPower)
 	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
-		return acc + m.Energy
+	totalExport := lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+		return acc + m.Export
 	}, 0)
 
 	var excessStr string
@@ -509,7 +511,7 @@ func (site *Site) updatePvMeters() {
 
 	site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
 	site.publish(keys.PvPower, site.pvPower)
-	site.publish(keys.PvEnergy, totalEnergy)
+	site.publish(keys.PvExport, totalExport)
 	site.publish(keys.Pv, mm)
 }
 
@@ -564,18 +566,28 @@ func (site *Site) updateExtMeters() {
 			site.log.ERROR.Printf("ext meter %d power: %v", i+1, err)
 		}
 
-		// ext energy
-		var energy float64
+		// ext import energy
+		var importEnergy float64
 		if m, ok := meter.(api.EnergyImport); err == nil && ok {
-			energy, err = m.EnergyImport()
+			importEnergy, err = m.EnergyImport()
 			if err != nil {
-				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("ext meter %d import: %v", i+1, err)
+			}
+		}
+
+		// ext export energy
+		var export float64
+		if m, ok := meter.(api.EnergyImport); err == nil && ok {
+			export, err = m.EnergyImport()
+			if err != nil {
+				site.log.ERROR.Printf("ext meter %d export: %v", i+1, err)
 			}
 		}
 
 		mm[i] = meterMeasurement{
 			Power:  power,
-			Energy: energy,
+			Import: importEnergy,
+			Export: export,
 		}
 	}
 
@@ -603,12 +615,20 @@ func (site *Site) updateBatteryMeters() error {
 			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
 		}
 
-		// battery energy (discharge)
-		var energy float64
-		if m, ok := meter.(api.EnergyImport); ok {
-			energy, err = m.EnergyImport()
+		// battery export energy (discharge)
+		var export float64
+		if m, ok := meter.(api.EnergyExport); ok {
+			export, err = m.EnergyExport()
 			if err != nil {
-				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("battery %d export: %v", i+1, err)
+			}
+		}
+		// battery energy (charge)
+		var importEnergy float64
+		if m, ok := meter.(api.EnergyImport); ok {
+			importEnergy, err = m.EnergyImport()
+			if err != nil {
+				site.log.ERROR.Printf("battery %d import: %v", i+1, err)
 			}
 		}
 
@@ -634,7 +654,8 @@ func (site *Site) updateBatteryMeters() error {
 
 		mm[i] = batteryMeasurement{
 			Power:        power,
-			Energy:       energy,
+			Import:       importEnergy,
+			Export:       export,
 			Soc:          batSoc,
 			Capacity:     capacity,
 			Controllable: controllable,
@@ -676,13 +697,17 @@ func (site *Site) updateBatteryMeters() error {
 	site.batteryPower = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
 		return acc + m.Power
 	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		return acc + m.Energy
+	totalExport := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		return acc + m.Export
+	}, 0)
+	totalImport := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+		return acc + m.Import
 	}, 0)
 
 	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 	site.publish(keys.BatteryPower, site.batteryPower)
-	site.publish(keys.BatteryEnergy, totalEnergy)
+	site.publish(keys.BatteryExport, totalExport)
+	site.publish(keys.BatteryImport, totalImport)
 	site.publish(keys.Battery, mm)
 
 	return nil

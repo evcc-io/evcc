@@ -14,7 +14,7 @@ const (
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
-	PvEnergy              = "pvEnergy"
+	PvExport              = "pvExport"
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
@@ -48,7 +48,8 @@ const (
 
 	// battery status
 	Battery       = "battery"
-	BatteryEnergy = "batteryEnergy"
+	BatteryExport = "batteryExport"
+	BatteryImport = "batteryImport"
 	BatteryMode   = "batteryMode"
 	BatteryPower  = "batteryPower"
 	BatterySoc    = "batterySoc"

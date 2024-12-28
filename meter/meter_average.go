@@ -40,37 +40,43 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 
 	meter, _ := NewConfigurable(mav.CurrentPower)
 
-	// decorate energy reading
-	var totalEnergy func() (float64, error)
+	// import
+	var energyImport func() (float64, error)
 	if m, ok := m.(api.EnergyImport); ok {
-		totalEnergy = m.EnergyImport
+		energyImport = m.EnergyImport
 	}
 
-	// decorate battery reading
+	// export
+	var export func() (float64, error)
+	if m, ok := m.(api.EnergyExport); ok {
+		export = m.EnergyExport
+	}
+
+	// battery
 	var batterySoc func() (float64, error)
 	if m, ok := m.(api.Battery); ok {
 		batterySoc = m.Soc
 	}
 
-	// decorate currents reading
+	// currents
 	var currents func() (float64, float64, float64, error)
 	if m, ok := m.(api.PhaseCurrents); ok {
 		currents = m.Currents
 	}
 
-	// decorate voltages reading
+	// voltages
 	var voltages func() (float64, float64, float64, error)
 	if m, ok := m.(api.PhaseVoltages); ok {
 		voltages = m.Voltages
 	}
 
-	// decorate powers reading
+	// powers
 	var powers func() (float64, float64, float64, error)
 	if m, ok := m.(api.PhasePowers); ok {
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.capacity.Decorator(), nil, nil), nil
+	return meter.Decorate(energyImport, export, currents, voltages, powers, batterySoc, cc.Meter.capacity.Decorator(), nil, nil), nil
 }
 
 type MovingAverage struct {
