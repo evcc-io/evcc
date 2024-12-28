@@ -596,6 +596,7 @@ vehicleLimit = "Køretøjets grænse"
 vehicleLimitReached = "Køretøjets grænse er nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 welcome = "Kort indledende opladning for at bekræfte forbindelsen."
+unknown = ""
 
 [notifications]
 dismissAll = "Afvis alle"
