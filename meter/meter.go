@@ -111,9 +111,9 @@ func (m *Meter) Decorate(
 	batterySoc func() (float64, error),
 	batteryCapacity func() float64,
 	MaxACPower func() float64,
-	setBatteryMode func(api.BatteryMode) error,
+	batteryMode func(api.BatteryMode) error,
 ) api.Meter {
-	return decorateMeter(m, energyImport, energyExport, currents, voltages, powers, batterySoc, batteryCapacity, MaxACPower, setBatteryMode)
+	return decorateMeter(m, energyImport, energyExport, currents, voltages, powers, batterySoc, batteryCapacity, MaxACPower, batteryMode)
 }
 
 // CurrentPower implements the api.Meter interface

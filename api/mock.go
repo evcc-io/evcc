@@ -370,32 +370,32 @@ func (mr *MockMeterMockRecorder) CurrentPower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurrentPower", reflect.TypeOf((*MockMeter)(nil).CurrentPower))
 }
 
-// MockMeterEnergy is a mock of EnergyImport interface.
-type MockMeterEnergy struct {
+// MockEnergyImport is a mock of EnergyImport interface.
+type MockEnergyImport struct {
 	ctrl     *gomock.Controller
-	recorder *MockMeterEnergyMockRecorder
+	recorder *MockEnergyImportMockRecorder
 	isgomock struct{}
 }
 
-// MockMeterEnergyMockRecorder is the mock recorder for MockMeterEnergy.
-type MockMeterEnergyMockRecorder struct {
-	mock *MockMeterEnergy
+// MockEnergyImportMockRecorder is the mock recorder for MockEnergyImport.
+type MockEnergyImportMockRecorder struct {
+	mock *MockEnergyImport
 }
 
-// NewMockMeterEnergy creates a new mock instance.
-func NewMockMeterEnergy(ctrl *gomock.Controller) *MockMeterEnergy {
-	mock := &MockMeterEnergy{ctrl: ctrl}
-	mock.recorder = &MockMeterEnergyMockRecorder{mock}
+// NewMockEnergyImport creates a new mock instance.
+func NewMockEnergyImport(ctrl *gomock.Controller) *MockEnergyImport {
+	mock := &MockEnergyImport{ctrl: ctrl}
+	mock.recorder = &MockEnergyImportMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockMeterEnergy) EXPECT() *MockMeterEnergyMockRecorder {
+func (m *MockEnergyImport) EXPECT() *MockEnergyImportMockRecorder {
 	return m.recorder
 }
 
 // EnergyImport mocks base method.
-func (m *MockMeterEnergy) EnergyImport() (float64, error) {
+func (m *MockEnergyImport) EnergyImport() (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnergyImport")
 	ret0, _ := ret[0].(float64)
@@ -404,9 +404,9 @@ func (m *MockMeterEnergy) EnergyImport() (float64, error) {
 }
 
 // EnergyImport indicates an expected call of EnergyImport.
-func (mr *MockMeterEnergyMockRecorder) EnergyImport() *gomock.Call {
+func (mr *MockEnergyImportMockRecorder) EnergyImport() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnergyImport", reflect.TypeOf((*MockMeterEnergy)(nil).EnergyImport))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnergyImport", reflect.TypeOf((*MockEnergyImport)(nil).EnergyImport))
 }
 
 // MockPhaseCurrents is a mock of PhaseCurrents interface.
