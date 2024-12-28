@@ -4,6 +4,7 @@ const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
 	Currency              = "currency"
+	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
@@ -29,7 +30,6 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 	Circuits              = "circuits"
-	Ext                   = "ext"
 
 	// meters
 	GridMeter     = "gridMeter"
