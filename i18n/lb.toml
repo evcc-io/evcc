@@ -589,6 +589,7 @@ vehicleLimit = "Limitt vum Gefier."
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."
+unknown = ""
 
 [notifications]
 dismissAll = "Notifikatiounen ewechuelen"
