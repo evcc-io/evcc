@@ -182,7 +182,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	// Processing the received data
+	// Process the received data
 	var dataSet NewDataSet
 	if err := xml.NewDecoder(bytes.NewReader(xmlFile)).Decode(&dataSet); err != nil {
 		return nil, err
