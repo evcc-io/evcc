@@ -164,10 +164,10 @@ func (wb *Hesotec) ChargeDuration() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-var _ api.MeterEnergy = (*Hesotec)(nil)
+var _ api.EnergyImport = (*Hesotec)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Hesotec) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Hesotec) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(hesotecRegEnergy, 2)
 	if err != nil {
 		return 0, err

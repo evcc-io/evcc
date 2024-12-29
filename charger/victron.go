@@ -180,7 +180,7 @@ func (wb *Victron) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*Victron)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.EnergyImport interface
 func (wb *Victron) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Energy, 1+cast.ToUint16(wb.regs.isGX))
 	if err != nil {

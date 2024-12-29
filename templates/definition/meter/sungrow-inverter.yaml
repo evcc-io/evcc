@@ -20,7 +20,7 @@ render: |
       type: input
       address: 5082 # Meter power
       decode: int32s
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -37,7 +37,7 @@ render: |
       address: 5030 # Total Active Power
       type: input
       decode: uint32s
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

@@ -13,7 +13,7 @@ render: |
   {{- include "modbus" . }}
   model: iem3000
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

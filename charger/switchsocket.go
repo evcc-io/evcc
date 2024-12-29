@@ -19,7 +19,7 @@ type SwitchSocket struct {
 	*switchSocket
 }
 
-//go:generate decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t "api.EnergyImport,EnergyImport,func() (float64, error)"
 
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {

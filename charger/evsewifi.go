@@ -28,7 +28,7 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate decorate -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -78,7 +78,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currentPower = wb.currentPower
 	}
 
-	// decorate Charger with MeterEnergy
+	// decorate Charger with EnergyImport
 	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
 		totalEnergy = wb.totalEnergy
@@ -226,7 +226,7 @@ func (wb *EVSEWifi) currentPower() (float64, error) {
 	return 1000 * params.ActualPower, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
+// EnergyImport implements the api.EnergyImport interface
 func (wb *EVSEWifi) totalEnergy() (float64, error) {
 	params, err := wb.paramG.Get()
 	return params.MeterReading, err

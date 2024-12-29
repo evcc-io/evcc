@@ -23,7 +23,7 @@ render: |
       - 211:W
       - 203:W
       - 213:W
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
@@ -96,7 +96,7 @@ render: |
       - 111:W
       - 103:W
       - 113:W
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:

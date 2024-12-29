@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateTest(base api.Charger, energyImport func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case meterEnergy == nil && phaseSwitcher == nil:
+	case energyImport == nil && phaseSwitcher == nil:
 		return base
 
-	case meterEnergy != nil && phaseSwitcher == nil:
+	case energyImport != nil && phaseSwitcher == nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateTestEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meterEnergy == nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
 			api.PhaseSwitcher
@@ -33,22 +33,22 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 			},
 		}
 
-	case meterEnergy != nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport != nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseSwitcher
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateTestEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseSwitcher: &decorateTestPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case meterEnergy == nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
 			api.PhaseGetter
@@ -63,16 +63,16 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 			},
 		}
 
-	case meterEnergy != nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			api.Charger
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Charger: base,
-			MeterEnergy: &decorateTestMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateTestEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseGetter: &decorateTestPhaseGetterImpl{
 				phaseGetter: phaseGetter,
@@ -86,12 +86,12 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 	return nil
 }
 
-type decorateTestMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateTestEnergyImportImpl struct {
+	energyImport func() (float64, error)
 }
 
-func (impl *decorateTestMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateTestEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
 }
 
 type decorateTestPhaseGetterImpl struct {

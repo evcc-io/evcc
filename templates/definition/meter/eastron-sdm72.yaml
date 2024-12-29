@@ -13,4 +13,4 @@ render: |
   {{- include "modbus" . }}
   model: sdm72
   power: Power
-  energy: Import
+  import: Import

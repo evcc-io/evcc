@@ -38,7 +38,7 @@ render: |
       address: 33 # 0x21 Total Active power (Grid Meter)
       type: holding
       decode: int32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -115,7 +115,7 @@ render: |
         address: 1075 # 0x433 PV6 power
         type: holding
         decode: uint32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -132,7 +132,7 @@ render: |
       address: 294 # 0x126 Battery Power
       type: holding
       decode: int16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

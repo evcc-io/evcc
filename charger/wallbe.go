@@ -40,7 +40,7 @@ func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
-//go:generate decorate -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
+//go:generate decorate -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -174,7 +174,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 	return rs485.RTUInt32ToFloat64Swapped(b), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (wb *Wallbe) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
 	if err != nil {

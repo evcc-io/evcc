@@ -84,7 +84,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -229,7 +229,7 @@ func (wb *BenderCC) currentPower() (float64, error) {
 // removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*BenderCC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
+// EnergyImport implements the api.EnergyImport interface
 func (wb *BenderCC) totalEnergy() (float64, error) {
 	if wb.legacy {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegPhaseEnergy, 6)

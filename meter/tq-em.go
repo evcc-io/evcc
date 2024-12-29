@@ -143,9 +143,9 @@ func (m *TqEm) CurrentPower() (float64, error) {
 	return res.Obis1_4_0 - res.Obis2_4_0, err
 }
 
-var _ api.MeterEnergy = (*TqEm)(nil)
+var _ api.EnergyImport = (*TqEm)(nil)
 
-func (m *TqEm) TotalEnergy() (float64, error) {
+func (m *TqEm) EnergyImport() (float64, error) {
 	res, err := m.dataG()
 	return res.Obis1_8_0 / 1e3, err
 }

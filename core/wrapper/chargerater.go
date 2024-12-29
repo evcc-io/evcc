@@ -11,7 +11,7 @@ import (
 )
 
 // ChargeRater is responsible for providing charged energy amount
-// by implementing api.ChargeRater. It uses the charge meter's TotalEnergy or
+// by implementing api.ChargeRater. It uses the charge meter's EnergyImport or
 // keeps track of consumed energy by regularly updating consumed power.
 type ChargeRater struct {
 	sync.Mutex
@@ -33,18 +33,18 @@ func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	}
 }
 
-// StartCharge records meter start energy. If meter does not supply TotalEnergy,
+// StartCharge records meter start energy. If meter does not supply EnergyImport,
 // start time is recorded and  charged energy set to zero.
 func (cr *ChargeRater) StartCharge(continued bool) {
 	cr.Lock()
 	defer cr.Unlock()
 
-	// time is needed if MeterEnergy is not supported
+	// time is needed if EnergyImport is not supported
 	cr.start = cr.clck.Now()
 
 	// get end energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
-		if f, err := m.TotalEnergy(); err == nil {
+	if m, ok := cr.meter.(api.EnergyImport); ok {
+		if f, err := m.EnergyImport(); err == nil {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
 		} else {
@@ -59,7 +59,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 	}
 }
 
-// StopCharge records meter stop energy. If meter does not supply TotalEnergy,
+// StopCharge records meter stop energy. If meter does not supply EnergyImport,
 // stop time is recorded and accumulating energy though SetChargePower stopped.
 func (cr *ChargeRater) StopCharge() {
 	cr.Lock()
@@ -68,8 +68,8 @@ func (cr *ChargeRater) StopCharge() {
 	cr.charging = false
 
 	// get end energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
-		if f, err := m.TotalEnergy(); err == nil {
+	if m, ok := cr.meter.(api.EnergyImport); ok {
+		if f, err := m.EnergyImport(); err == nil {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
 		} else {
@@ -88,7 +88,7 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	}
 
 	// update energy amount if not provided by meter
-	if _, ok := cr.meter.(api.MeterEnergy); !ok {
+	if _, ok := cr.meter.(api.EnergyImport); !ok {
 		// convert power to energy in kWh
 		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
 		// move timestamp
@@ -108,8 +108,8 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 	}
 
 	// get current energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
-		f, err := m.TotalEnergy()
+	if m, ok := cr.meter.(api.EnergyImport); ok {
+		f, err := m.EnergyImport()
 		if err == nil {
 			return cr.chargedEnergy + f - cr.startEnergy, nil
 		}

@@ -73,7 +73,7 @@ type Gen2EmStatusResponse struct {
 }
 
 type Gen2EmDataStatusResponse struct {
-	TotalEnergy float64 `json:"total_act"`
+	EnergyImport float64 `json:"total_act"`
 }
 
 type Gen1SwitchResponse struct {

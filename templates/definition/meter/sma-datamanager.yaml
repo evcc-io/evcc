@@ -27,7 +27,7 @@ render: |
       address: 30775 # Aktuelle PV-Einspeisewirkleistung über alle Außenleiter, W
       type: holding
       decode: int32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -85,7 +85,7 @@ render: |
         address: 31395 # Momentane Batterieentladung, W
         type: holding
         decode: uint32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

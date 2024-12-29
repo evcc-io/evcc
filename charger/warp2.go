@@ -36,7 +36,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-//go:generate decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -246,7 +246,7 @@ func (wb *Warp2) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
+// EnergyImport implements the api.EnergyImport interface
 func (wb *Warp2) totalEnergy() (float64, error) {
 	var res warp.MeterValues
 	err := wb.meterG(&res)

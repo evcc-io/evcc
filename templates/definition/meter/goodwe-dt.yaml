@@ -20,7 +20,7 @@ render: |
       address: 781 # Actual Power
       type: holding
       decode: uint16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration

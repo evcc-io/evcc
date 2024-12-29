@@ -17,7 +17,7 @@ type Status struct {
 	SessionElapsed int     `json:"session_elapsed"`           // duration of this charging session in seconds
 	State          int     `json:"state,omitempty"`           // evse state 1=A 2=B 3=C 4=D 5-11=F 254=sleeping 255=disabled
 	Status         string  `json:"status,omitempty"`          // active, disabled, none, unknown
-	TotalEnergy    float64 `json:"total_energy"`              // The total amount of energy accumulated (in kwh)
+	EnergyImport   float64 `json:"total_energy"`              // The total amount of energy accumulated (in kwh)
 	Vehicle        int     `json:"vehicle,omitempty"`         // 0=not connected, 1=connected
 	Voltage        float64 `json:"voltage,omitempty"`         // supplied via MQTT/Tesla/HTTP or assume a default
 }

@@ -32,7 +32,7 @@ func init() {
 	registry.Add("keba-udp", NewKebaUdpFromConfig)
 }
 
-//go:generate decorate -f decorateKebaUdp -b *KebaUdp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate decorate -f decorateKebaUdp -b *KebaUdp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewKebaUdpFromConfig creates a new Keba UDP charger
 func NewKebaUdpFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -281,7 +281,7 @@ func (c *KebaUdp) currentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (c *KebaUdp) totalEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)

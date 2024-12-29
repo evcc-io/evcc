@@ -20,7 +20,7 @@ render: |
     source: http
     uri: http://{{ .host }}/e
     jq: .[0]|.pwr
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/e
     jq: .[0]|.p1+.p2
@@ -30,7 +30,7 @@ render: |
     source: http
     uri: http://{{ .host }}/e
     jq: .[0].ps0
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/e
     jq: .[0].cs0

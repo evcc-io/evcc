@@ -22,7 +22,7 @@ render: |
       address: 31657 # Active power of built-in electric energy sensor
       type: holding
       decode: int32
-  energy:
+  import:
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
@@ -66,7 +66,7 @@ render: |
       address: 30354 # Active power
       type: holding
       decode: int32
-  energy:
+  import:
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}
@@ -86,7 +86,7 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  energy:
+  import:
     source: modbus
     id: 0
     uri: {{ .host }}:{{ .port }}

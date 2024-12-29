@@ -19,7 +19,7 @@ render: |
     source: http
     uri: http://{{ .host }}/api/inverter/id/{{ .id }}
     jq: .ch[0][2]
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/api/inverter/id/{{ .id }}
     jq: .ch[0][6]

@@ -23,7 +23,7 @@ type Info struct {
 }
 
 type Energy struct {
-	TotalEnergy         int  `struc:"uint32"` // L energie02[0] / 1000
+	EnergyImport        int  `struc:"uint32"` // L energie02[0] / 1000
 	EnergyLastCharge    int  `struc:"uint32"` // L energie02[1] / 1000
 	Energy2ndLastCharge int  `struc:"uint32"` // L energie02[2] / 1000
 	Energy3rdLastCharge int  `struc:"uint32"` // L energie02[3] / 1000

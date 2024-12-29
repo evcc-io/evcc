@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateWarp2(base *Warp2, meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case identifier == nil && meter == nil && phaseSwitcher == nil:
+	case energyImport == nil && identifier == nil && meter == nil && phaseSwitcher == nil:
 		return base
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Meter
@@ -22,22 +22,33 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*Warp2
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Meter
@@ -52,156 +63,16 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter == nil && phaseSwitcher == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -211,82 +82,70 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
-			api.Identifier
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
+			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
 			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -299,14 +158,22 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+	case energyImport == nil && identifier != nil && meter == nil && phaseSwitcher == nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
 		}{
 			Warp2: base,
 			Identifier: &decorateWarp2IdentifierImpl{
@@ -315,260 +182,48 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
 		}
 
-	case identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport != nil && identifier != nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*Warp2
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
-		return &struct {
-			*Warp2
+			api.EnergyImport
 			api.Identifier
-			api.PhaseSwitcher
 		}{
 			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateWarp2IdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
+			api.EnergyImport
 			api.Identifier
 			api.Meter
-			api.PhaseSwitcher
 		}{
 			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Identifier: &decorateWarp2IdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Identifier
 			api.Meter
 			api.PhaseCurrents
-			api.PhaseSwitcher
 		}{
 			Warp2: base,
 			Identifier: &decorateWarp2IdentifierImpl{
@@ -580,19 +235,37 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
+			api.PhaseVoltages
 		}{
 			Warp2: base,
 			Identifier: &decorateWarp2IdentifierImpl{
@@ -601,8 +274,154 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -612,17 +431,59 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
-			api.Identifier
+			api.EnergyImport
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
 			api.Meter
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -635,45 +496,41 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -689,13 +546,137 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+	case energyImport == nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
 			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
 			api.PhaseSwitcher
 			api.PhaseVoltages
 		}{
@@ -706,8 +687,56 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -720,7 +749,38 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Warp2
 			api.PhaseGetter
@@ -735,7 +795,7 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Meter
@@ -754,20 +814,16 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Warp2
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseGetter: &decorateWarp2PhaseGetterImpl{
 				phaseGetter: phaseGetter,
@@ -777,7 +833,30 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Meter
@@ -800,222 +879,18 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseGetter
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.PhaseGetter
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.PhaseGetter
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseGetter
-			api.PhaseSwitcher
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
-		return &struct {
-			*Warp2
-			api.Identifier
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -1031,25 +906,68 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
-			api.Identifier
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
 			api.PhaseGetter
 			api.PhaseSwitcher
+			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -1060,70 +978,15 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
-			api.Meter
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
 			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+	case energyImport != nil && identifier == nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
 		return &struct {
 			*Warp2
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseGetter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-		}{
-			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateWarp2MeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseGetter: &decorateWarp2PhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
-		return &struct {
-			*Warp2
-			api.Identifier
+			api.EnergyImport
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseGetter
@@ -1131,8 +994,8 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			api.PhaseVoltages
 		}{
 			Warp2: base,
-			Identifier: &decorateWarp2IdentifierImpl{
-				identifier: identifier,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
 			},
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
@@ -1151,12 +1014,219 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+	case energyImport == nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
 		return &struct {
 			*Warp2
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport == nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.Identifier
+			api.Meter
 			api.PhaseCurrents
 			api.PhaseGetter
 			api.PhaseSwitcher
@@ -1169,8 +1239,40 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 			Meter: &decorateWarp2MeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateWarp2MeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateWarp2PhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateWarp2PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateWarp2PhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case energyImport != nil && identifier != nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*Warp2
+			api.EnergyImport
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			Warp2: base,
+			EnergyImport: &decorateWarp2EnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Identifier: &decorateWarp2IdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateWarp2MeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateWarp2PhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -1190,6 +1292,14 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 	return nil
 }
 
+type decorateWarp2EnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decorateWarp2EnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decorateWarp2IdentifierImpl struct {
 	identifier func() (string, error)
 }
@@ -1204,14 +1314,6 @@ type decorateWarp2MeterImpl struct {
 
 func (impl *decorateWarp2MeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decorateWarp2MeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateWarp2MeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decorateWarp2PhaseCurrentsImpl struct {

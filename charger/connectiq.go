@@ -163,10 +163,10 @@ func (wb *ConnectIq) CurrentPower() (float64, error) {
 	return (res.Pow[0] + res.Pow[1] + res.Pow[2]) * 1e3, nil
 }
 
-var _ api.MeterEnergy = (*ConnectIq)(nil)
+var _ api.EnergyImport = (*ConnectIq)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *ConnectIq) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *ConnectIq) EnergyImport() (float64, error) {
 	var res connectiq.MeterRead
 	uri := fmt.Sprintf("%s/meter/read", wb.uri)
 	err := wb.GetJSON(uri, &res)

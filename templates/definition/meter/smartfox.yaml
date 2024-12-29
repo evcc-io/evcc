@@ -23,7 +23,7 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: .power_io
-  energy:
+  import:
     source: http
     uri: {{ include "uri" . }}
     jq: .energy_in
@@ -64,7 +64,7 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: .PvPower[0]
-  energy:
+  import:
     source: http
     uri: {{ include "uri" . }}
     jq: .PvEnergy[0]
@@ -75,7 +75,7 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: .power_sf
-  energy:
+  import:
     source: http
     uri: {{ include "uri" . }}
     jq: .day_energy_sf

@@ -742,10 +742,10 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
-var _ api.MeterEnergy = (*Easee)(nil)
+var _ api.EnergyImport = (*Easee)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Easee) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (c *Easee) EnergyImport() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	return c.totalEnergy, nil

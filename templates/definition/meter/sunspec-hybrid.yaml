@@ -24,7 +24,7 @@ render: |
     value:
       - 203:W
       - 213:W
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
@@ -90,7 +90,7 @@ render: |
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCW # mppt 2
-  energy:
+  import:
     source: calc
     add:
       - source: sunspec
@@ -114,7 +114,7 @@ render: |
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:4:DCW # mppt 4 (discharge)
-  energy:
+  import:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 160:4:DCWH # mppt 4 (discharge)

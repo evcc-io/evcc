@@ -52,7 +52,7 @@ func (g *StatusResponse) ChargedEnergy() float64 {
 	return float64(g.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
 }
 
-func (g *StatusResponse) TotalEnergy() float64 {
+func (g *StatusResponse) EnergyImport() float64 {
 	return float64(g.Eto) / 1e1 // 0.1kWh to kWh (130 == 13kWh)
 }
 

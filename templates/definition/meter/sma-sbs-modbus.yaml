@@ -35,7 +35,7 @@ render: |
       address: 30775 # SMA Modbus Profile: GridMs.TotW
       type: input
       decode: int32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

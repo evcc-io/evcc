@@ -301,10 +301,10 @@ func (wb *NRGKickBLE) CurrentPower() (float64, error) {
 	return float64(res.TotalPower) * 10, nil
 }
 
-var _ api.MeterEnergy = (*NRGKickBLE)(nil)
+var _ api.EnergyImport = (*NRGKickBLE)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *NRGKickBLE) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *NRGKickBLE) EnergyImport() (float64, error) {
 	var res ble.Energy
 	if err := wb.read(ble.EnergyService, &res); err != nil {
 		return 0, err
@@ -312,7 +312,7 @@ func (wb *NRGKickBLE) TotalEnergy() (float64, error) {
 
 	wb.log.TRACE.Printf("read energy: %+v", res)
 
-	return float64(res.TotalEnergy) / 1000, nil
+	return float64(res.EnergyImport) / 1000, nil
 }
 
 var _ api.PhaseCurrents = (*NRGKickBLE)(nil)
@@ -333,7 +333,7 @@ func (wb *NRGKickBLE) Currents() (float64, float64, float64, error) {
 }
 
 // ChargedEnergy implements the ChargeRater interface
-// NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
+// NOTE: apparently shows energy of a stopped charging session, hence substituted by EnergyImport
 // func (wb *NRGKickBLE) ChargedEnergy() (float64, error) {
 // 	res := ble.Energy{}
 // 	if err := wb.read(ble.EnergyService, &res); err != nil {

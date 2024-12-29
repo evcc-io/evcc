@@ -20,5 +20,5 @@ render: |
   type: dsmr
   uri: {{ .host }}:{{ .port }}
   {{- if .energy }}
-  energy: {{ .energy }}
+  import: {{ .energy }}
   {{- end }}

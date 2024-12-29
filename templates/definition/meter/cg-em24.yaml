@@ -16,7 +16,7 @@ render: |
   {{- include "modbus" . }}
   model: cgem24
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

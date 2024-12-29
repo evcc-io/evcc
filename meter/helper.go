@@ -9,26 +9,35 @@ import (
 )
 
 // BuildMeasurements returns typical meter measurement getters from config
-func BuildMeasurements(ctx context.Context, power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
+func BuildMeasurements(ctx context.Context, power, energyImport, export *provider.Config) (func() (float64, error), func() (float64, error), func() (float64, error), error) {
 	var powerG func() (float64, error)
 	if power != nil {
 		var err error
 		powerG, err = provider.NewFloatGetterFromConfig(ctx, *power)
 		if err != nil {
-			return nil, nil, fmt.Errorf("power: %w", err)
+			return nil, nil, nil, fmt.Errorf("power: %w", err)
 		}
 	}
 
-	var energyG func() (float64, error)
-	if energy != nil {
+	var importG func() (float64, error)
+	if energyImport != nil {
 		var err error
-		energyG, err = provider.NewFloatGetterFromConfig(ctx, *energy)
+		importG, err = provider.NewFloatGetterFromConfig(ctx, *energyImport)
 		if err != nil {
-			return nil, nil, fmt.Errorf("energy: %w", err)
+			return nil, nil, nil, fmt.Errorf("import: %w", err)
 		}
 	}
 
-	return powerG, energyG, nil
+	var exportG func() (float64, error)
+	if export != nil {
+		var err error
+		exportG, err = provider.NewFloatGetterFromConfig(ctx, *export)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("export: %w", err)
+		}
+	}
+
+	return powerG, importG, exportG, nil
 }
 
 // BuildPhaseMeasurements returns typical meter measurement getters from config

@@ -101,9 +101,9 @@ func (m *Discovergy) CurrentPower() (float64, error) {
 	return m.scale * float64(res.Values.Power) / 1e3, err
 }
 
-var _ api.MeterEnergy = (*Discovergy)(nil)
+var _ api.EnergyImport = (*Discovergy)(nil)
 
-func (m *Discovergy) TotalEnergy() (float64, error) {
+func (m *Discovergy) EnergyImport() (float64, error) {
 	res, err := m.dataG()
 	return float64(res.Values.Energy) / 1e10, err
 }

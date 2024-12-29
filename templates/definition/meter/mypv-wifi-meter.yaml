@@ -19,7 +19,7 @@ render: |
       address: 32 # 0x0020 sum of power, signed, value=data, unit: W
       type: holding
       decode: int32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

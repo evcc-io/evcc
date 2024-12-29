@@ -29,7 +29,7 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
     #   | ----------------------------- PV W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
     #   | ----------------------Total Yield W ------------- |

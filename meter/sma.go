@@ -104,10 +104,10 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
-var _ api.MeterEnergy = (*SMA)(nil)
+var _ api.EnergyImport = (*SMA)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (sm *SMA) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (sm *SMA) EnergyImport() (float64, error) {
 	values, err := sm.device.Values()
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }

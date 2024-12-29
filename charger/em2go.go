@@ -239,10 +239,10 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
-var _ api.MeterEnergy = (*Em2Go)(nil)
+var _ api.EnergyImport = (*Em2Go)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Em2Go) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Em2Go) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
 	if err != nil {
 		return 0, err

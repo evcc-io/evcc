@@ -18,7 +18,7 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M39 - .M38 # current purchase - current feed-in at the interconnection point
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M41 # cumulated purchase since installation
@@ -28,7 +28,7 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M03 # current pv power
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M37 # cumulated pv production since installation of Sonnenbatterie
@@ -40,7 +40,7 @@ render: |
     # M34 current discharging power, S65 max inverter power
     # M35 current charging power, S65 max inverter power
     jq: (if .M34 <= .S65 then .M34 else 0 end) - (if .M35 <= .S65 then .M35 else 0 end)
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M31 # total stored energy over lifetime

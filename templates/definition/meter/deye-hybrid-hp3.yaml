@@ -35,7 +35,7 @@ render: |
       address: 625 # Grid side total power
       type: holding
       decode: int16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -98,7 +98,7 @@ render: |
         type: holding
         decode: uint16
       scale: 10
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -116,7 +116,7 @@ render: |
       type: holding
       decode: int16
     scale: 10
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

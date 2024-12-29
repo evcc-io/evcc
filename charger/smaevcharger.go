@@ -233,10 +233,10 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
 }
 
-var _ api.MeterEnergy = (*Smaevcharger)(nil)
+var _ api.EnergyImport = (*Smaevcharger)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Smaevcharger) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Smaevcharger) EnergyImport() (float64, error) {
 	val, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
 	return val / 1e3, err
 }

@@ -191,16 +191,16 @@ func (c *GoE) Identify() (string, error) {
 	return resp.Identify(), nil
 }
 
-var _ api.MeterEnergy = (*GoE)(nil)
+var _ api.EnergyImport = (*GoE)(nil)
 
-// totalEnergy implements the api.MeterEnergy interface - v2 only
-func (c *GoE) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.EnergyImport interface - v2 only
+func (c *GoE) EnergyImport() (float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
 		return 0, err
 	}
 
-	return resp.TotalEnergy(), err
+	return resp.EnergyImport(), err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface - v2 only

@@ -25,7 +25,7 @@ render: |
   {{- include "modbus" . }}
   model: sdm
   power: Power
-  energy: Import
+  import: Import
   currents:
     - CurrentL1
     - CurrentL2

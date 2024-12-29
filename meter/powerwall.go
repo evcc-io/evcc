@@ -32,7 +32,7 @@ func init() {
 	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
-//go:generate decorate -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
+//go:generate decorate -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -137,7 +137,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		m.energySite = energySite
 	}
 
-	// decorate api.MeterEnergy
+	// decorate api.EnergyImport
 	var totalEnergy func() (float64, error)
 	if m.usage == "load" || m.usage == "solar" {
 		totalEnergy = m.totalEnergy
@@ -186,7 +186,7 @@ func (m *PowerWall) CurrentPower() (float64, error) {
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (m *PowerWall) totalEnergy() (float64, error) {
 	res, err := m.meterG()
 	if err != nil {

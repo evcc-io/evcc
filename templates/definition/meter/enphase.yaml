@@ -42,7 +42,7 @@ render: |
     insecure: true
     {{- end }}
     jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").wNow else .production[] | select(.type == "inverters").wNow end
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/production.json
     {{- if .token }}

@@ -148,10 +148,10 @@ func (wb *OpenWBPro) CurrentPower() (float64, error) {
 	return res.PowerAll, err
 }
 
-var _ api.MeterEnergy = (*OpenWBPro)(nil)
+var _ api.EnergyImport = (*OpenWBPro)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *OpenWBPro) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *OpenWBPro) EnergyImport() (float64, error) {
 	res, err := wb.statusG.Get()
 	return res.Imported / 1e3, err
 }

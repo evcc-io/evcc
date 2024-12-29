@@ -205,10 +205,10 @@ func (wb *HardyBarth) CurrentPower() (float64, error) {
 	return res.Data[obis.PowerConsumption], nil
 }
 
-var _ api.MeterEnergy = (*HardyBarth)(nil)
+var _ api.EnergyImport = (*HardyBarth)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *HardyBarth) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *HardyBarth) EnergyImport() (float64, error) {
 	res, err := wb.meterG()
 	if err != nil {
 		return 0, err

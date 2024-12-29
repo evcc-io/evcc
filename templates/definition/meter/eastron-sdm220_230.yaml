@@ -19,4 +19,4 @@ render: |
   {{- include "modbus" . }}
   model: sdm220
   power: Power
-  energy: Import
+  import: Import

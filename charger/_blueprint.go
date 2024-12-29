@@ -95,10 +95,17 @@ func (wb *Blueprint) ChargedEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterEnergy = (*Blueprint)(nil)
+var _ api.EnergyImport = (*Blueprint)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Blueprint) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Blueprint) EnergyImport() (float64, error) {
+	return 0, api.ErrNotAvailable
+}
+
+var _ api.EnergyExport = (*Blueprint)(nil)
+
+// EnergyExport implements the api.EnergyExport interface
+func (wb *Blueprint) EnergyExport() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 

@@ -72,9 +72,9 @@ func (c *HomeWizard) Enable(enable bool) error {
 	return c.conn.Enable(enable)
 }
 
-var _ api.MeterEnergy = (*HomeWizard)(nil)
+var _ api.EnergyImport = (*HomeWizard)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *HomeWizard) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+// EnergyImport implements the api.EnergyImport interface
+func (c *HomeWizard) EnergyImport() (float64, error) {
+	return c.conn.EnergyImport()
 }

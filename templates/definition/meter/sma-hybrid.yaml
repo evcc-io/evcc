@@ -41,7 +41,7 @@ render: |
       address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
       type: input
       decode: int32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -88,7 +88,7 @@ render: |
           address: 30961 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -115,7 +115,7 @@ render: |
           type: input
           decode: uint32nan
         scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

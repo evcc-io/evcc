@@ -197,10 +197,10 @@ func (c *DaheimLaden) CurrentPower() (float64, error) {
 	return float64(res.ActivePowerImport * 1e3), err
 }
 
-var _ api.MeterEnergy = (*DaheimLaden)(nil)
+var _ api.EnergyImport = (*DaheimLaden)(nil)
 
-// TotalEnergy implements the api.MeterMeterEnergy interface
-func (c *DaheimLaden) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.MeterMeterEnergy interface
+func (c *DaheimLaden) EnergyImport() (float64, error) {
 	res, err := c.meterG.Get()
 	return float64(res.EnergyActiveImportRegister), err
 }

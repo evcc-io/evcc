@@ -25,7 +25,7 @@ render: |
       address: 169 # "Total grid power"
       type: holding
       decode: int16
-  energy:
+  import:
     source: calc
     add:
     - source: modbus
@@ -71,7 +71,7 @@ render: |
         address: 189 # "PV4 input power"
         type: holding
         decode: uint16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -88,7 +88,7 @@ render: |
       address: 190 # "Battery output power"
       type: holding
       decode: int16
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

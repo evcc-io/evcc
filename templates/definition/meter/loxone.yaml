@@ -36,7 +36,7 @@ render: |
       password: {{ .password }}
     jq: .LL.value
     scale: 1000
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/jdev/sps/io/{{ .meterblock }}/all
     auth:

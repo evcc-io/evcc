@@ -21,7 +21,7 @@ render: |
       type: input
       decode: int32
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -38,7 +38,7 @@ render: |
       type: input
       address: 3004 # Active power
       decode: uint32
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

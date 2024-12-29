@@ -39,7 +39,7 @@ render: |
       uri: {{ include "uri" . }}/status/79
       jq: .[0].[1]
       scale: -1000
-  energy:
+  import:
     source: calc
     add:
     - source: http

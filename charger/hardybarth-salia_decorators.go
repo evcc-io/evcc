@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateSalia(base *Salia, meter func() (float64, error), energyImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case meter == nil && phaseSwitcher == nil:
+	case energyImport == nil && meter == nil && phaseSwitcher == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
+	case energyImport == nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -22,22 +22,33 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
+	case energyImport != nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*Salia
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 		}{
 			Salia: base,
-			Meter: &decorateSaliaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
+	case energyImport != nil && meter != nil && phaseCurrents == nil && phaseSwitcher == nil:
+		return &struct {
+			*Salia
+			api.EnergyImport
+			api.Meter
+		}{
+			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateSaliaMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case energyImport == nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -52,26 +63,26 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
+	case energyImport != nil && meter != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Salia
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.PhaseSwitcher
@@ -82,7 +93,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport == nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -97,26 +108,41 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseSwitcher
 		}{
 			Salia: base,
-			Meter: &decorateSaliaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseSwitcher: &decorateSaliaPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil:
+	case energyImport != nil && meter != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Salia
+			api.EnergyImport
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateSaliaMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateSaliaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -126,29 +152,6 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			Salia: base,
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
-			},
-			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateSaliaPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil:
-		return &struct {
-			*Salia
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-		}{
-			Salia: base,
-			Meter: &decorateSaliaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -158,7 +161,30 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && meter != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Salia
+			api.EnergyImport
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateSaliaMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateSaliaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.PhaseGetter
@@ -173,7 +199,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport == nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -192,20 +218,16 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
-			api.Meter
-			api.MeterEnergy
+			api.EnergyImport
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Salia: base,
-			Meter: &decorateSaliaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
 			},
 			PhaseGetter: &decorateSaliaPhaseGetterImpl{
 				phaseGetter: phaseGetter,
@@ -215,7 +237,30 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && meter != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Salia
+			api.EnergyImport
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
+			Meter: &decorateSaliaMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateSaliaPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateSaliaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case energyImport == nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
 			api.Meter
@@ -238,21 +283,21 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil:
+	case energyImport != nil && meter != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Salia
+			api.EnergyImport
 			api.Meter
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Salia: base,
+			EnergyImport: &decorateSaliaEnergyImportImpl{
+				energyImport: energyImport,
+			},
 			Meter: &decorateSaliaMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateSaliaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateSaliaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -269,20 +314,20 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 	return nil
 }
 
+type decorateSaliaEnergyImportImpl struct {
+	energyImport func() (float64, error)
+}
+
+func (impl *decorateSaliaEnergyImportImpl) EnergyImport() (float64, error) {
+	return impl.energyImport()
+}
+
 type decorateSaliaMeterImpl struct {
 	meter func() (float64, error)
 }
 
 func (impl *decorateSaliaMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
-}
-
-type decorateSaliaMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateSaliaMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }
 
 type decorateSaliaPhaseCurrentsImpl struct {

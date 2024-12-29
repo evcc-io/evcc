@@ -52,7 +52,7 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -97,7 +97,7 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 		bo:    bo,
 	}
 
-	// decorate api.MeterEnergy
+	// decorate api.EnergyImport
 	var totalEnergy func() (float64, error)
 	if usage == "grid" {
 		totalEnergy = m.totalEnergy
@@ -138,7 +138,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (m *RCT) totalEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":

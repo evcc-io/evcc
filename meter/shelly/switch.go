@@ -105,8 +105,8 @@ func (sh *Switch) Enable(enable bool) error {
 	return err
 }
 
-// TotalEnergy implements the api.Meter interface
-func (sh *Switch) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.Meter interface
+func (sh *Switch) EnergyImport() (float64, error) {
 	var energy float64
 
 	d := sh.Connection

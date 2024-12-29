@@ -25,7 +25,7 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # total AC output
     #   | ---------------------------- PAC W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==67109120) | .value )
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
     #   | --------------------- Total Yield W ------------- |

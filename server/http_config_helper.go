@@ -130,8 +130,8 @@ func testInstance(instance any) map[string]testResult {
 		res["power"] = makeResult(val, err)
 	}
 
-	if dev, ok := instance.(api.MeterEnergy); ok {
-		val, err := dev.TotalEnergy()
+	if dev, ok := instance.(api.EnergyImport); ok {
+		val, err := dev.EnergyImport()
 		res["energy"] = makeResult(val, err)
 	}
 

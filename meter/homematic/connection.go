@@ -92,8 +92,8 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return res.FloatValue("POWER"), err
 }
 
-// TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
-func (c *Connection) TotalEnergy() (float64, error) {
+// EnergyImport reads the homematic HMIP-PSM meterchannel energy in Wh
+func (c *Connection) EnergyImport() (float64, error) {
 	res, err := c.meterG.Get()
 	return res.FloatValue("ENERGY_COUNTER") / 1e3, err
 }

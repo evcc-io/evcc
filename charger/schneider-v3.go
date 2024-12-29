@@ -191,10 +191,10 @@ func (wb *Schneider) CurrentPower() (float64, error) {
 	return float64(encoding.Float32LswFirst(b)) * 1e3, nil
 }
 
-var _ api.MeterEnergy = (*Schneider)(nil)
+var _ api.EnergyImport = (*Schneider)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Schneider) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (wb *Schneider) EnergyImport() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEnergy, 4)
 	if err != nil {
 		return 0, err

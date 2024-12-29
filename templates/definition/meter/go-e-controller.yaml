@@ -14,7 +14,7 @@ render: |
     source: http
     uri: http://{{ .host }}/api/status?filter=ccp
     jq: .ccp[1]
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/api/status?filter=cec
     jq: .cec[1][0]/1000
@@ -24,7 +24,7 @@ render: |
     source: http
     uri: http://{{ .host }}/api/status?filter=ccp
     jq: .ccp[4]
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/api/status?filter=cec
     jq: .cec[4][0]/1000

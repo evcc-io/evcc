@@ -241,10 +241,10 @@ func (m *OpenWB) CurrentPower() (float64, error) {
 	return m.currentPowerG()
 }
 
-var _ api.MeterEnergy = (*OpenWB)(nil)
+var _ api.EnergyImport = (*OpenWB)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *OpenWB) TotalEnergy() (float64, error) {
+// EnergyImport implements the api.EnergyImport interface
+func (m *OpenWB) EnergyImport() (float64, error) {
 	return m.totalEnergyG()
 }
 

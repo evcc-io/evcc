@@ -33,7 +33,7 @@ render: |
       address: 13009 # Export power
       decode: int32s
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -96,7 +96,7 @@ render: |
       address: 5016 # Total DC power
       type: input
       decode: uint32s
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -135,7 +135,7 @@ render: |
           address: 13000 # Battery running state
           decode: bool16
           bitmask: 4 # Discharging
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:

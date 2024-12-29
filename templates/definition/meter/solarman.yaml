@@ -22,7 +22,7 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
     regex: webdata_now_p\s*=\s*\"(\d+)\"
-  energy:
+  import:
     source: http
     uri: http://{{ .host }}/status.html
     auth: # basic authorization

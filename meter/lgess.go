@@ -54,7 +54,7 @@ func init() {
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
 
-//go:generate decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.EnergyImport,EnergyImport,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 func NewLgEss8FromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
@@ -98,7 +98,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		conn:  conn,
 	}
 
-	// decorate api.MeterEnergy
+	// decorate api.EnergyImport
 	var totalEnergy func() (float64, error)
 	if m.usage == "grid" && essType != lgpcs.LgEss15 {
 		totalEnergy = m.totalEnergy
@@ -132,7 +132,7 @@ func (m *LgEss) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.EnergyImport interface
 func (m *LgEss) totalEnergy() (float64, error) {
 	data, err := m.conn.Data()
 	if err != nil {
