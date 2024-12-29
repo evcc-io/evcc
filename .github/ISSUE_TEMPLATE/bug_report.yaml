@@ -40,9 +40,9 @@ body:
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
         
-        To create a config without secrets you can use `evcc dump --cfg`
+        Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
         
-        Please ensure you have **no passwords** and **no sponsortoken** in your report
+        To quickly dump a redacted configuration without secrets, you can use the `evcc dump --cfg` command.
 
   - type: textarea
     validations:
