@@ -10,8 +10,7 @@ group: price
 params:
   - name: region
     example: GER
-    type: choice
-    choice:
+    validvalues:
       [
         "EE",
         "LT",
@@ -39,8 +38,7 @@ params:
       ]
   - name: currency
     default: EUR
-    type: choice
-    choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
+    validvalues: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
   - preset: tariff-base
 render: |
   type: custom

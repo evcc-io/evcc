@@ -9,8 +9,7 @@ group: price
 params:
   - name: region
     example: AT
-    type: choice
-    choice: ["DE", "AT"]
+    validvalues: ["DE", "AT"]
   - preset: tariff-base
 render: |
   type: awattar

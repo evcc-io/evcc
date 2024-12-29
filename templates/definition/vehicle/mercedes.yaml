@@ -13,8 +13,7 @@ params:
     required: true
   - name: region
     required: true
-    type: choice
-    choice: ["EMEA", "APAC", "NORAM"]
+    validvalues: [EMEA, APAC, NORAM]
     default: EMEA
   - name: accessToken
     required: true
