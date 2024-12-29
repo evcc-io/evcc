@@ -3,7 +3,7 @@ package charger
 // LICENSE
 
 // Copyright (c) 2019-2022 andig
-// Copyright (c) 2022 premultiply
+// Copyright (c) 2022-2024 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -163,6 +163,11 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(r), nil
 	default:
+		// ensure Outlet is re-enabled after wake-up
+		if b[1] == 0xE0 { // Outlet is disabled
+			return api.StatusNone, wb.set(ablRegModifyState, 0xA1A1)
+		}
+
 		status, ok := ablStatus[b[1]]
 		if !ok {
 			status = string(r)
