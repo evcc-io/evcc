@@ -444,7 +444,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		exampleValue: param.Example,
 		help:         param.Help.ShortString(c.lang),
 		valueType:    param.Type,
-		choice:       param.Choice,
+		validValues:  param.ValidValues,
 		mask:         param.IsMasked(),
 		required:     param.IsRequired(),
 	})

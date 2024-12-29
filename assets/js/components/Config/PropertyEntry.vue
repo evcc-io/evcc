@@ -14,7 +14,7 @@
 			:type="Type"
 			class="me-2"
 			:required="Required"
-			:choice="Choice"
+			:validValues="ValidValues"
 		/>
 	</FormRow>
 </template>
@@ -36,7 +36,7 @@ export default {
 		Example: String,
 		Type: String,
 		Mask: Boolean,
-		Choice: Array,
+		ValidValues: Array,
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],

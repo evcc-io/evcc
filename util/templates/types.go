@@ -187,6 +187,7 @@ type Param struct {
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
+	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
 
