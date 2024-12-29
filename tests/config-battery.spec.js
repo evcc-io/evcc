@@ -33,7 +33,7 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+    await meterModal.getByRole("button", { name: "Add Battery" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -77,7 +77,7 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+    await meterModal.getByRole("button", { name: "Add Battery" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await expect(meterModal.getByLabel("Password optional")).not.toBeVisible();
     await page.getByRole("button", { name: "Show advanced settings" }).click();

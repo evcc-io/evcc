@@ -26,12 +26,12 @@
 					<div class="modal-body">
 						<div v-if="!meterType">
 							<AddDeviceButton
-								title="Add solar meter"
+								:title="$t('config.pv.titleAdd')"
 								class="mb-4 addButton"
 								@click="selectType('pv')"
 							/>
 							<AddDeviceButton
-								title="Add battery meter"
+								:title="$t('config.battery.titleAdd')"
 								class="addButton"
 								@click="selectType('battery')"
 							/>
