@@ -607,7 +607,10 @@ func (site *Site) updateAuxMeters() {
 		return acc + m.Power
 	}, 0)
 
-	site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
+	if len(site.auxMeters) > 1 {
+		site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
+	}
+
 	site.publish(keys.AuxPower, site.auxPower)
 	site.publish(keys.Aux, mm)
 }
