@@ -586,11 +586,11 @@ scale3p = "Aumento a potenza trifase in {remaining}…"
 targetChargeActive = "Piano di ricarica attivo. Fine prevista tra {duration}."
 targetChargePlanned = "Il piano di ricarica inizia tra {duration}."
 targetChargeWaitForVehicle = "Piano di ricarica pronto. In attesa del veicolo..."
+unknown = ""
 vehicleLimit = "Limite del veicolo."
 vehicleLimitReached = "Limite del veicolo raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 welcome = "Piccola carica iniziale per confermare la connessione."
-unknown = ""
 
 [notifications]
 dismissAll = "Rimuovi tutte"
