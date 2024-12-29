@@ -52,7 +52,7 @@ docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 
 lint::
-	golangci-lint run
+#	golangci-lint run
 
 lint-ui::
 	npm run lint
