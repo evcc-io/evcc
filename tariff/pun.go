@@ -127,7 +127,6 @@ func (t *Pun) Type() api.TariffType {
 }
 
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
-	// Cookie Jar to store cookies between requests
 	client := request.NewClient(t.log)
 	client.Jar, _ = cookiejar.New(nil)
 
@@ -153,7 +152,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		t.log.TRACE.Println(`PUN Zip file request failed:`, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
