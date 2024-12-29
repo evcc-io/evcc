@@ -78,6 +78,8 @@ func (t *Pun) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var today api.Rates
+
+		// get today data
 		if err := backoff.Retry(func() error {
 			var err error
 
@@ -91,6 +93,7 @@ func (t *Pun) run(done chan error) {
 			continue
 		}
 
+		// get tomorrow data
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
