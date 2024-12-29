@@ -9,8 +9,7 @@ params:
     description:
       de: Region
       en: Region
-    type: choice
-    choice: ["EU", "AU"]
+    validvalues: ["EU", "AU"]
     default: EU
     advanced: true
 render: |
