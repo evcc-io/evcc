@@ -10,8 +10,7 @@ params:
   - name: modbus
     choice: ["tcpip"]
   - name: tempsource
-    type: choice
-    choice: ["", "warmwater", "buffer"]
+    validvalues: ["", "warmwater", "buffer"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"

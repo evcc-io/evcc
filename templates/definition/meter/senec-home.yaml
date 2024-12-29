@@ -11,7 +11,9 @@ params:
   - name: host
   - name: schema
     type: choice
-    choice: ["https", "http"]
+    validvalues:
+      - https
+      - http
     default: https
   - name: capacity
     advanced: true

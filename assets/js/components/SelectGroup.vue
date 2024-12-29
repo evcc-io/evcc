@@ -21,7 +21,7 @@ export default {
 	props: {
 		id: String,
 		options: Array,
-		modelValue: [Number, String, Boolean],
+		modelValue: [Number, String],
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,

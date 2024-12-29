@@ -111,7 +111,7 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
-		choice: { type: Array, default: () => [] },
+		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -171,15 +171,15 @@ export default {
 			return this.type === "List";
 		},
 		select() {
-			return this.choice.length > 0;
+			return this.validValues.length > 0;
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (typeof this.choice[0] === "object") {
-				return this.choice;
+			if (typeof this.validValues[0] === "object") {
+				return this.validValues;
 			}
 
-			let values = [...this.choice];
+			let values = [...this.validValues];
 
 			if (this.icons && !this.required) {
 				values = ["", ...values];
