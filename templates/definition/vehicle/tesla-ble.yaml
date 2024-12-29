@@ -60,14 +60,12 @@ render: |
     scale: 1.60934
     timeout: 30s
   status:
-    source: combined
-    plugged:
-      source: http
-      uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-      jq: .response.response.charge_state.charging_state != "Disconnected"
-      timeout: 30s
-    charging:
-      source: http
-      uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-      jq: .response.response.charge_state.charging_state == "Charging"
-      timeout: 30s
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    method: GET
+    jq: (if (.response.response.charge_state.charging_state == "Charging") then "C"
+      elif (.response.response.charge_state.charging_state == "Stopped") then "B"
+      elif (.response.response.charge_state.charging_state == "NoPower") then "B"
+      elif (.response.response.charge_state.charging_state == "Complete") then "B" 
+      else "A" end)
+    timeout: 30s
