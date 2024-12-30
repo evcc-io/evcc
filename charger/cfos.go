@@ -114,10 +114,6 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // laden
 		return api.StatusC, nil
-	case 3: // laden mit Kühlung
-		return api.StatusD, nil
-	case 4: // kein Strom
-		return api.StatusE, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
