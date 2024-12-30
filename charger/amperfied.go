@@ -183,7 +183,7 @@ func (wb *Amperfied) Status() (api.ChargeStatus, error) {
 			return api.StatusB, nil
 		}
 
-		return api.StatusF, nil
+		fallthrough
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}

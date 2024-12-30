@@ -166,10 +166,8 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		return api.StatusC, err
 	case 4:
 		return api.StatusD, err
-	case 5, 6, 7, 8, 9, 10, 11:
-		return api.StatusF, err
 	default:
-		return api.StatusNone, fmt.Errorf("unknown EVSE state: %d", state)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", state)
 	}
 }
 
