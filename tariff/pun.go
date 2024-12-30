@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"slices"
@@ -77,18 +76,13 @@ func (t *Pun) run(done chan error) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		var today api.Rates
-
 		// get today data
-		if err := backoff.Retry(func() error {
-			var err error
-
-			today, err = t.getData(time.Now())
-
-			return err
-		}, bo()); err != nil {
+		today, err := backoff.RetryWithData(func() (api.Rates, error) {
+			res, err := t.getData(time.Now())
+			return res, backoffPermanentError(err)
+		}, bo())
+		if err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -132,32 +126,26 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 
 	// Request the ZIP file
 	uri := "https://gme.mercatoelettrico.org/DesktopModules/GmeDownload/API/ExcelDownload/downloadzipfile?DataInizio=" + day.Format("20060102") + "&DataFine=" + day.Format("20060102") + "&Date=" + day.Format("20060102") + "&Mercato=MGP&Settore=Prezzi&FiltroDate=InizioFine"
-	req, err := http.NewRequest("GET", uri, nil)
+	req, _ := http.NewRequest("GET", uri, nil)
+	req.Header = http.Header{
+		"Referer":            {"https://gme.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Download?valore=Prezzi"},
+		"moduleid":           {"12103"},
+		"sec-ch-ua-mobile":   {"?0"},
+		"sec-ch-ua-platform": {"Windows"},
+		"sec-fetch-dest":     {"empty"},
+		"sec-fetch-mode":     {"cors"},
+		"sec-fetch-site":     {"same-origin"},
+		"sec-gpc":            {"1"},
+		"tabid":              {"1749"},
+		"userid":             {"-1"},
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header = http.Header{
-		"moduleid":           []string{"12103"},
-		"Referer":            []string{"https://gme.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Download?valore=Prezzi"},
-		"sec-ch-ua-mobile":   []string{"?0"},
-		"sec-ch-ua-platform": []string{"Windows"},
-		"sec-fetch-dest":     []string{"empty"},
-		"sec-fetch-mode":     []string{"cors"},
-		"sec-fetch-site":     []string{"same-origin"},
-		"sec-gpc":            []string{"1"},
-		"tabid":              []string{"1749"},
-		"userid":             []string{"-1"},
-	}
-
-	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Process the ZIP file
-	body, err := io.ReadAll(resp.Body)
+	body, err := request.ReadBody(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -178,14 +166,9 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 	defer f.Close()
 
-	xmlFile, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
 	// Process the received data
 	var dataSet NewDataSet
-	if err := xml.NewDecoder(bytes.NewReader(xmlFile)).Decode(&dataSet); err != nil {
+	if err := xml.NewDecoder(f).Decode(&dataSet); err != nil {
 		return nil, err
 	}
 
