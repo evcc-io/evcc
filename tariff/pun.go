@@ -141,7 +141,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 
 	resp, err := client.Do(req)
-	if err != nil {
+	if err != nil || resp.StatusCode == http.StatusNotFound {
 		return nil, err
 	}
 
