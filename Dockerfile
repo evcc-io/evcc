@@ -56,18 +56,19 @@ COPY --from=node /build/dist /build/dist
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
+ARG TARGETPLATFORM
 
-RUN case "${TARGETVARIANT}" in \
-	"armhf") export GOARM='6' ;; \
-	"armv7") export GOARM='6' ;; \
-	"v6") export GOARM='6' ;; \
-	"v7") export GOARM='7' ;; \
-	esac;
+RUN echo "I'm building for platform: $TARGETPLATFORM"
+RUN echo "I'm building for arch: $TARGETARCH"
+RUN echo "I'm building for variant: $TARGETVARIANT"
+RUN echo "I'm building for OS: $TARGETOS"
+
+ARG GOARM=${TARGETVARIANT#v}
 
 ARG TESLA_CLIENT_ID
 ENV TESLA_CLIENT_ID=${TESLA_CLIENT_ID}
 
-RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
+RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
 # STEP 3 build a small image including module support
