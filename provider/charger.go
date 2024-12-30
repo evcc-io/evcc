@@ -10,16 +10,16 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
-type enableProvider struct {
+type chargerProvider struct {
 	charger api.Charger
 }
 
 func init() {
-	registry.AddCtx("map", NewMapFromConfig)
+	registry.AddCtx("charger", NewChargerEnableFromConfig)
 }
 
-// NewEnableFromConfig creates type conversion provider
-func NewEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewChargerEnableFromConfig creates type conversion provider
+func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Charger config.Typed
 	}
@@ -37,24 +37,24 @@ func NewEnableFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 		return nil, err
 	}
 
-	o := &enableProvider{
+	o := &chargerProvider{
 		charger: charger,
 	}
 
 	return o, nil
 }
 
-var _ BoolProvider = (*enableProvider)(nil)
+var _ BoolProvider = (*chargerProvider)(nil)
 
-func (o *enableProvider) BoolGetter() (func() (bool, error), error) {
+func (o *chargerProvider) BoolGetter() (func() (bool, error), error) {
 	return func() (bool, error) {
 		return o.charger.Enabled()
 	}, nil
 }
 
-var _ SetBoolProvider = (*enableProvider)(nil)
+var _ SetBoolProvider = (*chargerProvider)(nil)
 
-func (o *enableProvider) BoolSetter(param string) (func(bool) error, error) {
+func (o *chargerProvider) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return o.charger.Enable(val)
 	}, nil
