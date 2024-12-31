@@ -1,5 +1,5 @@
 <template>
-	<h3 class="fw-normal mb-4">Übersicht</h3>
+	<h3 class="fw-normal mb-4">{{ $t("sessions.overview") }}</h3>
 
 	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mb-5">
 		<p>{{ $t("sessions.noData") }}</p>

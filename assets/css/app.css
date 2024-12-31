@@ -632,3 +632,7 @@ html.app .modal-dialog {
 .alert-danger code {
 	color: var(--evcc-darkest-green);
 }
+
+input::-webkit-date-and-time-value {
+	text-align: left;
+}

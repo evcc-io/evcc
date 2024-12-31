@@ -19,12 +19,15 @@ type SwitchSocket struct {
 	*switchSocket
 }
 
+//go:generate decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		Enabled      provider.Config
 		Enable       provider.Config
 		Power        provider.Config
+		Energy       *provider.Config
 		StandbyPower float64
 	}
 
@@ -47,13 +50,21 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
+	var energy func() (float64, error)
+	if cc.Energy != nil {
+		energy, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	c := &SwitchSocket{
 		enabled:      enabled,
 		enable:       enable,
 		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),
 	}
 
-	return c, nil
+	return decorateSwitchSocket(c, energy), nil
 }
 
 func (c *SwitchSocket) Enabled() (bool, error) {

@@ -3,11 +3,11 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"maps"
 	"regexp"
 	"slices"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
@@ -50,9 +50,10 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprig.FuncMap()).
+		Funcs(sprig.TxtFuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
+			"addDate":   addDate,
 		}).Parse(s)
 	if err != nil {
 		return s, err

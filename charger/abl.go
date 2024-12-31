@@ -96,7 +96,7 @@ func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {

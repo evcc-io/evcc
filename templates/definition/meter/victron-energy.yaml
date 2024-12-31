@@ -18,17 +18,17 @@ params:
   - name: capacity
     advanced: true
   - name: meterid # grid meter VRM instance
-    type: number
+    type: int
     usages: ["grid"]
     help:
       de: "Grid-Energiezähler VRM instance- kann im VRM Portal oder im RemoteUI ausgelesen werden."
       en: "Grid meter VRM instance- can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
-    type: number
+    type: int
     advanced: true
   - name: maxsoc
-    type: number
+    type: int
     advanced: true
 render: |
   type: custom

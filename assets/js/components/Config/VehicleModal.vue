@@ -177,7 +177,7 @@
 										<PropertyField
 											id="vehicleParamPriority"
 											v-model="values.priority"
-											type="Number"
+											type="Int"
 											size="w-100"
 											class="me-2"
 											:valid-values="priorityOptions"
@@ -193,7 +193,7 @@
 										<PropertyField
 											id="vehicleParamIdentifiers"
 											v-model="values.identifiers"
-											type="StringList"
+											type="List"
 											property="identifiers"
 											size="w-100"
 											class="me-2"

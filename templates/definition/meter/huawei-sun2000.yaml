@@ -24,11 +24,25 @@ params:
   - name: timeout
     default: 15s
   - name: storageunit
-    type: number
+    type: int
     default: 1
+    advanced: true
+  - name: maxchargepower
+    default: 10000
     advanced: true
   - name: capacity
     advanced: true
+  - name: forceaccharging
+    default: false
+    advanced: true
+    type: bool
+    usages: ["battery"]
+    description:
+      en: Inverter cascade
+      de: Wechselrichterkaskade
+    help:
+      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -150,15 +164,28 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 0 # stop
+          source: sequence
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47100 # Forcible charge/discharge
-              type: writesingle
-              encoding: uint16
+          - source: const
+            value: 0 # stop
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47100 # Forcible charge/discharge
+                type: writesingle
+                encoding: uint16
+          {{- if eq .forceaccharging "false" }}
+          - source: const
+            value: 0 # Disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47087 # Charge from grid
+                type: writesingle
+                encoding: uint16
+          {{- end }}
       - case: 2 # hold
         set:
           source: sequence
@@ -231,7 +258,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 10000 # W
+            value: {{ .maxchargepower }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

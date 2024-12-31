@@ -134,11 +134,6 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // Charging
 		return api.StatusC, nil
-	case
-		7, // Reserved
-		8, // Disabled
-		9: // Faulted
-		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}

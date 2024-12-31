@@ -20,6 +20,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -108,12 +110,14 @@ render: |
   power:
     source: calc
     mul:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 13021 # Battery power
-        type: input
-        decode: int16
+    - source: calc
+      abs:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 13021 # Battery power
+          decode: int16
     - source: calc
       add:
       - source: modbus
@@ -222,6 +226,18 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
+        {{- if .maxchargepower }}
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13051 # Charge power
+              type: writesingle
+              decode: uint16
+        {{- else }}
         - source: go
           script: power
           in:
@@ -247,5 +263,6 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
+        {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

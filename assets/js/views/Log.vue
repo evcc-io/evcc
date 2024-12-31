@@ -197,7 +197,7 @@ export default {
 		},
 	},
 	watch: {
-		selectedAreas() {
+		areas() {
 			this.updateLogs();
 		},
 		level() {
@@ -339,7 +339,7 @@ export default {
 	--opacity: 1;
 	opacity: var(--opacity);
 	animation-name: fadeIn;
-	animation-duration: 1s;
+	animation-duration: var(--transition-duration-fast);
 	animation-fill-mode: forwards;
 	animation-timing-function: ease-out;
 	text-indent: 1rem hanging;
@@ -361,9 +361,9 @@ export default {
 	color: var(--bs-danger);
 }
 .log-debug {
-	--opacity: 0.6;
+	--opacity: 0.7;
 }
 .log-trace {
-	--opacity: 0.4;
+	--opacity: 0.5;
 }
 </style>

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
@@ -16,25 +17,28 @@ import (
 )
 
 type Pipeline struct {
-	log    *util.Logger
-	re     *regexp.Regexp
-	jq     *gojq.Query
-	dflt   string
-	unpack string
-	decode string
+	log        *util.Logger
+	re         *regexp.Regexp
+	jq         *gojq.Query
+	allowEmpty bool
+	dflt       string
+	unpack     string
+	decode     string
 }
 
 type Settings struct {
-	Regex   string
-	Default string
-	Jq      string
-	Unpack  string
-	Decode  string
+	AllowEmpty bool
+	Regex      string
+	Default    string
+	Jq         string
+	Unpack     string
+	Decode     string
 }
 
 func New(log *util.Logger, cc Settings) (*Pipeline, error) {
 	p := &Pipeline{
-		log: log,
+		log:        log,
+		allowEmpty: cc.AllowEmpty,
 	}
 
 	var err error
@@ -169,6 +173,10 @@ func (p *Pipeline) decodeValue(value []byte) (float64, error) {
 }
 
 func (p *Pipeline) Process(in []byte) ([]byte, error) {
+	if p.allowEmpty && len(bytes.TrimSpace(in)) == 0 {
+		return nil, nil
+	}
+
 	b := p.transformXML(in)
 
 	if p.re != nil {
@@ -185,7 +193,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 	if p.jq != nil {
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
-			return b, err
+			return b, backoff.Permanent(err)
 		}
 		b = []byte(fmt.Sprintf("%v", v))
 	}

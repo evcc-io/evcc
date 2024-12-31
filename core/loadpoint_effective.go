@@ -1,16 +1,19 @@
 package core
 
 import (
+	"sort"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util"
 )
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
@@ -28,24 +31,72 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
-// vehiclePlanSoc returns the next vehicle plan time and soc
-func (lp *Loadpoint) vehiclePlanSoc() (time.Time, int) {
+// nextVehiclePlan returns the next vehicle plan time, soc and id
+func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	if v := lp.GetVehicle(); v != nil {
-		return vehicle.Settings(lp.log, v).GetPlanSoc()
+		type plan struct {
+			Time time.Time
+			Soc  int
+			Id   int
+		}
+
+		var plans []plan
+
+		// static plan
+		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+			plans = append(plans, plan{Id: 1, Soc: soc, Time: planTime})
+		}
+
+		// repeating plans
+		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
+			if !rp.Active || len(rp.Weekdays) == 0 {
+				continue
+			}
+
+			time, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+			if err != nil {
+				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
+				continue
+			}
+
+			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, Time: time})
+		}
+
+		// sort plans by time
+		sort.Slice(plans, func(i, j int) bool {
+			return plans[i].Time.Before(plans[j].Time)
+		})
+
+		if len(plans) > 0 {
+			return plans[0].Time, plans[0].Soc, plans[0].Id
+		}
 	}
-	return time.Time{}, 0
+	return time.Time{}, 0, 0
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, soc := lp.vehiclePlanSoc()
+	_, soc, _ := lp.nextVehiclePlan()
 	return soc
+}
+
+// EffectivePlanId returns the id for the current plan
+func (lp *Loadpoint) EffectivePlanId() int {
+	if lp.socBasedPlanning() {
+		_, _, id := lp.nextVehiclePlan()
+		return id
+	}
+	if lp.planEnergy > 0 {
+		return 1
+	}
+	// no plan
+	return 0
 }
 
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _ := lp.vehiclePlanSoc()
+		ts, _, _ := lp.nextVehiclePlan()
 		return ts
 	}
 

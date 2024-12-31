@@ -3,13 +3,16 @@ products:
   - brand: MG
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
-    help:
-      de: Erforderlich
-      en: Required
     required: true
+  - name: region
+    description:
+      de: Region
+      en: Region
+    validvalues: ["EU", "AU"]
+    default: EU
+    advanced: true
 render: |
   type: mg
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
+  region: {{ .region }}

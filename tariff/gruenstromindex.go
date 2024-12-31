@@ -9,51 +9,17 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff/corrently"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 type GrünStromIndex struct {
+	*request.Helper
 	log  *util.Logger
 	zip  string
 	data *util.Monitor[api.Rates]
-}
-
-type gsiForecast struct {
-	Support       string `json:"support"`
-	License       string `json:"license"`
-	Info          string `json:"info"`
-	Documentation string `json:"documentation"`
-	Commercial    string `json:"commercial"`
-	Signee        string `json:"signee"`
-	Forecast      []struct {
-		Epochtime     int     `json:"epochtime"`
-		Eevalue       int     `json:"eevalue"`
-		Ewind         int     `json:"ewind"`
-		Esolar        int     `json:"esolar"`
-		Ensolar       int     `json:"ensolar"`
-		Enwind        int     `json:"enwind"`
-		Sci           int     `json:"sci"`
-		Gsi           float64 `json:"gsi"`
-		TimeStamp     int64   `json:"timeStamp"`
-		Energyprice   string  `json:"energyprice"`
-		Co2GStandard  int     `json:"co2_g_standard"`
-		Co2GOekostrom int     `json:"co2_g_oekostrom"`
-		Timeframe     struct {
-			Start int64 `json:"start"`
-			End   int64 `json:"end"`
-		} `json:"timeframe"`
-		Iat       int64  `json:"iat"`
-		Zip       string `json:"zip"`
-		Signature string `json:"signature"`
-	} `json:"forecast"`
-	Location struct {
-		Zip       string `json:"zip"`
-		City      string `json:"city"`
-		Signature string `json:"signature"`
-	} `json:"location"`
-	Err     bool
-	Message any
 }
 
 var _ api.Tariff = (*GrünStromIndex)(nil)
@@ -64,19 +30,26 @@ func init() {
 
 func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Zip string
+		Zip   string
+		Token string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("gsi").Redact(cc.Zip)
+	log := util.NewLogger("gsi").Redact(cc.Zip, cc.Token)
 
 	t := &GrünStromIndex{
-		log:  log,
-		zip:  cc.Zip,
-		data: util.NewMonitor[api.Rates](2 * time.Hour),
+		log:    log,
+		zip:    cc.Zip,
+		Helper: request.NewHelper(log),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+	}
+
+	t.Client.Transport = &oauth2.Transport{
+		Base:   t.Client.Transport,
+		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
 	}
 
 	done := make(chan error)
@@ -88,16 +61,13 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 
 func (t *GrünStromIndex) run(done chan error) {
 	var once sync.Once
-	client := request.NewHelper(t.log)
-
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
-		var res gsiForecast
+	for tick := time.Tick(time.Hour); ; <-tick {
+		var res corrently.Forecast
 
 		err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo())
 
 		if err == nil && res.Err {

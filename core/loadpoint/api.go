@@ -67,6 +67,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectivePlanId returns the effective plan id
+	EffectivePlanId() int
 	// EffectivePlanTime returns the effective plan time
 	EffectivePlanTime() time.Time
 	// EffectiveMinPower returns the min charging power for the minimum active phases

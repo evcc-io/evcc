@@ -22,7 +22,7 @@ type Connection struct {
 	data *util.Monitor[Data]
 }
 
-func NewConnection(account, serial string, timeout time.Duration) (*Connection, error) {
+func NewConnection(region, account, serial string, timeout time.Duration) (*Connection, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -31,12 +31,12 @@ func NewConnection(account, serial string, timeout time.Duration) (*Connection, 
 		return conn, nil
 	}
 
-	res, err := MqttCredentials(account, serial)
+	log := util.NewLogger("zendure")
+	res, err := MqttCredentials(log, region, account, serial)
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("zendure")
 	client, err := mqtt.NewClient(
 		log,
 		net.JoinHostPort(res.Data.MqttUrl, strconv.Itoa(res.Data.Port)), res.Data.AppKey, res.Data.Secret,
@@ -76,6 +76,8 @@ func (c *Connection) handler(data string) {
 		if err := mergo.Merge(&v, res.Data); err != nil {
 			c.log.ERROR.Println(err)
 		}
+
+		c.log.TRACE.Printf("!! data: %+v", v)
 
 		return v
 	})
