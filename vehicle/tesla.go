@@ -2,7 +2,7 @@ package vehicle
 
 import (
 	"context"
-	"os"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,15 +23,7 @@ type Tesla struct {
 }
 
 func init() {
-	if id := os.Getenv("TESLA_CLIENT_ID"); id != "" {
-		tesla.OAuth2Config.ClientID = id
-	}
-	if secret := os.Getenv("TESLA_CLIENT_SECRET"); secret != "" {
-		tesla.OAuth2Config.ClientSecret = secret
-	}
-	if tesla.OAuth2Config.ClientID != "" {
-		registry.Add("tesla", NewTeslaFromConfig)
-	}
+	registry.Add("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
@@ -60,6 +52,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if cc.Credentials.Secret != "" {
 		tesla.OAuth2Config.ClientSecret = cc.Credentials.Secret
+	}
+
+	if tesla.OAuth2Config.ClientID == "" {
+		return nil, errors.New("missing client id, see https://github.com/evcc-io/evcc/discussions/17501")
 	}
 
 	token, err := cc.Tokens.Token()
