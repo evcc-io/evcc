@@ -107,14 +107,12 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				return api.StatusA, nil
 			}
 			switch res2.BatteryChargeStatus.ChargingState {
-			case "ERROR":
-				return api.StatusF, nil
 			case "OFF", "COMPLETED":
 				return api.StatusB, nil
 			case "ON", "CHARGING":
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, errors.New("emobility - unknown charging state: " + res2.BatteryChargeStatus.ChargingState)
+				return api.StatusNone, errors.New("emobility - invalid status: " + res2.BatteryChargeStatus.ChargingState)
 			}
 		}
 	}

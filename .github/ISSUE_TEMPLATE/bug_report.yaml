@@ -39,6 +39,10 @@ body:
       render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
+        
+        Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
+        
+        To quickly dump a redacted configuration without secrets, you can use the `evcc dump --cfg` command.
 
   - type: textarea
     validations:
@@ -54,7 +58,7 @@ body:
     validations:
       required: true
     attributes:
-      label: What type of operating system are you running?
+      label: What type of operating system or environment does evcc run on?
       description: >
         **NOTE** if you're using HomeAssistant or Docker we ask you to reproduce the problem on plain Linux or Windows first.
       options:
@@ -62,12 +66,14 @@ body:
         - Windows
         - Docker container
         - HomeAssistant Add-on
+        - macOS
+        - other
 
   - type: checkboxes
     id: nightly
     attributes:
       label: Nightly build
-      description: Check if issue as already been fixed in the latest nightly build
+      description: Check if the issue has not already been fixed in the latest nightly build
       options:
         - label: I have verified that the issue is reproducible with the latest nightly build
           required: true

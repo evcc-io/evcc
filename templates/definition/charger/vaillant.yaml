@@ -22,7 +22,13 @@ params:
     help:
       de: Boost Temperatur (zusätzlich zu Warmwasser)
       en: Boost temperature setpoint (in addition to hot water)
+  - name: phases
+    type: int
+    advanced: true
 render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
+  heatingzone: {{ .zone }}
+  heatingsetpoint: {{ .setpoint }}
+  phases: {{ .phases }}

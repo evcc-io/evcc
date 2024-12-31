@@ -51,8 +51,7 @@ render: |
           source: http
           uri: https://enever.nl/api/stroomprijs_vandaag.php?token={{ .token }}
           jq: |
-            .data | [
-              .[] |
+            [ .data.[] |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
@@ -65,8 +64,7 @@ render: |
           source: http
           uri: https://enever.nl/api/stroomprijs_morgen.php?token={{ .token }}
           jq: |
-            .data | [
-              .[] |
+            [ .data.[] |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
