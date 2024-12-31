@@ -63,8 +63,8 @@ func TestPublishSocAndRange(t *testing.T) {
 		status  api.ChargeStatus
 		allowed bool
 	}{
-		{api.StatusB, false},
-		{api.StatusC, true},
+		{api.StatusConnected, false},
+		{api.StatusCharging, true},
 	}
 
 	for _, tc := range tc {
@@ -240,7 +240,7 @@ func TestReconnectVehicle(t *testing.T) {
 			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
 
 			charger := api.NewMockCharger(ctrl)
-			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+			charger.EXPECT().Status().Return(api.StatusConnected, nil).AnyTimes()
 
 			lp := &Loadpoint{
 				log:           util.NewLogger("foo"),
@@ -268,7 +268,7 @@ func TestReconnectVehicle(t *testing.T) {
 			charger.EXPECT().Enabled().Return(true, nil)
 
 			// vehicle not updated yet
-			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
+			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusDisconnected, nil)
 
 			lp.Update(0, 0, nil, false, false, 0, nil, nil)
 			ctrl.Finish()
@@ -282,7 +282,7 @@ func TestReconnectVehicle(t *testing.T) {
 			// sync charger
 			charger.EXPECT().Enabled().Return(true, nil)
 			// vehicle not updated yet
-			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
+			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusConnected, nil)
 
 			lp.Update(0, 0, nil, false, false, 0, nil, nil)
 			ctrl.Finish()

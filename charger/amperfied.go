@@ -144,7 +144,7 @@ func (wb *Amperfied) set(reg, val uint16) error {
 func (wb *Amperfied) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegChargingState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	sb := binary.BigEndian.Uint16(b)
@@ -155,33 +155,33 @@ func (wb *Amperfied) Status() (api.ChargeStatus, error) {
 
 	switch sb {
 	case 2, 3:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 4, 5:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 6, 7:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 10:
 		// ensure RemoteLock is disabled after wake-up
 		b, err := wb.conn.ReadHoldingRegisters(ampRegRemoteLock, 1)
 		if err != nil {
-			return api.StatusNone, err
+			return api.StatusUnknown, err
 		}
 
 		// unlock
 		if binary.BigEndian.Uint16(b) != 1 {
 			if err := wb.set(ampRegRemoteLock, 1); err != nil {
-				return api.StatusNone, err
+				return api.StatusUnknown, err
 			}
 		}
 
 		// keep status B2 during wakeup
 		if wb.wakeup {
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		}
 
 		fallthrough
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", sb)
 	}
 }
 

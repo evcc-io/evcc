@@ -100,7 +100,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 
 		uri := fmt.Sprintf("%s/status", wb.uri)
 		if err := wb.GetJSON(uri, &status); err != nil {
-			return api.StatusNone, err
+			return api.StatusUnknown, err
 		}
 		chargeStatus = status.ChargeStatus
 		sessionStartTime = status.SessionStartTime
@@ -109,10 +109,10 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 
 		uri := fmt.Sprintf("%s/slaves/false", wb.uri)
 		if err := wb.GetJSON(uri, &status); err != nil {
-			return api.StatusNone, err
+			return api.StatusUnknown, err
 		}
 		if wb.slaveIndex >= len(status) {
-			return api.StatusNone, nil
+			return api.StatusUnknown, nil
 		}
 		chargeStatus = status[wb.slaveIndex].ChargeStatus
 		sessionStartTime = status[wb.slaveIndex].SessionStartTime
@@ -121,22 +121,22 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 
 	switch chargeStatus {
 	case 0x00, 0x10: // notconnected
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 0x30: // connected
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 0x40: // charging
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 0x42, // chargepaused
 		0x50, // chargefinished
 		0x60: // chargecancelled
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 0x90: // unavailable
 		if sessionStartTime > 0 {
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		}
 		fallthrough
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", chargeStatus)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", chargeStatus)
 	}
 }
 

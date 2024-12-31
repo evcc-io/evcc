@@ -138,7 +138,7 @@ func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	/*
@@ -160,16 +160,16 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 
 	switch res.State {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2, 254, 255:
 		if res.Vehicle == 1 {
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		}
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", res.State)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", res.State)
 	}
 }
 

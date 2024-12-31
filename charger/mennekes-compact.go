@@ -134,21 +134,21 @@ func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration)
 func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegEvseState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch status := encoding.Uint16(b); status {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 
 	case 2, 3, 4:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 
 	case 5:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

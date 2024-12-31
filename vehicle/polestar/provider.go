@@ -43,12 +43,12 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status, err := v.statusG()
 
-	res := api.StatusA
+	res := api.StatusDisconnected
 	if status.ChargerConnectionStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
-		res = api.StatusB
+		res = api.StatusConnected
 	}
 	if status.ChargingStatus == "CHARGING_STATUS_CHARGING" {
-		res = api.StatusB
+		res = api.StatusConnected
 	}
 
 	return res, err

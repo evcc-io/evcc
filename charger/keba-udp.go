@@ -171,20 +171,20 @@ func (c *KebaUdp) Status() (api.ChargeStatus, error) {
 	var kr keba.Report2
 	err := c.roundtrip("report", 2, &kr)
 	if err != nil {
-		return api.StatusA, err
+		return api.StatusDisconnected, err
 	}
 
 	if kr.Plug < 5 {
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
 	if kr.State == 3 {
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	}
 	if kr.State != 4 {
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	}
 
-	return api.StatusNone, fmt.Errorf("invalid status: %+d", kr.State)
+	return api.StatusUnknown, fmt.Errorf("invalid status: %+d", kr.State)
 }
 
 // Enabled implements the api.Charger interface

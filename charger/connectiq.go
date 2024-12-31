@@ -92,14 +92,14 @@ func (wb *ConnectIq) status() (connectiq.ChargeStatus, error) {
 func (wb *ConnectIq) Status() (api.ChargeStatus, error) {
 	resp, err := wb.status()
 
-	res := api.StatusNone
+	res := api.StatusUnknown
 	switch resp.Status {
 	case "ready":
-		res = api.StatusA
+		res = api.StatusDisconnected
 	case "ev":
-		res = api.StatusB
+		res = api.StatusConnected
 	case "charging":
-		res = api.StatusC
+		res = api.StatusCharging
 	default:
 		if err == nil {
 			err = fmt.Errorf("invalid status: %s", resp.Status)

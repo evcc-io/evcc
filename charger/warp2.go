@@ -200,7 +200,7 @@ func (wb *Warp2) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (wb *Warp2) Status() (api.ChargeStatus, error) {
-	res := api.StatusNone
+	res := api.StatusUnknown
 
 	var status warp.EvseState
 	err := wb.statusG(&status)
@@ -210,11 +210,11 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 
 	switch status.Iec61851State {
 	case 0:
-		res = api.StatusA
+		res = api.StatusDisconnected
 	case 1:
-		res = api.StatusB
+		res = api.StatusConnected
 	case 2:
-		res = api.StatusC
+		res = api.StatusCharging
 	default:
 		err = fmt.Errorf("invalid status: %d", status.Iec61851State)
 	}

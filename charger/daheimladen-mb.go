@@ -160,30 +160,30 @@ func utf16BytesToString(b []byte, o binary.ByteOrder) string {
 func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	s := binary.BigEndian.Uint16(b)
 
 	switch s {
 	case 1: // Standby (A)
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2: // Connect (B1)
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3: // Start-up State (B2)
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 4: // Charging (C)
 		enabled, err := wb.Enabled()
 		if !enabled {
-			return api.StatusB, err
+			return api.StatusConnected, err
 		}
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 5: // Start-UP Fail (B2)
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 6: // Session Terminated by EVSE
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default: // Other
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

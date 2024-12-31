@@ -101,7 +101,7 @@ func (wb *Obo) heartbeat(ctx context.Context, timeout time.Duration) {
 func (wb *Obo) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(oboRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch u := binary.BigEndian.Uint16(b); u {
@@ -110,7 +110,7 @@ func (wb *Obo) Status() (api.ChargeStatus, error) {
 		return api.ChargeStatus(string('A' + rune(u))), nil
 	default:
 		// D, F
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", u)
 	}
 }
 

@@ -59,18 +59,18 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.statusG()
 	if err == nil {
 		if s, err := res.VehicleStatus.EvStatus.StringVal("EV_CHARGING_STATUS"); err == nil {
 			switch s {
 			case "NOTCONNECTED":
-				status = api.StatusA
+				status = api.StatusDisconnected
 			case "INITIALIZATION", "PAUSED":
-				status = api.StatusB
+				status = api.StatusConnected
 			case "CHARGING":
-				status = api.StatusC
+				status = api.StatusCharging
 			}
 		}
 	}

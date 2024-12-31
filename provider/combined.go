@@ -61,7 +61,7 @@ func (o *combinedProvider) StringGetter() (func() (string, error), error) {
 			return "", err
 		}
 		if charging {
-			return string(api.StatusC), nil
+			return string(api.StatusCharging), nil
 		}
 
 		plugged, err := o.plugged()
@@ -69,9 +69,9 @@ func (o *combinedProvider) StringGetter() (func() (string, error), error) {
 			return "", err
 		}
 		if plugged {
-			return string(api.StatusB), nil
+			return string(api.StatusConnected), nil
 		}
 
-		return string(api.StatusA), nil
+		return string(api.StatusDisconnected), nil
 	}, nil
 }

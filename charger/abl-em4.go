@@ -126,7 +126,7 @@ func (wb *AblEm4) getCurrent() (uint16, error) {
 func (wb *AblEm4) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	r := rune(b[1]>>4-0x0A) + 'A'
@@ -140,7 +140,7 @@ func (wb *AblEm4) Status() (api.ChargeStatus, error) {
 			status = string(r)
 		}
 
-		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", status)
 	}
 }
 

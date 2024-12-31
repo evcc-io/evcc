@@ -167,7 +167,7 @@ func NewConfigurable(
 func (m *Charger) Status() (api.ChargeStatus, error) {
 	s, err := m.statusG()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(s)

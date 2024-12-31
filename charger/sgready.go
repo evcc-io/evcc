@@ -163,14 +163,14 @@ func (wb *SgReady) mode() (int64, error) {
 func (wb *SgReady) Status() (api.ChargeStatus, error) {
 	mode, err := wb.mode()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if mode == Stop {
-		return api.StatusNone, errors.New("stop mode")
+		return api.StatusUnknown, errors.New("stop mode")
 	}
 
-	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}[mode]
+	status := map[int64]api.ChargeStatus{Boost: api.StatusCharging, Normal: api.StatusConnected}[mode]
 	return status, nil
 }
 

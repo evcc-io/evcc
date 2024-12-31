@@ -96,7 +96,7 @@ func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
 func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(versiRegChargeStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(string(b))

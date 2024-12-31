@@ -102,16 +102,16 @@ func NewSwitchSocket(
 // Status calculates a generic switches status
 func (c *switchSocket) Status() (api.ChargeStatus, error) {
 	if c.lp != nil && c.lp.GetMode() == api.ModeOff {
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
 
-	res := api.StatusB
+	res := api.StatusConnected
 
 	// static mode
 	if c.standbypower < 0 {
 		on, err := c.enabled()
 		if on {
-			res = api.StatusC
+			res = api.StatusCharging
 		}
 
 		return res, err
@@ -120,7 +120,7 @@ func (c *switchSocket) Status() (api.ChargeStatus, error) {
 	// standby power mode
 	power, err := c.currentPower()
 	if power > c.standbypower {
-		res = api.StatusC
+		res = api.StatusCharging
 	}
 
 	return res, err

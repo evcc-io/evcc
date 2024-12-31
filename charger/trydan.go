@@ -97,17 +97,17 @@ func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
 func (t Trydan) Status() (api.ChargeStatus, error) {
 	data, err := t.statusG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 	switch state := data.ChargeState; state {
 	case 0:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 1:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown status: %d", state)
+		return api.StatusUnknown, fmt.Errorf("unknown status: %d", state)
 	}
 }
 

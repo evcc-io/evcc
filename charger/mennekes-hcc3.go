@@ -93,18 +93,18 @@ func NewMennekesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 func (wb *MennekesHcc3) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch status := binary.BigEndian.Uint16(b); status {
 	case 1, 2:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 3, 4:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 5, 6:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

@@ -133,14 +133,14 @@ func (wb *Weidmüller) getPhaseValues(reg uint16) (float64, float64, float64, er
 func (wb *Weidmüller) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegCarStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s := string(b[1]); s {
 	case "A", "B", "C":
 		return api.ChargeStatus(s), nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", s)
 	}
 }
 

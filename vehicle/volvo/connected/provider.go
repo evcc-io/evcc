@@ -30,7 +30,7 @@ func (v *Provider) Soc() (float64, error) {
 
 // Range implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.statusG()
 	if err != nil {
@@ -39,13 +39,13 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	switch res.Data.ChargingConnectionStatus.Value {
 	case "CONNECTION_STATUS_DISCONNECTED":
-		status = api.StatusA
+		status = api.StatusDisconnected
 	case "CONNECTION_STATUS_CONNECTED_AC", "CONNECTION_STATUS_CONNECTED_DC":
-		status = api.StatusB
+		status = api.StatusConnected
 	}
 
 	if res.Data.ChargingSystemStatus.Value == "CHARGING_SYSTEM_CHARGING" {
-		status = api.StatusC
+		status = api.StatusCharging
 	}
 
 	return status, err

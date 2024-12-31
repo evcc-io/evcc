@@ -156,7 +156,7 @@ func (wb *Delta) heartbeat(ctx context.Context, timeout time.Duration) {
 func (wb *Delta) statusDelta() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	// 0: Charging process not started (no vehicle connected)
@@ -170,13 +170,13 @@ func (wb *Delta) statusDelta() (api.ChargeStatus, error) {
 
 	switch s := encoding.Uint16(b); s {
 	case 0:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 1, 2, 4, 5, 6, 7:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %0x", s)
 	}
 }
 
@@ -201,7 +201,7 @@ func (wb *Delta) statusReasonDelta() (api.Reason, error) {
 func (wb *Delta) statusOCPP() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	// 0: Unavailable
@@ -217,13 +217,13 @@ func (wb *Delta) statusOCPP() (api.ChargeStatus, error) {
 
 	switch s := encoding.Uint16(b); s {
 	case 0, 1, 2:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 4:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 3, 5, 6, 7, 9:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %0x", s)
 	}
 }
 

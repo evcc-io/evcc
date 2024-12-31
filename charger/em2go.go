@@ -138,18 +138,18 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch binary.BigEndian.Uint16(b) {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2, 3:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 4, 6:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", b[1])
 	}
 }
 

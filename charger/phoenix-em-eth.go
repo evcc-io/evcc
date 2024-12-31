@@ -87,7 +87,7 @@ func NewPhoenixEMEth(uri string, slaveID uint8) (*PhoenixEMEth, error) {
 func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(string(b[1]))

@@ -208,17 +208,17 @@ func (wb *Keba) getChargingState() (uint32, error) {
 // Status implements the api.Charger interface
 func (wb *Keba) Status() (api.ChargeStatus, error) {
 	if connected, err := wb.isConnected(); err != nil || !connected {
-		return api.StatusA, err
+		return api.StatusDisconnected, err
 	}
 
 	s, err := wb.getChargingState()
 	if err != nil {
-		return api.StatusA, err
+		return api.StatusDisconnected, err
 	}
 	if s == 3 {
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	}
-	return api.StatusB, nil
+	return api.StatusConnected, nil
 }
 
 // statusReason implements the api.StatusReasoner interface

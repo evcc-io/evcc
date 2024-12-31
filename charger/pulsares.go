@@ -179,23 +179,23 @@ func (wb *Pulsares) getCurrent() (uint16, error) {
 func (wb *Pulsares) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegConnectionStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if binary.BigEndian.Uint16(b) != 1 {
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
 
 	b, err = wb.conn.ReadHoldingRegisters(pulsaresRegChargeStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if u := binary.BigEndian.Uint16(b); u == 3 || u == 4 {
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	}
 
-	return api.StatusB, nil
+	return api.StatusConnected, nil
 }
 
 // Enabled implements the api.Charger interface

@@ -298,7 +298,7 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		clock:      clock,    // mockable time
 		bus:        bus,      // event bus
 		mode:       api.ModeOff,
-		status:     api.StatusNone,
+		status:     api.StatusUnknown,
 		minCurrent: 6,  // A
 		maxCurrent: 16, // A
 		Soc: SocConfig{
@@ -921,12 +921,12 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 // connected returns the EVs connection state
 func (lp *Loadpoint) connected() bool {
 	status := lp.GetStatus()
-	return status == api.StatusB || status == api.StatusC
+	return status == api.StatusConnected || status == api.StatusCharging
 }
 
 // charging returns the EVs charging state
 func (lp *Loadpoint) charging() bool {
-	return lp.GetStatus() == api.StatusC
+	return lp.GetStatus() == api.StatusCharging
 }
 
 // setStatus updates the internal charging state according to EV
@@ -1023,22 +1023,22 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 	res := make([]string, 0, 2)
 
 	// changed from A - connected
-	if prevStatus == api.StatusA || (status != api.StatusA && prevStatus == api.StatusNone) {
+	if prevStatus == api.StatusDisconnected || (status != api.StatusDisconnected && prevStatus == api.StatusUnknown) {
 		res = append(res, evVehicleConnect)
 	}
 
 	// changed to C - start charging
-	if status == api.StatusC {
+	if status == api.StatusCharging {
 		res = append(res, evChargeStart)
 	}
 
 	// changed from C - stop charging
-	if prevStatus == api.StatusC {
+	if prevStatus == api.StatusCharging {
 		res = append(res, evChargeStop)
 	}
 
 	// changed to A - disconnected
-	if status == api.StatusA {
+	if status == api.StatusDisconnected {
 		res = append(res, evVehicleDisconnect)
 	}
 
@@ -1063,7 +1063,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
-			if prevStatus != api.StatusNone {
+			if prevStatus != api.StatusUnknown {
 				switch ev {
 				case evVehicleConnect:
 					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge)
@@ -1767,7 +1767,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusConnected {
 		if r, err := sr.StatusReason(); err == nil {
 			lp.publish(keys.ChargerStatusReason, r)
 		} else {
@@ -1874,7 +1874,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	}
 
 	// Wake-up checks
-	if lp.enabled && lp.status == api.StatusB &&
+	if lp.enabled && lp.status == api.StatusConnected &&
 		// TODO take vehicle api limits into account
 		int(lp.vehicleSoc) < lp.effectiveLimitSoc() && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()

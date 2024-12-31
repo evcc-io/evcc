@@ -147,7 +147,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
 
 			// vehicle is plugged or charging, so it should be the right one
-			if status == api.StatusB || status == api.StatusC {
+			if status == api.StatusConnected || status == api.StatusCharging {
 				if res != nil {
 					c.log.WARN.Println("vehicle status: >1 matches, giving up")
 					return nil

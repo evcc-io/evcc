@@ -187,15 +187,15 @@ var _ api.ChargeState = (*CarWings)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *CarWings) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.statusG()
 	if err == nil {
 		if res.PluginState == carwings.Connected {
-			status = api.StatusB // connected, not charging
+			status = api.StatusConnected // connected, not charging
 		}
 		if res.ChargingStatus == carwings.NormalCharging {
-			status = api.StatusC // charging
+			status = api.StatusCharging // charging
 		}
 	}
 

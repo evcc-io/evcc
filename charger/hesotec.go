@@ -97,7 +97,7 @@ func NewHesotec(uri string, id uint8) (api.Charger, error) {
 func (wb *Hesotec) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(hesotecRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 	return api.ChargeStatusString(string(b[0]))
 }

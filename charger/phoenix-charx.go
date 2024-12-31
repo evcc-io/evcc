@@ -133,7 +133,7 @@ func (wb *PhoenixCharx) meter() (uint16, error) {
 func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegStatus), 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	// TODO check IEC 61851-1 C1 state

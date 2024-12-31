@@ -103,18 +103,18 @@ func (wb *Dadapower) heartbeat(ctx context.Context) {
 func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(dadapowerRegPlugState+wb.regOffset, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch status := binary.BigEndian.Uint16(b); status {
 	case 0x0A: // ready
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 0x0B: // EV is present
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 0x0C: // charging
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

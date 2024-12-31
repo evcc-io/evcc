@@ -27,48 +27,39 @@ type ChargeStatus string
 
 // Charging states
 const (
-	StatusNone ChargeStatus = ""
-	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    Ladestation betriebsbereit, Fahrzeug getrennt
-	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fahrzeug verbunden, Netzspannung liegt nicht an
-	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    Fahrzeug lädt, Netzspannung liegt an
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler Fahrzeug / Kabel (CP-Kurzschluss, 0V)
+	StatusUnknown      ChargeStatus = ""
+	StatusDisconnected ChargeStatus = "A" // No vehicle connected
+	StatusConnected    ChargeStatus = "B" // Vehicle connected, no charging
+	StatusCharging     ChargeStatus = "C" // Vehicle charging
 )
 
-var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
-
-// ChargeStatusString converts a string to ChargeStatus
+// ChargeStatusString converts from IEC 62196 string to ChargeStatus
 func ChargeStatusString(status string) (ChargeStatus, error) {
 	s := strings.ToUpper(strings.Trim(status, "\x00 "))
 
 	if len(s) == 0 {
-		return StatusNone, fmt.Errorf("invalid status: %s", status)
+		return StatusUnknown, fmt.Errorf("invalid status: %s", status)
 	}
 
 	switch s1 := s[:1]; s1 {
-	case "A", "B":
-		return ChargeStatus(s1), nil
+	case "A":
+		return StatusDisconnected, nil
+
+	case "B":
+		return StatusConnected, nil
 
 	case "C", "D":
 		if s == "C1" || s == "D1" {
-			return StatusB, nil
+			return StatusConnected, nil
 		}
-		return StatusC, nil
+		return StatusCharging, nil
 
 	case "E", "F":
-		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", s)
+		return StatusUnknown, fmt.Errorf("error status: %s", s)
 
 	default:
-		return StatusNone, fmt.Errorf("invalid status: %s", status)
+		return StatusUnknown, fmt.Errorf("invalid status: %s", status)
 	}
-}
-
-// ChargeStatusStringWithMapping converts a string to ChargeStatus. In case of error, mapping is applied.
-func ChargeStatusStringWithMapping(s string, m map[ChargeStatus]ChargeStatus) (ChargeStatus, error) {
-	status, err := ChargeStatusString(s)
-	if mappedStatus, ok := m[status]; ok && err != nil {
-		return mappedStatus, nil
-	}
-	return status, err
 }
 
 // String implements Stringer

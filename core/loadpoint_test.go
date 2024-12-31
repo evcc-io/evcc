@@ -92,7 +92,7 @@ func TestNew(t *testing.T) {
 	if lp.maxCurrent != maxA {
 		t.Errorf("MaxCurrent %v", lp.maxCurrent)
 	}
-	if lp.status != api.StatusNone {
+	if lp.status != api.StatusUnknown {
 		t.Errorf("status %v", lp.status)
 	}
 	if lp.charging() {
@@ -106,44 +106,44 @@ func TestUpdatePowerZero(t *testing.T) {
 		mode   api.ChargeMode
 		expect func(h *api.MockCharger)
 	}{
-		{api.StatusA, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusDisconnected, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusDisconnected, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusDisconnected, api.ModeMinPV, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusDisconnected, api.ModePV, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false) // zero since update called with 0
 		}},
 
-		{api.StatusB, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusConnected, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusB, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusConnected, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusB, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusConnected, api.ModeMinPV, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusB, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusConnected, api.ModePV, func(h *api.MockCharger) {
 			// zero since update called with 0
 			// force = false due to pv mode climater check
 			h.EXPECT().Enable(false)
 		}},
 
-		{api.StatusC, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusCharging, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusC, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusCharging, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusC, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusCharging, api.ModeMinPV, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusC, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusCharging, api.ModePV, func(h *api.MockCharger) {
 			// omitted since PV balanced
 		}},
 	}
@@ -299,7 +299,7 @@ func TestPVHysteresis(t *testing.T) {
 		}},
 	}
 
-	for _, status := range []api.ChargeStatus{api.StatusB, api.StatusC} {
+	for _, status := range []api.ChargeStatus{api.StatusConnected, api.StatusCharging} {
 		for _, tc := range tc {
 			t.Log(tc)
 
@@ -367,7 +367,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	}
 
 	// not connected, test PV mode logic  short-circuited
-	lp.status = api.StatusA
+	lp.status = api.StatusDisconnected
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
@@ -421,11 +421,11 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 
 	lp.enabled = true
 	lp.chargeCurrent = minA
-	lp.status = api.StatusC
+	lp.status = api.StatusCharging
 
 	t.Log("charging below soc target")
 	vehicle.EXPECT().Soc().Return(85.0, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, 0, nil, false, false, 0, nil, nil)
@@ -434,7 +434,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().Soc().Return(90.0, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(500, 0, nil, false, false, 0, nil, nil)
@@ -443,14 +443,14 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().Soc().Return(95.0, nil)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Status().Return(api.StatusConnected, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 
 	t.Log("soc has risen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Status().Return(api.StatusConnected, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-500, 0, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
@@ -458,7 +458,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
 	vehicle.EXPECT().Soc().Return(85.0, nil)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Status().Return(api.StatusConnected, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	charger.EXPECT().Enable(true).Return(nil)
@@ -483,7 +483,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		sessionEnergy: NewEnergyMetrics(),
 		minCurrent:    minA,
 		maxCurrent:    maxA,
-		status:        api.StatusC,
+		status:        api.StatusCharging,
 		Mode_:         api.ModeOff, // default mode
 	}
 
@@ -495,14 +495,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 
 	t.Log("charging at min")
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, 0, nil, false, false, 0, nil, nil)
 
 	t.Log("switch off when disconnected")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusA, nil)
+	charger.EXPECT().Status().Return(api.StatusDisconnected, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(-300, 0, nil, false, false, 0, nil, nil)
 
@@ -551,7 +551,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		sessionEnergy: NewEnergyMetrics(),
 		minCurrent:    minA,
 		maxCurrent:    maxA,
-		status:        api.StatusC,
+		status:        api.StatusCharging,
 	}
 
 	attachListeners(t, lp)
@@ -566,14 +566,14 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	t.Log("start charging at 0 kWh")
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 
 	t.Log("at 1:00h charging at 5 kWh")
 	clock.Add(time.Hour)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
@@ -581,7 +581,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	clock.Add(time.Second)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Status().Return(api.StatusConnected, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
@@ -589,7 +589,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	clock.Add(time.Second)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
@@ -597,7 +597,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	clock.Add(30 * time.Minute)
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Status().Return(api.StatusCharging, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 7500.0)
 
@@ -605,7 +605,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	clock.Add(30 * time.Minute)
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Status().Return(api.StatusConnected, nil)
 	lp.Update(-1, 0, nil, false, false, 0, nil, nil)
 	expectCache("chargedEnergy", 10000.0)
 
@@ -634,45 +634,45 @@ func TestSocPoll(t *testing.T) {
 		res    bool
 	}{
 		// pollCharging
-		{pollCharging, api.StatusA, -1, false},
-		{pollCharging, api.StatusA, 0, false},
-		{pollCharging, api.StatusA, tRefresh, false},
-		{pollCharging, api.StatusB, -1, true}, // poll once when car connected
-		{pollCharging, api.StatusB, 0, false},
-		{pollCharging, api.StatusB, tRefresh, false},
-		{pollCharging, api.StatusC, -1, true},
-		{pollCharging, api.StatusC, 0, true},
-		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollCharging, api.StatusB, -1, true},         // fetch if car stopped charging
-		{pollCharging, api.StatusB, 0, false},         // no more polling
-		{pollCharging, api.StatusB, tRefresh, false},  // no more polling
+		{pollCharging, api.StatusDisconnected, -1, false},
+		{pollCharging, api.StatusDisconnected, 0, false},
+		{pollCharging, api.StatusDisconnected, tRefresh, false},
+		{pollCharging, api.StatusConnected, -1, true}, // poll once when car connected
+		{pollCharging, api.StatusConnected, 0, false},
+		{pollCharging, api.StatusConnected, tRefresh, false},
+		{pollCharging, api.StatusCharging, -1, true},
+		{pollCharging, api.StatusCharging, 0, true},
+		{pollCharging, api.StatusCharging, tNoRefresh, true}, // cached by vehicle
+		{pollCharging, api.StatusConnected, -1, true},        // fetch if car stopped charging
+		{pollCharging, api.StatusConnected, 0, false},        // no more polling
+		{pollCharging, api.StatusConnected, tRefresh, false}, // no more polling
 
 		// pollConnected
-		{pollConnected, api.StatusA, -1, false},
-		{pollConnected, api.StatusA, 0, false},
-		{pollConnected, api.StatusA, tRefresh, false},
-		{pollConnected, api.StatusB, -1, true},
-		{pollConnected, api.StatusB, 0, false},
-		{pollConnected, api.StatusB, tNoRefresh, false},
-		{pollConnected, api.StatusB, tRefresh, true},
-		{pollConnected, api.StatusC, -1, true},
-		{pollConnected, api.StatusC, 0, true},
-		{pollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollConnected, api.StatusC, tRefresh, true},
+		{pollConnected, api.StatusDisconnected, -1, false},
+		{pollConnected, api.StatusDisconnected, 0, false},
+		{pollConnected, api.StatusDisconnected, tRefresh, false},
+		{pollConnected, api.StatusConnected, -1, true},
+		{pollConnected, api.StatusConnected, 0, false},
+		{pollConnected, api.StatusConnected, tNoRefresh, false},
+		{pollConnected, api.StatusConnected, tRefresh, true},
+		{pollConnected, api.StatusCharging, -1, true},
+		{pollConnected, api.StatusCharging, 0, true},
+		{pollConnected, api.StatusCharging, tNoRefresh, true}, // cached by vehicle
+		{pollConnected, api.StatusCharging, tRefresh, true},
 
 		// pollAlways
-		{pollAlways, api.StatusA, -1, true},
-		{pollAlways, api.StatusA, 0, false},
-		{pollAlways, api.StatusA, tNoRefresh, false},
-		{pollAlways, api.StatusA, tRefresh, true},
-		{pollAlways, api.StatusB, -1, true},
-		{pollAlways, api.StatusB, 0, false},
-		{pollAlways, api.StatusB, tNoRefresh, false},
-		{pollAlways, api.StatusB, tRefresh, true},
-		{pollAlways, api.StatusC, -1, true},
-		{pollAlways, api.StatusC, 0, true},
-		{pollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollAlways, api.StatusC, tRefresh, true},
+		{pollAlways, api.StatusDisconnected, -1, true},
+		{pollAlways, api.StatusDisconnected, 0, false},
+		{pollAlways, api.StatusDisconnected, tNoRefresh, false},
+		{pollAlways, api.StatusDisconnected, tRefresh, true},
+		{pollAlways, api.StatusConnected, -1, true},
+		{pollAlways, api.StatusConnected, 0, false},
+		{pollAlways, api.StatusConnected, tNoRefresh, false},
+		{pollAlways, api.StatusConnected, tRefresh, true},
+		{pollAlways, api.StatusCharging, -1, true},
+		{pollAlways, api.StatusCharging, 0, true},
+		{pollAlways, api.StatusCharging, tNoRefresh, true}, // cached by vehicle
+		{pollAlways, api.StatusCharging, tRefresh, true},
 	}
 
 	for _, tc := range tc {
@@ -750,7 +750,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			Disable: ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
+			status:  api.StatusCharging,
 			enabled: true,
 		}
 

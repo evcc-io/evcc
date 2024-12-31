@@ -63,7 +63,7 @@ func NewBlueprint(uri string, cache time.Duration) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (wb *Blueprint) Status() (api.ChargeStatus, error) {
-	return api.StatusNone, api.ErrNotAvailable
+	return api.StatusUnknown, api.ErrNotAvailable
 }
 
 // Enabled implements the api.Charger interface

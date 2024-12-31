@@ -84,14 +84,14 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Status implements the api.Charger interface
 func (v *Twc3) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.vitalsG()
 	switch {
 	case res.ContactorClosed:
-		status = api.StatusC
+		status = api.StatusCharging
 	case res.VehicleConnected:
-		status = api.StatusB
+		status = api.StatusConnected
 	}
 
 	return status, err
@@ -114,7 +114,7 @@ func (c *Twc3) Enable(enable bool) error {
 	if err != nil {
 		return err
 	}
-	if status == api.StatusA && !enable {
+	if status == api.StatusDisconnected && !enable {
 		c.enabled = false
 		return nil
 	}

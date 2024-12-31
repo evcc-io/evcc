@@ -110,31 +110,31 @@ func (wb *ABB) status() (byte, error) {
 func (wb *ABB) Status() (api.ChargeStatus, error) {
 	s, err := wb.status()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s {
 	case 0: // State A: Idle
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 1: // State B1: EV Plug in, pending authorization
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2: // State B2: EV Plug in, EVSE ready for charging(PWM)
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3: // State C1: EV Ready for charge, S2 closed(no PWM)
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 4: // State C2: Charging Contact closed, energy delivering
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 5: // Other: Session stopped
 		b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
 		if err != nil {
-			return api.StatusNone, err
+			return api.StatusUnknown, err
 		}
 		if binary.BigEndian.Uint32(b) >= 0x0101 {
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		}
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	default: // Other
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %0x", s)
 	}
 }
 

@@ -52,7 +52,7 @@ func (wb *Pantabox) Status() (api.ChargeStatus, error) {
 	}
 
 	if err := wb.GetJSON(wb.uri+"/charger/state", &res); err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(res.State)

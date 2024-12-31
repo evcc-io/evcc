@@ -54,7 +54,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.dataG()
 	if err == nil {
@@ -109,10 +109,10 @@ func MapChargeStatus(lookup int) api.ChargeStatus {
 	switch lookup {
 	case
 		0, 5, 6, 9, 10, 11:
-		return api.StatusC
+		return api.StatusCharging
 	case
 		1, 2, 4, 7, 8:
-		return api.StatusB
+		return api.StatusConnected
 	}
-	return api.StatusA
+	return api.StatusDisconnected
 }

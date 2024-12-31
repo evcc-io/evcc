@@ -123,15 +123,15 @@ func (wb *MyPvElwa2) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPvElwa2) Status() (api.ChargeStatus, error) {
-	res := api.StatusA
+	res := api.StatusDisconnected
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
 		return res, err
 	}
 
-	res = api.StatusB
+	res = api.StatusConnected
 	if binary.BigEndian.Uint16(b) == 2 {
-		res = api.StatusC
+		res = api.StatusCharging
 	}
 
 	return res, nil

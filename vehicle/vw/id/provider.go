@@ -55,13 +55,13 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		err = errors.New("missing charging status")
 	}
 
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 	if err == nil {
 		if res.Charging.PlugStatus.Value.PlugConnectionState == "connected" {
-			status = api.StatusB
+			status = api.StatusConnected
 		}
 		if res.Charging.ChargingStatus.Value.ChargingState == "charging" {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 	}
 

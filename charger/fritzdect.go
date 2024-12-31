@@ -58,7 +58,7 @@ func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower flo
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	resp, err := c.conn.ExecCmd("getswitchpresent")
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	present, err := strconv.ParseBool(resp)
@@ -67,7 +67,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	}
 
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return c.switchSocket.Status()

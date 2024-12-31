@@ -120,22 +120,22 @@ func (wb *Sungrow) getPhaseValues(regs []uint16, divider float64) (float64, floa
 func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(sgRegState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s := binary.BigEndian.Uint16(b); s {
 	case 1: // Idle
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case
 		2, // Standby
 		4, // SuspendedEVSE
 		5, // SuspendedEV
 		6: // Completed
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3: // Charging
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

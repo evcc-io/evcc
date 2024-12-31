@@ -133,15 +133,15 @@ var _ api.ChargeState = (*Niu)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Niu) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.apiG()
 	if err == nil {
 		if res.Data.IsConnected {
-			status = api.StatusB
+			status = api.StatusConnected
 		}
 		if res.Data.IsCharging > 0 {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 	}
 

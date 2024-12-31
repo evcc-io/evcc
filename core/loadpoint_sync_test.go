@@ -17,11 +17,11 @@ func TestSyncCharger(t *testing.T) {
 		status                      api.ChargeStatus
 		expected, actual, corrected bool
 	}{
-		{api.StatusA, false, false, false},
-		{api.StatusC, false, false, true}, // disabled but charging
-		{api.StatusA, false, true, true},
-		{api.StatusA, true, false, false},
-		{api.StatusA, true, true, true},
+		{api.StatusDisconnected, false, false, false},
+		{api.StatusCharging, false, false, true}, // disabled but charging
+		{api.StatusDisconnected, false, true, true},
+		{api.StatusDisconnected, true, false, false},
+		{api.StatusDisconnected, true, true, true},
 	}
 
 	ctrl := gomock.NewController(t)
@@ -32,7 +32,7 @@ func TestSyncCharger(t *testing.T) {
 		charger := api.NewMockCharger(ctrl)
 		charger.EXPECT().Enabled().Return(tc.actual, nil).AnyTimes()
 
-		if tc.status == api.StatusC {
+		if tc.status == api.StatusCharging {
 			charger.EXPECT().Enable(tc.corrected).Times(1)
 		}
 
@@ -81,7 +81,7 @@ func TestSyncChargerCurrentsByGetter(t *testing.T) {
 			bus:           evbus.New(),
 			clock:         clock.New(),
 			charger:       charger,
-			status:        api.StatusC,
+			status:        api.StatusCharging,
 			enabled:       true,
 			phases:        3,
 			chargeCurrent: tc.lpCurrent,
@@ -117,7 +117,7 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 			bus:            evbus.New(),
 			clock:          clock.New(),
 			charger:        charger,
-			status:         api.StatusC,
+			status:         api.StatusCharging,
 			enabled:        true,
 			phases:         3,
 			chargeCurrent:  tc.lpCurrent,
@@ -166,7 +166,7 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 			bus:            evbus.New(),
 			clock:          clock.New(),
 			charger:        charger,
-			status:         api.StatusC,
+			status:         api.StatusCharging,
 			enabled:        true,
 			phases:         tc.lpPhases,
 			measuredPhases: tc.actualPhases,
@@ -212,7 +212,7 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 			bus:            evbus.New(),
 			clock:          clock.New(),
 			charger:        charger,
-			status:         api.StatusC,
+			status:         api.StatusCharging,
 			enabled:        true,
 			phases:         tc.lpPhases,
 			measuredPhases: tc.actualPhases,

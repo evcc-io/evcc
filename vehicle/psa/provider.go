@@ -107,13 +107,13 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				continue
 			}
 
-			status := api.StatusA
+			status := api.StatusDisconnected
 
 			if e.Charging.Plugged {
-				status = api.StatusB
+				status = api.StatusConnected
 
 				if strings.ToLower(e.Charging.Status) == "inprogress" {
-					status = api.StatusC
+					status = api.StatusCharging
 				}
 			}
 
@@ -123,7 +123,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		err = api.ErrNotAvailable
 	}
 
-	return api.StatusNone, err
+	return api.StatusUnknown, err
 }
 
 var _ api.VehicleClimater = (*Provider)(nil)

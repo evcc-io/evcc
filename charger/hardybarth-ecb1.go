@@ -127,20 +127,20 @@ func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
 func (wb *HardyBarth) Status() (api.ChargeStatus, error) {
 	resp, err := wb.getChargeControl()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if resp.State == "" {
-		return api.StatusNone, errors.New("invalid state- check controller type (eCB1 vs Salia)")
+		return api.StatusUnknown, errors.New("invalid state- check controller type (eCB1 vs Salia)")
 	}
 
-	res := api.StatusA
+	res := api.StatusDisconnected
 
 	if resp.Connected {
-		res = api.StatusB
+		res = api.StatusConnected
 
 		if resp.StateID == 5 {
-			res = api.StatusC
+			res = api.StatusCharging
 		}
 	}
 

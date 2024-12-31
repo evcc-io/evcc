@@ -123,22 +123,22 @@ func (wb *WebastoNext) heartbeat(ctx context.Context, timeout time.Duration) {
 func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargePointState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	sb := binary.BigEndian.Uint16(b)
 
 	switch sb {
 	case 0:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 1, 4:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 7:
-		return api.StatusNone, fmt.Errorf("charging error: status %d", sb)
+		return api.StatusUnknown, fmt.Errorf("charging error: status %d", sb)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", sb)
 	}
 }
 

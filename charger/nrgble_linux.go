@@ -214,20 +214,20 @@ func (wb *NRGKickBLE) mergeSettings(info ble.Info) ble.Settings {
 func (wb *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	var res ble.Power
 	if err := wb.read(ble.PowerService, &res); err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	wb.log.TRACE.Printf("read power: %+v", res)
 
 	switch res.CPSignal {
 	case 3:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 4:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", res.CPSignal)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", res.CPSignal)
 	}
 }
 
