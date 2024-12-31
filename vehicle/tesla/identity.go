@@ -27,9 +27,8 @@ var OAuth2Config = &oauth2.Config{
 	Scopes: []string{"openid", "email", "offline_access"},
 }
 
-var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
-
 func init() {
+	// TODO
 	if TESLA_CLIENT_ID != "" {
 		OAuth2Config.ClientID = TESLA_CLIENT_ID
 	}
