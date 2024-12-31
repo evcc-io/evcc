@@ -116,9 +116,9 @@
 			<PropertyField
 				id="modbusBaudrate"
 				property="baudrate"
-				type="Int"
+				type="Choice"
 				class="me-2 w-50"
-				:valid-values="baudrateOptions"
+				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
 				@change="$emit('update:baudrate', $event.target.value)"
@@ -128,9 +128,9 @@
 			<PropertyField
 				id="modbusComset"
 				property="comset"
-				type="String"
+				type="Choice"
 				class="me-2 w-50"
-				:valid-values="comsetOptions"
+				:choice="comsetOptions"
 				required
 				:model-value="comset || defaultComset || '8N1'"
 				@change="$emit('update:comset', $event.target.value)"
