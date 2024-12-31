@@ -20,12 +20,11 @@ var acceptable = []string{
 	"network is unreachable",
 	"error connecting: Network Error",
 	"unexpected status: 401",
-	"missing credentials",    // Tesla
-	"missing credentials id", // Tronity
-	"missing access and/or refresh token, use `evcc token` to create", // Tesla
-	"login failed: code not found",                                    // Polestar
-	"empty instance type- check for missing usage",                    // Merces
-	"invalid vehicle type: tesla",                                     // Tesla
+	"missing credentials id",                       // Tronity
+	"missing client id",                            // Tesla
+	"login failed: code not found",                 // Polestar
+	"empty instance type- check for missing usage", // Mercedes
+	"invalid vehicle type: tesla",                  // Tesla
 }
 
 func TestTemplates(t *testing.T) {
