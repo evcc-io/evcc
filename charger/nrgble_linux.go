@@ -214,7 +214,7 @@ func (wb *NRGKickBLE) mergeSettings(info ble.Info) ble.Settings {
 func (wb *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	var res ble.Power
 	if err := wb.read(ble.PowerService, &res); err != nil {
-		return api.StatusF, err
+		return api.StatusNone, err
 	}
 
 	wb.log.TRACE.Printf("read power: %+v", res)
@@ -226,9 +226,9 @@ func (wb *NRGKickBLE) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case 4:
 		return api.StatusA, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", res.CPSignal)
 	}
-
-	return api.StatusA, fmt.Errorf("unexpected cp signal: %d", res.CPSignal)
 }
 
 // Enabled implements the api.Charger interface

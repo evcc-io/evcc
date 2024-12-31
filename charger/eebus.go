@@ -217,10 +217,8 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
-	case ucapi.EVChargeStateTypeError: // Error
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
+		return api.StatusNone, fmt.Errorf("invalid status: %s", currentState)
 	}
 }
 

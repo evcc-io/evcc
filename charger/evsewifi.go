@@ -154,12 +154,8 @@ func (wb *EVSEWifi) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // charging
 		return api.StatusC, nil
-	case 4: // charging with ventilation
-		return api.StatusD, nil
-	case 5: // failure (e.g. diode check, RCD failure)
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", params.VehicleState)
 	}
 }
 
