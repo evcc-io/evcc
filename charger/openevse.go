@@ -137,6 +137,10 @@ func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
 // Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
 	/*
 		0: "unknown",
 		1: "not connected",
@@ -154,22 +158,18 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		255: "disabled"
 	*/
 
-	switch state := res.State; state {
+	switch res.State {
 	case 1:
-		return api.StatusA, err
+		return api.StatusA, nil
 	case 2, 254, 255:
 		if res.Vehicle == 1 {
-			return api.StatusB, err
+			return api.StatusB, nil
 		}
-		return api.StatusA, err
+		return api.StatusA, nil
 	case 3:
-		return api.StatusC, err
-	case 4:
-		return api.StatusD, err
-	case 5, 6, 7, 8, 9, 10, 11:
-		return api.StatusF, err
+		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown EVSE state: %d", state)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", res.State)
 	}
 }
 

@@ -119,48 +119,25 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	}
 	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
-	var res api.ChargeStatus
 	switch chargeStatus {
 	case 0x00, 0x10: // notconnected
-		res = api.StatusA
+		return api.StatusA, nil
 	case 0x30: // connected
-		res = api.StatusB
+		return api.StatusB, nil
 	case 0x40: // charging
-		res = api.StatusC
+		return api.StatusC, nil
 	case 0x42, // chargepaused
 		0x50, // chargefinished
 		0x60: // chargecancelled
-		res = api.StatusB
+		return api.StatusB, nil
 	case 0x90: // unavailable
 		if sessionStartTime > 0 {
-			res = api.StatusB
-		} else {
-			res = api.StatusF
+			return api.StatusB, nil
 		}
-	case 0x95, // dcfault
-		0x96, // dchardwarefault
-		0x9A, // cpfault
-		0x9B: // cpshorted
-		res = api.StatusE
-	case 0x70, // overheat
-		0x80, // criticaltemperature
-		0x91, // reserved
-		0x9C, // remotedisabled
-		0x9D, // dlmfault
-		0xA0, // cablefault
-		0xA1,
-		0xA2, // lockingfault
-		0xA3,
-		0xA4, // contactorfault
-		0xA8, // rcdfault
-		0xF0, // wait
-		0xF1: // ventfault
-		res = api.StatusF
-	default: // generalfault
-		res = api.StatusF
+		fallthrough
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", chargeStatus)
 	}
-
-	return res, nil
 }
 
 // Enabled implements the api.Charger interface

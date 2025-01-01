@@ -96,9 +96,9 @@
 										<PropertyField
 											id="vehicleParamMode"
 											v-model="values.mode"
-											type="String"
+											type="Choice"
 											class="w-100"
-											:valid-values="[
+											:choice="[
 												{ key: 'off', name: $t('main.mode.off') },
 												{ key: 'pv', name: $t('main.mode.pv') },
 												{ key: 'minpv', name: $t('main.mode.minpv') },
@@ -177,10 +177,10 @@
 										<PropertyField
 											id="vehicleParamPriority"
 											v-model="values.priority"
-											type="Int"
+											type="Choice"
 											size="w-100"
 											class="me-2"
-											:valid-values="priorityOptions"
+											:choice="priorityOptions"
 											required
 										/>
 									</FormRow>
