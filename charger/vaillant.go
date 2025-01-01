@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -80,7 +79,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(clientCtx, token), sensonet.WithHttpClient(client), sensonet.WithLogger(log.TRACE))
+	conn, err := sensonet.NewConnection(oc.TokenSource(clientCtx, token), sensonet.WithHttpClient(client))
 	if err != nil {
 		return nil, err
 	}
@@ -91,43 +90,20 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemId := homes[0].SystemID
-
-	system, err := conn.GetSystem(systemId)
-	if err != nil {
-		return nil, err
-	}
-
-	var strategy int
-	hotWater := len(system.State.Dhw)+len(system.State.DomesticHotWater) > 0
-
-	switch {
-	case hotWater && cc.HeatingSetpoint != 0:
-		strategy = sensonet.STRATEGY_HOTWATER_THEN_HEATING
-	case hotWater:
-		strategy = sensonet.STRATEGY_HOTWATER
-	case cc.HeatingSetpoint != 0:
-		strategy = sensonet.STRATEGY_HEATING
-	default:
-		return nil, errors.New("could not determine boost strategy, need either hot water or heating zone and setpoint")
-	}
-
-	heatingPar := sensonet.HeatingParStruct{
-		ZoneIndex:    cc.HeatingZone,
-		VetoSetpoint: cc.HeatingSetpoint,
-		VetoDuration: -1, // negative value means: use default
-	}
-	hotwaterPar := sensonet.HotwaterParStruct{
-		Index: -1, // negative value means: use default
-	}
+	heating := cc.HeatingZone > 0 && cc.HeatingSetpoint > 0
 
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
-			_, err := conn.StopStrategybased(systemId, &heatingPar, &hotwaterPar)
-			return err
+			if heating {
+				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
+			}
+			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
 		case Boost:
-			_, err := conn.StartStrategybased(systemId, strategy, &heatingPar, &hotwaterPar)
-			return err
+			if heating {
+				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, sensonet.ZONEVETODURATION_DEFAULT)
+			}
+			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
 		default:
 			return api.ErrNotAvailable
 		}
@@ -146,7 +122,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	var temp func() (float64, error)
-	if hotWater {
+	if !heating {
 		temp = func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
