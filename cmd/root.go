@@ -36,8 +36,9 @@ const (
 )
 
 var (
-	log     = util.NewLogger("main")
-	cfgFile string
+	log         = util.NewLogger("main")
+	cfgFile     string
+	cfgDatabase string
 
 	ignoreEmpty = ""                                      // ignore empty keys
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
@@ -63,6 +64,7 @@ func init() {
 
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
+	rootCmd.PersistentFlags().StringVarP(&cfgDatabase, "database", "d", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
@@ -96,6 +98,9 @@ func initConfig() {
 		viper.AddConfigPath("/etc") // path to look for the config file in
 
 		viper.SetConfigName("evcc")
+	}
+	if cfgDatabase != "" {
+		viper.Set("Database.Dsn", cfgDatabase)
 	}
 
 	viper.SetEnvPrefix("evcc")
