@@ -165,7 +165,7 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	default:
 		// ensure Outlet is re-enabled after wake-up
 		if b[1] == 0xE0 { // Outlet is disabled
-			return api.StatusNone, wb.set(ablRegModifyState, 0xA1A1)
+			return api.StatusA, wb.set(ablRegModifyState, 0xA1A1)
 		}
 
 		status, ok := ablStatus[b[1]]
