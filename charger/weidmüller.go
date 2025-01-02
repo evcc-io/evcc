@@ -32,10 +32,9 @@ import (
 
 // Weidmüller charger implementation
 type Weidmüller struct {
-	log      *util.Logger
-	conn     *modbus.Connection
-	curr     uint16
-	hasMeter bool
+	log  *util.Logger
+	conn *modbus.Connection
+	curr uint16
 }
 
 const (
@@ -110,7 +109,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return decorateWeidmüller(wb, wb.totalEnergy), nil
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *Weidmüller) heartbeat(ctx context.Context, timeout time.Duration) {
