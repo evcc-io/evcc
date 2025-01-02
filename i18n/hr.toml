@@ -590,6 +590,7 @@ vehicleLimit = "Granica vozila."
 vehicleLimitReached = "Dosegnuto ograničenje na vozilu."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
 welcome = "Kratko početno punjenje kako bi se potvrdila povezanost."
+unknown = ""
 
 [notifications]
 dismissAll = "Odbaci sve"
