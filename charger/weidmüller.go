@@ -68,19 +68,7 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{})
 		return nil, err
 	}
 
-	wb, err := NewWeidmüller(ctx, cc.URI, cc.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	var totalEnergy func() (float64, error)
-
-	// check presence of energy meter
-	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-		totalEnergy = wb.totalEnergy
-	}
-
-	return decorateWeidmüller(wb, totalEnergy), nil
+	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
 
 //go:generate decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
@@ -116,6 +104,11 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 
 	// failsafe
 	go wb.heartbeat(ctx, wmHeartbeatInterval)
+
+	// check presence of energy meter
+	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+		return decorateWeidmüller(wb, wb.totalEnergy), nil
+	}
 
 	return wb, err
 }
