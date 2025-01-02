@@ -850,20 +850,30 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 }
 
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
-	var tariffs struct {
-		GridPrice   *float64 `json:"gridPrice,omitempty"`
-		FeedInPrice *float64 `json:"feedInPrice,omitempty"`
-		Co2         *float64 `json:"co2,omitempty"`
+	type tarif struct {
+		Price    *float64   `json:"price,omitempty"`
+		Co2      *float64   `json:"co2,omitempty"`
+		Forecast []api.Rate `json:"forecast,omitempty"`
 	}
 
+	var tariffs struct {
+		Grid   tarif `json:"grid,omitempty"`
+		FeedIn tarif `json:"feedIn,omitempty"`
+		Co2    tarif `json:"co2,omitempty"`
+	}
+
+	tariffs.Grid.Forecast = tariff.Forecast(site.tariffs.Grid)
 	if val, err := site.tariffs.CurrentGridPrice(); err == nil {
-		tariffs.GridPrice = &val
+		tariffs.Grid.Price = &val
 	}
+	tariffs.FeedIn.Forecast = tariff.Forecast(site.tariffs.FeedIn)
 	if val, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		tariffs.FeedInPrice = &val
+		tariffs.FeedIn.Price = &val
 	}
+	// TODO CO2 type
+	tariffs.Co2.Forecast = tariff.Forecast(site.tariffs.Co2)
 	if val, err := site.tariffs.CurrentCo2(); err == nil {
-		tariffs.Co2 = &val
+		tariffs.Co2.Co2 = &val
 	}
 
 	site.publish(keys.Tariffs, tariffs)
