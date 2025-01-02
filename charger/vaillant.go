@@ -71,16 +71,17 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
-	client := request.NewClient(log)
-	clientCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
+	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := oc.PasswordCredentialsToken(clientCtx, cc.User, cc.Password)
+	token, err := oc.PasswordCredentialsToken(logCtx, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(clientCtx, token), sensonet.WithHttpClient(client), sensonet.WithLogger(log.TRACE))
+	conn, err := sensonet.NewConnection(oc.TokenSource(logCtx, token),
+		sensonet.WithHttpClient(request.NewClient(log)),
+		sensonet.WithLogger(log.TRACE))
 	if err != nil {
 		return nil, err
 	}
