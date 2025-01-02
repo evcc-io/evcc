@@ -402,7 +402,7 @@ titleMinSoc = "Asgari doldurma"
 titleTargetCharge = "Ayrılış"
 unsavedChanges = "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?"
 update = "Uygula"
-weekdays = "“Hafta günleri”"
+weekdays = "Günler"
 
 [main.energyflow]
 battery = "Batarya"
@@ -581,6 +581,7 @@ vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
+unknown = ""
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
