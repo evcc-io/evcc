@@ -68,8 +68,6 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{})
 		return nil, err
 	}
 
-	//return NewWeidmüller(ctx, cc.URI, cc.ID)
-
 	wb, err := NewWeidmüller(ctx, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
