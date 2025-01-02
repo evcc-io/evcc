@@ -108,8 +108,6 @@ type Site struct {
 	batteryPower  float64         // Battery charge power
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
-
-	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the site's meter configuration
@@ -422,16 +420,6 @@ func (site *Site) publish(key string, val interface{}) {
 	}
 
 	site.uiChan <- util.Param{Key: key, Val: val}
-}
-
-// publishDelta deduplicates messages before publishing
-func (site *Site) publishDelta(key string, val interface{}) {
-	if v, ok := site.publishCache[key]; ok && v == val {
-		return
-	}
-
-	site.publishCache[key] = val
-	site.publish(key, val)
 }
 
 // updatePvMeters updates pv meters. All measurements are optional.
@@ -862,30 +850,56 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 }
 
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
-	site.publish(keys.GreenShareHome, greenShareHome)
-	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
+	var tariffs struct {
+		GridPrice   *float64 `json:"gridPrice,omitempty"`
+		FeedInPrice *float64 `json:"feedInPrice,omitempty"`
+		Co2         *float64 `json:"co2,omitempty"`
+	}
 
-	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publishDelta(keys.TariffGrid, gridPrice)
+	if val, err := site.tariffs.CurrentGridPrice(); err == nil {
+		tariffs.GridPrice = &val
 	}
-	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publishDelta(keys.TariffFeedIn, feedInPrice)
+	if val, err := site.tariffs.CurrentFeedInPrice(); err == nil {
+		tariffs.FeedInPrice = &val
 	}
-	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publishDelta(keys.TariffCo2, co2)
+	if val, err := site.tariffs.CurrentCo2(); err == nil {
+		tariffs.Co2 = &val
 	}
+
+	site.publish(keys.Tariffs, tariffs)
+
+	type effective struct {
+		GreenPercent float64  `json:"greenPercent"`
+		Price        *float64 `json:"effectivePrice,omitempty"`
+		Co2          *float64 `json:"effectiveCo2,omitempty"`
+	}
+
+	share := struct {
+		Home       effective `json:"home"`
+		Loadpoints effective `json:"loadpoints"`
+	}{
+		Home: effective{
+			GreenPercent: greenShareHome,
+		},
+		Loadpoints: effective{
+			GreenPercent: greenShareLoadpoints,
+		},
+	}
+
 	if price := site.effectivePrice(greenShareHome); price != nil {
-		site.publish(keys.TariffPriceHome, price)
+		share.Home.Price = price
 	}
 	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
-		site.publish(keys.TariffCo2Home, co2)
+		share.Home.Co2 = co2
 	}
 	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
-		site.publish(keys.TariffPriceLoadpoints, price)
+		share.Loadpoints.Price = price
 	}
 	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		site.publish(keys.TariffCo2Loadpoints, co2)
+		share.Loadpoints.Co2 = co2
 	}
+
+	site.publish(keys.GreenShare, share)
 }
 
 // updateLoadpoints updates all loadpoints' charge power
