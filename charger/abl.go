@@ -157,11 +157,11 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	r := rune(b[1]>>4-0x0A) + 'A'
+	s := string(rune((b[1]>>4)-0x0A) + 'A')
 
-	switch r {
-	case 'A', 'B', 'C':
-		return api.ChargeStatus(r), nil
+	switch s {
+	case "A", "B", "C":
+		return api.ChargeStatusString(s)
 	default:
 		// ensure Outlet is re-enabled after wake-up
 		if b[1] == 0xE0 { // Outlet is disabled
@@ -170,7 +170,7 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 		status, ok := ablStatus[b[1]]
 		if !ok {
-			status = string(r)
+			status = s
 		}
 
 		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
