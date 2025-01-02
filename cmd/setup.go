@@ -840,7 +840,7 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalconfig.All) error {
-	// collect references for filter for used devices
+	// collect references for filtering used devices
 	if err := collectRefs(conf); err != nil {
 		return err
 	}
