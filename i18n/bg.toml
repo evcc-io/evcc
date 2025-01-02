@@ -3,81 +3,237 @@ batteryLevel = "Батерия %"
 capacity = "{energy} от {total}"
 disclaimerHint = "Бележка:"
 disclaimerText = "Тези настройки важат само за режим на работа използвайки енергия от фотоволтаици. Зареждането ще бъде настроено спрямо тях"
-legendBottomName = "приоритизиране на дом"
-legendBottomSubline = "не се използва за зареждане"
-legendMiddleName = "приоритизиране на кола"
-legendMiddleSubline = "дом на заден план"
+legendBottomName = "Приоритизиране на зареждането на домашната батерия"
+legendBottomSubline = "докато достигне {soc}."
+legendMiddleName = "Приоритизиране на зареждането на превозното средство"
+legendMiddleSubline = "когато домашната батерия е над {soc}."
 legendTitle = "Как да се използва енергията от фотоволтаиците?"
 legendTopAutostart = "автоматично стартиране"
 legendTopName = "зареждане използвайки батерия"
-legendTopSubline = "без прекъсвания"
-modalTitle = "Настройки на батерия"
+legendTopSubline = "когато домашната батерия е над {soc}."
+modalTitle = "Домашна батерия"
+usageTab = "Използване на батерията"
+discharge = "Предотврати разреждането в бърз режим и планираното зареждане"
+gridChargeTab = "Зареждане от мрежата"
+control = "Управление на батерията"
 
 [batterySettings.bufferStart]
-full = "при почти заредена батерия"
+full = "при {soc}."
 low = "при донякъде заредена батерия"
 medium = "при наполовина заредена батерия"
 never = "само при наличие на излишък"
+above = "когато над {soc}"
 
 [config]
 
 [config.battery]
+titleAdd = "Добави батерия"
+titleEdit = "Редактиране на батерията"
 
 [config.circuits]
+title = "Управление на натоварването"
+description = "Гарантира, че сумата от всички точки на натоварване, свързани към една верига, не надвишава конфигурираните граници на мощност и ток. Веригите могат да бъдат вложени, за да се изгради йерархия."
 
 [config.control]
+description = "Обикновено стойностите по подразбиране са наред. Променяйте ги само ако знаете какво правите."
+descriptionInterval = "Цикъл на актуализация на контролния цикъл в секунди. Определя колко често evcc чете данни от измервателния уред, регулира мощността на зареждане и актуализира потребителския интерфейс. Кратките интервали (< 30s) могат да причинят осцилации и нежелано поведение."
+descriptionResidualPower = "Премества работната точка на контролния цикъл. Ако имате домашна батерия, се препоръчва да зададете стойност от 100 W. По този начин батерията ще има лек приоритет пред използването на мрежата."
+labelInterval = "Интервал на актуализация"
+labelResidualPower = "Остатъчна мощност"
+title = "Поведение на управление"
 
 [config.deviceValue]
+chargedEnergy = "Заредено"
+phaseCurrents = "Текущ L1, L2, L3"
+phaseVoltages = "Напрежение L1, L2, L3"
+power = "Мощност"
+range = "Обхват"
+soc = "Състояние на заряда"
+socLimit = "Лимит"
+co2 = "Мрежа CO₂"
+configured = "Конфигуриран"
+currency = "Валута"
+org = "Организация"
+hemsType = "Система"
+broker = "Брокер"
+energy = "Енергия"
+bucket = "Кофа"
+capacity = "Капацитет"
+chargeStatus = "Статус"
+chargeStatusA = "не е свързан"
+chargeStatusB = "свързан"
+chargeStatusC = "зареждане"
+chargeStatusE = "няма мощност"
+chargeStatusF = "грешка"
+current = "Електричеството"
+enabled = "Готов за зареждане"
+feedinPrice = "Цена за изкупуване"
+gridPrice = "Цена на мрежата"
+no = "не"
+odometer = "одометър"
+phasePowers = "Мощност L1, L2, L3"
+powerRange = "Мощност"
+temp = "Температура"
+topic = "Тема"
+url = "URL"
+yes = "да"
+currentRange = "Електричеството"
+controllable = "Контролируем"
 
 [config.eebus]
+title = "EEBus"
+description = "Основна конфигурация за комуникация с други EEBus устройства."
 
 [config.form]
 example = "Пример"
 optional = "незадължителен"
 
 [config.general]
+docsLink = "Виж документацията."
+telemetry = "Телеметрия"
+save = "Запази"
+off = "изключено"
+on = "включено"
+password = "Парола"
+remove = "Премахни"
+hideAdvancedSettings = "Скрий разширените настройки"
+showAdvancedSettings = "Покажи разширените настройки"
+readFromFile = "Прочети от файл"
+title = "Заглавие"
+cancel = "Отказ"
+experimental = "Експериментален"
 
 [config.grid]
+titleEdit = "Редактирай мрежов измервателен уред"
+title = "Мрежов измервателен уред"
+titleAdd = "Добави мрежов измервателен уред"
 
 [config.hems]
+description = "Свържете evcc с друга система за управление на домашната енергия."
+title = „Система за управление на енергията в дома“
 
 [config.influx]
+labelBucket = "Кофа"
+labelOrg = "Организация"
+labelPassword = "Парола"
+labelToken = "API токен"
+labelUrl = "URL"
+labelUser = "Потребителско име"
+title = "InfluxDB"
+v1Support = "Нуждаете се от поддръжка за InfluxDB 1.x?"
+v2Support = "Назад към InfluxDB 2.x"
+labelCheckInsecure = "Разреши самоподписани сертификати"
+labelDatabase = "База данни"
+labelInsecure = „Проверка на сертификат“
+description = "Записва данни за зареждане и други метрики в InfluxDB. Използвайте Grafana или други инструменти за визуализиране на данните."
+descriptionToken = "Проверете документацията на InfluxDB, за да научите как да създадете такъв. https://docs.influxdata.com/influxdb/v2/admin/"
 
 [config.main]
 addVehicle = "Добави автомобил"
 edit = "редактирай"
 title = "Конфигурация"
 vehicles = "Моите Автомобили"
+addLoadpoint = "Добави зарядна точка"
+addPvBattery = "Добави соларен панел или батерия"
+unconfigured = "не е конфигуриран"
+configured = "Конфигуриран"
+yaml = "Конфигурирано в evcc.yaml. Не може да се редактира в потребителския интерфейс."
 
 [config.messaging]
+description = "Получавайте съобщения за вашите сесии на зареждане."
+title = "Notifications"
 
 [config.meter]
+cancel = "Отказ"
+delete = "Изтрий"
+save = "Запази"
+template = "Производител"
+titleChoice = "Какво искате да добавите?"
+validateSave = "Валидирай и запази"
 
 [config.modbusproxy]
+description = "Позволете на няколко клиента да имат достъп до едно Modbus устройство."
+title = „Модбус прокси“
 
 [config.mqtt]
+labelInsecure = "Валидиране на сертификат"
+labelPassword = "Парола"
+labelCheckInsecure = "Позволете самоподписани сертификати"
+labelClientId = "Клиентски идентификатор"
+description = "Свържете се с MQTT брокер, за да обменяте данни с други системи във вашата мрежа."
+descriptionTopic = "Оставете празно, за да деактивирате публикуването."
+labelBroker = "Брокер"
+labelTopic = "Тема"
+labelUser = "Потребителско име"
+labelCaCert = "Сървърен сертификат (CA)"
+labelClientCert = "Клиентски сертификат"
+labelClientKey = "Клиентски ключ"
+publishing = "Публикуване"
+authentication = "Автентикация"
+title = "MQTT"
+descriptionClientId = "Автор на съобщенията. Ако е празно, се използва `evcc-[rand]`."
 
 [config.network]
+labelPort = "Порт"
+labelSchema = "Схема"
+title = "Мрежа"
+labelHost = "Хост име"
+descriptionSchema = "Влияе само на начина, по който се генерират URL адресите. Изборът на HTTPS няма да активира криптиране."
+descriptionHost = „Използвайте разширението .local, за да активирате mDNS. Това е от значение за разпознаване на мобилни приложения и някои зарядни станции OCPP.“
+descriptionPort = "Порт за уеб интерфейса и API. Ще трябва да актуализирате URL адреса на браузъра си, ако промените това."
 
 [config.options]
 
 [config.options.boolean]
+yes = "да"
+no = "не"
 
 [config.options.endianness]
+big = "голям ендиан"
+little = „малко ендианско“
 
 [config.options.schema]
+http = "HTTP (некриптиран)"
+https = "HTTPS (криптиран)"
 
 [config.pv]
+titleAdd = "Добавяне на соларен метър"
+titleEdit = "Редактиране на соларен метър"
 
 [config.section]
+general = "Общи"
+system = "Система"
+grid = "Мрежова връзка"
+integrations = "Интеграции"
+meter = "Солар и батерия"
+vehicles = "Превозни средства"
+loadpoints = "Зарядни точки"
 
 [config.sponsor]
+addToken = "Въведете спонсорски токен"
+changeToken = "Промяна на спонсорския токен"
+description = "Моделът за спонсорство ни помага да поддържаме проекта и устойчиво да изграждаме нови и вълнуващи функции. Като спонсор получавате достъп до всички реализации на зарядни устройства."
+descriptionToken = "Получавате токена от {url}. Ние също предлагаме пробен токен за тестване."
+labelToken = "Спонсорски токен"
+title = "Спонсорство"
+error = "Спонсорският токен не е валиден."
 
 [config.system]
+restartRequiredDescription = "Моля, рестартирайте, за да видите ефекта."
+restartRequiredMessage = "Конфигурацията е променена."
+logs = "Логове"
+restartingDescription = "Моля, изчакайте..."
+restart = "Рестартиране"
+restartingMessage = "Рестартиране на evcc."
 
 [config.tariffs]
+title = "Тарифи"
+description = "Определете вашите енергийни тарифи, за да изчислите разходите за вашите сесии на зареждане."
 
 [config.title]
+description = "Показва се на главния екран и в раздела на браузъра."
+label = "Заглавие"
+title = "Редактиране на заглавие"
 
 [config.validation]
 failed = "неуспешен"
@@ -129,8 +285,19 @@ savingsTitle = "Спестявате"
 savingsTotalEnergy = "{total} kWh заредени"
 since = "от {since}"
 tabTitle = "Моите данни"
+co2Saved = "{value} запазени"
+co2Title = "CO₂ емисии"
+moneySaved = "{value} запазени"
+periodLabel = "Период:"
+referenceGrid = "Мрежа"
+referenceLabel = "Референтни данни:"
+configurePriceCo2 = "Научете как да конфигурирате данните за цените и CO₂."
 
 [footer.savings.period]
+365d = "последните 365 дни"
+thisYear = "тази година"
+total = "всички времена"
+30d = "последните 30 дни"
 
 [footer.sponsor]
 becomeSponsor = "Станете Спонсор"
@@ -141,6 +308,11 @@ supportUs = "Нашата мисия е да направим слънчеват
 thanks = "Благодарим Ви, {sponsor}! С ваша помощ продължаваме да развиваме evcc."
 titleNoSponsor = "Подкрепете ни"
 titleSponsor = "Вие сте спонсор"
+becomeSponsorExtended = "Подкрепете ни директно, за да получите стикери."
+victron = "Вие използвате evcc на хардуера на Victron Energy и имате достъп до всички функции."
+titleTrial = "Режим на проба"
+trial = "Вие сте в пробен режим и можете да използвате всички функции. Моля, обмислете възможността да подкрепите проекта."
+titleVictron = "Спонсорирано от Victron Energy"
 
 [footer.telemetry]
 optIn = "Искам да споделям моите данни."
@@ -161,96 +333,440 @@ modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
 [header]
+blog = "Блог"
+about = "Относно"
+github = "GitHub"
+login = "Автомобил-влизания в системата"
+needHelp = "Нуждаете се от помощ?"
+sessions = "Сесии за зареждане"
+nativeSettings = "Промяна на сървъра"
+logout = "Изход"
+docs = "Документация"
 
 [help]
+modalTitle = "Нуждаете се от помощ?"
+restartButton = "Рестартиране"
+discussionsButton = "GitHub дискусии"
+documentationButton = "Документация"
+issueButton = "Докладвайте за грешка"
+issueDescription = "Открихте ли странно или неправилно поведение?"
+primaryActions = "Нещо не работи както трябва? Това са добри места, където можете да получите помощ."
+secondaryActions = "Все още не можете да решите проблема си? Ето някои по-сериозни опции."
+logsButton = "Преглед на дневниците"
+logsDescription = "Проверете дневниците за грешки."
+restartDescription = "Опитахте ли да го изключите и включите отново?"
 
 [help.restart]
+modalTitle = "Сигурни ли сте, че искате да рестартирате?"
+cancel = "Отказ"
+confirm = "Да, рестартирайте!"
+description = "При нормални обстоятелства рестартирането не би трябвало да е необходимо. Моля, обмислете подаването на сигнал за грешка, ако трябва редовно да рестартирате evcc."
+disclaimer = "Забележка: evcc ще се прекрати и ще разчита на операционната система за рестартиране на услугата."
 
 [log]
+areaLabel = "Филтриране по област"
+areas = "Всички области"
+levelLabel = "Филтриране по ниво на дневника"
+search = "Търсене"
+update = "Автоматично обновяване"
+noResults = "Няма съвпадащи записи в дневника."
+title = "Дневници"
+nAreas = "{count} области"
+selectAll = "Изберете всички"
+download = "Изтеглете пълния дневник"
+showAll = "Показване на всички записи"
 
 [loginModal]
+password = "Парола"
+login = "Вход"
+title = "Удостоверяване"
+reset = "Нулиране на паролата?"
+iframeIssue = "Вашата парола е правилна, но изглежда, че браузърът ви е загубил бисквитката за удостоверяване. Това може да се случи, ако стартирате evcc в iframe чрез HTTP."
+cancel = "Отказ"
+error = "Входът не бе успешен: "
+iframeHint = "Отворете evcc в нов раздел."
+invalid = "Паролата е невалидна."
 
 [main]
+vehicles = "Паркиране"
 
 [main.chargingPlan]
+time = "Време"
+title = "План"
+modalTitle = "План за зареждане"
+arrivalTab = "Пристигане"
+day = "Ден"
+addRepeatingPlan = "Добавяне на повтарящ се план"
+planNumber = "План {number}"
+repeating = "повтарящ се"
+repeatingPlans = "Повтарящи се планове"
+departureTab = "Заминаване"
+none = "няма"
+update = "Приложи"
+selectAll = "Изберете всички"
+weekdays = "Дни"
+active = "Активен"
+goal = "Цел на зареждане"
+remove = "Премахване"
+titleMinSoc = "Минимално зареждане"
+titleTargetCharge = "Заминаване"
+unsavedChanges = "Има незаписани промени. Приложи сега?"
 
 [main.energyflow]
+batteryDischarge = "Разреждане на батерията"
+batteryTooltip = "{energy} от {total} ({soc})"
+loadpoints = "Зарядно устройство | Зарядно устройство | {count} зарядни устройства"
+pvProduction = "Производство"
+selfConsumption = "Самопотребление"
+batteryHold = "Батерия (заключена)"
+cheapBatteryGridCharge = "евтина мрежова енергия"
+cleanBatteryGridCharge = "чиста мрежова енергия"
+battery = "Батерия"
+batteryCharge = "Зареждане на батерията"
+gridImport = "Използвана енергия от мрежата"
+homePower = "Потребление"
+pvExport = "Енергия, която се подава в електрическата мрежа"
+noEnergy = "Няма данни от измервателния уред"
 
 [main.heatingStatus]
+charging = "Загряване…"
+waitForVehicle = "Готово. Чака се нагревателят …"
 
 [main.loadpoint]
+co2 = "⌀ CO₂"
+duration = "Продължителност на зареждането"
+power = "Мощност"
+avgPrice = "⌀ Цена"
+charged = "Заредено"
+fallbackName = "Зарядна точка"
+price = "Цена"
+solar = "Соларен"
+remaining = "Оставащо време"
+remoteDisabledHard = "{source}: изключено"
+remoteDisabledSoft = "{source}: изключено адаптивното соларно зареждане"
 
 [main.loadpointSettings]
+batteryUsage = "Домашна батерия"
+currents = "Заряден ток"
+default = "по подразбиране"
+title = "Настройки {0}"
+vehicle = "Превозно средство"
+onlyForSocBasedCharging = "Тези опции са налични само за превозни средства с известен заряд."
+disclaimerHint = "Забележка:"
+smartCostCheap = "Евтино зареждане от мрежата"
+smartCostClean = "Чисто зареждане от мрежата"
 
 [main.loadpointSettings.batteryBoost]
+description = "Бързо зареждане от домашната батерия"
+label = "Батериен бууст"
+mode = "Налично само в соларен и мин+соларен режим"
+once = "Буустът е активен за тази сесия на зареждане"
 
 [main.loadpointSettings.limitSoc]
+description = "Лимит на зареждане, който се използва, когато това превозно средство е свързано"
+label = "Лимит по подразбиране"
 
 [main.loadpointSettings.maxCurrent]
+label = "Макс. ток"
 
 [main.loadpointSettings.minCurrent]
+label = "Мин. ток"
 
 [main.loadpointSettings.minSoc]
+label = "Мин. заряд %"
+description = "Превозното средство се зарежда „бързо“ до {0} в соларен режим. След това продължава със соларен излишък. Полезно за осигуряване на минимален пробег дори в по-тъмни дни."
 
 [main.loadpointSettings.phasesConfigured]
+label = "Фази"
+phases_0 = "Автоматично превключване"
+phases_1 = "1 фаза"
+phases_1_hint = "({min} до {max})"
+phases_3 = "3 фази"
+phases_3_hint = "({min} до {max})"
+no1p3pSupport = "Как е свързана вашата зарядна станция?"
 
 [main.mode]
+minpv = "Мин+Солар"
+now = "Бързо"
+off = "Изкл."
+pv = "Солар"
+smart = "Смарт"
 
 [main.provider]
+login = "Вход"
+logout = "Изход"
 
 [main.targetCharge]
+planPeriodValue = "{start} до {end}"
+planUnknown = "Все още не е известно"
+planPeriodLabel = "Период"
+priceLimit = "Лимит на цената от {price}"
+targetIsTooFarInTheFuture = "Ще коригираме плана веднага щом научим повече за бъдещето."
+activate = "Активиране"
+costLimitIgnore = "Конфигурираният {limit} ще бъде игнориран през този период."
+currentPlan = "Активен план"
+descriptionSoc = "Кога трябва да бъде заредено превозното средство до {targetSoc}?"
+nextPlan = "Следващ план"
+targetIsAboveVehicleLimit = "Лимитът на превозното средство е под целта за зареждане."
+targetIsInThePast = "Изберете време в бъдещето, Марти."
+vehicleCapacityRequired = "Капацитетът на батерията на превозното средство е необходим за изчисляване на времето за зареждане."
+remove = "Премахване"
+inactiveLabel = "Целево време"
+co2Limit = "Лимит на CO₂ от {co2}"
+today = "днес"
+setTargetTime = "няма"
+title = "Целево време"
+tomorrow = "утре"
+update = "Обновяване"
+onlyInPvMode = "Планът за зареждане работи само в соларен режим."
+vehicleCapacityDocs = "Научете как да го конфигурирате."
+notReachableInTime = "Целта ще бъде постигната {overrun} по-късно."
+planDuration = "Време за зареждане"
+preview = "Преглед на плана"
+targetIsAboveLimit = "Конфигурираният лимит за зареждане от {limit} ще бъде игнориран през този период."
+descriptionEnergy = "До кога трябва да бъде заредена {targetEnergy} в превозното средство?"
 
 [main.targetChargePlan]
+priceLabel = "Цена на енергията"
+chargeDuration = "Време за зареждане"
+co2Label = "Емисия на CO₂ ⌀"
+timeRange = "{day} {range} ч"
+unknownPrice = "Все още не е известно"
 
 [main.targetEnergy]
+label = "Лимит"
+noLimit = "няма"
 
 [main.vehicle]
+changeVehicle = "Промяна на превозното средство"
+fallbackName = "Превозно средство"
+detectionActive = "Откриване на превозно средство…"
+targetSoc = "Лимит"
+none = "Няма превозно средство"
+unknown = "Гостуващо превозно средство"
+vehicleSoc = "Зареждане"
+temp = "Температура"
+tempLimit = "Целева температура"
+notReachable = "Превозното средство не беше достъпно. Опитайте да рестартирате evcc."
+moreActions = "Още действия"
+addVehicle = "Добавяне на превозно средство"
 
 [main.vehicleSoc]
+connected = "свързан"
+disconnected = "разединен"
+vehicleLimit = "Лимит на превозното средство: {soc}"
+charging = "зареждане"
+ready = "готов"
 
 [main.vehicleStatus]
+disconnected = "Разединен."
+connected = "Превозното средство е свързано"
+disconnectRequired = "Процесът е прекратен. Моля, свържете се отново."
+finished = "Завършен."
+pvDisable = "Недостатъчен излишък. Скоро ще бъде пауза."
+pvEnable = "Наличен излишък. Скоро ще започне."
+targetChargeWaitForVehicle = "Планът за зареждане е готов. Очаква се превозното средство…"
+charging = "Зареждане…"
+cheapEnergyCharging = "Налична е евтина енергия."
+cleanEnergyCharging = "Налична е чиста енергия."
+climating = "Открито е предварително кондициониране."
+minCharge = "Минимално зареждане до {soc}."
+scale1p = "Скоро ще се намали до еднофазно зареждане."
+targetChargeActive = "Планът за зареждане е активен. Очаквано завършване след {duration}."
+waitForVehicle = "Готов. Очакване на превозното средство…"
+cheapEnergyNextStart = "Евтината енергия в {duration}"
+cleanEnergyNextStart = "Чиста енергия в {продължителност}."
+welcome = "Кратко първоначално зареждане за потвърждаване на връзката."
+batteryBoost = "Активно ускоряване на батерията."
+cleanEnergySet = "Лимитът на CO₂ е зададен."
+scale3p = "Скоро ще се увеличи до трифазно зареждане."
+targetChargePlanned = "Планът за таксуване започва в {duration}"
+unknown = ""
+vehicleLimit = "Лимит на превозното средство."
+vehicleLimitReached = "Достигнат е лимитът на превозното средство."
+awaitingAuthorization = "Изчакване на разрешение."
+cheapEnergySet = "Лимитът на цената е зададен."
 
 [notifications]
+modalTitle = "Известия"
+logs = "Вижте пълните дневници"
+dismissAll = "Отхвърли всички"
 
 [offline]
+message = "Няма връзка със сървъра."
+restart = "Рестартиране"
+configurationError = "Грешка при стартиране. Проверете конфигурацията си и рестартирайте."
+restartNeeded = "Необходимо за прилагане на промените."
+restarting = "Сървърът ще бъде отново на линия след малко."
 
 [passwordModal]
+labelRepeat = "Повторете паролата"
+newPassword = "Създайте парола"
+titleNew = "Задайте парола на администратора"
+titleUpdate = "Обновяване на паролата на администратора"
+empty = "Паролата не трябва да бъде празна."
+error = "Грешка: "
+labelCurrent = "Текуща парола"
+labelNew = "Нова парола"
+noMatch = "Паролите не съвпадат."
+updatePassword = "Обновяване на паролата"
+description = "Задайте парола за защита на настройките на конфигурацията. Използването на основния екран е възможно и без влизане в системата."
 
 [session]
+finished = "Завършено"
+started = "Начално време"
+price = "Цена"
+title = "Сесия на зареждане"
+meterstart = "Начало на брояча"
+meterstop = "Край на брояча"
+odometer = "Пробег"
+co2 = "CO₂"
+delete = "Изтрий"
+meter = "Километраж"
+cancel = "Отказ"
+date = "Период"
 
 [sessions]
+energy = "Заредено"
+avgPower = "⌀ Мощност"
+avgPrice = "⌀ Цена"
+downloadCsv = "Изтегляне като CSV"
+csvTotal = "Изтегляне на общ CSV"
+reallyDelete = "Наистина ли искате да изтриете тази сесия?"
+solar = "Слънчева енергия"
+title = "Сесии на зареждане"
+total = "Общо"
+showIndividualEntries = "Показване на отделни сесии"
+overview = "Общ преглед"
+chargeDuration = "Продължителност"
+co2 = "⌀ CO₂"
+csvMonth = "Изтегляне на {month} CSV"
+price = "Цена"
+vehicle = "Превозно средство"
+date = "Начало"
+noData = "Няма сесии на зареждане този месец."
+loadpoint = "Ладеен пункт"
 
 [sessions.chartTitle]
+byGroupVehicle = "По превозно средство"
+avgCo2ByGroup = "⌀ CO₂ {byGroup}"
+byGroupLoadpoint = "По зарядна точка"
+energy = "Заредена енергия"
+energyGrouped = "Слънчева енергия срещу мрежова енергия"
+energyGroupedByGroup = "Енергия {byGroup}"
+energySubTotal = "{value} общо"
+groupedCo2ByGroup = "Количество CO₂ {byGroup}"
+historyCo2 = "CO₂-емисии"
+historyCo2Sub = "{value} общо"
+historyPrice = "Разходи за зареждане"
+historyPriceSub = "{value} общо"
+solar = "Делът на слънчевата енергия в електроенергията през годината"
+solarByGroup = "Слънчев дял {byGroup}"
+energySubSolar = "{value} слънчева енергия"
+groupedPriceByGroup = "Обща цена {byGroup}"
+avgPriceByGroup = "⌀ Цена {byGroup}"
 
 [sessions.csv]
+chargedenergy = "Енергия (kWh)"
+chargeduration = "Продължителност"
+co2perkwh = "CO₂/kWh"
+created = "Начално време"
+vehicle = "Превозно средство"
+identifier = "Идентификатор"
+finished = "Завършено"
+meterstop = "Крайно показание на електромера (kWh)"
+priceperkwh = "Цена/kWh"
+loadpoint = "Зарядна точка"
+meterstart = "Начално показание на електромера (kWh)"
+odometer = "Пробег (км)"
+price = "Цена"
+solarpercentage = "Слънчева енергия (%)"
 
 [sessions.filter]
+allLoadpoints = "Всички зарядни точки"
+allVehicles = "Всички превозни средства"
+filter = "Филтър"
 
 [sessions.group]
+self = "Слънчева енергия"
+co2 = "Емисии"
+grid = "Мрежа"
+price = "Цена"
 
 [sessions.groupBy]
+vehicle = "Превозно средство"
+loadpoint = "Зарядна точка"
+none = "Общо"
 
 [sessions.period]
+month = "Месец"
+total = "Общо"
+year = "Година"
 
 [sessions.type]
+co2 = "CO₂"
+price = "Цена"
+solar = "Слънчева енергия"
 
 [settings]
+title = "Потребителски интерфейс"
 
 [settings.fullscreen]
+label = "Цял екран"
+exit = "Изход от режим на цял екран"
+enter = "Въведете в режим на цял екран"
 
 [settings.hiddenFeatures]
+label = "Експериментален"
+value = "Показване на експериментални функции на потребителския интерфейс."
 
 [settings.language]
+auto = "Автоматичен"
+label = "Език"
 
 [settings.sponsorToken]
+getNew = "Вземете нов"
+hint = "Забележка: В бъдеще ще автоматизираме това."
+expires = "Вашият спонсорски токен изтича след {inXDays}. {getNewToken} и го актуализирайте тук."
 
 [settings.telemetry]
+label = "Телеметрия"
 
 [settings.theme]
+label = "Дизайн"
+light = "Светъл"
+auto = "Система"
+dark = "Тъмен"
 
 [settings.unit]
+mi = "Мили"
+km = "km"
+label = "Единици"
 
 [smartCost]
 activeHours = "{charging} от {total}"
+activeHoursLabel = "Активни часове"
+batteryDescription = "Зарежда домашната батерия с енергия от мрежата."
+cheapTitle = "Евтино зареждане от мрежата"
+cleanTitle = "Чисто зареждане от мрежата"
+co2Limit = "Граница на CO₂"
+loadpointDescription = "Позволява временно бързо зареждане в соларен режим."
+modalTitle = "Интелигентно зареждане от мрежата"
+priceLabel = "Цена на енергията"
+priceLimit = "Граница на цената"
+applyToAll = "Приложи навсякъде?"
+co2Label = "Емисия на CO₂"
+none = "Няма"
+saved = "Запазено."
 
 [startupError]
+fixAndRestart = "Моля, отстранете проблема и рестартирайте сървъра."
+configFile = "Използван конфигурационен файл:"
+configuration = "Конфигурация"
+description = "Моля, проверете конфигурационния си файл. Ако съобщението за грешка не помогне, проверете {0}."
+discussions = "Дискусии в GitHub"
+lineError = "Грешка в {0}."
+lineErrorLink = "Ред {0}"
+title = "Грешка при стартиране"
+restartButton = "Рестартиране"
+hint = "Забележка: Възможно е също така да имате дефектно устройство (инвертор, измервателен уред и т.н.). Проверете мрежовите си връзки."
