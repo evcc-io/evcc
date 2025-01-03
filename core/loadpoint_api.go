@@ -177,7 +177,7 @@ func (lp *Loadpoint) GetPhases() int {
 func (lp *Loadpoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if !lp.hasPhaseSwitching() && phases == 0 {
-		return fmt.Errorf("invalid number of phases: %d", phases)
+		return fmt.Errorf("charger does not support phase switching")
 	}
 
 	if phases != 0 && phases != 1 && phases != 3 {
