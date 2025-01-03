@@ -33,19 +33,9 @@ func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Prov
 		return nil, err
 	}
 
-	pipe, err := pipeline.New(nil, cc.Settings)
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := pipe.Process([]byte(cc.Value))
-	if err != nil {
-		return nil, err
-	}
-
 	p := &constProvider{
 		ctx: ctx,
-		str: string(b),
+		str: cc.Value,
 		set: cc.Set,
 	}
 
