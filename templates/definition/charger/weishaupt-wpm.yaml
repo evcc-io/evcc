@@ -19,7 +19,7 @@ render: |
   type: sgready
   getmode:
     source: map
-    values:HEIZBETRIB
+    values:
       8:  1 # ABTAUEN
       10: 3 # EVU_SPERRE
       14: 2 # ERHOEHTER_BETRIEB
