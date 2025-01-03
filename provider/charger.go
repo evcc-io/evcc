@@ -21,18 +21,18 @@ func init() {
 // NewChargerEnableFromConfig creates type conversion provider
 func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Charger config.Typed
+		Config config.Typed
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.Charger.Type == "" {
+	if cc.Config.Type == "" {
 		return nil, fmt.Errorf("missing charger")
 	}
 
-	charger, err := charger.NewFromConfig(ctx, cc.Charger.Type, cc.Charger.Other)
+	charger, err := charger.NewFromConfig(ctx, cc.Config.Type, cc.Config.Other)
 	if err != nil {
 		return nil, err
 	}
