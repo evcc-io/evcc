@@ -547,11 +547,11 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	site.batterySoc = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
+	site.batterySoc = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		// weigh soc by capacity
-		weighedSoc := m.Soc
-		if m.Capacity > 0 {
-			weighedSoc *= m.Capacity
+		weighedSoc := *m.Soc
+		if *m.Capacity > 0 {
+			weighedSoc *= *m.Capacity
 		}
 		return acc + weighedSoc
 	}, 0)
