@@ -70,7 +70,7 @@ func init() {
 	registry.Add("peblar", NewPeblarFromConfig)
 }
 
-//go:generate decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {

@@ -51,7 +51,7 @@ func init() {
 	registry.AddCtx("pulsares", NewPulsaresFromConfig)
 }
 
-//go:generate decorate -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
 func NewPulsaresFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {

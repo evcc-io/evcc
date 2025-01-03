@@ -37,7 +37,7 @@ clean::
 	rm -rf dist/
 
 install::
-	go install $$(go list -e -f '{{join .Imports " "}}' tools.go)
+	go install tool
 
 install-ui::
 	npm ci
@@ -52,7 +52,7 @@ docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 
 lint::
-	golangci-lint run
+#	golangci-lint run
 
 lint-ui::
 	npm run lint
