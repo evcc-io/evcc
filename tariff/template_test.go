@@ -4,16 +4,18 @@ import (
 	"context"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
 var acceptable = []string{
-	"missing token",         // amber, tibber
-	"invalid zipcode",       // grünstromindex
-	"invalid apikey format", // octopusenergy
-	"missing region",        // octopusenergy
-	"missing securitytoken", // entsoe
+	api.ErrMissingCredentials.Error(),
+	api.ErrMissingToken.Error(),
+	"invalid zipcode",                                  // grünstromindex
+	"invalid apikey format",                            // octopusenergy
+	"missing region",                                   // octopusenergy
+	"missing securitytoken",                            // entsoe
 	"cannot define region and postcode simultaneously", // ngeso
 }
 

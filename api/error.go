@@ -12,7 +12,10 @@ var ErrMustRetry = errors.New("must retry")
 var ErrSponsorRequired = errors.New("sponsorship required, see https://github.com/evcc-io/evcc#sponsorship")
 
 // ErrMissingCredentials indicates that user/password are missing
-var ErrMissingCredentials = errors.New("missing credentials")
+var ErrMissingCredentials = errors.New("missing user/password credentials")
+
+// ErrMissingToken indicates that access/refresh tokens are missing
+var ErrMissingToken = errors.New("missing token credentials")
 
 // ErrOutdated indicates that result is outdated
 var ErrOutdated = errors.New("outdated")

@@ -4,11 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
 var acceptable = []string{
+	api.ErrMissingCredentials.Error(),
+	api.ErrMissingToken.Error(),
 	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
@@ -29,7 +32,6 @@ var acceptable = []string{
 	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
-	"missing credentials",
 	"timeout",                    // ocpp
 	"must have uri and password", // Wattpilot
 }

@@ -48,7 +48,6 @@ jobs:
           push: true
           build-args: |
             RELEASE=1
-            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: ${{ steps.meta.outputs.tags }}
 
   apt:
@@ -100,7 +99,6 @@ jobs:
         env:
           # use GH_TOKEN for access to evcc-io/homebrew-tap
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - uses: actions/setup-python@v5
         with:

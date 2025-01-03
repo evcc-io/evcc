@@ -2,13 +2,12 @@ package vehicle
 
 import (
 	"context"
-	"os"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
@@ -23,15 +22,7 @@ type Tesla struct {
 }
 
 func init() {
-	if id := os.Getenv("TESLA_CLIENT_ID"); id != "" {
-		tesla.OAuth2Config.ClientID = id
-	}
-	if secret := os.Getenv("TESLA_CLIENT_SECRET"); secret != "" {
-		tesla.OAuth2Config.ClientSecret = secret
-	}
-	if tesla.OAuth2Config.ClientID != "" {
-		registry.Add("tesla", NewTeslaFromConfig)
-	}
+	registry.Add("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
@@ -42,6 +33,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Tokens       Tokens
 		VIN          string
 		CommandProxy string
+		ProxyToken   string
 		Cache        time.Duration
 		Timeout      time.Duration
 	}{
@@ -62,6 +54,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		tesla.OAuth2Config.ClientSecret = cc.Credentials.Secret
 	}
 
+	if tesla.OAuth2Config.ClientID == "" {
+		return nil, errors.New("missing client id, see https://github.com/evcc-io/evcc/discussions/17501")
+	}
+
 	token, err := cc.Tokens.Token()
 	if err != nil {
 		return nil, err
@@ -78,9 +74,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	hc := request.NewClient(log)
+	baseTransport := hc.Transport
+
 	hc.Transport = &oauth2.Transport{
 		Source: identity,
-		Base:   hc.Transport,
+		Base:   baseTransport,
 	}
 
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
@@ -109,9 +107,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	pc := request.NewClient(log)
 	pc.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"X-Auth-Token": sponsor.Token,
+			"Authorization": "Bearer " + cc.ProxyToken,
 		}),
-		Base: hc.Transport,
+		Base: baseTransport,
 	}
 
 	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
