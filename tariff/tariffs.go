@@ -12,6 +12,15 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner api.Tariff
 }
 
+func Forecast(t api.Tariff) []api.Rate {
+	if t != nil && t.Type() == api.TariffTypePriceForecast {
+		if rr, err := t.Rates(); err == nil {
+			return rr
+		}
+	}
+	return nil
+}
+
 func currentPrice(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
