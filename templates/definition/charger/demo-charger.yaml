@@ -14,7 +14,7 @@ params:
       de: Ladezustand
       en: Charge status
     type: choice
-    choice: [A, B, C, D, E, F]
+    choice: [A, B, C]
     default: A
   - name: power
     description:
