@@ -1,0 +1,113 @@
+template: weishaupt-wpm
+products:
+  - brand: Weishaupt
+    description:
+      generic: WPM (SG Ready)
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      8:  1 # ABTAUEN
+      10: 3 # EVU_SPERRE
+      14: 2 # ERHOEHTER_BETRIEB
+      18: 3 # FROSTSCHUTZ
+      19: 1 # HEIZBETRIEB
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30006
+        type: input
+        encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45101 # 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45102 # 4002
+              type: writesingle
+              encoding: uint16
+    - case: 2 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45101
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45102
+              type: writesingle
+              encoding: uint16
+    - case: 3 # dimm
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45101
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 45102
+              type: writesingle
+              encoding: uint16
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater" -}} 32102 {{ else }} 33104 {{- end }} # 32102 = WW; 33104 Vorlauf
+      type: input
+      encoding: int16
+    scale: 0.1
+  {{- end }}
