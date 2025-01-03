@@ -4,6 +4,7 @@
 			class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
 			:class="open ? 'text-primary' : ''"
 			type="button"
+			tabindex="0"
 			@click="toggle"
 		>
 			<span v-if="open">{{ $t("config.general.hideAdvancedSettings") }}</span>
