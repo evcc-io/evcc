@@ -27,7 +27,7 @@ render: |
     auth:
       type: bearer
       password: {{ .token }}
-    insecure: true 
+    insecure: true
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
   currents:
