@@ -704,6 +704,7 @@ export default {
 	methods: {
 		reset() {
 			this.values = deepClone(defaultValues);
+			this.updatePhases();
 		},
 		async loadConfiguration() {
 			try {
