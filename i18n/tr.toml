@@ -576,12 +576,12 @@ scale3p = "Birazdan 3 fazla doldurmaya yükseltilecek."
 targetChargeActive = "Doldurma planı yürürlükte. Tahmini bitiş süresi {duration} içerisinde."
 targetChargePlanned = "Doldurma planı {duration} içerisinde başlayacak."
 targetChargeWaitForVehicle = "Doldurma planı hazır. Araç bekleniyor…"
+unknown = ""
 vehicleLimit = "Araç sınırı."
 vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
 welcome = "Bağlantıyı onaylamak için kısa ilk dolum."
-unknown = ""
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
