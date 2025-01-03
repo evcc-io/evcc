@@ -70,7 +70,7 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewKSE creates KSE charger
 func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
@@ -121,19 +121,15 @@ func (wb *KSE) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := binary.BigEndian.Uint16(b)
-
-	switch s {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 0, 1, 3:
 		return api.StatusA, nil
 	case 4:
 		return api.StatusB, nil
 	case 5:
 		return api.StatusC, nil
-	case 6, 7, 8:
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

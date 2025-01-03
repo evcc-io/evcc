@@ -23,7 +23,13 @@ never = "bare med nok PV-overskudd"
 
 [config.battery]
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
+
+[config.eebus]
 
 [config.form]
 example = "Eksempel"
@@ -33,15 +39,29 @@ optional = "valgfritt"
 
 [config.grid]
 
+[config.hems]
+
+[config.influx]
+
 [config.main]
 addVehicle = "Legg til kjøretøy"
 edit = "rediger"
 title = "Oppsett"
 vehicles = "Mine kjøretøy"
 
+[config.messaging]
+
 [config.meter]
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -51,7 +71,11 @@ vehicles = "Mine kjøretøy"
 
 [config.section]
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -217,6 +241,8 @@ disclaimerHint = "Merknad:"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
@@ -362,6 +388,8 @@ title = "Ladeøkter"
 total = "Totalt"
 vehicle = "Kjøretøy"
 
+[sessions.chartTitle]
+
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
 created = "Opprettet"
@@ -377,6 +405,14 @@ vehicle = "Kjøretøy"
 allLoadpoints = "alle ladepunkter"
 allVehicles = "alle kjøretøy"
 filter = "Filter"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Innstillinger"

@@ -15,7 +15,8 @@ params:
       en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
   - name: pricetype
     default: CONSUMPTION
-    validvalues: ["MARKET", "CONSUMPTION", "GENERATION"]
+    type: choice
+    choice: ["MARKET", "CONSUMPTION", "GENERATION"]
     required: true
     help:
       de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"

@@ -90,17 +90,17 @@ test("http iframe hint", async ({ page }) => {
 
 test("update password", async ({ page }) => {
   await start(BASIC, "password.sql", "");
-  await page.goto("/");
 
   const oldPassword = "secret";
   const newPassword = "newsecret";
 
   // login modal
-  page.goto("/#/config");
-  const loginOld = page.getByTestId("login-modal");
-  await loginOld.getByLabel("Password").fill(oldPassword);
-  await loginOld.getByRole("button", { name: "Login" }).click();
-  await expect(loginOld).not.toBeVisible();
+  await page.goto("/#/config");
+  const loginModal = page.getByTestId("login-modal");
+  await expect(loginModal).toBeVisible();
+  await loginModal.getByLabel("Password").fill(oldPassword);
+  await loginModal.getByRole("button", { name: "Login" }).click();
+  await expect(loginModal).not.toBeVisible();
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
@@ -123,6 +123,7 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await page.getByRole("link", { name: "Configuration" }).click();
   const loginNew = page.getByTestId("login-modal");
+  await expect(loginNew).toBeVisible();
   await loginNew.getByLabel("Password").fill(newPassword);
   await loginNew.getByRole("button", { name: "Login" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();

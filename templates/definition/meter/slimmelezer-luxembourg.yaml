@@ -1,0 +1,95 @@
+template: slimmelezer-luxembourg
+products:
+  - brand: Zuidwijk
+    description:
+      generic: SlimmeLezer(+) in Luxembourg
+requirements:
+  description:
+    de: Slimmelezer-Geräte in Luxemburg verwenden für verschiedene Sensoren andere Namen.
+    en: Slimmelezer devices use different sensor names in Luxembourg.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_consumed
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_produced
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+  energy:
+    source: http
+    uri: http://{{ .host }}/sensor/energy_produced_luxembourg
+    headers:
+    - content-type: application/json
+    jq: .value
+  currents:
+  - source: http
+    uri: http://{{ .host }}/sensor/current_phase_1
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_phase_2
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_phase_3
+    headers:
+    - content-type: application/json
+    jq: .value
+  powers:
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_produced_phase_1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_consumed_phase_1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_produced_phase_2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_consumed_phase_2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_produced_phase_3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_consumed_phase_3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000

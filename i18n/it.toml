@@ -414,7 +414,7 @@ titleMinSoc = "Carica minima"
 titleTargetCharge = "Partenza"
 unsavedChanges = "Ci sono modifiche non salvate. Vuoi salvarle adesso?"
 update = "Applica"
-weekdays = "“Giorni”"
+weekdays = "Giorni"
 
 [main.energyflow]
 battery = "Batteria"

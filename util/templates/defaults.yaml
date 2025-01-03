@@ -197,7 +197,7 @@ params:
     help:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
       en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
-    type: stringlist
+    type: list
   - name: priority
     description:
       de: Priorität
@@ -222,7 +222,8 @@ params:
       de: "'de' für Deutsch und 'en' für Englisch"
       en: "'en' for English and 'de' for German"
     default: en
-    validvalues: ["de", "en"]
+    type: choice
+    choice: ["en", "de"]
   - name: icon
     description:
       de: Icon
@@ -231,7 +232,7 @@ params:
       de: "Icon in der Benutzeroberfläche"
       en: "Icon as shown in user interface"
     type: choice
-    validvalues:
+    choice:
       - car
       - bike
       - bus
@@ -299,6 +300,9 @@ params:
     description:
       de: Standardmodus für die aktive Batteriesteuerung
       en: Default mode for battery control
+    help:
+      de: Standardmodus für die aktive Batteriesteuerung auf die der Wechselrichter wieder nach einem Laden des Speichers oder Unterbinden der Entladung zurückfällt.
+      en: Default mode for battery control to which the inverter falls back after charging the battery or after stopping discharge.
   - name: maxchargepower
     type: int
     usages: ["battery"]
@@ -318,6 +322,7 @@ params:
       en: Power limit for grid charging.
       de: Leistungslimit für Netzladung.
     default: 100
+
 presets:
   vehicle-base:
     params:
@@ -341,13 +346,11 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        type: stringlist
       - name: priority
         advanced: true
       - name: cache
         default: 15m
         advanced: true
-        type: duration
   vehicle-common:
     params:
       - name: title
@@ -365,7 +368,6 @@ presets:
         advanced: true
       - name: identifiers
         advanced: true
-        type: stringlist
       - name: priority
         advanced: true
   vehicle-features:
@@ -572,6 +574,9 @@ devicegroups:
   generic:
     de: Generische Unterstützung
     en: Generic support
+  heating:
+    de: Wärmeerzeuger
+    en: Heating devices
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets
