@@ -21,6 +21,8 @@ const (
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planSlotEnd = time.Time{}
+		lp.planActiveTime = time.Time{}
+		lp.planActiveSoc = 0.0
 	}
 	if lp.planActive != active {
 		lp.planActive = active
@@ -37,6 +39,7 @@ func (lp *Loadpoint) finishPlan() {
 	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
 	}
+	lp.log.DEBUG.Println("plan: deleting expired plan")
 }
 
 // remainingPlanEnergy returns missing energy amount in kWh
@@ -105,12 +108,21 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
-		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
 	}
 
 	goal, isSocBased := lp.GetPlanGoal()
+
+	defer func() {
+		if active {
+			lp.planActiveTime = planTime
+			if isSocBased {
+				lp.planActiveSoc = goal
+			}
+		}
+	}()
+
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
@@ -157,8 +169,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 
 		// remember last active plan's end time
-		lp.setPlanActive(true)
 		lp.planSlotEnd = activeSlot.End
+		return true
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
@@ -180,5 +192,5 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 	}
 
-	return active
+	return false
 }
