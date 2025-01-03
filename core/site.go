@@ -42,20 +42,14 @@ type updater interface {
 	Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
-// meterMeasurement is used as slice element for publishing structured data
-type meterMeasurement struct {
-	Power         float64 `json:"power"`
-	Energy        float64 `json:"energy,omitempty"`
-	ExcessDCPower float64 `json:"excessdcpower,omitempty"`
-}
-
-// batteryMeasurement is used as slice element for publishing structured data
-type batteryMeasurement struct {
-	Power        float64 `json:"power"`
-	Energy       float64 `json:"energy,omitempty"`
-	Soc          float64 `json:"soc,omitempty"`
-	Capacity     float64 `json:"capacity,omitempty"`
-	Controllable bool    `json:"controllable"`
+// measurement is used as slice element for publishing structured data
+type measurement struct {
+	Power         float64  `json:"power"`
+	Energy        float64  `json:"energy,omitempty"`
+	ExcessDCPower float64  `json:"excessdcpower,omitempty"`
+	Capacity      *float64 `json:"capacity,omitempty"`
+	Soc           *float64 `json:"soc,omitempty"`
+	Controllable  *bool    `json:"controllable,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -434,25 +428,17 @@ func (site *Site) publishDelta(key string, val interface{}) {
 	site.publish(key, val)
 }
 
-// updatePvMeters updates pv meters. All measurements are optional.
-func (site *Site) updatePvMeters() {
-	if len(site.pvMeters) == 0 {
-		return
-	}
-
+func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 	var wg sync.WaitGroup
-
-	mm := make([]meterMeasurement, len(site.pvMeters))
+	mm := make([]measurement, len(meters))
 
 	fun := func(i int, meter api.Meter) {
 		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
-			if power < -500 {
-				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
-			}
+			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
-			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
+			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
 		// energy (production)
@@ -460,57 +446,143 @@ func (site *Site) updatePvMeters() {
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err != nil {
-				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
 
-		var excessDC float64
-		var excessStr string
-		if m, ok := meter.(api.MaxACPower); ok {
-			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
-				excessDC = -dc
-				excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -dc)
-			}
-		}
-
-		if len(site.pvMeters) > 1 {
-			site.log.DEBUG.Printf("pv %d power: %.0fW"+excessStr, i+1, power)
-		}
-
-		mm[i] = meterMeasurement{
-			Power:         power,
-			Energy:        energy,
-			ExcessDCPower: excessDC,
+		mm[i] = measurement{
+			Power:  power,
+			Energy: energy,
 		}
 
 		wg.Done()
 	}
 
-	wg.Add(len(site.pvMeters))
-	for i, meter := range site.pvMeters {
+	wg.Add(len(meters))
+	for i, meter := range meters {
 		go fun(i, meter)
 	}
 	wg.Wait()
 
-	site.pvPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	return mm
+}
+
+// updatePvMeters updates pv meters. All measurements are optional.
+func (site *Site) updatePvMeters() {
+	if len(site.pvMeters) == 0 {
+		return
+	}
+
+	mm := site.collectMeters("pv", site.pvMeters)
+
+	for i, meter := range site.pvMeters {
+		power := mm[i].Power
+
+		if power < -500 {
+			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
+		}
+
+		if m, ok := meter.(api.MaxACPower); ok {
+			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
+				mm[i].ExcessDCPower = -dc
+				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, -dc)
+			}
+		}
+	}
+
+	site.pvPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + max(0, m.Power)
 	}, 0)
-	site.excessDCPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	site.excessDCPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc - math.Abs(m.ExcessDCPower)
 	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Energy
 	}, 0)
 
-	var excessStr string
-	if site.excessDCPower < 0 {
-		excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
+	if len(site.pvMeters) > 1 {
+		var excessStr string
+		if site.excessDCPower < 0 {
+			excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
+		}
+
+		site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
 	}
 
-	site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
+}
+
+// updateBatteryMeters updates battery meters
+func (site *Site) updateBatteryMeters() {
+	if len(site.batteryMeters) == 0 {
+		return
+	}
+
+	mm := site.collectMeters("battery", site.batteryMeters)
+
+	for i, meter := range site.batteryMeters {
+		// battery soc and capacity
+		var batSoc, capacity float64
+		var err error
+
+		if m, ok := meter.(api.Battery); ok {
+			batSoc, err = soc.Guard(m.Soc())
+			if err == nil {
+				if m, ok := m.(api.BatteryCapacity); ok {
+					capacity = m.Capacity()
+				}
+
+				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
+			} else {
+				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+			}
+		}
+
+		_, controllable := meter.(api.BatteryController)
+
+		mm[i].Soc = lo.ToPtr(batSoc)
+		mm[i].Capacity = lo.ToPtr(capacity)
+		mm[i].Controllable = lo.ToPtr(controllable)
+	}
+
+	site.batterySoc = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		// weigh soc by capacity
+		weighedSoc := *m.Soc
+		if *m.Capacity > 0 {
+			weighedSoc *= *m.Capacity
+		}
+		return acc + weighedSoc
+	}, 0)
+	totalCapacity := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + *m.Capacity
+	}, 0)
+
+	// convert weighed socs to total soc
+	if totalCapacity == 0 {
+		totalCapacity = float64(len(site.batteryMeters))
+	}
+	site.batterySoc /= totalCapacity
+
+	site.batteryPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + m.Power
+	}, 0)
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + m.Energy
+	}, 0)
+
+	if len(site.batteryMeters) > 1 {
+		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
+		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
+	}
+
+	site.publish(keys.BatteryCapacity, totalCapacity)
+	site.publish(keys.BatterySoc, site.batterySoc)
+
+	site.publish(keys.BatteryPower, site.batteryPower)
+	site.publish(keys.BatteryEnergy, totalEnergy)
+	site.publish(keys.Battery, mm)
 }
 
 // updateAuxMeters updates aux meters
@@ -519,32 +591,15 @@ func (site *Site) updateAuxMeters() {
 		return
 	}
 
-	var wg sync.WaitGroup
-
-	mm := make([]meterMeasurement, len(site.auxMeters))
-
-	fun := func(i int, meter api.Meter) {
-		if power, err := meter.CurrentPower(); err == nil {
-			mm[i].Power = power
-			site.log.DEBUG.Printf("aux power %d: %.0fW", i+1, power)
-		} else {
-			site.log.ERROR.Printf("aux meter %d: %v", i+1, err)
-		}
-
-		wg.Done()
-	}
-
-	wg.Add(len(site.auxMeters))
-	for i, meter := range site.auxMeters {
-		go fun(i, meter)
-	}
-	wg.Wait()
-
-	site.auxPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	mm := site.collectMeters("aux", site.auxMeters)
+	site.auxPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Power
 	}, 0)
 
-	site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
+	if len(site.auxMeters) > 1 {
+		site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
+	}
+
 	site.publish(keys.AuxPower, site.auxPower)
 	site.publish(keys.Aux, mm)
 }
@@ -555,137 +610,8 @@ func (site *Site) updateExtMeters() {
 		return
 	}
 
-	mm := make([]meterMeasurement, len(site.extMeters))
-
-	for i, meter := range site.extMeters {
-		// ext power
-		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
-		if err != nil {
-			site.log.ERROR.Printf("ext meter %d power: %v", i+1, err)
-		}
-
-		// ext energy
-		var energy float64
-		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-			energy, err = m.TotalEnergy()
-			if err != nil {
-				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
-			}
-		}
-
-		mm[i] = meterMeasurement{
-			Power:  power,
-			Energy: energy,
-		}
-	}
-
-	// Publishing will be done in separate PR
-}
-
-// updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters() error {
-	if len(site.batteryMeters) == 0 {
-		return nil
-	}
-
-	var eg errgroup.Group
-
-	mm := make([]batteryMeasurement, len(site.batteryMeters))
-
-	fun := func(i int, meter api.Meter) error {
-		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
-		if err != nil {
-			// power is required- return on error
-			return fmt.Errorf("battery %d power: %v", i+1, err)
-		}
-
-		if len(site.batteryMeters) > 1 {
-			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
-		}
-
-		// battery energy (discharge)
-		var energy float64
-		if m, ok := meter.(api.MeterEnergy); ok {
-			energy, err = m.TotalEnergy()
-			if err != nil {
-				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
-			}
-		}
-
-		// battery soc and capacity
-		var batSoc, capacity float64
-		if meter, ok := meter.(api.Battery); ok {
-			batSoc, err = soc.Guard(meter.Soc())
-
-			if err == nil {
-				if m, ok := meter.(api.BatteryCapacity); ok {
-					capacity = m.Capacity()
-				}
-
-				if len(site.batteryMeters) > 1 {
-					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
-				}
-			} else {
-				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
-			}
-		}
-
-		_, controllable := meter.(api.BatteryController)
-
-		mm[i] = batteryMeasurement{
-			Power:        power,
-			Energy:       energy,
-			Soc:          batSoc,
-			Capacity:     capacity,
-			Controllable: controllable,
-		}
-
-		return nil
-	}
-
-	for i, meter := range site.batteryMeters {
-		eg.Go(func() error { return fun(i, meter) })
-	}
-
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	site.batterySoc = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		// weigh soc by capacity
-		weighedSoc := m.Soc
-		if m.Capacity > 0 {
-			weighedSoc *= m.Capacity
-		}
-		return acc + weighedSoc
-	}, 0)
-	totalCapacity := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		return acc + m.Capacity
-	}, 0)
-
-	// convert weighed socs to total soc
-	if totalCapacity == 0 {
-		totalCapacity = float64(len(site.batteryMeters))
-	}
-	site.batterySoc /= totalCapacity
-
-	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
-	site.publish(keys.BatteryCapacity, totalCapacity)
-	site.publish(keys.BatterySoc, site.batterySoc)
-
-	site.batteryPower = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		return acc + m.Power
-	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		return acc + m.Energy
-	}, 0)
-
-	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
-	site.publish(keys.BatteryPower, site.batteryPower)
-	site.publish(keys.BatteryEnergy, totalEnergy)
-	site.publish(keys.Battery, mm)
-
-	return nil
+	mm := site.collectMeters("ext", site.extMeters)
+	site.publish(keys.Ext, mm)
 }
 
 // updateGridMeter updates grid meter
@@ -742,10 +668,10 @@ func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
 	eg.Go(func() error { site.updatePvMeters(); return nil })
+	eg.Go(func() error { site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
-	eg.Go(site.updateBatteryMeters)
 	eg.Go(site.updateGridMeter)
 
 	return eg.Wait()
@@ -769,7 +695,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
 	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
-		residualPower = 100 // W
+		residualPower = 100 // Wsite.publish(keys.PvPower,
 	}
 
 	// allow using grid and charge as estimate for pv power
