@@ -97,9 +97,6 @@ yes = "yes"
 A = "A (not connected)"
 B = "B (connected)"
 C = "C (charging)"
-D = "D (charging with ventilation)"
-E = "E (no power)"
-F = "F (error)"
 
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
@@ -298,9 +295,6 @@ https = "HTTPS (encrypted)"
 A = "A (not connected)"
 B = "B (connected)"
 C = "C (charging)"
-D = "D (charging with ventilation)"
-E = "E (no power)"
-F = "F (error)"
 
 [config.pv]
 titleAdd = "Add Solar Meter"
