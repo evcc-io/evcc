@@ -1,6 +1,6 @@
-template: stiebel-wpm
+template: weishaupt-wpm
 products:
-  - brand: Stiebel Eltron
+  - brand: Weishaupt
     description:
       generic: WPM (SG Ready)
 group: heating
@@ -20,15 +20,16 @@ render: |
   getmode:
     source: map
     values:
-      1: 3 # Frostschutz
-      2: 1 # Normal
-      3: 2 # Forcierter Betrieb
-      4: 2 # Sofortige Ansteuerung
+      8:  1 # ABTAUEN
+      10: 3 # EVU_SPERRE
+      14: 2 # ERHOEHTER_BETRIEB
+      18: 3 # FROSTSCHUTZ
+      19: 1 # HEIZBETRIEB
     get:
       source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 5000
+        address: 30006
         type: input
         encoding: uint16
   setmode:
@@ -44,7 +45,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4001
+              address: 45101 # 4001
               type: writesingle
               encoding: uint16
         - source: const
@@ -53,7 +54,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4002
+              address: 45102 # 4002
               type: writesingle
               encoding: uint16
     - case: 2 # boost
@@ -66,7 +67,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4001
+              address: 45101
               type: writesingle
               encoding: uint16
         - source: const
@@ -75,7 +76,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4002
+              address: 45102
               type: writesingle
               encoding: uint16
     - case: 3 # dimm
@@ -88,7 +89,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4001
+              address: 45101
               type: writesingle
               encoding: uint16
         - source: const
@@ -97,7 +98,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 4002
+              address: 45102
               type: writesingle
               encoding: uint16
   {{- if .tempsource }}
@@ -105,7 +106,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "warmwater" -}} 521 {{ else }} 517 {{- end }}
+      address: {{ if eq .tempsource "warmwater" -}} 32102 {{ else }} 33104 {{- end }} # 32102 = WW; 33104 Vorlauf
       type: input
       encoding: int16
     scale: 0.1

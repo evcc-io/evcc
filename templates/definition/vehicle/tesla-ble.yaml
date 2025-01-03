@@ -1,0 +1,71 @@
+template: tesla-ble
+products:
+  - description:
+      generic: Tesla BLE
+group: generic
+requirements:
+  description:
+    de: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
+    en: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
+params:
+  - preset: vehicle-common
+  - name: vin
+    required: true
+    example: W...
+    help:
+      de: Erforderlich für BLE-Verbindung
+      en: Required for BLE connection
+  - name: url
+    required: true
+    example: http://192.168.178.27
+    help:
+      de: URL des Tesla BLE HTTP Proxy
+      en: URL of the Tesla BLE HTTP Proxy
+  - name: port
+    example: 8080
+    default: 8080
+    help:
+      de: Port des Tesla BLE HTTP Proxy
+      en: Port of the Tesla BLE HTTP Proxy
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  chargeEnable:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/{{`{{ if .chargeenable }}charge_start{{ else }}charge_stop{{ end }}`}}
+    method: POST
+  maxcurrent:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/set_charging_amps
+    method: POST
+    body: '{"charging_amps": ${maxcurrent}}'
+  wakeup:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/wake_up
+    method: POST
+  soc:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: .response.response.charge_state.battery_level
+    timeout: 30s
+  limitsoc:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: .response.response.charge_state.charge_limit_soc
+    timeout: 30s
+  range:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: .response.response.charge_state.battery_range
+    scale: 1.60934
+    timeout: 30s
+  status:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    method: GET
+    jq: (if (.response.response.charge_state.charging_state == "Charging") then "C"
+      elif (.response.response.charge_state.charging_state == "Stopped") then "B"
+      elif (.response.response.charge_state.charging_state == "NoPower") then "B"
+      elif (.response.response.charge_state.charging_state == "Complete") then "B" 
+      else "A" end)
+    timeout: 30s

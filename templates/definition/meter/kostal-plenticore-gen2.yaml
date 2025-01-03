@@ -34,7 +34,8 @@ params:
     description:
       de: Byte-Reihenfolge (Little/Big)
       en: Endianness (Little/Big)
-    validvalues: ["big", "little"]
+    type: choice
+    choice: ["little", "big"]
     default: little
     advanced: true
   - name: capacity

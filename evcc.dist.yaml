@@ -151,86 +151,19 @@ tariffs:
         price: 0.2 # EUR/kWh
       - days: Sat,Sun
         price: 0.15 # EUR/kWh
-
-    # or variable tariffs
-    # type: tibber
-    # token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
-    # homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
-
-    # type: awattar
-    # region: de # optional, choose at for Austria
-    # charges: # optional, additional charges per kWh
-    # tax: # optional, additional tax (0.1 for 10%)
-
-    # type: octopusenergy
-    # tariff: AGILE-FLEX-22-11-25 # Tariff code
-    # region: A # optional
-
-    # type: elering # Nordpool
-    # region: ee # or lt, lv, fi
-    # charges: # optional, additional charges per kWh
-    # tax: # optional, additional tax (0.1 for 10%)
-
-    # type: energinet # Energinet using the price in DKK
-    # region: dk1 # or dk2
-    # charges: # optional, additional charges per kWh
-    # tax: # optional, additional tax (0.1 for 10%)
-
-    # type: entsoe # Entso-E european market data
-    # domain: BZN|DE-LU # https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas
-    # securitytoken: # api token
-    # charges: # optional, additional charges per kWh
-    # tax: # optional, additional tax (0.1 for 10%)
-
-    # type: pun # PUN - Prezzo unico nazionale - Hourly Italian wholesale prices
-    # charges: 0 # optional, additional charges per kWh
-    # tax: 0 # optional, additional tax (0.1 for 10%)
-
-    # type: amber
-    # token: # api token from https://app.amber.com.au/developers/
-    # siteid: # site ID returned by the API
-    # channel: general
-
-    # type: custom # price from a plugin source; see https://docs.evcc.io/docs/reference/plugins
-    # price:
-    #   source: http
-    #   uri: https://example.org/price.json
-    #   jq: .price.current
-
-    # type: template
-    # template: energy-charts-api # epex spot market prices
-    # bzn: DE-LU
-    # charges: 0.15
-    # tax: 0.1
-    # formula: math.Min((price + charges) * (1 + tax), 0.5)
+    # see: https://docs.evcc.io/en/docs/devices/tariffs
 
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
-
-    # type: octopusenergy
-    # tariff: AGILE-FLEX-22-11-25 # Tariff code
-    # region: A # optional
-
-    # type: amber
-    # token: # api token from https://app.amber.com.au/developers/
-    # siteid: # site ID returned by the API
-    # channel: feedIn
+    # see: https://docs.evcc.io/en/docs/devices/tariffs
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
-    # type: grünstromindex # GrünStromIndex (Germany only)
+    # type: template
+    # template: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
-
-    # type: electricitymaps # https://app.electricitymaps.com/map
-    # uri: <uri>
-    # token: <token> # needs to be a token with forecast (not in the free tier)
-    # zone: DE
-
-    # type: ngeso # National Grid Electricity System Operator data (Great Britain only) https://carbonintensity.org.uk/
-    # provides national data if both region and postcode are omitted - Choose ONE only!
-    # region: 1 # optional, coarser than using a postcode - The region details are at https://carbon-intensity.github.io/api-definitions/#region-list
-    # postcode: SW1 # optional - Outward postcode i.e. RG41 or SW1 or TF8. Do not include full postcode, outward postcode only
+    # see: https://docs.evcc.io/en/docs/devices/tariffs#co-forecast
 
 # mqtt message broker
 mqtt:
