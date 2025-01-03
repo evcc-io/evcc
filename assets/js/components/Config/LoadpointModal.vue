@@ -112,10 +112,10 @@
 					<PropertyField
 						id="loadpointMode"
 						v-model="values.defaultMode"
-						type="String"
+						type="Choice"
 						class="w-100"
 						required
-						:valid-values="[
+						:choice="[
 							{ key: '', name: '---' },
 							{ key: 'off', name: $t('main.mode.off') },
 							{ key: 'pv', name: $t('main.mode.pv') },
@@ -402,9 +402,9 @@
 					<PropertyField
 						id="loadpointParamCircuit"
 						v-model="values.circuit"
-						type="String"
+						type="Choice"
 						class="me-2"
-						:valid-values="circuitOptions"
+						:choice="circuitOptions"
 						required
 					/>
 				</FormRow>
@@ -424,9 +424,9 @@
 						<PropertyField
 							id="loadpointParamVehicle"
 							v-model="values.vehicle"
-							type="String"
+							type="Choice"
 							class="me-2"
-							:valid-values="allVehicleOptions"
+							:choice="allVehicleOptions"
 							required
 						/>
 					</FormRow>
