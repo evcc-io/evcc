@@ -109,18 +109,18 @@ func (wb *PrachtAlpha) Status() (api.ChargeStatus, error) {
 	reg := wb.register(prachtConnStatus)
 	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 0:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 1:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2, 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", u)
 	}
 }
 

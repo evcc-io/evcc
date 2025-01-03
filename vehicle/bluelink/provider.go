@@ -106,7 +106,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.Battery interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusNone
+	status := api.StatusUnknown
 	res, err := v.statusG()
 	if err != nil {
 		return status, err

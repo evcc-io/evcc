@@ -12,18 +12,18 @@ func TestStatusEvents(t *testing.T) {
 		from, to api.ChargeStatus
 		events   []string
 	}{
-		{api.StatusNone, api.StatusA, []string{evVehicleDisconnect}},
-		{api.StatusNone, api.StatusB, []string{evVehicleConnect}},
-		{api.StatusNone, api.StatusC, []string{evVehicleConnect, evChargeStart}},
+		{api.StatusUnknown, api.StatusDisconnected, []string{evVehicleDisconnect}},
+		{api.StatusUnknown, api.StatusConnected, []string{evVehicleConnect}},
+		{api.StatusUnknown, api.StatusCharging, []string{evVehicleConnect, evChargeStart}},
 
-		{api.StatusA, api.StatusB, []string{evVehicleConnect}},
-		{api.StatusA, api.StatusC, []string{evVehicleConnect, evChargeStart}},
+		{api.StatusDisconnected, api.StatusConnected, []string{evVehicleConnect}},
+		{api.StatusDisconnected, api.StatusCharging, []string{evVehicleConnect, evChargeStart}},
 
-		{api.StatusB, api.StatusA, []string{evVehicleDisconnect}},
-		{api.StatusB, api.StatusC, []string{evChargeStart}},
+		{api.StatusConnected, api.StatusDisconnected, []string{evVehicleDisconnect}},
+		{api.StatusConnected, api.StatusCharging, []string{evChargeStart}},
 
-		{api.StatusC, api.StatusA, []string{evChargeStop, evVehicleDisconnect}},
-		{api.StatusC, api.StatusB, []string{evChargeStop}},
+		{api.StatusCharging, api.StatusDisconnected, []string{evChargeStop, evVehicleDisconnect}},
+		{api.StatusCharging, api.StatusConnected, []string{evChargeStop}},
 	}
 
 	for _, tc := range tc {

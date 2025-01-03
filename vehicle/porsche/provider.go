@@ -95,29 +95,29 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	res2, err := v.emobilityG()
 	if err == nil {
 		if res2.BatteryChargeStatus == nil {
-			return api.StatusNone, api.ErrNotAvailable
+			return api.StatusUnknown, api.ErrNotAvailable
 		}
 
 		switch res2.BatteryChargeStatus.PlugState {
 		case "DISCONNECTED":
-			return api.StatusA, nil
+			return api.StatusDisconnected, nil
 		case "CONNECTED":
 			// ignore if the car is connected to a DC charging station
 			if res2.BatteryChargeStatus.ChargingInDCMode {
-				return api.StatusA, nil
+				return api.StatusDisconnected, nil
 			}
 			switch res2.BatteryChargeStatus.ChargingState {
 			case "OFF", "COMPLETED":
-				return api.StatusB, nil
+				return api.StatusConnected, nil
 			case "ON", "CHARGING":
-				return api.StatusC, nil
+				return api.StatusCharging, nil
 			default:
-				return api.StatusNone, errors.New("emobility - invalid status: " + res2.BatteryChargeStatus.ChargingState)
+				return api.StatusUnknown, errors.New("emobility - invalid status: " + res2.BatteryChargeStatus.ChargingState)
 			}
 		}
 	}
 
-	return api.StatusNone, err
+	return api.StatusUnknown, err
 }
 
 var _ api.VehicleClimater = (*Provider)(nil)

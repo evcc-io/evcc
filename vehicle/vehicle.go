@@ -72,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		status = func() (api.ChargeStatus, error) {
 			s, err := get()
 			if err != nil {
-				return api.StatusNone, err
+				return api.StatusUnknown, err
 			}
 			return api.ChargeStatusString(s)
 		}

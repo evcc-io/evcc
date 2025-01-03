@@ -122,15 +122,15 @@ func (v *Volvo) Status() (api.ChargeStatus, error) {
 	if err == nil {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
-			return api.StatusA, nil
+			return api.StatusDisconnected, nil
 		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged", "CablePluggedInCar_ChargingPaused":
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		case "Charging", "CablePluggedInCar_Charging":
-			return api.StatusC, nil
+			return api.StatusCharging, nil
 		}
 	}
 
-	return api.StatusNone, err
+	return api.StatusUnknown, err
 }
 
 var _ api.VehicleRange = (*Volvo)(nil)

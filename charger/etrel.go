@@ -112,7 +112,7 @@ func NewEtrel(connector int, uri string, id uint8) (*Etrel, error) {
 func (wb *Etrel) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	// 0 Unknown
@@ -129,13 +129,13 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 1, 2:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 3, 5, 6, 7, 9:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 4:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", u)
 	}
 }
 

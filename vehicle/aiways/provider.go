@@ -38,7 +38,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusNone // disconnected
+	status := api.StatusUnknown // disconnected
 
 	res, err := v.statusG()
 	if err != nil {
@@ -47,11 +47,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	switch res.Data.Vc.ChargeSts {
 	case 3:
-		status = api.StatusA
+		status = api.StatusDisconnected
 	case 4:
-		status = api.StatusB
+		status = api.StatusConnected
 	case 1:
-		status = api.StatusC
+		status = api.StatusCharging
 	default:
 		err = fmt.Errorf("invalid status: %d", res.Data.Vc.ChargeSts)
 	}

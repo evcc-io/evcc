@@ -144,18 +144,18 @@ func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
 func (wb *EVSEWifi) Status() (api.ChargeStatus, error) {
 	params, err := wb.paramG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch params.VehicleState {
 	case 1: // ready
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2: // EV is present
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3: // charging
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", params.VehicleState)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", params.VehicleState)
 	}
 }
 

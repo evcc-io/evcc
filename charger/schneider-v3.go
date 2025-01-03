@@ -133,20 +133,20 @@ func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
 func (wb *Schneider) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	s := encoding.Uint16(b)
 
 	switch s {
 	case 0, 1, 2, 6:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 3, 4, 5, 7:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 8, 9:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

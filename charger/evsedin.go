@@ -66,18 +66,18 @@ func NewEvseDIN(uri, device, comset string, baudrate int, proto modbus.Protocol,
 func (evse *EvseDIN) Status() (api.ChargeStatus, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch b[1] {
 	case 1: // ready
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2: // EV is present
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3: // charging
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", b[1])
 	}
 }
 

@@ -70,18 +70,18 @@ func (c *Wattpilot) Log(level string, data string) {
 func (c *Wattpilot) Status() (api.ChargeStatus, error) {
 	car, err := c.api.GetProperty("car")
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch car.(float64) {
 	case 1.0:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2.0, 5.0:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 3.0, 4.0:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
+		return api.StatusUnknown, fmt.Errorf("car unknown result: %d", car)
 	}
 }
 

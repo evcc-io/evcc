@@ -125,7 +125,7 @@ func NewVictron(uri string, slaveID uint8, regs victronRegs) (api.Charger, error
 func (wb *Victron) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Status, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	u := binary.BigEndian.Uint16(b)
@@ -133,9 +133,9 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	case 0, 1, 2, 3:
 		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
 	case 5, 6, 21:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", u)
 	}
 }
 

@@ -112,7 +112,7 @@ func NewWallbe(uri string) (*Wallbe, error) {
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(string(b[1]))

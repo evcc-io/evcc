@@ -118,18 +118,18 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 func (wb *KSE) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegVehicleState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch status := binary.BigEndian.Uint16(b); status {
 	case 0, 1, 3:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 4:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 5:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

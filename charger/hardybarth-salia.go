@@ -195,7 +195,7 @@ func (wb *Salia) post(key, val string) error {
 func (wb *Salia) Status() (api.ChargeStatus, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 	return api.ChargeStatusString(res.Secc.Port0.Ci.Charge.Cp.Status)
 }

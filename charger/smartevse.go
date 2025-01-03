@@ -103,22 +103,22 @@ func NewsmartEVSE(uri, device, comset string, baudrate int, proto modbus.Protoco
 func (wb *smartEVSE) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(smartEVSERegChargingState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	status := binary.BigEndian.Uint16(b) & 0xff
 
 	switch status {
 	case 0:
-		return api.StatusNone, nil
+		return api.StatusUnknown, nil
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

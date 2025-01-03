@@ -152,21 +152,21 @@ func (c *Zaptec) chargers() ([]string, error) {
 func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return api.StatusA, err
+		return api.StatusDisconnected, err
 	}
 
 	switch i, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); i {
 	case zaptec.OpModeDisconnected:
-		return api.StatusA, err
+		return api.StatusDisconnected, err
 	case zaptec.OpModeConnectedRequesting, zaptec.OpModeConnectedFinished:
-		return api.StatusB, err
+		return api.StatusConnected, err
 	case zaptec.OpModeConnectedCharging:
-		return api.StatusC, err
+		return api.StatusCharging, err
 	default:
 		if err == nil {
 			err = fmt.Errorf("unknown status: %d", i)
 		}
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 }
 

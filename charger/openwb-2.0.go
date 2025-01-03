@@ -95,14 +95,14 @@ func NewOpenWB20(uri string, slaveID uint8, connector uint16) (*OpenWB20, error)
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
-		return api.StatusC, err
+		return api.StatusCharging, err
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegPlugged, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
-		return api.StatusB, err
+		return api.StatusConnected, err
 	}
 
-	return api.StatusA, nil
+	return api.StatusDisconnected, nil
 }
 
 // Enabled implements the api.Charger interface

@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -110,10 +111,10 @@ func NewInnogy(uri string, id uint8) (*Innogy, error) {
 func (wb *Innogy) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(igyRegStatus, 2)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
-	return api.ChargeStatusStringWithMapping(string(b), api.StatusEasA)
+	return api.ChargeStatusString(strings.Replace(string(b), "E", "A", 1))
 }
 
 // Enabled implements the api.Charger interface
@@ -175,7 +176,7 @@ var _ api.Meter = (*Innogy)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Innogy) CurrentPower() (float64, error) {
 	// https://github.com/evcc-io/evcc/issues/6848
-	if status, err := wb.Status(); status != api.StatusC || err != nil {
+	if status, err := wb.Status(); status != api.StatusCharging || err != nil {
 		return 0, err
 	}
 

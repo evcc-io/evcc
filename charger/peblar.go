@@ -128,14 +128,14 @@ func NewPeblar(uri string, id uint8) (api.Charger, error) {
 func (wb *Peblar) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(peblarRegCpState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s := rune(encoding.Uint16(b)); s {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(s), nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

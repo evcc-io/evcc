@@ -104,18 +104,18 @@ func NewCfosPowerBrain(uri string, id uint8) (api.Charger, error) {
 func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch b[1] {
 	case 0: // warten
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 1: // Fahrzeug erkannt
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2: // laden
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", b[1])
 	}
 }
 

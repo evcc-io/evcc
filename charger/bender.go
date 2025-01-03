@@ -154,18 +154,18 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(bendRegChargePointState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s := binary.BigEndian.Uint16(b); s {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3, 4:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

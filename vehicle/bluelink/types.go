@@ -115,17 +115,17 @@ func (d VehicleStatus) SoC() (float64, error) {
 
 func (d VehicleStatus) Status() (api.ChargeStatus, error) {
 	if d.EvStatus != nil {
-		status := api.StatusA
+		status := api.StatusDisconnected
 		if d.EvStatus.BatteryPlugin > 0 || d.EvStatus.ChargePortDoorOpenStatus == 1 {
-			status = api.StatusB
+			status = api.StatusConnected
 		}
 		if d.EvStatus.BatteryCharge {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 		return status, nil
 	}
 
-	return api.StatusNone, api.ErrNotAvailable
+	return api.StatusUnknown, api.ErrNotAvailable
 }
 
 func (d VehicleStatus) FinishTime() (time.Time, error) {
@@ -294,14 +294,14 @@ func (d StatusLatestResponseCCS) SoC() (float64, error) {
 func (d StatusLatestResponseCCS) Status() (api.ChargeStatus, error) {
 	if d.ResMsg.State.Vehicle.Green != nil {
 		if d.ResMsg.State.Vehicle.Green.ChargingInformation.ConnectorFastening.State == 1 {
-			return api.StatusB, nil
+			return api.StatusConnected, nil
 		}
 		if d.ResMsg.State.Vehicle.Green.ChargingInformation.Charging.RemainTime > 0 {
-			return api.StatusC, nil
+			return api.StatusCharging, nil
 		}
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
-	return api.StatusNone, api.ErrNotAvailable
+	return api.StatusUnknown, api.ErrNotAvailable
 }
 
 func (d StatusLatestResponseCCS) FinishTime() (time.Time, error) {

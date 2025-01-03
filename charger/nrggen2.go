@@ -109,7 +109,7 @@ func NewNRGKickGen2(uri string, slaveID uint8) (*NRGKickGen2, error) {
 func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 	b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	// 0 - "UNKNOWN",
@@ -120,13 +120,13 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 	// 7 - "WAKEUP"
 	switch status := binary.BigEndian.Uint16(b); status {
 	case 0:
-		return api.StatusNone, nil
+		return api.StatusUnknown, nil
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 6:
 		// 0 - "NO_ERROR",
 		// 1 - "GENERAL_ERROR",
@@ -162,13 +162,13 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		// x - "UNKNOWN"
 		b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegError, 1)
 		if err != nil {
-			return api.StatusNone, err
+			return api.StatusUnknown, err
 		}
-		return api.StatusNone, fmt.Errorf("charger error: %d", binary.BigEndian.Uint16(b))
+		return api.StatusUnknown, fmt.Errorf("charger error: %d", binary.BigEndian.Uint16(b))
 	case 7:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

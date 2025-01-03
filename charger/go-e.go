@@ -91,18 +91,18 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 func (c *GoE) Status() (api.ChargeStatus, error) {
 	resp, err := c.api.Status()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch car := resp.Status(); car {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	case 3, 4:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
+		return api.StatusUnknown, fmt.Errorf("car unknown result: %d", car)
 	}
 }
 

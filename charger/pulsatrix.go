@@ -211,7 +211,7 @@ func (c *Pulsatrix) heartbeat(ctx context.Context) {
 func (c *Pulsatrix) Status() (api.ChargeStatus, error) {
 	res, err := c.data.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(res.VehicleStatus)

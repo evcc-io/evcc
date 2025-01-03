@@ -94,15 +94,15 @@ func (wb *OpenWBPro) set(payload string) error {
 func (wb *OpenWBPro) Status() (api.ChargeStatus, error) {
 	resp, err := wb.statusG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
-	res := api.StatusA
+	res := api.StatusDisconnected
 	switch {
 	case resp.ChargeState:
-		res = api.StatusC
+		res = api.StatusCharging
 	case resp.PlugState:
-		res = api.StatusB
+		res = api.StatusConnected
 	}
 
 	return res, nil

@@ -221,7 +221,7 @@ func (m *OpenWB) Enabled() (bool, error) {
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
 	status, err := m.statusG()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 	return api.ChargeStatusString(status)
 }

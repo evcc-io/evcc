@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -134,10 +135,10 @@ func (wb *Alfen) heartbeat(ctx context.Context) {
 func (wb *Alfen) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(alfenRegStatus, 5)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
-	return api.ChargeStatusStringWithMapping(string(b), api.StatusEasA)
+	return api.ChargeStatusString(strings.Replace(string(b), "E", "A", 1))
 }
 
 // Enabled implements the api.Charger interface

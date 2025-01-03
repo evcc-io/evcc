@@ -188,7 +188,7 @@ func (v *Tronity) Soc() (float64, error) {
 
 // status implements the api.ChargeState interface
 func (v *Tronity) status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 	res, err := v.bulkG()
 	if err != nil {
 		return status, err
@@ -196,9 +196,9 @@ func (v *Tronity) status() (api.ChargeStatus, error) {
 
 	switch {
 	case res.Charging == "Charging":
-		status = api.StatusC
+		status = api.StatusCharging
 	case res.Plugged:
-		status = api.StatusB
+		status = api.StatusConnected
 	}
 
 	return status, nil

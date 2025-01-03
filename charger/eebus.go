@@ -176,7 +176,7 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
 
 	// re-set current limit after reconnect
@@ -186,7 +186,7 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 		}
 
 		c.mux.Lock()
-		if !c.reconnect && (res == api.StatusB || res == api.StatusC) {
+		if !c.reconnect && (res == api.StatusConnected || res == api.StatusCharging) {
 			c.mux.Unlock()
 			return
 		}
@@ -204,21 +204,21 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 
 	currentState, err := c.uc.EvCC.ChargeState(evEntity)
 	if err != nil {
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	}
 
 	switch currentState {
 	case ucapi.EVChargeStateTypeUnknown, ucapi.EVChargeStateTypeUnplugged: // Unplugged
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case ucapi.EVChargeStateTypeFinished, ucapi.EVChargeStateTypePaused: // Finished, Paused
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case ucapi.EVChargeStateTypeActive: // Active
 		if c.isCharging(evEntity) {
-			return api.StatusC, nil
+			return api.StatusCharging, nil
 		}
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", currentState)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", currentState)
 	}
 }
 

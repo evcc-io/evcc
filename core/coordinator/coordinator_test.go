@@ -26,12 +26,12 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		res    api.Vehicle
 	}
 	tc := []testcase{
-		{"A/A->0", api.StatusA, api.StatusA, nil},
-		{"B/A->1", api.StatusB, api.StatusA, v1},
-		{"B/A->1", api.StatusB, api.StatusA, v1},
-		{"A/B->2", api.StatusA, api.StatusB, v2},
-		{"A/B->2", api.StatusA, api.StatusB, v2},
-		{"B/B->1", api.StatusB, api.StatusB, nil},
+		{"A/A->0", api.StatusDisconnected, api.StatusDisconnected, nil},
+		{"B/A->1", api.StatusConnected, api.StatusDisconnected, v1},
+		{"B/A->1", api.StatusConnected, api.StatusDisconnected, v1},
+		{"A/B->2", api.StatusDisconnected, api.StatusConnected, v2},
+		{"A/B->2", api.StatusDisconnected, api.StatusConnected, v2},
+		{"B/B->1", api.StatusConnected, api.StatusConnected, nil},
 	}
 
 	log := util.NewLogger("foo")

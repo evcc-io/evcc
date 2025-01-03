@@ -140,7 +140,7 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 	state, err := wb.getMeasurement("Measurement.Operation.EVeh.ChaStt")
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if state != wb.oldstate {
@@ -152,7 +152,7 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 
 		if state == smaevcharger.StatusB && wb.oldstate == smaevcharger.StatusA {
 			if err := wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)); err != nil {
-				return api.StatusNone, err
+				return api.StatusUnknown, err
 			}
 		}
 		wb.oldstate = state
@@ -160,13 +160,13 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 
 	switch state {
 	case smaevcharger.StatusA:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case smaevcharger.StatusB:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case smaevcharger.StatusC:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %.0f", state)
+		return api.StatusUnknown, fmt.Errorf("invalid state: %.0f", state)
 	}
 }
 

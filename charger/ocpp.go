@@ -198,25 +198,25 @@ func (c *OCPP) Connector() *ocpp.Connector {
 func (c *OCPP) Status() (api.ChargeStatus, error) {
 	status, err := c.conn.Status()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch status {
 	case
 		core.ChargePointStatusAvailable,   // "Available"
 		core.ChargePointStatusUnavailable: // "Unavailable"
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case
 		core.ChargePointStatusPreparing,     // "Preparing"
 		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
 		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
 		core.ChargePointStatusFinishing:     // "Finishing"
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case
 		core.ChargePointStatusCharging: // "Charging"
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", status)
 	}
 }
 

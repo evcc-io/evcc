@@ -428,16 +428,16 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	res := api.StatusNone
+	res := api.StatusUnknown
 
 	switch c.opMode {
 	case easee.ModeDisconnected:
-		res = api.StatusA
+		res = api.StatusDisconnected
 	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
 		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
-		res = api.StatusB
+		res = api.StatusConnected
 	case easee.ModeCharging:
-		res = api.StatusC
+		res = api.StatusCharging
 	default:
 		return res, fmt.Errorf("invalid opmode: %d", c.opMode)
 	}
@@ -694,7 +694,7 @@ var _ api.Meter = (*Easee)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Easee) CurrentPower() (float64, error) {
-	if status, err := c.Status(); err != nil || status == api.StatusA {
+	if status, err := c.Status(); err != nil || status == api.StatusDisconnected {
 		return 0, err
 	}
 

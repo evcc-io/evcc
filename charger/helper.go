@@ -66,5 +66,5 @@ func verifyEnabled(c api.Charger, enabled bool) (bool, error) {
 	status, err := c.Status()
 
 	// always treat charging as enabled
-	return status == api.StatusC, err
+	return status == api.StatusCharging, err
 }

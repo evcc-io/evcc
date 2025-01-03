@@ -114,24 +114,24 @@ func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 func (wb *Solax) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(solaxRegState, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch s := encoding.Uint16(b); s {
 	case
 		0, // "Available"
 		5: // "Unavailable"
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case
 		1, // "Preparing"
 		8, // "SuspendedEVSE"
 		7, // "SuspendedEV"
 		3: // "Finishing"
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 2: // "Charging"
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", s)
 	}
 }
 

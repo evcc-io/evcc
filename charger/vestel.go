@@ -130,15 +130,15 @@ func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *Vestel) Status() (api.ChargeStatus, error) {
-	res := api.StatusA
+	res := api.StatusDisconnected
 
 	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
 	if err == nil && binary.BigEndian.Uint16(b) >= 2 {
-		res = api.StatusB
+		res = api.StatusConnected
 
 		b, err = wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
 		if err == nil && binary.BigEndian.Uint16(b) == 1 {
-			res = api.StatusC
+			res = api.StatusCharging
 		}
 	}
 

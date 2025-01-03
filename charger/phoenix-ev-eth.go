@@ -129,7 +129,7 @@ func NewPhoenixEVEth(uri string, slaveID uint8) (api.Charger, error) {
 func (wb *PhoenixEVEth) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(string(b[1]))

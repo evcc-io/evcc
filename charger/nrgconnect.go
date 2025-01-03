@@ -114,18 +114,18 @@ func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 	res, err := nrg.settingsG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	if res.Values.ChargingStatus == nil {
-		return api.StatusNone, errors.New("unknown status")
+		return api.StatusUnknown, errors.New("unknown status")
 	}
 
 	if res.Values.ChargingStatus.Charging {
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	}
 
-	return api.StatusB, nil
+	return api.StatusConnected, nil
 }
 
 // Enabled implements the api.Charger interface

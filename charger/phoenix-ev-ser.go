@@ -58,7 +58,7 @@ func NewPhoenixEVSer(uri, device, comset string, baudrate int, proto modbus.Prot
 func (wb *PhoenixEVSer) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEVSerRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	return api.ChargeStatusString(string(b[0]))

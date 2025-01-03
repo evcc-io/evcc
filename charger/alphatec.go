@@ -113,18 +113,18 @@ func (wb *Alphatec) getCurrent() (uint16, error) {
 func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(alphatecRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case 2, 8:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case 3:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %d", u)
 	}
 }
 

@@ -103,7 +103,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
-		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
+		if lp.GetStatus() == api.StatusCharging && (smartCostActive || lp.IsFastChargingActive()) {
 			return true
 		}
 	}

@@ -65,15 +65,15 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.chargerG()
 	if err == nil {
 		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
-			status = api.StatusB
+			status = api.StatusConnected
 		}
 		if res.Charger.Status.ChargingStatusData.ChargingState.Content == "charging" {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 	}
 

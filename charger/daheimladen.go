@@ -92,19 +92,19 @@ func (c *DaheimLaden) reset() {
 func (c *DaheimLaden) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	status := daheimladen.ChargePointStatus(res.Status)
 	switch status {
 	case daheimladen.AVAILABLE:
-		return api.StatusA, nil
+		return api.StatusDisconnected, nil
 	case daheimladen.PREPARING:
-		return api.StatusB, nil
+		return api.StatusConnected, nil
 	case daheimladen.CHARGING, daheimladen.FINISHING:
-		return api.StatusC, nil
+		return api.StatusCharging, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", res.Status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", res.Status)
 	}
 }
 

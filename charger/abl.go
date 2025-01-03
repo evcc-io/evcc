@@ -154,7 +154,7 @@ func (wb *ABLeMH) get(reg, count uint16) ([]byte, error) {
 func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	b, err := wb.get(ablRegStatus, 1)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
 	r := rune(b[1]>>4-0x0A) + 'A'
@@ -168,7 +168,7 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 			status = string(r)
 		}
 
-		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
+		return api.StatusUnknown, fmt.Errorf("invalid status: %s", status)
 	}
 }
 

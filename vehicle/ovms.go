@@ -181,15 +181,15 @@ var _ api.ChargeState = (*Ovms)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Ovms) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 
 	res, err := v.chargeG()
 	if err == nil {
 		if res.ChargePortOpen > 0 {
-			status = api.StatusB
+			status = api.StatusConnected
 		}
 		if res.ChargeState == "charging" {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 	}
 

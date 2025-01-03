@@ -67,15 +67,15 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.status.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusUnknown, err
 	}
 
-	status := api.StatusA // disconnected
+	status := api.StatusDisconnected // disconnected
 	if res.RvsChargeStatus.ChargingGunState != 0 {
 		if (res.ChrgMgmtData.BmsChrgSts & 0x01) == 0 {
-			status = api.StatusB
+			status = api.StatusConnected
 		} else {
-			status = api.StatusC
+			status = api.StatusCharging
 		}
 	}
 
