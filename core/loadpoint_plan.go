@@ -88,8 +88,19 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duratio
 
 // plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
+	defer func() {
+		lp.setPlanActive(active)
+	}()
+
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
+
+	defer func() {
+		lp.publish(keys.PlanProjectedStart, planStart)
+		lp.publish(keys.PlanProjectedEnd, planEnd)
+		lp.publish(keys.PlanOverrun, planOverrun)
+	}()
+
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
 		return false
@@ -110,12 +121,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 				lp.planActiveSoc = goal
 			}
 		}
-
-		lp.setPlanActive(active)
-
-		lp.publish(keys.PlanProjectedStart, planStart)
-		lp.publish(keys.PlanProjectedEnd, planEnd)
-		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
 	maxPower := lp.EffectiveMaxPower()
