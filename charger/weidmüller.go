@@ -114,7 +114,6 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 
 func (wb *Weidmüller) heartbeat(ctx context.Context, timeout time.Duration) {
 	b := make([]byte, 4)
-
 	binary.BigEndian.PutUint32(b, wmTimeout)
 
 	for tick := time.Tick(timeout); ; {
