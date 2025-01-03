@@ -8,6 +8,7 @@ import (
 	charger "github.com/evcc-io/evcc/charger/config"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/spf13/cast"
 )
 
 type chargerProvider struct {
@@ -42,6 +43,27 @@ func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{
 	}
 
 	return o, nil
+}
+
+var _ IntProvider = (*chargerProvider)(nil)
+
+func (o *chargerProvider) IntGetter() (func() (int64, error), error) {
+	return func() (int64, error) {
+		v, err := o.charger.Enabled()
+		return cast.ToInt64(v), err
+	}, nil
+}
+
+var _ SetIntProvider = (*chargerProvider)(nil)
+
+func (o *chargerProvider) IntSetter(param string) (func(int64) error, error) {
+	return func(val int64) error {
+		b, err := cast.ToBoolE(val)
+		if err != nil {
+			return err
+		}
+		return o.charger.Enable(b)
+	}, nil
 }
 
 var _ BoolProvider = (*chargerProvider)(nil)
