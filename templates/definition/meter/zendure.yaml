@@ -19,8 +19,8 @@ params:
       en: "You can find this in the Zendure App in the settings of the device"
   - name: region
     type: choice
+    choice: ["EU", "Global"]
     default: EU
-    validvalues: ["EU", "Global"]
   - name: capacity
     default: 2
     advanced: true

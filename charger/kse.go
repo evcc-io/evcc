@@ -121,19 +121,15 @@ func (wb *KSE) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := binary.BigEndian.Uint16(b)
-
-	switch s {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 0, 1, 3:
 		return api.StatusA, nil
 	case 4:
 		return api.StatusB, nil
 	case 5:
 		return api.StatusC, nil
-	case 6, 7, 8:
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

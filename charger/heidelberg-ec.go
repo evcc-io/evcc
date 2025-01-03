@@ -157,10 +157,6 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 6, 7:
 		return api.StatusC, nil
-	case 8:
-		return api.StatusD, nil
-	case 9:
-		return api.StatusE, nil
 	case 10:
 		// ensure RemoteLock is disabled after wake-up
 		b, err := wb.conn.ReadHoldingRegisters(hecRegRemoteLock, 1)
@@ -180,7 +176,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 			return api.StatusB, nil
 		}
 
-		return api.StatusF, nil
+		fallthrough
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}

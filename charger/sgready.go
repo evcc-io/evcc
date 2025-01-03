@@ -167,7 +167,7 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 	}
 
 	if mode == Stop {
-		return api.StatusE, errors.New("stop mode")
+		return api.StatusNone, errors.New("stop mode")
 	}
 
 	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}[mode]
