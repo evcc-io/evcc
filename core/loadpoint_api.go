@@ -125,6 +125,8 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	lp.log.DEBUG.Println("set default mode:", mode)
+
 	if lp.DefaultMode != mode {
 		lp.DefaultMode = mode
 		lp.settings.SetString(keys.DefaultMode, string(mode))
