@@ -42,20 +42,14 @@ type updater interface {
 	Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
-// meterMeasurement is used as slice element for publishing structured data
-type meterMeasurement struct {
-	Power         float64 `json:"power"`
-	Energy        float64 `json:"energy,omitempty"`
-	ExcessDCPower float64 `json:"excessdcpower,omitempty"`
-}
-
-// batteryMeasurement is used as slice element for publishing structured data
-type batteryMeasurement struct {
-	Power        float64 `json:"power"`
-	Energy       float64 `json:"energy,omitempty"`
-	Soc          float64 `json:"soc,omitempty"`
-	Capacity     float64 `json:"capacity,omitempty"`
-	Controllable bool    `json:"controllable"`
+// measurement is used as slice element for publishing structured data
+type measurement struct {
+	Power         float64  `json:"power"`
+	Energy        float64  `json:"energy,omitempty"`
+	ExcessDCPower float64  `json:"excessdcpower,omitempty"`
+	Capacity      *float64 `json:"capacity,omitempty"`
+	Soc           *float64 `json:"soc,omitempty"`
+	Controllable  *bool    `json:"controllable,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -434,9 +428,9 @@ func (site *Site) publishDelta(key string, val interface{}) {
 	site.publish(key, val)
 }
 
-func (site *Site) collectMeters(key string, meters []api.Meter) []meterMeasurement {
+func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 	var wg sync.WaitGroup
-	mm := make([]meterMeasurement, len(meters))
+	mm := make([]measurement, len(meters))
 
 	fun := func(i int, meter api.Meter) {
 		// power
@@ -456,7 +450,7 @@ func (site *Site) collectMeters(key string, meters []api.Meter) []meterMeasureme
 			}
 		}
 
-		mm[i] = meterMeasurement{
+		mm[i] = measurement{
 			Power:  power,
 			Energy: energy,
 		}
@@ -496,13 +490,13 @@ func (site *Site) updatePvMeters() {
 		}
 	}
 
-	site.pvPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	site.pvPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + max(0, m.Power)
 	}, 0)
-	site.excessDCPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	site.excessDCPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc - math.Abs(m.ExcessDCPower)
 	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Energy
 	}, 0)
 
@@ -527,7 +521,6 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
-	bm := make([]batteryMeasurement, len(site.batteryMeters))
 
 	for i, meter := range site.batteryMeters {
 		// battery soc and capacity
@@ -549,16 +542,12 @@ func (site *Site) updateBatteryMeters() {
 
 		_, controllable := meter.(api.BatteryController)
 
-		bm[i] = batteryMeasurement{
-			Power:        mm[i].Power,
-			Energy:       mm[i].Energy,
-			Soc:          batSoc,
-			Capacity:     capacity,
-			Controllable: controllable,
-		}
+		mm[i].Soc = lo.ToPtr(batSoc)
+		mm[i].Capacity = lo.ToPtr(capacity)
+		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	site.batterySoc = lo.Reduce(bm, func(acc float64, m batteryMeasurement, _ int) float64 {
+	site.batterySoc = lo.Reduce(mm, func(acc float64, m batteryMeasurement, _ int) float64 {
 		// weigh soc by capacity
 		weighedSoc := m.Soc
 		if m.Capacity > 0 {
@@ -566,8 +555,8 @@ func (site *Site) updateBatteryMeters() {
 		}
 		return acc + weighedSoc
 	}, 0)
-	totalCapacity := lo.Reduce(bm, func(acc float64, m batteryMeasurement, _ int) float64 {
-		return acc + m.Capacity
+	totalCapacity := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + *m.Capacity
 	}, 0)
 
 	// convert weighed socs to total soc
@@ -576,10 +565,10 @@ func (site *Site) updateBatteryMeters() {
 	}
 	site.batterySoc /= totalCapacity
 
-	site.batteryPower = lo.Reduce(bm, func(acc float64, m batteryMeasurement, _ int) float64 {
+	site.batteryPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Power
 	}, 0)
-	totalEnergy := lo.Reduce(bm, func(acc float64, m batteryMeasurement, _ int) float64 {
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Energy
 	}, 0)
 
@@ -603,7 +592,7 @@ func (site *Site) updateAuxMeters() {
 	}
 
 	mm := site.collectMeters("aux", site.auxMeters)
-	site.auxPower = lo.Reduce(mm, func(acc float64, m meterMeasurement, _ int) float64 {
+	site.auxPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Power
 	}, 0)
 
@@ -706,7 +695,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
 	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
-		residualPower = 100 // W
+		residualPower = 100 // Wsite.publish(keys.PvPower,
 	}
 
 	// allow using grid and charge as estimate for pv power
