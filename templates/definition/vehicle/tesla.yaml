@@ -36,7 +36,7 @@ params:
   - name: proxyToken
     advanced: true
     help:
-      en: Proxy token to acccess the command proxy.
+      en: Proxy token to access the command proxy.
       de: Proxy token für den Command Proxy.
   - name: cache
     default: 15m
