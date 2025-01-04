@@ -25,7 +25,7 @@ func init() {
 }
 
 // newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(name string, other map[string]interface{}) (api.Vehicle, error) {
+func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   Tokens
@@ -51,7 +51,7 @@ func newMercedesFromConfig(name string, other map[string]interface{}) (api.Vehic
 		cc.User = cc.Account_
 	}
 
-	log := util.NewLogger(name).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.NewLogger(brand).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func newMercedesFromConfig(name string, other map[string]interface{}) (api.Vehic
 
 	api := mercedes.NewAPI(log, identity)
 
-	if name == "smart-eq" {
+	if brand == "smart-eq" {
 		if cc.VIN == "" {
 			return nil, errors.New("missing VIN")
 		}
