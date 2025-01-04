@@ -45,6 +45,15 @@ func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{
 	return o, nil
 }
 
+var _ FloatProvider = (*chargerProvider)(nil)
+
+func (o *chargerProvider) FloatGetter() (func() (float64, error), error) {
+	return func() (float64, error) {
+		v, err := o.charger.Enabled()
+		return cast.ToFloat64(v), err
+	}, nil
+}
+
 var _ IntProvider = (*chargerProvider)(nil)
 
 func (o *chargerProvider) IntGetter() (func() (int64, error), error) {
