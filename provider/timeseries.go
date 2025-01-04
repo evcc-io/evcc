@@ -16,10 +16,8 @@ func init() {
 }
 
 // TimeSeriesFromConfig creates timeseries provider
-func TimeSeriesFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
-	p := &timeseriesProvider{}
-
-	return p, nil
+func TimeSeriesFromConfig(_ context.Context, _ map[string]interface{}) (Provider, error) {
+	return new(timeseriesProvider), nil
 }
 
 var _ StringProvider = (*timeseriesProvider)(nil)
