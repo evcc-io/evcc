@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	charger "github.com/evcc-io/evcc/charger/config"
@@ -11,16 +10,16 @@ import (
 	"github.com/spf13/cast"
 )
 
-type chargerProvider struct {
+type switchChargerProvider struct {
 	charger api.Charger
 }
 
 func init() {
-	registry.AddCtx("charger", NewChargerEnableFromConfig)
+	registry.AddCtx("switch", NewSwitchEnableFromConfig)
 }
 
-// NewChargerEnableFromConfig creates type conversion provider
-func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewSwitchEnableFromConfig creates type conversion provider
+func NewSwitchEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Config config.Typed
 	}
@@ -29,43 +28,39 @@ func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	if cc.Config.Type == "" {
-		return nil, fmt.Errorf("missing charger")
-	}
-
 	charger, err := charger.NewFromConfig(ctx, cc.Config.Type, cc.Config.Other)
 	if err != nil {
 		return nil, err
 	}
 
-	o := &chargerProvider{
+	o := &switchChargerProvider{
 		charger: charger,
 	}
 
 	return o, nil
 }
 
-var _ FloatProvider = (*chargerProvider)(nil)
+var _ FloatProvider = (*switchChargerProvider)(nil)
 
-func (o *chargerProvider) FloatGetter() (func() (float64, error), error) {
+func (o *switchChargerProvider) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		v, err := o.charger.Enabled()
 		return cast.ToFloat64(v), err
 	}, nil
 }
 
-var _ IntProvider = (*chargerProvider)(nil)
+var _ IntProvider = (*switchChargerProvider)(nil)
 
-func (o *chargerProvider) IntGetter() (func() (int64, error), error) {
+func (o *switchChargerProvider) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		v, err := o.charger.Enabled()
 		return cast.ToInt64(v), err
 	}, nil
 }
 
-var _ SetIntProvider = (*chargerProvider)(nil)
+var _ SetIntProvider = (*switchChargerProvider)(nil)
 
-func (o *chargerProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *switchChargerProvider) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		b, err := cast.ToBoolE(val)
 		if err != nil {
@@ -75,17 +70,17 @@ func (o *chargerProvider) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ BoolProvider = (*chargerProvider)(nil)
+var _ BoolProvider = (*switchChargerProvider)(nil)
 
-func (o *chargerProvider) BoolGetter() (func() (bool, error), error) {
+func (o *switchChargerProvider) BoolGetter() (func() (bool, error), error) {
 	return func() (bool, error) {
 		return o.charger.Enabled()
 	}, nil
 }
 
-var _ SetBoolProvider = (*chargerProvider)(nil)
+var _ SetBoolProvider = (*switchChargerProvider)(nil)
 
-func (o *chargerProvider) BoolSetter(param string) (func(bool) error, error) {
+func (o *switchChargerProvider) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return o.charger.Enable(val)
 	}, nil
