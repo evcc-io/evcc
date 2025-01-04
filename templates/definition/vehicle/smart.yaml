@@ -12,7 +12,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: user
-    required: true
+    deprecated: true
   - name: region
     required: true
     choice: [EMEA, APAC, NORAM]
@@ -24,13 +24,13 @@ params:
     required: true
     mask: true
   - name: vin
+    required: true
     example: V...
   - name: cache
     default: 15m
 render: |
   type: smart-eq
   vin: {{ .vin }}
-  user: {{ .user }}
   region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
