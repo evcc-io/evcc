@@ -57,10 +57,6 @@ func newMercedesFromConfig(name string, other map[string]interface{}) (api.Vehic
 		return nil, err
 	}
 
-	v := &Mercedes{
-		embed: &cc.embed,
-	}
-
 	api := mercedes.NewAPI(log, identity)
 
 	if name == "smart-eq" {
@@ -69,9 +65,14 @@ func newMercedesFromConfig(name string, other map[string]interface{}) (api.Vehic
 		}
 	} else {
 		cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-		if err == nil {
-			v.Provider = mercedes.NewProvider(api, cc.VIN, cc.Cache)
+		if err != nil {
+			return nil, err
 		}
+	}
+
+	v := &Mercedes{
+		embed:    &cc.embed,
+		Provider: mercedes.NewProvider(api, cc.VIN, cc.Cache),
 	}
 
 	return v, err
