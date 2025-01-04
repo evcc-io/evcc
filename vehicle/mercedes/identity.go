@@ -42,8 +42,11 @@ var OAuth2Config = &oauth2.Config{
 
 // NewIdentity creates Mercedes identity
 func NewIdentity(log *util.Logger, token *oauth2.Token, region string) (*Identity, error) {
-	var claims jwt.RegisteredClaims
-	if _, err := jwt.ParseWithClaims(token.AccessToken, &claims, nil); err != nil {
+	var claims struct {
+		Email string
+		jwt.RegisteredClaims
+	}
+	if _, _, err := new(jwt.Parser).ParseUnverified(token.AccessToken, &claims); err != nil {
 		return nil, err
 	}
 
@@ -54,7 +57,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, region string) (*Identit
 	v := &Identity{
 		Helper:  request.NewHelper(log),
 		log:     log,
-		account: claims.Subject,
+		account: claims.Email,
 		region:  region,
 	}
 
