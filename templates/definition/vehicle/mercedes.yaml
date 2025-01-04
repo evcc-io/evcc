@@ -10,7 +10,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: user
-    required: true
+    deprecated: true
   - name: region
     required: true
     type: choice

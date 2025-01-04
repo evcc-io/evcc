@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
@@ -40,7 +41,12 @@ var OAuth2Config = &oauth2.Config{
 }
 
 // NewIdentity creates Mercedes identity
-func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region string) (*Identity, error) {
+func NewIdentity(log *util.Logger, token *oauth2.Token, region string) (*Identity, error) {
+	var claims jwt.RegisteredClaims
+	if _, err := jwt.ParseWithClaims(token.AccessToken, &claims, nil); err != nil {
+		return nil, err
+	}
+
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
@@ -48,7 +54,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	v := &Identity{
 		Helper:  request.NewHelper(log),
 		log:     log,
-		account: account,
+		account: claims.Subject,
 		region:  region,
 	}
 
@@ -59,7 +65,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	}
 
 	// reuse identity instance
-	if instance := getInstance(account); instance != nil {
+	if instance := getInstance(v.account); instance != nil {
 		v.log.DEBUG.Println("identity.NewIdentity - token found in instance store")
 		return instance, nil
 	}
@@ -91,7 +97,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	// add instance
-	addInstance(account, v)
+	addInstance(v.account, v)
 
 	return v, nil
 }
