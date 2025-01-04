@@ -29,7 +29,6 @@ params:
 render: |
   type: mercedes
   vin: {{ .vin }}
-  user: {{ .user }}
   region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
