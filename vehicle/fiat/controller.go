@@ -30,8 +30,6 @@ var _ api.CurrentController = (*Controller)(nil)
 // MaxCurrent implements the api.CurrentController interface
 func (c *Controller) MaxCurrent(current int64) error {
 	// Even if we cannot control the current, this interface must be implemented otherwise the ChargeEnable is never called
-	// Store the requested current
-	c.requestedCurrent = current
 	return nil
 }
 
