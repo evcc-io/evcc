@@ -15,6 +15,7 @@ params:
     description:
       de: Leistung (W)
       en: Power (W)
+    default: 0
     type: int
   - name: energy
     description:
