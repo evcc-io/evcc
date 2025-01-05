@@ -15,11 +15,11 @@ type switchChargerProvider struct {
 }
 
 func init() {
-	registry.AddCtx("switch", NewSwitchEnableFromConfig)
+	registry.AddCtx("charger", NewChargerEnableFromConfig)
 }
 
-// NewSwitchEnableFromConfig creates type conversion provider
-func NewSwitchEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewChargerEnableFromConfig creates type conversion provider
+func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
 	var cc struct {
 		Config config.Typed
 	}
