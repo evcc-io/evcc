@@ -87,7 +87,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	return err
 }
 
-func (c *Controller) ConfigureChargeSchedule(schedule *ScheduleData) {
+func (c *Controller) configureChargeSchedule(schedule *ScheduleData) {
 	// all values are set to be sure no manual change can lead to inconsistencies
 	schedule.CabinPriority = false
 	schedule.ChargeToFull = false
