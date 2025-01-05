@@ -624,17 +624,12 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
+	lp.publish(keys.ChargerPhaseSwitching, lp.hasPhaseSwitching())
+	lp.publish(keys.ChargerPhaseReading, lp.getChargerPhysicalPhases() != 0)
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
-
-	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
-		lp.publish(keys.ChargerPhysicalPhases, phases)
-	} else {
-		lp.publish(keys.ChargerPhysicalPhases, nil)
-	}
 
 	// charger features
 	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
