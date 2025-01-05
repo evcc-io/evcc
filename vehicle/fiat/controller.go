@@ -106,7 +106,7 @@ func (c *Controller) ConfigureChargeSchedule(schedule *ScheduleData) {
 	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 }
 
-func (c *Controller) DisableConflictingChargeSchedule(schedule *ScheduleData) {
+func (c *Controller) disableConflictingChargeSchedule(schedule *ScheduleData) {
 	// make sure the other charge schedules are disabled in case user changed them
 	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
 		schedule.EnableScheduleType = false
