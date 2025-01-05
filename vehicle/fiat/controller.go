@@ -37,14 +37,6 @@ func (c *Controller) MaxCurrent(current int64) error {
 	return nil
 }
 
-var _ api.CurrentGetter = (*Controller)(nil)
-
-// GetMaxCurrent implements the api.CurrentGetter interface
-func (c *Controller) GetMaxCurrent() (float64, error) {
-	// To avoid errors on evcc as we cannot control the current on the vehicle for now, return always the requested current
-	return float64(c.requestedCurrent), nil
-}
-
 var _ api.ChargeController = (*Controller)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
