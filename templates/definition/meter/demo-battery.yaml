@@ -15,11 +15,13 @@ params:
     description:
       de: Leistung (W)
       en: Power (W)
+    default: 0
     type: int
   - name: soc
     description:
       de: Ladestand (%)
       en: Charge (%)
+    default: 0
     type: int
   - name: controllable
     description:
