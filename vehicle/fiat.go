@@ -60,10 +60,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
-		// create a controller if and only if the pin has been configured to avoid errors
-		if cc.PIN != "" {
-			v.Controller = fiat.NewController(v.Provider, api, cc.VIN, cc.PIN)
-		}
+		v.Controller = fiat.NewController(v.Provider, api, cc.VIN, cc.PIN)
 	}
 
 	return v, err

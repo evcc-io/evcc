@@ -37,6 +37,10 @@ var _ api.ChargeController = (*Controller)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
 func (c *Controller) ChargeEnable(enable bool) error {
+	if c.pin == "" {
+		return api.ErrMissingCredentials
+	}
+
 	// get current schedule status from provider (cached)
 	stat, err := c.pvd.statusG()
 	if err != nil {
