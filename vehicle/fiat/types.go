@@ -28,7 +28,7 @@ type Vehicle struct {
 	VIN string
 }
 
-type ScheduleData struct {
+type Schedule struct {
 	CabinPriority      bool   `json:"cabinPriority"`
 	ChargeToFull       bool   `json:"chargeToFull"`
 	EnableScheduleType bool   `json:"enableScheduleType"`
@@ -71,7 +71,7 @@ type StatusResponse struct {
 			TimeToFullyChargeL2 int     // 540
 			TotalRange          int     // 17
 		}
-		Schedules []ScheduleData
+		Schedules []Schedule
 		Timestamp TimeMillis
 	} `json:",omitempty"`
 	Timestamp TimeMillis

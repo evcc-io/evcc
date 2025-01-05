@@ -8,19 +8,19 @@ import (
 )
 
 type Controller struct {
-	pvd              *Provider
-	api              *API
-	vin              string
-	pin              string
+	pvd *Provider
+	api *API
+	vin string
+	pin string
 }
 
 // NewController creates a vehicle current and charge controller
 func NewController(provider *Provider, api *API, vin string, pin string) *Controller {
 	impl := &Controller{
-		pvd:              provider,
-		api:              api,
-		vin:              vin,
-		pin:              pin,
+		pvd: provider,
+		api: api,
+		vin: vin,
+		pin: pin,
 	}
 	return impl
 }
@@ -71,7 +71,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	return err
 }
 
-func (c *Controller) configureChargeSchedule(schedule *ScheduleData) {
+func (c *Controller) configureChargeSchedule(schedule *Schedule) {
 	// all values are set to be sure no manual change can lead to inconsistencies
 	schedule.CabinPriority = false
 	schedule.ChargeToFull = false
@@ -90,7 +90,7 @@ func (c *Controller) configureChargeSchedule(schedule *ScheduleData) {
 	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 }
 
-func (c *Controller) disableConflictingChargeSchedule(schedule *ScheduleData) {
+func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) {
 	// make sure the other charge schedules are disabled in case user changed them
 	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
 		schedule.EnableScheduleType = false
