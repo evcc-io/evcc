@@ -80,10 +80,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 
 	// post new schedule
 	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
-
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 	}
+
 	return err
 }
 
