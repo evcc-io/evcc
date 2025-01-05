@@ -63,7 +63,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	// configure first schedule and make sure it's active
-	c.ConfigureChargeSchedule(&stat.EvInfo.Schedules[0])
+	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
 
 	if enable {
 		// start charging by updating active charge schedule to start now and end in 12h
@@ -75,8 +75,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	// make sure the other charge schedules are disabled in case user changed them
-	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
-	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
+	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
+	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
 
 	// post new schedule
 	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
