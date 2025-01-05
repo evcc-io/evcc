@@ -12,7 +12,6 @@ type Controller struct {
 	api              *API
 	vin              string
 	pin              string
-	requestedCurrent int64
 }
 
 // NewController creates a vehicle current and charge controller
