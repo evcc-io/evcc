@@ -21,7 +21,6 @@ func NewController(provider *Provider, api *API, vin string, pin string) *Contro
 		api:              api,
 		vin:              vin,
 		pin:              pin,
-		requestedCurrent: 0,
 	}
 	return impl
 }
