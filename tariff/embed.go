@@ -35,13 +35,22 @@ func (t *embed) init() (err error) {
 		}
 		vm.ImportUsed()
 
-		res, err := vm.Eval(fmt.Sprintf(`
+		if _, err := vm.Eval(fmt.Sprintf(`
 		var (
 			price float64 = %f
 			charges float64 = %f
 			tax float64 = %f
 			ts = time.Unix(%d, 0).Local()
-		)`, price, t.Charges, t.Tax, ts.Unix()) + "\n" + t.Formula)
+		)`, price, t.Charges, t.Tax, ts.Unix())); err != nil {
+			return 0, err
+		}
+
+		prg, err := vm.Compile(t.Formula)
+		if err != nil {
+			return 0, err
+		}
+
+		res, err := vm.Execute(prg)
 		if err != nil {
 			return 0, err
 		}
