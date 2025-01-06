@@ -116,11 +116,11 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 
 	// There are two attributes for the proconditioning status, precondNow and precondActive
 	if val, ok := message.Attributes["precondNow"]; ok {
-		res.Preconditioning.Active = bool(val.GetBoolValue())
+		res.Preconditioning.Active = val.GetBoolValue()
 	}
 	if !res.Preconditioning.Active {
 		if val, ok := message.Attributes["precondActive"]; ok {
-			res.Preconditioning.Active = bool(val.GetBoolValue())
+			res.Preconditioning.Active = val.GetBoolValue()
 		}
 	}
 
