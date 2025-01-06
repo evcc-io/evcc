@@ -41,8 +41,7 @@ func (t *embed) init() (err error) {
 			charges float64 = %f
 			tax float64 = %f
 			ts = time.Unix(%d, 0).Local()
-		)
-		`+t.Formula, price, t.Charges, t.Tax, ts.Unix()))
+		)`, price, t.Charges, t.Tax, ts.Unix()) + "\n" + t.Formula)
 		if err != nil {
 			return 0, err
 		}
