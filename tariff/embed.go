@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/provider/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
 )
@@ -34,15 +33,16 @@ func (t *embed) init() (err error) {
 		if err := vm.Use(stdlib.Symbols); err != nil {
 			return 0, err
 		}
+		vm.ImportUsed()
 
-		res, err := vm.Eval(fmt.Sprintf(`%s
+		res, err := vm.Eval(fmt.Sprintf(`
 		var (
 			price float64 = %f
 			charges float64 = %f
 			tax float64 = %f
 			ts = time.Unix(%d, 0).Local()
 		)
-		`+t.Formula, golang.Imports, price, t.Charges, t.Tax, ts.Unix()))
+		`+t.Formula, price, t.Charges, t.Tax, ts.Unix()))
 		if err != nil {
 			return 0, err
 		}
