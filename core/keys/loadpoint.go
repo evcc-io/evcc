@@ -22,8 +22,8 @@ const (
 
 	ChargerIcon           = "chargerIcon"           // charger icon for ui
 	ChargerFeature        = "chargerFeature"        // charger feature
-	ChargerPhaseSwitching = "chargerPhaseSwitching" // api.PhaseSwitcher: phase switcher (1p3p chargers) available
-	ChargerPhaseReading   = "chargerPhaseReading"   // api.PhaseDescriber: get charger phases available
+	ChargerPhysicalPhases = "chargerPhysicalPhases" // charger phases
+	ChargerPhases1p3p     = "chargerPhases1p3p"     // phase switcher (1p3p chargers)
 	ChargerStatusReason   = "chargerStatusReason"   // either awaiting authorization or disconnect required
 
 	// loadpoint status

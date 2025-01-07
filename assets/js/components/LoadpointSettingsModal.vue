@@ -47,7 +47,7 @@
 									{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
-									<p v-if="!chargerPhaseSwitching" class="mt-0 mb-2">
+									<p v-if="!chargerPhases1p3p" class="mt-0 mb-2">
 										<small>
 											{{
 												$t(
@@ -184,8 +184,8 @@ export default {
 		id: [String, Number],
 		phasesConfigured: Number,
 		phasesActive: Number,
-		chargerPhaseSwitching: Boolean,
-		chargerPhaseReading: Boolean,
+		chargerPhases1p3p: Boolean,
+		chargerPhysicalPhases: Number,
 		batteryBoost: Boolean,
 		batteryBoostAvailable: Boolean,
 		mode: String,
@@ -215,13 +215,13 @@ export default {
 	},
 	computed: {
 		phasesOptions() {
-			if (this.chargerPhaseSwitching) {
-				// automatic switching
-				return [PHASES_AUTO, PHASES_3, PHASES_1];
-			}
-			if (this.chargerPhaseReading) {
+			if (this.chargerPhysicalPhases == 1) {
 				// known fixed phase configuration, no settings required
 				return [];
+			}
+			if (this.chargerPhases1p3p) {
+				// automatic switching
+				return [PHASES_AUTO, PHASES_3, PHASES_1];
 			}
 			// 1p or 3p possible
 			return [PHASES_3, PHASES_1];
@@ -230,7 +230,7 @@ export default {
 			return this.collectProps(LoadpointSettingsBatteryBoost);
 		},
 		maxPower() {
-			if (this.chargerPhaseSwitching) {
+			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.maxPowerPhases(3);
 				}
@@ -241,7 +241,7 @@ export default {
 			return this.fmtW(this.maxCurrent * V * this.phasesActive);
 		},
 		minPower() {
-			if (this.chargerPhaseSwitching) {
+			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.minPowerPhases(1);
 				}
