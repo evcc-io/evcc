@@ -45,12 +45,7 @@ func (t *embed) init() (err error) {
 			return 0, err
 		}
 
-		prg, err := vm.Compile(t.Formula)
-		if err != nil {
-			return 0, err
-		}
-
-		res, err := vm.Execute(prg)
+		res, err := vm.Eval(t.Formula)
 		if err != nil {
 			return 0, err
 		}
