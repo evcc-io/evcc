@@ -73,11 +73,9 @@ func (c *Connection) handler(data string) {
 	}
 
 	c.data.SetFunc(func(v Data) Data {
-		if err := mergo.Merge(&v, res.Data); err != nil {
+		if err := mergo.Merge(&v, res.Data, mergo.WithOverride); err != nil {
 			c.log.ERROR.Println(err)
 		}
-
-		c.log.TRACE.Printf("!! data: %+v", v)
 
 		return v
 	})
