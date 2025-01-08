@@ -63,7 +63,9 @@ func TestGoEV2(t *testing.T) {
 	sponsor.Subject = "foo"
 
 	h.expect("/api/status?filter=alw")
-	wb, err := NewGoE(srv.URL, "", 0)
+	wb, err := newGoEFromConfig(false, map[string]any{
+		"uri": srv.URL,
+	})
 	if err != nil {
 		t.Error(err)
 	}
