@@ -63,30 +63,28 @@ func TestGoEV2(t *testing.T) {
 	sponsor.Subject = "foo"
 
 	h.expect("/api/status?filter=alw")
-	wb, err := newGoEFromConfig(false, map[string]any{
-		"uri": srv.URL,
-	})
+	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if _, ok := any(wb).(api.Meter); !ok {
+	if _, ok := wb.(api.Meter); !ok {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := any(wb).(api.PhaseCurrents); !ok {
+	if _, ok := wb.(api.PhaseCurrents); !ok {
 		t.Error("missing PhaseCurrents api")
 	}
 
-	if _, ok := any(wb).(api.Identifier); !ok {
+	if _, ok := wb.(api.Identifier); !ok {
 		t.Error("missing Identifier api")
 	}
 
-	if _, ok := any(wb).(api.MeterEnergy); !ok {
+	if _, ok := wb.(api.MeterEnergy); !ok {
 		t.Error("missing MeterEnergy api")
 	}
 
-	if _, ok := any(wb).(api.PhaseSwitcher); !ok {
+	if _, ok := wb.(api.PhaseSwitcher); !ok {
 		t.Error("missing PhaseSwitcher api")
 	}
 }
