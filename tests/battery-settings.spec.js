@@ -48,7 +48,11 @@ test.describe("battery settings", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
     await page.getByTestId("energyflow").click();
-    await page.getByRole("button", { name: "cheap grid energy (≤ 50.0 ct)" }).click();
+    await page.getByRole("button", { name: "grid charging active (≤ 50.0 ct)" }).click();
     await expect(page.getByTestId("battery-settings-modal")).toBeVisible();
+    await page.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "grid charging when ≤ -10.0 ct" })).toBeVisible();
   });
 });
