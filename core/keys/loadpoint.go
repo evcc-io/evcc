@@ -24,11 +24,11 @@ const (
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
 	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 
-	ChargerIcon           = "chargerIcon"           // charger icon for ui
-	ChargerFeature        = "chargerFeature"        // charger feature
-	ChargerPhysicalPhases = "chargerPhysicalPhases" // charger phases
-	ChargerPhases1p3p     = "chargerPhases1p3p"     // phase switcher (1p3p chargers)
-	ChargerStatusReason   = "chargerStatusReason"   // either awaiting authorization or disconnect required
+	ChargerIcon         = "chargerIcon"         // charger icon for ui
+	ChargerFeature      = "chargerFeature"      // charger feature
+	ChargerSinglePhase  = "chargerSinglePhase"  // api.PhaseDescriber: charger physical phases, sockets only
+	ChargerPhases1p3p   = "chargerPhases1p3p"   // api.PhaseSwitcher: 1p3p chargers
+	ChargerStatusReason = "chargerStatusReason" // either awaiting authorization or disconnect required
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
