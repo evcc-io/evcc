@@ -33,10 +33,10 @@ func (s *Stats) Update(p publisher) {
 	}
 
 	stats := map[string]map[string]float64{
-		"30d":      s.calculate(30),
-		"365d":     s.calculate(365),
-		"thisYear": s.calculate(time.Now().YearDay()),
-		"total":    s.calculate(365 * 100), // 100 years
+		"30d":      s.calculate(time.Now().AddDate(0, 0, -30)),
+		"365d":     s.calculate(time.Now().AddDate(0, 0, -365)),
+		"thisYear": s.calculate(time.Date(time.Now().Year(), 1, 1, 0, 0, 0, 0, time.Local)),
+		"total":    s.calculate(time.Time{}),
 	}
 	p.publish(keys.Statistics, stats)
 
@@ -44,7 +44,7 @@ func (s *Stats) Update(p publisher) {
 }
 
 // calculate reads the stats for the last n-days
-func (s *Stats) calculate(days int) map[string]float64 {
+func (s *Stats) calculate(fromDate time.Time) map[string]float64 {
 	result := make(map[string]float64)
 
 	executeQuery := func(selectClause string, whereClause string, fromDate time.Time, dest interface{}) {
@@ -60,7 +60,6 @@ func (s *Stats) calculate(days int) map[string]float64 {
 		}
 	}
 
-	fromDate := time.Now().AddDate(0, 0, -days)
 	var solarPercentage, chargedKWh, avgPrice, avgCo2 float64
 	executeQuery("SUM(charged_kwh * solar_percentage) / SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &solarPercentage)
 	executeQuery("SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &chargedKWh)
