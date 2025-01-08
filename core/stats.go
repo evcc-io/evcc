@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
+	"github.com/jinzhu/now"
 )
 
 // publisher gives access to the site's publish function
@@ -35,7 +36,7 @@ func (s *Stats) Update(p publisher) {
 	stats := map[string]map[string]float64{
 		"30d":      s.calculate(time.Now().AddDate(0, 0, -30)),
 		"365d":     s.calculate(time.Now().AddDate(0, 0, -365)),
-		"thisYear": s.calculate(time.Date(time.Now().Year(), 1, 1, 0, 0, 0, 0, time.Local)),
+		"thisYear": s.calculate(now.BeginningOfYear()),
 		"total":    s.calculate(time.Time{}),
 	}
 	p.publish(keys.Statistics, stats)
