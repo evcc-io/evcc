@@ -33,36 +33,34 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestGoEV1(t *testing.T) {
-	h := &handler{}
-	srv := httptest.NewServer(h)
+	srv := httptest.NewServer(new(handler))
 
 	sponsor.Subject = "foo"
 
-	wb, err := NewGoE(srv.URL, "", 0)
+	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if _, ok := any(wb).(api.Meter); !ok {
+	if _, ok := wb.(api.Meter); !ok {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := any(wb).(api.PhaseCurrents); !ok {
+	if _, ok := wb.(api.PhaseCurrents); !ok {
 		t.Error("missing PhaseCurrents api")
 	}
 
-	if _, ok := any(wb).(api.Identifier); !ok {
+	if _, ok := wb.(api.Identifier); !ok {
 		t.Error("missing Identifier api")
 	}
 }
 
 func TestGoEV2(t *testing.T) {
-	h := &handler{}
-	srv := httptest.NewServer(h)
+	srv := httptest.NewServer(new(handler))
 
 	sponsor.Subject = "foo"
 
-	h.expect("/api/status?filter=alw")
+	srv.Config.Handler.(*handler).expect("/api/status?filter=alw")
 	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
