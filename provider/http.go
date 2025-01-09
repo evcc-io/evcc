@@ -34,6 +34,8 @@ func init() {
 	registry.AddCtx("http", NewHTTPProviderFromConfig)
 }
 
+var mc = httpcache.NewMemoryCache()
+
 // Auth is the authorization config
 type Auth struct {
 	Type, User, Password string
@@ -101,7 +103,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	}
 
 	// http cache
-	cacheTransport := httpcache.NewMemoryCacheTransport()
+	cacheTransport := httpcache.NewTransport(mc)
 	cacheTransport.Transport = p.Client.Transport
 	p.Client.Transport = cacheTransport
 
