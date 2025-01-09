@@ -103,9 +103,10 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	}
 
 	// http cache
-	cacheTransport := httpcache.NewTransport(mc)
-	cacheTransport.Transport = p.Client.Transport
-	p.Client.Transport = cacheTransport
+	p.Client.Transport = &httpcache.Transport{
+		Cache:     mc,
+		Transport: p.Client.Transport,
+	}
 
 	// ignore the self signed certificate
 	if insecure {
