@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,7 +29,17 @@ type HTTP struct {
 	pipeline    *pipeline.Pipeline
 	val         []byte // Cached http response value
 	err         error  // Cached http response error
+	cache_id    string // Cache ID for shared cache
+	log         *util.Logger
 }
+
+type CacheItem struct {
+	val     []byte    // Cached http response value
+	err     error     // Cached http response error
+	updated time.Time // Time of last update
+}
+
+var sharedCache map[string]CacheItem = make(map[string]CacheItem)
 
 func init() {
 	registry.AddCtx("http", NewHTTPProviderFromConfig)
@@ -51,6 +62,7 @@ func NewHTTPProviderFromConfig(ctx context.Context, other map[string]interface{}
 		Auth              Auth
 		Timeout           time.Duration
 		Cache             time.Duration
+		SharedCache       bool
 	}{
 		Headers: make(map[string]string),
 		Method:  http.MethodGet,
@@ -71,7 +83,8 @@ func NewHTTPProviderFromConfig(ctx context.Context, other map[string]interface{}
 		cc.Cache,
 	).
 		WithHeaders(cc.Headers).
-		WithBody(cc.Body)
+		WithBody(cc.Body).
+		WithSharedCache(cc.SharedCache, cc.Auth)
 
 	p.Client.Timeout = cc.Timeout
 
@@ -109,6 +122,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	if insecure {
 		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
+	p.log = log
 
 	return p
 }
@@ -131,6 +145,43 @@ func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
 	return p
 }
 
+// WithSharedCache adds shared cache
+func (p *HTTP) WithSharedCache(sharedCache bool, auth Auth) *HTTP {
+	if sharedCache {
+		// cache_id is hash of method + url + body + headers + auth
+		hash := md5.New()
+		hash.Write([]byte(p.method))
+		hash.Write([]byte(p.url))
+		hash.Write([]byte(p.body))
+		for k, v := range p.headers {
+			hash.Write([]byte(k))
+			hash.Write([]byte(v))
+		}
+		if auth.Type != "" {
+			hash.Write([]byte(auth.Type))
+			hash.Write([]byte(auth.User))
+			hash.Write([]byte(auth.Password))
+		}
+		p.cache_id = fmt.Sprintf("%x", hash.Sum(nil))
+	}
+
+	return p
+}
+
+func (i *CacheItem) update(val []byte, err error) {
+	i.val = val
+	i.err = err
+	i.updated = time.Now()
+}
+
+func (i *CacheItem) valid(cache time.Duration) bool {
+	return time.Since(i.updated) < cache
+}
+
+func (i *CacheItem) get() ([]byte, error) {
+	return i.val, i.err
+}
+
 // WithAuth adds authorized transport
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
@@ -150,29 +201,53 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	return p, nil
 }
 
+func (p *HTTP) doRequest(url string, body string) ([]byte, error) {
+	var b io.Reader
+	if p.method != http.MethodGet {
+		b = strings.NewReader(body)
+	}
+
+	url = util.DefaultScheme(url, "http")
+
+	// empty method becomes GET
+	req, err := request.New(p.method, url, b, p.headers)
+	p.log.DEBUG.Printf("HTTP request: %s %s", p.method, url)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	var val []byte
+	val, err = p.DoBody(req)
+	if err != nil {
+		if err := knownErrors(val); err != nil {
+			p.err = err
+		}
+	}
+	return val, err
+}
+
 // request executes the configured request or returns the cached value
 func (p *HTTP) request(url string, body string) ([]byte, error) {
-	if time.Since(p.updated) >= p.cache {
-		var b io.Reader
-		if p.method != http.MethodGet {
-			b = strings.NewReader(body)
+	p.log.DEBUG.Printf("new request: %s %s", p.method, url)
+	// Shared cache
+	if p.cache_id != "" {
+		if item, ok := sharedCache[p.cache_id]; ok && item.valid(p.cache) {
+			p.log.DEBUG.Printf("shared cache hit: %v", p.cache_id)
+			p.val, p.err = item.get()
+		} else {
+			p.log.DEBUG.Printf("shared cache miss: %v", p.cache_id)
+			p.val, p.err = p.doRequest(url, body)
+			item := CacheItem{}
+			item.update(p.val, p.err)
+			sharedCache[p.cache_id] = item
 		}
-
-		url := util.DefaultScheme(url, "http")
-
-		// empty method becomes GET
-		req, err := request.New(p.method, url, b, p.headers)
-		if err != nil {
-			return []byte{}, err
-		}
-
-		p.val, p.err = p.DoBody(req)
-		if p.err != nil {
-			if err := knownErrors(p.val); err != nil {
-				p.err = err
-			}
-		}
+		// Non-shared cache
+	} else if time.Since(p.updated) >= p.cache {
+		p.log.DEBUG.Printf("cache expired: %v", p.cache)
+		p.val, p.err = p.doRequest(url, body)
 		p.updated = time.Now()
+	} else {
+		p.log.DEBUG.Printf("cache hit")
 	}
 
 	return p.val, p.err
