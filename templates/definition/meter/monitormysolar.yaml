@@ -1,0 +1,112 @@
+template: monitormysolar
+products:
+  - brand: LUX
+    description:
+      generic: TODO
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      This meter is compatible with inverters with the MonitorMySolar dongle. See https://monitormy.solar/ for more information.
+      Dongle firmware version XX or greater is required.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: dongle_id
+    type: string
+    required: true
+    description:
+      generic: The ID of the dongle.
+    example: dongle-40:4C:xx:xx:xx:xx
+  - name: dongle_host
+    type: string
+    description:
+      generic: The hostname or IP address of the dongle. Required for battery control.
+    example: monitormysolar.local
+  - name: battery_hold_percent
+    type: int
+    advanced: true
+    description:
+      generic: Power percentage to discharge the battery when in hold mode.
+    example: 0
+    default: 0
+  - name: battery_charge_percent
+    type: int
+    advanced: true
+    description:
+      generic: Power percentage to charge the battery when in charge mode.
+    example: 100
+    default: 100
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: (-1 * .payload.Ptogrid) + .payload.Ptouser
+    timeout: 30s
+  energy:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: .payload.Einv_day
+    timeout: 30s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: .payload.Pall
+    timeout: 30s
+  energy:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: .payload.Epv1_day + .payload.Epv2_day + .payload.Epv3_day
+    timeout: 30s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: (-1 * .payload.Pcharge) + .payload.Pdischarge
+    timeout: 30s
+  energy:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: .payload.Edischg_day
+    timeout: 30s
+  soc:
+    source: mqtt
+    topic: {{ .dongle_id }}/inputbank1
+    jq: .payload.SOC
+    timeout: 30s
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal 
+      set:
+        source: http
+        uri: http://{{ .dongle_host }}/evcc/update
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{ "update": "batterynormal" }'
+    - case: 2 # hold
+      set:
+        source: http
+        uri: http://{{ .dongle_host }}/evcc/update
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{ "update": "batteryhold", "value": {{ .battery_hold_percent }} }'
+    - case: 3 # charge
+      set:
+        source: http
+        uri: http://{{ .dongle_host }}/evcc/update
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{ "update": "batterycharge", "value": {{ .battery_charge_percent }} }'
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
