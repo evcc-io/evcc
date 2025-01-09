@@ -7,7 +7,7 @@ params:
   - name: usage
     choice: ["pv"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
     baudrate: 9600
     comset: 8N1
 render: |
