@@ -252,7 +252,11 @@ var _ api.ChargeRater = (*Smaevcharger)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
+	var e *smaevcharger.ErrUnknownMeasurement
 	res, err := wb.getMeasurement("Measurement.ChaSess.WhIn")
+	if err != nil && errors.As(err, &e) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
+	}
 	return res / 1e3, err
 }
 
@@ -318,7 +322,7 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("unknown measurement: %s", id)
+	return 0, &smaevcharger.ErrUnknownMeasurement{Measurement: id}
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {
