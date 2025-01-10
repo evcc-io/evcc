@@ -4,6 +4,15 @@ products:
     description:
       generic: Wattpilot (OCPP)
 requirements:
+  description:
+    de: |
+      Hinweis zur Konfiguration des Wattpilot mittels solar.wattpilot app: das Symbol neben dem 
+      Beispiel-OCPP-Server "wss://<username>:<password>@ocpp.cloud.fronius.com/<UID>" dient zur Konfiguration. 
+      Hier entsprechend dann "ws://<IP-vom-evcc-host>:8887/ eingeben und unten "Füge SN zur URL" aktivieren.
+    en: |
+      Note on configuring the Wattpilot using the solar.wattpilot app: The symbol next to the 
+      example OCPP server "wss://<username>:<password>@ocpp.cloud.fronius.com/<UID>" is used for configuration.
+      Enter "ws://<IP-of-the-evcc-host>:8887/" and activate "Add SN to URL" below.
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
