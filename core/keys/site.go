@@ -12,6 +12,7 @@ const (
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
+	PvEnergy              = "pvEnergy"
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
@@ -42,8 +43,9 @@ const (
 	BufferStartSoc          = "bufferStartSoc"
 
 	// battery status
-	Battery      = "battery"
-	BatteryMode  = "batteryMode"
-	BatteryPower = "batteryPower"
-	BatterySoc   = "batterySoc"
+	Battery       = "battery"
+	BatteryEnergy = "batteryEnergy"
+	BatteryMode   = "batteryMode"
+	BatteryPower  = "batteryPower"
+	BatterySoc    = "batterySoc"
 )

@@ -498,6 +498,9 @@ func (site *Site) updatePvMeters() {
 	site.excessDCPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc - math.Abs(m.ExcessDCPower)
 	}, 0)
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + m.Energy
+	}, 0)
 
 	if len(site.pvMeters) > 1 {
 		var excessStr string
@@ -509,6 +512,7 @@ func (site *Site) updatePvMeters() {
 	}
 
 	site.publish(keys.PvPower, site.pvPower)
+	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
 }
 
@@ -566,6 +570,9 @@ func (site *Site) updateBatteryMeters() {
 	site.batteryPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
 		return acc + m.Power
 	}, 0)
+	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+		return acc + m.Energy
+	}, 0)
 
 	if len(site.batteryMeters) > 1 {
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
@@ -576,6 +583,7 @@ func (site *Site) updateBatteryMeters() {
 	site.publish(keys.BatterySoc, site.batterySoc)
 
 	site.publish(keys.BatteryPower, site.batteryPower)
+	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
 }
 
