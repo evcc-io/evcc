@@ -223,8 +223,7 @@ export default {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
-						mode: "index",
-						intersect: false,
+						axis: "x",
 						positioner: (context) => {
 							const { chart, tooltipPosition } = context;
 							const { tooltip } = chart;

@@ -29,13 +29,19 @@ params:
     deprecated: true
   - name: capacity
     advanced: true
+  - name: defaultmode
+    help:
+      de: Standardmodus für die aktive Batteriesteuerung. Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
+      en: Default mode for battery control. Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
+    default: 0 # self use
+    advanced: true
   # battery control
   - name: minsoc
-    type: number
+    type: int
     advanced: true
     deprecated: true
   - name: maxsoc
-    type: number
+    type: int
     advanced: true
     deprecated: true
 render: |
@@ -150,7 +156,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: 0 # self-use
+        value: {{ .defaultmode }} # set back to default energy storage mode
         set:
           source: ignore
           error: "modbus: response data size '18' does not match count '4'"

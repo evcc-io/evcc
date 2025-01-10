@@ -8,16 +8,14 @@ params:
     example: ZFAE...
   - name: pin
     mask: true
-  - preset: vehicle-identify
-  - name: welcomecharge
-    advanced: true
+    help:
+      en: Required for evcc to refresh the SoC while charging. When connected to TWC3, used to start/stop charging.
+      de: Benötigt zur Aktualisierung des Ladestands während der Ladung. Bei Nutzung mit TWC3 kann der Ladevorgang mittels PIN gestartet und gestoppt werden.
+  - preset: vehicle-features
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
   {{- if .pin }}
-  pin: {{ .pin }} # mandatory to deep refresh Soc
+  pin: {{ .pin }} # mandatory to deep refresh Soc & start/stop charge
   {{- end }}
-  {{ include "vehicle-identify" . }}
-  {{- if eq .welcomecharge "true" }}
-  features: ["welcomecharge"]
-  {{- end }}
+  {{ include "vehicle-features" . }}

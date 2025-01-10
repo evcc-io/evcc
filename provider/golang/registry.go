@@ -4,8 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/provider/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
-	"github.com/traefik/yaegi/stdlib"
 )
 
 var (
@@ -24,10 +24,10 @@ func RegisteredVM(name, init string) (*interp.Interpreter, error) {
 	// create new VM
 	if !ok {
 		vm = interp.New(interp.Options{})
-
 		if err := vm.Use(stdlib.Symbols); err != nil {
 			return nil, err
 		}
+		vm.ImportUsed()
 
 		if init != "" {
 			if _, err := vm.Eval(init); err != nil {

@@ -1,0 +1,73 @@
+template: enever
+products:
+  - brand: Enever
+requirements:
+  description:
+    de: Nur für Niederlande verfügbar.
+    en: Only available for Netherlands.
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: token
+    required: true
+  - name: provider
+    type: choice
+    choice:
+      [
+        "",
+        "AA",
+        "AIP",
+        "ANWB",
+        "BE",
+        "EE",
+        "EN",
+        "EVO",
+        "EZ",
+        "FR",
+        "GSL",
+        "MDE",
+        "NE",
+        "TI",
+        "VDB",
+        "VON",
+        "WE",
+        "ZG",
+        "ZP",
+      ]
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: go
+    script: |
+      // concat today and tomorrow
+      "[" + strings.Trim(strings.Trim(today, "[]") + "," + strings.Trim(tomorrow, "[]"), ",") + "]"
+    in:
+      - name: today
+        type: string
+        config:
+          source: http
+          uri: https://enever.nl/api/stroomprijs_vandaag.php?token={{ .token }}
+          jq: |
+            [ .data.[] |
+              {
+                "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
+                "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
+                "price": .prijs{{ .provider }} | tonumber
+              }
+            ] | tostring
+      - name: tomorrow
+        type: string
+        config:
+          source: http
+          uri: https://enever.nl/api/stroomprijs_morgen.php?token={{ .token }}
+          jq: |
+            [ .data.[] |
+              {
+                "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
+                "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
+                "price": .prijs{{ .provider }} | tonumber
+              }
+            ] | tostring

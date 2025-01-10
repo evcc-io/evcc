@@ -111,7 +111,7 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
-		validValues: { type: Array, default: () => [] },
+		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -123,7 +123,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Number", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -132,13 +132,13 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Number", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
 		},
 		endAlign() {
-			return ["Number", "Float", "Duration"].includes(this.type);
+			return ["Int", "Float", "Duration"].includes(this.type);
 		},
 		step() {
 			if (this.type === "Float" || this.type === "Duration") {
@@ -168,18 +168,18 @@ export default {
 			return this.type === "Bool";
 		},
 		array() {
-			return this.type === "StringList";
+			return this.type === "List";
 		},
 		select() {
-			return this.validValues.length > 0;
+			return this.choice.length > 0;
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (typeof this.validValues[0] === "object") {
-				return this.validValues;
+			if (typeof this.choice[0] === "object") {
+				return this.choice;
 			}
 
-			let values = [...this.validValues];
+			let values = [...this.choice];
 
 			if (this.icons && !this.required) {
 				values = ["", ...values];

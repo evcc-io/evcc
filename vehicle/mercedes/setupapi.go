@@ -74,11 +74,11 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 
 func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token, error) {
 	data := url.Values{
-		"client_id":  []string{ClientId},
-		"grant_type": []string{"password"},
-		"password":   []string{fmt.Sprintf("%s:%s", nonce, pin)},
-		"scope":      []string{"openid email phone profile offline_access ciam-uid"},
-		"username":   []string{vs.account},
+		"client_id":  {ClientId},
+		"grant_type": {"password"},
+		"password":   {fmt.Sprintf("%s:%s", nonce, pin)},
+		"scope":      {"openid email phone profile offline_access ciam-uid"},
+		"username":   {vs.account},
 	}
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)

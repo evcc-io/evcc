@@ -9,9 +9,11 @@ requirements:
   description:
     de: |
       Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
+      Als Betriebsart der sonnenBatterie werden die beiden Modi "Eigenverbrauch" (Standard) und "Time-of-use" unterstützt. Der Modus kann über den Parameter `defaultmode` an die Konfiguration der sonnenBatterie angepasst werden.
       Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `chargepower` angepasst werden.
     en: |
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
+      The two operating modes supported for the sonnenBatterie are “self-consumption” (default) and “time-of-use”. The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
       The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `chargepower` parameter.
 params:
   - name: usage
@@ -27,6 +29,15 @@ params:
     help:
       de: API Token (benötigt für aktive Batteriesteuerung)
       en: API Token (required for active battery control)
+    usages: ["battery"]
+  - name: defaultmode
+    type: choice
+    choice: ["self-consumption", "time-of-use"]
+    default: self-consumption
+    advanced: true
+    help:
+      de: Standardmodus für die aktive Batteriesteuerung (self-consumption oder time-of-use)
+      en: Default mode for active battery control (self-consumption or time-of-use)
     usages: ["battery"]
   - name: chargepower
     default: 3300
@@ -66,7 +77,11 @@ render: |
         headers:
         - content-type: application/json
         - Auth-Token: {{ .token }}
-        body: '{"EM_OperatingMode":"2"}'  # self consumption
+        {{- if eq .defaultmode "time-of-use" }}
+        body: '{"EM_OperatingMode":"10"}' # Time-of-use
+        {{- else }}
+        body: '{"EM_OperatingMode":"2"}'  # Self-consumption
+        {{- end }}
     - case: 2 # hold
       set:
         source: sequence
@@ -78,7 +93,7 @@ render: |
           headers:
           - content-type: application/json
           - Auth-Token: {{ .token }}
-          body: '{"EM_OperatingMode":"1"}'  # manual
+          body: '{"EM_OperatingMode":"1"}'  # Manual
         - source: http
           uri: http://{{ .host }}/api/v2/setpoint/discharge/0
           insecure: true

@@ -5,10 +5,8 @@ requirements:
   evcc: ["skiptest"]
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: LPSVS...
 render: |
   type: polestar
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

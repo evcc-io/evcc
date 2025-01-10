@@ -48,6 +48,7 @@ chargeStatus = "Статус"
 chargeStatusA = "не підключено"
 chargeStatusB = "підключений"
 chargeStatusC = "зарядка"
+chargeStatusE = "немає електроенергії"
 chargeStatusF = "помилка"
 chargedEnergy = "Заряджений"
 configured = "Налаштовано"
@@ -80,8 +81,10 @@ optional = "необов'язково"
 cancel = "Скасувати"
 docsLink = "Переглянути документацію."
 experimental = "Експериментальний"
+hideAdvancedSettings = "Приховати розширені налаштування"
 off = "вимкнено"
 save = "зберегти"
+showAdvancedSettings = "Показати розширені налаштування"
 telemetry = "Телеметрія"
 
 [config.grid]
@@ -92,6 +95,7 @@ titleEdit = "Редагувати лічильник електромережі"
 title = "HEMS"
 
 [config.influx]
+labelBucket = "Bucket"
 labelDatabase = "База даних"
 labelToken = "API Token"
 labelUrl = "URL"
@@ -107,6 +111,10 @@ unconfigured = "не налаштовано"
 vehicles = "Мій транспорт"
 yaml = "Налаштовано в evcc.yaml. Не можна редагувати в інтерфейсі користувача."
 
+[config.messaging]
+description = "Отримувати повідомлення про ваші сеанси зарядки"
+title = "Сповіщення"
+
 [config.meter]
 cancel = "Скасувати"
 delete = "Видалити"
@@ -115,7 +123,19 @@ template = "Виробник"
 titleChoice = "Що ви хочете додати?"
 validateSave = "Перевірте та збережіть"
 
+[config.modbusproxy]
+description = "Дозволити кільком клієнтам доступ до одного пристрою Modbus."
+title = "Modbus Proxy"
+
+[config.mqtt]
+labelBroker = "Broker"
+title = "MQTT"
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 big = "великий байт"
@@ -135,7 +155,11 @@ titleEdit = "Редагувати сонячний лічильник"
 cancel = "Скасувати"
 save = "Зберегти"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -202,7 +226,7 @@ becomeSponsor = "Стати спонсором"
 confetti = "Готові до конфетті?"
 confettiPromise = "Ви отримуєте наклейки та цифрові конфетті"
 sticker = "… або наклейки evcc?"
-supportUs = "Наша місія — зробити сонячну енергію нормою. Допоможіть evcc, заплативши стільки, скільки можете."
+supportUs = "Наша місія — зробити заряджання від сонячних батарей нормою. Допоможіть evcc, заплативши стільки, скільки можете."
 thanks = "Дякуємо, {sponsor}! Ваш внесок допомагає розвивати evcc далі."
 titleNoSponsor = "Підтримайте нас"
 titleSponsor = "Ви спонсор"
@@ -299,7 +323,7 @@ co2 = "⌀ CO₂"
 duration = "Тривалість"
 fallbackName = "Точка зарядки"
 power = "Потужність"
-price = "Σ Ціна"
+price = "Вартість"
 solar = "Сонячна"
 
 [main.loadpointSettings]
@@ -309,6 +333,8 @@ disclaimerHint = "Примітка:"
 onlyForSocBasedCharging = "Ці параметри доступні лише для автомобілів із відомим рівнем заряду."
 title = "Налаштування {0}"
 vehicle = "Транспортний засіб"
+
+[main.loadpointSettings.batteryBoost]
 
 [main.loadpointSettings.limitSoc]
 description = "Ліміт заряджання, який використовується, коли цей автомобіль під’єднано."
@@ -401,20 +427,20 @@ vehicleLimit = "Ліміт транспортного засобу: {soc}"
 
 [main.vehicleStatus]
 charging = "Зарядка…"
-cheapEnergyCharging = "Доступна дешева енергія. Заряджання..."
-cleanEnergyCharging = "Чиста енергія доступна. Заряджання..."
+cheapEnergyCharging = "Доступна дешева енергія."
+cleanEnergyCharging = "Чиста енергія доступна."
 climating = "Виявлено попередню підготовку."
 connected = "Підключено."
 disconnected = "Відключено."
 minCharge = "Мінімальна зарядка до {soc}."
-pvDisable = "Недостатньо надлишку. Пауза через {remaining}…"
-pvEnable = "Надлишок доступний. Початок через {remaining}…"
-scale1p = "Зменшення до 1-фазного живлення через {remaining}…"
-scale3p = "Збільшення до 3-фазного живлення через {remaining}…"
-targetChargeActive = "Запланований заряд активний…"
-targetChargePlanned = "Запланована зарядка починається о {time}."
+pvDisable = "Недостатньо надлишків. Скоро припинення."
+pvEnable = "Надлишки доступні. Скоро почнеться."
+scale1p = "Зменшення до 1-фазного живлення скоро."
+scale3p = "Збільшення до 3-фазного живлення скоро."
+targetChargeActive = "Запланований заряд активний. Орієнтовний фініш через {duration}."
+targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
-vehicleLimitReached = "Ліміт транспортного засобу {soc} досягнуто."
+vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 
 [notifications]
@@ -453,12 +479,16 @@ downloadCsv = "Завантажити як CSV"
 energy = "Заряджено"
 loadpoint = "Точка зарядки"
 noData = "Ніяких зарядних сесій цього місяця"
-price = "Σ Ціна"
+overview = "Огляд"
+price = "Вартість"
 reallyDelete = "Ви дійсно хочете видалити цей сеанс?"
 solar = "Сонячна"
 title = "Сеанси зарядки"
 total = "Всього"
 vehicle = "Транспортний засіб"
+
+[sessions.chartTitle]
+solar = "Сонячна частка за рік"
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
@@ -475,6 +505,14 @@ vehicle = "Транспортний засіб"
 allLoadpoints = "всі точки зарядки"
 allVehicles = "всі транспортні засоби"
 filter = "Фільтр"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Інтерфейс користувача"

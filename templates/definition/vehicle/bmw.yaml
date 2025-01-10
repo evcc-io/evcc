@@ -4,43 +4,29 @@ products:
 requirements:
   description:
     de: |
-      Benötigt `hcaptcha` Token. Dieses muss einmalig unter https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html generiert werden. Das Token ist nur für kurze Zeit gültig. Bitte möglichst schnell nach Generierung in die Konfiguration kopieren und evcc starten.
+      Benötigt `hcaptcha` Token. Dieses muss einmalig unter [bimmer-connected.readthedocs.io](https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html) generiert werden. Das Token ist nur für kurze Zeit gültig. Bitte möglichst schnell nach Generierung in die Konfiguration kopieren und evcc starten.
     en: |
-      Requires `hcaptcha` token. This must be generated once at https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html. The token is only valid for a short time. Please copy it into the configuration and start evcc as soon as possible after generation.
+      Requires `hcaptcha` token. This must be generated once at [bimmer-connected.readthedocs.io](https://bimmer-connected.readthedocs.io/en/latest/captcha/rest_of_world.html). The token is only valid for a short time. Please copy it into the configuration and start evcc as soon as possible after generation.
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
   - name: vin
     example: WBMW...
   - name: region
     description:
       de: Region
       en: Region
-    # values:
-    #   - NA
-    #   - EU
+    type: choice
+    choice: ["EU", "NA"]
     default: EU
-    advanced: true
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
     advanced: true
   - name: hcaptcha
     required: true
+  - preset: vehicle-features
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
-  features:
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
-  {{- end }}
+  {{ include "vehicle-features" . }}
   hcaptcha: {{ .hcaptcha }}

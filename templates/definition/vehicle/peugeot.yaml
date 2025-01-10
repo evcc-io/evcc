@@ -8,10 +8,7 @@ requirements:
     en: |
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: user
     required: true
   - name: password
@@ -24,10 +21,8 @@ params:
     mask: true
   - name: vin
     example: V...
-  - name: capacity
-  - name: phases
-    advanced: true
-  - preset: vehicle-identify
+  - name: cache
+    default: 15m
 render: |
   type: peugeot
   vin: {{ .vin }}
@@ -36,4 +31,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-identify" . }}
+  cache: {{ .cache }}

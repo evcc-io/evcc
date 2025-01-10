@@ -5,8 +5,6 @@ products:
   - brand: Land Rover
 params:
   - preset: vehicle-base
-  - preset: vehicle-identify
 render: |
   type: jaguar
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}

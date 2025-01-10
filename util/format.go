@@ -53,6 +53,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		Funcs(sprig.TxtFuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
+			"addDate":   addDate,
 		}).Parse(s)
 	if err != nil {
 		return s, err
