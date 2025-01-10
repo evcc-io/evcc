@@ -46,15 +46,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.Credentials.ID != "" {
-		tesla.OAuth2Config.ClientID = cc.Credentials.ID
-	}
-
-	if cc.Credentials.Secret != "" {
-		tesla.OAuth2Config.ClientSecret = cc.Credentials.Secret
-	}
-
-	if tesla.OAuth2Config.ClientID == "" {
+	if cc.Credentials.ID == "" {
 		return nil, errors.New("missing client id, see https://github.com/evcc-io/evcc/discussions/17501")
 	}
 
@@ -65,10 +57,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("tesla").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh, cc.ProxyToken,
-		tesla.OAuth2Config.ClientID, tesla.OAuth2Config.ClientSecret,
+		cc.Credentials.ID, cc.Credentials.Secret,
 	)
 
-	identity, err := tesla.NewIdentity(log, token)
+	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret), token)
 	if err != nil {
 		return nil, err
 	}
