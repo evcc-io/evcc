@@ -17,7 +17,7 @@ params:
     id: 1
   - name: capacity
     advanced: true
-  -name: maxacpower
+  - name: maxacpower
   # battery control
   - name: watchdog
     type: duration
