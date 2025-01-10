@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/tesla-proxy-client"
 )
 
-const ProxyBaseUrl = "https://api.teslamate.com"
+const ProxyBaseUrl = "https://api.myteslamate.com"
 
 type Controller struct {
 	vehicle *tesla.Vehicle

@@ -64,7 +64,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("tesla").Redact(
-		cc.Tokens.Access, cc.Tokens.Refresh,
+		cc.Tokens.Access, cc.Tokens.Refresh, cc.ProxyToken,
 		tesla.OAuth2Config.ClientID, tesla.OAuth2Config.ClientSecret,
 	)
 
