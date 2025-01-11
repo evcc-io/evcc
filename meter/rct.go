@@ -192,7 +192,7 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	return float64(res), err
 }
 
-// batteryMode implements the api.BatteryController interface
+// setBatteryMode implements the api.BatteryController interface
 func (m *RCT) setBatteryMode(mode api.BatteryMode) error {
 	write := func(id rct.Identifier, data []byte) error {
 		b := rct.NewDatagramBuilder()
