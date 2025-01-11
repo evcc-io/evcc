@@ -1,8 +1,10 @@
 package meter
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -52,7 +54,7 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -105,11 +107,13 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
+	var batteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+		batteryMode = m.setBatteryMode
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, capacity), nil
+	return decorateRCT(m, totalEnergy, batterySoc, batteryMode, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -186,4 +190,35 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	}, m.bo)
 
 	return float64(res), err
+}
+
+// batteryMode implements the api.BatteryController interface
+func (m *RCT) setBatteryMode(mode api.BatteryMode) error {
+	write := func(id rct.Identifier, data []byte) error {
+		b := rct.NewDatagramBuilder()
+		b.Build(&rct.Datagram{rct.Write, id, data})
+		_, err := m.conn.Send(b)
+		return err
+	}
+
+	switch mode {
+	case api.BatteryNormal:
+		return write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+
+	case api.BatteryHold:
+		return write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetConstant})
+
+	case api.BatteryCharge:
+		if err := write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
+			return err
+		}
+
+		data := make([]byte, 4)
+		binary.BigEndian.PutUint32(data, math.Float32bits(0.95))
+
+		return write(rct.PowerMngSocTargetSet, []byte{rct.SOCTargetExternal})
+
+	default:
+		return api.ErrNotAvailable
+	}
 }
