@@ -490,15 +490,15 @@ func (site *Site) updatePvMeters() {
 		}
 	}
 
-	site.pvPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + max(0, m.Power)
-	}, 0)
-	site.excessDCPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc - math.Abs(m.ExcessDCPower)
-	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + m.Energy
-	}, 0)
+	site.pvPower = lo.SumBy(mm, func(m measurement) float64 {
+		return max(0, m.Power)
+	})
+	site.excessDCPower = lo.SumBy(mm, func(m measurement) float64 {
+		return math.Abs(m.ExcessDCPower)
+	})
+	totalEnergy := lo.SumBy(mm, func(m measurement) float64 {
+		return m.Energy
+	})
 
 	if len(site.pvMeters) > 1 {
 		var excessStr string
@@ -547,17 +547,16 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	site.batterySoc = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
+	site.batterySoc = lo.SumBy(mm, func(m measurement) float64 {
 		// weigh soc by capacity
-		weighedSoc := *m.Soc
 		if *m.Capacity > 0 {
-			weighedSoc *= *m.Capacity
+			return *m.Soc * *m.Capacity
 		}
-		return acc + weighedSoc
-	}, 0)
-	totalCapacity := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + *m.Capacity
-	}, 0)
+		return *m.Soc
+	})
+	totalCapacity := lo.SumBy(mm, func(m measurement) float64 {
+		return *m.Capacity
+	})
 
 	// convert weighed socs to total soc
 	if totalCapacity == 0 {
@@ -565,12 +564,12 @@ func (site *Site) updateBatteryMeters() {
 	}
 	site.batterySoc /= totalCapacity
 
-	site.batteryPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + m.Power
-	}, 0)
-	totalEnergy := lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + m.Energy
-	}, 0)
+	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
+		return m.Power
+	})
+	totalEnergy := lo.SumBy(mm, func(m measurement) float64 {
+		return m.Energy
+	})
 
 	if len(site.batteryMeters) > 1 {
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
@@ -592,9 +591,9 @@ func (site *Site) updateAuxMeters() {
 	}
 
 	mm := site.collectMeters("aux", site.auxMeters)
-	site.auxPower = lo.Reduce(mm, func(acc float64, m measurement, _ int) float64 {
-		return acc + m.Power
-	}, 0)
+	site.auxPower = lo.SumBy(mm, func(m measurement) float64 {
+		return m.Power
+	})
 
 	if len(site.auxMeters) > 1 {
 		site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
