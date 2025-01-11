@@ -30,6 +30,34 @@ render: |
     insecure: true
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+  currents:
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -53,6 +81,34 @@ render: |
     {{- end }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").whLifetime else .production[] | select(.type == "inverters").whLifetime end
     scale: 0.001
+  currents:
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
+    - source: http
+      uri: http://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

@@ -3,7 +3,10 @@ package server
 import (
 	"fmt"
 	"math"
+	"reflect"
+	"slices"
 	"strconv"
+	"strings"
 )
 
 // pass converts a simple api without return value to api with nil error return value
@@ -21,4 +24,11 @@ func parseFloat(payload string) (float64, error) {
 		err = fmt.Errorf("invalid float value: %s", payload)
 	}
 	return f, err
+}
+
+// omitEmpty returns true if struct field is omitempty
+func omitEmpty(f reflect.StructField) bool {
+	tag := f.Tag.Get("json")
+	values := strings.Split(tag, ",")
+	return slices.Contains(values, "omitempty")
 }
