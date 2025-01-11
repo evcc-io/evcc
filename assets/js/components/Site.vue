@@ -66,8 +66,7 @@ export default {
 		offline: Boolean,
 
 		// details
-		gridConfigured: Boolean,
-		gridPower: Number,
+		grid: Object,
 		homePower: Number,
 		pvPower: Number,
 		pv: Array,
@@ -112,6 +111,12 @@ export default {
 		},
 		pvConfigured: function () {
 			return this.pv?.length > 0;
+		},
+		gridConfigured: function () {
+			return !!this.grid;
+		},
+		gridPower: function () {
+			return this.grid?.power || 0;
 		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
