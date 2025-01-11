@@ -22,11 +22,14 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -41,7 +44,7 @@ type Vaillant struct {
 	systemId string
 }
 
-//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Battery,Soc,func() (float64, error)"
+//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -52,6 +55,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		HeatingZone     int
 		HeatingSetpoint float32
 		Phases          int
+		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -59,6 +63,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		},
 		Realm:  sensonet.REALM_GERMANY,
 		Phases: 1,
+		Cache:  time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -121,9 +126,20 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		SgReady:  sgr,
 	}
 
+	var power func() (float64, error)
+	mpc, err := conn.GetMpcData(systemId)
+	if err == nil && len(mpc.Devices) > 0 {
+		power = provider.Cached(func() (float64, error) {
+			res, err := conn.GetMpcData(systemId)
+			return lo.SumBy(res.Devices, func(d sensonet.MpcDevice) float64 {
+				return d.CurrentPower
+			}), err
+		}, cc.Cache)
+	}
+
 	var temp func() (float64, error)
 	if !heating {
-		temp = func() (float64, error) {
+		temp = provider.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err
@@ -137,10 +153,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}
+		}, cc.Cache)
 	}
 
-	return decorateVaillant(res, temp), nil
+	return decorateVaillant(res, power, temp), nil
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
