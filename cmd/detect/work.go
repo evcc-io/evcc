@@ -13,7 +13,7 @@ import (
 
 func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
 	var wg sync.WaitGroup
-	for i := 0; i < num; i++ {
+	for range num {
 		wg.Add(1)
 		go func() {
 			workunit(log, tasks, hits)

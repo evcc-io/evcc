@@ -83,7 +83,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		m.publishSingleValue(topic, retained, val.Len())
 
 		// loop slice
-		for i := 0; i < val.Len(); i++ {
+		for i := range val.Len() {
 			m.publishComplex(fmt.Sprintf("%s/%d", topic, i+1), retained, val.Index(i).Interface())
 		}
 
@@ -99,7 +99,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		typ := val.Type()
 
 		// loop struct
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
 				topic := fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
 
@@ -278,7 +278,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	topic = fmt.Sprintf("%s/vehicles", m.root)
 	m.publish(topic, true, len(site.Vehicles().Settings()))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		m.publish(fmt.Sprintf("%s/site/pv/%d", m.root, i), true, nil)
 		m.publish(fmt.Sprintf("%s/site/battery/%d", m.root, i), true, nil)
 		m.publish(fmt.Sprintf("%s/site/vehicles/%d", m.root, i), true, nil)

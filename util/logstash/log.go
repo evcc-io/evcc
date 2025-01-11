@@ -65,7 +65,7 @@ func (l *logger) Size() int64 {
 	r := l.data
 	var size int64
 
-	for i := 0; i < r.Len(); i++ {
+	for range r.Len() {
 		if e, ok := r.Value.(element); ok {
 			size += int64(len(e))
 		}

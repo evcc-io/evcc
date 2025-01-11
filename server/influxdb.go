@@ -75,7 +75,7 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 		typ := reflect.TypeOf(sv)
 		val := reflect.ValueOf(sv)
 
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
 				if val.Field(i).IsZero() && omitEmpty(f) {
 					continue
@@ -135,7 +135,7 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 			val := reflect.ValueOf(val)
 
 			// loop slice
-			for i := 0; i < val.Len(); i++ {
+			for i := range val.Len() {
 				tags["id"] = strconv.Itoa(i + 1)
 				writeStruct(val.Index(i).Interface())
 			}

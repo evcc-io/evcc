@@ -26,7 +26,7 @@ func (p *timeseriesProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		res := make(api.Rates, 48)
 		ts := now.BeginningOfHour()
-		for i := 0; i < 48; i++ {
+		for i := range 48 {
 			res[i] = api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
