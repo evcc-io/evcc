@@ -22,10 +22,11 @@ type measurement struct {
 	Power        float64   `json:"power"`
 	Energy       float64   `json:"energy,omitempty"`
 	Currents     []float64 `json:"currents,omitempty"`
+	Soc          *float64  `json:"soc,omitempty"`
 	Controllable *bool     `json:"controllable,omitempty"`
 }
 
-func TestPublishTypes(t *testing.T) {
+func TestMqttTypes(t *testing.T) {
 	suite.Run(t, new(mqttSuite))
 }
 
@@ -104,25 +105,21 @@ func (suite *mqttSuite) TestSlice() {
 }
 
 func (suite *mqttSuite) TestGrid() {
-	topics := []string{"test/power", "test/energy", "test/currents", "test/controllable"}
+	topics := []string{"test/power", "test/energy", "test/currents", "test/soc", "test/controllable"}
 
 	suite.publish("test", false, measurement{})
-	suite.Require().Len(suite.topics, 4)
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "", "", "", ""}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Energy: 1})
-	suite.Require().Len(suite.topics, 4)
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "1", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "1", "", "", ""}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Controllable: lo.ToPtr(false)})
-	suite.Require().Len(suite.topics, 4)
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", "false"}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "", "", "", "false"}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Currents: []float64{1, 2, 3}})
-	suite.Require().Len(suite.topics, 7)
-	suite.Equal([]string{"test/power", "test/energy", "test/currents", "test/controllable", "test/currents/1", "test/currents/2", "test/currents/3"}, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "3", "", "1", "2", "3"}, suite.payloads, "payloads")
+	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
+	suite.Equal([]string{"0", "", "3", "", "", "1", "2", "3"}, suite.payloads, "payloads")
 }
