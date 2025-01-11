@@ -3,6 +3,7 @@ products:
   - brand: RCT
     description:
       generic: Power
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
