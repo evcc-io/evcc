@@ -44,12 +44,14 @@ type updater interface {
 
 // measurement is used as slice element for publishing structured data
 type measurement struct {
-	Power         float64  `json:"power"`
-	Energy        float64  `json:"energy,omitempty"`
-	ExcessDCPower float64  `json:"excessdcpower,omitempty"`
-	Capacity      *float64 `json:"capacity,omitempty"`
-	Soc           *float64 `json:"soc,omitempty"`
-	Controllable  *bool    `json:"controllable,omitempty"`
+	Power         float64   `json:"power"`
+	Energy        float64   `json:"energy,omitempty"`
+	Powers        []float64 `json:"powers,omitempty"`
+	Currents      []float64 `json:"currents,omitempty"`
+	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
+	Capacity      *float64  `json:"capacity,omitempty"`
+	Soc           *float64  `json:"soc,omitempty"`
+	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -619,10 +621,12 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
+	var mm measurement
+
 	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo()); err == nil {
+		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
-		site.publish(keys.GridPower, res)
 	} else {
 		return fmt.Errorf("grid power: %v", err)
 	}
@@ -634,18 +638,16 @@ func (site *Site) updateGridMeter() error {
 		if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
-				phases := []float64{p1, p2, p3}
-				site.log.DEBUG.Printf("grid powers: %.0fW", phases)
-				site.publish(keys.GridPowers, phases)
+				mm.Powers = []float64{p1, p2, p3}
+				site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
 			} else {
 				site.log.ERROR.Printf("grid powers: %v", err)
 			}
 		}
 
 		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
-			phases := []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
-			site.log.DEBUG.Printf("grid currents: %.3gA", phases)
-			site.publish(keys.GridCurrents, phases)
+			mm.Currents = []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
+			site.log.DEBUG.Printf("grid currents: %.3gA", mm.Currents)
 		} else {
 			site.log.ERROR.Printf("grid currents: %v", err)
 		}
@@ -654,11 +656,13 @@ func (site *Site) updateGridMeter() error {
 	// grid energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
-			site.publish(keys.GridEnergy, f)
+			mm.Energy = f
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
+
+	site.publish(keys.Grid, mm)
 
 	return nil
 }
@@ -688,7 +692,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
 		site.gridPower = totalChargePower - site.pvPower
-		site.publish(keys.GridPower, site.gridPower)
+		site.publish(keys.Grid, measurement{Power: site.gridPower})
 	}
 
 	// ensure safe default for residual power
@@ -922,8 +926,11 @@ func (site *Site) prepare() {
 	site.publish(keys.SiteTitle, site.Title)
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
 	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
+	site.publish(keys.Aux, make([]api.Meter, len(site.auxMeters)))
+	site.publish(keys.Ext, make([]api.Meter, len(site.extMeters)))
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
