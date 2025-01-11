@@ -83,7 +83,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(clientCtx, token), sensonet.WithHttpClient(client))
+	conn, err := sensonet.NewConnection(oc.TokenSource(logCtx, token), sensonet.WithHttpClient(request.NewClient(log)))
 	if err != nil {
 		return nil, err
 	}
