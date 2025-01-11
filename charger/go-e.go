@@ -38,13 +38,18 @@ type GoE struct {
 }
 
 func init() {
-	registry.Add("go-e", NewGoEFromConfig)
+	registry.Add("go-e", func(other map[string]interface{}) (api.Charger, error) {
+		return newGoEFromConfig(true, other)
+	})
+	registry.Add("go-e-v3", func(other map[string]interface{}) (api.Charger, error) {
+		return newGoEFromConfig(false, other)
+	})
 }
 
-//go:generate decorate -f decorateGoE -b *GoE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
-// NewGoEFromConfig creates a go-e charger from generic config
-func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
+// newGoEFromConfig creates a go-e charger from generic config
+func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string
@@ -61,11 +66,26 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("must have either uri or token")
 	}
 
-	return NewGoE(cc.URI, cc.Token, cc.Cache)
+	c, err := NewGoE(cc.URI, cc.Token, cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	var chargedEnergy func() (float64, error)
+	if v2 {
+		chargedEnergy = c.chargedEnergy
+	}
+
+	var phases1p3p func(int) error
+	if c.api.IsV2() {
+		phases1p3p = c.phases1p3p
+	}
+
+	return decorateGoE(c, chargedEnergy, phases1p3p), nil
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
+func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{}
 
 	log := util.NewLogger("go-e").Redact(token)
@@ -78,10 +98,6 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
-	}
-
-	if c.api.IsV2() {
-		return decorateGoE(c, c.phases1p3p), nil
 	}
 
 	return c, nil
@@ -201,6 +217,17 @@ func (c *GoE) TotalEnergy() (float64, error) {
 	}
 
 	return resp.TotalEnergy(), err
+}
+
+// chargedEnergy implements the api.ChargeRater interface - v2 only
+// https://github.com/evcc-io/evcc/issues/13726
+func (c *GoE) chargedEnergy() (float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.ChargedEnergy(), err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface - v2 only

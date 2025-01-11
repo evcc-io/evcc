@@ -132,13 +132,12 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	res := api.StatusA
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
-		return res, err
+		return api.StatusNone, err
 	}
 
-	res = api.StatusB
+	res := api.StatusB
 	if binary.BigEndian.Uint16(b) == 2 {
 		res = api.StatusC
 	}
