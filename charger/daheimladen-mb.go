@@ -142,12 +142,6 @@ func (wb *DaheimLadenMB) getCurrent() (uint16, error) {
 	return binary.BigEndian.Uint16(b), nil
 }
 
-// utf16BytesToString converts UTF-16 encoded bytes to UTF-8 encoded string.
-func utf16BytesToString(b []byte) string {
-	s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
-	return s
-}
-
 // Status implements the api.Charger interface
 func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1)
@@ -272,13 +266,18 @@ func (wb *DaheimLadenMB) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return utf16BytesToString(b, binary.BigEndian), nil
+	return unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenMB) Diagnose() {
+	utf16BytesToString := func(b []byte) string {
+		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+		return s
+	}
+
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
