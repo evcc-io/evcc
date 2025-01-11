@@ -126,11 +126,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	var power func() (float64, error)
-	mpc, err := conn.GetMpcData(systemId)
-	if err == nil && len(mpc.Devices) > 0 {
+	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
 		power = provider.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
-			return lo.SumBy(res.Devices, func(d sensonet.MpcDevice) float64 {
+			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
 			}), err
 		}, cc.Cache)
