@@ -8,6 +8,7 @@ const (
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
+	GridConfigured        = "gridConfigured"
 	Grid                  = "grid"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"

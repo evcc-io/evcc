@@ -926,6 +926,7 @@ func (site *Site) prepare() {
 
 	site.publish(keys.SiteTitle, site.Title)
 
+	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
 	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
