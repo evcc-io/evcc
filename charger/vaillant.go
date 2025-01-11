@@ -185,7 +185,7 @@ func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
 		fmt.Printf("%d.%d. %s\n", chapter, i+1, typ)
 
 		if rt.Kind() == reflect.Slice {
-			for j := 0; j < rv.Len(); j++ {
+			for j := range rv.Len() {
 				fmt.Printf("%d.%d.%d. %s %d\n", chapter, i+1, j+1, typ, j)
 				fmt.Printf("%+v\n", rv.Index(j))
 			}

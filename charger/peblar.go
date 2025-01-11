@@ -233,7 +233,7 @@ func (wb *Peblar) getPhaseValues(reg uint16, divider float64) (float64, float64,
 	}
 
 	var res [3]float64
-	for i := 0; i < int(wb.phases); i++ {
+	for i := range int(wb.phases) {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
 	}
 
