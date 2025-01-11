@@ -87,14 +87,23 @@ func (w *influxSuite) TestSlice() {
 	w.Len(w.p, 0)
 }
 
-func (w *influxSuite) TestStruct() {
-	simple := struct {
-		Power float64
-	}{
-		Power: 1,
-	}
-
-	w.WriteParam(util.Param{Key: "grid", Val: simple})
-	w.Equal([]*write.Point{inf2.NewPoint("gridPower", nil, map[string]any{"value": 1.0}, w.clock.Now())}, w.p)
+func (w *influxSuite) TestMeasurement() {
+	w.WriteParam(util.Param{Key: "battery", Val: measurement{Power: 1, Soc: lo.ToPtr(10.0)}})
+	w.Equal([]*write.Point{
+		inf2.NewPoint("batteryPower", nil, map[string]any{"value": 1.0}, w.clock.Now()),
+		inf2.NewPoint("batterySoc", nil, map[string]any{"value": 10.0}, w.clock.Now()),
+	}, w.p)
 }
+
+func (w *influxSuite) TestSliceOfStruct() {
+	w.WriteParam(util.Param{Key: "grid", Val: []measurement{
+		{Power: 1, Soc: lo.ToPtr(10.0)},
+		{Power: 2, Soc: lo.ToPtr(20.0)},
+	}})
+	w.Equal([]*write.Point{
+		inf2.NewPoint("gridPower", map[string]string{"id": "1"}, map[string]any{"value": 1.0}, w.clock.Now()),
+		inf2.NewPoint("gridSoc", map[string]string{"id": "1"}, map[string]any{"value": 10.0}, w.clock.Now()),
+		inf2.NewPoint("gridPower", map[string]string{"id": "2"}, map[string]any{"value": 2.0}, w.clock.Now()),
+		inf2.NewPoint("gridSoc", map[string]string{"id": "2"}, map[string]any{"value": 20.0}, w.clock.Now()),
+	}, w.p)
 }
