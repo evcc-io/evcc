@@ -8,8 +8,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
-github.com/Maschga/rct v0.1.2-0.20250112094625-b2df451c7ef9 h1:rr2Rk9DNdyFCN8OEIVlxkSt9ftgO1MRWj+3ar39Ldu0=
-github.com/Maschga/rct v0.1.2-0.20250112094625-b2df451c7ef9/go.mod h1:0lfd2mmBnBzIvuzYtdhG+2371u+cUfIxsYErm4P9KRI=
+github.com/Maschga/rct v0.1.2-0.20250112193044-2980bbd48edf h1:OxSUCmjj+ovko/IdC2755mGRNn2G3ksaOkp74Fm0QAI=
+github.com/Maschga/rct v0.1.2-0.20250112193044-2980bbd48edf/go.mod h1:0lfd2mmBnBzIvuzYtdhG+2371u+cUfIxsYErm4P9KRI=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.3.0 h1:B8LGeaivUe71a5qox1ICM/JLl0NqZSW5CHyL+hmvYS0=
