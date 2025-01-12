@@ -194,29 +194,22 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 
 // setBatteryMode implements the api.BatteryController interface
 func (m *RCT) setBatteryMode(mode api.BatteryMode) error {
-	write := func(id rct.Identifier, data []byte) error {
-		b := rct.NewDatagramBuilder()
-		b.Build(&rct.Datagram{rct.Write, id, data})
-		_, err := m.conn.Send(b)
-		return err
-	}
-
 	switch mode {
 	case api.BatteryNormal:
-		return write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+		return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 
 	case api.BatteryHold:
-		return write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetConstant})
+		return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetConstant})
 
 	case api.BatteryCharge:
-		if err := write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
+		if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
 			return err
 		}
 
 		data := make([]byte, 4)
 		binary.BigEndian.PutUint32(data, math.Float32bits(0.95))
 
-		return write(rct.PowerMngSocTargetSet, []byte{rct.SOCTargetExternal})
+		return m.conn.Write(rct.PowerMngSocTargetSet, []byte{rct.SOCTargetExternal})
 
 	default:
 		return api.ErrNotAvailable
