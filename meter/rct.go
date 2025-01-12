@@ -115,30 +115,34 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 		batteryMode = func(mode api.BatteryMode) error {
 			switch mode {
 			case api.BatteryNormal:
-				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
+				if err := m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(minSoc)/100)); err != nil {
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(minSoc)/100))
+				if err := m.conn.Write(rct.PowerMngSocCharge, m.floatVal(float32(0.05))); err != nil {
+					return err
+				}
+
+				if err := m.conn.Write(rct.PowerMngSocChargePowerW, m.floatVal(float32(100))); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.BatterySoCTargetMinIsland, m.floatVal(float32(minSoc)/100))
 
 			case api.BatteryHold:
-				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
-					return err
-				}
-
 				soc, err := m.batterySoc()
 				if err != nil {
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(soc)/100))
+				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(soc)/100))
 
 			case api.BatteryCharge:
-				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
+				if err := m.conn.Write(rct.PowerMngSocChargePowerW, m.floatVal(float32(10_000))); err != nil {
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocTargetSet, m.floatVal(float32(maxSoc)/100))
+				return m.conn.Write(rct.PowerMngSocCharge, m.floatVal(float32(maxSoc)/100))
 
 			default:
 				return api.ErrNotAvailable
