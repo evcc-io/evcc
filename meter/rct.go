@@ -142,6 +142,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
+				// automatically sets BatterySoCTargetMin and BatterySoCTargetMinIsland to maxsoc
 				return m.conn.Write(rct.PowerMngSocCharge, m.floatVal(float32(maxSoc)/100))
 
 			default:
