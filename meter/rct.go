@@ -208,8 +208,7 @@ func (m *RCT) setBatteryMode(mode api.BatteryMode) error {
 
 		data := make([]byte, 4)
 		binary.BigEndian.PutUint32(data, math.Float32bits(0.95))
-
-		return m.conn.Write(rct.PowerMngSocTargetSet, []byte{rct.SOCTargetExternal})
+		return m.conn.Write(rct.PowerMngSocTargetSet, data)
 
 	default:
 		return api.ErrNotAvailable
