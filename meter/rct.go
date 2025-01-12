@@ -119,7 +119,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(minSoc)))
+				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(minSoc)/100))
 
 			case api.BatteryHold:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
@@ -131,14 +131,14 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(soc)))
+				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(soc)/100))
 
 			case api.BatteryCharge:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngSocTargetSet, m.floatVal(float32(maxSoc)))
+				return m.conn.Write(rct.PowerMngSocTargetSet, m.floatVal(float32(maxSoc)/100))
 
 			default:
 				return api.ErrNotAvailable
