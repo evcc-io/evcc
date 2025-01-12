@@ -59,9 +59,10 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		Uri, Usage string
-		Cache      time.Duration
+		capacity       `mapstructure:",squash"`
+		Uri, Usage     string
+		MinSoc, MaxSoc int
+		Cache          time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -74,13 +75,13 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
+	return NewRCT(cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.Cache, cc.capacity.Decorator())
 }
 
 var rctMu sync.Mutex
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	rctMu.Lock()
 	defer rctMu.Unlock()
 
@@ -110,10 +111,48 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 	var batteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
-		batteryMode = m.setBatteryMode
+
+		batteryMode = func(mode api.BatteryMode) error {
+			switch mode {
+			case api.BatteryNormal:
+				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(minSoc)))
+
+			case api.BatteryHold:
+				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
+					return err
+				}
+
+				soc, err := m.batterySoc()
+				if err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.PowerMngSocMin, m.floatVal(float32(soc)))
+
+			case api.BatteryCharge:
+				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.PowerMngSocTargetSet, m.floatVal(float32(maxSoc)))
+
+			default:
+				return api.ErrNotAvailable
+			}
+		}
 	}
 
 	return decorateRCT(m, totalEnergy, batterySoc, batteryMode, capacity), nil
+}
+
+func (m *RCT) floatVal(f float32) []byte {
+	data := make([]byte, 4)
+	binary.BigEndian.PutUint32(data, math.Float32bits(f))
+	return data
 }
 
 // CurrentPower implements the api.Meter interface
@@ -190,27 +229,4 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	}, m.bo)
 
 	return float64(res), err
-}
-
-// setBatteryMode implements the api.BatteryController interface
-func (m *RCT) setBatteryMode(mode api.BatteryMode) error {
-	switch mode {
-	case api.BatteryNormal:
-		return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
-
-	case api.BatteryHold:
-		return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetConstant})
-
-	case api.BatteryCharge:
-		if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal}); err != nil {
-			return err
-		}
-
-		data := make([]byte, 4)
-		binary.BigEndian.PutUint32(data, math.Float32bits(0.95))
-		return m.conn.Write(rct.PowerMngSocTargetSet, data)
-
-	default:
-		return api.ErrNotAvailable
-	}
 }

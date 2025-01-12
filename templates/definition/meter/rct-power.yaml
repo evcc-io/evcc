@@ -11,9 +11,18 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
+    advanced: true
 render: |
   type: rct
   uri: {{ .host }}
   usage: {{ .usage }}
   cache: 2s
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
