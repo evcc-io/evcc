@@ -14,9 +14,11 @@ params:
   # battery control
   - name: minsoc
     type: int
+    default: 7
     advanced: true
   - name: maxsoc
     type: int
+    default: 97
     advanced: true
 render: |
   type: rct
