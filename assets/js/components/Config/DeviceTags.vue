@@ -84,6 +84,7 @@ export default {
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
 				case "phases1p3p":
+				case "singlePhase":
 				case "enabled":
 				case "configured":
 					return value

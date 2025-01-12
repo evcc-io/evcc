@@ -297,6 +297,7 @@
 					:vehicleOptions="vehicleOptions"
 					:loadpointCount="loadpoints.length"
 					:chargers="chargers"
+					:chargerValues="deviceValues.charger"
 					:meters="meters"
 					:circuits="circuits"
 					:fade="loadpointSubModalOpen ? 'left' : ''"

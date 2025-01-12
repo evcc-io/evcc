@@ -364,33 +364,35 @@
 					</FormRow>
 				</div>
 
-				<FormRow
-					v-show="showAll"
-					v-if="chargerSupports1p3p"
-					id="loadpointParamPhases"
-					:label="$t('config.loadpoint.phasesAutomatic')"
-					:help="$t('config.loadpoint.phasesAutomaticHelp')"
-				>
-				</FormRow>
-				<FormRow
-					v-else
-					v-show="showAll"
-					id="loadpointParamPhases"
-					:label="$t('config.loadpoint.phasesLabel')"
-					:help="$t('config.loadpoint.phasesHelp')"
-				>
-					<SelectGroup
+				<template v-if="!chargerIsSinglePhase">
+					<FormRow
+						v-show="showAll"
+						v-if="chargerSupports1p3p"
 						id="loadpointParamPhases"
-						v-model="values.phases"
-						class="w-100"
-						:options="[
-							{ value: 1, name: $t('config.loadpoint.phases1p') },
-							{ value: 3, name: $t('config.loadpoint.phases3p') },
-						]"
-						transparent
-						equal-width
-					/>
-				</FormRow>
+						:label="$t('config.loadpoint.phasesAutomatic')"
+						:help="$t('config.loadpoint.phasesAutomaticHelp')"
+					>
+					</FormRow>
+					<FormRow
+						v-else
+						v-show="showAll"
+						id="loadpointParamPhases"
+						:label="$t('config.loadpoint.phasesLabel')"
+						:help="$t('config.loadpoint.phasesHelp')"
+					>
+						<SelectGroup
+							id="loadpointParamPhases"
+							v-model="values.phases"
+							class="w-100"
+							:options="[
+								{ value: 1, name: $t('config.loadpoint.phases1p') },
+								{ value: 3, name: $t('config.loadpoint.phases3p') },
+							]"
+							transparent
+							equal-width
+						/>
+					</FormRow>
+				</template>
 
 				<FormRow
 					v-show="showAll"
@@ -590,6 +592,7 @@ export default {
 		loadpointCount: Number,
 		fade: String,
 		chargers: { type: Array, default: () => [] },
+		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array, default: () => [] },
 		circuits: { type: Array, default: () => [] },
 	},
@@ -625,12 +628,20 @@ export default {
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
-			const title = this.charger?.config?.template || "unknown";
+			const title = this.charger.config?.template || "unknown";
 			return `${title} [${this.values.charger}]`;
 		},
+		chargerStatus() {
+			if (!this.chargerValues || !this.values.charger) {
+				return {};
+			}
+			return this.chargerValues[this.values.charger] || {};
+		},
 		chargerSupports1p3p() {
-			const value = this.charger?.config?.phases1p3p;
-			return value === "true" || value === true;
+			return this.chargerStatus.phases1p3p?.value || false;
+		},
+		chargerIsSinglePhase() {
+			return this.chargerStatus.singlePhase?.value || false;
 		},
 		meterTitle() {
 			const name = this.values.meter;
@@ -698,6 +709,9 @@ export default {
 			}
 		},
 		chargerSupports1p3p() {
+			this.updatePhases();
+		},
+		chargerIsSinglePhase() {
 			this.updatePhases();
 		},
 	},
@@ -799,6 +813,10 @@ export default {
 		},
 		updatePhases() {
 			const { phases } = this.values;
+			if (this.chargerIsSinglePhase) {
+				this.values.phases = 1;
+				return;
+			}
 			if (this.chargerSupports1p3p && this.isNew) {
 				this.values.phases = 0; // automatic
 				return;
