@@ -35,6 +35,7 @@ type MyPv struct {
 	conn    *modbus.Connection
 	power   uint32
 	statusC uint16
+	enabled bool
 }
 
 const (
@@ -151,7 +152,11 @@ func (wb *MyPv) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	if binary.BigEndian.Uint16(b) == 0 {
+		wb.enabled = false
+	}
+
+	return wb.enabled, nil
 }
 
 func (wb *MyPv) setPower(power uint16) error {
@@ -169,7 +174,12 @@ func (wb *MyPv) Enable(enable bool) error {
 		power = uint16(atomic.LoadUint32(&wb.power))
 	}
 
-	return wb.setPower(power)
+	res := wb.setPower(power)
+	if res == nil {
+		wb.enabled = enable
+	}
+
+	return res
 }
 
 // MaxCurrent implements the api.Charger interface
