@@ -120,10 +120,11 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
 			enabled, err := wb.Enabled()
+			if err == nil && enabled {
+				err = wb.setPower(power)
+			}
 			if err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
-			} else if enabled {
-				err = wb.setPower(power)
 			}
 		}
 	}
