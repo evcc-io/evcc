@@ -35,9 +35,10 @@ func (lp *Loadpoint) EffectivePriority() int {
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	if v := lp.GetVehicle(); v != nil {
 		type plan struct {
-			Time time.Time
-			Soc  int
-			Id   int
+			Start time.Time // last possible start time
+			Time  time.Time // user-selected finish time
+			Soc   int
+			Id    int
 		}
 
 		var plans []plan
@@ -62,9 +63,16 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, Time: time})
 		}
 
-		// sort plans by time
+		// calculate last possible start times
+		for i, p := range plans {
+			maxPower := lp.EffectiveMaxPower()
+			requiredDuration := lp.GetPlanRequiredDuration(float64(p.Soc), maxPower)
+			plans[i].Start = p.Time.Add(-requiredDuration)
+		}
+
+		// sort plans by start time
 		sort.Slice(plans, func(i, j int) bool {
-			return plans[i].Time.Before(plans[j].Time)
+			return plans[i].Start.Before(plans[j].Start)
 		})
 
 		if len(plans) > 0 {
