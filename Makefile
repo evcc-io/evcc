@@ -106,7 +106,7 @@ apt-release::
 
 # gokrazy image
 gokrazy::
-	go install github.com/gokrazy/tools/cmd/gok@main
+	which gok || go install github.com/gokrazy/tools/cmd/gok@main
 	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS),gokrazy -ldflags=$(LD_FLAGS)"]!g' packaging/gokrazy/config.tmpl.json > config.json
 	# ${GOK} add tailscale.com/cmd/tailscaled
 	# ${GOK} add tailscale.com/cmd/tailscale
