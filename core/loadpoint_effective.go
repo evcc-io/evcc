@@ -81,7 +81,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: time})
 		}
 
-		// calculate last possible start times
+		// calculate earliest required plan start
 		if plan := lp.nextActivePlan(lp.EffectiveMaxPower(), plans); plan != nil {
 			return plan.End, plan.Soc, plan.Id
 		}
