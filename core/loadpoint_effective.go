@@ -32,10 +32,10 @@ func (lp *Loadpoint) EffectivePriority() int {
 }
 
 type plan struct {
+	Id    int
 	Start time.Time // last possible start time
 	End   time.Time // user-selected finish time
 	Soc   int
-	Id    int
 }
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {

@@ -80,29 +80,28 @@ func TestNextPlan(t *testing.T) {
 	lp.charger = api.NewMockCharger(ctrl)
 
 	for _, tc := range []struct {
-		name   string
 		planId int
 		plans  []plan
 	}{
-		{"first wins", 1, []plan{
+		{1, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
 			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
 		}},
-		{"first wins (overlap)", 1, []plan{
+		{1, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20},
 			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{"first wins (reverse overlap)", 2, []plan{
+		{2, []plan{
 			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20},
 			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{"last wins", 2, []plan{
+		{2, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
 			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60},
 		}},
 	} {
 		res := lp.nextActivePlan(1e4, tc.plans)
-		require.NotNil(t, res, tc.name)
-		assert.Equal(t, tc.planId, res.Id, tc.name)
+		require.NotNil(t, res)
+		assert.Equal(t, tc.planId, res.Id)
 	}
 }
