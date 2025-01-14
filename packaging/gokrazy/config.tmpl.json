@@ -1,0 +1,40 @@
+{
+    "Hostname": "evcc",
+    "Update": {
+        "HTTPPort": "8080",
+        "HTTPPassword": "HjJv6aBX51G4wT8EueCc"
+    },
+    "Packages": [
+        "github.com/gokrazy/breakglass",
+        "github.com/gokrazy/mkfs",
+        "github.com/gokrazy/fbstatus",
+        "github.com/gokrazy/serial-busybox",
+        "github.com/gokrazy/wifi",
+        "github.com/evcc-io/evcc"
+    ],
+    "PackageConfig": {
+        "github.com/evcc-io/evcc": {
+            "GoBuildFlags": null,
+            "Environment": [
+                "EVCC_NETWORK_PORT=80",
+                "EVCC_DATABASE_DSN=/perm/evcc.db"
+            ]
+        },
+        "github.com/gokrazy/breakglass": {
+            "CommandLineFlags": [
+                "-authorized_keys=/etc/breakglass.authorized_keys",
+                "-forward=private-network"
+            ],
+            "ExtraFilePaths": {
+                "/etc/breakglass.authorized_keys": "packaging/breakglass.authorized_keys"
+            }
+        },
+        "tailscale.com/cmd/tailscale": {
+            "CommandLineFlags": [
+                "up",
+                "--ssh=true"
+            ]
+        }
+    },
+    "SerialConsole": "disabled"
+}
