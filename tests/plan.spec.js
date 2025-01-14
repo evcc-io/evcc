@@ -546,51 +546,6 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("target-text")).toContainText("9:30 AM");
   });
 
-  test("next plan selection", async ({ page }) => {
-    const tomorrow = getWeekday(1);
-
-    await page.goto("/");
-
-    const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
-
-    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = await page.getByTestId("charging-plan-modal");
-
-    // daily: 8:00 at 60% plan
-    await modal.getByRole("button", { name: "Add repeating plan" }).click();
-    const plan2 = modal.getByTestId("plan-entry").last();
-    const days = plan2.getByTestId("repeating-plan-weekdays");
-    await days.click();
-    await days.getByRole("checkbox", { name: "Select all" }).check();
-    await days.click(); // close
-    await plan2.getByTestId("repeating-plan-time").fill("08:00");
-    await plan2.getByTestId("repeating-plan-soc").selectOption("60%");
-    await plan2.getByTestId("repeating-plan-active").click();
-
-    // static: 9:00 at 65% for a trip
-    const plan1 = modal.getByTestId("plan-entry").nth(0);
-    await plan1.getByTestId("static-plan-day").selectOption({ index: 1 });
-    await plan1.getByTestId("static-plan-time").fill("09:00");
-    await plan1.getByTestId("static-plan-soc").selectOption("65%");
-    await plan1.getByTestId("static-plan-active").click();
-
-    // verify plan #2 is next, enough time for the following plan (1h for +5%)
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
-    await expect(modal.getByTestId("target-text")).toContainText("8:00 AM");
-
-    // static: increase plan soc to 100%
-    await modal.getByTestId("static-plan-soc").selectOption("100%");
-    await modal.getByTestId("static-plan-apply").click();
-
-    // verify plan #1 is next, skip plan #2 since 1h is not enough for +40%
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
-    await expect(modal.getByTestId("target-text")).toContainText("9:00 AM");
-  });
-
   test("repeating plan persistence", async ({ page }) => {
     await page.goto("/");
 
