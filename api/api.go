@@ -120,7 +120,8 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
-// PhaseDescriber returns the number of available phases
+// PhaseDescriber returns the number of physically connected phases
+// Used for vehicles and to limit switch sockets to 1p only
 type PhaseDescriber interface {
 	Phases() int
 }

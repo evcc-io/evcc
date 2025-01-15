@@ -165,7 +165,7 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 		if param.Loadpoint != nil {
 			lp := site.Loadpoints()[*param.Loadpoint]
 
-			tags["loadpoint"] = lp.Title()
+			tags["loadpoint"] = lp.GetTitle()
 			if v := lp.GetVehicle(); v != nil {
 				tags["vehicle"] = v.Title()
 			}

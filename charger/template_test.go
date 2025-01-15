@@ -29,7 +29,7 @@ var acceptable = []string{
 	"(Client.Timeout exceeded while awaiting headers)",
 	"can only have either uri or device",                                   // modbus
 	"connection already registered with different protocol: localhost:502", // modbus
-	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
+	"sponsorship required, see https://docs.evcc.io/docs/sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
 	"timeout",                    // ocpp

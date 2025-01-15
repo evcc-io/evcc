@@ -40,6 +40,8 @@ func (v *embed) Capacity() float64 {
 	return v.Capacity_
 }
 
+var _ api.PhaseDescriber = (*embed)(nil)
+
 // Phases returns the phases used by the vehicle
 func (v *embed) Phases() int {
 	return v.Phases_

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
@@ -47,7 +46,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			Battery *[]string
 		}
 
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
