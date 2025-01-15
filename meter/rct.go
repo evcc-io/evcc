@@ -113,7 +113,6 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 		batterySoc = m.batterySoc
 
 		batteryMode = func(mode api.BatteryMode) error {
-
 			switch mode {
 			case api.BatteryNormal:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
