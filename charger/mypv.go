@@ -236,3 +236,10 @@ func (wb *MyPv) GetLimitSoc() (int64, error) {
 
 	return int64(binary.BigEndian.Uint16(b)) / 10, nil
 }
+
+var _ api.PhaseDescriber = (*switchSocket)(nil)
+
+// Phases implements the api.PhasesDescriber interface
+func (v *MyPv) Phases() int {
+	return 1
+}
