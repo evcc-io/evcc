@@ -649,8 +649,6 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd
 
 	go hems.Run()
 
-	// log conf
-	log.INFO.Printf("HEMS configured: %+v", conf)
 	return nil
 }
 
