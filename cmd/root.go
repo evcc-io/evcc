@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
+	"runtime/trace"
 	"strings"
 	"sync"
 	"syscall"
@@ -72,10 +74,8 @@ func init() {
 	bindP(rootCmd, "log")
 
 	rootCmd.Flags().Bool("metrics", false, "Expose metrics")
-	bind(rootCmd, "metrics")
-
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
-	bind(rootCmd, "profile")
+	rootCmd.Flags().Bool("trace", false, "Trace runtime")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
@@ -115,12 +115,30 @@ func Execute() {
 	}
 }
 
+func traceRegion(name string, f func() error) error {
+	var err error
+	trace.WithRegion(context.Background(), name, func() {
+		err = f()
+	})
+	return err
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
+	if cmd.Flag("trace").Changed {
+		if f, err := os.CreateTemp("", "evcc-trace-*.log"); err == nil {
+			log.INFO.Println("trace:", f.Name())
+			trace.Start(f)
+			defer trace.Stop()
+		}
+	}
+
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
+	if cfgErr := traceRegion("load config", func() error {
+		return loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
+	}); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
@@ -155,12 +173,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
-	if viper.GetBool("metrics") {
+	if cmd.Flag("metrics").Changed {
 		httpd.Router().Handle("/metrics", promhttp.Handler())
 	}
 
 	// pprof
-	if viper.GetBool("profile") {
+	if cmd.Flag("profile").Changed {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 
