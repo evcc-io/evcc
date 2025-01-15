@@ -624,7 +624,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
-		if lp.configuredPhases != phases {
+		if lp.configuredPhases != phases && lp.configuredPhases != 0 {
 			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", lp.configuredPhases, phases)
 		}
 		lp.phases = phases
