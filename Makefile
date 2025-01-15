@@ -20,7 +20,7 @@ PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK := gok -i evcc
-IMAGE_FILE := evcc_$(TAG_NAME).image
+IMAGE_FILE := evcc_$(TAG_NAME).img
 
 # deb
 PACKAGES = ./release
