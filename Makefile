@@ -110,7 +110,7 @@ gokrazy::
 	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS),gokrazy -ldflags=$(LD_FLAGS)"]!g' packaging/gokrazy/config.tmpl.json > config.json
 	# ${GOK} add tailscale.com/cmd/tailscaled
 	# ${GOK} add tailscale.com/cmd/tailscale
-	${GOK} overwrite --root=$(IMAGE_FILE) --target_storage_bytes=1258299392
+	${GOK} overwrite --full=$(IMAGE_FILE) --target_storage_bytes=1258299392
 	gzip -f $(IMAGE_FILE)
 
 gokrazy-run::
