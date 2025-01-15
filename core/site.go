@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"runtime/trace"
 	"strings"
 	"sync"
 	"testing"
@@ -685,7 +686,7 @@ func (site *Site) updateMeters() error {
 //     (negative values mean grid: export, battery: charging
 //   - if battery buffer can be used for charging
 func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, bool, error) {
-	if err := site.updateMeters(); err != nil {
+	if err := util.TraceRegion("update meters", site.updateMeters); err != nil {
 		return 0, false, false, err
 	}
 
@@ -898,10 +899,12 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		lp.Update(
-			sitePower, max(0, site.batteryPower), rates, batteryBuffered, batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-		)
+		trace.WithRegion(context.Background(), "update loadpoint", func() {
+			lp.Update(
+				sitePower, max(0, site.batteryPower), rates, batteryBuffered, batteryStart,
+				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			)
+		})
 
 		site.Health.Update()
 

@@ -838,22 +838,22 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 
 func configureDevices(conf globalconfig.All) error {
 	// TODO: add name/identifier to error for better highlighting in UI
-	if err := traceRegion("setup meters", func() error {
+	if err := util.TraceRegion("setup meters", func() error {
 		return configureMeters(conf.Meters)
 	}); err != nil {
 		return &ClassError{ClassMeter, err}
 	}
-	if err := traceRegion("setup chargers", func() error {
+	if err := util.TraceRegion("setup chargers", func() error {
 		return configureChargers(conf.Chargers)
 	}); err != nil {
 		return &ClassError{ClassCharger, err}
 	}
-	if err := traceRegion("setup vehicles", func() error {
+	if err := util.TraceRegion("setup vehicles", func() error {
 		return configureVehicles(conf.Vehicles)
 	}); err != nil {
 		return &ClassError{ClassVehicle, err}
 	}
-	if err := traceRegion("setup circuits", func() error {
+	if err := util.TraceRegion("setup circuits", func() error {
 		return configureCircuits(conf.Circuits)
 	}); err != nil {
 		return &ClassError{ClassCircuit, err}

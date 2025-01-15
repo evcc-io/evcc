@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -115,14 +114,6 @@ func Execute() {
 	}
 }
 
-func traceRegion(name string, f func() error) error {
-	var err error
-	trace.WithRegion(context.Background(), name, func() {
-		err = f()
-	})
-	return err
-}
-
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -136,7 +127,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := traceRegion("load config", func() error {
+	if cfgErr := util.TraceRegion("load config", func() error {
 		return loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
 	}); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
