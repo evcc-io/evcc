@@ -17,21 +17,6 @@ params:
       en: "Temperature source"
 render: |
   type: sgready
-  getmode:
-    source: map
-    values:
-      8:  1 # ABTAUEN
-      10: 3 # EVU_SPERRE
-      14: 2 # ERHOEHTER_BETRIEB
-      18: 3 # FROSTSCHUTZ
-      19: 1 # HEIZBETRIEB
-    get:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30006
-        type: input
-        encoding: uint16
   setmode:
     source: switch
     switch:
