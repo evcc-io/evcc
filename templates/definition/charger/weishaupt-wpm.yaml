@@ -17,6 +17,51 @@ params:
       en: "Temperature source"
 render: |
   type: sgready
+  getmode:
+    source: map
+    values:
+      1: 1 # RELAISTEST
+      2: 3 # NOTAUS
+      3: 3 # DIAGNOSE
+      4: 1 # HANDBETRIEB
+      5: 1 # HANDBETRIEB_HEIZEN
+      6: 1 # HANDBETRIEB_KUEHLEN
+      7: 1 # MANUELLER_ABTAUBETRIEB
+      8: 1 # ABTAUEN
+      9: 1 # WEZ2
+      10: 3 # EVU_SPERRE
+      11: 2 # SG_TARIF
+      12: 2 # SG_MAXIMAL
+      13: 2 # TARIFLADUNG
+      14: 2 # ERHOEHTER_BETRIEB
+      15: 3 # STANDZEIT
+      16: 1 # STANDBYBETRIEB
+      17: 1 # SPUELBETRIEB
+      18: 3 # FROSTSCHUTZ
+      19: 1 # HEIZBETRIEB
+      20: 1  # WARMWASSERBETRIEB
+      21: 1 # LEGIONELLENSCHUTZ
+      22: 1 # UMSCHALTUNG_HZ_KU
+      23: 1  # KUEHLBETRIEB
+      24: 1 # PASSIVE_KUEHLUNG
+      25: 1 # SOMMERBETRIEB
+      26: 1 # SCHWIMMBAD
+      27: 3 # URLAUB
+      28: 1 # ESTRICHT
+      39: 3 # GESPERRT
+      30: 3 # SPERRE_AT
+      31: 3 # SPERRE_SOMMER
+      32: 3 # SPERRE_WINTER
+      33: 3 # EINSATZGRENZE
+      34: 3 # HK_SPERRE
+      35: 1 # ABSENK
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30006
+        type: input
+        encoding: uint16
   setmode:
     source: switch
     switch:
