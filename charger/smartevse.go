@@ -117,14 +117,8 @@ func (wb *smartEVSE) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil
-	case 4:
-		return api.StatusD, nil
-	case 5:
-		return api.StatusE, nil
-	case 6:
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status returned: %d", status)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

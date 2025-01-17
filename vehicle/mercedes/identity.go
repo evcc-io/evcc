@@ -105,8 +105,8 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	defer v.mu.Unlock()
 
 	data := url.Values{
-		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
 	}
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)

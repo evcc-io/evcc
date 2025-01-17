@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Ladestand"
+batteryLevel = "Ladestand der Batterie "
 capacity = "{energy} von {total}"
 control = "Batteriesteuerung"
 discharge = "Verhindere Entladung im Schnell-Modus und bei geplantem Laden."
@@ -40,6 +40,7 @@ labelResidualPower = "Residualleistung"
 title = "Regelverhalten"
 
 [config.deviceValue]
+amount = "Anzahl"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapazität"
@@ -137,7 +138,7 @@ vehicles = "Meine Fahrzeuge"
 yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
 
 [config.messaging]
-description = "Erhalte Benachrichtigungen über Ladevorgänge und andere Ereignisse."
+description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."
 title = "Benachrichtigungen"
 
 [config.meter]
@@ -402,16 +403,16 @@ titleMinSoc = "Min. Ladung"
 titleTargetCharge = "Abfahrt"
 unsavedChanges = "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?"
 update = "Anwenden"
-weekdays = "Wochentage"
+weekdays = "Tage"
 
 [main.energyflow]
 battery = "Batterie"
 batteryCharge = "Batterie laden"
 batteryDischarge = "Batterie entladen"
+batteryGridChargeActive = "Netzladen aktiv"
+batteryGridChargeLimit = "Netzladen wenn"
 batteryHold = "Batterie (gesperrt)"
 batteryTooltip = "{energy} von {total} ({soc})"
-cheapBatteryGridCharge = "günstige Netzenergie"
-cleanBatteryGridCharge = "saubere Netzenergie"
 gridImport = "Netzbezug"
 homePower = "Verbrauch"
 loadpoints = "Ladepunkt | Ladepunkt | {count} Ladepunkte"
@@ -490,6 +491,8 @@ logout = "abmelden"
 
 [main.targetCharge]
 activate = "Aktivieren"
+co2Limit = "CO₂-Grenze von {co2}"
+costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
@@ -502,6 +505,7 @@ planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 planUnknown = "noch unbekannt"
 preview = "Plan Vorschau"
+priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
 targetIsAboveLimit = "Das eingestellte Ladelimit von {limit} wird in diesem Zeitraum ignoriert."

@@ -70,7 +70,7 @@ func init() {
 	registry.Add("peblar", NewPeblarFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -233,7 +233,7 @@ func (wb *Peblar) getPhaseValues(reg uint16, divider float64) (float64, float64,
 	}
 
 	var res [3]float64
-	for i := 0; i < int(wb.phases); i++ {
+	for i := range int(wb.phases) {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
 	}
 

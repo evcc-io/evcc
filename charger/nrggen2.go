@@ -48,7 +48,7 @@ func init() {
 	registry.Add("nrggen2", NewNRGKickGen2FromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -164,11 +164,11 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		if err != nil {
 			return api.StatusNone, err
 		}
-		return api.StatusF, fmt.Errorf("%d", binary.BigEndian.Uint16(b))
+		return api.StatusNone, fmt.Errorf("charger error: %d", binary.BigEndian.Uint16(b))
 	case 7:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unhandled status type")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

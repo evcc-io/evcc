@@ -1,0 +1,14 @@
+template: ac-thor
+products:
+  - brand: my-PV
+    description:
+      generic: AC THOR, AC THOR 9s
+group: heating
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: ac-thor
+  {{- include "modbus" . }}
