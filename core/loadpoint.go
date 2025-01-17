@@ -753,6 +753,8 @@ func (lp *Loadpoint) syncCharger() error {
 					}
 					lp.chargeCurrent = current
 					lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+				} else {
+					lp.log.TRACE.Printf("charger logic _rro_: current (got %.3gA from charger, expected %.3gA from lp)", current, lp.chargeCurrent)
 				}
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				return fmt.Errorf("charger get max current: %w", err)
@@ -863,9 +865,9 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
-		} else {
-			err = lp.charger.MaxCurrent(int64(chargeCurrent))
-		}
+			} else {
+				err = lp.charger.MaxCurrent(int64(chargeCurrent))
+			}
 
 		if err != nil {
 			v := lp.GetVehicle()
@@ -996,7 +998,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	if lp.vehicleSoc != 0 {
 		active := lp.vehicleSoc < float64(minSoc)
 		if active {
-			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
+			lp.log.DEBUG.Printf("forced charging at vehicle soc %.2f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
 		}
 		return active
 	}
@@ -1640,7 +1642,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		lp.vehicleSoc = f
-		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
+		lp.log.DEBUG.Printf("vehicle soc: %.2f%%", lp.vehicleSoc)
 		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 		// vehicle target soc
