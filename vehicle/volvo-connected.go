@@ -1,11 +1,13 @@
 package vehicle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
+	"golang.org/x/oauth2"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -21,13 +23,13 @@ func init() {
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
 func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string
-		VIN            string
-		// ClientID, ClientSecret string
-		// Sandbox                bool
-		VccApiKey string
-		Cache     time.Duration
+		embed `mapstructure:",squash"`
+		// User, Password string
+		VIN         string
+		Credentials ClientCredentials
+		RedirectUri string
+		VccApiKey   string
+		Cache       time.Duration
 	}{
 		Cache: interval,
 	}
@@ -36,13 +38,13 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	// if cc.ClientID == "" && cc.ClientSecret == "" {
-	// 	return nil, errors.New("missing credentials")
+	// if cc.User == "" || cc.Password == "" {
+	// 	return nil, api.ErrMissingCredentials
 	// }
+
+	if err := cc.Credentials.Error(); err != nil {
+		return nil, err
+	}
 
 	// var options []VolvoConnected.IdentityOptions
 
@@ -56,18 +58,24 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	// 	}))
 	// }
 
-	log := util.NewLogger("volvo-cc").Redact(cc.User, cc.Password, cc.VIN, cc.VccApiKey)
+	log := util.NewLogger("volvo-cc").Redact(cc.Credentials.ID, cc.Credentials.Secret, cc.VIN, cc.VccApiKey)
 
-	// identity, err := connected.NewIdentity(log, cc.ClientID, cc.ClientSecret)
-	identity, err := connected.NewIdentity(log)
+	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	fmt.Println(oc.AuthCodeURL("state", oauth2.AccessTypeOffline))
+
+	identity, err := connected.NewIdentity(log, oc)
+	// identity, err := connected.NewIdentity(log)
 	if err != nil {
 		return nil, err
 	}
 
-	ts, err := identity.Login(cc.User, cc.Password)
-	if err != nil {
-		return nil, err
-	}
+	_ = identity
+	var ts oauth2.TokenSource
+
+	// ts, err := identity.Login(cc.User, cc.Password)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// api := connected.NewAPI(log, identity, cc.Sandbox)
 	api := connected.NewAPI(log, ts, cc.VccApiKey)

@@ -13,16 +13,21 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var Oauth2Config = oauth2.Config{
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
-		TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
-	},
-	Scopes: []string{
-		oidc.ScopeOpenID, "vehicle:attributes",
-		"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
-		"conve:fuel_status", "conve:odometer_status", "conve:environment",
-	},
+func Oauth2Config(id, secret, redirect string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		RedirectURL:  redirect,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
+			TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
+		},
+		Scopes: []string{
+			oidc.ScopeOpenID, "vehicle:attributes",
+			"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
+			"conve:fuel_status", "conve:odometer_status", "conve:environment",
+		},
+	}
 }
 
 const (
@@ -33,12 +38,14 @@ const (
 type Identity struct {
 	log *util.Logger
 	*request.Helper
+	oc *oauth2.Config
 }
 
-func NewIdentity(log *util.Logger) (*Identity, error) {
+func NewIdentity(log *util.Logger, oc *oauth2.Config) (*Identity, error) {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),
+		oc:     oc,
 	}
 
 	return v, nil
@@ -50,10 +57,10 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		"password":                {password},
 		"access_token_manager_id": {managerId},
 		"grant_type":              {"password"},
-		"scope":                   {strings.Join(Oauth2Config.Scopes, " ")},
+		"scope":                   {strings.Join(v.oc.Scopes, " ")},
 	}
 
-	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+	req, err := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type":  request.FormContent,
 		"Authorization": basicAuth,
 	})
@@ -80,7 +87,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token":           {token.RefreshToken},
 	}
 
-	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+	req, err := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type":  request.FormContent,
 		"Authorization": basicAuth,
 	})
