@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -24,6 +26,13 @@ func (c *ClientCredentials) Error() error {
 	}
 
 	return nil
+}
+
+// Hash returns a hash of the client credentials, including optional key qualifier
+func (c *ClientCredentials) Hash(key string) string {
+	sha256 := sha256.New()
+	sha256.Write([]byte(c.ID + c.Secret + key))
+	return hex.EncodeToString(sha256.Sum(nil))
 }
 
 // Tokens contains access and refresh tokens

@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -25,6 +26,7 @@ func init() {
 func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
+		User        string
 		VIN         string
 		Credentials ClientCredentials
 		RedirectUri string
@@ -41,18 +43,6 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	if err := cc.Credentials.Error(); err != nil {
 		return nil, err
 	}
-
-	// var options []VolvoConnected.IdentityOptions
-
-	// TODO Load tokens from a persistence storage and use those during startup
-	// e.g. persistence.Load("key")
-	// if tokens != nil {
-	// 	options = append(options, VolvoConnected.WithToken(&oauth2.Token{
-	// 		AccessToken:  tokens.Access,
-	// 		RefreshToken: tokens.Refresh,
-	// 		Expiry:       tokens.Expiry,
-	// 	}))
-	// }
 
 	log := util.NewLogger("volvo-cc").Redact(cc.Credentials.ID, cc.Credentials.Secret, cc.VIN, cc.VccApiKey)
 
@@ -81,4 +71,20 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	}
 
 	return v, err
+}
+
+var _ api.AuthProvider = (*VolvoConnected)(nil)
+
+func (v *VolvoConnected) SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool) {
+	fmt.Println(baseURL, redirectURL)
+}
+
+func (v *VolvoConnected) LoginHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	}
+}
+
+func (v *VolvoConnected) LogoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	}
 }
