@@ -1,11 +1,8 @@
 template: volvo-connected
 products:
   - brand: Volvo
-    description:
-      de: aktuell
-      en: latest
 params:
-  - preset: vehicle-base
+  - preset: vehicle-common
   - name: vccapikey
     required: true
     help:
@@ -14,4 +11,4 @@ params:
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}
-  {{ include "vehicle-base" . }}
+  {{ include "vehicle-common" . }}
