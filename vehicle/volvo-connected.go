@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
 type VolvoConnected struct {
 	*embed
+	*connected.Identity
 	*connected.Provider
 }
 
@@ -48,18 +48,12 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 
 	oc := connected.Oauth2Config(log, cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
 
+	ts := connected.NewIdentity(log, oc)
+
 	cv := oauth2.GenerateVerifier()
 	fmt.Println(oc.AuthCodeURL("state", oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv)))
 	os.Exit(1)
 
-	var ts oauth2.TokenSource
-
-	// ts, err := identity.Login(cc.User, cc.Password)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// api := connected.NewAPI(log, identity, cc.Sandbox)
 	api := connected.NewAPI(log, ts, cc.VccApiKey)
 
 	var err error
@@ -67,24 +61,9 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 
 	v := &VolvoConnected{
 		embed:    &cc.embed,
+		Identity: ts,
 		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
 	}
 
 	return v, err
-}
-
-var _ api.AuthProvider = (*VolvoConnected)(nil)
-
-func (v *VolvoConnected) SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool) {
-	fmt.Println(baseURL, redirectURL)
-}
-
-func (v *VolvoConnected) LoginHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-	}
-}
-
-func (v *VolvoConnected) LogoutHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-	}
 }
