@@ -31,9 +31,9 @@ func Oauth2Config(log *util.Logger, id, secret, redirect string) *oauth2Config {
 			},
 			Scopes: []string{
 				oidc.ScopeOpenID,
-				"vehicle:attributes",
+				// "vehicle:attributes",
 				"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
-				"conve:fuel_status", "conve:odometer_status", "conve:environment",
+				// "conve:fuel_status", "conve:odometer_status", "conve:environment",
 			},
 		},
 	}

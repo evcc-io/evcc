@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,8 +24,7 @@ func init() {
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
 func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed `mapstructure:",squash"`
-		// User, Password string
+		embed       `mapstructure:",squash"`
 		VIN         string
 		Credentials ClientCredentials
 		RedirectUri string
@@ -37,10 +37,6 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-
-	// if cc.User == "" || cc.Password == "" {
-	// 	return nil, api.ErrMissingCredentials
-	// }
 
 	if err := cc.Credentials.Error(); err != nil {
 		return nil, err
@@ -61,13 +57,10 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	log := util.NewLogger("volvo-cc").Redact(cc.Credentials.ID, cc.Credentials.Secret, cc.VIN, cc.VccApiKey)
 
 	oc := connected.Oauth2Config(log, cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	fmt.Println(oc.AuthCodeURL("state", oauth2.AccessTypeOffline))
 
-	// identity, err := connected.NewIdentity(log, oc)
-	// identity, err := connected.NewIdentity(log)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	cv := oauth2.GenerateVerifier()
+	fmt.Println(oc.AuthCodeURL("state", oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv)))
+	os.Exit(1)
 
 	var ts oauth2.TokenSource
 
