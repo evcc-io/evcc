@@ -1,10 +1,10 @@
 package connected
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
@@ -13,90 +13,53 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func Oauth2Config(id, secret, redirect string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     id,
-		ClientSecret: secret,
-		RedirectURL:  redirect,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
-			TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
+type oauth2Config struct {
+	*oauth2.Config
+	h *request.Helper
+}
+
+func Oauth2Config(log *util.Logger, id, secret, redirect string) *oauth2Config {
+	return &oauth2Config{
+		h: request.NewHelper(log),
+		Config: &oauth2.Config{
+			ClientID:     id,
+			ClientSecret: secret,
+			RedirectURL:  redirect,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
+				TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
+			},
+			Scopes: []string{
+				oidc.ScopeOpenID,
+				"vehicle:attributes",
+				"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
+				"conve:fuel_status", "conve:odometer_status", "conve:environment",
+			},
 		},
-		Scopes: []string{
-			oidc.ScopeOpenID, "vehicle:attributes",
-			"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
-			"conve:fuel_status", "conve:odometer_status", "conve:environment",
-		},
 	}
 }
 
-const (
-	managerId = "JWTh4Yf0b"
-	basicAuth = "Basic aDRZZjBiOlU4WWtTYlZsNnh3c2c1WVFxWmZyZ1ZtSWFEcGhPc3kxUENhVXNpY1F0bzNUUjVrd2FKc2U0QVpkZ2ZJZmNMeXc="
-)
-
-type Identity struct {
-	log *util.Logger
-	*request.Helper
-	oc *oauth2.Config
+func (oc *oauth2Config) TokenSource(ctx context.Context, token *oauth2.Token) oauth2.TokenSource {
+	return oauth.RefreshTokenSource(token, oc)
 }
 
-func NewIdentity(log *util.Logger, oc *oauth2.Config) (*Identity, error) {
-	v := &Identity{
-		log:    log,
-		Helper: request.NewHelper(log),
-		oc:     oc,
-	}
-
-	return v, nil
-}
-
-func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
+func (oc *oauth2Config) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"username":                {user},
-		"password":                {password},
-		"access_token_manager_id": {managerId},
-		"grant_type":              {"password"},
-		"scope":                   {strings.Join(v.oc.Scopes, " ")},
+		// "access_token_manager_id": {managerId},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
 	}
 
-	req, err := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": basicAuth,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var tok oauth2.Token
-	if err := v.DoJSON(req, &tok); err != nil {
-		return nil, err
-	}
-
-	token := util.TokenWithExpiry(&tok)
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
-	go oauth.Refresh(v.log, token, ts)
-
-	return ts, nil
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"access_token_manager_id": {managerId},
-		"grant_type":              {"refresh_token"},
-		"refresh_token":           {token.RefreshToken},
-	}
-
-	req, err := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": basicAuth,
+	req, err := request.New(http.MethodPost, oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type": request.FormContent,
+		// "Authorization": basicAuth,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	var res oauth2.Token
-	if err := v.DoJSON(req, &res); err != nil {
+	if err := oc.h.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 

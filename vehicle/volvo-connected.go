@@ -60,16 +60,15 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 
 	log := util.NewLogger("volvo-cc").Redact(cc.Credentials.ID, cc.Credentials.Secret, cc.VIN, cc.VccApiKey)
 
-	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	oc := connected.Oauth2Config(log, cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
 	fmt.Println(oc.AuthCodeURL("state", oauth2.AccessTypeOffline))
 
-	identity, err := connected.NewIdentity(log, oc)
+	// identity, err := connected.NewIdentity(log, oc)
 	// identity, err := connected.NewIdentity(log)
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	_ = identity
 	var ts oauth2.TokenSource
 
 	// ts, err := identity.Login(cc.User, cc.Password)
@@ -80,6 +79,7 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	// api := connected.NewAPI(log, identity, cc.Sandbox)
 	api := connected.NewAPI(log, ts, cc.VccApiKey)
 
+	var err error
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	v := &VolvoConnected{
