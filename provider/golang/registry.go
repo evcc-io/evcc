@@ -8,13 +8,6 @@ import (
 	"github.com/traefik/yaegi/interp"
 )
 
-const Imports = `import (
-	"fmt"
-	"math"
-	"strings"
-	"time"
-)`
-
 var (
 	mu       sync.Mutex
 	registry = make(map[string]*interp.Interpreter)
@@ -31,14 +24,10 @@ func RegisteredVM(name, init string) (*interp.Interpreter, error) {
 	// create new VM
 	if !ok {
 		vm = interp.New(interp.Options{})
-
 		if err := vm.Use(stdlib.Symbols); err != nil {
 			return nil, err
 		}
-
-		if _, err := vm.Eval(Imports); err != nil {
-			return nil, err
-		}
+		vm.ImportUsed()
 
 		if init != "" {
 			if _, err := vm.Eval(init); err != nil {

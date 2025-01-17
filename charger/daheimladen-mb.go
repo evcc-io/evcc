@@ -22,12 +22,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"golang.org/x/text/encoding/unicode"
 )
 
 // DaheimLadenMB charger implementation
@@ -141,19 +140,6 @@ func (wb *DaheimLadenMB) getCurrent() (uint16, error) {
 	}
 
 	return binary.BigEndian.Uint16(b), nil
-}
-
-// utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
-// to a UTF-8 encoded string.
-func utf16BytesToString(b []byte, o binary.ByteOrder) string {
-	utf := make([]uint16, (len(b)+(2-1))/2)
-	for i := 0; i+(2-1) < len(b); i += 2 {
-		utf[i/2] = o.Uint16(b[i:])
-	}
-	if len(b)/2 < len(utf) {
-		utf[len(utf)-1] = utf8.RuneError
-	}
-	return string(utf16.Decode(utf))
 }
 
 // Status implements the api.Charger interface
@@ -280,13 +266,18 @@ func (wb *DaheimLadenMB) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return utf16BytesToString(b, binary.BigEndian), nil
+	return unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenMB) Diagnose() {
+	utf16BytesToString := func(b []byte) string {
+		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+		return s
+	}
+
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
@@ -300,10 +291,10 @@ func (wb *DaheimLadenMB) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
+		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
-		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
+		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))

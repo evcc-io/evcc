@@ -1,0 +1,112 @@
+template: stiebel-wpm
+products:
+  - brand: Stiebel Eltron
+    description:
+      generic: WPM (SG Ready)
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      1: 3 # Frostschutz
+      2: 1 # Normal
+      3: 2 # Forcierter Betrieb
+      4: 2 # Sofortige Ansteuerung
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 5000
+        type: input
+        encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4002
+              type: writesingle
+              encoding: uint16
+    - case: 2 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4002
+              type: writesingle
+              encoding: uint16
+    - case: 3 # dimm
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4002
+              type: writesingle
+              encoding: uint16
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater" -}} 521 {{ else }} 517 {{- end }}
+      type: input
+      encoding: int16
+    scale: 0.1
+  {{- end }}

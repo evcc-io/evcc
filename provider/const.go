@@ -11,7 +11,6 @@ import (
 )
 
 type constProvider struct {
-	*getter
 	ctx context.Context
 	str string
 	set Config
@@ -33,23 +32,11 @@ func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Prov
 		return nil, err
 	}
 
-	pipe, err := pipeline.New(nil, cc.Settings)
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := pipe.Process([]byte(cc.Value))
-	if err != nil {
-		return nil, err
-	}
-
 	p := &constProvider{
 		ctx: ctx,
-		str: string(b),
+		str: cc.Value,
 		set: cc.Set,
 	}
-
-	p.getter = defaultGetters(p, 1)
 
 	return p, nil
 }
@@ -60,6 +47,45 @@ func (p *constProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		return p.str, nil
 	}, nil
+}
+
+var _ IntProvider = (*constProvider)(nil)
+
+func (p *constProvider) IntGetter() (func() (int64, error), error) {
+	val, err := strconv.ParseInt(p.str, 10, 64)
+	if err != nil && p.str == "" {
+		err = nil
+	}
+
+	return func() (int64, error) {
+		return val, err
+	}, err
+}
+
+var _ FloatProvider = (*constProvider)(nil)
+
+func (p *constProvider) FloatGetter() (func() (float64, error), error) {
+	val, err := strconv.ParseFloat(p.str, 64)
+	if err != nil && p.str == "" {
+		err = nil
+	}
+
+	return func() (float64, error) {
+		return val, err
+	}, err
+}
+
+var _ BoolProvider = (*constProvider)(nil)
+
+func (p *constProvider) BoolGetter() (func() (bool, error), error) {
+	val, err := strconv.ParseBool(p.str)
+	if err != nil && p.str == "" {
+		err = nil
+	}
+
+	return func() (bool, error) {
+		return val, err
+	}, err
 }
 
 var _ SetIntProvider = (*constProvider)(nil)

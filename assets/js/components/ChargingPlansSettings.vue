@@ -97,7 +97,6 @@ export default {
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
-		smartCostLimit: Number,
 		smartCostType: String,
 		currency: String,
 		mode: String,

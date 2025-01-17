@@ -103,9 +103,7 @@ func mbbUserId(log *util.Logger, ts oauth2.TokenSource, uid string) (string, err
 		Base:   client.Transport,
 	}
 
-	data := url.Values{
-		"scopeId": []string{"commonMandatoryFields"},
-	}
+	data := url.Values{"scopeId": {"commonMandatoryFields"}}
 
 	var mandatoryConsentInfo struct {
 		MbbUserId string `json:"mbbUserId"`

@@ -3,6 +3,7 @@ products:
   - brand: SENEC
     description:
       generic: .Home
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -10,9 +11,7 @@ params:
   - name: host
   - name: schema
     type: choice
-    validvalues:
-      - https
-      - http
+    choice: ["https", "http"]
     default: https
   - name: capacity
     advanced: true
@@ -52,5 +51,30 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
     unpack: hex
     decode: float32
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: {{ .schema }}://{{ .host }}/lala.cgi
+        insecure: true
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
+    - case: 2 # hold (not implemented)
+      set:
+        source: error
+        error: ErrNotAvailable
+    - case: 3 # charge
+      set:
+        source: http
+        uri: {{ .schema }}://{{ .host }}/lala.cgi
+        insecure: true
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
   capacity: {{ .capacity }} # kWh
   {{- end }}

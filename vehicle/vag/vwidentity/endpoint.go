@@ -87,8 +87,8 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 	// add nonce and state
 	query := url.Values{
-		"nonce": []string{lo.RandomString(43, lo.LettersCharset)},
-		"state": []string{uuid.NewString()},
+		"nonce": {lo.RandomString(43, lo.LettersCharset)},
+		"state": {uuid.NewString()},
 	}
 
 	var vars FormVars

@@ -66,7 +66,7 @@ func init() {
 	registry.Add("em2go-home", NewEm2GoFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -148,10 +148,8 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 4, 6:
 		return api.StatusC, nil
-	case 5, 7:
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
+		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
 }
 

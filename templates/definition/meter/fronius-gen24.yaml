@@ -16,9 +16,11 @@ params:
     default: 502
   - name: integer
     deprecated: true
+  - name: maxacpower
+  - name: maxchargerate
+    advanced: true
   - name: capacity
     advanced: true
-  - name: maxacpower
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -213,7 +215,7 @@ render: |
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
-          value: -100 # %
+          value: -{{ .maxchargerate }} # %
           set:
             source: sunspec
             uri: {{ .host }}:{{ .port }}

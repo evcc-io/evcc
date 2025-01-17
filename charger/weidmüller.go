@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) 2023-2025 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -18,8 +18,10 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -36,23 +38,27 @@ type Weidmüller struct {
 }
 
 const (
-	wmRegCarStatus    = 301  // GD_ID_EVCC_CAR_STATE CHAR
-	wmRegEvccStatus   = 302  // GD_ID_EVCC_EVSE_STATE UINT16
-	wmRegPhases       = 318  // GD_ID_EVCC_PHASES_LLM UINT16
-	wmRegVoltages     = 400  // GD_ID_CM_VOLTAGE_PHASE UINT32
-	wmRegCurrents     = 406  // GD_ID_CM_CURRENT_PHASE UINT32
-	wmRegActivePower  = 418  // GD_ID_CM_ACTIVE_POWER UINT32
-	wmRegTotalEnergy  = 457  // GD_ID_CM_CONSUMED_ENERGY_TOTAL_WH UINT64
-	wmRegCurrentLimit = 702  // GD_ID_AUT_USER_CURRENT_LIMIT UINT16
-	wmRegCardId       = 1000 // GD_ID_RFID_TAG_UID CHAR[21]
+	wmRegCarStatus    = 301   // GD_ID_EVCC_CAR_STATE CHAR
+	wmRegEvccStatus   = 302   // GD_ID_EVCC_EVSE_STATE UINT16
+	wmRegPhases       = 318   // GD_ID_EVCC_PHASES_LLM UINT16
+	wmRegVoltages     = 400   // GD_ID_CM_VOLTAGE_PHASE UINT32
+	wmRegCurrents     = 406   // GD_ID_CM_CURRENT_PHASE UINT32
+	wmRegActivePower  = 418   // GD_ID_CM_ACTIVE_POWER UINT32
+	wmRegTotalEnergy  = 457   // GD_ID_CM_CONSUMED_ENERGY_TOTAL_WH UINT64
+	wmRegCardId       = 1000  // GD_ID_RFID_TAG_UID CHAR[21]
+	wmRegTimeout      = 11050 // GD_ID_LCM_TIMEOUT UINT32
+	wmRegCurrentLimit = 11052 // GD_ID_LCM_ACTUAL_CURRENT_LIMIT UINT16 (A)
+
+	wmHeartbeatInterval = 5 * time.Second
+	wmTimeout           = 65535 // ms
 )
 
 func init() {
-	registry.Add("weidmüller", NewWeidmüllerFromConfig)
+	registry.AddCtx("weidmüller", NewWeidmüllerFromConfig)
 }
 
 // NewWeidmüllerFromConfig creates a Weidmüller charger from generic config
-func NewWeidmüllerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -61,11 +67,13 @@ func NewWeidmüllerFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewWeidmüller(cc.URI, cc.ID)
+	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
 
+//go:generate decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 // NewWeidmüller creates Weidmüller charger
-func NewWeidmüller(uri string, id uint8) (api.Charger, error) {
+func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -93,7 +101,32 @@ func NewWeidmüller(uri string, id uint8) (api.Charger, error) {
 		wb.curr = curr
 	}
 
-	return wb, err
+	// failsafe
+	go wb.heartbeat(ctx, wmHeartbeatInterval)
+
+	// check presence of energy meter
+	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+		return decorateWeidmüller(wb, wb.totalEnergy), nil
+	}
+
+	return wb, nil
+}
+
+func (wb *Weidmüller) heartbeat(ctx context.Context, timeout time.Duration) {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, wmTimeout)
+
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if _, err := wb.conn.WriteMultipleRegisters(wmRegTimeout, 2, b); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *Weidmüller) setCurrent(current uint16) error {
@@ -184,10 +217,8 @@ func (wb *Weidmüller) CurrentPower() (float64, error) {
 	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
-var _ api.MeterEnergy = (*Weidmüller)(nil)
-
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *Weidmüller) TotalEnergy() (float64, error) {
+func (wb *Weidmüller) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

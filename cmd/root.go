@@ -180,7 +180,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup modbus proxy
 	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(conf.ModbusProxy))
+		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
 	}
 
 	// setup site and loadpoints
@@ -209,14 +209,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// remove previous fatal startup errors
 	valueChan <- util.Param{Key: keys.Fatal, Val: nil}
-	// publish initial settings
-	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
-	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
-	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
-	// TODO
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
@@ -234,15 +226,26 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
 	}
 
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
+
+	// publish initial settings
+	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
+	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
+	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
+	valueChan <- util.Param{Key: keys.Messaging, Val: pushChan != nil}
+	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
+	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
+	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// run shutdown functions on stop
 	var once sync.Once

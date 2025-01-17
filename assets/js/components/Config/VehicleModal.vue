@@ -96,9 +96,9 @@
 										<PropertyField
 											id="vehicleParamMode"
 											v-model="values.mode"
-											type="String"
+											type="Choice"
 											class="w-100"
-											:valid-values="[
+											:choice="[
 												{ key: 'off', name: $t('main.mode.off') },
 												{ key: 'pv', name: $t('main.mode.pv') },
 												{ key: 'minpv', name: $t('main.mode.minpv') },
@@ -177,10 +177,10 @@
 										<PropertyField
 											id="vehicleParamPriority"
 											v-model="values.priority"
-											type="Int"
+											type="Choice"
 											size="w-100"
 											class="me-2"
-											:valid-values="priorityOptions"
+											:choice="priorityOptions"
 											required
 										/>
 									</FormRow>
@@ -193,7 +193,7 @@
 										<PropertyField
 											id="vehicleParamIdentifiers"
 											v-model="values.identifiers"
-											type="StringList"
+											type="List"
 											property="identifiers"
 											size="w-100"
 											class="me-2"
@@ -313,7 +313,7 @@ export default {
 			};
 		},
 		templateParams() {
-			return (this.template?.Params || [])
+			const params = (this.template?.Params || [])
 				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
 				.map((p) => {
 					if (p.Name === "title" || p.Name === "icon") {
@@ -322,6 +322,12 @@ export default {
 					}
 					return p;
 				});
+
+			// always start with title and icon field
+			const order = { title: -2, icon: -1 };
+			params.sort((a, b) => (order[a.Name] || 0) - (order[b.Name] || 0));
+
+			return params;
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced);

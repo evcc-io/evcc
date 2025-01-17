@@ -44,7 +44,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.Token == "" {
-		return nil, errors.New("missing token")
+		return nil, api.ErrMissingToken
 	}
 
 	if cc.SiteID == "" {
@@ -83,7 +83,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Amber) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := time.Tick(time.Minute); ; <-tick {
 		var res []amber.PriceInfo
 		uri := fmt.Sprintf("%s&endDate=%s", t.uri, time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
 

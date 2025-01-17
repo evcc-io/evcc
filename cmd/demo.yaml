@@ -263,5 +263,6 @@ tariffs:
     type: fixed
     price: 0.08 # EUR/kWh
   co2:
-    type: grünstromindex
+    type: template
+    template: grünstromindex
     zip: 12349

@@ -91,9 +91,9 @@ func (c *Connection) ExecCmd(function string) (string, error) {
 	}
 
 	parameters := url.Values{
-		"sid":       []string{c.SID},
-		"ain":       []string{c.AIN},
-		"switchcmd": []string{function},
+		"sid":       {c.SID},
+		"ain":       {c.AIN},
+		"switchcmd": {function},
 	}
 
 	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", c.URI)
@@ -156,8 +156,8 @@ func (c *Connection) getSessionID() error {
 		var challresp string
 		if challresp, err = createChallengeResponse(v.Challenge, c.Password); err == nil {
 			params := url.Values{
-				"username": []string{c.User},
-				"response": []string{challresp},
+				"username": {c.User},
+				"response": {challresp},
 			}
 
 			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {

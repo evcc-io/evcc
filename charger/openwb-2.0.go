@@ -40,7 +40,7 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
 
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {

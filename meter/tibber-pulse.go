@@ -3,7 +3,6 @@ package meter
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -38,7 +37,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}
 
 	if cc.Token == "" {
-		return nil, errors.New("missing token")
+		return nil, api.ErrMissingToken
 	}
 
 	log := util.NewLogger("pulse").Redact(cc.Token, cc.HomeID)
@@ -88,7 +87,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			"token": cc.Token,
 		}).
 		WithRetryTimeout(0).
-		WithTimeout(time.Second).
+		WithTimeout(request.Timeout).
 		WithLog(log.TRACE.Println).
 		OnError(func(_ *graphql.SubscriptionClient, err error) error {
 			// exit the subscription client due to unauthorized error
