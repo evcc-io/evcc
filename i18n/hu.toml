@@ -417,6 +417,8 @@ noEnergy = "Nincs mérési adat"
 pvExport = "Hálózatba export"
 pvProduction = "Napelem termelés"
 selfConsumption = "Saját fogyasztás"
+batteryGridChargeActive = hálózatból töltés aktív
+batteryGridChargeLimit = hálózatból töltés ha
 
 [main.heatingStatus]
 charging = "Fűtés…"
