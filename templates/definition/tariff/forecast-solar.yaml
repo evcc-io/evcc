@@ -1,0 +1,34 @@
+template: forecast-solar
+products:
+  - brand: Forecast.Solar
+requirements:
+  description:
+    de: "PV Prognose"
+    en: "PV Prognosis"
+  evcc: ["skiptest"]
+# group: solar
+params:
+  - name: lat
+    required: true
+  - name: lon
+    required: true
+  - name: dec
+    required: true
+  - name: az
+    required: true
+  - name: kwp
+    required: true
+  - name: kwp
+    required: true
+  - name: apikey
+render: |
+  type: custom
+  forecast:
+    source: http
+    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}
+    jq: |
+      [ .result.watts | to_entries.[] | {
+        "start": (.key | strptime("%F %T") | mktime | strftime("%FT%TZ")),
+        "end":   (.key | strptime("%F %T") | mktime+3600 | strftime("%FT%TZ")),
+        "price": .value
+      } ] | tostring
