@@ -9,8 +9,7 @@
         "github.com/gokrazy/mkfs",
         "github.com/gokrazy/fbstatus",
         "github.com/gokrazy/serial-busybox",
-        "github.com/gokrazy/wifi",
-        "github.com/evcc-io/evcc"
+        "github.com/gokrazy/wifi"
     ],
     "PackageConfig": {
         "github.com/evcc-io/evcc": {
