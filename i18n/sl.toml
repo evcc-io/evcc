@@ -410,6 +410,12 @@ titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
 unsavedChanges = "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?"
 update = "Uporabi"
+planNumber = "Načrt {number}"
+addRepeatingPlan = "Dodaj ponavljajoči načrt"
+repeating = "ponavljajoči"
+selectAll = "Izberi vse"
+repeatingPlans = "Ponavljajoči načrti"
+weekdays = "Dnevi"
 
 [main.energyflow]
 battery = "Baterija"
