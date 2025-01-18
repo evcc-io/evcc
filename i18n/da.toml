@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Batteriniveau"
+batteryLevel = "Batteri-niveau"
 capacity = "{energy} af {total}"
 control = "Batteri indstillinger"
 discharge = "Forhindrer afladning ved planlagt opladning og i hurtig mode"
@@ -79,6 +79,7 @@ temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 yes = "ja"
+amount = "Mængde"
 
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
@@ -430,6 +431,8 @@ noEnergy = "Ingen målerdata"
 pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
+batteryGridChargeActive = "Oplader fra elnettet"
+batteryGridChargeLimit = "Oplader fra elnettet når"
 
 [main.heatingStatus]
 charging = "Opvarmer..."
