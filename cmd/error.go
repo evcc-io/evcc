@@ -56,7 +56,7 @@ type DeviceError struct {
 	err  error
 }
 
-func (e *DeviceError) Error() string {
+func (e DeviceError) Error() string {
 	return e.err.Error()
 }
 
