@@ -79,6 +79,7 @@ temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
 yes = "taip"
+amount = "Kiekis"
 
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
@@ -435,6 +436,8 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
+batteryGridChargeLimit = "įkrauti iš tinklo, kai"
+batteryGridChargeActive = "įkraunama iš tinklo"
 
 [main.heatingStatus]
 charging = "Šildoma…"

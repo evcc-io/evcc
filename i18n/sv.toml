@@ -79,6 +79,7 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
+amount = "Belopp"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
@@ -430,6 +431,8 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
+batteryGridChargeLimit = "nätladdning när"
+batteryGridChargeActive = "nätladdning aktiv"
 
 [main.heatingStatus]
 charging = "Värmer..."

@@ -79,6 +79,7 @@ temp = "Temperatura"
 topic = "Tema"
 url = "URL"
 yes = "sim"
+amount = "Quantia"
 
 [config.eebus]
 description = "Configuração que permite o evcc se comunicar com outros dispositivos EEBus."
@@ -431,6 +432,8 @@ noEnergy = "Sem leituras"
 pvExport = "Alimentação"
 pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
+batteryGridChargeActive = "carga da rede ativa"
+batteryGridChargeLimit = "carga da rede quando"
 
 [main.heatingStatus]
 charging = "Aquecendo..."

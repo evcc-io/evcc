@@ -417,7 +417,10 @@ titleMinSoc = "Min lading"
 titleTargetCharge = "Vertrek"
 unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 update = "Toepassen"
-weekdays = "Weekdagen"
+weekdays = "Dagen"
+addRepeatingPlan = "Herhalend plan toevoegen"
+planNumber = "Plan {number}"
+repeatingPlans = "Herhalende plannen""
 
 [main.energyflow]
 battery = "Batterij"
@@ -432,6 +435,8 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
+batteryGridChargeLimit = "net laden wanneer"
+batteryGridChargeActive = "net laden actief"
 
 [main.heatingStatus]
 charging = "Bezig met verwarmen..."
@@ -532,6 +537,7 @@ tomorrow = "Morgen"
 update = "Updaten"
 vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
 vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
+nextPlan = "Volgend plan"
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
@@ -592,6 +598,7 @@ vehicleLimit = "Voertuiglimiet."
 vehicleLimitReached = "Voertuiglimiet bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
 welcome = "Verkort initiële lading om de verbinding te bevestigen."
+unknown = ""
 
 [notifications]
 dismissAll = "Alles verwijderen"
