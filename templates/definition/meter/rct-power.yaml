@@ -3,6 +3,7 @@ products:
   - brand: RCT
     description:
       generic: Power
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -10,9 +11,20 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    default: 7
+    advanced: true
+  - name: maxsoc
+    type: int
+    default: 97
+    advanced: true
 render: |
   type: rct
   uri: {{ .host }}
   usage: {{ .usage }}
   cache: 2s
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
