@@ -47,10 +47,10 @@ func NewConfigError(err error) error {
 	return &ConfigError{err}
 }
 
-func (e *ConfigError) Error() string {
+func (e ConfigError) Error() string {
 	return e.err.Error()
 }
 
-func (e *ConfigError) Unwrap() error {
+func (e ConfigError) Unwrap() error {
 	return e.err
 }
