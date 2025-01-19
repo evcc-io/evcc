@@ -6,7 +6,7 @@ requirements:
   description:
     de: |
       Tesla bietet eine offizielle, aber kostenpflichtige Fahrzeug-API an.
-      Für private Nutzung kannst du dir einen [Tesla Developer Account](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von $10. Das ist für die gängigen evcc-Anwendungsfälle in der Regel ausreichend.
+      Für private Nutzung kannst du dir einen [Tesla Developer Account](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10$. Das ist für die gängigen evcc-Anwendungsfälle in der Regel ausreichend.
 
       Die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) erklärt den Prozess und generiert dir kostenfrei die für evcc benötigten Access- und Refresh-Token.
       Mit diesem Tokenpaar und deiner im Tesla Developer Account erstellten Client ID kann evcc direkt mit der Tesla API kommunizieren. Dein verbrauchtes Guthaben kannst du bei Tesla einsehen.
@@ -14,7 +14,7 @@ requirements:
       Für die Nutzung des "Tesla Wall Connectors" benötigst du einen öffentlichen Command-Proxy-Server. [myteslamate.com](https://app.myteslamate.com/) stellt diesen Dienst für 12€/Jahr bereit. Konfiguriere dafür bei myteslamate.com die Command-Berechtigungen und trage das Proxy-Token hier ein. Start-, Stopp- und Stromstärken-Kommandos werden über diesen Proxy an Tesla geschickt.
     en: |
       Tesla offers an official, but paid vehicle API.
-      For private use, you can create a [Tesla Developer Account](https://developer.tesla.com/) and receive a monthly API credit of $10. This is usually sufficient for the common evcc use cases.
+      For private use, you can create a [Tesla Developer Account](https://developer.tesla.com/) and receive a monthly API credit of 10$. This is usually sufficient for the common evcc use cases.
 
       The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token. With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla API. You can see your used credit at Tesla.
 
@@ -27,17 +27,16 @@ params:
       en: Client ID of your [Tesla Developer App](https://developer.tesla.com/dashboard).
       de: Kunden ID deiner [Tesla Developer App](https://developer.tesla.com/dashboard).
     required: true
-    advanced: true
   - name: accessToken
     help:
-      en: From [myteslamate.com](https://app.myteslamate.com/).
-      de: Von [myteslamate.com](https://app.myteslamate.com/).
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
     required: true
     mask: true
   - name: refreshToken
     help:
-      en: From [myteslamate.com](https://app.myteslamate.com/).
-      de: Von [myteslamate.com](https://app.myteslamate.com/).
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
     required: true
     mask: true
   - name: vin
