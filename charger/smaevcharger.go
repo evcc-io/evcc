@@ -245,7 +245,12 @@ var _ api.Meter = (*Smaevcharger)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Smaevcharger) CurrentPower() (float64, error) {
-	return wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	var e *smaevcharger.ErrUnknownMeasurement
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	if errors.As(err, &e) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
+	}
+	return res, err
 }
 
 var _ api.ChargeRater = (*Smaevcharger)(nil)
@@ -255,7 +260,7 @@ func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	var e *smaevcharger.ErrUnknownMeasurement
 	res, err := wb.getMeasurement("Measurement.ChaSess.WhIn")
 	if errors.As(err, &e) {
-		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
 	}
 	return res / 1e3, err
 }
