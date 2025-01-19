@@ -23,6 +23,7 @@ params:
   - name: apikey
 render: |
   type: custom
+  tariff: solar
   forecast:
     source: http
     uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}

@@ -10,4 +10,5 @@ const (
 	TariffTypePriceDynamic
 	TariffTypePriceForecast
 	TariffTypeCo2
+	TariffTypeSolar
 )
