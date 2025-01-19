@@ -112,32 +112,22 @@ render: |
   power:
     source: calc
     mul:
-    - source: calc
-      abs:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
-        register:
-          type: input
-          address: 13021 # Battery power
-          decode: int16
-    - source: calc
-      add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 2 # Charging
-        scale: -1
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 4 # Discharging
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      register:
+        type: input
+        address: 13019 # Battery voltage
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      register:
+        type: input
+        address: 13020 # Battery current
+        decode: uint16
+      scale: 0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
