@@ -25,7 +25,7 @@
                 "-forward=private-network"
             ],
             "ExtraFilePaths": {
-                "/etc/breakglass.authorized_keys": "packaging/breakglass.authorized_keys"
+                "/etc/breakglass.authorized_keys": "breakglass.authorized_keys"
             }
         },
         "tailscale.com/cmd/tailscale": {

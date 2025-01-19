@@ -10,7 +10,7 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 TESLA_CLIENT_ID := ${TESLA_CLIENT_ID}
-LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) -s -w
+LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
@@ -19,7 +19,8 @@ DOCKER_TAG := testing
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
-GOK := gok -i evcc
+GOK_DIR := packaging/gokrazy
+GOK := gok -i evcc --parent_dir $(GOK_DIR)
 IMAGE_FILE := evcc_$(TAG_NAME).img
 
 # deb
@@ -107,7 +108,8 @@ apt-release::
 # gokrazy image
 gokrazy::
 	which gok || go install github.com/gokrazy/tools/cmd/gok@main
-	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS),gokrazy -ldflags=$(LD_FLAGS)"]!g' packaging/gokrazy/config.tmpl.json > config.json
+	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
+	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS),gokrazy -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
 	${GOK} add .
 	# ${GOK} add tailscale.com/cmd/tailscaled
 	# ${GOK} add tailscale.com/cmd/tailscale
