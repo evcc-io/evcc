@@ -25,6 +25,7 @@ params:
     type: int
     default: 95
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -106,6 +107,7 @@ render: |
       type: holding
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
