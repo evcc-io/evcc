@@ -40,6 +40,7 @@ labelResidualPower = "Residuell Leeschtung"
 title = "Kontrollverhalen"
 
 [config.deviceValue]
+amount = "Unzahl"
 broker = "Broker"
 bucket = "Eemer"
 capacity = "Capacitéit"
@@ -76,7 +77,6 @@ temp = "Temperatur"
 topic = "Sujet"
 url = "URL"
 yes = "jo"
-amount = "Unzahl"
 
 [config.eebus]
 description = "Konfiguratioun déi et evcc erméiglecht fir mat aneren EEBus-Geräter ze kommunizéieren."
@@ -420,6 +420,8 @@ weekdays = "Deeg"
 battery = "Batterie"
 batteryCharge = "Batterie oplueden"
 batteryDischarge = "Batterie entlueden"
+batteryGridChargeActive = "Netzlueden aktiv"
+batteryGridChargeLimit = "Netzluede wann"
 batteryHold = "Batterie (gespäert)"
 batteryTooltip = "{energy} vun {total} ({soc})"
 gridImport = "Verbrauch vum Stroumnetz"
@@ -429,8 +431,6 @@ noEnergy = "Keng Moossdaten"
 pvExport = "Export an d'Stroumnetz"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Verbrauch"
-batteryGridChargeActive = "Netzlueden aktiv"
-batteryGridChargeLimit = "Netzluede wann"
 
 [main.heatingStatus]
 charging = "Wiermen…"

@@ -43,6 +43,7 @@ labelResidualPower = "Kvarvarande effekt"
 title = "Kontrollera beteende"
 
 [config.deviceValue]
+amount = "Belopp"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapacitet"
@@ -79,7 +80,6 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
-amount = "Belopp"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
@@ -422,6 +422,8 @@ weekdays = "Dagar"
 battery = "Batteri"
 batteryCharge = "Batteri laddas"
 batteryDischarge = "Batteri laddas ur"
+batteryGridChargeActive = "nätladdning aktiv"
+batteryGridChargeLimit = "nätladdning när"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energy} av {total} ({soc})"
 gridImport = "Import från elnät"
@@ -431,8 +433,6 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
-batteryGridChargeLimit = "nätladdning när"
-batteryGridChargeActive = "nätladdning aktiv"
 
 [main.heatingStatus]
 charging = "Värmer..."

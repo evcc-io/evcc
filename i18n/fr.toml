@@ -43,6 +43,7 @@ labelResidualPower = "Puissance résiduelle"
 title = "Comportement du contrôle"
 
 [config.deviceValue]
+amount = "Montant"
 broker = "Courtier"
 bucket = "Bucket"
 capacity = "Capacité"
@@ -79,7 +80,6 @@ temp = "Température"
 topic = "Sujet"
 url = "URL"
 yes = "oui"
-amount = "Montant"
 
 [config.eebus]
 description = "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus."
@@ -427,6 +427,8 @@ weekdays = "Jours"
 battery = "Batterie"
 batteryCharge = "Batterie en charge"
 batteryDischarge = "Décharge de la batterie"
+batteryGridChargeActive = "charge réseau active"
+batteryGridChargeLimit = "charge réseau quand"
 batteryHold = "Batterie (verrouillée)"
 batteryTooltip = "{energy} sur {total} ({soc})"
 gridImport = "Utilisation du réseau"
@@ -436,8 +438,6 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
-batteryGridChargeActive = "charge réseau active"
-batteryGridChargeLimit = "charge réseau quand"
 
 [main.heatingStatus]
 charging = "Chauffage… "

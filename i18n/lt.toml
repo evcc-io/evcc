@@ -43,6 +43,7 @@ labelResidualPower = "Likutinė galia"
 title = "Valdymo elgesys"
 
 [config.deviceValue]
+amount = "Kiekis"
 broker = "Broker sistema"
 bucket = "Bucket"
 capacity = "Talpa"
@@ -79,7 +80,6 @@ temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
 yes = "taip"
-amount = "Kiekis"
 
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
@@ -427,6 +427,8 @@ weekdays = "Dienos"
 battery = "Kaupiklis"
 batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
+batteryGridChargeActive = "įkraunama iš tinklo"
+batteryGridChargeLimit = "įkrauti iš tinklo, kai"
 batteryHold = "Kaupiklis (užblokuotas)"
 batteryTooltip = "{energy} iš {total} ({soc})"
 gridImport = "Iš tinklo"
@@ -436,8 +438,6 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
-batteryGridChargeLimit = "įkrauti iš tinklo, kai"
-batteryGridChargeActive = "įkraunama iš tinklo"
 
 [main.heatingStatus]
 charging = "Šildoma…"
