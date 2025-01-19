@@ -72,9 +72,7 @@ func (lp *Loadpoint) stopSession() {
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
 	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
 	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
-
-	// TODO @naltatis das ist ein Pointer in den laufenden Loadpoint. Wäre hier nicht eine Kopie des aktuellen Wertes?
-	s.ChargeDuration = &lp.chargeDuration
+	s.ChargeDuration = lo.ToPtr(lp.chargeDuration.Abs())
 
 	lp.db.Persist(s)
 }
