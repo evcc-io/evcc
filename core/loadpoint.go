@@ -1598,7 +1598,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO check if "session" prefix required?
 	lp.energyMetrics.Publish("session", lp)
 
-	// TODO deprecated: use energyMetrics instead
+	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
 	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
