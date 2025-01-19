@@ -962,23 +962,25 @@ func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mu
 		if provider, ok := v.(api.AuthProvider); ok {
 			id += 1
 
-			basePath := fmt.Sprintf("vehicles/%d", id)
-			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
-
 			// register vehicle
+			basePath := fmt.Sprintf("vehicles/%d", id)
+			callbackPath := fmt.Sprintf("%s/callback", basePath)
 			ap := authCollection.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
-
-			provider.SetCallbackParams(baseURI, callbackURI, ap.Handler())
 
 			auth.
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("/%s/login", basePath)).
-				HandlerFunc(provider.LoginHandler())
+				HandlerFunc(provider.LoginHandler(ap.Handler()))
+			auth.
+				Methods(http.MethodGet).
+				Path(callbackPath).
+				HandlerFunc(provider.RedirectHandler())
 			auth.
 				Methods(http.MethodPost).
 				Path(fmt.Sprintf("/%s/logout", basePath)).
 				HandlerFunc(provider.LogoutHandler())
 
+			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
 			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
 		}
 	}
