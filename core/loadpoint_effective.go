@@ -91,7 +91,12 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
+	if lp.planActive {
+		return int(lp.planActiveSoc)
+	}
+
 	_, soc, _ := lp.nextVehiclePlan()
+
 	return soc
 }
 
@@ -110,12 +115,18 @@ func (lp *Loadpoint) EffectivePlanId() int {
 
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
-	if lp.socBasedPlanning() {
-		ts, _, _ := lp.nextVehiclePlan()
-		return ts
+	if lp.planActive {
+		return lp.planActiveTime
 	}
 
-	ts, _ := lp.GetPlanEnergy()
+	var ts time.Time
+
+	if lp.socBasedPlanning() {
+		ts, _, _ = lp.nextVehiclePlan()
+	} else {
+		ts, _ = lp.GetPlanEnergy()
+	}
+
 	return ts
 }
 
