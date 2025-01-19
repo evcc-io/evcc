@@ -241,8 +241,8 @@ func healthHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	}
 }
