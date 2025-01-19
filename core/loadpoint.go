@@ -176,12 +176,12 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64        // Vehicle Soc
-	chargeDuration          time.Duration  // Charge duration
-	energyMetrics           *EnergyMetrics // Stats for charged energy by session
-	chargeRemainingDuration time.Duration  // Remaining charge duration
-	chargeRemainingEnergy   float64        // Remaining charge energy in Wh
-	progress                *Progress      // Step-wise progress indicator
+	vehicleSoc              float64       // Vehicle Soc
+	chargeDuration          time.Duration // Charge duration
+	energyMetrics           EnergyMetrics // Stats for charged energy by session
+	chargeRemainingDuration time.Duration // Remaining charge duration
+	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	progress                *Progress     // Step-wise progress indicator
 
 	// session log
 	db      *session.DB
@@ -307,12 +307,11 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 				Mode:     pollCharging,
 			},
 		},
-		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		energyMetrics: NewEnergyMetrics(),
-		progress:      NewProgress(0, 10),     // soc progress indicator
-		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
-		tasks:         util.NewQueue[Task](),  // task queue
+		Enable:      ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:     ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		progress:    NewProgress(0, 10),                                    // soc progress indicator
+		coordinator: coordinator.NewDummy(),                                // dummy vehicle coordinator
+		tasks:       util.NewQueue[Task](),                                 // task queue
 	}
 
 	return lp
