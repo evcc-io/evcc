@@ -31,6 +31,7 @@ titleEdit = "Upravit měřič baterie"
 [config.circuits]
 
 [config.control]
+description = "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte. "
 
 [config.deviceValue]
 capacity = "Kapacita"
@@ -49,6 +50,8 @@ power = "Výkon"
 range = "Rozsah"
 soc = "SoC"
 socLimit = "Strop"
+chargeStatusB = "připojeno"
+chargeStatusA = "nepřipojeno"
 
 [config.eebus]
 description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."
