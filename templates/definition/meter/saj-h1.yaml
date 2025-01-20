@@ -14,9 +14,11 @@ params:
     advanced: true
   # battery control
   - name: defaultmode
+    type: int
     default: 0 # (0=self-use,1=time-of-use,2=backup,3=passive)
     advanced: true
   - name: holdmode
+    type: int
     default: 2 # (0=self-use,1=time-of-use,2=backup,3=passive)
     advanced: true
   - name: backupsoc
@@ -106,9 +108,9 @@ render: |
             register:
               address: 0x3247 # AppMode
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
-          value: {{ .backupsoc }} # use backupsoc value when using backup mode as defaultmode
+          value: {{ .backupsoc }} # use backupsoc value to define the min backup soc to retain
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -116,7 +118,7 @@ render: |
             register:
               address: 0x3271 # BackModSOCRetain
               type: writeholding
-              decode: int16
+              decode: uint16
     - case: 2 # hold
       set:
         source: sequence
@@ -130,9 +132,9 @@ render: |
             register:
               address: 0x3247 # AppMode
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
-          value: {{ .soc }} # hold on current soc value when using backup mode as holdmode
+          value: {{ .soc }} # use current soc value to define the backup soc to retain
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -140,7 +142,7 @@ render: |
             register:
               address: 0x3271 # BackModSOCRetain
               type: writeholding
-              decode: int16
+              decode: uint16
     - case: 3 # charge
       set:
         source: sequence
@@ -154,7 +156,7 @@ render: |
             register:
               address: 0x3247 # AppMode
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
           value: 1 # enable
           set:
@@ -164,7 +166,7 @@ render: |
             register:
               address: 0x3604 # Charge time enable control
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
           value: 0 # start time (00:00)
           set:
@@ -174,7 +176,7 @@ render: |
             register:
               address: 0x3606 # Battery first charging time (start)
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
           value: 0x173B # end time (23:59)
           set:
@@ -184,7 +186,7 @@ render: |
             register:
               address: 0x3607 # Battery first charging time (end)
               type: writeholding
-              decode: int16
+              decode: uint16
         - source: const
           value: 0x7F64 # every day (0x7f) at 100% (0x64)
           set:
@@ -194,6 +196,6 @@ render: |
             register:
               address: 0x3608 # Battery first charging time (power)
               type: writeholding
-              decode: int16
+              decode: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
