@@ -79,6 +79,7 @@ temp = "Lämpötila"
 topic = "Aihe"
 url = "URL"
 yes = "kyllä"
+amount = Määrä
 
 [config.eebus]
 description = "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa."
