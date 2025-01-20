@@ -79,6 +79,7 @@ temp = "Temperatuur"
 topic = "Onderwerp"
 url = "URL"
 yes = "ja"
+amount = "Aantal"
 
 [config.eebus]
 description = "Configuratie voor communicatie met andere EEBus apparaten."
