@@ -79,6 +79,7 @@ temp = "Temperatura"
 topic = "Naslov"
 url = "URL"
 yes = "da"
+amount = "Iznos"
 
 [config.eebus]
 description = "Postavke koje omogućuju evcc-u komunikaciju s drugim EEBus uređajima."
