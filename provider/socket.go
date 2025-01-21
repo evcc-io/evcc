@@ -28,12 +28,12 @@ type Socket struct {
 }
 
 func init() {
-	registry.Add("ws", NewSocketProviderFromConfig)
-	registry.Add("websocket", NewSocketProviderFromConfig)
+	registry.Add("ws", NewSocketPluginFromConfig)
+	registry.Add("websocket", NewSocketPluginFromConfig)
 }
 
-// NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error) {
+// NewSocketPluginFromConfig creates a HTTP provider
+func NewSocketPluginFromConfig(other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		URI               string
 		Headers           map[string]string

@@ -31,7 +31,7 @@ type HTTP struct {
 }
 
 func init() {
-	registry.AddCtx("http", NewHTTPProviderFromConfig)
+	registry.AddCtx("http", NewHTTPPluginFromConfig)
 }
 
 var mc = httpcache.NewMemoryCache()
@@ -41,8 +41,8 @@ type Auth struct {
 	Type, User, Password string
 }
 
-// NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewHTTPPluginFromConfig creates a HTTP provider
+func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -217,7 +217,7 @@ func (p *HTTP) set(param string, val interface{}) error {
 	return err
 }
 
-var _ SetIntProvider = (*HTTP)(nil)
+var _ IntSetter = (*HTTP)(nil)
 
 // IntSetter sends int request
 func (p *HTTP) IntSetter(param string) (func(int64) error, error) {
@@ -226,7 +226,7 @@ func (p *HTTP) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetFloatProvider = (*HTTP)(nil)
+var _ FloatSetter = (*HTTP)(nil)
 
 // FloatSetter sends int request
 func (p *HTTP) FloatSetter(param string) (func(float64) error, error) {
@@ -235,7 +235,7 @@ func (p *HTTP) FloatSetter(param string) (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetStringProvider = (*HTTP)(nil)
+var _ StringSetter = (*HTTP)(nil)
 
 // StringSetter sends string request
 func (p *HTTP) StringSetter(param string) (func(string) error, error) {
@@ -244,7 +244,7 @@ func (p *HTTP) StringSetter(param string) (func(string) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*HTTP)(nil)
+var _ BoolSetter = (*HTTP)(nil)
 
 // BoolSetter sends bool request
 func (p *HTTP) BoolSetter(param string) (func(bool) error, error) {

@@ -11,7 +11,7 @@ func NewTimeoutHandler(ticker func() (string, error)) *TimeoutHandler {
 	return &TimeoutHandler{ticker}
 }
 
-func (h *TimeoutHandler) BoolGetter(p BoolProvider) (func() (bool, error), error) {
+func (h *TimeoutHandler) BoolGetter(p BoolGetter) (func() (bool, error), error) {
 	g, err := p.BoolGetter()
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (h *TimeoutHandler) BoolGetter(p BoolProvider) (func() (bool, error), error
 	}, nil
 }
 
-func (h *TimeoutHandler) FloatGetter(p FloatProvider) (func() (float64, error), error) {
+func (h *TimeoutHandler) FloatGetter(p FloatGetter) (func() (float64, error), error) {
 	g, err := p.FloatGetter()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (h *TimeoutHandler) FloatGetter(p FloatProvider) (func() (float64, error), 
 	}, nil
 }
 
-func (h *TimeoutHandler) StringGetter(p StringProvider) (func() (string, error), error) {
+func (h *TimeoutHandler) StringGetter(p StringGetter) (func() (string, error), error) {
 	g, err := p.StringGetter()
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (h *TimeoutHandler) StringGetter(p StringProvider) (func() (string, error),
 	}, nil
 }
 
-func (h *TimeoutHandler) JsonGetter(p StringProvider) (func(any) error, error) {
+func (h *TimeoutHandler) JsonGetter(p StringGetter) (func(any) error, error) {
 	g, err := p.StringGetter()
 	if err != nil {
 		return nil, err

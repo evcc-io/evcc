@@ -27,11 +27,11 @@ type Script struct {
 }
 
 func init() {
-	registry.Add("script", NewScriptProviderFromConfig)
+	registry.Add("script", NewScriptPluginFromConfig)
 }
 
-// NewScriptProviderFromConfig creates a script provider.
-func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
+// NewScriptPluginFromConfig creates a script provider.
+func NewScriptPluginFromConfig(other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		Cmd               string
 		pipeline.Settings `mapstructure:",squash"`
@@ -47,7 +47,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error)
 		return nil, err
 	}
 
-	p, err := NewScriptProvider(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
+	p, err := NewScripPlugin(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
 	p.getter = defaultGetters(p, cc.Scale)
 
 	if err == nil {
@@ -61,7 +61,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error)
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
+func NewScripPlugin(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	if strings.TrimSpace(script) == "" {
 		return nil, errors.New("script is required")
 	}
@@ -140,21 +140,21 @@ func scriptSetter[T any](p *Script, param string) (func(T) error, error) {
 	}, nil
 }
 
-var _ SetIntProvider = (*Script)(nil)
+var _ IntSetter = (*Script)(nil)
 
 // IntSetter invokes script with parameter replaced by int value
 func (p *Script) IntSetter(param string) (func(int64) error, error) {
 	return scriptSetter[int64](p, param)
 }
 
-var _ SetBoolProvider = (*Script)(nil)
+var _ BoolSetter = (*Script)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
 func (p *Script) BoolSetter(param string) (func(bool) error, error) {
 	return scriptSetter[bool](p, param)
 }
 
-var _ SetStringProvider = (*Script)(nil)
+var _ StringSetter = (*Script)(nil)
 
 // StringSetter returns a function that invokes a script with parameter by a string value
 func (p *Script) StringSetter(param string) (func(string) error, error) {

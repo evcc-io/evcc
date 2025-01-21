@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type watchdogProvider struct {
+type watchdogPlugin struct {
 	mu      sync.Mutex
 	ctx     context.Context
 	log     *util.Logger
@@ -24,7 +24,7 @@ func init() {
 }
 
 // NewWatchDogFromConfig creates watchDog provider
-func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Reset   *string
 		Set     Config
@@ -35,7 +35,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (P
 		return nil, err
 	}
 
-	o := &watchdogProvider{
+	o := &watchdogPlugin{
 		ctx:     ctx,
 		log:     contextLogger(ctx, util.NewLogger("watchdog")),
 		reset:   cc.Reset,
@@ -46,7 +46,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (P
 	return o, nil
 }
 
-func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
+func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	for tick := time.Tick(o.timeout); ; {
 		select {
 		case <-tick:
@@ -59,9 +59,9 @@ func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
 	}
 }
 
-// setter is the generic setter function for watchdogProvider
+// setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func(T) error {
+func setter[T comparable](o *watchdogPlugin, set func(T) error, reset *T) func(T) error {
 	return func(val T) error {
 		o.mu.Lock()
 
@@ -87,9 +87,9 @@ func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func
 	}
 }
 
-var _ SetIntProvider = (*watchdogProvider)(nil)
+var _ IntSetter = (*watchdogPlugin)(nil)
 
-func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
@@ -107,9 +107,9 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 	return setter(o, set, reset), nil
 }
 
-var _ SetFloatProvider = (*watchdogProvider)(nil)
+var _ FloatSetter = (*watchdogPlugin)(nil)
 
-func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error) {
+func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) {
 	set, err := o.set.FloatSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
@@ -127,9 +127,9 @@ func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error
 	return setter(o, set, reset), nil
 }
 
-var _ SetBoolProvider = (*watchdogProvider)(nil)
+var _ BoolSetter = (*watchdogPlugin)(nil)
 
-func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
+func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 	set, err := o.set.BoolSetter(o.ctx, param)
 	if err != nil {
 		return nil, err

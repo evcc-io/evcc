@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type calcProvider struct {
+type calcPlugin struct {
 	add, mul, div []func() (float64, error)
 	abs, sign     func() (float64, error)
 }
@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config
@@ -43,7 +43,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 		return nil, errors.New("can only have either add, mul, div, abs or sign")
 	}
 
-	o := &calcProvider{}
+	o := new(calcPlugin)
 
 	for idx, cc := range cc.Add {
 		f, err := cc.FloatGetter(ctx)
@@ -84,31 +84,31 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 	return o, nil
 }
 
-var _ IntProvider = (*calcProvider)(nil)
+var _ IntGetter = (*calcPlugin)(nil)
 
-func (o *calcProvider) IntGetter() (func() (int64, error), error) {
+func (o *calcPlugin) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		f, err := o.floatGetter()
 		return int64(f), err
 	}, nil
 }
 
-var _ StringProvider = (*calcProvider)(nil)
+var _ StringGetter = (*calcPlugin)(nil)
 
-func (o *calcProvider) StringGetter() (func() (string, error), error) {
+func (o *calcPlugin) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		f, err := o.floatGetter()
 		return fmt.Sprintf("%c", int(f)), err
 	}, nil
 }
 
-var _ FloatProvider = (*calcProvider)(nil)
+var _ FloatGetter = (*calcPlugin)(nil)
 
-func (o *calcProvider) FloatGetter() (func() (float64, error), error) {
+func (o *calcPlugin) FloatGetter() (func() (float64, error), error) {
 	return o.floatGetter, nil
 }
 
-func (o *calcProvider) floatGetter() (float64, error) {
+func (o *calcPlugin) floatGetter() (float64, error) {
 	var res float64
 
 	switch {

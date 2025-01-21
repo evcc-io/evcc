@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSocketProvider(t *testing.T) {
+func TestSockePlugin(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -40,7 +40,7 @@ func TestSocketProvider(t *testing.T) {
 	defer srv.Close()
 
 	addr := "ws://" + srv.Listener.Addr().String()
-	p, err := NewSocketProviderFromConfig(map[string]any{
+	p, err := NewSocketPluginFromConfig(map[string]any{
 		"uri": addr,
 		"jq":  `.data | select(.uuid=="bar") .tuples[0][1]`,
 	})
@@ -48,7 +48,7 @@ func TestSocketProvider(t *testing.T) {
 
 	<-p.(*Socket).val.Done()
 
-	g, err := p.(IntProvider).IntGetter()
+	g, err := p.(IntGetter).IntGetter()
 	require.NoError(t, err)
 
 	i, err := g()

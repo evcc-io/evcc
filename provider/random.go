@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type randomProvider struct {
+type randomPlugin struct {
 	ctx context.Context
 	set Config
 }
@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewRandomFromConfig creates random provider
-func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Set Config
 	}
@@ -27,7 +27,7 @@ func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 		return nil, err
 	}
 
-	o := &randomProvider{
+	o := &randomPlugin{
 		ctx: ctx,
 		set: cc.Set,
 	}
@@ -35,9 +35,9 @@ func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 	return o, nil
 }
 
-var _ SetIntProvider = (*randomProvider)(nil)
+var _ IntSetter = (*randomPlugin)(nil)
 
-func (o *randomProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *randomPlugin) IntSetter(param string) (func(int64) error, error) {
 	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err

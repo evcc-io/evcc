@@ -22,11 +22,11 @@ type Mqtt struct {
 }
 
 func init() {
-	registry.AddCtx("mqtt", NewMqttFromConfig)
+	registry.AddCtx("mqtt", NewMqttPluginFromConfig)
 }
 
-// NewMqttFromConfig creates Mqtt provider
-func NewMqttFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewMqttPluginFromConfig creates Mqtt provider
+func NewMqttPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters
@@ -120,7 +120,7 @@ func (m *Mqtt) StringGetter() (func() (string, error), error) {
 	return h.value, err
 }
 
-var _ SetIntProvider = (*Mqtt)(nil)
+var _ IntSetter = (*Mqtt)(nil)
 
 // IntSetter publishes topic with parameter replaced by int value
 func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
@@ -134,7 +134,7 @@ func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetFloatProvider = (*Mqtt)(nil)
+var _ FloatSetter = (*Mqtt)(nil)
 
 // FloatSetter publishes topic with parameter replaced by float value
 func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
@@ -148,7 +148,7 @@ func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*Mqtt)(nil)
+var _ BoolSetter = (*Mqtt)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
 func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
@@ -162,7 +162,7 @@ func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
 	}, nil
 }
 
-var _ SetStringProvider = (*Mqtt)(nil)
+var _ StringSetter = (*Mqtt)(nil)
 
 // StringSetter invokes script with parameter replaced by string value
 func (m *Mqtt) StringSetter(param string) (func(string) error, error) {

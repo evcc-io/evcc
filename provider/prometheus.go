@@ -26,7 +26,7 @@ func init() {
 	registry.Add("prometheus", NewPrometheusFromConfig)
 }
 
-func NewPrometheusFromConfig(other map[string]interface{}) (Provider, error) {
+func NewPrometheusFromConfig(other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		Uri, Query string
 		Timeout    time.Duration
@@ -83,7 +83,7 @@ func (p *Prometheus) Query() (model.Value, error) {
 	return res, nil
 }
 
-var _ FloatProvider = (*Prometheus)(nil)
+var _ FloatGetter = (*Prometheus)(nil)
 
 // FloatGetter expects scalar value from query response as float
 func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
@@ -102,7 +102,7 @@ func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
 	}, nil
 }
 
-var _ IntProvider = (*Prometheus)(nil)
+var _ IntGetter = (*Prometheus)(nil)
 
 // IntGetter expects scalar value from query response as int
 func (p *Prometheus) IntGetter() (func() (int64, error), error) {

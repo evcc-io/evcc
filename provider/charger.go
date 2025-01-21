@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-type switchChargerProvider struct {
+type switchChargerPlugin struct {
 	charger api.Charger
 }
 
@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewChargerEnableFromConfig creates type conversion provider
-func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Config config.Typed
 	}
@@ -33,34 +33,34 @@ func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	o := &switchChargerProvider{
+	o := &switchChargerPlugin{
 		charger: charger,
 	}
 
 	return o, nil
 }
 
-var _ FloatProvider = (*switchChargerProvider)(nil)
+var _ FloatGetter = (*switchChargerPlugin)(nil)
 
-func (o *switchChargerProvider) FloatGetter() (func() (float64, error), error) {
+func (o *switchChargerPlugin) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		v, err := o.charger.Enabled()
 		return cast.ToFloat64(v), err
 	}, nil
 }
 
-var _ IntProvider = (*switchChargerProvider)(nil)
+var _ IntGetter = (*switchChargerPlugin)(nil)
 
-func (o *switchChargerProvider) IntGetter() (func() (int64, error), error) {
+func (o *switchChargerPlugin) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		v, err := o.charger.Enabled()
 		return cast.ToInt64(v), err
 	}, nil
 }
 
-var _ SetIntProvider = (*switchChargerProvider)(nil)
+var _ IntSetter = (*switchChargerPlugin)(nil)
 
-func (o *switchChargerProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *switchChargerPlugin) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		b, err := cast.ToBoolE(val)
 		if err != nil {
@@ -70,17 +70,17 @@ func (o *switchChargerProvider) IntSetter(param string) (func(int64) error, erro
 	}, nil
 }
 
-var _ BoolProvider = (*switchChargerProvider)(nil)
+var _ BoolGetter = (*switchChargerPlugin)(nil)
 
-func (o *switchChargerProvider) BoolGetter() (func() (bool, error), error) {
+func (o *switchChargerPlugin) BoolGetter() (func() (bool, error), error) {
 	return func() (bool, error) {
 		return o.charger.Enabled()
 	}, nil
 }
 
-var _ SetBoolProvider = (*switchChargerProvider)(nil)
+var _ BoolSetter = (*switchChargerPlugin)(nil)
 
-func (o *switchChargerProvider) BoolSetter(param string) (func(bool) error, error) {
+func (o *switchChargerPlugin) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return o.charger.Enable(val)
 	}, nil

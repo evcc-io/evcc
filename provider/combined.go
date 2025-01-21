@@ -13,13 +13,13 @@ func init() {
 	registry.AddCtx("openwb", NewCombinedFromConfig)
 }
 
-// combinedProvider implements status conversion from openWB to api.Status
-type combinedProvider struct {
+// combinedPlugin implements status conversion from openWB to api.Status
+type combinedPlugin struct {
 	plugged, charging func() (bool, error)
 }
 
 // NewCombinedFromConfig creates combined provider
-func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Plugged, Charging Config
 	}
@@ -38,23 +38,23 @@ func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (P
 		return nil, fmt.Errorf("charging: %w", err)
 	}
 
-	o := NewCombinedProvider(plugged, charging)
+	o := NewCombinedPlugin(plugged, charging)
 
 	return o, nil
 }
 
-// NewCombinedProvider creates provider for OpenWB status converted from MQTT topics
-func NewCombinedProvider(plugged, charging func() (bool, error)) *combinedProvider {
-	return &combinedProvider{
+// NewCombinedPlugin creates provider for OpenWB status converted from MQTT topics
+func NewCombinedPlugin(plugged, charging func() (bool, error)) *combinedPlugin {
+	return &combinedPlugin{
 		plugged:  plugged,
 		charging: charging,
 	}
 }
 
-var _ StringProvider = (*combinedProvider)(nil)
+var _ StringGetter = (*combinedPlugin)(nil)
 
 // StringGetter returns string from OpenWB charging/ plugged status
-func (o *combinedProvider) StringGetter() (func() (string, error), error) {
+func (o *combinedPlugin) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		charging, err := o.charging()
 		if err != nil {

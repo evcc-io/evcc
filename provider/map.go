@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type mapProvider struct {
+type mapPlugin struct {
 	ctx      context.Context
 	values   map[int64]int64
 	get, set Config
@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewMapFromConfig creates type conversion provider
-func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Values   map[int64]int64
 		Get, Set Config
@@ -32,7 +32,7 @@ func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provid
 		return nil, fmt.Errorf("missing values")
 	}
 
-	o := &mapProvider{
+	o := &mapPlugin{
 		ctx:    ctx,
 		get:    cc.Get,
 		set:    cc.Set,
@@ -42,9 +42,9 @@ func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provid
 	return o, nil
 }
 
-var _ IntProvider = (*mapProvider)(nil)
+var _ IntGetter = (*mapPlugin)(nil)
 
-func (o *mapProvider) IntGetter() (func() (int64, error), error) {
+func (o *mapPlugin) IntGetter() (func() (int64, error), error) {
 	get, err := o.get.IntGetter(o.ctx)
 
 	return func() (int64, error) {
@@ -62,9 +62,9 @@ func (o *mapProvider) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-var _ SetIntProvider = (*mapProvider)(nil)
+var _ IntSetter = (*mapPlugin)(nil)
 
-func (o *mapProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *mapPlugin) IntSetter(param string) (func(int64) error, error) {
 	set, err := o.set.IntSetter(o.ctx, param)
 
 	return func(val int64) error {

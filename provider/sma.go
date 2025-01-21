@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewSMAFromConfig creates SMA provider
-func NewSMAFromConfig(other map[string]interface{}) (Provider, error) {
+func NewSMAFromConfig(other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		URI, Password, Interface string
 		Serial                   uint32
@@ -69,7 +69,7 @@ func NewSMAFromConfig(other map[string]interface{}) (Provider, error) {
 	return provider, err
 }
 
-var _ FloatProvider = (*SMA)(nil)
+var _ FloatGetter = (*SMA)(nil)
 
 // FloatGetter creates handler for float64
 func (p *SMA) FloatGetter() (func() (float64, error), error) {
@@ -83,7 +83,7 @@ func (p *SMA) FloatGetter() (func() (float64, error), error) {
 	}, nil
 }
 
-var _ IntProvider = (*SMA)(nil)
+var _ IntGetter = (*SMA)(nil)
 
 // IntGetter creates handler for int64
 func (p *SMA) IntGetter() (func() (int64, error), error) {

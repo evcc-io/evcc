@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type convertProvider struct {
+type convertPlugin struct {
 	ctx     context.Context
 	Convert string
 	Set     Config
@@ -19,8 +19,8 @@ func init() {
 }
 
 // NewConvertFromConfig creates type conversion provider
-func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
-	cc := convertProvider{
+func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+	cc := convertPlugin{
 		ctx: ctx,
 	}
 
@@ -31,9 +31,9 @@ func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Pr
 	return &cc, nil
 }
 
-var _ SetFloatProvider = (*convertProvider)(nil)
+var _ FloatSetter = (*convertPlugin)(nil)
 
-func (o *convertProvider) FloatSetter(param string) (func(float64) error, error) {
+func (o *convertPlugin) FloatSetter(param string) (func(float64) error, error) {
 	switch o.Convert {
 	case "float2int":
 		set, err := o.Set.IntSetter(o.ctx, param)
@@ -47,9 +47,9 @@ func (o *convertProvider) FloatSetter(param string) (func(float64) error, error)
 	}
 }
 
-var _ SetIntProvider = (*convertProvider)(nil)
+var _ IntSetter = (*convertPlugin)(nil)
 
-func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *convertPlugin) IntSetter(param string) (func(int64) error, error) {
 	switch o.Convert {
 	case "int2float":
 		set, err := o.Set.FloatSetter(o.ctx, param)

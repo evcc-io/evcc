@@ -28,7 +28,7 @@ func init() {
 }
 
 // NewModbusSunspecFromConfig creates Modbus plugin
-func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) {
+func NewModbusSunspecFromConfig(other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string
@@ -137,14 +137,14 @@ func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 	return m.scale * res, nil
 }
 
-var _ FloatProvider = (*Modbus)(nil)
+var _ FloatGetter = (*Modbus)(nil)
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *ModbusSunspec) FloatGetter() (func() (f float64, err error), error) {
 	return m.floatGetter, nil
 }
 
-var _ IntProvider = (*Modbus)(nil)
+var _ IntGetter = (*Modbus)(nil)
 
 // IntGetter executes configured modbus read operation and implements IntProvider
 func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
@@ -176,9 +176,9 @@ func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, 
 	return block, point, err
 }
 
-var _ SetFloatProvider = (*Modbus)(nil)
+var _ FloatSetter = (*Modbus)(nil)
 
-// FloatSetter executes configured modbus write operation and implements SetFloatProvider
+// FloatSetter executes configured modbus write operation and implements FloatSetter
 func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	block, point, err := m.blockPoint()
 	if err != nil {
@@ -206,9 +206,9 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetIntProvider = (*Modbus)(nil)
+var _ IntSetter = (*Modbus)(nil)
 
-// IntSetter executes configured modbus write operation and implements SetIntProvider
+// IntSetter executes configured modbus write operation and implements IntSetter
 func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 	block, point, err := m.blockPoint()
 	if err != nil {

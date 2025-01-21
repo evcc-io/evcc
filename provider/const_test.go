@@ -12,7 +12,7 @@ func TestConst(t *testing.T) {
 	assert.NoError(t, err)
 
 	{
-		g, err := p.(StringProvider).StringGetter()
+		g, err := p.(StringGetter).StringGetter()
 		assert.NoError(t, err)
 
 		v, err := g()
@@ -21,7 +21,7 @@ func TestConst(t *testing.T) {
 	}
 
 	{
-		g, err := p.(IntProvider).IntGetter()
+		g, err := p.(IntGetter).IntGetter()
 		assert.NoError(t, err)
 
 		v, err := g()
@@ -30,7 +30,7 @@ func TestConst(t *testing.T) {
 	}
 
 	{
-		g, err := p.(FloatProvider).FloatGetter()
+		g, err := p.(FloatGetter).FloatGetter()
 		assert.NoError(t, err)
 
 		v, err := g()

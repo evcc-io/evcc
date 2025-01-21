@@ -21,11 +21,11 @@ type Go struct {
 }
 
 func init() {
-	registry.AddCtx("go", NewGoProviderFromConfig)
+	registry.AddCtx("go", NewGoPluginFromConfig)
 }
 
-// NewGoProviderFromConfig creates a Go provider
-func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewGoPluginFromConfig creates a Go provider
+func NewGoPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -62,7 +62,7 @@ func NewGoProviderFromConfig(ctx context.Context, other map[string]interface{}) 
 	return p, nil
 }
 
-var _ FloatProvider = (*Go)(nil)
+var _ FloatGetter = (*Go)(nil)
 
 // FloatGetter parses float from request
 func (p *Go) FloatGetter() (func() (float64, error), error) {
@@ -81,7 +81,7 @@ func (p *Go) FloatGetter() (func() (float64, error), error) {
 	}, nil
 }
 
-var _ IntProvider = (*Go)(nil)
+var _ IntGetter = (*Go)(nil)
 
 // IntGetter parses int64 from request
 func (p *Go) IntGetter() (func() (int64, error), error) {
@@ -100,7 +100,7 @@ func (p *Go) IntGetter() (func() (int64, error), error) {
 	}, nil
 }
 
-var _ StringProvider = (*Go)(nil)
+var _ StringGetter = (*Go)(nil)
 
 // StringGetter parses string from request
 func (p *Go) StringGetter() (func() (string, error), error) {
@@ -119,7 +119,7 @@ func (p *Go) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ BoolProvider = (*Go)(nil)
+var _ BoolGetter = (*Go)(nil)
 
 // BoolGetter parses bool from request
 func (p *Go) BoolGetter() (func() (bool, error), error) {
@@ -192,7 +192,7 @@ func (p *Go) setParam(param string, val any) error {
 	return err
 }
 
-var _ SetIntProvider = (*Go)(nil)
+var _ IntSetter = (*Go)(nil)
 
 // IntSetter sends int request
 func (p *Go) IntSetter(param string) (func(int64) error, error) {
@@ -201,7 +201,7 @@ func (p *Go) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetFloatProvider = (*Go)(nil)
+var _ FloatSetter = (*Go)(nil)
 
 // FloatSetter sends float request
 func (p *Go) FloatSetter(param string) (func(float64) error, error) {
@@ -210,7 +210,7 @@ func (p *Go) FloatSetter(param string) (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetStringProvider = (*Go)(nil)
+var _ StringSetter = (*Go)(nil)
 
 // StringSetter sends string request
 func (p *Go) StringSetter(param string) (func(string) error, error) {
@@ -219,7 +219,7 @@ func (p *Go) StringSetter(param string) (func(string) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*Go)(nil)
+var _ BoolSetter = (*Go)(nil)
 
 // BoolSetter sends bool request
 func (p *Go) BoolSetter(param string) (func(bool) error, error) {

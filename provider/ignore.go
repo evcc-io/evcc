@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type ignoreProvider struct {
+type ignorePlugin struct {
 	ctx context.Context
 	err string
 	set Config
@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewIgnoreFromConfig creates const provider
-func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Error string
 		Set   Config
@@ -28,7 +28,7 @@ func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 		return nil, err
 	}
 
-	o := &ignoreProvider{
+	o := &ignorePlugin{
 		ctx: ctx,
 		err: cc.Error,
 		set: cc.Set,
@@ -37,7 +37,7 @@ func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 	return o, nil
 }
 
-var _ SetIntProvider = (*ignoreProvider)(nil)
+var _ IntSetter = (*ignorePlugin)(nil)
 
 func ignoreError[T any](fun func(T) error, match string) func(T) error {
 	return func(val T) error {
@@ -48,7 +48,7 @@ func ignoreError[T any](fun func(T) error, match string) func(T) error {
 	}
 }
 
-func (o *ignoreProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *ignorePlugin) IntSetter(param string) (func(int64) error, error) {
 	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
@@ -57,9 +57,9 @@ func (o *ignoreProvider) IntSetter(param string) (func(int64) error, error) {
 	return ignoreError(set, o.err), nil
 }
 
-var _ SetFloatProvider = (*ignoreProvider)(nil)
+var _ FloatSetter = (*ignorePlugin)(nil)
 
-func (o *ignoreProvider) FloatSetter(param string) (func(float64) error, error) {
+func (o *ignorePlugin) FloatSetter(param string) (func(float64) error, error) {
 	set, err := o.set.FloatSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
@@ -68,9 +68,9 @@ func (o *ignoreProvider) FloatSetter(param string) (func(float64) error, error) 
 	return ignoreError(set, o.err), nil
 }
 
-var _ SetBoolProvider = (*ignoreProvider)(nil)
+var _ BoolSetter = (*ignorePlugin)(nil)
 
-func (o *ignoreProvider) BoolSetter(param string) (func(bool) error, error) {
+func (o *ignorePlugin) BoolSetter(param string) (func(bool) error, error) {
 	set, err := o.set.BoolSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
@@ -79,9 +79,9 @@ func (o *ignoreProvider) BoolSetter(param string) (func(bool) error, error) {
 	return ignoreError(set, o.err), nil
 }
 
-var _ SetBytesProvider = (*ignoreProvider)(nil)
+var _ BytesSetter = (*ignorePlugin)(nil)
 
-func (o *ignoreProvider) BytesSetter(param string) (func([]byte) error, error) {
+func (o *ignorePlugin) BytesSetter(param string) (func([]byte) error, error) {
 	set, err := o.set.BytesSetter(o.ctx, param)
 	if err != nil {
 		return nil, err

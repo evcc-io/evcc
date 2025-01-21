@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
@@ -91,7 +91,7 @@ func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
 	}
 }
 
-var _ FloatProvider = (*Modbus)(nil)
+var _ FloatGetter = (*Modbus)(nil)
 
 // FloatGetter implements func() (float64, error)
 func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
@@ -115,7 +115,7 @@ func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
 	}, nil
 }
 
-var _ IntProvider = (*Modbus)(nil)
+var _ IntGetter = (*Modbus)(nil)
 
 // IntGetter implements IntProvider
 func (m *Modbus) IntGetter() (func() (int64, error), error) {
@@ -127,7 +127,7 @@ func (m *Modbus) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-var _ StringProvider = (*Modbus)(nil)
+var _ StringGetter = (*Modbus)(nil)
 
 // StringGetter implements StringProvider
 func (m *Modbus) StringGetter() (func() (string, error), error) {
@@ -146,7 +146,7 @@ func (m *Modbus) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ BoolProvider = (*Modbus)(nil)
+var _ BoolGetter = (*Modbus)(nil)
 
 // BoolGetter implements BoolProvider
 func (m *Modbus) BoolGetter() (func() (bool, error), error) {
@@ -198,16 +198,16 @@ func (m *Modbus) writeFunc() (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetFloatProvider = (*Modbus)(nil)
+var _ FloatSetter = (*Modbus)(nil)
 
-// FloatSetter implements SetFloatProvider
+// FloatSetter implements FloatSetter
 func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 	return m.writeFunc()
 }
 
-var _ SetIntProvider = (*Modbus)(nil)
+var _ IntSetter = (*Modbus)(nil)
 
-// IntSetter implements SetIntProvider
+// IntSetter implements IntSetter
 func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 	fun, err := m.writeFunc()
 	if err != nil {
@@ -219,9 +219,9 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*Modbus)(nil)
+var _ BoolSetter = (*Modbus)(nil)
 
-// BoolSetter implements SetBoolProvider
+// BoolSetter implements BoolSetter
 func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
 	set, err := m.IntSetter(param)
 
@@ -235,9 +235,9 @@ func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
 	}, err
 }
 
-var _ SetBytesProvider = (*Modbus)(nil)
+var _ BytesSetter = (*Modbus)(nil)
 
-// BytesSetter implements SetBytesProvider
+// BytesSetter implements BytesSetter
 func (m *Modbus) BytesSetter(_ string) (func([]byte) error, error) {
 	op, err := m.reg.Operation()
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type errorProvider struct {
+type errorPlugin struct {
 	err error
 }
 
@@ -15,7 +15,7 @@ func init() {
 }
 
 // NewErrorFromConfig creates error provider
-func NewErrorFromConfig(other map[string]interface{}) (Provider, error) {
+func NewErrorFromConfig(other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Error string
 	}
@@ -29,16 +29,16 @@ func NewErrorFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, fmt.Errorf("unknown error: %s", cc.Error)
 	}
 
-	o := &errorProvider{
+	o := &errorPlugin{
 		err: err,
 	}
 
 	return o, nil
 }
 
-var _ SetIntProvider = (*errorProvider)(nil)
+var _ IntSetter = (*errorPlugin)(nil)
 
-func (o *errorProvider) IntSetter(param string) (func(int64) error, error) {
+func (o *errorPlugin) IntSetter(param string) (func(int64) error, error) {
 	return func(int64) error {
 		return o.err
 	}, nil

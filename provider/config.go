@@ -7,42 +7,42 @@ import (
 	reg "github.com/evcc-io/evcc/util/registry"
 )
 
-var registry = reg.New[Provider]("plugin")
+var registry = reg.New[Plugin]("plugin")
 
 // provider types
 type (
-	Provider interface{}
-	Getters  interface {
-		StringProvider
-		FloatProvider
-		IntProvider
-		BoolProvider
+	Plugin  interface{}
+	Getters interface {
+		StringGetter
+		FloatGetter
+		IntGetter
+		BoolGetter
 	}
-	StringProvider interface {
+	StringGetter interface {
 		StringGetter() (func() (string, error), error)
 	}
-	FloatProvider interface {
+	FloatGetter interface {
 		FloatGetter() (func() (float64, error), error)
 	}
-	IntProvider interface {
+	IntGetter interface {
 		IntGetter() (func() (int64, error), error)
 	}
-	BoolProvider interface {
+	BoolGetter interface {
 		BoolGetter() (func() (bool, error), error)
 	}
-	SetStringProvider interface {
+	StringSetter interface {
 		StringSetter(param string) (func(string) error, error)
 	}
-	SetFloatProvider interface {
+	FloatSetter interface {
 		FloatSetter(param string) (func(float64) error, error)
 	}
-	SetIntProvider interface {
+	IntSetter interface {
 		IntSetter(param string) (func(int64) error, error)
 	}
-	SetBoolProvider interface {
+	BoolSetter interface {
 		BoolSetter(param string) (func(bool) error, error)
 	}
-	SetBytesProvider interface {
+	BytesSetter interface {
 		BytesSetter(param string) (func([]byte) error, error)
 	}
 )
@@ -79,7 +79,7 @@ func provider[T any](typ string, ctx context.Context, config *Config) (T, error)
 }
 
 func (c *Config) IntGetter(ctx context.Context) (func() (int64, error), error) {
-	prov, err := provider[IntProvider]("int", ctx, c)
+	prov, err := provider[IntGetter]("int", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (c *Config) IntGetter(ctx context.Context) (func() (int64, error), error) {
 }
 
 func (c *Config) FloatGetter(ctx context.Context) (func() (float64, error), error) {
-	prov, err := provider[FloatProvider]("float", ctx, c)
+	prov, err := provider[FloatGetter]("float", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (c *Config) FloatGetter(ctx context.Context) (func() (float64, error), erro
 }
 
 func (c *Config) StringGetter(ctx context.Context) (func() (string, error), error) {
-	prov, err := provider[StringProvider]("string", ctx, c)
+	prov, err := provider[StringGetter]("string", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (c *Config) StringGetter(ctx context.Context) (func() (string, error), erro
 }
 
 func (c *Config) BoolGetter(ctx context.Context) (func() (bool, error), error) {
-	prov, err := provider[BoolProvider]("bool", ctx, c)
+	prov, err := provider[BoolGetter]("bool", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (c *Config) BoolGetter(ctx context.Context) (func() (bool, error), error) {
 }
 
 func (c *Config) IntSetter(ctx context.Context, param string) (func(int64) error, error) {
-	prov, err := provider[SetIntProvider]("int", ctx, c)
+	prov, err := provider[IntSetter]("int", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (c *Config) IntSetter(ctx context.Context, param string) (func(int64) error
 }
 
 func (c *Config) FloatSetter(ctx context.Context, param string) (func(float642 float64) error, error) {
-	prov, err := provider[SetFloatProvider]("float", ctx, c)
+	prov, err := provider[FloatSetter]("float", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (c *Config) FloatSetter(ctx context.Context, param string) (func(float642 f
 }
 
 func (c *Config) StringSetter(ctx context.Context, param string) (func(string) error, error) {
-	prov, err := provider[SetStringProvider]("string", ctx, c)
+	prov, err := provider[StringSetter]("string", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (c *Config) StringSetter(ctx context.Context, param string) (func(string) e
 }
 
 func (c *Config) BoolSetter(ctx context.Context, param string) (func(bool) error, error) {
-	prov, err := provider[SetBoolProvider]("bool", ctx, c)
+	prov, err := provider[BoolSetter]("bool", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (c *Config) BoolSetter(ctx context.Context, param string) (func(bool) error
 }
 
 func (c *Config) BytesSetter(ctx context.Context, param string) (func([]byte) error, error) {
-	prov, err := provider[SetBytesProvider]("bytes", ctx, c)
+	prov, err := provider[BytesSetter]("bytes", ctx, c)
 	if prov == nil || err != nil {
 		return nil, err
 	}

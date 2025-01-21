@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type constProvider struct {
+type constPlugin struct {
 	ctx context.Context
 	str string
 	set Config
@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewConstFromConfig creates const provider
-func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Value             string
 		pipeline.Settings `mapstructure:",squash"`
@@ -32,7 +32,7 @@ func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Prov
 		return nil, err
 	}
 
-	p := &constProvider{
+	p := &constPlugin{
 		ctx: ctx,
 		str: cc.Value,
 		set: cc.Set,
@@ -41,17 +41,17 @@ func NewConstFromConfig(ctx context.Context, other map[string]interface{}) (Prov
 	return p, nil
 }
 
-var _ StringProvider = (*constProvider)(nil)
+var _ StringGetter = (*constPlugin)(nil)
 
-func (p *constProvider) StringGetter() (func() (string, error), error) {
+func (p *constPlugin) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		return p.str, nil
 	}, nil
 }
 
-var _ IntProvider = (*constProvider)(nil)
+var _ IntGetter = (*constPlugin)(nil)
 
-func (p *constProvider) IntGetter() (func() (int64, error), error) {
+func (p *constPlugin) IntGetter() (func() (int64, error), error) {
 	val, err := strconv.ParseInt(p.str, 10, 64)
 	if err != nil && p.str == "" {
 		err = nil
@@ -62,9 +62,9 @@ func (p *constProvider) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-var _ FloatProvider = (*constProvider)(nil)
+var _ FloatGetter = (*constPlugin)(nil)
 
-func (p *constProvider) FloatGetter() (func() (float64, error), error) {
+func (p *constPlugin) FloatGetter() (func() (float64, error), error) {
 	val, err := strconv.ParseFloat(p.str, 64)
 	if err != nil && p.str == "" {
 		err = nil
@@ -75,9 +75,9 @@ func (p *constProvider) FloatGetter() (func() (float64, error), error) {
 	}, err
 }
 
-var _ BoolProvider = (*constProvider)(nil)
+var _ BoolGetter = (*constPlugin)(nil)
 
-func (p *constProvider) BoolGetter() (func() (bool, error), error) {
+func (p *constPlugin) BoolGetter() (func() (bool, error), error) {
 	val, err := strconv.ParseBool(p.str)
 	if err != nil && p.str == "" {
 		err = nil
@@ -88,9 +88,9 @@ func (p *constProvider) BoolGetter() (func() (bool, error), error) {
 	}, err
 }
 
-var _ SetIntProvider = (*constProvider)(nil)
+var _ IntSetter = (*constPlugin)(nil)
 
-func (p *constProvider) IntSetter(param string) (func(int64) error, error) {
+func (p *constPlugin) IntSetter(param string) (func(int64) error, error) {
 	set, err := p.set.IntSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
@@ -106,9 +106,9 @@ func (p *constProvider) IntSetter(param string) (func(int64) error, error) {
 	}, err
 }
 
-var _ SetFloatProvider = (*constProvider)(nil)
+var _ FloatSetter = (*constPlugin)(nil)
 
-func (p *constProvider) FloatSetter(param string) (func(float64) error, error) {
+func (p *constPlugin) FloatSetter(param string) (func(float64) error, error) {
 	set, err := p.set.FloatSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
@@ -124,9 +124,9 @@ func (p *constProvider) FloatSetter(param string) (func(float64) error, error) {
 	}, err
 }
 
-var _ SetBoolProvider = (*constProvider)(nil)
+var _ BoolSetter = (*constPlugin)(nil)
 
-func (p *constProvider) BoolSetter(param string) (func(bool) error, error) {
+func (p *constPlugin) BoolSetter(param string) (func(bool) error, error) {
 	set, err := p.set.BoolSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
@@ -142,9 +142,9 @@ func (p *constProvider) BoolSetter(param string) (func(bool) error, error) {
 	}, err
 }
 
-var _ SetBytesProvider = (*constProvider)(nil)
+var _ BytesSetter = (*constPlugin)(nil)
 
-func (p *constProvider) BytesSetter(param string) (func([]byte) error, error) {
+func (p *constPlugin) BytesSetter(param string) (func([]byte) error, error) {
 	set, err := p.set.BytesSetter(p.ctx, param)
 	if err != nil {
 		return nil, err

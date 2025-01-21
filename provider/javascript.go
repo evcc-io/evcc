@@ -20,11 +20,11 @@ type Javascript struct {
 }
 
 func init() {
-	registry.AddCtx("js", NewJavascriptProviderFromConfig)
+	registry.AddCtx("js", NewJavascriptPluginFromConfig)
 }
 
-// NewJavascriptProviderFromConfig creates a Javascript provider
-func NewJavascriptProviderFromConfig(ctx context.Context, other map[string]interface{}) (Provider, error) {
+// NewJavascriptPluginFromConfig creates a Javascript provider
+func NewJavascriptPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		VM     string
 		Script string
@@ -61,7 +61,7 @@ func NewJavascriptProviderFromConfig(ctx context.Context, other map[string]inter
 	return p, nil
 }
 
-var _ FloatProvider = (*Javascript)(nil)
+var _ FloatGetter = (*Javascript)(nil)
 
 // FloatGetter parses float from request
 func (p *Javascript) FloatGetter() (func() (float64, error), error) {
@@ -75,7 +75,7 @@ func (p *Javascript) FloatGetter() (func() (float64, error), error) {
 	}, nil
 }
 
-var _ IntProvider = (*Javascript)(nil)
+var _ IntGetter = (*Javascript)(nil)
 
 // IntGetter parses int64 from request
 func (p *Javascript) IntGetter() (func() (int64, error), error) {
@@ -89,7 +89,7 @@ func (p *Javascript) IntGetter() (func() (int64, error), error) {
 	}, nil
 }
 
-var _ StringProvider = (*Javascript)(nil)
+var _ StringGetter = (*Javascript)(nil)
 
 // StringGetter parses string from request
 func (p *Javascript) StringGetter() (func() (string, error), error) {
@@ -103,7 +103,7 @@ func (p *Javascript) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ BoolProvider = (*Javascript)(nil)
+var _ BoolGetter = (*Javascript)(nil)
 
 // BoolGetter parses bool from request
 func (p *Javascript) BoolGetter() (func() (bool, error), error) {
@@ -185,7 +185,7 @@ func (p *Javascript) setParamSync(param string, val any) error {
 	return p.setParam(param, val)
 }
 
-var _ SetIntProvider = (*Javascript)(nil)
+var _ IntSetter = (*Javascript)(nil)
 
 // IntSetter sends int request
 func (p *Javascript) IntSetter(param string) (func(int64) error, error) {
@@ -194,7 +194,7 @@ func (p *Javascript) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetFloatProvider = (*Javascript)(nil)
+var _ FloatSetter = (*Javascript)(nil)
 
 // FloatSetter sends float request
 func (p *Javascript) FloatSetter(param string) (func(float64) error, error) {
@@ -203,7 +203,7 @@ func (p *Javascript) FloatSetter(param string) (func(float64) error, error) {
 	}, nil
 }
 
-var _ SetStringProvider = (*Javascript)(nil)
+var _ StringSetter = (*Javascript)(nil)
 
 // StringSetter sends string request
 func (p *Javascript) StringSetter(param string) (func(string) error, error) {
@@ -212,7 +212,7 @@ func (p *Javascript) StringSetter(param string) (func(string) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*Javascript)(nil)
+var _ BoolSetter = (*Javascript)(nil)
 
 // BoolSetter sends bool request
 func (p *Javascript) BoolSetter(param string) (func(bool) error, error) {

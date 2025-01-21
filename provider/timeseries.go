@@ -16,11 +16,11 @@ func init() {
 }
 
 // TimeSeriesFromConfig creates timeseries provider
-func TimeSeriesFromConfig(_ context.Context, _ map[string]interface{}) (Provider, error) {
+func TimeSeriesFromConfig(_ context.Context, _ map[string]interface{}) (Plugin, error) {
 	return new(timeseriesProvider), nil
 }
 
-var _ StringProvider = (*timeseriesProvider)(nil)
+var _ StringGetter = (*timeseriesProvider)(nil)
 
 func (p *timeseriesProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
