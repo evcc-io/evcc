@@ -121,7 +121,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
+	if err := settings.SetJson(v.key()+keys.RepeatingPlans, plans); err == nil {
+		return err
+	}
 
 	v.publish()
 
@@ -130,11 +132,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 
 func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 	var plans []api.RepeatingPlan
-
-	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
-	if err == nil {
+	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err == nil {
 		return plans
 	}
 
-	return []api.RepeatingPlan{}
+	return nil
 }
