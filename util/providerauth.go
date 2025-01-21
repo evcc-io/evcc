@@ -43,7 +43,7 @@ func (ac *AuthCollection) Publish() {
 	ac.paramC <- Param{Key: "auth", Val: val}
 }
 
-type AuthPlugin struct {
+type AuthProvider struct {
 	ac            *AuthCollection
 	Uri           string `json:"uri"`
 	Authenticated bool   `json:"authenticated"`
