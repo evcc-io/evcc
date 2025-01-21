@@ -8,8 +8,8 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openwb"
-	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -42,14 +42,14 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// timeout handler
-	h, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), cc.Timeout).StringGetter()
+	h, err := plugin.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), cc.Timeout).StringGetter()
 	if err != nil {
 		return nil, err
 	}
-	to := provider.NewTimeoutHandler(h)
+	to := plugin.NewTimeoutHandler(h)
 
-	mq := func(s string, args ...any) *provider.Mqtt {
-		return provider.NewMqtt(log, client, fmt.Sprintf(s, args...), 0)
+	mq := func(s string, args ...any) *plugin.Mqtt {
+		return plugin.NewMqtt(log, client, fmt.Sprintf(s, args...), 0)
 	}
 
 	var power func() (float64, error)
@@ -77,7 +77,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	case "pv":
 		// first pv
-		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured), cc.Timeout).BoolGetter()
+		configuredG, err := plugin.NewMqtt(log, client, fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 
 	case "battery":
-		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured), cc.Timeout).BoolGetter()
+		configuredG, err := plugin.NewMqtt(log, client, fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
 			return nil, err
 		}

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -19,7 +19,7 @@ func init() {
 // NewConfigurableFromConfig creates Messenger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (Messenger, error) {
 	var cc struct {
-		Send     provider.Config
+		Send     plugin.Config
 		Encoding string
 	}
 

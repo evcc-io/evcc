@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -18,19 +18,19 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Power    provider.Config
-		Energy   *provider.Config  // optional
-		Currents []provider.Config // optional
-		Voltages []provider.Config // optional
-		Powers   []provider.Config // optional
+		Power    plugin.Config
+		Energy   *plugin.Config  // optional
+		Currents []plugin.Config // optional
+		Voltages []plugin.Config // optional
+		Powers   []plugin.Config // optional
 
 		// battery
 		capacity    `mapstructure:",squash"`
 		maxpower    `mapstructure:",squash"`
 		battery     `mapstructure:",squash"`
-		Soc         *provider.Config // optional
-		LimitSoc    *provider.Config // optional
-		BatteryMode *provider.Config // optional
+		Soc         *plugin.Config // optional
+		LimitSoc    *plugin.Config // optional
+		BatteryMode *plugin.Config // optional
 	}{
 		battery: battery{
 			MinSoc: 20,

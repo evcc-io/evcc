@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -41,14 +41,14 @@ type Circuit struct {
 // NewFromConfig creates a new Circuit
 func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
-		Title         string           // title
-		ParentRef     string           `mapstructure:"parent"` // parent circuit reference
-		MeterRef      string           `mapstructure:"meter"`  // meter reference
-		MaxCurrent    float64          // the max allowed current
-		MaxPower      float64          // the max allowed power
-		GetMaxCurrent *provider.Config // dynamic max allowed current
-		GetMaxPower   *provider.Config // dynamic max allowed power
-		Timeout       time.Duration    // timeout between meter updates
+		Title         string         // title
+		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
+		MeterRef      string         `mapstructure:"meter"`  // meter reference
+		MaxCurrent    float64        // the max allowed current
+		MaxPower      float64        // the max allowed power
+		GetMaxCurrent *plugin.Config // dynamic max allowed current
+		GetMaxPower   *plugin.Config // dynamic max allowed power
+		Timeout       time.Duration  // timeout between meter updates
 	}{
 		Timeout: time.Minute,
 	}

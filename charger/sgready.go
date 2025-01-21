@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -54,13 +54,13 @@ const (
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed     `mapstructure:",squash"`
-		SetMode   provider.Config
-		GetMode   *provider.Config // optional
-		MaxPower  *provider.Config // optional
-		Power     *provider.Config // optional
-		Energy    *provider.Config // optional
-		Temp      *provider.Config // optional
-		LimitTemp *provider.Config // optional
+		SetMode   plugin.Config
+		GetMode   *plugin.Config // optional
+		MaxPower  *plugin.Config // optional
+		Power     *plugin.Config // optional
+		Energy    *plugin.Config // optional
+		Temp      *plugin.Config // optional
+		LimitTemp *plugin.Config // optional
 		Phases    int
 	}{
 		embed: embed{

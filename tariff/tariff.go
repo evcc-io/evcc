@@ -10,7 +10,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 )
@@ -32,8 +32,8 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
-		Price    *provider.Config
-		Forecast *provider.Config
+		Price    *plugin.Config
+		Forecast *plugin.Config
 		Type     api.TariffType `mapstructure:"tariff"`
 		Cache    time.Duration
 	}{
@@ -57,7 +57,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, fmt.Errorf("price: %w", err)
 	}
 	if priceG != nil {
-		priceG = provider.Cached(priceG, cc.Cache)
+		priceG = plugin.Cached(priceG, cc.Cache)
 	}
 
 	forecastG, err := cc.Forecast.StringGetter(ctx)

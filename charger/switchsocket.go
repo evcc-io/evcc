@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -24,11 +24,11 @@ type SwitchSocket struct {
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		Enabled      provider.Config
-		Enable       provider.Config
-		Power        provider.Config
-		Energy       *provider.Config
-		Soc          *provider.Config
+		Enabled      plugin.Config
+		Enable       plugin.Config
+		Power        plugin.Config
+		Energy       *plugin.Config
+		Soc          *plugin.Config
 		StandbyPower float64
 	}
 

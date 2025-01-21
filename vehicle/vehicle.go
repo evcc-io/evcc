@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -26,17 +26,17 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
-		Soc           provider.Config
-		LimitSoc      *provider.Config
-		Status        *provider.Config
-		Range         *provider.Config
-		Odometer      *provider.Config
-		Climater      *provider.Config
-		MaxCurrent    *provider.Config
-		GetMaxCurrent *provider.Config
-		FinishTime    *provider.Config
-		Wakeup        *provider.Config
-		ChargeEnable  *provider.Config
+		Soc           plugin.Config
+		LimitSoc      *plugin.Config
+		Status        *plugin.Config
+		Range         *plugin.Config
+		Odometer      *plugin.Config
+		Climater      *plugin.Config
+		MaxCurrent    *plugin.Config
+		GetMaxCurrent *plugin.Config
+		FinishTime    *plugin.Config
+		Wakeup        *plugin.Config
+		ChargeEnable  *plugin.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

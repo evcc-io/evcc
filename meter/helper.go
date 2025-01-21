@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 )
 
 // BuildMeasurements returns typical meter measurement getters from config
-func BuildMeasurements(ctx context.Context, power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
+func BuildMeasurements(ctx context.Context, power, energy *plugin.Config) (func() (float64, error), func() (float64, error), error) {
 	powerG, err := power.FloatGetter(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("power: %w", err)
@@ -24,7 +24,7 @@ func BuildMeasurements(ctx context.Context, power, energy *provider.Config) (fun
 }
 
 // BuildPhaseMeasurements returns typical meter measurement getters from config
-func BuildPhaseMeasurements(ctx context.Context, currents, voltages, powers []provider.Config) (
+func BuildPhaseMeasurements(ctx context.Context, currents, voltages, powers []plugin.Config) (
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
@@ -49,7 +49,7 @@ func BuildPhaseMeasurements(ctx context.Context, currents, voltages, powers []pr
 }
 
 // buildPhaseProviders returns phases getter for given config
-func buildPhaseProviders(ctx context.Context, providers []provider.Config) (func() (float64, float64, float64, error), error) {
+func buildPhaseProviders(ctx context.Context, providers []plugin.Config) (func() (float64, float64, float64, error), error) {
 	if len(providers) == 0 {
 		return nil, nil
 	}

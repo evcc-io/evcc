@@ -7,7 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -30,18 +30,18 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed                               `mapstructure:",squash"`
-		Status, Enable, Enabled, MaxCurrent provider.Config
-		MaxCurrentMillis                    *provider.Config
-		Identify, Phases1p3p                *provider.Config
-		Wakeup                              *provider.Config
-		Soc                                 *provider.Config
+		Status, Enable, Enabled, MaxCurrent plugin.Config
+		MaxCurrentMillis                    *plugin.Config
+		Identify, Phases1p3p                *plugin.Config
+		Wakeup                              *plugin.Config
+		Soc                                 *plugin.Config
 		Tos                                 bool
 
 		// optional measurements
-		Power  *provider.Config
-		Energy *provider.Config
+		Power  *plugin.Config
+		Energy *plugin.Config
 
-		Currents, Voltages []provider.Config
+		Currents, Voltages []plugin.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
