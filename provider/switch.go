@@ -56,19 +56,16 @@ var _ SetIntProvider = (*switchProvider)(nil)
 func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 	set := make([]func(int64) error, 0, len(o.cases))
 	for _, cc := range o.cases {
-		s, err := NewIntSetterFromConfig(o.ctx, param, cc.Set)
+		s, err := cc.Set.IntSetter(o.ctx, param)
 		if err != nil {
 			return nil, err
 		}
 		set = append(set, s)
 	}
 
-	var dflt func(int64) error
-	if o.dflt != nil {
-		var err error
-		if dflt, err = NewIntSetterFromConfig(o.ctx, param, *o.dflt); err != nil {
-			return nil, err
-		}
+	dflt, err := o.dflt.IntSetter(o.ctx, param)
+	if err != nil {
+		return nil, err
 	}
 
 	return func(val int64) error {

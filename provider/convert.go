@@ -36,7 +36,7 @@ var _ SetFloatProvider = (*convertProvider)(nil)
 func (o *convertProvider) FloatSetter(param string) (func(float64) error, error) {
 	switch o.Convert {
 	case "float2int":
-		set, err := NewIntSetterFromConfig(o.ctx, param, o.Set)
+		set, err := o.Set.IntSetter(o.ctx, param)
 
 		return func(val float64) error {
 			return set(int64(val))
@@ -52,14 +52,14 @@ var _ SetIntProvider = (*convertProvider)(nil)
 func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
 	switch o.Convert {
 	case "int2float":
-		set, err := NewFloatSetterFromConfig(o.ctx, param, o.Set)
+		set, err := o.Set.FloatSetter(o.ctx, param)
 
 		return func(val int64) error {
 			return set(float64(val))
 		}, err
 
 	case "int2bytes":
-		set, err := NewBytesSetterFromConfig(o.ctx, param, o.Set)
+		set, err := o.Set.BytesSetter(o.ctx, param)
 
 		return func(val int64) error {
 			b := make([]byte, 8)

@@ -10,22 +10,14 @@ import (
 
 // BuildMeasurements returns typical meter measurement getters from config
 func BuildMeasurements(ctx context.Context, power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
-	var powerG func() (float64, error)
-	if power != nil {
-		var err error
-		powerG, err = provider.NewFloatGetterFromConfig(ctx, *power)
-		if err != nil {
-			return nil, nil, fmt.Errorf("power: %w", err)
-		}
+	powerG, err := power.FloatGetter(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("power: %w", err)
 	}
 
-	var energyG func() (float64, error)
-	if energy != nil {
-		var err error
-		energyG, err = provider.NewFloatGetterFromConfig(ctx, *energy)
-		if err != nil {
-			return nil, nil, fmt.Errorf("energy: %w", err)
-		}
+	energyG, err := energy.FloatGetter(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("energy: %w", err)
 	}
 
 	return powerG, energyG, nil
@@ -68,7 +60,7 @@ func buildPhaseProviders(ctx context.Context, providers []provider.Config) (func
 
 	var phases [3]func() (float64, error)
 	for idx, prov := range providers {
-		c, err := provider.NewFloatGetterFromConfig(ctx, prov)
+		c, err := prov.FloatGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("[%d] %w", idx, err)
 		}

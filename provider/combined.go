@@ -28,12 +28,12 @@ func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (P
 		return nil, err
 	}
 
-	plugged, err := NewBoolGetterFromConfig(ctx, cc.Plugged)
+	plugged, err := cc.Plugged.BoolGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("plugged: %w", err)
 	}
 
-	charging, err := NewBoolGetterFromConfig(ctx, cc.Charging)
+	charging, err := cc.Charging.BoolGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("charging: %w", err)
 	}

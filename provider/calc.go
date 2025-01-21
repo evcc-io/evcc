@@ -46,7 +46,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 	o := &calcProvider{}
 
 	for idx, cc := range cc.Add {
-		f, err := NewFloatGetterFromConfig(ctx, cc)
+		f, err := cc.FloatGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
@@ -54,7 +54,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 	}
 
 	for idx, cc := range cc.Mul {
-		f, err := NewFloatGetterFromConfig(ctx, cc)
+		f, err := cc.FloatGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("mul[%d]: %w", idx, err)
 		}
@@ -62,27 +62,23 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Provi
 	}
 
 	for idx, cc := range cc.Div {
-		f, err := NewFloatGetterFromConfig(ctx, cc)
+		f, err := cc.FloatGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("div[%d]: %w", idx, err)
 		}
 		o.div = append(o.div, f)
 	}
 
-	if cc.Abs != nil {
-		f, err := NewFloatGetterFromConfig(ctx, *cc.Abs)
-		if err != nil {
-			return nil, fmt.Errorf("abs: %w", err)
-		}
-		o.abs = f
+	var err error
+
+	o.abs, err = cc.Abs.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("abs: %w", err)
 	}
 
-	if cc.Sign != nil {
-		f, err := NewFloatGetterFromConfig(ctx, *cc.Sign)
-		if err != nil {
-			return nil, fmt.Errorf("sign: %w", err)
-		}
-		o.sign = f
+	o.sign, err = cc.Sign.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("sign: %w", err)
 	}
 
 	return o, nil

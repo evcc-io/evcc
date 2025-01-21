@@ -71,20 +71,14 @@ func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit,
 		return nil, err
 	}
 
-	if cc.GetMaxPower != nil {
-		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxPower)
-		if err != nil {
-			return nil, err
-		}
-		circuit.getMaxPower = res
+	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(context.TODO())
+	if err != nil {
+		return nil, err
 	}
 
-	if cc.GetMaxCurrent != nil {
-		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxCurrent)
-		if err != nil {
-			return nil, err
-		}
-		circuit.getMaxCurrent = res
+	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(context.TODO())
+	if err != nil {
+		return nil, err
 	}
 
 	if cc.ParentRef != "" {

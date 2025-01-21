@@ -38,7 +38,7 @@ var _ SetIntProvider = (*sequenceProvider)(nil)
 func (o *sequenceProvider) IntSetter(param string) (func(int64) error, error) {
 	set := make([]func(int64) error, 0, len(o.set))
 	for _, cc := range o.set {
-		s, err := NewIntSetterFromConfig(o.ctx, param, cc)
+		s, err := cc.IntSetter(o.ctx, param)
 		if err != nil {
 			return nil, err
 		}
@@ -60,7 +60,7 @@ var _ SetFloatProvider = (*sequenceProvider)(nil)
 func (o *sequenceProvider) FloatSetter(param string) (func(float64) error, error) {
 	set := make([]func(float64) error, 0, len(o.set))
 	for _, cc := range o.set {
-		s, err := NewFloatSetterFromConfig(o.ctx, param, cc)
+		s, err := cc.FloatSetter(o.ctx, param)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ var _ SetBoolProvider = (*sequenceProvider)(nil)
 func (o *sequenceProvider) BoolSetter(param string) (func(bool) error, error) {
 	set := make([]func(bool) error, 0, len(o.set))
 	for _, cc := range o.set {
-		s, err := NewBoolSetterFromConfig(o.ctx, param, cc)
+		s, err := cc.BoolSetter(o.ctx, param)
 		if err != nil {
 			return nil, err
 		}

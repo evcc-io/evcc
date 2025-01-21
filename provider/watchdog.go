@@ -90,7 +90,7 @@ func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func
 var _ SetIntProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 var _ SetFloatProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error) {
-	set, err := NewFloatSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.FloatSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error
 var _ SetBoolProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
-	set, err := NewBoolSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.BoolSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}

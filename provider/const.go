@@ -91,7 +91,7 @@ func (p *constProvider) BoolGetter() (func() (bool, error), error) {
 var _ SetIntProvider = (*constProvider)(nil)
 
 func (p *constProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(p.ctx, param, p.set)
+	set, err := p.set.IntSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (p *constProvider) IntSetter(param string) (func(int64) error, error) {
 var _ SetFloatProvider = (*constProvider)(nil)
 
 func (p *constProvider) FloatSetter(param string) (func(float64) error, error) {
-	set, err := NewFloatSetterFromConfig(p.ctx, param, p.set)
+	set, err := p.set.FloatSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (p *constProvider) FloatSetter(param string) (func(float64) error, error) {
 var _ SetBoolProvider = (*constProvider)(nil)
 
 func (p *constProvider) BoolSetter(param string) (func(bool) error, error) {
-	set, err := NewBoolSetterFromConfig(p.ctx, param, p.set)
+	set, err := p.set.BoolSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (p *constProvider) BoolSetter(param string) (func(bool) error, error) {
 var _ SetBytesProvider = (*constProvider)(nil)
 
 func (p *constProvider) BytesSetter(param string) (func([]byte) error, error) {
-	set, err := NewBytesSetterFromConfig(p.ctx, param, p.set)
+	set, err := p.set.BytesSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
 	}

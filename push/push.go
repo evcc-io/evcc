@@ -27,7 +27,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	send, err := provider.NewStringSetterFromConfig(ctx, "send", cc.Send)
+	send, err := cc.Send.StringSetter(ctx, "send")
 	if err != nil {
 		return nil, err
 	}

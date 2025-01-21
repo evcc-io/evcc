@@ -45,7 +45,7 @@ func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Provid
 var _ IntProvider = (*mapProvider)(nil)
 
 func (o *mapProvider) IntGetter() (func() (int64, error), error) {
-	get, err := NewIntGetterFromConfig(o.ctx, o.get)
+	get, err := o.get.IntGetter(o.ctx)
 
 	return func() (int64, error) {
 		val, err := get()
@@ -65,7 +65,7 @@ func (o *mapProvider) IntGetter() (func() (int64, error), error) {
 var _ SetIntProvider = (*mapProvider)(nil)
 
 func (o *mapProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.IntSetter(o.ctx, param)
 
 	return func(val int64) error {
 		m, ok := o.values[val]

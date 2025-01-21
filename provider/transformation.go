@@ -29,28 +29,28 @@ func configureInputs(ctx context.Context, inConfig []transformationConfig) ([]in
 
 		switch strings.ToLower(cc.Type) {
 		case "bool":
-			ff, err := NewBoolGetterFromConfig(ctx, cc.Config)
+			ff, err := cc.Config.BoolGetter(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "int":
-			ff, err := NewIntGetterFromConfig(ctx, cc.Config)
+			ff, err := cc.Config.IntGetter(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "float":
-			ff, err := NewFloatGetterFromConfig(ctx, cc.Config)
+			ff, err := cc.Config.FloatGetter(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
 			f = func() (any, error) { return ff() }
 
 		case "string":
-			ff, err := NewStringGetterFromConfig(ctx, cc.Config)
+			ff, err := cc.Config.StringGetter(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -76,7 +76,7 @@ func configureOutputs(ctx context.Context, outConfig []transformationConfig) ([]
 
 		switch strings.ToLower(cc.Type) {
 		case "bool":
-			ff, err := NewBoolSetterFromConfig(ctx, cc.Name, cc.Config)
+			ff, err := cc.Config.BoolSetter(ctx, cc.Name)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -86,7 +86,7 @@ func configureOutputs(ctx context.Context, outConfig []transformationConfig) ([]
 			}
 
 		case "int":
-			ff, err := NewIntSetterFromConfig(ctx, cc.Name, cc.Config)
+			ff, err := cc.Config.IntSetter(ctx, cc.Name)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -96,7 +96,7 @@ func configureOutputs(ctx context.Context, outConfig []transformationConfig) ([]
 			}
 
 		case "float":
-			ff, err := NewFloatSetterFromConfig(ctx, cc.Name, cc.Config)
+			ff, err := cc.Config.FloatSetter(ctx, cc.Name)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}
@@ -106,7 +106,7 @@ func configureOutputs(ctx context.Context, outConfig []transformationConfig) ([]
 			}
 
 		case "string":
-			ff, err := NewStringSetterFromConfig(ctx, cc.Name, cc.Config)
+			ff, err := cc.Config.StringSetter(ctx, cc.Name)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", cc.Name, err)
 			}

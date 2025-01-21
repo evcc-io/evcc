@@ -52,26 +52,17 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	var (
-		err       error
-		priceG    func() (float64, error)
-		forecastG func() (string, error)
-	)
-
-	if cc.Price != nil {
-		priceG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Price)
-		if err != nil {
-			return nil, fmt.Errorf("price: %w", err)
-		}
-
+	priceG, err := cc.Price.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("price: %w", err)
+	}
+	if priceG != nil {
 		priceG = provider.Cached(priceG, cc.Cache)
 	}
 
-	if cc.Forecast != nil {
-		forecastG, err = provider.NewStringGetterFromConfig(ctx, *cc.Forecast)
-		if err != nil {
-			return nil, fmt.Errorf("forecast: %w", err)
-		}
+	forecastG, err := cc.Forecast.StringGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("forecast: %w", err)
 	}
 
 	t := &Tariff{

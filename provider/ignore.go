@@ -49,7 +49,7 @@ func ignoreError[T any](fun func(T) error, match string) func(T) error {
 }
 
 func (o *ignoreProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (o *ignoreProvider) IntSetter(param string) (func(int64) error, error) {
 var _ SetFloatProvider = (*ignoreProvider)(nil)
 
 func (o *ignoreProvider) FloatSetter(param string) (func(float64) error, error) {
-	set, err := NewFloatSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.FloatSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (o *ignoreProvider) FloatSetter(param string) (func(float64) error, error) 
 var _ SetBoolProvider = (*ignoreProvider)(nil)
 
 func (o *ignoreProvider) BoolSetter(param string) (func(bool) error, error) {
-	set, err := NewBoolSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.BoolSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (o *ignoreProvider) BoolSetter(param string) (func(bool) error, error) {
 var _ SetBytesProvider = (*ignoreProvider)(nil)
 
 func (o *ignoreProvider) BytesSetter(param string) (func([]byte) error, error) {
-	set, err := NewBytesSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.BytesSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}

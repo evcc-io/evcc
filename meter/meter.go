@@ -55,19 +55,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	m, _ := NewConfigurable(powerG)
 
 	// decorate soc
-	var socG func() (float64, error)
-	if cc.Soc != nil {
-		socG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Soc)
-		if err != nil {
-			return nil, fmt.Errorf("battery soc: %w", err)
-		}
+	socG, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("battery soc: %w", err)
 	}
 
 	var batModeS func(api.BatteryMode) error
 
 	switch {
 	case cc.Soc != nil && cc.LimitSoc != nil:
-		limitSocS, err := provider.NewFloatSetterFromConfig(ctx, "limitSoc", *cc.LimitSoc)
+		limitSocS, err := cc.LimitSoc.FloatSetter(ctx, "limitSoc")
 		if err != nil {
 			return nil, fmt.Errorf("battery limit soc: %w", err)
 		}
@@ -75,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		batModeS = cc.battery.LimitController(socG, limitSocS)
 
 	case cc.BatteryMode != nil:
-		modeS, err := provider.NewIntSetterFromConfig(ctx, "batteryMode", *cc.BatteryMode)
+		modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
 		if err != nil {
 			return nil, fmt.Errorf("battery mode: %w", err)
 		}

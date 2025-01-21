@@ -50,7 +50,7 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 	site.SetCircuit(lpc)
 
 	// limit getter
-	limitG, err := provider.NewBoolGetterFromConfig(ctx, cc.Limit)
+	limitG, err := cc.Limit.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}

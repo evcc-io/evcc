@@ -36,35 +36,29 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	enabled, err := provider.NewBoolGetterFromConfig(ctx, cc.Enabled)
+	enabled, err := cc.Enabled.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	enable, err := provider.NewBoolSetterFromConfig(ctx, "enable", cc.Enable)
+	enable, err := cc.Enable.BoolSetter(ctx, "enable")
 	if err != nil {
 		return nil, err
 	}
 
-	power, err := provider.NewFloatGetterFromConfig(ctx, cc.Power)
+	power, err := cc.Power.FloatGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var energy func() (float64, error)
-	if cc.Energy != nil {
-		energy, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
-		if err != nil {
-			return nil, err
-		}
+	energy, err := cc.Energy.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	var soc func() (float64, error)
-	if cc.Soc != nil {
-		soc, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
-		if err != nil {
-			return nil, err
-		}
+	soc, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	c := &SwitchSocket{

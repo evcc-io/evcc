@@ -38,7 +38,7 @@ func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Pro
 var _ SetIntProvider = (*randomProvider)(nil)
 
 func (o *randomProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(o.ctx, param, o.set)
+	set, err := o.set.IntSetter(o.ctx, param)
 	if err != nil {
 		return nil, err
 	}
