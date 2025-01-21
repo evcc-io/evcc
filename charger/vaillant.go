@@ -94,7 +94,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemId := homes[0].SystemID
-	heating := cc.HeatingZone > 0 && cc.HeatingSetpoint > 0
+	heating := cc.HeatingSetpoint > 0
 
 	set := func(mode int64) error {
 		switch mode {
@@ -105,9 +105,9 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
 		case Boost:
 			if heating {
-				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, sensonet.ZONEVETODURATION_DEFAULT)
+				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
-			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
+			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT) // zone 255
 		default:
 			return api.ErrNotAvailable
 		}
