@@ -92,7 +92,11 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, struc any) 
 			return
 		}
 
-		settings.SetJson(key, struc)
+		if err := settings.SetJson(key, struc); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
 		setConfigDirty()
 
 		valueChan <- util.Param{Key: key, Val: struc}
