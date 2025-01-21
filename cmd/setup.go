@@ -52,8 +52,6 @@ import (
 	"golang.org/x/text/currency"
 )
 
-var defaultDSN = "~/.evcc/evcc.db"
-
 var conf = globalconfig.All{
 	Interval: 10 * time.Second,
 	Log:      "info",
@@ -70,7 +68,7 @@ var conf = globalconfig.All{
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
-		Dsn:  defaultDSN,
+		Dsn:  "",
 	},
 }
 
@@ -98,27 +96,33 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 		}
 	}
 
-	// check service database
-	if _, err := os.Stat(serviceDB); err == nil && checkDB {
-		if conf.Database.Dsn == defaultDSN {
-			// no explicit db path given, use service database
-			if isWritable(serviceDB) {
-				conf.Database.Dsn = serviceDB
-				log.INFO.Println("system database found, using it.")
-			} else {
-				log.FATAL.Fatal(`Found systemd service database at "` + serviceDB + `", but it is not writable. Try running the command with 'sudo'.`)
+	// user did not specify a database path
+	if conf.Database.Dsn == "" {
+		// check if service database exists
+		if _, err := os.Stat(serviceDB); err == nil && checkDB {
+			// service database found, ask user what to do
+			sudo := ""
+			if !isWritable(serviceDB) {
+				sudo = "sudo "
 			}
-		} else {
-			// service database found, but explicit db path given
 			log.FATAL.Fatal(`
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with no explicit database path.
+Running the same config with multiple databases can lead to expiring vehicle tokens.
 
-Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
-Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
-This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
+If you want to use the existing service database run the following command:
 
-If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
-`)
+` + sudo + `evcc --database ` + serviceDB + `
+
+If you want to create a new user-space database run the following command:
+
+evcc --database ~/.evcc/evcc.db
+
+If you know what you're doing, you can skip the database check with the --ignore-db flag.
+			`)
 		}
+
+		// default to user database
+		conf.Database.Dsn = userDB
 	}
 
 	// parse log levels after reading config
