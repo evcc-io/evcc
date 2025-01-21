@@ -12,42 +12,42 @@ import (
 	"github.com/samber/lo"
 )
 
-type planStruct struct {
+type planData struct {
 	Soc  int       `json:"soc"`
 	Time time.Time `json:"time"`
 }
 
-type vehicleStruct struct {
-	Title          string                    `json:"title"`
-	Icon           string                    `json:"icon,omitempty"`
-	Capacity       float64                   `json:"capacity,omitempty"`
-	Phases         int                       `json:"phases,omitempty"`
-	MinSoc         int                       `json:"minSoc,omitempty"`
-	LimitSoc       int                       `json:"limitSoc,omitempty"`
-	MinCurrent     float64                   `json:"minCurrent,omitempty"`
-	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
-	Priority       int                       `json:"priority,omitempty"`
-	Features       []string                  `json:"features,omitempty"`
-	Plan           *planStruct               `json:"plan,omitempty"`
-	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
+type vehicleData struct {
+	Title          string              `json:"title"`
+	Icon           string              `json:"icon,omitempty"`
+	Capacity       float64             `json:"capacity,omitempty"`
+	Phases         int                 `json:"phases,omitempty"`
+	MinSoc         int                 `json:"minSoc,omitempty"`
+	LimitSoc       int                 `json:"limitSoc,omitempty"`
+	MinCurrent     float64             `json:"minCurrent,omitempty"`
+	MaxCurrent     float64             `json:"maxCurrent,omitempty"`
+	Priority       int                 `json:"priority,omitempty"`
+	Features       []string            `json:"features,omitempty"`
+	Plan           *planData           `json:"plan,omitempty"`
+	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
 func (site *Site) publishVehicles() {
 	vv := site.Vehicles().Settings()
-	res := make(map[string]vehicleStruct, len(vv))
+	res := make(map[string]vehicleData, len(vv))
 
 	for _, v := range vv {
-		var plan *planStruct
+		var plan *planData
 
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Time: time}
+			plan = &planData{Soc: soc, Time: time}
 		}
 
 		instance := v.Instance()
 		ac := instance.OnIdentified()
 
-		res[v.Name()] = vehicleStruct{
+		res[v.Name()] = vehicleData{
 			Title:          instance.Title(),
 			Icon:           instance.Icon(),
 			Capacity:       instance.Capacity(),

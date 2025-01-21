@@ -123,11 +123,10 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 		}
 
 		var plansWrapper struct {
-			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
+			RepeatingPlans []api.RepeatingPlan `json:"plans"`
 		}
 
-		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
-		if err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&plansWrapper); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
