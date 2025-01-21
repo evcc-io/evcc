@@ -176,12 +176,12 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64        // Vehicle Soc
-	chargeDuration          time.Duration  // Charge duration
-	sessionEnergy           *EnergyMetrics // Stats for charged energy by session
-	chargeRemainingDuration time.Duration  // Remaining charge duration
-	chargeRemainingEnergy   float64        // Remaining charge energy in Wh
-	progress                *Progress      // Step-wise progress indicator
+	vehicleSoc              float64       // Vehicle Soc
+	chargeDuration          time.Duration // Charge duration
+	energyMetrics           EnergyMetrics // Stats for charged energy by session
+	chargeRemainingDuration time.Duration // Remaining charge duration
+	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	progress                *Progress     // Step-wise progress indicator
 
 	// session log
 	db      *session.DB
@@ -307,12 +307,11 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 				Mode:     pollCharging,
 			},
 		},
-		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		sessionEnergy: NewEnergyMetrics(),
-		progress:      NewProgress(0, 10),     // soc progress indicator
-		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
-		tasks:         util.NewQueue[Task](),  // task queue
+		Enable:      ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:     ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		progress:    NewProgress(0, 10),                                    // soc progress indicator
+		coordinator: coordinator.NewDummy(),                                // dummy vehicle coordinator
+		tasks:       util.NewQueue[Task](),                                 // task queue
 	}
 
 	return lp
@@ -475,8 +474,8 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
 	// energy
-	lp.sessionEnergy.Reset()
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Reset()
+	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 
 	// duration
@@ -514,7 +513,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.resetMeasuredPhases()
 
 	// energy and duration
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
 
@@ -1580,7 +1579,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
 			}
@@ -1596,7 +1595,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	// TODO check if "session" prefix required?
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Publish("session", lp)
 
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
@@ -1751,7 +1750,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
-	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
+	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
