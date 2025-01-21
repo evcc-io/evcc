@@ -113,7 +113,38 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}
 	}
 
-	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	var get func() (int64, error)
+	get = provider.Cached(func() (int64, error) {
+		system, err := conn.GetSystem(systemId)
+		if err != nil {
+			return 0, err
+		}
+		enabled := Normal
+		if heating {
+			z := sensonet.GetZoneData(system, cc.HeatingZone)
+			if z.State.CurrentSpecialFunction == sensonet.SPECIAL_FUNCTION_QUICK_VETO {
+				enabled = Boost
+			}
+		} else {
+			switch {
+			case len(system.State.Dhw) > 0:
+				dhw := sensonet.GetDhwData(system, sensonet.HOTWATERINDEX_DEFAULT)
+				if dhw.State.CurrentSpecialFunction == sensonet.SPECIAL_FUNCTION_HOTWATER_BOOST {
+					enabled = Boost
+				}
+			case len(system.State.DomesticHotWater) > 0:
+				domestichotwater := sensonet.GetDomesticHotWaterData(system, sensonet.HOTWATERINDEX_DEFAULT)
+				if domestichotwater.State.CurrentSpecialFunction == sensonet.SPECIAL_FUNCTION_HOTWATER_BOOST {
+					enabled = Boost
+				}
+			default:
+				return 0, api.ErrNotAvailable
+			}
+		}
+		return enabled, nil
+	}, cc.Cache)
+
+	sgr, err := NewSgReady(ctx, &cc.embed, set, get, nil, cc.Phases)
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +167,24 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	var temp func() (float64, error)
-	if !heating {
-		temp = provider.Cached(func() (float64, error) {
-			system, err := conn.GetSystem(systemId)
-			if err != nil {
-				return 0, err
+	temp = provider.Cached(func() (float64, error) {
+		system, err := conn.GetSystem(systemId)
+		if err != nil {
+			return 0, err
+		}
+		if heating {
+			currentTemp := 5.0
+			// Some heating zones have no room temperature sensor. If that's the case, we take the sensor with the highest value from the other zones
+			for _, z := range system.State.Zones {
+				if currentTemp == 5.0 && z.CurrentRoomTemperature > currentTemp {
+					currentTemp = z.CurrentRoomTemperature
+				}
+				if z.Index == cc.HeatingZone && z.CurrentRoomTemperature != 0.0 {
+					currentTemp = z.CurrentRoomTemperature
+				}
 			}
-
+			return currentTemp, nil
+		} else {
 			switch {
 			case len(system.State.Dhw) > 0:
 				return system.State.Dhw[0].CurrentDhwTemperature, nil
@@ -151,8 +193,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}, cc.Cache)
-	}
+		}
+	}, cc.Cache)
 
 	return decorateVaillant(res, power, temp), nil
 }
