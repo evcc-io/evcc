@@ -61,7 +61,7 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}
 
 	var soc func() (float64, error)
 	if cc.Soc != nil {
-		soc, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
+		soc, err = provider.NewFloatGetterFromConfig(ctx, *cc.Soc)
 		if err != nil {
 			return nil, err
 		}
