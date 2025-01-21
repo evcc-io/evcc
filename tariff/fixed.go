@@ -85,7 +85,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
 	start := now.With(t.clock.Now().Local()).BeginningOfDay()
-	for i := 0; i < 7; i++ {
+	for i := range 7 {
 		dow := fixed.Day((int(start.Weekday()) + i) % 7)
 
 		zones := t.zones.ForDay(dow)

@@ -19,15 +19,17 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -42,7 +44,7 @@ type Vaillant struct {
 	systemId string
 }
 
-//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Battery,Soc,func() (float64, error)"
+//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -53,6 +55,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		HeatingZone     int
 		HeatingSetpoint float32
 		Phases          int
+		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -60,6 +63,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		},
 		Realm:  sensonet.REALM_GERMANY,
 		Phases: 1,
+		Cache:  time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,16 +75,15 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
-	client := request.NewClient(log)
-	clientCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
+	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := oc.PasswordCredentialsToken(clientCtx, cc.User, cc.Password)
+	token, err := oc.PasswordCredentialsToken(logCtx, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(clientCtx, token), sensonet.WithHttpClient(client), sensonet.WithLogger(log.TRACE))
+	conn, err := sensonet.NewConnection(oc.TokenSource(logCtx, token), sensonet.WithHttpClient(request.NewClient(log)))
 	if err != nil {
 		return nil, err
 	}
@@ -91,43 +94,20 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemId := homes[0].SystemID
-
-	system, err := conn.GetSystem(systemId)
-	if err != nil {
-		return nil, err
-	}
-
-	var strategy int
-	hotWater := len(system.State.Dhw)+len(system.State.DomesticHotWater) > 0
-
-	switch {
-	case hotWater && cc.HeatingSetpoint != 0:
-		strategy = sensonet.STRATEGY_HOTWATER_THEN_HEATING
-	case hotWater:
-		strategy = sensonet.STRATEGY_HOTWATER
-	case cc.HeatingSetpoint != 0:
-		strategy = sensonet.STRATEGY_HEATING
-	default:
-		return nil, errors.New("could not determine boost strategy, need either hot water or heating zone and setpoint")
-	}
-
-	heatingPar := sensonet.HeatingParStruct{
-		ZoneIndex:    cc.HeatingZone,
-		VetoSetpoint: cc.HeatingSetpoint,
-		VetoDuration: -1, // negative value means: use default
-	}
-	hotwaterPar := sensonet.HotwaterParStruct{
-		Index: -1, // negative value means: use default
-	}
+	heating := cc.HeatingZone > 0 && cc.HeatingSetpoint > 0
 
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
-			_, err := conn.StopStrategybased(systemId, &heatingPar, &hotwaterPar)
-			return err
+			if heating {
+				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
+			}
+			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
 		case Boost:
-			_, err := conn.StartStrategybased(systemId, strategy, &heatingPar, &hotwaterPar)
-			return err
+			if heating {
+				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, sensonet.ZONEVETODURATION_DEFAULT)
+			}
+			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
 		default:
 			return api.ErrNotAvailable
 		}
@@ -145,9 +125,19 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		SgReady:  sgr,
 	}
 
+	var power func() (float64, error)
+	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
+		power = provider.Cached(func() (float64, error) {
+			res, err := conn.GetMpcData(systemId)
+			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
+				return d.CurrentPower
+			}), err
+		}, cc.Cache)
+	}
+
 	var temp func() (float64, error)
-	if hotWater {
-		temp = func() (float64, error) {
+	if !heating {
+		temp = provider.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err
@@ -161,10 +151,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}
+		}, cc.Cache)
 	}
 
-	return decorateVaillant(res, temp), nil
+	return decorateVaillant(res, power, temp), nil
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
@@ -184,7 +174,7 @@ func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
 		fmt.Printf("%d.%d. %s\n", chapter, i+1, typ)
 
 		if rt.Kind() == reflect.Slice {
-			for j := 0; j < rv.Len(); j++ {
+			for j := range rv.Len() {
 				fmt.Printf("%d.%d.%d. %s %d\n", chapter, i+1, j+1, typ, j)
 				fmt.Printf("%+v\n", rv.Index(j))
 			}

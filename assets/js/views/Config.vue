@@ -186,7 +186,7 @@
 							>
 								<template #icon><NotificationIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('messaging')" />
+									<DeviceTags :tags="messagingTags" />
 								</template>
 							</DeviceCard>
 							<DeviceCard
@@ -210,7 +210,7 @@
 							>
 								<template #icon><EebusIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('eebus')" />
+									<DeviceTags :tags="eebusTags" />
 								</template>
 							</DeviceCard>
 							<DeviceCard
@@ -224,7 +224,7 @@
 								<template #tags>
 									<DeviceTags
 										v-if="circuits.length == 0"
-										:tags="yamlTags('circuits')"
+										:tags="{ configured: { value: false } }"
 									/>
 									<template
 										v-for="(circuit, idx) in circuits"
@@ -249,7 +249,7 @@
 							>
 								<template #icon><ModbusProxyIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('modbusproxy')" />
+									<DeviceTags :tags="modbusproxyTags" />
 								</template>
 							</DeviceCard>
 							<DeviceCard
@@ -390,12 +390,6 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
-			yamlConfigState: {
-				messaging: false,
-				eebus: false,
-				circuits: false,
-				modbusproxy: false,
-			},
 		};
 	},
 	computed: {
@@ -462,6 +456,19 @@ export default {
 			}
 			return result;
 		},
+		eebusTags() {
+			return { configured: { value: store.state?.eebus || false } };
+		},
+		modbusproxyTags() {
+			const config = store.state?.modbusproxy || [];
+			if (config.length > 0) {
+				return { amount: { value: config.length } };
+			}
+			return { configured: { value: false } };
+		},
+		messagingTags() {
+			return { configured: { value: store.state?.messaging || false } };
+		},
 	},
 	watch: {
 		offline() {
@@ -484,7 +491,6 @@ export default {
 			await this.loadCircuits();
 			await this.loadDirty();
 			await this.updateValues();
-			await this.updateYamlConfigState();
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
@@ -567,7 +573,6 @@ export default {
 		},
 		yamlChanged() {
 			this.loadDirty();
-			this.updateYamlConfigState();
 		},
 		addMeterToSite(type, name) {
 			if (type === "grid") {
@@ -635,16 +640,6 @@ export default {
 			} else {
 				console.error(`modal ${id} not found`);
 			}
-		},
-		updateYamlConfigState() {
-			const keys = Object.keys(this.yamlConfigState);
-			keys.forEach(async (key) => {
-				const res = await api.get(`/config/${key}`);
-				this.yamlConfigState[key] = !!res.data.result;
-			});
-		},
-		yamlTags(key) {
-			return { configured: { value: this.yamlConfigState[key] } };
 		},
 		circuitTags(circuit) {
 			const data = store.state?.circuits[circuit.name] || {};

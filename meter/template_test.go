@@ -4,18 +4,19 @@ import (
 	"context"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
 var acceptable = []string{
+	api.ErrMissingCredentials.Error(),
+	api.ErrMissingToken.Error(),
 	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
-	"missing token",
 	"mqtt not configured",
 	"not a SunSpec device",
 	"connect: connection refused", // sockets
-	"missing credentials",         // sockets
 	"power: timeout",              // sockets
 	"missing password",            // Powerwall
 	"connect: no route to host",

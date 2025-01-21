@@ -21,6 +21,7 @@ type Pipeline struct {
 	re         *regexp.Regexp
 	jq         *gojq.Query
 	allowEmpty bool
+	quote      bool
 	dflt       string
 	unpack     string
 	decode     string
@@ -28,6 +29,7 @@ type Pipeline struct {
 
 type Settings struct {
 	AllowEmpty bool
+	Quote      bool
 	Regex      string
 	Default    string
 	Jq         string
@@ -39,6 +41,7 @@ func New(log *util.Logger, cc Settings) (*Pipeline, error) {
 	p := &Pipeline{
 		log:        log,
 		allowEmpty: cc.AllowEmpty,
+		quote:      cc.Quote,
 	}
 
 	var err error
@@ -191,6 +194,9 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 	}
 
 	if p.jq != nil {
+		if p.quote {
+			b = []byte(fmt.Sprintf("%q", string(b)))
+		}
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
 			return b, backoff.Permanent(err)
