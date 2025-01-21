@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -64,7 +63,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return instance, nil
 	}
 
-	token.Expiry = time.Now().Add(time.Duration(-10) * time.Second)
+	// config token
 	if tok, err := v.RefreshToken(token); err == nil {
 		v.log.DEBUG.Println("identity.NewIdentity - valid config token found.")
 		token = tok
