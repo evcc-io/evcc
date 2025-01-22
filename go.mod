@@ -210,4 +210,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
-replace github.com/hasura/go-graphql-client => github.com/andig/go-graphql-client v0.0.0-20250120095858-26928861d4a0
+replace github.com/hasura/go-graphql-client => github.com/andig/go-graphql-client v0.0.0-20250122174133-b81902a68c07
