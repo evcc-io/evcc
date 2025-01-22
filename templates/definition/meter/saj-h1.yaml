@@ -15,15 +15,15 @@ params:
   # battery control
   - name: defaultmode
     type: int
-    default: 0 # (0=self-use,1=time-of-use,2=backup,3=passive)
+    default: 0 # (0=self-use,2=backup)
     advanced: true
   - name: holdmode
     type: int
-    default: 2 # (0=self-use,1=time-of-use,2=backup,3=passive)
+    default: 2 # (2=backup,3=passive)
     advanced: true
   - name: backupsoc
     type: int
-    default: 20 # used when backup mode is used as defaultmode to control the default backup soc
+    default: 20 # only used when .defaultmode is 2 (backup) to control the default backupsoc (from this soc, system will work as in self-use)
     advanced: true
 render: |
   type: custom
@@ -109,8 +109,9 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
+        {{- if eq .defaultmode "2" }} # 'backup soc' should only be set when .defaultmode is 2 (backup)
         - source: const
-          value: {{ .backupsoc }} # use backupsoc value to define the min backup soc to retain
+          value: {{ .backupsoc }} # use .backupsoc value as 'backup soc' from where the system will work as in self-use
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -119,6 +120,7 @@ render: |
               address: 0x3271 # BackModSOCRetain
               type: writeholding
               decode: uint16
+        {{- end }}
     - case: 2 # hold
       set:
         source: sequence
@@ -133,8 +135,9 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
+        {{- if eq .holdmode "2" }} # 'backup soc' should only be set when .holdmode is 2 (backup)
         - source: go
-          script: holdsoc
+          script: holdsoc # read 'current soc' and write it to the 'backup soc' to prevent battery discharge below this value
           in:
           - name: holdsoc
             type: int
@@ -158,6 +161,7 @@ render: |
                 address: 0x3271 # BackModSOCRetain
                 type: writeholding
                 decode: uint16
+        {{- end }}
     - case: 3 # charge
       set:
         source: sequence
