@@ -133,16 +133,31 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
-        - source: const
-          value: {{ .soc }} # use current soc value to define the backup soc to retain
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
-            register:
-              address: 0x3271 # BackModSOCRetain
-              type: writeholding
-              decode: uint16
+        - source: go
+          script: holdsoc
+          in:
+          - name: holdsoc
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              timeout: {{ .timeout }}
+              register:
+                address: 0x406F # BatEnergyPercent
+                type: holding
+                decode: uint16
+              scale: 0.01
+          out:
+          - name: holdsoc
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              timeout: {{ .timeout }}
+              register:
+                address: 0x3271 # BackModSOCRetain
+                type: writeholding
+                decode: uint16
     - case: 3 # charge
       set:
         source: sequence
