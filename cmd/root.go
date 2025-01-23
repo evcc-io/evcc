@@ -153,7 +153,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// value cache
-	cache := util.NewCache()
+	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
