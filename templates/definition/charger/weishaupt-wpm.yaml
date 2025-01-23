@@ -141,4 +141,4 @@ render: |
         type: input
         encoding: int16
       scale: 10 
-  {{- end }}  
+  {{- end }}
