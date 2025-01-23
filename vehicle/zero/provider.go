@@ -4,18 +4,18 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 )
 
 // Provider implements the vehicle api
 type Provider struct {
-	status provider.Cacheable[State]
+	status plugin.Cacheable[State]
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, unitId string, cache time.Duration) *Provider {
 	impl := &Provider{
-		status: provider.ResettableCached(func() (State, error) {
+		status: plugin.ResettableCached(func() (State, error) {
 			return api.Status(unitId)
 		}, cache),
 	}

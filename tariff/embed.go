@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/evcc-io/evcc/provider/golang/stdlib"
+	"github.com/evcc-io/evcc/plugin/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
 )
 
