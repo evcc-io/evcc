@@ -330,7 +330,7 @@ func (d StatusLatestResponseCCS) Range() (int64, error) {
 	return d.ResMsg.State.Vehicle.Drivetrain.FuelSystem.DTE.Total, nil
 }
 
-func (d StatusLatestResponseCCS) Climter() (bool, error) {
+func (d StatusLatestResponseCCS) Climater() (bool, error) {
 	return false, api.ErrNotAvailable
 }
 
