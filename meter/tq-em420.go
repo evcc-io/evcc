@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -114,7 +115,7 @@ func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	base := util.DefaultScheme(strings.TrimRight(cc.URI, "/"), "http")
 
-	dataG := util.Cached(func() (TqEm420Data, error) {
+	dataG := plugin.Cached(func() (TqEm420Data, error) {
 		var res TqEm420Data
 
 		headers := map[string]string{

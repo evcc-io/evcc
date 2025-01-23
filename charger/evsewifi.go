@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/evse"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -19,7 +20,7 @@ type EVSEWifi struct {
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
 	hires        bool
-	paramG       util.Cacheable[evse.ListEntry]
+	paramG       plugin.Cacheable[evse.ListEntry]
 }
 
 func init() {
@@ -121,7 +122,7 @@ func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
 		current: 6, // 6A defined value
 	}
 
-	wb.paramG = util.ResettableCached(func() (evse.ListEntry, error) {
+	wb.paramG = plugin.ResettableCached(func() (evse.ListEntry, error) {
 		var res evse.ParameterResponse
 		uri := fmt.Sprintf("%s/getParameters", wb.uri)
 		if err := wb.GetJSON(uri, &res); err != nil {

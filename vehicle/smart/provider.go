@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -20,7 +21,7 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 		expiry: expiry,
 	}
 
-	v.statusG = util.Cached(func() (StatusResponse, error) {
+	v.statusG = plugin.Cached(func() (StatusResponse, error) {
 		return v.status(
 			func() (StatusResponse, error) { return api.Status(vin) },
 			func() (StatusResponse, error) { return api.Refresh(vin) },

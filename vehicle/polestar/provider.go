@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,12 +16,12 @@ type Provider struct {
 
 func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Duration) *Provider {
 	v := &Provider{
-		statusG: util.Cached(func() (BatteryData, error) {
+		statusG: plugin.Cached(func() (BatteryData, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			return api.Status(ctx, vin)
 		}, cache),
-		odoG: util.Cached(func() (OdometerData, error) {
+		odoG: plugin.Cached(func() (OdometerData, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			return api.Odometer(ctx, vin)

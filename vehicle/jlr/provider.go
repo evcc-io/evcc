@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/plugin"
 )
 
 type Provider struct {
@@ -15,10 +15,10 @@ type Provider struct {
 
 func NewProvider(api *API, vin, user string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: util.Cached(func() (StatusResponse, error) {
+		statusG: plugin.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
 		}, cache),
-		positionG: util.Cached(func() (PositionResponse, error) {
+		positionG: plugin.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
 		}, cache),
 		chargeS: func(enable bool) error {

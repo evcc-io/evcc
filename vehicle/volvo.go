@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -63,7 +64,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}),
 	}
 
-	v.statusG = util.Cached(v.StatusRequest, cc.Cache)
+	v.statusG = plugin.Cached(v.StatusRequest, cc.Cache)
 
 	var err error
 	v.vin, err = ensureVehicle(cc.VIN, v.Vehicles)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openwb/pro"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -23,7 +24,7 @@ type OpenWBPro struct {
 	*request.Helper
 	uri     string
 	current float64
-	statusG util.Cacheable[pro.Status]
+	statusG plugin.Cacheable[pro.Status]
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
@@ -52,7 +53,7 @@ func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWB
 		current: 6, // 6A defined value
 	}
 
-	wb.statusG = util.ResettableCached(func() (pro.Status, error) {
+	wb.statusG = plugin.ResettableCached(func() (pro.Status, error) {
 		var res pro.Status
 		uri := fmt.Sprintf("%s/%s", wb.uri, "connect.php")
 		err := wb.GetJSON(uri, &res)

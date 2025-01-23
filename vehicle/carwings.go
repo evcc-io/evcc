@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/joeshaw/carwings"
@@ -89,8 +90,8 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	v.statusG = util.Cached(v.status, cc.Cache)
-	v.climateG = util.Cached(v.session.ClimateControlStatus, cc.Cache)
+	v.statusG = plugin.Cached(v.status, cc.Cache)
+	v.climateG = plugin.Cached(v.session.ClimateControlStatus, cc.Cache)
 
 	return v, nil
 }

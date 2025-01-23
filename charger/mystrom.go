@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/mystrom"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -20,7 +21,7 @@ func init() {
 type MyStrom struct {
 	*switchSocket
 	conn    *mystrom.Connection
-	reportG util.Cacheable[mystrom.Report]
+	reportG plugin.Cacheable[mystrom.Report]
 }
 
 // NewMyStromFromConfig creates a myStrom charger from generic config
@@ -43,7 +44,7 @@ func NewMyStromFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	c.switchSocket = NewSwitchSocket(&cc.embed, c.Enabled, c.conn.CurrentPower, cc.StandbyPower)
-	c.reportG = util.ResettableCached(c.conn.Report, cc.Cache)
+	c.reportG = plugin.ResettableCached(c.conn.Report, cc.Cache)
 
 	return c, nil
 }

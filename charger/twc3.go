@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -72,7 +73,7 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	client := request.NewHelper(util.NewLogger("twc3"))
 	uri := fmt.Sprintf("%s/api/1/vitals", util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"))
 
-	c.vitalsG = util.Cached(func() (Vitals, error) {
+	c.vitalsG = plugin.Cached(func() (Vitals, error) {
 		var res Vitals
 		err := client.GetJSON(uri, &res)
 		return res, err

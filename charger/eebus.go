@@ -15,6 +15,7 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
@@ -87,7 +88,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charg
 	}
 
 	c.Connector = eebus.NewConnector()
-	c.minMaxG = util.Cached(c.minMax, time.Second)
+	c.minMaxG = plugin.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err

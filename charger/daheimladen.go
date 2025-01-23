@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/daheimladen"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -21,8 +22,8 @@ type DaheimLaden struct {
 	idTag         string
 	token         string
 	transactionID int32
-	statusG       util.Cacheable[daheimladen.GetLatestStatus]
-	meterG        util.Cacheable[daheimladen.GetLatestMeterValueResponse]
+	statusG       plugin.Cacheable[daheimladen.GetLatestStatus]
+	meterG        plugin.Cacheable[daheimladen.GetLatestMeterValueResponse]
 	cache         time.Duration
 }
 
@@ -66,13 +67,13 @@ func NewDaheimLaden(token, stationID string, cache time.Duration) (*DaheimLaden,
 		Base: c.Client.Transport,
 	}
 
-	c.statusG = util.ResettableCached(func() (daheimladen.GetLatestStatus, error) {
+	c.statusG = plugin.ResettableCached(func() (daheimladen.GetLatestStatus, error) {
 		var res daheimladen.GetLatestStatus
 		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/status", daheimladen.BASE_URL, c.stationID), &res)
 		return res, err
 	}, c.cache)
 
-	c.meterG = util.ResettableCached(func() (daheimladen.GetLatestMeterValueResponse, error) {
+	c.meterG = plugin.ResettableCached(func() (daheimladen.GetLatestMeterValueResponse, error) {
 		var res daheimladen.GetLatestMeterValueResponse
 		err := c.GetJSON(fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID), &res)
 		return res, err

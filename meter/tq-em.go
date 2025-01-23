@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -90,7 +91,7 @@ func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("no serial")
 	}
 
-	dataG := util.Cached(func() (tqemData, error) {
+	dataG := plugin.Cached(func() (tqemData, error) {
 		var res tqemData
 
 		uri := fmt.Sprintf("%s/mum-webservice/data.php", base)

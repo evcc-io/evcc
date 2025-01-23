@@ -26,6 +26,7 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -126,7 +127,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	var power func() (float64, error)
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		power = util.Cached(func() (float64, error) {
+		power = plugin.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
@@ -152,7 +153,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	var temp func() (float64, error)
 	if !heating || heatingTempSensor {
-		temp = util.Cached(func() (float64, error) {
+		temp = plugin.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err

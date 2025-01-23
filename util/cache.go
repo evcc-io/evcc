@@ -1,139 +1,114 @@
 package util
 
 import (
-	"errors"
-	"math"
+	"fmt"
+	"maps"
+	"slices"
 	"sync"
-	"time"
 
-	"github.com/asaskevich/EventBus"
-	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/encode"
 )
 
-var bus = EventBus.New()
-
-const (
-	reset           = "reset"
-	backoffDuration = 5 * time.Second
-)
-
-func ResetCached() {
-	bus.Publish(reset)
+// Cache is a data store
+type Cache struct {
+	mu  sync.RWMutex
+	val map[string]Param
 }
 
-// cached wraps a getter with a cache
-type cached[T any] struct {
-	mux            sync.Mutex
-	clock          clock.Clock
-	updated        time.Time
-	retried        time.Time
-	cache          time.Duration
-	backoffCounter int
-	g              func() (T, error)
-	val            T
-	err            error
+// flush is the value type used as parameter for flushing the cache.
+// Flushing is implemented by closing the channel. At this time, it is guaranteed
+// that the cache has catched up processing all pending messages.
+type flush chan struct{}
+
+// Flusher returns a new flush channel
+func Flusher() flush {
+	return make(flush)
 }
 
-// Cached wraps a getter with a cache
-func Cached[T any](g func() (T, error), cache time.Duration) func() (T, error) {
-	c := ResettableCached(g, cache)
-	return c.Get
-}
-
-// Cacheable is the interface for a resettable cache
-type Cacheable[T any] interface {
-	Get() (T, error)
-	Reset()
-}
-
-var _ Cacheable[int64] = (*cached[int64])(nil)
-
-// ResettableCached wraps a getter with a cache. It returns a `Cacheable`.
-// Instead of the cached getter, the `Get()` and `Reset()` methods are exposed.
-func ResettableCached[T any](g func() (T, error), cache time.Duration) *cached[T] {
-	clock := clock.New()
-	c := &cached[T]{
-		clock: clock,
-		cache: cache,
-		g:     g,
+// NewCache creates cache
+func NewCache() *Cache {
+	return &Cache{
+		val: make(map[string]Param),
 	}
-	_ = bus.Subscribe(reset, c.Reset)
-	return c
 }
 
-func (c *cached[T]) Get() (T, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+// Run adds input channel's values to cache
+func (c *Cache) Run(in <-chan Param) {
+	log := NewLogger("cache")
 
-	if c.mustUpdate() {
-		c.val, c.err = c.g()
-		c.updated = c.clock.Now()
-		c.retried = c.clock.Now()
+	for p := range in {
+		if flushC, ok := p.Val.(flush); ok {
+			close(flushC)
+			continue
+		}
 
-		if c.err == nil {
-			c.backoffCounter = 0
+		key := p.Key
+		if p.Loadpoint != nil {
+			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
+		}
+
+		log.TRACE.Printf("%s: %v", key, p.Val)
+		c.Add(p.UniqueID(), p)
+	}
+}
+
+// State provides a structured copy of the cached values.
+// Loadpoints are aggregated as loadpoints array.
+// Result values are formatted using encoder.
+func (c *Cache) State(enc encode.Encoder) map[string]any {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	res := make(map[string]any)
+	lps := make(map[int]map[string]any)
+
+	for _, param := range c.val {
+		if param.Loadpoint == nil {
+			res[param.Key] = enc.Encode(param.Val)
+		} else {
+			lp, ok := lps[*param.Loadpoint]
+			if !ok {
+				lp = make(map[string]any)
+				lps[*param.Loadpoint] = lp
+			}
+			lp[param.Key] = enc.Encode(param.Val)
 		}
 	}
 
-	return c.val, c.err
+	// convert map to array
+	loadpoints := make([]map[string]any, len(lps))
+	for id, lp := range lps {
+		loadpoints[id] = lp
+	}
+	res["loadpoints"] = loadpoints
+
+	return res
 }
 
-func (c *cached[T]) Reset() {
-	c.mux.Lock()
-	c.updated = time.Time{}
-	c.retried = time.Time{}
-	c.mux.Unlock()
+// All provides a copy of the cached values
+func (c *Cache) All() []Param {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return slices.Collect(maps.Values(c.val))
 }
 
-func (c *cached[T]) mustUpdate() bool {
-	return c.clock.Since(c.updated) > c.cache ||
-		errors.Is(c.err, api.ErrMustRetry) ||
-		c.err != nil && c.shouldRetryWithBackoff()
+// Add entry to cache
+func (c *Cache) Add(key string, param Param) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.val[key] = param
 }
 
-// shouldRetryWithBackoff returns true when exponential back-off duration has elapsed since last retry
-func (c *cached[T]) shouldRetryWithBackoff() bool {
-	if c.clock.Since(c.retried) > backoffDuration*time.Duration(math.Pow(2, float64(c.backoffCounter))) {
-		c.backoffCounter++
-		return true
+// Get entry from cache
+func (c *Cache) Get(key string) Param {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if val, ok := c.val[key]; ok {
+		return val
 	}
 
-	return false
-}
-
-// Value is a cacheable value that can expire
-type Value[T any] struct {
-	mux     sync.RWMutex
-	clock   clock.Clock
-	updated time.Time
-	cache   time.Duration
-	val     T
-}
-
-func NewValue[T any](cache time.Duration) *Value[T] {
-	return &Value[T]{
-		clock: clock.New(),
-		cache: cache,
-	}
-}
-
-func (v *Value[T]) Get() (T, error) {
-	v.mux.RLock()
-	defer v.mux.RUnlock()
-
-	if v.clock.Since(v.updated) > v.cache {
-		var zero T
-		return zero, api.ErrTimeout
-	}
-
-	return v.val, nil
-}
-
-func (v *Value[T]) Set(val T) {
-	v.mux.Lock()
-	defer v.mux.Unlock()
-
-	v.val = val
-	v.updated = v.clock.Now()
+	return Param{}
 }
