@@ -47,12 +47,12 @@ func NewScriptPluginFromConfig(other map[string]interface{}) (Plugin, error) {
 		return nil, err
 	}
 
-	p, err := NewScripPlugin(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
+	p, err := NewScriptPlugin(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
 	p.getter = defaultGetters(p, cc.Scale)
 
 	if err == nil {
 		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(log, cc.Settings)
+		pipe, err = pipeline.New(p.log, cc.Settings)
 		p.pipeline = pipe
 	}
 
@@ -61,7 +61,7 @@ func NewScriptPluginFromConfig(other map[string]interface{}) (Plugin, error) {
 
 // NewScriptProvider creates a script plugin.
 // Script execution is aborted after given timeout.
-func NewScripPlugin(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
+func NewScriptPlugin(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	if strings.TrimSpace(script) == "" {
 		return nil, errors.New("script is required")
 	}

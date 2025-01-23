@@ -511,14 +511,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 }
 
 // cacheExpecter can be used to verify asynchronously written values from cache
-func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, val interface{})) {
+func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.ParamCache, func(key string, val interface{})) {
 	t.Helper()
 
 	// attach cache for verifying values
 	paramC := make(chan util.Param)
 	lp.uiChan = paramC
 
-	cache := util.NewCache()
+	cache := util.NewParamCache()
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
