@@ -149,7 +149,7 @@ func (v *Provider) Odometer() (float64, error) {
 
 var _ api.VehicleClimater = (*Provider)(nil)
 
-// Range implements the api.VehicleRange interface
+// Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
 	if err != nil {
