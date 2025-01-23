@@ -117,7 +117,7 @@ gokrazy::
 	gzip -f $(IMAGE_FILE)
 
 gokrazy-run::
-	$(shell if [! -e packaging/gokrazy/QEMU_EFI.fd]; wget https://releases.linaro.org/components/kernel/uefi-linaro/latest/release/qemu64/QEMU_EFI.fd -O packaging/gokrazy/QEMU_EFI.fd; fi)
+	$(shell if [ ! -e packaging/gokrazy/QEMU_EFI.fd ]; then wget https://releases.linaro.org/components/kernel/uefi-linaro/latest/release/qemu64/QEMU_EFI.fd -O packaging/gokrazy/QEMU_EFI.fd; fi)
 	MACHINE=arm64 IMAGE_FILE=$(IMAGE_FILE) ./packaging/gokrazy/run.sh
 
 gokrazy-update::
