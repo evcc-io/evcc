@@ -15,6 +15,10 @@ params:
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
+  - name: powerconsumption
+    description:
+      de: "Max. Leistungsaufnahme in kW. Kein exakter Wert, nur zur Anzeige."
+      en: "Max. power consumption in kW. Not an exact value, only for display."
 render: |
   type: sgready
   getmode:
@@ -124,3 +128,18 @@ render: |
       encoding: int16
     scale: 0.1
   {{- end }}
+  {{- if .powerconsumption }}
+  power:
+    source: calc
+    mul:
+    - source: const
+      value: {{ .powerconsumption }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 33103
+        type: input
+        encoding: int16
+      scale: 10
+  {{- end }}  
+
