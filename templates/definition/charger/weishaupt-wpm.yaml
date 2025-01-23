@@ -137,9 +137,9 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 33103
+        address: 33103 # Leistungsanforderung
         type: input
         encoding: int16
-      scale: 10
+      scale: 10 
   {{- end }}  
 
