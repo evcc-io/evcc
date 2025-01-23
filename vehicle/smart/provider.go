@@ -93,7 +93,7 @@ func (v *Provider) Range() (int64, error) {
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer implements the plugin.VehicleOdometer interface
+// Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	return res.Status.Data.Odo.Value, err
