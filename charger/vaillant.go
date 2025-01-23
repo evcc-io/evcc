@@ -153,7 +153,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	var temp func() (float64, error)
 	if !heating || heatingTempSensor {
-		temp = provider.Cached(func() (float64, error) {
+		temp = plugin.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err
