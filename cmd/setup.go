@@ -134,7 +134,7 @@ If you know what you're doing, you can skip the database check with the --ignore
 }
 
 func isWritable(filePath string) bool {
-	file, err := os.OpenFile(filePath, os.O_WRONLY, 0666)
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0o666)
 	if err != nil {
 		return false
 	}
@@ -709,7 +709,7 @@ func configureEEBus(conf *eebus.Config) error {
 }
 
 // setup messaging
-func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {

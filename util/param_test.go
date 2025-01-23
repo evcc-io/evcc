@@ -18,8 +18,6 @@ func TestParam(t *testing.T) {
 	assert.Equal(t, "2.power", p.UniqueID())
 }
 
-func TestCache(t *testing.T) {
-	c := NewCache()
-
-	c.Add("foo", Param{})
+func TestParamCache(t *testing.T) {
+	NewParamCache().Add("foo", Param{})
 }
