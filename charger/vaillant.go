@@ -135,8 +135,24 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}, cc.Cache)
 	}
 
+	heatingTemp := func(zz []sensonet.StateZone) float64 {
+		z, _ := lo.Find(zz, func(z sensonet.StateZone) bool {
+			return z.Index == cc.HeatingZone
+		})
+		return z.CurrentRoomTemperature
+	}
+
+	var heatingTempSensor bool
+	if heating {
+		system, err := conn.GetSystem(systemId)
+		if err != nil {
+			return nil, err
+		}
+		heatingTempSensor = heatingTemp(system.State.Zones) > 0
+	}
+
 	var temp func() (float64, error)
-	if !heating {
+	if !heating || heatingTempSensor {
 		temp = provider.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
@@ -144,6 +160,11 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			}
 
 			switch {
+			case heatingTempSensor:
+				if res := heatingTemp(system.State.Zones); res > 0 {
+					return res, nil
+				}
+				return 0, api.ErrNotAvailable
 			case len(system.State.Dhw) > 0:
 				return system.State.Dhw[0].CurrentDhwTemperature, nil
 			case len(system.State.DomesticHotWater) > 0:
