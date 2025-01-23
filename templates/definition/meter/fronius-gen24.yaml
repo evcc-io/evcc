@@ -144,13 +144,6 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # off
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:ChaGriSet
-        - source: const
           value: 0
           set:
             source: sunspec
@@ -168,13 +161,6 @@ render: |
       set:
         source: sequence
         set:
-        - source: const
-          value: 0 # off
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:ChaGriSet
         - source: const
           value: 2
           set:
@@ -201,7 +187,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 1 # off
+          value: 1 # on
           set:
             source: sunspec
             uri: {{ .host }}:{{ .port }}
