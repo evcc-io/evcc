@@ -147,6 +147,17 @@ func (v *Provider) Odometer() (float64, error) {
 	return res.Odometer()
 }
 
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return false, err
+	}
+	return res.Climater()
+}
+
 var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
