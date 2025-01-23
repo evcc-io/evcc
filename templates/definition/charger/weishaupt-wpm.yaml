@@ -127,6 +127,7 @@ render: |
       type: input
       encoding: int16
     scale: 0.1
+  {{- end }}  
   {{- if .powerconsumption }}
   power:
     source: calc
@@ -141,4 +142,3 @@ render: |
         encoding: int16
       scale: 10 
   {{- end }}  
-
