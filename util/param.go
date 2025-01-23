@@ -31,8 +31,8 @@ func (p Param) UniqueID() string {
 	return b.String()
 }
 
-// Cache is a data store
-type Cache struct {
+// ParamCache is a data store
+type ParamCache struct {
 	mu  sync.RWMutex
 	val map[string]Param
 }
@@ -48,14 +48,14 @@ func Flusher() flush {
 }
 
 // NewCache creates cache
-func NewCache() *Cache {
-	return &Cache{
+func NewParamCache() *ParamCache {
+	return &ParamCache{
 		val: make(map[string]Param),
 	}
 }
 
 // Run adds input channel's values to cache
-func (c *Cache) Run(in <-chan Param) {
+func (c *ParamCache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
@@ -77,7 +77,7 @@ func (c *Cache) Run(in <-chan Param) {
 // State provides a structured copy of the cached values.
 // Loadpoints are aggregated as loadpoints array.
 // Result values are formatted using encoder.
-func (c *Cache) State(enc encode.Encoder) map[string]any {
+func (c *ParamCache) State(enc encode.Encoder) map[string]any {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -108,7 +108,7 @@ func (c *Cache) State(enc encode.Encoder) map[string]any {
 }
 
 // All provides a copy of the cached values
-func (c *Cache) All() []Param {
+func (c *ParamCache) All() []Param {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -116,7 +116,7 @@ func (c *Cache) All() []Param {
 }
 
 // Add entry to cache
-func (c *Cache) Add(key string, param Param) {
+func (c *ParamCache) Add(key string, param Param) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -124,7 +124,7 @@ func (c *Cache) Add(key string, param Param) {
 }
 
 // Get entry from cache
-func (c *Cache) Get(key string) Param {
+func (c *ParamCache) Get(key string) Param {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 

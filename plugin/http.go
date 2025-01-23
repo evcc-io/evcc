@@ -138,9 +138,6 @@ func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
-		basicAuth := transport.BasicAuthHeader(user, password)
-		log.Redact(basicAuth)
-
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "bearer":
 		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
