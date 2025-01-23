@@ -63,40 +63,31 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return instance, nil
 	}
 
-	// config token
-	if tok, err := v.RefreshToken(token); err == nil {
-		v.log.DEBUG.Println("identity.NewIdentity - valid config token found.")
-		token = tok
-	} else {
-		v.log.DEBUG.Println("identity.NewIdentity - no valid token found in config. Starting search in database.")
-	}
-
 	// database token
-	if !token.Valid() {
-		var tok oauth2.Token
-		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+	v.log.DEBUG.Println("identity.NewIdentity - start database token.")
+	var tok oauth2.Token
+	if err := settings.Json(v.settingsKey(), &tok); err == nil {
+		if !tok.Valid() {
 			v.log.DEBUG.Println("identity.NewIdentity - database token found")
-			token = &tok
+			if _, err := v.RefreshToken(&tok); err == nil {
+				return v, nil
+			} else {
+				v.log.DEBUG.Println("identity.NewIdentity - database token refresh failed:", err)
+			}
+		} else {
+			addInstance(account, v)
+			return v, nil
 		}
 	}
 
-	if !token.Valid() && token.RefreshToken != "" {
-		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
-		if tok, err := v.RefreshToken(token); err == nil {
-			token = tok
-		}
+	// config token
+	v.log.DEBUG.Println("identity.NewIdentity - start config token.")
+	if _, err := v.RefreshToken(token); err == nil {
+		v.log.DEBUG.Println("identity.NewIdentity - valid config token found.")
+		return v, nil
 	}
 
-	if !token.Valid() {
-		return nil, errors.New("token expired. Replace the token in the evcc.yaml with a new one.")
-	}
-
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
-
-	// add instance
-	addInstance(account, v)
-
-	return v, nil
+	return nil, errors.New("Token expired. Replace the token in the evcc.yaml with a new one.")
 }
 
 func (v *Identity) settingsKey() string {
@@ -123,6 +114,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	tok := util.TokenWithExpiry(&res)
 	v.TokenSource = oauth.RefreshTokenSource(tok, v)
 
+	addInstance(v.account, v)
 	err := settings.SetJson(v.settingsKey(), tok)
 
 	return tok, err
