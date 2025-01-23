@@ -20,11 +20,13 @@ render: |
   getmode:
     source: map
     values:
-      8:  1 # ABTAUEN
-      10: 3 # EVU_SPERRE
-      14: 2 # ERHOEHTER_BETRIEB
-      18: 3 # FROSTSCHUTZ
-      19: 1 # HEIZBETRIEB
+      8:  1 # Abtauen
+      9:  1 # WEZ2
+      10: 3 # EVU Sperre
+      14: 2 # Erhoeter Betrieb
+      15: 1 # Standzeit/Taktsperre
+      18: 3 # Frostschutz
+      19: 1 # Heizbetrieb
     get:
       source: modbus
       {{- include "modbus" . | indent 4 }}
