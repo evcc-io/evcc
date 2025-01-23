@@ -98,6 +98,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
+	// re-check since plannerActive() is called before conencted() check in Update()
+	if !lp.connected() {
+		return false
+	}
+
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
 		return false
