@@ -8,7 +8,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -19,8 +19,8 @@ type EEBus struct {
 	*eebus.Connector
 	uc *eebus.UseCasesCS
 
-	power, energy      *provider.Value[float64]
-	voltages, currents *provider.Value[[]float64]
+	power, energy      *plugin.Value[float64]
+	voltages, currents *plugin.Value[[]float64]
 }
 
 func init() {
@@ -54,10 +54,10 @@ func NewEEBus(ski, ip string, timeout time.Duration) (*EEBus, error) {
 		log:       util.NewLogger("eebus"),
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(),
-		power:     provider.NewValue[float64](timeout),
-		energy:    provider.NewValue[float64](timeout),
-		voltages:  provider.NewValue[[]float64](timeout),
-		currents:  provider.NewValue[[]float64](timeout),
+		power:     plugin.NewValue[float64](timeout),
+		energy:    plugin.NewValue[float64](timeout),
+		voltages:  plugin.NewValue[[]float64](timeout),
+		currents:  plugin.NewValue[[]float64](timeout),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
