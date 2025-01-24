@@ -35,5 +35,5 @@
             ]
         }
     },
-    "SerialConsole": "disabled"
+    "SerialConsole": "ttyAMA0,115200"
 }
