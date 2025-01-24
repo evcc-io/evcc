@@ -43,35 +43,31 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger                 string
-	site, circuit           int
-	lastEnergyPollTriggered time.Time
-	lastOpModePollTriggered time.Time
-	log                     *util.Logger
-	mux                     sync.RWMutex
-	lastEnergyPollMux       sync.Mutex
-	maxChargerCurrent       float64
-	dynamicChargerCurrent   float64
-	dynamicCircuitCurrent   [3]float64
-	current                 float64
-	chargerEnabled          bool
-	smartCharging           bool
-	authorize               bool
-	enabled                 bool
-	opMode                  int
-	pilotMode               string
-	reasonForNoCurrent      int
-	phaseMode               int
-	sessionStartEnergy      *float64
+	charger               string
+	site, circuit         int
+	log                   *util.Logger
+	mux                   sync.RWMutex
+	maxChargerCurrent     float64
+	dynamicChargerCurrent float64
+	dynamicCircuitCurrent [3]float64
+	current               float64
+	chargerEnabled        bool
+	smartCharging         bool
+	authorize             bool
+	enabled               bool
+	opMode                int
+	pilotMode             string
+	reasonForNoCurrent    int
+	phaseMode             int
+	sessionStartEnergy    *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid       string
-	lp         loadpoint.API
-	cmdC       chan easee.SignalRCommandResponse
-	obsC       chan easee.Observation
-	obsTime    map[easee.ObservationID]time.Time
-	stopTicker chan struct{}
-	startDone  func()
+	rfid      string
+	lp        loadpoint.API
+	cmdC      chan easee.SignalRCommandResponse
+	obsC      chan easee.Observation
+	obsTime   map[easee.ObservationID]time.Time
+	startDone func()
 }
 
 func init() {
@@ -336,40 +332,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.sessionStartEnergy = nil
 		}
 
-		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
-		if c.opMode != easee.ModeCharging && opMode == easee.ModeCharging {
-			if c.stopTicker == nil {
-				c.stopTicker = make(chan struct{})
-
-				go func() {
-					for tick := time.Tick(5 * time.Minute); ; {
-						select {
-						case <-c.stopTicker:
-							return
-						case <-tick:
-							c.requestLifetimeEnergyUpdate()
-						}
-					}
-				}()
-			}
-		}
-
-		// OpMode changed FROM >1 ("car connected") TO  1/disconnected  - stop ticker if channel exists
-		// channel may not exist regularly if the car was connected but charging never started
-		if c.opMode != easee.ModeDisconnected && opMode == easee.ModeDisconnected && c.stopTicker != nil {
-			close(c.stopTicker)
-			c.stopTicker = nil
-		}
-
-		// for relevant OpModes changes indicating a start or stop of the charging session, request new update of LIFETIME_ENERGY
-		// relevant OpModes: leaving op modes 1 (car connected, charging will start uncontrolled if unauthorized)
-		// and 3 (charging stopped or pause), or reaching op mode 1 (car disconnected) and 7 (charging paused/ended by de-authenticating)
-		if c.opMode != opMode && // only if op mode actually changed AND
-			(c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeCharging || // from these op modes
-				opMode == easee.ModeDisconnected || opMode == easee.ModeAwaitingAuthentication) { // or to these op modes
-			c.requestLifetimeEnergyUpdate()
-		}
-
 		c.opMode = opMode
 
 		// startup completed
@@ -423,7 +385,6 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.updateSmartCharging()
-	c.confirmStatusConsistency()
 
 	c.mux.RLock()
 	defer c.mux.RUnlock()
@@ -704,18 +665,6 @@ func (c *Easee) CurrentPower() (float64, error) {
 	return c.currentPower, nil
 }
 
-func (c *Easee) requestLifetimeEnergyUpdate() {
-	c.lastEnergyPollMux.Lock()
-	defer c.lastEnergyPollMux.Unlock()
-	if time.Since(c.lastEnergyPollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
-		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
-		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
-			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
-		}
-		c.lastEnergyPollTriggered = time.Now()
-	}
-}
-
 var _ api.ChargeRater = (*Easee)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
@@ -881,24 +830,4 @@ var _ loadpoint.Controller = (*Easee)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
-}
-
-// checks that opMode matches powerflow and polls if inconsistent
-func (c *Easee) confirmStatusConsistency() {
-	c.mux.Lock()
-	opCharging := c.opMode == easee.ModeCharging
-	pilotCharging := c.pilotMode == "C"
-	powerFlowing := c.currentPower > 0
-	c.mux.Unlock()
-
-	if (!opCharging && powerFlowing) || opCharging != pilotCharging {
-		// poll opMode from charger as API can give outdated data after SignalR (re)connect
-		if time.Since(c.lastOpModePollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
-			uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
-			if _, err := c.Post(uri, request.JSONContent, nil); err != nil {
-				c.log.WARN.Printf("failed to poll CHARGER_OP_MODE, results may vary: %v", err)
-			}
-			c.lastOpModePollTriggered = time.Now()
-		}
-	}
 }
