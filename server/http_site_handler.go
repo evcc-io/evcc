@@ -197,7 +197,7 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 }
 
 // stateHandler returns the combined state
-func stateHandler(cache *util.Cache) http.HandlerFunc {
+func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State(encode.NewEncoder(encode.WithDuration()))
 		for _, k := range ignoreState {
@@ -241,6 +241,7 @@ func healthHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	}

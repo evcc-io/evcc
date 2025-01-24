@@ -30,7 +30,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -46,7 +46,7 @@ type Salia struct {
 	uri     string
 	current int64
 	fw      int // 2 if fw 2.0
-	apiG    provider.Cacheable[salia.Api]
+	apiG    plugin.Cacheable[salia.Api]
 }
 
 func init() {
@@ -84,7 +84,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		current: 6,
 	}
 
-	wb.apiG = provider.ResettableCached(func() (salia.Api, error) {
+	wb.apiG = plugin.ResettableCached(func() (salia.Api, error) {
 		var res salia.Api
 		err := wb.GetJSON(wb.uri, &res)
 		return res, err

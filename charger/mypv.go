@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,6 +34,7 @@ import (
 type MyPv struct {
 	log     *util.Logger
 	conn    *modbus.Connection
+	lp      loadpoint.API
 	power   uint32
 	statusC uint16
 	enabled bool
@@ -191,7 +193,13 @@ var _ api.ChargerEx = (*MyPv)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *MyPv) MaxCurrentMillis(current float64) error {
-	power := uint16(230 * current)
+	phases := 1
+	if wb.lp != nil {
+		if p := wb.lp.GetPhases(); p != 0 {
+			phases = p
+		}
+	}
+	power := uint16(voltage * current * float64(phases))
 
 	err := wb.setPower(power)
 	if err == nil {
@@ -235,4 +243,11 @@ func (wb *MyPv) GetLimitSoc() (int64, error) {
 	}
 
 	return int64(binary.BigEndian.Uint16(b)) / 10, nil
+}
+
+var _ loadpoint.Controller = (*MyPv)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
