@@ -157,14 +157,14 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-       - source: const
+        - source: const
           value: 100 # %
           set:
             source: sunspec
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
-       - source: const
+        - source: const
           value: 5 # %
           set:
             source: sunspec
