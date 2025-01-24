@@ -97,9 +97,9 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	}
 
 	// user did not specify a database path
-	if conf.Database.Dsn == "" {
+	if conf.Database.Dsn == "" && checkDB {
 		// check if service database exists
-		if _, err := os.Stat(serviceDB); err == nil && checkDB {
+		if _, err := os.Stat(serviceDB); err == nil {
 			// service database found, ask user what to do
 			sudo := ""
 			if !isWritable(serviceDB) {
@@ -120,9 +120,6 @@ evcc --database ~/.evcc/evcc.db
 If you know what you're doing, you can skip the database check with the --ignore-db flag.
 			`)
 		}
-
-		// default to user database
-		conf.Database.Dsn = userDB
 	}
 
 	// parse log levels after reading config
@@ -525,7 +522,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
 	if conf.Dsn == "" {
-		return errors.New("database dsn not configured")
+		conf.Dsn = userDB
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
