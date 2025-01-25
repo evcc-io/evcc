@@ -1,4 +1,5 @@
 template: weishaupt-wpm
+deprecated: true
 products:
   - brand: Weishaupt
     description:
