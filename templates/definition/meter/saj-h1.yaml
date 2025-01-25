@@ -12,19 +12,6 @@ params:
     default: 5s
   - name: capacity
     advanced: true
-  # battery control
-  - name: defaultmode
-    type: int
-    default: 0 # (0=self-use,2=backup)
-    advanced: true
-  - name: holdmode
-    type: int
-    default: 2 # (2=backup,3=passive)
-    advanced: true
-  - name: backupsoc
-    type: int
-    default: 20 # only used when .defaultmode is 2 (backup) to control the default backupsoc (from this soc, system will work as in self-use)
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -100,7 +87,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: {{ .defaultmode }}
+          value: 0 # self-use mode
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -109,24 +96,12 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
-        {{- if eq .defaultmode "2" }} # 'backup soc' should only be set when .defaultmode is 2 (backup)
-        - source: const
-          value: {{ .backupsoc }} # use .backupsoc value as 'backup soc' from where the system will work as in self-use
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
-            register:
-              address: 0x3271 # BackModSOCRetain
-              type: writeholding
-              decode: uint16
-        {{- end }}
     - case: 2 # hold
       set:
         source: sequence
         set:
         - source: const
-          value: {{ .holdmode }}
+          value: 3 # passive mode
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -135,39 +110,13 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
-        {{- if eq .holdmode "2" }} # 'backup soc' should only be set when .holdmode is 2 (backup)
-        - source: go
-          script: holdsoc # read 'current soc' and write it to the 'backup soc' to prevent battery discharge below this value
-          in:
-          - name: holdsoc
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
-              register:
-                address: 0x406F # BatEnergyPercent
-                type: holding
-                decode: uint16
-              scale: 0.01
-          out:
-          - name: holdsoc
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
-              register:
-                address: 0x3271 # BackModSOCRetain
-                type: writeholding
-                decode: uint16
         {{- end }}
     - case: 3 # charge
       set:
         source: sequence
         set:
         - source: const
-          value: 1 # Time-Of-Use
+          value: 1 # time-of-use mode
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
