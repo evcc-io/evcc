@@ -113,6 +113,34 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 		batterySoc = m.batterySoc
 
 		batteryMode = func(mode api.BatteryMode) error {
+			var batteryError error
+
+			if mode != api.BatteryNormal {
+				batStatus, err := m.conn.QueryInt32(rct.BatteryBatStatus)
+				if err != nil {
+					return err
+				}
+
+				// see https://rctclient.readthedocs.io/en/latest/inverter_bitfields.html#battery-bat-status
+				if batStatus&1032 == 0 {
+					mode = api.BatteryNormal
+					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is calibrating")
+				} else if batStatus&2048 == 0 {
+					mode = api.BatteryNormal
+					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is balancing")
+				}
+
+				state, err := m.conn.QueryUint8(rct.InverterState)
+				if err != nil {
+					return err
+				}
+
+				if state == 0x0A || state == 0x0B {
+					mode = api.BatteryNormal
+					batteryError = fmt.Errorf("set batteryMode to batteryNormal because inverter is not connected to the grid")
+				}
+			}
+
 			switch mode {
 			case api.BatteryNormal:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
@@ -123,7 +151,11 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
-				return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
+				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0))); err != nil {
+					return err
+				}
+
+				return batteryError
 
 			case api.BatteryHold:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
