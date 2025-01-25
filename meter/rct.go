@@ -116,21 +116,18 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 			var batteryError error
 
 			if mode != api.BatteryNormal {
-				batStatus, err := m.conn.QueryInt32(rct.BatteryBatStatus)
+				batStatus, err := m.queryInt32(rct.BatteryBatStatus)
 				if err != nil {
 					return err
 				}
 
-				// see https://rctclient.readthedocs.io/en/latest/inverter_bitfields.html#battery-bat-status
-				if batStatus&1032 == 0 {
+				// see https://github.com/weltenwort/home-assistant-rct-power-integration/issues/264#issuecomment-2124811644
+				if batStatus != 0 {
 					mode = api.BatteryNormal
-					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is calibrating")
-				} else if batStatus&2048 == 0 {
-					mode = api.BatteryNormal
-					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is balancing")
+					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is not in normal charge/discharge operation")
 				}
 
-				state, err := m.conn.QueryUint8(rct.InverterState)
+				state, err := m.queryUInt8(rct.InverterState)
 				if err != nil {
 					return err
 				}
@@ -260,4 +257,36 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	}, m.bo)
 
 	return float64(res), err
+}
+
+// queryInt32 adds retry logic of recoverable errors to QueryInt32
+func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
+	m.bo.Reset()
+
+	res, err := backoff.RetryWithData(func() (int32, error) {
+		res, err := m.conn.QueryInt32(id)
+		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+			err = backoff.Permanent(err)
+		}
+
+		return res, err
+	}, m.bo)
+
+	return int32(res), err
+}
+
+// queryUInt8 adds retry logic of recoverable errors to QueryUInt8
+func (m *RCT) queryUInt8(id rct.Identifier) (uint8, error) {
+	m.bo.Reset()
+
+	res, err := backoff.RetryWithData(func() (uint8, error) {
+		res, err := m.conn.QueryUint8(id)
+		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+			err = backoff.Permanent(err)
+		}
+
+		return res, err
+	}, m.bo)
+
+	return uint8(res), err
 }
