@@ -272,7 +272,7 @@ func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 		return res, err
 	}, m.bo)
 
-	return int32(res), err
+	return res, err
 }
 
 // queryUInt8 adds retry logic of recoverable errors to QueryUInt8
@@ -288,5 +288,5 @@ func (m *RCT) queryUInt8(id rct.Identifier) (uint8, error) {
 		return res, err
 	}, m.bo)
 
-	return uint8(res), err
+	return res, err
 }
