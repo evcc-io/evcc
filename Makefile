@@ -114,7 +114,7 @@ gokrazy::
 	# ${GOK} add tailscale.com/cmd/tailscaled
 	# ${GOK} add tailscale.com/cmd/tailscale
 	${GOK} overwrite --full=$(IMAGE_FILE) --target_storage_bytes=1258299392
-	gzip -f $(IMAGE_FILE)
+	# gzip -f $(IMAGE_FILE)
 
 gokrazy-run::
 	${GOK} vm run
