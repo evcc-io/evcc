@@ -7,7 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -30,40 +30,40 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed                               `mapstructure:",squash"`
-		Status, Enable, Enabled, MaxCurrent provider.Config
-		MaxCurrentMillis                    *provider.Config
-		Identify, Phases1p3p                *provider.Config
-		Wakeup                              *provider.Config
-		Soc                                 *provider.Config
+		Status, Enable, Enabled, MaxCurrent plugin.Config
+		MaxCurrentMillis                    *plugin.Config
+		Identify, Phases1p3p                *plugin.Config
+		Wakeup                              *plugin.Config
+		Soc                                 *plugin.Config
 		Tos                                 bool
 
 		// optional measurements
-		Power  *provider.Config
-		Energy *provider.Config
+		Power  *plugin.Config
+		Energy *plugin.Config
 
-		Currents, Voltages []provider.Config
+		Currents, Voltages []plugin.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	status, err := provider.NewStringGetterFromConfig(ctx, cc.Status)
+	status, err := cc.Status.StringGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("status: %w", err)
 	}
 
-	enabled, err := provider.NewBoolGetterFromConfig(ctx, cc.Enabled)
+	enabled, err := cc.Enabled.BoolGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("enabled: %w", err)
 	}
 
-	enable, err := provider.NewBoolSetterFromConfig(ctx, "enable", cc.Enable)
+	enable, err := cc.Enable.BoolSetter(ctx, "enable")
 	if err != nil {
 		return nil, fmt.Errorf("enable: %w", err)
 	}
 
-	maxcurrent, err := provider.NewIntSetterFromConfig(ctx, "maxcurrent", cc.MaxCurrent)
+	maxcurrent, err := cc.MaxCurrent.IntSetter(ctx, "maxcurrent")
 	if err != nil {
 		return nil, fmt.Errorf("maxcurrent: %w", err)
 	}
@@ -75,12 +75,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 
 	c.embed = &cc.embed
 
-	var maxcurrentmillis func(float64) error
-	if cc.MaxCurrentMillis != nil {
-		maxcurrentmillis, err = provider.NewFloatSetterFromConfig(ctx, "maxcurrentmillis", *cc.MaxCurrentMillis)
-		if err != nil {
-			return nil, fmt.Errorf("maxcurrentmillis: %w", err)
-		}
+	maxcurrentmillis, err := cc.MaxCurrentMillis.FloatSetter(ctx, "maxcurrentmillis")
+	if err != nil {
+		return nil, fmt.Errorf("maxcurrentmillis: %w", err)
 	}
 
 	// decorate phases
@@ -90,7 +87,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 			return nil, errors.New("1p3p does no longer handle disable/enable. Use tos: true to confirm you understand the consequences")
 		}
 
-		phases1p3pS, err := provider.NewIntSetterFromConfig(ctx, "phases", *cc.Phases1p3p)
+		phases1p3pS, err := cc.Phases1p3p.IntSetter(ctx, "phases")
 		if err != nil {
 			return nil, fmt.Errorf("phases: %w", err)
 		}
@@ -101,34 +98,28 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	// decorate identifier
-	var identify func() (string, error)
-	if cc.Identify != nil {
-		identify, err = provider.NewStringGetterFromConfig(ctx, *cc.Identify)
-		if err != nil {
-			return nil, fmt.Errorf("identify: %w", err)
-		}
+	identify, err := cc.Identify.StringGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("identify: %w", err)
 	}
 
 	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
-		wakeupS, err := provider.NewBoolSetterFromConfig(ctx, "wakeup", *cc.Wakeup)
+		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
 
 		wakeup = func() error {
-			return wakeupS(true)
+			return set(true)
 		}
 	}
 
 	// decorate soc
-	var soc func() (float64, error)
-	if cc.Soc != nil {
-		soc, err = provider.NewFloatGetterFromConfig(ctx, *cc.Soc)
-		if err != nil {
-			return nil, fmt.Errorf("soc: %w", err)
-		}
+	soc, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("soc: %w", err)
 	}
 
 	// decorate measurements

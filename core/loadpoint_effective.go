@@ -1,7 +1,7 @@
 package core
 
 import (
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,20 +31,39 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
+type plan struct {
+	Id    int
+	Start time.Time // last possible start time
+	End   time.Time // user-selected finish time
+	Soc   int
+}
+
+func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
+	for i, p := range plans {
+		requiredDuration := lp.GetPlanRequiredDuration(float64(p.Soc), maxPower)
+		plans[i].Start = p.End.Add(-requiredDuration)
+	}
+
+	// sort plans by start time
+	slices.SortStableFunc(plans, func(i, j plan) int {
+		return i.Start.Compare(j.Start)
+	})
+
+	if len(plans) > 0 {
+		return &plans[0]
+	}
+
+	return nil
+}
+
 // nextVehiclePlan returns the next vehicle plan time, soc and id
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	if v := lp.GetVehicle(); v != nil {
-		type plan struct {
-			Time time.Time
-			Soc  int
-			Id   int
-		}
-
 		var plans []plan
 
 		// static plan
 		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, Soc: soc, Time: planTime})
+			plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
 		}
 
 		// repeating plans
@@ -59,16 +78,12 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 				continue
 			}
 
-			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, Time: time})
+			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: time})
 		}
 
-		// sort plans by time
-		sort.Slice(plans, func(i, j int) bool {
-			return plans[i].Time.Before(plans[j].Time)
-		})
-
-		if len(plans) > 0 {
-			return plans[0].Time, plans[0].Soc, plans[0].Id
+		// calculate earliest required plan start
+		if plan := lp.nextActivePlan(lp.EffectiveMaxPower(), plans); plan != nil {
+			return plan.End, plan.Soc, plan.Id
 		}
 	}
 	return time.Time{}, 0, 0

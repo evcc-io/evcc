@@ -40,6 +40,7 @@ labelResidualPower = "Residual power"
 title = "Control behavior"
 
 [config.deviceValue]
+amount = "Amount"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Capacity"

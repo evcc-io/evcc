@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/samber/lo"
 )
 
@@ -28,16 +28,16 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		chargerG: provider.Cached(func() (ChargerResponse, error) {
+		chargerG: plugin.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
 		}, cache),
-		statusG: provider.Cached(func() (StatusResponse, error) {
+		statusG: plugin.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
 		}, cache),
-		climateG: provider.Cached(func() (ClimaterResponse, error) {
+		climateG: plugin.Cached(func() (ClimaterResponse, error) {
 			return api.Climater(vin)
 		}, cache),
-		positionG: provider.Cached(func() (PositionResponse, error) {
+		positionG: plugin.Cached(func() (PositionResponse, error) {
 			return api.Position(vin)
 		}, cache),
 		action: func(action, value string) error {

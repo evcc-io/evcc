@@ -10,7 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openevse"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -20,7 +20,7 @@ import (
 type OpenEVSE struct {
 	*request.Helper
 	uri     string
-	statusG provider.Cacheable[openevse.Status]
+	statusG plugin.Cacheable[openevse.Status]
 	current int
 	enabled bool
 }
@@ -67,7 +67,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 	}
 
-	c.statusG = provider.ResettableCached(func() (openevse.Status, error) {
+	c.statusG = plugin.ResettableCached(func() (openevse.Status, error) {
 		var res openevse.Status
 
 		uri := fmt.Sprintf("%s/status", c.uri)
