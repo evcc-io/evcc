@@ -5,7 +5,9 @@ package lgpcs
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,19 +15,13 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-)
-
-// URIs
-const (
-	LoginURI     = "/v1/login"
-	UserLoginURI = "/v1/user/setting/login"
-	MeterURI     = "/v1/user/essinfo/home"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/spf13/cast"
 )
 
 type Com struct {
 	*request.Helper
 	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
-	authPath string
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
 	essType  Model  // currently the LG Ess Home 8/10 and Home 15 are supported
@@ -47,13 +43,11 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 		instance = &Com{
 			Helper:   request.NewHelper(log),
 			uri:      uri,
-			authPath: UserLoginURI,
 			password: password,
 			essType:  essType,
 		}
 
 		if registration != "" {
-			instance.authPath = LoginURI
 			instance.password = registration
 		}
 
@@ -62,7 +56,7 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.dataG = util.Cached(instance.refreshData, cache)
+		instance.dataG = util.Cached(instance.essInfo, cache)
 
 		// do first login if no authKey exists and uri and password exist
 		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
@@ -94,7 +88,8 @@ func (m *Com) Login() error {
 		"password": m.password,
 	}
 
-	req, err := request.New(http.MethodPut, m.uri+m.authPath, request.MarshalJSON(data), request.JSONEncoding)
+	uri := fmt.Sprintf("%s/v1/user/setting/login", m.uri)
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -125,46 +120,68 @@ func (m *Com) Data() (EssData, error) {
 	return m.dataG()
 }
 
-// refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
-func (m *Com) refreshData() (EssData, error) {
+// essInfo reads essinfo/home
+func (m *Com) essInfo() (EssData, error) {
+	f := func(body io.ReadSeeker) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/essinfo/home", m.uri)
+		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
+	}
+
 	if m.essType == LgEss8 {
 		var res MeterResponse8
-		err := m.update(&res)
+		err := m.request(f, nil, &res)
 		return res, err
 	}
 
 	var res MeterResponse15
-	err := m.update(&res)
+	err := m.request(f, nil, &res)
 	return res, err
 }
 
-func (m *Com) update(meterData any) error {
-	data := map[string]interface{}{
+// BatteryMode sets the battery mode
+func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
+	var res struct{}
+	return m.request(func(body io.ReadSeeker) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/setting/batt", m.uri)
+		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
+	}, map[string]string{
+		"backupmode": mode,
+		"backup_soc": strconv.Itoa(soc),
+		"autocharge": strconv.Itoa(cast.ToInt(autocharge)),
+	}, &res)
+}
+
+func (m *Com) request(f func(io.ReadSeeker) (*http.Request, error), payload any, meterData any) error {
+	data := map[string]string{
 		"auth_key": m.authKey,
 	}
 
-	req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
+	if err := mapstructure.Decode(payload, &data); err != nil {
+		return err
+	}
+
+	req, err := f(request.MarshalJSON(data))
 	if err != nil {
 		return err
 	}
 
-	if err := m.DoJSON(req, meterData); err != nil {
+	if err := m.DoJSON(req, &meterData); err != nil {
 		// re-login if request returns 405-error
-		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
-			if err := m.Login(); err != nil {
-				return err
-			}
-
-			data["auth_key"] = m.authKey
-			req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
-			if err != nil {
-				return err
-			}
-
-			return m.DoJSON(req, &meterData)
+		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
+			return err
 		}
 
-		return err
+		if err := m.Login(); err != nil {
+			return err
+		}
+
+		data["auth_key"] = m.authKey
+		req, err := f(request.MarshalJSON(data))
+		if err != nil {
+			return err
+		}
+
+		return m.DoJSON(req, &meterData)
 	}
 
 	return nil
