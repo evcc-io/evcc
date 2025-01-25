@@ -177,7 +177,7 @@ func (m *LgEss) batteryMode(battery battery) func(api.BatteryMode) error {
 			}
 			return m.conn.BatteryMode("on", int(soc), true)
 		case api.BatteryCharge:
-			return m.conn.BatteryMode("on", int(battery.MinSoc), true)
+			return m.conn.BatteryMode("on", int(battery.MaxSoc), true)
 		default:
 			return api.ErrNotAvailable
 		}
