@@ -1863,6 +1863,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && (keepEnabled || lp.vehicleClimateActive()) {
+			if keepEnabled {
+				lp.log.DEBUG.Println("keeping charger active after vehicle stopped charging")
+			}
 			targetCurrent = lp.effectiveMinCurrent()
 		}
 
