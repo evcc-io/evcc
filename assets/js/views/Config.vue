@@ -619,16 +619,17 @@ export default {
 		async updateValues() {
 			clearTimeout(this.deviceValueTimeout);
 			if (!this.offline) {
-				const promises = [
-					...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
-					...this.vehicles.map((vehicle) =>
-						this.updateDeviceValue("vehicle", vehicle.name)
-					),
-				];
-
-				await Promise.all(promises);
+				for (const meter of this.meters) {
+					await this.updateDeviceValue("meter", meter.name);
+				}
+				for (const vehicle of this.vehicles) {
+					await this.updateDeviceValue("vehicle", vehicle.name);
+				}
 			}
-			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
+			// ensure that component is still mounted
+			if (!this.$el) return;
+			const interval = (store.state?.interval || 30) * 1000;
+			this.deviceValueTimeout = setTimeout(this.updateValues, interval);
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || [];
