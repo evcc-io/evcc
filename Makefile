@@ -20,7 +20,7 @@ PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK_DIR := packaging/gokrazy
-GOK := gok -i evcc --parent_dir $(GOK_DIR)
+GOK := GOOS=linux gok -i evcc --parent_dir $(GOK_DIR)
 IMAGE_FILE := evcc_$(TAG_NAME).img
 
 # deb
@@ -105,21 +105,31 @@ apt-release::
 		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
 	)
 
-# gokrazy image
-gokrazy::
+# gokrazy
+gok::
 	which gok || go install github.com/gokrazy/tools/cmd/gok@main
 	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
 	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS) -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
 	${GOK} add .
 	# ${GOK} add tailscale.com/cmd/tailscaled
 	# ${GOK} add tailscale.com/cmd/tailscale
+
+# build image
+gok-image:: gok
 	${GOK} overwrite --full=$(IMAGE_FILE) --target_storage_bytes=1258299392
 	# gzip -f $(IMAGE_FILE)
 
-gokrazy-run::
+# run qemu
+gok-run:: gok
 	${GOK} vm run
 
-gokrazy-update::
+# run qemu on mac
+gok-mac::
+	sed 's!"SerialConsole": "ttyAMA0,115200"!"KernelPackage": "github.com/gokrazy/kernel.arm64",'\\n'    "SerialConsole": "ttyAMA0,115200"!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
+	${GOK} add .
+	${GOK} vm run
+
+gok-update::
 	${GOK} update yes $(IMAGE_OPTIONS)
 
 soc::
