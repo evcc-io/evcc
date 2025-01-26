@@ -36,6 +36,8 @@ description = "Obvykle jsou přednastavené hodnoty správné. Změňte jen poku
 [config.deviceValue]
 capacity = "Kapacita"
 chargeStatus = "Stav"
+chargeStatusA = "nepřipojeno"
+chargeStatusB = "připojeno"
 chargedEnergy = "Nabito"
 configured = "Nastaveno"
 currency = "Měna"
@@ -50,8 +52,6 @@ power = "Výkon"
 range = "Rozsah"
 soc = "SoC"
 socLimit = "Strop"
-chargeStatusB = "připojeno"
-chargeStatusA = "nepřipojeno"
 
 [config.eebus]
 description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."
