@@ -121,13 +121,13 @@ gok-image:: gok
 
 # run qemu
 gok-run:: gok
-	${GOK} vm run
+	${GOK} vm run --ports 8088:8080
 
 # run qemu on mac
 gok-mac:: gok
 	mv $(GOK_DIR)/evcc/config.json $(GOK_DIR)/evcc/linux.json
 	sed 's!"SerialConsole": "ttyAMA0,115200"!"KernelPackage": "github.com/gokrazy/kernel.arm64",'\\n'    "SerialConsole": "ttyAMA0,115200"!g' $(GOK_DIR)/evcc/linux.json > $(GOK_DIR)/evcc/config.json
-	${GOK} vm run
+	${GOK} vm run --ports 8088:8080
 
 gok-update::
 	${GOK} update yes $(IMAGE_OPTIONS)
