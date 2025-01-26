@@ -121,7 +121,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 
 				// see https://github.com/weltenwort/home-assistant-rct-power-integration/issues/264#issuecomment-2124811644
 				if batStatus != 0 {
-					return fmt.Errorf("prevent change of batteryMode because battery is not in normal charge/discharge operation")
+					return errors.New("invalid battery operating mode")
 				}
 			}
 
