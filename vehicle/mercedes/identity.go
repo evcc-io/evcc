@@ -70,7 +70,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	// database token
 	if !token.Valid() {
 		if err := settings.Json(v.settingsKey(), &token); err != nil {
-			return nil, errors.New("token expired")
+			return nil, errors.New("missing token")
 		}
 
 		if !token.Valid() {
