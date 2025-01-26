@@ -257,19 +257,3 @@ func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 
 	return res, err
 }
-
-// queryUInt8 adds retry logic of recoverable errors to QueryUInt8
-func (m *RCT) queryUInt8(id rct.Identifier) (uint8, error) {
-	m.bo.Reset()
-
-	res, err := backoff.RetryWithData(func() (uint8, error) {
-		res, err := m.conn.QueryUint8(id)
-		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
-			err = backoff.Permanent(err)
-		}
-
-		return res, err
-	}, m.bo)
-
-	return res, err
-}
