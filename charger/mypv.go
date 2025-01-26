@@ -32,17 +32,18 @@ import (
 
 // MyPv charger implementation
 type MyPv struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	lp      loadpoint.API
-	power   uint32
-	statusC uint16
-	enabled bool
+	log         *util.Logger
+	conn        *modbus.Connection
+	lp          loadpoint.API
+	power       uint32
+	statusC     uint16
+	enabled     bool
+	thorRegTemp uint16
 }
 
 const (
-	elwaRegSetPower  = 1000
-	elwaRegTemp      = 1001
+	elwaRegSetPower = 1000
+	// elwaRegTemp      = 1001
 	elwaRegTempLimit = 1002
 	elwaRegStatus    = 1003
 	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
@@ -62,19 +63,25 @@ func init() {
 
 // newMyPvFromConfig creates a MyPv charger from generic config
 func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, statusC uint16) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		// Temp               plugin.Config
+		ThorRegTemp uint16
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1, // default
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, statusC)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.ThorRegTemp, statusC)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
-func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, statusC uint16) (api.Charger, error) {
+func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, thorRegTemp uint16, statusC uint16) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -88,9 +95,10 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, statusC uint1
 	conn.Logger(log.TRACE)
 
 	wb := &MyPv{
-		log:     log,
-		conn:    conn,
-		statusC: statusC,
+		log:         log,
+		conn:        conn,
+		statusC:     statusC,
+		thorRegTemp: thorRegTemp,
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)
@@ -225,7 +233,7 @@ var _ api.Battery = (*MyPv)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPv) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegTemp, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.thorRegTemp, 1)
 	if err != nil {
 		return 0, err
 	}

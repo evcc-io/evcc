@@ -9,6 +9,14 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    choice: ["1001", "1030", "1034"]
+    default: "1001"
+    description: 
+      en: "modbus register used for calculating Soc"
+      de: "Modbusregister zur Berechnung des SoC"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
+  ThorRegTemp: {{- if eq .tempsource "1031" }} 1031 {{- else if eq .tempsource "1030" }} 1030 {{- else }} 1001 {{- end }}
+  
