@@ -43,6 +43,7 @@ labelResidualPower = "Preostala snaga"
 title = "Učestalost osvježavanja"
 
 [config.deviceValue]
+amount = "Iznos"
 broker = "Posrednik"
 bucket = "Kanta"
 capacity = "Kapacitet"

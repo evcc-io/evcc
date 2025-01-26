@@ -41,6 +41,7 @@ labelResidualPower = "Tartalék energia"
 title = "Vezérlési mód"
 
 [config.deviceValue]
+amount = "Mennyiség"
 broker = "Bróker"
 bucket = "Vödör"
 capacity = "Kapacitás"
