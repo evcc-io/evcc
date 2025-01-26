@@ -124,9 +124,9 @@ gok-run:: gok
 	${GOK} vm run
 
 # run qemu on mac
-gok-mac::
-	sed 's!"SerialConsole": "ttyAMA0,115200"!"KernelPackage": "github.com/gokrazy/kernel.arm64",'\\n'    "SerialConsole": "ttyAMA0,115200"!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
-	${GOK} add .
+gok-mac:: gok
+	mv $(GOK_DIR)/evcc/config.json $(GOK_DIR)/evcc/linux.json
+	sed 's!"SerialConsole": "ttyAMA0,115200"!"KernelPackage": "github.com/gokrazy/kernel.arm64",'\\n'    "SerialConsole": "ttyAMA0,115200"!g' $(GOK_DIR)/evcc/linux.json > $(GOK_DIR)/evcc/config.json
 	${GOK} vm run
 
 gok-update::
