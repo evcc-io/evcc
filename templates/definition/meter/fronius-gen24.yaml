@@ -157,20 +157,6 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-        - source: const
-          value: 100 # %
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:InWRte
-        - source: const
-          value: 5 # %
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:MinRsvPct
     - case: 2 # hold
       set:
         source: sequence
@@ -214,12 +200,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-        - source: const
-          value: 99 # %
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:MinRsvPct
   capacity: {{ .capacity }} # kWh
   {{- end }}
