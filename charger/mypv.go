@@ -42,12 +42,12 @@ type MyPv struct {
 }
 
 const (
-	elwaRegSetPower = 1000
-	// elwaRegTemp      = 1001
+	elwaRegSetPower  = 1000
 	elwaRegTempLimit = 1002
 	elwaRegStatus    = 1003
 	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 )
+var thorRegTempArray = [3]uint16{1001, 1030, 1031}
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -65,8 +65,7 @@ func init() {
 func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, statusC uint16) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		// Temp               plugin.Config
-		ThorRegTemp uint16
+		ThorRegTempIndex uint16
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1, // default
@@ -77,7 +76,7 @@ func newMyPvFromConfig(ctx context.Context, name string, other map[string]interf
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.ThorRegTemp, statusC)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, thorRegTempArray[cc.ThorRegTempIndex-1], statusC)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger

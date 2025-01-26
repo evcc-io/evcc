@@ -13,10 +13,10 @@ params:
     choice: ["1", "2", "3"]
     default: "1"
     description: 
-      en: "choose temperature sensor ("1", "2" or "3") according to AC Thor documentation for calculating Soc"
-      de: "Wählen Sie den Temperatursensor ("1", "2" oder "3") gemäß der AC Thor-Dokumentation zur Berechnung des SoC"
+      en: "choose temperature sensor (1, 2 or 3) according to AC Thor documentation for calculating Soc"
+      de: "Wählen Sie den Temperatursensor (1, 2 oder 3) gemäß der AC Thor-Dokumentation zur Berechnung des SoC"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
-  ThorRegTemp: {{- if eq .tempsource "3" }} 1031 {{- else if eq .tempsource "2" }} 1030 {{- else }} 1001 {{- end }}
+  ThorRegTempIndex: {{- if eq .tempsource "3" }} 3 {{- else if eq .tempsource "2" }} 2 {{- else }} 1 {{- end }}
   
