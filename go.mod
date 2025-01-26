@@ -67,7 +67,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
+	github.com/mlnoga/rct v0.1.2-0.20250123194852-f6c64dfa2f45
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.4.1
@@ -210,4 +210,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
-replace github.com/mlnoga/rct => github.com/Maschga/rct v0.1.2-0.20250112193044-2980bbd48edf
+replace github.com/mlnoga/rct => github.com/Maschga/rct v0.1.2-0.20250123202746-3bacbc13d633

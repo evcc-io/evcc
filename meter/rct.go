@@ -113,6 +113,18 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 		batterySoc = m.batterySoc
 
 		batteryMode = func(mode api.BatteryMode) error {
+			if mode != api.BatteryNormal {
+				batStatus, err := m.queryInt32(rct.BatteryBatStatus)
+				if err != nil {
+					return err
+				}
+
+				// see https://github.com/weltenwort/home-assistant-rct-power-integration/issues/264#issuecomment-2124811644
+				if batStatus != 0 {
+					return errors.New("invalid battery operating mode")
+				}
+			}
+
 			switch mode {
 			case api.BatteryNormal:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
@@ -228,4 +240,20 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	}, m.bo)
 
 	return float64(res), err
+}
+
+// queryInt32 adds retry logic of recoverable errors to QueryInt32
+func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
+	m.bo.Reset()
+
+	res, err := backoff.RetryWithData(func() (int32, error) {
+		res, err := m.conn.QueryInt32(id)
+		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+			err = backoff.Permanent(err)
+		}
+
+		return res, err
+	}, m.bo)
+
+	return res, err
 }
