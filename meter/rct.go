@@ -113,8 +113,6 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 		batterySoc = m.batterySoc
 
 		batteryMode = func(mode api.BatteryMode) error {
-			var batteryError error
-
 			if mode != api.BatteryNormal {
 				batStatus, err := m.queryInt32(rct.BatteryBatStatus)
 				if err != nil {
@@ -123,18 +121,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 
 				// see https://github.com/weltenwort/home-assistant-rct-power-integration/issues/264#issuecomment-2124811644
 				if batStatus != 0 {
-					mode = api.BatteryNormal
-					batteryError = fmt.Errorf("set batteryMode to batteryNormal because battery is not in normal charge/discharge operation")
-				}
-
-				state, err := m.queryUInt8(rct.InverterState)
-				if err != nil {
-					return err
-				}
-
-				if state == 0x0A || state == 0x0B {
-					mode = api.BatteryNormal
-					batteryError = fmt.Errorf("set batteryMode to batteryNormal because inverter is not connected to the grid")
+					return fmt.Errorf("prevent change of batteryMode because battery is not in normal charge/discharge operation")
 				}
 			}
 
@@ -148,11 +135,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
-				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0))); err != nil {
-					return err
-				}
-
-				return batteryError
+				return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
 
 			case api.BatteryHold:
 				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
