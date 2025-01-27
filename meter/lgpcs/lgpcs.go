@@ -142,7 +142,7 @@ func (m *Com) essInfo() (EssData, error) {
 func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	var res struct{}
 	return m.request(func(body io.ReadSeeker) (*http.Request, error) {
-		uri := fmt.Sprintf("%s/v1/setting/batt", m.uri)
+		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
 		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
 	}, map[string]string{
 		"backupmode": mode,
