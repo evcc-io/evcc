@@ -264,11 +264,13 @@ export default {
     },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const digits = decimals ? undefined : 0;
       const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
         currencyDisplay,
-        maximumFractionDigits: decimals ? undefined : 0,
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
       }).format(amout);
 
       return withSymbol ? result : result.replace(currency, "").trim();
