@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -32,13 +33,13 @@ import (
 
 // MyPv charger implementation
 type MyPv struct {
-	log         *util.Logger
-	conn        *modbus.Connection
-	lp          loadpoint.API
-	power       uint32
-	statusC     uint16
-	enabled     bool
-	thorRegTemp uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	lp      loadpoint.API
+	power   uint32
+	statusC uint16
+	enabled bool
+	regTemp uint16
 }
 
 const (
@@ -47,7 +48,8 @@ const (
 	elwaRegStatus    = 1003
 	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 )
-var thorRegTempArray = [3]uint16{1001, 1030, 1031}
+
+var elwaTemp = []uint16{1001, 1030, 1031}
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -65,22 +67,23 @@ func init() {
 func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, statusC uint16) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		ThorRegTempIndex uint16
+		TempSource         int
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1, // default
 		},
+		TempSource: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, thorRegTempArray[cc.ThorRegTempIndex], statusC)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.TempSource, statusC)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
-func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, thorRegTemp uint16, statusC uint16) (api.Charger, error) {
+func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -90,14 +93,18 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, thorRegTemp u
 		return nil, api.ErrSponsorRequired
 	}
 
+	if tempSource < 1 || tempSource > len(elwaTemp) {
+		return nil, fmt.Errorf("invalid temp source: %d", tempSource)
+	}
+
 	log := util.NewLogger(name)
 	conn.Logger(log.TRACE)
 
 	wb := &MyPv{
-		log:         log,
-		conn:        conn,
-		statusC:     statusC,
-		thorRegTemp: thorRegTemp,
+		log:     log,
+		conn:    conn,
+		statusC: statusC,
+		regTemp: elwaTemp[tempSource-1],
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)
@@ -232,7 +239,7 @@ var _ api.Battery = (*MyPv)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPv) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.thorRegTemp, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.regTemp, 1)
 	if err != nil {
 		return 0, err
 	}
