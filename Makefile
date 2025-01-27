@@ -20,7 +20,7 @@ PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK_DIR := packaging/gokrazy
-GOK_RUN := user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8088-:8080
+GOK_RUN := user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 GOK := gok -i evcc --parent_dir $(GOK_DIR)
 IMAGE_FILE := evcc_$(TAG_NAME).img
 
