@@ -10,6 +10,8 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+  - name: maxchargerate
+    advanced: true
   - name: capacity
     advanced: true
 render: |
@@ -42,12 +44,6 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # off
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 124:0:ChaGriSet
-        - source: const
           value: 0
           set:
             source: sunspec
@@ -63,12 +59,6 @@ render: |
       set:
         source: sequence
         set:
-        - source: const
-          value: 0 # off
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 124:0:ChaGriSet
         - source: const
           value: 2
           set:
@@ -92,7 +82,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 1 # off
+          value: 1 # on
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
@@ -104,7 +94,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             value: 124:0:StorCtl_Mod
         - source: const
-          value: -100 # %
+          value: -{{ .maxchargerate }} # %
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
