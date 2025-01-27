@@ -62,10 +62,6 @@ func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.
 }
 
 func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	if cp, err := cs.ChargepointByID(id); err == nil {
-		return cp.OnStatusNotification(request)
-	}
-
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
@@ -74,6 +70,10 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 		reg.mu.Lock()
 		reg.status[request.ConnectorId] = request
 		reg.mu.Unlock()
+	}
+
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnStatusNotification(request)
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
