@@ -35,7 +35,7 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargerState {
+	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.StatusOfChargerConnection {
 	case 1, 3:
 		return api.StatusB, err
 	case 2:
