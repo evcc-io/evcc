@@ -12,4 +12,4 @@ params:
 render: |
   type: ac-elwa-2
   {{- include "modbus" . }}
-  ThorRegTempIndex: 1
+  ThorRegTempIndex: 0

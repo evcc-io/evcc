@@ -18,5 +18,5 @@ params:
 render: |
   type: ac-thor
   {{- include "modbus" . }}
-  ThorRegTempIndex: {{- if eq .tempsource "3" }} 3 {{- else if eq .tempsource "2" }} 2 {{- else }} 1 {{- end }}
+  ThorRegTempIndex: {{- if eq .tempsource "3" }} 2 {{- else if eq .tempsource "2" }} 1 {{- else }} 0 {{- end }}
   

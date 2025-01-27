@@ -76,7 +76,7 @@ func newMyPvFromConfig(ctx context.Context, name string, other map[string]interf
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, thorRegTempArray[cc.ThorRegTempIndex-1], statusC)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, thorRegTempArray[cc.ThorRegTempIndex], statusC)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
