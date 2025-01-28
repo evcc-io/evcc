@@ -20,7 +20,7 @@ PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK_DIR := packaging/gokrazy
-GOK_RUN := user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
+GOK_NETDEV := user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 GOK := gok -i evcc --parent_dir $(GOK_DIR)
 IMAGE_FILE := evcc_$(TAG_NAME).img
 
@@ -122,13 +122,13 @@ gok-image:: gok
 
 # run qemu
 gok-run:: gok
-	${GOK} vm run --netdev $(GOK_RUN)
+	${GOK} vm run --netdev $(GOK_NETDEV)
 
 # run qemu on mac
 gok-mac:: gok
 	mv $(GOK_DIR)/evcc/config.json $(GOK_DIR)/evcc/linux.json
 	sed 's!"SerialConsole": "ttyAMA0,115200"!"KernelPackage": "github.com/gokrazy/kernel.arm64",'\\n'    "SerialConsole": "ttyAMA0,115200"!g' $(GOK_DIR)/evcc/linux.json > $(GOK_DIR)/evcc/config.json
-	${GOK} vm run --netdev $(GOK_RUN)
+	${GOK} vm run --netdev $(GOK_NETDEV)
 
 gok-update::
 	${GOK} update yes $(IMAGE_OPTIONS)
