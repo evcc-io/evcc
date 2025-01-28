@@ -123,7 +123,7 @@ func (m *Com) Data() (EssData, error) {
 // essInfo reads essinfo/home
 func (m *Com) essInfo() (EssData, error) {
 	f := func(body io.ReadSeeker) (*http.Request, error) {
-		uri := fmt.Sprintf("%s/v1/essinfo/home", m.uri)
+		uri := fmt.Sprintf("%s/v1/user/essinfo/home", m.uri)
 		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
 	}
 
