@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 const (
@@ -234,7 +234,7 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	select {
 	case <-lp.vehicleDetectTicker.C:
 		lp.log.DEBUG.Println("vehicle api refresh")
-		provider.ResetCached()
+		util.ResetCached()
 	default:
 	}
 
@@ -260,7 +260,7 @@ func (lp *Loadpoint) vehicleDefaultOrDetect() {
 func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts
 	lp.log.DEBUG.Println("vehicle api refresh")
-	provider.ResetCached()
+	util.ResetCached()
 
 	lp.vehicleDetect = lp.clock.Now()
 	lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)

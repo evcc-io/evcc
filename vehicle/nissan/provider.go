@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 const refreshTimeout = 2 * time.Minute
@@ -28,7 +28,7 @@ func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Pr
 		expiry: expiry,
 	}
 
-	impl.statusG = provider.Cached(func() (StatusResponse, error) {
+	impl.statusG = util.Cached(func() (StatusResponse, error) {
 		return impl.status(
 			func() (StatusResponse, error) { return api.BatteryStatus(vin, version) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },

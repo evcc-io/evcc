@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 type Provider struct {
@@ -13,7 +13,7 @@ type Provider struct {
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		dataG: provider.Cached(func() (StatusResponse, error) {
+		dataG: util.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
 		}, cache),
 	}
@@ -115,11 +115,9 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 func MapChargeStatus(lookup int) api.ChargeStatus {
 	switch lookup {
-	case
-		0, 5, 6, 9, 10, 11:
+	case 0, 5, 6, 9, 10, 11:
 		return api.StatusC
-	case
-		1, 2, 4, 7, 8:
+	case 1, 2, 4, 7, 8:
 		return api.StatusB
 	}
 	return api.StatusA

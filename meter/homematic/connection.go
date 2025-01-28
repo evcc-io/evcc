@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -29,8 +28,8 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
-	meterG  provider.Cacheable[MethodResponse]
-	switchG provider.Cacheable[MethodResponse]
+	meterG  util.Cacheable[MethodResponse]
+	switchG util.Cacheable[MethodResponse]
 }
 
 // NewConnection creates a new Homematic device connection.
@@ -58,11 +57,11 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
-	conn.switchG = provider.ResettableCached(func() (MethodResponse, error) {
+	conn.switchG = util.ResettableCached(func() (MethodResponse, error) {
 		return conn.XmlCmd("getParamset", conn.SwitchChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 
-	conn.meterG = provider.ResettableCached(func() (MethodResponse, error) {
+	conn.meterG = util.ResettableCached(func() (MethodResponse, error) {
 		return conn.XmlCmd("getParamset", conn.MeterChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 

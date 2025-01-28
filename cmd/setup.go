@@ -24,9 +24,9 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider/golang"
-	"github.com/evcc-io/evcc/provider/javascript"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/golang"
+	"github.com/evcc-io/evcc/plugin/javascript"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -68,7 +68,7 @@ var conf = globalconfig.All{
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
-		Dsn:  "~/.evcc/evcc.db",
+		Dsn:  "",
 	},
 }
 
@@ -79,22 +79,6 @@ func nameValid(name string) error {
 		return fmt.Errorf("name must not contain special characters or spaces: %s", name)
 	}
 	return nil
-}
-
-func tokenDanger(conf []config.Named) bool {
-	problematic := []string{"tesla", "psa", "opel", "citroen", "ds", "peugeot"}
-
-	for _, cc := range conf {
-		if slices.Contains(problematic, cc.Type) {
-			return true
-		}
-		template, ok := cc.Other["template"].(string)
-		if ok && cc.Type == "template" && slices.Contains(problematic, template) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
@@ -112,17 +96,30 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 		}
 	}
 
-	// check service database
-	if _, err := os.Stat(serviceDB); err == nil && checkDB && conf.Database.Dsn != serviceDB && tokenDanger(conf.Vehicles) {
-		log.FATAL.Fatal(`
+	// user did not specify a database path
+	if conf.Database.Dsn == "" && checkDB {
+		// check if service database exists
+		if _, err := os.Stat(serviceDB); err == nil {
+			// service database found, ask user what to do
+			sudo := ""
+			if !isWritable(serviceDB) {
+				sudo = "sudo "
+			}
+			log.FATAL.Fatal(`
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with no explicit database path.
+Running the same config with multiple databases can lead to expiring vehicle tokens.
 
-Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
-Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
-This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
-If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
+If you want to use the existing service database run the following command:
 
-If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
-`)
+` + sudo + `evcc --database ` + serviceDB + `
+
+If you want to create a new user-space database run the following command:
+
+evcc --database ~/.evcc/evcc.db
+
+If you know what you're doing, you can skip the database check with the --ignore-db flag.
+			`)
+		}
 	}
 
 	// parse log levels after reading config
@@ -131,6 +128,15 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	}
 
 	return err
+}
+
+func isWritable(filePath string) bool {
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0o666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
 }
 
 func configureCircuits(conf []config.Named) error {
@@ -516,7 +522,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
 	if conf.Dsn == "" {
-		return errors.New("database dsn not configured")
+		conf.Dsn = userDB
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
@@ -700,7 +706,7 @@ func configureEEBus(conf *eebus.Config) error {
 }
 
 // setup messaging
-func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {

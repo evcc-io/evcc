@@ -28,7 +28,6 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/zaptec"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -43,7 +42,7 @@ import (
 type Zaptec struct {
 	*request.Helper
 	log      *util.Logger
-	statusG  provider.Cacheable[zaptec.StateResponse]
+	statusG  util.Cacheable[zaptec.StateResponse]
 	id       string
 	enabled  bool
 	priority bool
@@ -91,7 +90,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	}
 
 	// setup cached values
-	c.statusG = provider.ResettableCached(func() (zaptec.StateResponse, error) {
+	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
 
 		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.id)
