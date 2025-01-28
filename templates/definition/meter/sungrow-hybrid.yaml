@@ -110,34 +110,40 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: calc
-    mul:
-    - source: calc
-      abs:
+    source: go
+    script: |
+      	if (brs&0x4 > 0 || bc < 0) && bp >= 0 {
+          return bp
+        }
+        return -bp
+    in:
+    - name: brs
+      type: int
+      config:
         source: modbus
         {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
+        register:
+          type: input
+          address: 13000 # Battery running state
+          decode: uint16
+    - name: bc
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 13020 # Battery current
+          decode: uint16
+    - name: bp
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
         register:
           type: input
           address: 13021 # Battery power
           decode: int16
-    - source: calc
-      add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 2 # Charging
-        scale: -1
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 4 # Discharging
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
