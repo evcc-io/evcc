@@ -1,0 +1,252 @@
+template: sungrow-hybrid-gen2
+covers: ["sungrow"]
+products:
+  - brand: Sungrow
+    description:
+      generic: SH Series Hybrid Inverter (firmware 01.2025 and later)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
+    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware. Older versions do not provide all required data (power, state of charge).
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+  - name: timeout
+  - name: capacity
+    advanced: true
+  - name: maxacpower
+  - name: maxchargepower
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      type: input
+      address: 13009 # Export power
+      decode: int32s
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13036 # Total Import Energy, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
+  currents:
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5602 # Meter Phase A Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5018 # Phase A voltage, 0.1V
+        decode: uint16
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5604 # Meter Phase B Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5019 # Phase b voltage, 0.1V
+        decode: uint16
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5606 # Meter Phase C Active Power, 1W
+        decode: int32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5020 # Phase C voltage, 0.1V
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 5016 # Total DC power
+      type: input
+      decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13002 # Total PV Generation, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    mul:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      register:
+        type: input
+        address: 13019 # Battery voltage
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      register:
+        type: input
+        address: 13020 # Battery current
+        decode: int16
+      scale: -0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13026 # Total battery discharge energy, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13022 # Battery level
+      type: input
+      decode: int16
+    scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Self-consumption mode (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode selection
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # Stop (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Forced mode (charge/discharge/stop)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode selection
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # Stop (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Forced mode (charge/discharge/stop)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xAA # Charge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        {{- if .maxchargepower }}
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge power
+              type: writesingle
+              decode: uint16
+        {{- else }}
+        - source: go
+          script: power
+          in:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 5627 # BDC rated power
+                type: input
+                decode: uint16
+              scale: 100
+          out:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 13051 # Charge/discharge power
+                type: writesingle
+                decode: uint16
+        {{- end }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
