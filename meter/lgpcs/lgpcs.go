@@ -64,7 +64,7 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 		}
 	})
 
-	// check if different uris are provided
+	// check if both password and registration are provided
 	if password != "" && registration != "" {
 		return nil, errors.New("cannot have registration and password")
 	}
@@ -143,7 +143,7 @@ func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	var res struct{}
 	return m.request(func(body io.ReadSeeker) (*http.Request, error) {
 		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
-		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
+		return request.New(http.MethodPut, uri, body, request.JSONEncoding)
 	}, map[string]string{
 		"backupmode": mode,
 		"backup_soc": strconv.Itoa(soc),
