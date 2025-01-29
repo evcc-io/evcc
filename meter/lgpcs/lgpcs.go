@@ -34,7 +34,7 @@ var (
 )
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
+func GetInstance(uri, password string, cache time.Duration, essType Model) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	var err error
@@ -45,10 +45,6 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 			uri:      uri,
 			password: password,
 			essType:  essType,
-		}
-
-		if registration != "" {
-			instance.password = registration
 		}
 
 		// ignore the self signed certificate
@@ -63,11 +59,6 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 			err = instance.Login()
 		}
 	})
-
-	// check if both password and registration are provided
-	if password != "" && registration != "" {
-		return nil, errors.New("cannot have registration and password")
-	}
 
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {
@@ -102,6 +93,34 @@ func (m *Com) Login() error {
 
 	if err := m.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
+	}
+
+	// try to login as ESS installer if user login failed
+	if res.Status == "password mismatched" {
+		uri := fmt.Sprintf("%s/v1/login", m.uri)
+		req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err != nil {
+			return err
+		}
+
+		// read auth_key from response body
+		var res struct {
+			Status  string `json:"status,omitempty"`
+			AuthKey string `json:"auth_key"`
+		}
+
+		if err := m.DoJSON(req, &res); err != nil {
+			return fmt.Errorf("login failed: %w", err)
+		}
+
+		if res.Status != "success" {
+			return fmt.Errorf("login failed: %s", res.Status)
+		}
+
+		// read auth_key from response
+		m.authKey = res.AuthKey
+
+		return nil
 	}
 
 	// check login response status
