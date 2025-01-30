@@ -37,7 +37,7 @@ export default function setupRouter(i18n) {
         props: (route) => {
           const { lp } = route.query;
           return {
-            selectedLoadpointIndex: lp ? parseInt(lp, 10) : undefined,
+            selectedLoadpointIndex: lp ? parseInt(lp, 10) - 1 : undefined,
           };
         },
       },

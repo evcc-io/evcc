@@ -169,7 +169,7 @@ export default {
 	},
 	methods: {
 		selectedLoadpointChanged(index) {
-			this.$router.push({ query: { lp: index } });
+			this.$router.push({ query: { lp: index + 1 } });
 		},
 	},
 };
