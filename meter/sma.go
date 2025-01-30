@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider/sma"
+	"github.com/evcc-io/evcc/plugin/sma"
 	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )

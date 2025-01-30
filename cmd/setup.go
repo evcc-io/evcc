@@ -26,9 +26,9 @@ import (
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider/golang"
-	"github.com/evcc-io/evcc/provider/javascript"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/golang"
+	"github.com/evcc-io/evcc/plugin/javascript"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -71,7 +71,7 @@ var conf = globalconfig.All{
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
-		Dsn:  "~/.evcc/evcc.db",
+		Dsn:  "",
 	},
 }
 
@@ -82,22 +82,6 @@ func nameValid(name string) error {
 		return fmt.Errorf("name must not contain special characters or spaces: %s", name)
 	}
 	return nil
-}
-
-func tokenDanger(conf []config.Named) bool {
-	problematic := []string{"tesla", "psa", "opel", "citroen", "ds", "peugeot"}
-
-	for _, cc := range conf {
-		if slices.Contains(problematic, cc.Type) {
-			return true
-		}
-		template, ok := cc.Other["template"].(string)
-		if ok && cc.Type == "template" && slices.Contains(problematic, template) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
@@ -115,17 +99,30 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 		}
 	}
 
-	// check service database
-	if _, err := os.Stat(serviceDB); err == nil && checkDB && conf.Database.Dsn != serviceDB && tokenDanger(conf.Vehicles) {
-		log.FATAL.Fatal(`
+	// user did not specify a database path
+	if conf.Database.Dsn == "" && checkDB {
+		// check if service database exists
+		if _, err := os.Stat(serviceDB); err == nil {
+			// service database found, ask user what to do
+			sudo := ""
+			if !isWritable(serviceDB) {
+				sudo = "sudo "
+			}
+			log.FATAL.Fatal(`
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with no explicit database path.
+Running the same config with multiple databases can lead to expiring vehicle tokens.
 
-Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
-Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
-This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
-If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
+If you want to use the existing service database run the following command:
 
-If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
-`)
+` + sudo + `evcc --database ` + serviceDB + `
+
+If you want to create a new user-space database run the following command:
+
+evcc --database ~/.evcc/evcc.db
+
+If you know what you're doing, you can skip the database check with the --ignore-db flag.
+			`)
+		}
 	}
 
 	// parse log levels after reading config
@@ -134,6 +131,15 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	}
 
 	return err
+}
+
+func isWritable(filePath string) bool {
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0o666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
 }
 
 func configureCircuits(conf []config.Named) error {
@@ -494,7 +500,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 	// setup EEBus server
 	if err == nil {
-		err = wrapErrorWithClass(ClassEEBus, configureEEBus(conf.EEBus))
+		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
 	// setup javascript VMs
@@ -519,7 +525,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
 	if conf.Dsn == "" {
-		return errors.New("database dsn not configured")
+		conf.Dsn = userDB
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
@@ -562,14 +568,6 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 		return nil, nil
 	}
 
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.Influx) {
-	// 	if err := settings.SetJson(keys.Influx, conf); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -590,13 +588,6 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {
 			return err
 		}
-
-		// TODO remove yaml file
-		// } else {
-		// 	// migrate settings & write defaults
-		// 	if err := settings.SetJson(keys.Mqtt, conf); err != nil {
-		// 		return err
-		// 	}
 	}
 
 	if conf.Broker == "" {
@@ -648,7 +639,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
@@ -659,14 +650,6 @@ func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd)
 	if conf.Type == "" {
 		return nil
 	}
-
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.Hems) {
-	// 	if err := settings.SetYaml(keys.Hems, conf); err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, conf.Other, site, httpd)
 	if err != nil {
@@ -683,10 +666,6 @@ func networkSettings(conf *globalconfig.Network) error {
 	if settings.Exists(keys.Network) {
 		return settings.Json(keys.Network, &conf)
 	}
-
-	// TODO remove yaml file
-	// // migrate settings
-	// return settings.SetJson(keys.Network, conf)
 
 	return nil
 }
@@ -706,7 +685,7 @@ func configureMDNS(conf globalconfig.Network) error {
 }
 
 // setup EEBus
-func configureEEBus(conf eebus.Config) error {
+func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
 		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
@@ -718,16 +697,8 @@ func configureEEBus(conf eebus.Config) error {
 		return nil
 	}
 
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.EEBus) {
-	// 	if err := settings.SetYaml(keys.EEBus, conf); err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	var err error
-	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
+	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
@@ -738,18 +709,12 @@ func configureEEBus(conf eebus.Config) error {
 }
 
 // setup messaging
-func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
-
-		// TODO remove yaml file
-		// } else if len(conf.Services)+len(conf.Events) > 0 {
-		// 	if err := settings.SetYaml(keys.Messaging, conf); err != nil {
-		// 		return nil, err
-		// 	}
 	}
 
 	messageChan := make(chan push.Event, 1)
@@ -810,12 +775,6 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
-
-		// TODO remove yaml file
-		// } else if conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" {
-		// 	if err := settings.SetYaml(keys.Tariffs, conf); err != nil {
-		// 		return nil, err
-		// 	}
 	}
 
 	tariffs := tariff.Tariffs{
@@ -861,21 +820,15 @@ func configureDevices(conf globalconfig.All) error {
 	return nil
 }
 
-func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
+func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
+		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), conf); err != nil {
 			return err
 		}
-
-		// TODO remove yaml file
-		// } else if len(conf) > 0 {
-		// 	if err := settings.SetYaml(keys.ModbusProxy, conf); err != nil {
-		// 		return err
-		// 	}
 	}
 
-	for _, cfg := range conf {
+	for _, cfg := range *conf {
 		var mode modbus.ReadOnlyMode
 		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
 		if err != nil {

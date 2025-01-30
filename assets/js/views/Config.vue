@@ -198,7 +198,7 @@
 						>
 							<template #icon><NotificationIcon /></template>
 							<template #tags>
-								<DeviceTags :tags="yamlTags('messaging')" />
+								<DeviceTags :tags="messagingTags" />
 							</template>
 						</DeviceCard>
 						<DeviceCard
@@ -222,9 +222,10 @@
 						>
 							<template #icon><EebusIcon /></template>
 							<template #tags>
-								<DeviceTags :tags="yamlTags('eebus')" />
+								<DeviceTags :tags="eebusTags" />
 							</template>
 						</DeviceCard>
+
 						<DeviceCard
 							:name="`${$t('config.circuits.title')} 🧪`"
 							editable
@@ -236,7 +237,7 @@
 							<template #tags>
 								<DeviceTags
 									v-if="circuits.length == 0"
-									:tags="yamlTags('circuits')"
+									:tags="{ configured: { value: false } }"
 								/>
 								<template
 									v-for="(circuit, idx) in circuits"
@@ -438,12 +439,6 @@ export default {
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
-			yamlConfigState: {
-				messaging: false,
-				eebus: false,
-				circuits: false,
-				modbusproxy: false,
-			},
 		};
 	},
 	computed: {
@@ -523,6 +518,19 @@ export default {
 			const { name } = store.state?.sponsor || {};
 			return !!name;
 		},
+		eebusTags() {
+			return { configured: { value: store.state?.eebus || false } };
+		},
+		modbusproxyTags() {
+			const config = store.state?.modbusproxy || [];
+			if (config.length > 0) {
+				return { amount: { value: config.length } };
+			}
+			return { configured: { value: false } };
+		},
+		messagingTags() {
+			return { configured: { value: store.state?.messaging || false } };
+		},
 	},
 	watch: {
 		offline() {
@@ -547,7 +555,6 @@ export default {
 			await this.loadCircuits();
 			await this.loadDirty();
 			await this.updateValues();
-			await this.updateYamlConfigState();
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
@@ -698,7 +705,6 @@ export default {
 		},
 		yamlChanged() {
 			this.loadDirty();
-			this.updateYamlConfigState();
 		},
 		addMeter(type, name) {
 			if (type === "charge") {
@@ -773,19 +779,21 @@ export default {
 		async updateValues() {
 			clearTimeout(this.deviceValueTimeout);
 			if (!this.offline) {
-				const promises = [
-					...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
-					...this.vehicles.map((vehicle) =>
-						this.updateDeviceValue("vehicle", vehicle.name)
-					),
-					...this.chargers.map((charger) =>
-						this.updateDeviceValue("charger", charger.name)
-					),
-				];
-
-				await Promise.all(promises);
+				const devices = {
+					meter: this.meters,
+					vehicle: this.vehicles,
+					charger: this.chargers,
+				};
+				for (const type in devices) {
+					for (const device of devices[type]) {
+						await this.updateDeviceValue(type, device.name);
+					}
+				}
 			}
-			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
+			// ensure that component is still mounted
+			if (!this.$el) return;
+			const interval = (store.state?.interval || 30) * 1000;
+			this.deviceValueTimeout = setTimeout(this.updateValues, interval);
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || {};
@@ -803,16 +811,6 @@ export default {
 			} else {
 				console.error(`modal ${id} not found`);
 			}
-		},
-		updateYamlConfigState() {
-			const keys = Object.keys(this.yamlConfigState);
-			keys.forEach(async (key) => {
-				const res = await api.get(`/config/${key}`);
-				this.yamlConfigState[key] = !!res.data.result;
-			});
-		},
-		yamlTags(key) {
-			return { configured: { value: this.yamlConfigState[key] } };
 		},
 		circuitTags(circuit) {
 			const circuits = store.state?.circuits || {};

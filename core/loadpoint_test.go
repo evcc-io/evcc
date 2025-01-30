@@ -158,19 +158,18 @@ func TestUpdatePowerZero(t *testing.T) {
 		charger := api.NewMockCharger(ctrl)
 
 		lp := &Loadpoint{
-			log:           util.NewLogger("foo"),
-			bus:           evbus.New(),
-			clock:         clock,
-			charger:       charger,
-			chargeMeter:   &Null{}, // silence nil panics
-			chargeRater:   &Null{}, // silence nil panics
-			chargeTimer:   &Null{}, // silence nil panics
-			wakeUpTimer:   NewTimer(),
-			sessionEnergy: NewEnergyMetrics(),
-			minCurrent:    minA,
-			maxCurrent:    maxA,
-			phases:        1,
-			status:        tc.status, // no status change
+			log:         util.NewLogger("foo"),
+			bus:         evbus.New(),
+			clock:       clock,
+			charger:     charger,
+			chargeMeter: &Null{}, // silence nil panics
+			chargeRater: &Null{}, // silence nil panics
+			chargeTimer: &Null{}, // silence nil panics
+			wakeUpTimer: NewTimer(),
+			minCurrent:  minA,
+			maxCurrent:  maxA,
+			phases:      1,
+			status:      tc.status, // no status change
 		}
 
 		attachListeners(t, lp)
@@ -404,13 +403,12 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		progress:    NewProgress(0, 10), // silence nil panics
 		wakeUpTimer: NewTimer(),         // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
-		minCurrent:    minA,
-		maxCurrent:    maxA,
-		vehicle:       vehicle,      // needed for targetSoc check
-		socEstimator:  socEstimator, // instead of vehicle: vehicle,
-		mode:          api.ModeNow,
-		sessionEnergy: NewEnergyMetrics(),
-		limitSoc:      90, // session limit
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		vehicle:      vehicle,      // needed for targetSoc check
+		socEstimator: socEstimator, // instead of vehicle: vehicle,
+		mode:         api.ModeNow,
+		limitSoc:     90, // session limit
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
 				Mode:     loadpoint.PollConnected, // allow polling when connected
@@ -474,20 +472,19 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger := api.NewMockCharger(ctrl)
 
 	lp := &Loadpoint{
-		log:           util.NewLogger("foo"),
-		bus:           evbus.New(),
-		clock:         clock,
-		settings:      settings.NewDatabaseSettingsAdapter("foo"),
-		charger:       charger,
-		chargeMeter:   &Null{}, // silence nil panics
-		chargeRater:   &Null{}, // silence nil panics
-		chargeTimer:   &Null{}, // silence nil panics
-		wakeUpTimer:   NewTimer(),
-		sessionEnergy: NewEnergyMetrics(),
-		minCurrent:    minA,
-		maxCurrent:    maxA,
-		status:        api.StatusC,
-		DefaultMode:   api.ModeOff, // default mode
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		settings:    settings.NewDatabaseSettingsAdapter("foo"),
+		charger:     charger,
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
+		wakeUpTimer: NewTimer(),
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusC,
+		DefaultMode: api.ModeOff, // default mode
 	}
 
 	attachListeners(t, lp)
@@ -517,14 +514,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 }
 
 // cacheExpecter can be used to verify asynchronously written values from cache
-func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, val interface{})) {
+func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.ParamCache, func(key string, val interface{})) {
 	t.Helper()
 
 	// attach cache for verifying values
 	paramC := make(chan util.Param)
 	lp.uiChan = paramC
 
-	cache := util.NewCache()
+	cache := util.NewParamCache()
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
@@ -543,18 +540,17 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater := api.NewMockChargeRater(ctrl)
 
 	lp := &Loadpoint{
-		log:           util.NewLogger("foo"),
-		bus:           evbus.New(),
-		clock:         clock,
-		charger:       charger,
-		chargeMeter:   &Null{}, // silence nil panics
-		chargeRater:   rater,
-		chargeTimer:   &Null{}, // silence nil panics
-		wakeUpTimer:   NewTimer(),
-		sessionEnergy: NewEnergyMetrics(),
-		minCurrent:    minA,
-		maxCurrent:    maxA,
-		status:        api.StatusC,
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: rater,
+		chargeTimer: &Null{}, // silence nil panics
+		wakeUpTimer: NewTimer(),
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusC,
 	}
 
 	attachListeners(t, lp)

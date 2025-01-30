@@ -34,7 +34,8 @@ func OAuth2Config(id, secret string) *oauth2.Config {
 type Identity struct {
 	oauth2.TokenSource
 	mu      sync.Mutex
-	rts     oauth2.TokenSource
+	log     *util.Logger
+	oc      *oauth2.Config
 	subject string
 }
 
@@ -59,6 +60,8 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	}
 
 	v := &Identity{
+		log:     log,
+		oc:      oc,
 		subject: claims.Subject,
 	}
 
@@ -82,10 +85,6 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
-	// refresh token source
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	v.rts = oc.TokenSource(ctx, token)
-
 	// add instance
 	addInstance(claims.Subject, v)
 
@@ -100,7 +99,9 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	token, err := v.rts.Token()
+	// refresh token source
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(v.log))
+	token, err := v.oc.TokenSource(ctx, token).Token()
 	if err != nil {
 		return nil, err
 	}

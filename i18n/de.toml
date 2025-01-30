@@ -54,6 +54,7 @@ labelResidualPower = "Residualleistung"
 title = "Regelverhalten"
 
 [config.deviceValue]
+amount = "Anzahl"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapazität"

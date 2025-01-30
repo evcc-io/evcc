@@ -23,7 +23,6 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -155,12 +154,12 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64        // Vehicle Soc
-	chargeDuration          time.Duration  // Charge duration
-	sessionEnergy           *EnergyMetrics // Stats for charged energy by session
-	chargeRemainingDuration time.Duration  // Remaining charge duration
-	chargeRemainingEnergy   float64        // Remaining charge energy in Wh
-	progress                *Progress      // Step-wise progress indicator
+	vehicleSoc              float64       // Vehicle Soc
+	chargeDuration          time.Duration // Charge duration
+	energyMetrics           EnergyMetrics // Stats for charged energy by session
+	chargeRemainingDuration time.Duration // Remaining charge duration
+	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	progress                *Progress     // Step-wise progress indicator
 
 	// session log
 	db      *session.DB
@@ -266,12 +265,11 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 				Mode:     loadpoint.PollCharging,
 			},
 		},
-		Enable:        loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:       loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		sessionEnergy: NewEnergyMetrics(),
-		progress:      NewProgress(0, 10),     // soc progress indicator
-		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
-		tasks:         util.NewQueue[Task](),  // task queue
+		Enable:      loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:     loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		progress:    NewProgress(0, 10),                                              // soc progress indicator
+		coordinator: coordinator.NewDummy(),                                          // dummy vehicle coordinator
+		tasks:       util.NewQueue[Task](),                                           // task queue
 	}
 
 	return lp
@@ -480,7 +478,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	}
 
 	// soc update reset
-	provider.ResetCached()
+	util.ResetCached()
 	lp.socUpdated = time.Time{}
 
 	// reset pv enable/disable timer
@@ -497,8 +495,8 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
 	// energy
-	lp.sessionEnergy.Reset()
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Reset()
+	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 
 	// duration
@@ -536,7 +534,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.resetMeasuredPhases()
 
 	// energy and duration
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
 
@@ -645,8 +643,18 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.EnableDelay, lp.Enable.Delay)
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
-	lp.publish(keys.Phases, lp.configuredPhases)
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases) // TODO remove
+	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
+		if lp.configuredPhases != phases && lp.configuredPhases != 0 {
+			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", lp.configuredPhases, phases)
+		}
+		lp.phases = phases
+		lp.configuredPhases = phases
+		lp.publish(keys.Phases, phases)
+	} else {
+		lp.publish(keys.Phases, nil)
+	}
+
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesEnabled, lp.phases)
@@ -1599,7 +1607,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
 			}
@@ -1615,7 +1623,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	// TODO check if "session" prefix required?
-	lp.sessionEnergy.Publish("session", lp)
+	lp.energyMetrics.Publish("session", lp)
 
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
@@ -1770,7 +1778,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
-	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
+	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
@@ -1870,7 +1878,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
+		rate, _ := rates.Current(time.Now())
 		if smartCostActive {
+			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Price)
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

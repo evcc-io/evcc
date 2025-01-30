@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 const refreshTimeout = 2 * time.Minute
@@ -28,13 +28,13 @@ func NewProvider(api *API, vehicle Vehicle, expiry, cache time.Duration) *Provid
 		expiry: expiry,
 	}
 
-	v.statusG = provider.Cached(func() (BluelinkVehicleStatus, error) {
+	v.statusG = util.Cached(func() (BluelinkVehicleStatus, error) {
 		return v.status(
 			func() (BluelinkVehicleStatusLatest, error) { return api.StatusLatest(vehicle) },
 		)
 	}, cache)
 
-	v.statusLG = provider.Cached(func() (BluelinkVehicleStatusLatest, error) {
+	v.statusLG = util.Cached(func() (BluelinkVehicleStatusLatest, error) {
 		return api.StatusLatest(vehicle)
 	}, cache)
 
@@ -145,6 +145,17 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 	return res.Odometer()
+}
+
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return false, err
+	}
+	return res.Climater()
 }
 
 var _ api.SocLimiter = (*Provider)(nil)

@@ -82,7 +82,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	log.INFO.Println("- eebus")
 	if reset {
 		settings.Delete(keys.EEBus)
-	} else if conf.EEBus.URI != "" {
+	} else if conf.EEBus.Configured() {
 		_ = settings.SetYaml(keys.EEBus, conf.EEBus)
 	}
 

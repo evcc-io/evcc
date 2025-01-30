@@ -137,7 +137,7 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.sessionEnergy.TotalWh()
+	return lp.energyMetrics.TotalWh()
 }
 
 // GetPriority returns the loadpoint priority

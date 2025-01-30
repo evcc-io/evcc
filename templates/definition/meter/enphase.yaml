@@ -39,7 +39,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
     - source: http
       uri: http://{{ .host }}/production.json?details=1
       {{- if .token }}
@@ -48,7 +48,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
     - source: http
       uri: http://{{ .host }}/production.json?details=1
       {{- if .token }}
@@ -57,7 +57,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsCurrent else 0 end
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 3 )) then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -90,7 +90,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
     - source: http
       uri: http://{{ .host }}/production.json?details=1
       {{- if .token }}
@@ -99,7 +99,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
     - source: http
       uri: http://{{ .host }}/production.json?details=1
       {{- if .token }}
@@ -108,7 +108,7 @@ render: |
         password: {{ .token }}
       insecure: true
       {{- end }}
-      jq: if .production[] | select(.measurementType == "production").activeCount >= 1 then .production[] | select(.measurementType == "production").lines[2].rmsCurrent else 0 end
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 3 )) then .production[] | select(.measurementType == "production").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
