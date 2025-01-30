@@ -3,7 +3,6 @@ products:
   - brand: LG
     description:
       generic: ESS Home 15
-capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -19,13 +18,6 @@ params:
         Alternativ kann die Registriernummer für Administratorlogin verwendet werden.
   - name: capacity
     advanced: true
-  # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
 render: |
   type: lgess15
   usage: {{ .usage }}
@@ -37,8 +29,4 @@ render: |
   {{- if .registration }}
   registration: {{ .registration }}
   {{- end }}
-  {{- if eq .usage "battery" }}
   capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
-  {{- end }}
