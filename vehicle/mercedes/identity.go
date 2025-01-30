@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -59,25 +60,27 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 
 	// reuse identity instance
 	if instance := getInstance(account); instance != nil {
+		v.log.DEBUG.Println("identity.NewIdentity - token found in instance store")
 		return instance, nil
 	}
 
-	// config token
 	if !token.Valid() {
-		token, _ = v.RefreshToken(token)
+		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
 	}
 
 	// database token
 	if !token.Valid() {
-		if err := settings.Json(v.settingsKey(), &token); err != nil {
-			return nil, errors.New("missing token")
+		var tok oauth2.Token
+		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+			v.log.DEBUG.Println("identity.NewIdentity - database token found")
+			token = &tok
 		}
+	}
 
-		if !token.Valid() {
-			var err error
-			if token, err = v.RefreshToken(token); err != nil {
-				return nil, err
-			}
+	if !token.Valid() && token.RefreshToken != "" {
+		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
+		if tok, err := v.RefreshToken(token); err == nil {
+			token = tok
 		}
 	}
 
@@ -100,10 +103,6 @@ func (v *Identity) settingsKey() string {
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-
-	if token == nil {
-		return nil, errors.New("token is nil")
-	}
 
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
