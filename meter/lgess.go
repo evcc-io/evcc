@@ -67,11 +67,11 @@ func NewLgEss15FromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		URI, Usage string
-		Password   string
-		battery    `mapstructure:",squash"`
-		Cache      time.Duration
+		capacity               `mapstructure:",squash"`
+		URI, Usage             string
+		Registration, Password string
+		battery                `mapstructure:",squash"`
+		Cache                  time.Duration
 	}{
 		battery: battery{
 			MinSoc: 20,
@@ -88,12 +88,12 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache, cc.capacity.Decorator(), cc.battery, essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator(), cc.battery, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, password string, cache time.Duration, capacity func() float64, battery battery, essType lgpcs.Model) (api.Meter, error) {
-	conn, err := lgpcs.GetInstance(uri, password, cache, essType)
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, battery battery, essType lgpcs.Model) (api.Meter, error) {
+	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
 	}

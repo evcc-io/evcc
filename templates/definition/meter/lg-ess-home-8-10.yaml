@@ -3,6 +3,7 @@ products:
   - brand: LG
     description:
       generic: ESS Home 8/10
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -16,7 +17,20 @@ params:
       de: >
         Benutzerpasswort, siehe https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
         Alternativ kann die Registriernummer für Administratorlogin verwendet werden.
+  - name: registration
+    advanced: true
+    example: "DE200..."
+    help:
+      en: Registration id of the LG ESS HOME inverter.
+      de: Registriernummer des LG ESS HOME Wechselrichters.
   - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
     advanced: true
 render: |
   type: lgess8
@@ -29,4 +43,8 @@ render: |
   {{- if .registration }}
   registration: {{ .registration }}
   {{- end }}
+  {{- if eq .usage "battery" }}
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
+  {{- end }}

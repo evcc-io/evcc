@@ -34,7 +34,7 @@ var (
 )
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, password string, cache time.Duration, essType Model) (*Com, error) {
+func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	var err error
@@ -45,6 +45,10 @@ func GetInstance(uri, password string, cache time.Duration, essType Model) (*Com
 			uri:      uri,
 			password: password,
 			essType:  essType,
+		}
+
+		if registration != "" {
+			instance.password = registration
 		}
 
 		// ignore the self signed certificate
@@ -59,6 +63,11 @@ func GetInstance(uri, password string, cache time.Duration, essType Model) (*Com
 			err = instance.Login()
 		}
 	})
+
+	// check if both password and registration are provided
+	if password != "" && registration != "" {
+		return nil, errors.New("cannot have registration and password")
+	}
 
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {
