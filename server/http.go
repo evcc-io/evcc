@@ -156,6 +156,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	// loadpoint api
+	// TODO any loadpoint
 	for id, lp := range site.Loadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
@@ -236,7 +237,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		routes := map[string]route{
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
@@ -247,7 +248,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
 		}
 
 		// yaml handlers
@@ -277,6 +278,17 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		}
 
 		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// loadpoints
+		for _, r := range map[string]route{
+			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
+			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
+			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
+			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
+			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
+		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}

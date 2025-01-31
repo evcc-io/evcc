@@ -6,7 +6,6 @@ import (
 	"math"
 	"reflect"
 	"slices"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -20,10 +19,10 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
-	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -65,32 +64,8 @@ const (
 // elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
 
-// PollConfig defines the vehicle polling mode and interval
-type PollConfig struct {
-	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
-	Interval time.Duration `mapstructure:"interval"` // interval when not charging
-}
-
-// SocConfig defines soc settings, estimation and update behavior
-type SocConfig struct {
-	Poll     PollConfig `mapstructure:"poll"`
-	Estimate *bool      `mapstructure:"estimate"`
-}
-
 // Poll modes
-const (
-	pollCharging  = "charging"
-	pollConnected = "connected"
-	pollAlways    = "always"
-
-	pollInterval = 60 * time.Minute
-)
-
-// ThresholdConfig defines enable/disable hysteresis parameters
-type ThresholdConfig struct {
-	Delay     time.Duration
-	Threshold float64
-}
+const pollInterval = 60 * time.Minute
 
 // Task is the task type
 type Task = func()
@@ -108,24 +83,27 @@ type Loadpoint struct {
 	// exposed public configuration
 	sync.RWMutex // guard status
 
-	vmu   sync.RWMutex   // guard vehicle
-	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
+	vmu sync.RWMutex // guard vehicle
 
-	Title_          string `mapstructure:"title"`    // UI title
-	Priority_       int    `mapstructure:"priority"` // Priority
-	CircuitRef      string `mapstructure:"circuit"`  // Circuit reference
-	ChargerRef      string `mapstructure:"charger"`  // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
-	Soc             SocConfig
-	Enable, Disable ThresholdConfig
+	CircuitRef string `mapstructure:"circuit"` // Circuit reference
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
+	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
+
+	Soc             loadpoint.SocConfig
+	Enable, Disable loadpoint.ThresholdConfig
 
 	// TODO deprecated
-	GuardDuration_    time.Duration `mapstructure:"guardduration"` // charger enable/disable minimum holding time
-	ConfiguredPhases_ int           `mapstructure:"phases"`
-	MinCurrent_       float64       `mapstructure:"minCurrent"`
-	MaxCurrent_       float64       `mapstructure:"maxCurrent"`
+	DefaultMode    api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
+	Title_         string         `mapstructure:"title"`         // UI title
+	Priority_      int            `mapstructure:"priority"`      // Priority
+	GuardDuration_ time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
+	Phases_        int            `mapstructure:"phases"`
+	MinCurrent_    float64        `mapstructure:"minCurrent"`
+	MaxCurrent_    float64        `mapstructure:"maxCurrent"`
 
+	title            string   // UI title
+	priority         int      // Priority
 	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
 	configuredPhases int      // Charger configured phase mode 0/1/3
@@ -187,34 +165,31 @@ type Loadpoint struct {
 	db      *session.DB
 	session *session.Session
 
-	settings *Settings
+	settings settings.Settings
 
 	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
 	}
 
 	// set vehicle polling mode
-	switch lp.Soc.Poll.Mode = strings.ToLower(lp.Soc.Poll.Mode); lp.Soc.Poll.Mode {
-	case pollCharging:
-	case pollConnected, pollAlways:
+	switch lp.Soc.Poll.Mode {
+	case loadpoint.PollCharging:
+	case loadpoint.PollConnected, loadpoint.PollAlways:
 		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
 	default:
-		if lp.Soc.Poll.Mode != "" {
-			lp.log.WARN.Printf("invalid poll mode: %s", lp.Soc.Poll.Mode)
-		}
-		lp.Soc.Poll.Mode = pollCharging
+		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
 	if lp.CircuitRef != "" {
 		dev, err := config.Circuits().ByName(lp.CircuitRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("circuit: %w", err)
 		}
 		lp.circuit = dev.Instance()
 	}
@@ -222,7 +197,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("meter: %w", err)
 		}
 		lp.chargeMeter = dev.Instance()
 	}
@@ -231,7 +206,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	if lp.VehicleRef != "" {
 		dev, err := config.Vehicles().ByName(lp.VehicleRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vehicle: %w", err)
 		}
 		lp.defaultVehicle = dev.Instance()
 	}
@@ -241,7 +216,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 	dev, err := config.Chargers().ByName(lp.ChargerRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("charger: %w", err)
 	}
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
@@ -253,24 +228,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 
 	// TODO deprecated
-	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
-		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
-			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
-		}
-	}
-	if lp.MaxCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
-		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
-			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
-		}
-	}
-	if lp.ConfiguredPhases_ > 0 {
-		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
-		if _, err := lp.settings.Int(keys.PhasesConfigured); err != nil {
-			lp.settings.SetInt(keys.PhasesConfigured, int64(lp.ConfiguredPhases_))
-		}
-	}
+	lp.migrateSettings()
 
 	// validate thresholds
 	if lp.Enable.Threshold > lp.Disable.Threshold {
@@ -280,7 +238,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 
 	// choose sane default if mode is not set
-	if lp.mode = lp.Mode_; lp.mode == "" {
+	if lp.mode = lp.DefaultMode; lp.mode == "" {
 		lp.mode = api.ModeOff
 	}
 
@@ -288,7 +246,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults
-func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
+func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	clock := clock.New()
 	bus := evbus.New()
 
@@ -301,20 +259,67 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		status:     api.StatusNone,
 		minCurrent: 6,  // A
 		maxCurrent: 16, // A
-		Soc: SocConfig{
-			Poll: PollConfig{
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
-				Mode:     pollCharging,
+				Mode:     loadpoint.PollCharging,
 			},
 		},
-		Enable:      ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:     ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		progress:    NewProgress(0, 10),                                    // soc progress indicator
-		coordinator: coordinator.NewDummy(),                                // dummy vehicle coordinator
-		tasks:       util.NewQueue[Task](),                                 // task queue
+		Enable:      loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:     loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		progress:    NewProgress(0, 10),                                              // soc progress indicator
+		coordinator: coordinator.NewDummy(),                                          // dummy vehicle coordinator
+		tasks:       util.NewQueue[Task](),                                           // task queue
 	}
 
 	return lp
+}
+
+// migrateSettings migrates loadpoint settings
+func (lp *Loadpoint) migrateSettings() {
+	// One-time migrations MUST be mirrored in restoreSettings
+	if lp.DefaultMode != "" {
+		lp.log.WARN.Println("deprecated: mode setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Mode); err != nil {
+			lp.settings.SetString(keys.Mode, string(lp.DefaultMode))
+		}
+	}
+	if lp.Title_ != "" {
+		lp.log.WARN.Println("deprecated: title setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Title); err != nil {
+			lp.settings.SetString(keys.Title, lp.Title_)
+		}
+	}
+	if lp.Priority_ > 0 {
+		lp.log.WARN.Println("deprecated: priority setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Priority); err != nil {
+			lp.settings.SetInt(keys.Priority, int64(lp.Priority_))
+		}
+	}
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
+			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
+		}
+	}
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
+			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
+		}
+	}
+	if lp.Phases_ > 0 {
+		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
+		if _, err := lp.settings.Int(keys.Phases); err != nil {
+			lp.settings.SetInt(keys.Phases, int64(lp.Phases_))
+		}
+	}
+	if lp.Soc.Estimate != nil || lp.Soc.Poll.Mode != loadpoint.PollCharging || lp.Soc.Poll.Interval != 0 {
+		lp.log.WARN.Println("deprecated: soc setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Soc); err != nil {
+			lp.settings.SetJson(keys.Soc, lp.Soc)
+		}
+	}
 }
 
 // restoreSettings restores loadpoint settings
@@ -322,10 +327,16 @@ func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
 		return
 	}
+	if v, err := lp.settings.String(keys.Title); err == nil && v != "" {
+		lp.setTitle(v)
+	}
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
+		lp.setPriority(int(v))
+	}
+	if v, err := lp.settings.Int(keys.Phases); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
 		lp.phases = lp.configuredPhases
 	}
@@ -343,6 +354,16 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
 		lp.SetSmartCostLimit(&v)
+	}
+
+	var thresholds loadpoint.ThresholdsConfig
+	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
+		lp.setThresholds(thresholds)
+	}
+
+	var socConfig loadpoint.SocConfig
+	if err := lp.settings.Json(keys.Soc, &socConfig); err == nil {
+		lp.setSocConfig(socConfig)
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
@@ -457,7 +478,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	}
 
 	// soc update reset
-	plugin.ResetCached()
+	util.ResetCached()
 	lp.socUpdated = time.Time{}
 
 	// reset pv enable/disable timer
@@ -585,7 +606,7 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 // defaultMode executes the action
 func (lp *Loadpoint) defaultMode() {
 	lp.RLock()
-	mode := lp.Mode_
+	mode := lp.DefaultMode
 	lp.RUnlock()
 
 	if mode != "" && mode != lp.GetMode() {
@@ -611,7 +632,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.restoreSettings()
 
 	// publish initial values
-	lp.publish(keys.Title, lp.Title())
+	lp.publish(keys.Title, lp.GetTitle())
 	lp.publish(keys.Mode, lp.GetMode())
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
@@ -628,15 +649,17 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		}
 		lp.phases = phases
 		lp.configuredPhases = phases
-		lp.publish(keys.ChargerPhysicalPhases, phases)
+		lp.publish(keys.Phases, phases)
 	} else {
-		lp.publish(keys.ChargerPhysicalPhases, nil)
+		lp.publish(keys.Phases, nil)
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
+	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
+	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -684,6 +707,11 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		}
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
+	}
+
+	// set vehicle polling mode
+	if lp.Soc.Poll.Mode != loadpoint.PollCharging {
+		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
 	}
 
 	// allow charger to access loadpoint

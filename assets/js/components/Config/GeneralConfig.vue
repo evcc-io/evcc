@@ -7,6 +7,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('titleModal')"
 			>
 				<EditIcon size="xs" />
@@ -20,6 +21,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('passwordModal')"
 			>
 				<EditIcon size="xs" />
@@ -34,6 +36,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -48,6 +51,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -57,7 +61,7 @@
 			<strong class="config-label">{{ $t("config.sponsor.title") }} 🧪</strong>
 			<div class="config-text" :class="sponsorStatus.cssClass">
 				<span
-					v-if="sponsorStatus.expiresSoon"
+					v-if="sponsorStatus.expiresSoon && sponsorStatus.name"
 					class="d-inline-block me-1 p-1 rounded-circle bg-warning rounded-circle"
 				></span>
 				{{ sponsorStatus.name || "---" }}
@@ -66,6 +70,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('sponsorModal')"
 			>
 				<EditIcon size="xs" />
@@ -78,6 +83,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('networkModal')"
 			>
 				<EditIcon size="xs" />
@@ -90,6 +96,7 @@
 				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
+				tabindex="0"
 				@click.prevent="openModal('controlModal')"
 			>
 				<EditIcon size="xs" />
@@ -136,10 +143,8 @@ export default {
 			const sponsor = store.state?.sponsor || {};
 			const { name, expiresSoon } = sponsor;
 			let cssClass = "";
-			if (expiresSoon) {
-				cssClass = "text-warning";
-			} else if (name) {
-				cssClass = "text-primary";
+			if (name) {
+				cssClass = expiresSoon ? "text-warning" : "text-primary";
 			}
 
 			return { name, expiresSoon, cssClass };

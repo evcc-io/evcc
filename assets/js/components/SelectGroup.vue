@@ -8,6 +8,8 @@
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
+			:data-testid="`${id}-${option.value}`"
+			tabindex="0"
 			@click="$emit('update:modelValue', option.value)"
 		>
 			{{ option.name }}
@@ -55,6 +57,10 @@ export default {
 }
 .btn:hover {
 	color: var(--evcc-gray);
+}
+.btn:focus {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
 }
 .btn.active {
 	color: var(--evcc-background);

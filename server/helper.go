@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"reflect"
 	"slices"
@@ -24,6 +26,13 @@ func parseFloat(payload string) (float64, error) {
 		err = fmt.Errorf("invalid float value: %s", payload)
 	}
 	return f, err
+}
+
+// jsonDecoder returns a json decoder with disallowed unknown fields
+func jsonDecoder(r io.Reader) *json.Decoder {
+	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
+	return dec
 }
 
 // omitEmpty returns true if struct field is omitempty

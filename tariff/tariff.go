@@ -57,7 +57,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, fmt.Errorf("price: %w", err)
 	}
 	if priceG != nil {
-		priceG = plugin.Cached(priceG, cc.Cache)
+		priceG = util.Cached(priceG, cc.Cache)
 	}
 
 	forecastG, err := cc.Forecast.StringGetter(ctx)

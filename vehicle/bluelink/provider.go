@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/util"
 )
 
 const refreshTimeout = 2 * time.Minute
@@ -28,13 +28,13 @@ func NewProvider(api *API, vehicle Vehicle, expiry, cache time.Duration) *Provid
 		expiry: expiry,
 	}
 
-	v.statusG = plugin.Cached(func() (BluelinkVehicleStatus, error) {
+	v.statusG = util.Cached(func() (BluelinkVehicleStatus, error) {
 		return v.status(
 			func() (BluelinkVehicleStatusLatest, error) { return api.StatusLatest(vehicle) },
 		)
 	}, cache)
 
-	v.statusLG = plugin.Cached(func() (BluelinkVehicleStatusLatest, error) {
+	v.statusLG = util.Cached(func() (BluelinkVehicleStatusLatest, error) {
 		return api.StatusLatest(vehicle)
 	}, cache)
 
