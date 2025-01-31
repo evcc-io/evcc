@@ -6,6 +6,8 @@
     },
     "Packages": [
         "github.com/gokrazy/breakglass",
+        "tailscale.com/cmd/tailscaled",
+        "tailscale.com/cmd/tailscale",
         "github.com/gokrazy/mkfs",
         "github.com/gokrazy/fbstatus",
         "github.com/gokrazy/serial-busybox",
