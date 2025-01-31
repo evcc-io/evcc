@@ -14,18 +14,24 @@
     "PackageConfig": {
         "github.com/evcc-io/evcc": {
             "GoBuildFlags": null,
+            "CommandLineFlags": [
+                "--config=/etc/evcc.yaml"
+            ],
             "Environment": [
                 "EVCC_NETWORK_PORT=80",
                 "EVCC_DATABASE_DSN=/perm/evcc.db"
-            ]
+            ],
+            "ExtraFileContents": {
+                "/etc/evcc.yaml": " "
+            }
         },
         "github.com/gokrazy/breakglass": {
             "CommandLineFlags": [
                 "-authorized_keys=/etc/breakglass.authorized_keys",
                 "-forward=private-network"
             ],
-            "ExtraFilePaths": {
-                "/etc/breakglass.authorized_keys": "breakglass.authorized_keys"
+            "ExtraFileContents": {
+                "/etc/breakglass.authorized_keys": " "
             }
         },
         "tailscale.com/cmd/tailscale": {
