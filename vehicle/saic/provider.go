@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
 )
 
@@ -25,14 +25,14 @@ var TargetSocVals = [...]int{0, 40, 50, 60, 70, 80, 90, 100}
 
 // Provider implements the vehicle api
 type Provider struct {
-	status provider.Cacheable[requests.ChargeStatus]
+	status util.Cacheable[requests.ChargeStatus]
 	wakeup func() error
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		status: provider.ResettableCached(func() (requests.ChargeStatus, error) {
+		status: util.ResettableCached(func() (requests.ChargeStatus, error) {
 			return api.Status(vin)
 		}, cache),
 		wakeup: func() error {
@@ -54,7 +54,7 @@ func (v *Provider) Soc() (float64, error) {
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		//v.status.Reset()
+		// v.status.Reset()
 		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 

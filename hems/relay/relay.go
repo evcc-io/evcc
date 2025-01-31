@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -24,7 +24,7 @@ type Relay struct {
 func New(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
 	var cc struct {
 		MaxPower float64
-		Limit    provider.Config
+		Limit    plugin.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,7 +50,7 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 	site.SetCircuit(lpc)
 
 	// limit getter
-	limitG, err := provider.NewBoolGetterFromConfig(ctx, cc.Limit)
+	limitG, err := cc.Limit.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}

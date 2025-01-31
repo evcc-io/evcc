@@ -56,7 +56,7 @@
 							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
-					<div v-if="fatal">{{ fatal.error }}</div>
+					<div v-if="fatal" class="text-break">{{ fatal.error }}</div>
 				</div>
 				<button
 					type="button"

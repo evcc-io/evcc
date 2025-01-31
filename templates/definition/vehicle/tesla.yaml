@@ -19,7 +19,6 @@ requirements:
       The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token. With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla API. You can see your used credit at Tesla.
 
       To use a Tesla Wall Connector, you need a public Command Proxy Server. [myteslamate.com](https://app.myteslamate.com/) provides this service for 12€/year. Configure the Command permissions at myteslamate.com and enter the Proxy Token here. Start, stopp and current commands are sent to Tesla via this proxy.
-  evcc: ["sponsorship"]
 params:
   - preset: vehicle-common
   - name: clientId
