@@ -13,7 +13,6 @@ import (
 	"github.com/andig/go-powerwall"
 	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -90,7 +89,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	m := &PowerWall{
 		client: client,
 		usage:  strings.ToLower(usage),
-		meterG: provider.Cached(client.GetMetersAggregates, cache),
+		meterG: util.Cached(client.GetMetersAggregates, cache),
 	}
 
 	var batteryControl bool

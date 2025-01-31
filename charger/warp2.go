@@ -9,8 +9,8 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
-	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -104,14 +104,14 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 
 	// timeout handler
-	h, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/evse/low_level_state", topic), timeout).StringGetter()
+	h, err := plugin.NewMqtt(log, client, fmt.Sprintf("%s/evse/low_level_state", topic), timeout).StringGetter()
 	if err != nil {
 		return nil, err
 	}
-	to := provider.NewTimeoutHandler(h)
+	to := plugin.NewTimeoutHandler(h)
 
-	mq := func(s string, args ...any) *provider.Mqtt {
-		return provider.NewMqtt(log, client, fmt.Sprintf(s, args...), 0)
+	mq := func(s string, args ...any) *plugin.Mqtt {
+		return plugin.NewMqtt(log, client, fmt.Sprintf(s, args...), 0)
 	}
 
 	wb.maxcurrentG, err = to.JsonGetter(mq("%s/evse/external_current", topic))
@@ -135,7 +135,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 
-	wb.maxcurrentS, err = provider.NewMqtt(log, client,
+	wb.maxcurrentS, err = plugin.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/external_current_update", topic), 0).
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
@@ -148,7 +148,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 
-	wb.phasesS, err = provider.NewMqtt(log, client,
+	wb.phasesS, err = plugin.NewMqtt(log, client,
 		fmt.Sprintf("%s/power_manager/external_control_update", emTopic), 0).
 		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
@@ -171,7 +171,7 @@ func (wb *Warp2) hasFeature(root, feature string, timeout time.Duration) bool {
 
 	topic := fmt.Sprintf("%s/info/features", root)
 
-	if dataG, err := provider.NewMqtt(wb.log, wb.client, topic, timeout).StringGetter(); err == nil {
+	if dataG, err := plugin.NewMqtt(wb.log, wb.client, topic, timeout).StringGetter(); err == nil {
 		if data, err := dataG(); err == nil {
 			if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
 				return slices.Contains(wb.features, feature)

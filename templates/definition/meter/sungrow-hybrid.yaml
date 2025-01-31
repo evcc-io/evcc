@@ -28,6 +28,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       type: input
       address: 13009 # Export power
@@ -92,6 +93,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 5016 # Total DC power
       type: input
@@ -114,6 +116,7 @@ render: |
       abs:
         source: modbus
         {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
         register:
           type: input
           address: 13021 # Battery power
@@ -163,7 +166,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode selection
               type: writesingle
@@ -173,7 +175,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
               type: writesingle
@@ -187,7 +188,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode selection
               type: writesingle
@@ -197,7 +197,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
               type: writesingle
@@ -211,7 +210,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode
               type: writesingle
@@ -221,7 +219,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
               type: writesingle
@@ -232,7 +229,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13051 # Charge power
               type: writesingle
@@ -246,7 +242,6 @@ render: |
             config:
               source: modbus
               {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
               register:
                 address: 5627 # BDC rated power
                 type: input
@@ -258,7 +253,6 @@ render: |
             config:
               source: modbus
               {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
               register:
                 address: 13051 # Charge/discharge power
                 type: writesingle

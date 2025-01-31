@@ -15,7 +15,6 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
@@ -88,7 +87,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charg
 	}
 
 	c.Connector = eebus.NewConnector()
-	c.minMaxG = provider.Cached(c.minMax, time.Second)
+	c.minMaxG = util.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
@@ -217,10 +216,8 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
-	case ucapi.EVChargeStateTypeError: // Error
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
+		return api.StatusNone, fmt.Errorf("invalid status: %s", currentState)
 	}
 }
 

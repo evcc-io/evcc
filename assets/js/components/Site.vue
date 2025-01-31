@@ -3,7 +3,9 @@
 		<div class="container px-4 top-area">
 			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
 				<h1 class="d-block my-0">
-					{{ siteTitle || "evcc" }}
+					<span v-if="!isInitialSetup">
+						{{ siteTitle || "evcc" }}
+					</span>
 				</h1>
 				<div class="d-flex">
 					<Notifications
@@ -14,11 +16,30 @@
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
-			<Energyflow v-bind="energyflow" />
+			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
+			</div>
+			<div
+				v-else-if="isInitialSetup"
+				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
+			>
+				<div
+					class="welcome d-flex align-items-center flex-column justify-content-center text-center"
+				>
+					<h1 class="mb-0 fs-4 d-flex align-items-center gap-2">
+						{{ $t("main.welcome") }}
+					</h1>
+					<WelcomeIcons class="welcome-icons" />
+					<router-link
+						class="btn btn-lg btn-outline-primary configure-button"
+						to="/config"
+					>
+						{{ $t("main.startConfiguration") }}
+					</router-link>
+				</div>
 			</div>
 			<Loadpoints
 				v-else
@@ -48,6 +69,7 @@ import Loadpoints from "./Loadpoints.vue";
 import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import WelcomeIcons from "./WelcomeIcons.vue";
 
 export default {
 	name: "Site",
@@ -57,6 +79,7 @@ export default {
 		Footer,
 		Notifications,
 		TopNavigation,
+		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -67,7 +90,7 @@ export default {
 
 		// details
 		gridConfigured: Boolean,
-		gridPower: Number,
+		grid: Object,
 		homePower: Number,
 		pvPower: Number,
 		pv: Array,
@@ -113,6 +136,9 @@ export default {
 		pvConfigured: function () {
 			return this.pv?.length > 0;
 		},
+		gridPower: function () {
+			return this.grid?.power || 0;
+		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
@@ -139,6 +165,9 @@ export default {
 		showParkingLot: function () {
 			// work in progess
 			return false;
+		},
+		isInitialSetup: function () {
+			return this.loadpoints.length === 0;
 		},
 		footer: function () {
 			return {
@@ -173,5 +202,31 @@ export default {
 	z-index: 1;
 }
 .fatal {
+}
+
+.configure-button:not(:active):not(:hover),
+.welcome-icons {
+	animation: colorTransition 10s infinite alternate;
+	animation-timing-function: ease-in-out;
+}
+
+@keyframes colorTransition {
+	0% {
+		color: var(--evcc-accent1);
+		border-color: var(--evcc-accent1);
+	}
+	50% {
+		color: var(--evcc-accent2);
+		border-color: var(--evcc-accent2);
+	}
+	100% {
+		color: var(--evcc-accent3);
+		border-color: var(--evcc-accent3);
+	}
+}
+.welcome {
+	background-color: var(--evcc-box);
+	padding: 4rem;
+	border-radius: 2rem;
 }
 </style>

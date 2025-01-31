@@ -2,7 +2,7 @@ package charger
 
 import (
 	"encoding/binary"
-	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -114,14 +114,8 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // laden
 		return api.StatusC, nil
-	case 3: // laden mit Kühlung
-		return api.StatusD, nil
-	case 4: // kein Strom
-		return api.StatusE, nil
-	case 5: // Fehler
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
 }
 

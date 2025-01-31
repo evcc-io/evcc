@@ -215,12 +215,8 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	case
 		core.ChargePointStatusCharging: // "Charging"
 		return api.StatusC, nil
-	case
-		core.ChargePointStatusReserved, // "Reserved"
-		core.ChargePointStatusFaulted:  // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
+		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
 	}
 }
 

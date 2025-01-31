@@ -164,11 +164,11 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		if err != nil {
 			return api.StatusNone, err
 		}
-		return api.StatusF, fmt.Errorf("%d", binary.BigEndian.Uint16(b))
+		return api.StatusNone, fmt.Errorf("charger error: %d", binary.BigEndian.Uint16(b))
 	case 7:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unhandled status type")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

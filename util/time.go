@@ -32,7 +32,7 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 	}
 
 	// Check the next 7 days for a valid match
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		weekday := int(target.Weekday())
 		if contains(weekdays, weekday) {
 			return target, nil

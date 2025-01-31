@@ -238,7 +238,7 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		}
 
 		var total float64
-		for l := 0; l < 3; l++ {
+		for l := range 3 {
 			total += float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
 		}
 

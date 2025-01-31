@@ -271,6 +271,7 @@ export default {
 			this.modal.show();
 		},
 		updateTargetTimeLabel: function () {
+			if (!this.effectivePlanTime) return "";
 			const targetDate = new Date(this.effectivePlanTime);
 			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},

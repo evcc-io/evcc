@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -18,19 +18,19 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Power    provider.Config
-		Energy   *provider.Config  // optional
-		Currents []provider.Config // optional
-		Voltages []provider.Config // optional
-		Powers   []provider.Config // optional
+		Power    plugin.Config
+		Energy   *plugin.Config  // optional
+		Currents []plugin.Config // optional
+		Voltages []plugin.Config // optional
+		Powers   []plugin.Config // optional
 
 		// battery
 		capacity    `mapstructure:",squash"`
 		maxpower    `mapstructure:",squash"`
 		battery     `mapstructure:",squash"`
-		Soc         *provider.Config // optional
-		LimitSoc    *provider.Config // optional
-		BatteryMode *provider.Config // optional
+		Soc         *plugin.Config // optional
+		LimitSoc    *plugin.Config // optional
+		BatteryMode *plugin.Config // optional
 	}{
 		battery: battery{
 			MinSoc: 20,
@@ -55,19 +55,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	m, _ := NewConfigurable(powerG)
 
 	// decorate soc
-	var socG func() (float64, error)
-	if cc.Soc != nil {
-		socG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Soc)
-		if err != nil {
-			return nil, fmt.Errorf("battery soc: %w", err)
-		}
+	socG, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("battery soc: %w", err)
 	}
 
 	var batModeS func(api.BatteryMode) error
 
 	switch {
 	case cc.Soc != nil && cc.LimitSoc != nil:
-		limitSocS, err := provider.NewFloatSetterFromConfig(ctx, "limitSoc", *cc.LimitSoc)
+		limitSocS, err := cc.LimitSoc.FloatSetter(ctx, "limitSoc")
 		if err != nil {
 			return nil, fmt.Errorf("battery limit soc: %w", err)
 		}
@@ -75,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		batModeS = cc.battery.LimitController(socG, limitSocS)
 
 	case cc.BatteryMode != nil:
-		modeS, err := provider.NewIntSetterFromConfig(ctx, "batteryMode", *cc.BatteryMode)
+		modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
 		if err != nil {
 			return nil, fmt.Errorf("battery mode: %w", err)
 		}

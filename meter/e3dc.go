@@ -176,7 +176,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	case api.BatteryCharge:
 		res, err = m.conn.SendMultiple([]rscp.Message{
 			e3dcDischargeBatteryLimit(false, 0),
-			e3dcBatteryCharge(10000), // 10kWh
+			e3dcBatteryCharge(50000), // max. 50kWh
 		})
 
 	default:
