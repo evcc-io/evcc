@@ -18,14 +18,23 @@
 			<div class="mt-4 mb-3">
 				<Sponsor v-bind="sponsor" />
 			</div>
-			<button
-				v-if="!showForm"
-				type="button"
-				class="btn btn-link text-muted btn-form"
-				@click="showForm = !showForm"
-			>
-				{{ sponsorTokenLabel }}
-			</button>
+			<div v-if="!showForm" class="d-flex gap-1 justify-content-between flex-wrap">
+				<button
+					type="button"
+					class="btn btn-link text-muted text-truncate"
+					@click="showForm = !showForm"
+				>
+					{{ sponsorTokenLabel }}
+				</button>
+				<a
+					v-if="!hasToken"
+					class="btn btn-link text-muted text-truncate"
+					:href="trialTokenLink"
+					target="_blank"
+				>
+					{{ $t("config.sponsor.trialToken") }}
+				</a>
+			</div>
 			<div v-else>
 				<hr />
 				<FormRow
@@ -57,6 +66,7 @@ import FormRow from "./FormRow.vue";
 import Sponsor, { VICTRON_DEVICE } from "../Sponsor.vue";
 import SponsorTokenExpires from "../SponsorTokenExpires.vue";
 import store from "../../store";
+import { docsPrefix } from "../../i18n";
 
 export default {
 	name: "SponsorModal",
@@ -78,6 +88,9 @@ export default {
 				? this.$t("config.sponsor.changeToken")
 				: this.$t("config.sponsor.addToken");
 		},
+		trialTokenLink() {
+			return `${docsPrefix()}/docs/sponsorship#trial`;
+		},
 	},
 	methods: {
 		transformReadValues() {
@@ -89,8 +102,5 @@ export default {
 <style scoped>
 textarea {
 	font-family: var(--bs-font-monospace);
-}
-.btn-form {
-	margin-left: -0.75rem;
 }
 </style>

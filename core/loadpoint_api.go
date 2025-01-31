@@ -13,11 +13,50 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// Title returns the human-readable loadpoint title
-func (lp *Loadpoint) Title() string {
+// GetCharger returns the loadpoint charger
+func (lp *Loadpoint) GetChargerName() string {
+	return lp.ChargerRef
+}
+
+// GetMeter returns the loadpoint meter
+func (lp *Loadpoint) GetMeterName() string {
+	return lp.MeterRef
+}
+
+// GetCircuitName returns the loadpoint circuit
+func (lp *Loadpoint) GetCircuitName() string {
+	return lp.CircuitRef
+}
+
+// GetDefaultVehicle returns the loadpoint default vehicle
+func (lp *Loadpoint) GetDefaultVehicle() string {
+	return lp.VehicleRef
+}
+
+// GetTitle returns the loadpoint title
+func (lp *Loadpoint) GetTitle() string {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Title_
+	return lp.title
+}
+
+// SetTitle sets the loadpoint title
+func (lp *Loadpoint) SetTitle(title string) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set title:", title)
+
+	if title != lp.title {
+		lp.setTitle(title)
+	}
+}
+
+// setTitle sets the loadpoint title (no mutex)
+func (lp *Loadpoint) setTitle(title string) {
+	lp.title = title
+	lp.publish(keys.Title, lp.title)
+	lp.settings.SetString(keys.Title, lp.title)
 }
 
 // GetStatus returns the charging status
@@ -74,6 +113,26 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
+// GetDefaultMode returns the default charge mode
+func (lp *Loadpoint) GetDefaultMode() api.ChargeMode {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.DefaultMode
+}
+
+// SetDefaultMode sets the default charge mode
+func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set default mode:", mode)
+
+	if lp.DefaultMode != mode {
+		lp.DefaultMode = mode
+		lp.settings.SetString(keys.DefaultMode, string(mode))
+	}
+}
+
 // getChargedEnergy returns session charge energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.RLock()
@@ -85,7 +144,14 @@ func (lp *Loadpoint) getChargedEnergy() float64 {
 func (lp *Loadpoint) GetPriority() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Priority_
+	return lp.priority
+}
+
+// setPriority sets the loadpoint priority (no mutex)
+func (lp *Loadpoint) setPriority(prio int) {
+	lp.priority = prio
+	lp.publish(keys.Priority, lp.priority)
+	lp.settings.SetInt(keys.Priority, int64(lp.priority))
 }
 
 // SetPriority sets the loadpoint priority
@@ -96,8 +162,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	lp.log.DEBUG.Println("set priority:", prio)
 
 	if lp.Priority_ != prio {
-		lp.Priority_ = prio
-		lp.publish(keys.Priority, prio)
+		lp.setPriority(prio)
 	}
 }
 
@@ -112,7 +177,7 @@ func (lp *Loadpoint) GetPhases() int {
 func (lp *Loadpoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if !lp.hasPhaseSwitching() && phases == 0 {
-		return fmt.Errorf("invalid number of phases: %d", phases)
+		return fmt.Errorf("charger does not support phase switching")
 	}
 
 	if phases != 0 && phases != 1 && phases != 3 {
@@ -239,6 +304,60 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	return nil
 }
 
+// GetSoc returns the PV mode threshold settings
+func (lp *Loadpoint) GetSocConfig() loadpoint.SocConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Soc
+}
+
+func (lp *Loadpoint) setSocConfig(soc loadpoint.SocConfig) {
+	lp.Soc = soc
+	lp.settings.SetJson(keys.Soc, soc)
+	lp.requestUpdate()
+}
+
+// SetSoc sets the PV mode threshold settings
+func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set soc config: %+v", soc)
+
+	// apply immediately
+	lp.setSocConfig(soc)
+}
+
+// GetThresholds returns the PV mode threshold settings
+func (lp *Loadpoint) GetThresholds() loadpoint.ThresholdsConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return loadpoint.ThresholdsConfig{
+		Enable:  lp.Enable,
+		Disable: lp.Disable,
+	}
+}
+
+func (lp *Loadpoint) setThresholds(thresholds loadpoint.ThresholdsConfig) {
+	lp.Enable = thresholds.Enable
+	lp.Disable = thresholds.Disable
+	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
+	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
+	lp.settings.SetJson(keys.Thresholds, thresholds)
+	lp.requestUpdate()
+}
+
+// SetThresholds sets the PV mode threshold settings
+func (lp *Loadpoint) SetThresholds(thresholds loadpoint.ThresholdsConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set thresholds: %+v", thresholds)
+
+	// apply immediately
+	lp.setThresholds(thresholds)
+}
+
 // GetEnableThreshold gets the loadpoint enable threshold
 func (lp *Loadpoint) GetEnableThreshold() float64 {
 	lp.RLock()
@@ -255,7 +374,11 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 
 	if lp.Enable.Threshold != threshold {
 		lp.Enable.Threshold = threshold
-		lp.publish(keys.EnableThreshold, threshold)
+		// TODO reduce APIs
+		lp.setThresholds(loadpoint.ThresholdsConfig{
+			Enable:  lp.Enable,
+			Disable: lp.Disable,
+		})
 	}
 }
 
@@ -275,7 +398,11 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 
 	if lp.Disable.Threshold != threshold {
 		lp.Disable.Threshold = threshold
-		lp.publish(keys.DisableThreshold, threshold)
+		// TODO reduce APIs
+		lp.setThresholds(loadpoint.ThresholdsConfig{
+			Enable:  lp.Enable,
+			Disable: lp.Disable,
+		})
 	}
 }
 
