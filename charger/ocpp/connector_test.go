@@ -23,6 +23,8 @@ type connTestSuite struct {
 }
 
 func (suite *connTestSuite) SetupTest() {
+	// setup instance
+	Instance()
 	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
 	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, "")
 

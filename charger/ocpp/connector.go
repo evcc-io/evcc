@@ -50,16 +50,16 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 	}
 
 	// trigger status for all connectors
+
+	var ok bool
+	// apply cached status if available
+	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+		if _, err := cp.OnStatusNotification(status); err == nil {
+			ok = true
+		}
+	})
+
 	if cp.HasRemoteTriggerFeature {
-		var ok bool
-
-		// apply cached status if available
-		instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
-			if _, err := cp.OnStatusNotification(status); err == nil {
-				ok = true
-			}
-		})
-
 		// only trigger if we don't already have a status
 		if !ok {
 			if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
@@ -110,7 +110,9 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 		conn.mu.Unlock()
 
 		if update {
-			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+			if conn.cp.HasRemoteTriggerFeature {
+				conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+			}
 		}
 	}
 }
@@ -125,7 +127,9 @@ func (conn *Connector) Initialized() error {
 			return nil
 
 		case <-trigger: // try to trigger StatusNotification again as last resort
-			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+			if conn.cp.HasRemoteTriggerFeature {
+				conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+			}
 
 		case <-timeout:
 			return api.ErrTimeout

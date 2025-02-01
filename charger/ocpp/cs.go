@@ -133,8 +133,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		// update id
 		cp.RegisterID(chargePoint.ID())
-
-		cs.regs[chargePoint.ID()].cp = cp
+		cs.regs[chargePoint.ID()] = reg
 		delete(cs.regs, "")
 
 		cp.connect(true)
