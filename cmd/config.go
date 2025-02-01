@@ -34,7 +34,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 	}
 
 	cc := templates.ClassValues()
-	if c := cmd.Flags().Lookup("class").Value.String(); c != "" {
+	if c := cmd.Flag("class").Value.String(); c != "" {
 		class, err := templates.ClassString(c)
 		if err != nil {
 			log.FATAL.Fatal(err)
@@ -49,11 +49,15 @@ func runConfig(cmd *cobra.Command, args []string) {
 		}
 
 		if len(configurable) > 0 {
-			fmt.Println(class)
-			fmt.Println("---")
+			if len(cc) > 0 {
+				fmt.Println(class)
+				fmt.Println("---")
+			}
+
 			for _, c := range configurable {
 				fmt.Println(strconv.Itoa(c.ID)+":", c.Type, c.Value)
 			}
+
 			fmt.Println("")
 		}
 	}
