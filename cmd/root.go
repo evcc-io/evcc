@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/tailscale"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -240,6 +241,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err == nil {
 		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
+	}
+
+	// setup tailscale
+	if err == nil {
+		if err := tailscale.Run("evcc", conf.Network.Port); err != nil {
+			// 	valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
+			// 	log.INFO.Println("tailscale: authorize at ", authUrl)
+			// } else if err != nil {
+			log.ERROR.Println("tailscale:", err)
+		}
 	}
 
 	// publish initial settings
