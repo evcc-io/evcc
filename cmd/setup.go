@@ -469,7 +469,7 @@ func configureSponsorship(token string) (err error) {
 
 func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
 	// full http request log
-	if cmd.Flags().Lookup(flagHeaders).Changed {
+	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
