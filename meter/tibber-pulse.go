@@ -126,7 +126,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		for tick := time.Tick(10 * time.Second); ; {
 			if err := client.Run(); err != nil {
 				log.ERROR.Println(err)
-				return
 			}
 
 			select {
