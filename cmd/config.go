@@ -13,7 +13,7 @@ import (
 // configCmd represents the configure command
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Dump database configuration (evcc.yaml)",
+	Short: "Dump database configuration",
 	Run:   runConfig,
 }
 
