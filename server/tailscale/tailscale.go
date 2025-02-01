@@ -4,10 +4,12 @@ package tailscale
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
@@ -39,26 +41,44 @@ func Run(host string, port int) error {
 	<-started
 	go h.completeStartup(host)
 
-	cfg, err := lc.GetServeConfig(context.Background())
+	sc, err := lc.GetServeConfig(context.Background())
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("cfg: %+v\n", cfg)
+	// if sc.Web == nil {
+	// 	sc.Web = make(map[ipn.HostPort]*ipn.WebServerConfig)
+	// }
 
-	if cfg.Web == nil {
-		cfg.Web = make(map[ipn.HostPort]*ipn.WebServerConfig)
+	// hostPort := ipn.HostPort(fmt.Sprintf(":%d", port))
+	// if _, err := hostPort.Port(); err != nil {
+	// 	panic(err)
+	// }
+	// target := "http://localhost:" + strconv.Itoa(port)
+
+	// fmt.Println(hostPort, "->", target)
+
+	t, err := ipn.ExpandProxyTargetValue("localhost:"+strconv.Itoa(port), []string{"http", "https", "https+insecure"}, "http")
+	if err != nil {
+		return err
 	}
 
-	cfg.Web[ipn.HostPort(strconv.Itoa(port))] = &ipn.WebServerConfig{
-		Handlers: map[string]*ipn.HTTPHandler{
-			"foo": {
-				Proxy: fmt.Sprintf("http://localhost:%d", port),
-			},
-		},
+	st, err := lc.StatusWithoutPeers(context.Background())
+	if err != nil {
+		return err
 	}
+	if st.Self == nil {
+		return errors.New("no self node")
+	}
+	dnsName := strings.TrimSuffix(st.Self.DNSName, ".")
 
-	if err := lc.SetServeConfig(context.Background(), cfg); err != nil {
+	sc.SetWebHandler(&ipn.HTTPHandler{
+		Proxy: t,
+	}, dnsName, 443, "", true)
+
+	fmt.Printf("sc: %+v\n", sc)
+
+	if err := lc.SetServeConfig(context.Background(), sc); err != nil {
 		return err
 	}
 
