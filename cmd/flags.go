@@ -69,7 +69,7 @@ func bindP(cmd *cobra.Command, key string, flagName ...string) {
 	if len(flagName) == 1 {
 		name = flagName[0]
 	}
-	if err := viper.BindPFlag(key, cmd.PersistentFlag(name)); err != nil {
+	if err := viper.BindPFlag(key, cmd.PersistentFlags().Lookup(name)); err != nil {
 		panic(err)
 	}
 }
