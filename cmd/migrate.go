@@ -32,7 +32,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	reset := cmd.Flags().Lookup(flagReset).Changed
+	reset := cmd.Flag(flagReset).Changed
 
 	// TODO remove yaml file
 	if reset {
