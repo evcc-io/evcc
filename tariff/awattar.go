@@ -39,6 +39,10 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Awattar{
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
@@ -58,8 +62,7 @@ func (t *Awattar) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res awattar.Prices
 
 		// Awattar publishes prices for next day around 13:00 CET/CEST, so up to 35h of price data are available
@@ -82,7 +85,7 @@ func (t *Awattar) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: t.totalPrice(r.Marketprice / 1e3),
+				Price: t.totalPrice(r.Marketprice/1e3, r.StartTimestamp),
 			}
 			data = append(data, ar)
 		}

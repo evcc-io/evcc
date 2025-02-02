@@ -125,11 +125,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err == nil || meterValues == "disable" {
-			cp.meterValuesSample = meterValues
-		} else {
+		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err != nil {
 			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValuesSampledData, err)
 		}
+		cp.meterValuesSample = meterValues
 	}
 
 	// trigger initial meter values

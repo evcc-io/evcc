@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -62,13 +63,13 @@ const (
 )
 
 func init() {
-	registry.Add("keba-modbus", NewKebaFromConfig)
+	registry.AddCtx("keba-modbus", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.StatusReasoner,StatusReason,func() (api.Reason, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate decorate -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.StatusReasoner,StatusReason,func() (api.Reason, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
-func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -82,7 +83,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewKeba(cc.embed, cc.URI, cc.ID)
+	wb, err := NewKeba(ctx, cc.embed, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,14 +131,14 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(time.Duration(u) * time.Second / 2)
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
 }
 
 // NewKeba creates a new charger
-func NewKeba(embed embed, uri string, slaveID uint8) (*Keba, error) {
+func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -159,8 +160,14 @@ func NewKeba(embed embed, uri string, slaveID uint8) (*Keba, error) {
 	return wb, err
 }
 
-func (wb *Keba) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.Enabled(); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

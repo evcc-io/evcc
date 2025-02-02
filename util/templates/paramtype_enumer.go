@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatNumberStringList"
+const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatIntList"
 
-var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 46, 56}
+var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 43, 47}
 
-const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatnumberstringlist"
+const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatintlist"
 
 func (i ParamType) String() string {
 	if i < 0 || i >= ParamType(len(_ParamTypeIndex)-1) {
@@ -30,11 +30,11 @@ func _ParamTypeNoOp() {
 	_ = x[TypeChargeModes-(3)]
 	_ = x[TypeDuration-(4)]
 	_ = x[TypeFloat-(5)]
-	_ = x[TypeNumber-(6)]
-	_ = x[TypeStringList-(7)]
+	_ = x[TypeInt-(6)]
+	_ = x[TypeList-(7)]
 }
 
-var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeNumber, TypeStringList}
+var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeInt, TypeList}
 
 var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeName[0:6]:        TypeString,
@@ -49,10 +49,10 @@ var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeLowerName[27:35]: TypeDuration,
 	_ParamTypeName[35:40]:      TypeFloat,
 	_ParamTypeLowerName[35:40]: TypeFloat,
-	_ParamTypeName[40:46]:      TypeNumber,
-	_ParamTypeLowerName[40:46]: TypeNumber,
-	_ParamTypeName[46:56]:      TypeStringList,
-	_ParamTypeLowerName[46:56]: TypeStringList,
+	_ParamTypeName[40:43]:      TypeInt,
+	_ParamTypeLowerName[40:43]: TypeInt,
+	_ParamTypeName[43:47]:      TypeList,
+	_ParamTypeLowerName[43:47]: TypeList,
 }
 
 var _ParamTypeNames = []string{
@@ -62,8 +62,8 @@ var _ParamTypeNames = []string{
 	_ParamTypeName[16:27],
 	_ParamTypeName[27:35],
 	_ParamTypeName[35:40],
-	_ParamTypeName[40:46],
-	_ParamTypeName[46:56],
+	_ParamTypeName[40:43],
+	_ParamTypeName[43:47],
 }
 
 // ParamTypeString retrieves an enum value from the enum constants string name.

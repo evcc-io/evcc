@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorConfig } from "./simulator";
-import { login } from "./utils";
 
 const BASICS_CONFIG = "basics.evcc.yaml";
 
@@ -11,7 +10,7 @@ test.use({ baseURL: baseUrl() });
 
 test.describe("Basics", async () => {
   test.beforeAll(async () => {
-    await start(BASICS_CONFIG, "password.sql");
+    await start(BASICS_CONFIG);
   });
 
   test.afterAll(async () => {
@@ -21,9 +20,6 @@ test.describe("Basics", async () => {
   test("Menu options. No battery and grid.", async ({ page }) => {
     for (const route of UI_ROUTES) {
       await page.goto(route);
-      if (route === "/#/config") {
-        await login(page);
-      }
 
       await page.getByTestId("topnavigation-button").click();
       await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();
@@ -53,7 +49,7 @@ test.describe("Basics", async () => {
 test.describe("Advanced", async () => {
   test.beforeAll(async () => {
     await startSimulator();
-    await start(simulatorConfig(), "password.sql");
+    await start(simulatorConfig());
   });
 
   test.afterAll(async () => {
@@ -64,9 +60,6 @@ test.describe("Advanced", async () => {
   test("Menu options. All available.", async ({ page }) => {
     for (const route of UI_ROUTES) {
       await page.goto(route);
-      if (route === "/#/config") {
-        await login(page);
-      }
 
       await page.getByTestId("topnavigation-button").click();
       await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();

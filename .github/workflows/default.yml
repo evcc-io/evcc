@@ -13,7 +13,7 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -208,23 +208,11 @@ jobs:
       - name: Build Go
         run: make build
 
-      - uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install playwright
+      - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
         run: npx playwright test
-
-      # - name: Run tests
-      #   uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
-      #   with:
-      #     args: npx playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

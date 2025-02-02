@@ -10,6 +10,11 @@ group: co2
 params:
   - name: zip
     required: true
+  - name: token
+    help:
+      de: "Token für den Zugriff auf die API von https://console.corrently.io/"
+      en: "Token for accessing the API from https://console.corrently.io"
 render: |
   type: grünstromindex
   zip: {{ .zip }}
+  token: {{ .token }}

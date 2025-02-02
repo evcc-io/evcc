@@ -8,24 +8,16 @@ requirements:
     en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
     de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
 params:
-  - name: title
   - name: user
     required: true
   - name: vin
     required: true
-  - name: capacity
-  - name: phases
-    advanced: true
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: timeout
     default: 1h
-  - preset: vehicle-identify
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  {{- include "vehicle-identify" . }}
   soc: # battery soc (%)
     source: mqtt
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/soc

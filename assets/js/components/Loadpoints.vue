@@ -27,7 +27,7 @@
 					:batteryConfigured="batteryConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
-					@click="scrollTo(index)"
+					@click="goTo(index)"
 				/>
 			</div>
 		</div>
@@ -37,7 +37,7 @@
 				:key="index"
 				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center evcc-default-text"
 				:class="{ 'indicator--selected': selected(index) }"
-				@click="scrollTo(index)"
+				@click="goTo(index)"
 			>
 				<shopicon-filled-lightning
 					v-if="isCharging(loadpoint)"
@@ -70,15 +70,25 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		selectedIndex: Number,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 	},
+	emits: ["index-changed"],
 	data() {
-		return { selectedIndex: 0, snapTimeout: null };
+		return { snapTimeout: null, scrollTimeout: null, highlightedIndex: 0 };
+	},
+	watch: {
+		selectedIndex: function (newIndex) {
+			this.scrollTo(newIndex);
+		},
 	},
 	mounted() {
-		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll, false);
+		if (this.selectedIndex > 0) {
+			this.$refs.carousel.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
+		}
+		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll);
 	},
 	unmounted() {
 		if (this.$refs.carousel) {
@@ -89,23 +99,33 @@ export default {
 		handleCarouselScroll() {
 			const { scrollLeft } = this.$refs.carousel;
 			const { offsetWidth } = this.$refs.carousel.children[0];
-			this.selectedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
+			this.highlightedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
+
+			// save scroll position to url if not changing for 2s
+			clearTimeout(this.scrollTimeout);
+			this.scrollTimeout = setTimeout(() => {
+				if (this.highlightedIndex !== this.selectedIndex) {
+					this.$emit("index-changed", this.highlightedIndex);
+				}
+			}, 2000);
+		},
+		goTo(index) {
+			this.$emit("index-changed", index);
 		},
 		isCharging(lp) {
 			return lp.charging && lp.chargePower > 0;
 		},
 		selected(index) {
-			return this.selectedIndex === index;
+			return this.highlightedIndex === index;
+		},
+		left(index) {
+			return this.$refs.carousel.children[0].offsetWidth * index;
 		},
 		scrollTo(index) {
-			if (this.selectedIndex === index) {
-				return;
-			}
-			this.selectedIndex = index;
+			this.highlightedIndex = index;
 			const $carousel = this.$refs.carousel;
-			const width = $carousel.children[0].offsetWidth;
 			$carousel.style.scrollSnapType = "none";
-			$carousel.scrollTo({ top: 0, left: 7.5 + width * index, behavior: "smooth" });
+			$carousel.scrollTo({ top: 0, left: this.left(index), behavior: "smooth" });
 
 			clearTimeout(this.snapTimeout);
 			this.snapTimeout = setTimeout(() => {

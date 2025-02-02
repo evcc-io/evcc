@@ -82,7 +82,7 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return decorateInnogy(wb, totalEnergy, voltages), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate decorate -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewInnogy creates a Innogy charger
 func NewInnogy(uri string, id uint8) (*Innogy, error) {

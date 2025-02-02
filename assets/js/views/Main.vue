@@ -1,5 +1,9 @@
 <template>
-	<Site :notifications="notifications" v-bind="state"></Site>
+	<Site
+		:notifications="notifications"
+		v-bind="state"
+		:selected-loadpoint-index="selectedLoadpointIndex"
+	/>
 </template>
 
 <script>
@@ -11,6 +15,7 @@ export default {
 	components: { Site },
 	props: {
 		notifications: Array,
+		selectedLoadpointIndex: Number,
 	},
 	data: function () {
 		return store;

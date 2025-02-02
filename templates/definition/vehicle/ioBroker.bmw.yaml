@@ -1,0 +1,47 @@
+template: ioBroker.bmw
+products:
+  - description:
+      generic: ioBroker.bmw
+group: generic
+requirements:
+  description:
+    en: ioBroker BMW Adapter. Requires ioBroker.bmw and ioBroker.simple-api
+    de: ioBroker BMW Adapter. Benötigt ioBroker.bmw und ioBroker.simple-api
+params:
+  - preset: vehicle-common
+  - name: vin
+    example: WBMW...
+  - name: uri
+    required: true
+    help:
+      generic: ioBroker URL
+  - name: id
+    default: 0
+    type: int
+    help:
+      de: Instanz-ID
+      en: Instance ID
+    advanced: true
+  - preset: vehicle-features
+render: |
+  type: custom
+  {{ include "vehicle-common" . }}
+  soc:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.isChargerConnected
+    charging:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingStatus
+      jq: '. == "CHARGING"'
+  range:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.range
+  odometer:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
+  {{ include "vehicle-features" . }}

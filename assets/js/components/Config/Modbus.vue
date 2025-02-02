@@ -17,6 +17,7 @@
 				class="btn-check"
 				name="modbusConnection"
 				value="tcpip"
+				tabindex="0"
 				autocomplete="off"
 			/>
 			<label class="btn btn-outline-primary" for="modbusTcpIp">Network</label>
@@ -27,6 +28,7 @@
 				class="btn-check"
 				name="modbusConnection"
 				value="serial"
+				tabindex="0"
 				autocomplete="off"
 			/>
 			<label class="btn btn-outline-primary" for="modbusSerial">Serial / USB</label>
@@ -36,7 +38,7 @@
 		<PropertyField
 			id="modbusId"
 			property="id"
-			type="Number"
+			type="Int"
 			class="me-2"
 			required
 			:model-value="id || defaultId || 1"
@@ -59,7 +61,7 @@
 			<PropertyField
 				id="modbusPort"
 				property="port"
-				type="Number"
+				type="Int"
 				class="me-2 w-50"
 				required
 				:model-value="port || defaultPort || 502"
@@ -84,6 +86,7 @@
 					class="btn-check"
 					name="modbusProtocol"
 					value="tcp"
+					tabindex="0"
 					autocomplete="off"
 				/>
 				<label class="btn btn-outline-primary" for="modbusTcp">TCP</label>
@@ -94,6 +97,7 @@
 					class="btn-check"
 					name="modbusProtocol"
 					value="rtu"
+					tabindex="0"
 					autocomplete="off"
 				/>
 				<label class="btn btn-outline-primary" for="modbusRtu">RTU</label>
@@ -116,9 +120,9 @@
 			<PropertyField
 				id="modbusBaudrate"
 				property="baudrate"
-				type="Number"
+				type="Choice"
 				class="me-2 w-50"
-				:valid-values="baudrateOptions"
+				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
 				@change="$emit('update:baudrate', $event.target.value)"
@@ -128,9 +132,9 @@
 			<PropertyField
 				id="modbusComset"
 				property="comset"
-				type="String"
+				type="Choice"
 				class="me-2 w-50"
-				:valid-values="comsetOptions"
+				:choice="comsetOptions"
 				required
 				:model-value="comset || defaultComset || '8N1'"
 				@change="$emit('update:comset', $event.target.value)"

@@ -3,6 +3,8 @@ package util
 import (
 	"reflect"
 	"sync"
+
+	"github.com/evcc-io/evcc/api"
 )
 
 // TeeAttacher allows attaching a listener to a tee
@@ -32,10 +34,6 @@ func (t *Tee) add(out chan<- Param) {
 	t.recv = append(t.recv, out)
 }
 
-type redactor interface {
-	Redacted() any
-}
-
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
@@ -45,7 +43,7 @@ func (t *Tee) Run(in <-chan Param) {
 			}
 		}
 
-		if val, ok := (msg.Val).(redactor); ok {
+		if val, ok := (msg.Val).(api.Redactor); ok {
 			msg.Val = val.Redacted()
 		}
 

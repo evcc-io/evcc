@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,9 +24,11 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Region              string
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Region: "EU",
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -36,8 +39,16 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
+	var baseUrl string
+	switch strings.ToUpper(cc.Region) {
+	case "AU":
+		baseUrl = saic.RegionAU
+	default:
+		baseUrl = saic.RegionEU
+	}
+
 	log := util.NewLogger("mg").Redact(cc.User, cc.Password, cc.VIN)
-	identity := saic.NewIdentity(log, cc.User, cc.Password)
+	identity := saic.NewIdentity(log, cc.User, cc.Password, baseUrl)
 
 	if err := identity.Login(); err != nil {
 		return nil, err

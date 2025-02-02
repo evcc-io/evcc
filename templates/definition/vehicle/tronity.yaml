@@ -6,10 +6,7 @@ group: generic
 requirements:
   evcc: ["sponsorship"]
 params:
-  - name: title
-  - name: icon
-    default: car
-    advanced: true
+  - preset: vehicle-common
   - name: clientid
     description:
       generic: Tronity API Client ID
@@ -26,11 +23,8 @@ params:
     required: true
   - name: vin
     example: W...
-  - name: capacity
-    default: 10
-  - name: phases
-    advanced: true
-  - preset: vehicle-identify
+  - name: cache
+    default: 15m
 render: |
   type: tronity
   vin: {{ .vin }}
@@ -38,4 +32,4 @@ render: |
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-identify" . }}
+  cache: {{ .cache }}

@@ -37,7 +37,7 @@ func main() {
 }
 
 func runOcpp(cmd *cobra.Command, args []string) {
-	url := cmd.Flags().Lookup("uri").Value.String()
+	url := cmd.Flag("uri").Value.String()
 
 	if len(args) > 0 {
 		chargePointId = args[0]

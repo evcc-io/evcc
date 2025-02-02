@@ -1,0 +1,38 @@
+template: lg-ess-home-15
+products:
+  - brand: LG
+    description:
+      generic: ESS Home 15
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: password
+    help:
+      en: >
+        User password, see https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alteratively, use registration id for admin login.
+      de: >
+        Benutzerpasswort, siehe https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alternativ kann die Registriernummer für Administratorlogin verwendet werden.
+  - name: registration
+    advanced: true
+    example: "DE200..."
+    help:
+      en: Registration id of the LG ESS HOME inverter.
+      de: Registriernummer des LG ESS HOME Wechselrichters.
+  - name: capacity
+    advanced: true
+render: |
+  type: lgess15
+  usage: {{ .usage }}
+  # uri and password are only required once if multiple lgess usages are defined
+  uri: https://{{ .host }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  {{- if .registration }}
+  registration: {{ .registration }}
+  {{- end }}
+  capacity: {{ .capacity }} # kWh

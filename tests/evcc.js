@@ -42,12 +42,12 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
-export async function start(config, sqlDumps) {
+export async function start(config, sqlDumps, flags = "--disable-auth") {
   await _clean();
   if (sqlDumps) {
     await _restoreDatabase(sqlDumps);
   }
-  return await _start(config);
+  return await _start(config, flags);
 }
 
 export async function stop(instance) {
@@ -55,9 +55,9 @@ export async function stop(instance) {
   await _clean();
 }
 
-export async function restart(config) {
+export async function restart(config, flags = "--disable-auth") {
   await _stop();
-  await _start(config);
+  await _start(config, flags);
 }
 
 export async function cleanRestart(config, sqlDumps) {
@@ -77,14 +77,15 @@ async function _restoreDatabase(sqlDumps) {
   }
 }
 
-async function _start(config) {
+async function _start(config, flags = []) {
   const configFile = config.includes("/") ? config : `tests/${config}`;
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
-  log("starting evcc", { config, port });
-  const instance = spawn(BINARY, ["--config", configFile], {
+  const additionalFlags = typeof flags === "string" ? [flags] : flags;
+  log("starting evcc", { config, port, additionalFlags });
+  const instance = spawn(BINARY, ["--config", configFile, additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });
@@ -108,10 +109,17 @@ async function _stop(instance) {
     log("evcc is down", { port });
     return;
   }
+  // check if auth is required
+  const res = await axios.get(`${baseUrl()}/api/auth/status`);
+  log("auth status", res.status, res.statusText, res.data);
+  let cookie;
+  // login required
+  if (!res.data) {
+    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+    log("login", res.status, res.statusText);
+    cookie = res.headers["set-cookie"];
+  }
   log("shutting down evcc", { port });
-  const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-  log(res.status, res.statusText);
-  const cookie = res.headers["set-cookie"];
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
