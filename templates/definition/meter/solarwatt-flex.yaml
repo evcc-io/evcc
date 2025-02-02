@@ -1,5 +1,4 @@
 template: solarwatt-flex
-covers: ["solarwatt-flex"]
 products:
   - brand: Solarwatt
     description:
