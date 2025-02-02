@@ -1,0 +1,24 @@
+site:
+  title: Hello World
+
+loadpoints:
+  - title: Carport
+    charger: charger
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        false
+    status:
+      source: js
+      script: |
+        "B"
+    maxcurrent:
+      source: js
+      script:

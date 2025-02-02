@@ -1,0 +1,72 @@
+package plugin
+
+import "encoding/json"
+
+// TimeoutHandler is a wrapper for a Getter that times out after a given duration
+type TimeoutHandler struct {
+	ticker func() (string, error)
+}
+
+func NewTimeoutHandler(ticker func() (string, error)) *TimeoutHandler {
+	return &TimeoutHandler{ticker}
+}
+
+func (h *TimeoutHandler) BoolGetter(p BoolGetter) (func() (bool, error), error) {
+	g, err := p.BoolGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (val bool, err error) {
+		if val, err = g(); err == nil {
+			_, err = h.ticker()
+		}
+		return val, err
+	}, nil
+}
+
+func (h *TimeoutHandler) FloatGetter(p FloatGetter) (func() (float64, error), error) {
+	g, err := p.FloatGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (val float64, err error) {
+		if val, err = g(); err == nil {
+			_, err = h.ticker()
+		}
+		return val, err
+	}, nil
+}
+
+func (h *TimeoutHandler) StringGetter(p StringGetter) (func() (string, error), error) {
+	g, err := p.StringGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (val string, err error) {
+		if val, err = g(); err == nil {
+			_, err = h.ticker()
+		}
+		return val, err
+	}, nil
+}
+
+func (h *TimeoutHandler) JsonGetter(p StringGetter) (func(any) error, error) {
+	g, err := p.StringGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(res any) error {
+		val, err := g()
+		if err != nil {
+			return err
+		}
+		if _, err := h.ticker(); err != nil {
+			return err
+		}
+		return json.Unmarshal([]byte(val), res)
+	}, nil
+}

@@ -25,7 +25,15 @@ params:
     id: 1
   - name: connector
     default: 1
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Charger is equipped with phase switching feature
+      de: Phasenumschaltung vorhanden
+    advanced: true
+    default: true
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}
   connector: {{ .connector }}
+  phases1p3p: {{ .phases1p3p }}

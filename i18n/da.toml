@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Batteriniveau"
+batteryLevel = "Batteri-niveau"
 capacity = "{energy} af {total}"
 control = "Batteri indstillinger"
 discharge = "Forhindrer afladning ved planlagt opladning og i hurtig mode"
@@ -43,6 +43,7 @@ labelResidualPower = "Tilbageværende effekt"
 title = "kontrol adfærd"
 
 [config.deviceValue]
+amount = "Mængde"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapacitet"
@@ -421,6 +422,8 @@ weekdays = "Dag"
 battery = "Batteri"
 batteryCharge = "Batteriet oplades"
 batteryDischarge = "Batteriet aflades"
+batteryGridChargeActive = "Oplader fra elnettet"
+batteryGridChargeLimit = "Oplader fra elnettet når"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
 gridImport = "Forbrug fra elnet"

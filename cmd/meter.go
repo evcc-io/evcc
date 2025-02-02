@@ -39,7 +39,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	mode := api.BatteryUnknown
-	if val := cmd.Flags().Lookup(flagBatteryMode).Value.String(); val != "" {
+	if val := cmd.Flag(flagBatteryMode).Value.String(); val != "" {
 		var err error
 		mode, err = api.BatteryModeString(val)
 		if err != nil {

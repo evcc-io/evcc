@@ -44,7 +44,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.Token == "" {
-		return nil, errors.New("missing token")
+		return nil, api.ErrMissingToken
 	}
 
 	if cc.SiteID == "" {

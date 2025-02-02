@@ -17,3 +17,7 @@ func TestParam(t *testing.T) {
 	p.Loadpoint = &lp
 	assert.Equal(t, "2.power", p.UniqueID())
 }
+
+func TestParamCache(t *testing.T) {
+	NewParamCache().Add("foo", Param{})
+}

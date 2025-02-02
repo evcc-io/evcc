@@ -1,4 +1,5 @@
 template: weishaupt-wpm
+deprecated: true
 products:
   - brand: Weishaupt
     description:
@@ -18,20 +19,33 @@ params:
 render: |
   type: sgready
   getmode:
-    source: map
-    values:
-      8:  1 # ABTAUEN
-      10: 3 # EVU_SPERRE
-      14: 2 # ERHOEHTER_BETRIEB
-      18: 3 # FROSTSCHUTZ
-      19: 1 # HEIZBETRIEB
-    get:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30006
-        type: input
-        encoding: uint16
+    source: go
+    script: |
+      res := 1
+      switch {
+      case SG1 == 1 && SG2 == 0: res = 3
+      case SG2 == 1: res = 2
+      }
+      res
+    in:
+    - name: SG1
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 35101
+          type: input
+          encoding: uint16
+    - name: SG2
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 35102
+          type: input
+          encoding: uint16
   setmode:
     source: switch
     switch:

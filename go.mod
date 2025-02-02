@@ -8,7 +8,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.10.1
-	github.com/WulfgarW/sensonet v0.0.2
+	github.com/WulfgarW/sensonet v0.0.3
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -23,7 +23,7 @@ require (
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/coder/websocket v1.8.12
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
@@ -56,7 +56,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/jinzhu/now v1.1.5
-	github.com/joeshaw/carwings v0.0.0-20240517194654-cf29a185820c
+	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
 	github.com/joho/godotenv v1.5.1
 	github.com/jpfielding/go-http-digest v0.0.0-20240123121450-cffc47d5d6d8
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
@@ -99,7 +99,7 @@ require (
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20241211175049-b4f1988a35de
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/net v0.33.0
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.25.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/text v0.21.0
 	golang.org/x/tools v0.28.0
@@ -211,3 +211,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
 replace github.com/mlnoga/rct => github.com/Maschga/rct v0.1.2-0.20250123202746-3bacbc13d633
+
+replace github.com/hasura/go-graphql-client => github.com/andig/go-graphql-client v0.0.0-20250123081454-14ac4443ffd9
