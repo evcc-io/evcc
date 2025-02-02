@@ -145,6 +145,9 @@ export default {
 			}));
 		},
 		options() {
+			// capture vue component this to be used in chartjs callbacks
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			const vThis = this;
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
@@ -156,8 +159,7 @@ export default {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
-						mode: "index",
-						intersect: false,
+						axis: "x",
 						positioner: (context) => {
 							const { chart, tooltipPosition } = context;
 							const { tooltip } = chart;
@@ -209,10 +211,11 @@ export default {
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback: (value) =>
-								this.period === PERIODS.YEAR
-									? this.fmtMonth(new Date(this.year, value, 1), true)
-									: value,
+							callback: function (value) {
+								return vThis.period === PERIODS.YEAR
+									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
+									: this.getLabelForValue(value);
+							},
 						},
 					},
 					y: {

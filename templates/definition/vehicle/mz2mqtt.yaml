@@ -8,37 +8,15 @@ requirements:
     en: myMazda to MQTT. Required MQTT broker configuration and a mz2mqtt installation https://github.com/C64Axel/mz2mqtt.
     de: myMazda zu MQTT. Voraussetzung ist ein konfigurierter MQTT Broker und eine mz2mqtt Installation https://github.com/C64Axel/mz2mqtt.
 params:
-  - name: title
+  - preset: vehicle-common
   - name: vin
     required: true
-    help:
-      de: Erforderlich
-      en: Required
-  - name: capacity
-  - name: phases
-    advanced: true
-  - name: icon
-    default: car
-    advanced: true
   - name: timeout
     default: 720h
     advanced: true
-  - preset: vehicle-identify
 render: |
   type: custom
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- include "vehicle-identify" . }}
+  {{- include "vehicle-common" . }}
   soc:
     source: mqtt
     topic: mz2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage

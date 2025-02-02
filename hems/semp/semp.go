@@ -139,12 +139,10 @@ func (s *SEMP) Run() {
 		ads = append(ads, ad)
 	}
 
-	ticker := time.NewTicker(maxAge * time.Second / 2)
-
 ANNOUNCE:
-	for {
+	for tick := time.Tick(maxAge * time.Second / 2); ; {
 		select {
-		case <-ticker.C:
+		case <-tick:
 			for _, ad := range ads {
 				if err := ad.Alive(); err != nil {
 					s.log.ERROR.Println(err)
@@ -377,7 +375,7 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 	res := DeviceInfo{
 		Identification: Identification{
 			DeviceID:     s.deviceID(id),
-			DeviceName:   lp.Title(),
+			DeviceName:   lp.GetTitle(),
 			DeviceType:   sempCharger,
 			DeviceSerial: s.serialNumber(id),
 			DeviceVendor: "github.com/evcc-io/evcc",

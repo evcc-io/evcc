@@ -4,7 +4,7 @@ import { enableExperimental } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start("battery-settings.evcc.yaml", "password.sql");
+  await start("battery-settings.evcc.yaml");
 });
 test.afterAll(async () => {
   await stop();

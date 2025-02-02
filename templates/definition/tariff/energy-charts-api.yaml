@@ -9,9 +9,9 @@ requirements:
 group: price
 params:
   - name: bzn
-    type: string
+    type: choice
     required: true
-    validvalues:
+    choice:
       [
         "AT",
         "BE",
@@ -40,5 +40,10 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{"{{"}} now | dateModify "+24h" | date "2006-01-02" {{"}}"}}
-    jq: '[.unix_seconds, .price] | transpose | map({ "start": (.[0] | todate), "end": ((.[0]+3600) | todate), "price": (.[1]/1000)}) | tostring'
+    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
+    jq: |
+      [.unix_seconds, .price] | transpose | map({
+        "start": .[0] | todate,
+        "end":   .[0]+3600 | todate,
+        "price": .[1]/1000
+      }) | tostring

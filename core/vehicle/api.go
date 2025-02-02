@@ -43,6 +43,11 @@ type API interface {
 	// SetPlanSoc sets the charge plan time and soc
 	SetPlanSoc(time.Time, int) error
 
+	// GetRepeatingPlans returns every repeating plan
+	GetRepeatingPlans() []api.RepeatingPlanStruct
+	// SetRepeatingPlans stores every repeating plan
+	SetRepeatingPlans([]api.RepeatingPlanStruct) error
+
 	// // GetMinCurrent returns the min charging current
 	// GetMinCurrent() float64
 	// // SetMinCurrent sets the min charging current

@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -47,13 +48,13 @@ const (
 )
 
 func init() {
-	registry.Add("pulsares", NewPulsaresFromConfig)
+	registry.AddCtx("pulsares", NewPulsaresFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate decorate -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
-func NewPulsaresFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPulsaresFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -62,7 +63,7 @@ func NewPulsaresFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewPulsares(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	wb, err := NewPulsares(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func NewPulsaresFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewPulsares creates Pulsares charger
-func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Pulsares, error) {
+func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Pulsares, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -120,14 +121,20 @@ func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol
 	}
 
 	if t > 0 {
-		go wb.heartbeat(t / 2)
+		go wb.heartbeat(ctx, t/2)
 	}
 
 	return wb, err
 }
 
-func (wb *Pulsares) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+func (wb *Pulsares) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.ReadHoldingRegisters(pulsaresRegBackup, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

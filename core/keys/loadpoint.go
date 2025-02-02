@@ -4,27 +4,31 @@ const (
 	// loadpoint settings
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
+	DefaultMode      = "defaultMode" // default charge mode
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
 	MaxCurrent       = "maxCurrent"  // max current
 	MinSoc           = "minSoc"      // min soc
 	LimitSoc         = "limitSoc"    // limit soc
 	LimitEnergy      = "limitEnergy" // limit energy
+	Soc              = "soc"
+	Thresholds       = "thresholds"
 	EnableThreshold  = "enableThreshold"
 	DisableThreshold = "disableThreshold"
 	EnableDelay      = "enableDelay"
 	DisableDelay     = "disableDelay"
 	BatteryBoost     = "batteryBoost"
 
-	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
+	Phases           = "phases"           // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
+	PhasesConfigured = "phasesConfigured" // TODO mirrors "phases" for UI purposes
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
 	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 
-	ChargerIcon           = "chargerIcon"           // charger icon for ui
-	ChargerFeature        = "chargerFeature"        // charger feature
-	ChargerPhysicalPhases = "chargerPhysicalPhases" // charger phases
-	ChargerPhases1p3p     = "chargerPhases1p3p"     // phase switcher (1p3p chargers)
-	ChargerStatusReason   = "chargerStatusReason"   // either awaiting authorization or disconnect required
+	ChargerIcon         = "chargerIcon"         // charger icon for ui
+	ChargerFeature      = "chargerFeature"      // charger feature
+	ChargerSinglePhase  = "chargerSinglePhase"  // api.PhaseDescriber: charger physical phases, sockets only
+	ChargerPhases1p3p   = "chargerPhases1p3p"   // api.PhaseSwitcher: 1p3p chargers
+	ChargerStatusReason = "chargerStatusReason" // either awaiting authorization or disconnect required
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
@@ -38,6 +42,7 @@ const (
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectivePlanId     = "effectivePlanId"     // effective plan id
 	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
@@ -66,6 +71,9 @@ const (
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+
+	// repeating plans
+	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
 
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled

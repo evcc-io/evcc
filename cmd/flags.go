@@ -11,6 +11,9 @@ const (
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
+	flagDisableAuth            = "disable-auth"
+	flagDisableAuthDescription = "Disable authentication (dangerous)"
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
 	flagBatteryModeWait            = "battery-mode-wait"
@@ -56,7 +59,7 @@ func bind(cmd *cobra.Command, key string, flagName ...string) {
 	if len(flagName) == 1 {
 		name = flagName[0]
 	}
-	if err := viper.BindPFlag(key, cmd.Flags().Lookup(name)); err != nil {
+	if err := viper.BindPFlag(key, cmd.Flag(name)); err != nil {
 		panic(err)
 	}
 }

@@ -1,0 +1,17 @@
+template: peblar
+products:
+  - brand: Peblar
+    description:
+      generic: Home, Home Plus, Business
+capabilities: ["1p3p", "mA"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Peblar-Ladegeräte mit Firmware-Version 1.6 und höher unterstützen Modbus TCP über Port 502. Der Modbus-Server muss über die Weboberfläche des Ladegeräts aktiviert werden. Stellen Sie sicher, dass Smart-Charging-Strategien deaktiviert und auf Standard gesetzt sind.
+    en: Peblar chargers with firmware version 1.6 and onwards support Modbus TCP via port 502. The Modbus server needs to be enabled via the charger web interface. Ensure that smart charging strategies are disabled and set to Default.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: peblar
+  {{- include "modbus" . }}

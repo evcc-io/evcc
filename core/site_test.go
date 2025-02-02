@@ -136,11 +136,18 @@ func TestRequiredBatteryMode(t *testing.T) {
 		{true, api.BatteryCharge, api.BatteryUnknown}, // ignore
 	}
 
+	{
+		// no battery
+		res := new(Site).requiredBatteryMode(true, api.Rate{})
+		assert.Equal(t, api.BatteryUnknown, res, "expected %s, got %s", api.BatteryUnknown, res)
+	}
+
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		s := &Site{
-			batteryMode: tc.mode,
+			batteryMeters: []api.Meter{nil},
+			batteryMode:   tc.mode,
 		}
 
 		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})

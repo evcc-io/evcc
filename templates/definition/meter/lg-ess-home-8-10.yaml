@@ -25,7 +25,7 @@ params:
   - name: capacity
     advanced: true
 render: |
-  type: lgess
+  type: lgess8
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}

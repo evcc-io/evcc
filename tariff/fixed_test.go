@@ -54,7 +54,7 @@ func TestFixedSplitZones(t *testing.T) {
 	tf.clock = clock.NewMock()
 
 	var expect api.Rates
-	for i := 0; i < 7; i++ {
+	for i := range 7 {
 		dayStart := now.With(tf.clock.Now()).BeginningOfDay().AddDate(0, 0, i)
 
 		// 00:00-05:00 0.1

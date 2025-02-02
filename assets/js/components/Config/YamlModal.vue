@@ -138,8 +138,4 @@ export default {
 		margin: 0;
 	}
 }
-
-.btn-cancel {
-	margin-left: -0.75rem;
-}
 </style>

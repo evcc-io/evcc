@@ -28,6 +28,25 @@ type Vehicle struct {
 	VIN string
 }
 
+type Schedule struct {
+	CabinPriority      bool   `json:"cabinPriority"`
+	ChargeToFull       bool   `json:"chargeToFull"`
+	EnableScheduleType bool   `json:"enableScheduleType"`
+	EndTime            string `json:"endTime"`
+	RepeatSchedule     bool   `json:"repeatSchedule"`
+	ScheduleType       string `json:"scheduleType"`
+	ScheduledDays      struct {
+		Friday    bool `json:"friday"`
+		Monday    bool `json:"monday"`
+		Saturday  bool `json:"saturday"`
+		Sunday    bool `json:"sunday"`
+		Thursday  bool `json:"thursday"`
+		Tuesday   bool `json:"tuesday"`
+		Wednesday bool `json:"wednesday"`
+	} `json:"scheduledDays"`
+	StartTime string `json:"startTime"`
+}
+
 type StatusResponse struct {
 	VehicleInfo struct {
 		Odometer struct {
@@ -52,6 +71,7 @@ type StatusResponse struct {
 			TimeToFullyChargeL2 int     // 540
 			TotalRange          int     // 17
 		}
+		Schedules []Schedule
 		Timestamp TimeMillis
 	} `json:",omitempty"`
 	Timestamp TimeMillis

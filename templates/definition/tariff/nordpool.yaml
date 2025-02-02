@@ -1,0 +1,80 @@
+template: nordpool
+products:
+  - brand: Nordpool spot prices
+requirements:
+  description:
+    de: "Nordpool Spot Preise im Day-Ahead-Markt für alle Märkte in der Nordpool-Region."
+    en: "Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: region
+    example: GER
+    type: choice
+    choice:
+      [
+        "EE",
+        "LT",
+        "LV",
+        "AT",
+        "BE",
+        "FR",
+        "GER",
+        "NL",
+        "PL",
+        "DK1",
+        "DK2",
+        "FI",
+        "NO1",
+        "NO2",
+        "NO3",
+        "NO4",
+        "NO5",
+        "SE1",
+        "SE2",
+        "SE3",
+        "SE4",
+        "TEL",
+        "SYS",
+      ]
+  - name: currency
+    default: EUR
+    type: choice
+    choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
+  - preset: tariff-base
+render: |
+  type: custom
+  forecast:
+    source: go
+    script: |
+      // concat today and tomorrow
+      "[" + strings.Trim(strings.Trim(today, "[]") + "," + strings.Trim(tomorrow, "[]"), ",") + "]"
+    in:
+      - name: today
+        type: string
+        config:
+          source: http
+          uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ now.Local | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          jq: |
+            [ .multiAreaEntries.[] | 
+              {
+                "start": .deliveryStart,
+                "end":   .deliveryEnd,
+                "price": .entryPerArea.{{ .region }} / 1000
+              }
+            ] | tostring
+      - name: tomorrow
+        type: string
+        config:
+          source: http
+          uri: https://dataportal-api.nordpoolgroup.com/api/DayAheadPrices?market=DayAhead&date={{ `{{ addDate (now.Local) 0 0 1 | date "2006-01-02" }}` }}&deliveryArea={{ .region }}&currency={{ .currency }}
+          allowempty: true
+          jq: |
+            [ .multiAreaEntries.[] | 
+              {
+                "start": .deliveryStart,
+                "end":   .deliveryEnd,
+                "price": .entryPerArea.{{ .region }} / 1000
+              }
+            ] | tostring
+  {{ include "tariff-base" . }}

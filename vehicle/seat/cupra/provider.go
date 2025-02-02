@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Provider is an api.Vehicle implementation for Seat Cupra cars
@@ -19,13 +19,13 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (Status, error) {
+		statusG: util.Cached(func() (Status, error) {
 			return api.Status(userID, vin)
 		}, cache),
-		positionG: provider.Cached(func() (Position, error) {
+		positionG: util.Cached(func() (Position, error) {
 			return api.ParkingPosition(vin)
 		}, cache),
-		milageG: provider.Cached(func() (Mileage, error) {
+		milageG: util.Cached(func() (Mileage, error) {
 			return api.Mileage(vin)
 		}, cache),
 		action: func(action, cmd string) error {
@@ -37,10 +37,24 @@ func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
+func (v *Provider) engine(s Status, typ string) (Engine, error) {
+	for _, e := range []Engine{s.Engines.Primary, s.Engines.Secondary} {
+		if e.FuelType == typ {
+			return e, nil
+		}
+	}
+	return Engine{}, api.ErrNotAvailable
+}
+
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	return res.Engines.Primary.LevelPct, err
+	if err != nil {
+		return 0, err
+	}
+
+	engine, err := v.engine(res, FuelTypeElectric)
+	return engine.LevelPct, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -89,7 +103,12 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	return int64(res.Engines.Primary.RangeKm), err
+	if err != nil {
+		return 0, err
+	}
+
+	engine, err := v.engine(res, FuelTypeElectric)
+	return int64(engine.RangeKm), err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
