@@ -19,7 +19,6 @@ import (
 type MockAPI struct {
 	ctrl     *gomock.Controller
 	recorder *MockAPIMockRecorder
-	isgomock struct{}
 }
 
 // MockAPIMockRecorder is the mock recorder for MockAPI.
@@ -40,28 +39,28 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 }
 
 // SetString mocks base method.
-func (m *MockAPI) SetString(key, value string) {
+func (m *MockAPI) SetString(arg0, arg1 string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetString", key, value)
+	m.ctrl.Call(m, "SetString", arg0, arg1)
 }
 
 // SetString indicates an expected call of SetString.
-func (mr *MockAPIMockRecorder) SetString(key, value any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetString(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetString", reflect.TypeOf((*MockAPI)(nil).SetString), key, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetString", reflect.TypeOf((*MockAPI)(nil).SetString), arg0, arg1)
 }
 
 // String mocks base method.
-func (m *MockAPI) String(key string) (string, error) {
+func (m *MockAPI) String(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "String", key)
+	ret := m.ctrl.Call(m, "String", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // String indicates an expected call of String.
-func (mr *MockAPIMockRecorder) String(key any) *gomock.Call {
+func (mr *MockAPIMockRecorder) String(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockAPI)(nil).String), key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockAPI)(nil).String), arg0)
 }

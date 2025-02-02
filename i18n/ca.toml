@@ -23,13 +23,7 @@ never = "només amb prous excedents"
 
 [config.battery]
 
-[config.circuits]
-
-[config.control]
-
 [config.deviceValue]
-
-[config.eebus]
 
 [config.form]
 
@@ -37,25 +31,11 @@ never = "només amb prous excedents"
 
 [config.grid]
 
-[config.hems]
-
-[config.influx]
-
 [config.main]
-
-[config.messaging]
 
 [config.meter]
 
-[config.modbusproxy]
-
-[config.mqtt]
-
-[config.network]
-
 [config.options]
-
-[config.options.boolean]
 
 [config.options.endianness]
 
@@ -65,11 +45,7 @@ never = "només amb prous excedents"
 
 [config.section]
 
-[config.sponsor]
-
 [config.system]
-
-[config.tariffs]
 
 [config.title]
 
@@ -212,8 +188,6 @@ default = "defecte"
 title = "Configuracions {0}"
 vehicle = "Vehicle"
 
-[main.loadpointSettings.batteryBoost]
-
 [main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
@@ -348,8 +322,6 @@ solar = "Solar"
 title = "Sessions de càrrega"
 vehicle = "Vehicle"
 
-[sessions.chartTitle]
-
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
 created = "Hora d'inici"
@@ -362,14 +334,6 @@ odometer = "Kilometratge (km)"
 vehicle = "Vehicle"
 
 [sessions.filter]
-
-[sessions.group]
-
-[sessions.groupBy]
-
-[sessions.period]
-
-[sessions.type]
 
 [settings]
 title = "Configuració"

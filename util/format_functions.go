@@ -12,7 +12,3 @@ func timeRound(d time.Duration, round string) time.Duration {
 		return d
 	}
 }
-
-func addDate(ts time.Time, y, m, d int) time.Time {
-	return ts.AddDate(y, m, d)
-}

@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -29,7 +30,7 @@ type EEBus struct {
 	failsafeLimit    float64
 	failsafeDuration time.Duration
 
-	heartbeat *util.Value[struct{}]
+	heartbeat *provider.Value[struct{}]
 }
 
 type Limits struct {
@@ -89,7 +90,7 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		root:      root,
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(),
-		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		heartbeat: provider.NewValue[struct{}](2 * time.Minute), // LPC-031
 
 		consumptionLimit: &ucapi.LoadLimit{
 			Value:        limits.ConsumptionLimit,

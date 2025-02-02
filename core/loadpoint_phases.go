@@ -8,9 +8,8 @@ import (
 // setConfiguredPhases sets the default phase configuration
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	lp.configuredPhases = phases
-	lp.publish(keys.Phases, lp.configuredPhases)
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases) // TODO remove
-	lp.settings.SetInt(keys.Phases, int64(lp.configuredPhases))
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -77,9 +76,9 @@ func (lp *Loadpoint) ActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	lp.RLock()
+	lp.Lock()
 	configuredPhases := lp.configuredPhases
-	lp.RUnlock()
+	lp.Unlock()
 
 	// 1p3p supported or limit 1p
 	if lp.hasPhaseSwitching() || configuredPhases == 1 {
@@ -103,9 +102,9 @@ func (lp *Loadpoint) maxActivePhases() int {
 
 	// if 1p3p supported then assume configured limit or 3p
 	if lp.hasPhaseSwitching() {
-		lp.RLock()
+		lp.Lock()
 		physical = lp.configuredPhases
-		lp.RUnlock()
+		lp.Unlock()
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))

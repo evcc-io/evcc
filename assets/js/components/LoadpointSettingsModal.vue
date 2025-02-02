@@ -185,7 +185,7 @@ export default {
 		phasesConfigured: Number,
 		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
-		chargerSinglePhase: Boolean,
+		chargerPhysicalPhases: Number,
 		batteryBoost: Boolean,
 		batteryBoostAvailable: Boolean,
 		mode: String,
@@ -215,7 +215,8 @@ export default {
 	},
 	computed: {
 		phasesOptions() {
-			if (this.chargerSinglePhase) {
+			if (this.chargerPhysicalPhases == 1) {
+				// known fixed phase configuration, no settings required
 				return [];
 			}
 			if (this.chargerPhases1p3p) {

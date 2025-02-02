@@ -1,7 +1,5 @@
 package cupra
 
-const FuelTypeElectric = "electric"
-
 type Vehicle struct {
 	VIN              string
 	EnrollmentStatus string

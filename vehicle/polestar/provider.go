@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,12 +16,12 @@ type Provider struct {
 
 func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Duration) *Provider {
 	v := &Provider{
-		statusG: util.Cached(func() (BatteryData, error) {
+		statusG: provider.Cached(func() (BatteryData, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			return api.Status(ctx, vin)
 		}, cache),
-		odoG: util.Cached(func() (OdometerData, error) {
+		odoG: provider.Cached(func() (OdometerData, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			return api.Odometer(ctx, vin)
@@ -63,7 +64,7 @@ func (v *Provider) Range() (int64, error) {
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer implements the api.VehicleOdometer interface
+// Odometer implements the Provider.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.odoG()
 	return res.OdometerMeters / 1e3, err

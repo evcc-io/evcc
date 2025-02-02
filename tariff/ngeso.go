@@ -73,7 +73,8 @@ func (t *Ngeso) run(done chan error) {
 	}
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	for tick := time.Tick(time.Hour); ; <-tick {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
 			return res, backoffPermanentError(err)

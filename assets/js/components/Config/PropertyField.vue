@@ -93,14 +93,10 @@
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../SelectGroup.vue";
-import formatter from "../../mixins/formatter";
-
-const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
 	components: { VehicleIcon, SelectGroup },
-	mixins: [formatter],
 	props: {
 		id: String,
 		property: String,
@@ -111,7 +107,7 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
-		choice: { type: Array, default: () => [] },
+		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -123,7 +119,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Number", "Float", "Duration"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -132,13 +128,13 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Number", "Float", "Duration"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
 		},
 		endAlign() {
-			return ["Int", "Float", "Duration"].includes(this.type);
+			return ["Number", "Float", "Duration"].includes(this.type);
 		},
 		step() {
 			if (this.type === "Float" || this.type === "Duration") {
@@ -147,9 +143,6 @@ export default {
 			return null;
 		},
 		unitValue() {
-			if (this.type === "Duration") {
-				return this.fmtDurationUnit(this.value, this.unit);
-			}
 			if (this.unit) {
 				return this.unit;
 			}
@@ -168,21 +161,18 @@ export default {
 			return this.type === "Bool";
 		},
 		array() {
-			return this.type === "List";
+			return this.type === "StringList";
 		},
 		select() {
-			return this.choice.length > 0;
-		},
-		durationFactor() {
-			return this.unit === "minute" ? 60 : 1;
+			return this.validValues.length > 0;
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (typeof this.choice[0] === "object") {
-				return this.choice;
+			if (typeof this.validValues[0] === "object") {
+				return this.validValues;
 			}
 
-			let values = [...this.choice];
+			let values = [...this.validValues];
 
 			if (this.icons && !this.required) {
 				values = ["", ...values];
@@ -213,10 +203,6 @@ export default {
 					return Array.isArray(this.modelValue) ? this.modelValue.join("\n") : "";
 				}
 
-				if (this.type === "Duration" && typeof this.modelValue === "number") {
-					return this.modelValue / this.durationFactor / NS_PER_SECOND;
-				}
-
 				return this.modelValue;
 			},
 			set(value) {
@@ -228,10 +214,6 @@ export default {
 
 				if (this.array) {
 					newValue = value ? value.split("\n") : [];
-				}
-
-				if (this.type === "Duration" && typeof newValue === "number") {
-					newValue = newValue * this.durationFactor * NS_PER_SECOND;
 				}
 
 				this.$emit("update:modelValue", newValue);

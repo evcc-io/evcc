@@ -1,13 +1,16 @@
 <template>
-	<p class="mb-3 root" data-testid="plan-warnings">
-		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
+	<p class="mb-0" data-testid="plan-warnings">
+		<span v-if="targetIsAboveLimit" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
-		<span v-if="['off', 'now'].includes(mode)" class="d-block evcc-gray mb-1">
+		<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
-		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mb-1">
+		<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
+		</span>
+		<span v-if="costLimitExists" class="d-block text-secondary mb-1">
+			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
 		</span>
 		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
 			{{ $t("main.targetCharge.notReachableInTime", { overrun: overrunFmt }) }}
@@ -19,6 +22,7 @@
 </template>
 
 <script>
+import { CO2_TYPE } from "../units";
 import formatter from "../mixins/formatter";
 
 export default {
@@ -34,6 +38,9 @@ export default {
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
+		smartCostLimit: Number,
+		smartCostType: String,
+		currency: String,
 		mode: String,
 		tariff: Object,
 		plan: Object,
@@ -101,6 +108,22 @@ export default {
 			}
 			return this.fmtWh(this.planEnergy * 1e3);
 		},
+		costLimitExists: function () {
+			return this.smartCostLimit !== null;
+		},
+		costLimitText: function () {
+			if (this.isCo2) {
+				return this.$t("main.targetCharge.co2Limit", {
+					co2: this.fmtCo2Short(this.smartCostLimit),
+				});
+			}
+			return this.$t("main.targetCharge.priceLimit", {
+				price: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
+			});
+		},
+		isCo2() {
+			return this.smartCostType === CO2_TYPE;
+		},
 	},
 	methods: {
 		fmtSoc(soc) {
@@ -109,9 +132,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-.root:empty {
-	display: none;
-}
-</style>

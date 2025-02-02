@@ -42,7 +42,8 @@ func (t *GroupeE) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res []struct {
 			StartTimestamp time.Time `json:"start_timestamp"`
 			EndTimestamp   time.Time `json:"end_timestamp"`

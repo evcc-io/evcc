@@ -134,7 +134,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
 }
 
-//go:generate decorate -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idTag string,
@@ -219,8 +219,12 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	case
 		core.ChargePointStatusCharging: // "Charging"
 		return api.StatusC, nil
+	case
+		core.ChargePointStatusReserved, // "Reserved"
+		core.ChargePointStatusFaulted:  // "Faulted"
+		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
+		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 	}
 }
 
@@ -364,17 +368,7 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	enabled, err := c.Enabled()
-	if err != nil {
-		return err
-	}
-
-	var current float64
-	if enabled {
-		current = c.current
-	}
-
-	return c.setCurrent(current)
+	return c.setCurrent(c.current)
 }
 
 var _ api.Identifier = (*OCPP)(nil)

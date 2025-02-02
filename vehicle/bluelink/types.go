@@ -13,7 +13,6 @@ type BluelinkVehicleStatus interface {
 	Status() (api.ChargeStatus, error)
 	FinishTime() (time.Time, error)
 	Range() (int64, error)
-	Climater() (bool, error)
 	GetLimitSoc() (int64, error)
 }
 
@@ -49,10 +48,8 @@ type StatusLatestResponse struct {
 }
 
 type VehicleStatus struct {
-	Time      string
-	AirCtrlOn bool
-	Defrost   bool
-	EvStatus  *struct {
+	Time     string
+	EvStatus *struct {
 		BatteryCharge bool
 		BatteryStatus float64
 		BatteryPlugin int
@@ -151,10 +148,6 @@ func (d VehicleStatus) Range() (int64, error) {
 		}
 	}
 	return 0, api.ErrNotAvailable
-}
-
-func (d VehicleStatus) Climater() (bool, error) {
-	return d.AirCtrlOn || d.Defrost, nil
 }
 
 func (d VehicleStatus) GetLimitSoc() (int64, error) {
@@ -328,10 +321,6 @@ func (d StatusLatestResponseCCS) FinishTime() (time.Time, error) {
 
 func (d StatusLatestResponseCCS) Range() (int64, error) {
 	return d.ResMsg.State.Vehicle.Drivetrain.FuelSystem.DTE.Total, nil
-}
-
-func (d StatusLatestResponseCCS) Climater() (bool, error) {
-	return false, api.ErrNotAvailable
 }
 
 func (d StatusLatestResponseCCS) GetLimitSoc() (int64, error) {

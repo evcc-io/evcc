@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -16,16 +15,11 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", func(other map[string]interface{}) (api.Vehicle, error) {
-		return newMercedesFromConfig("mercedes", other)
-	})
-	registry.Add("smart-eq", func(other map[string]interface{}) (api.Vehicle, error) {
-		return newMercedesFromConfig("smart-eq", other)
-	})
+	registry.Add("mercedes", NewMercedesFromConfig)
 }
 
-// newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+// NewMercedesFromConfig creates a new vehicle
+func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   Tokens
@@ -51,28 +45,21 @@ func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehi
 		cc.User = cc.Account_
 	}
 
-	log := util.NewLogger(brand).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err
 	}
 
-	api := mercedes.NewAPI(log, identity)
-
-	if brand == "smart-eq" {
-		if cc.VIN == "" {
-			return nil, errors.New("missing VIN")
-		}
-	} else {
-		cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-		if err != nil {
-			return nil, err
-		}
+	v := &Mercedes{
+		embed: &cc.embed,
 	}
 
-	v := &Mercedes{
-		embed:    &cc.embed,
-		Provider: mercedes.NewProvider(api, cc.VIN, cc.Cache),
+	api := mercedes.NewAPI(log, identity)
+
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	if err == nil {
+		v.Provider = mercedes.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

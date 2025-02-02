@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -56,13 +55,13 @@ const (
 )
 
 func init() {
-	registry.AddCtx("schneider-v3", NewSchneiderV3FromConfig)
+	registry.Add("schneider-v3", NewSchneiderV3FromConfig)
 }
 
 // https://download.schneider-electric.com/files?p_enDocType=Other+technical+guide&p_File_Name=GEX1969300-04.pdf&p_Doc_Ref=GEX1969300
 
 // NewSchneiderV3FromConfig creates a Schneider charger from generic config
-func NewSchneiderV3FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSchneiderV3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -71,11 +70,11 @@ func NewSchneiderV3FromConfig(ctx context.Context, other map[string]interface{})
 		return nil, err
 	}
 
-	return NewSchneiderV3(ctx, cc.URI, cc.ID)
+	return NewSchneiderV3(cc.URI, cc.ID)
 }
 
 // NewSchneiderV3 creates Schneider charger
-func NewSchneiderV3(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewSchneiderV3(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -109,20 +108,14 @@ func NewSchneiderV3(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
 	if u := encoding.Uint16(b); u != 2 {
-		go wb.heartbeat(ctx, 2*time.Second)
+		go wb.heartbeat(2 * time.Second)
 	}
 
 	return wb, nil
 }
 
-func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *Schneider) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(schneiderRegLifebit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

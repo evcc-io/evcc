@@ -10,7 +10,6 @@
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
 				:title="$t('config.main.edit')"
-				tabindex="0"
 				@click="$emit('edit')"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>

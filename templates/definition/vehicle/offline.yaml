@@ -4,7 +4,14 @@ products:
       generic: Offline
 group: generic
 params:
-  - preset: vehicle-common
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
 render: |
   type: custom
   features: ["offline"]
@@ -12,3 +19,4 @@ render: |
   soc:
     source: const
     value: 0
+  {{ include "vehicle-identify" . }}

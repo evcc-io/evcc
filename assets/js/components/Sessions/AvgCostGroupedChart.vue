@@ -92,7 +92,8 @@ export default {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
-						axis: "r",
+						intersect: false,
+						mode: "index",
 						position: "topBottomCenter",
 						callbacks: {
 							title: () => null,

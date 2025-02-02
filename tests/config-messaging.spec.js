@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, login } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -14,12 +14,13 @@ const SELECT_ALL = "ControlOrMeta+KeyA";
 
 async function goToConfig(page) {
   await page.goto("/#/config");
+  await login(page);
   await enableExperimental(page);
 }
 
 test.describe("messaging", async () => {
   test("save a comment", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start(CONFIG_GRID_ONLY, "password.sql");
     await goToConfig(page);
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();

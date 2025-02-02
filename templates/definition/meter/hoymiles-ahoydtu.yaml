@@ -8,7 +8,7 @@ params:
     choice: ["pv"]
   - name: host
   - name: id
-    type: int
+    type: number
     description:
       de: Wechselrichter ID (falls mehrere vorhanden)
       en: Inverter ID (if multiple exist)

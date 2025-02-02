@@ -148,10 +148,8 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	}
 
 	var sum float64
-	for i := range 3 {
-		if u := binary.BigEndian.Uint16(b[2*i:]); u != 0xFFFF {
-			sum += float64(u)
-		}
+	for i := 0; i < 3; i++ {
+		sum += float64(binary.BigEndian.Uint16(b[2*i:]))
 	}
 
 	return sum, nil

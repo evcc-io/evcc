@@ -20,8 +20,7 @@ func Decorate(req *http.Request) error {
 }
 
 func CreateRequest(
-	baseUrl string,
-	path string,
+	endpoint string,
 	httpMethod string,
 	request string,
 	contentType string,
@@ -30,11 +29,9 @@ func CreateRequest(
 ) (*http.Request, error) {
 	appSendDate := time.Now().UnixMilli()
 
-	endpoint := baseUrl + path
-
 	if len(request) != 0 {
 		request = EncryptRequest(
-			path,
+			endpoint,
 			appSendDate,
 			TENANT_ID,
 			token,
@@ -59,7 +56,7 @@ func CreateRequest(
 		req.Header.Set("event-id", eventId)
 	}
 
-	replace := strings.Replace(endpoint, baseUrl, "/", -1)
+	replace := strings.Replace(endpoint, BASE_URL_P, "/", -1)
 
 	req.Header.Set("app-verification-string",
 		CalculateRequestVerification(

@@ -19,7 +19,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -55,14 +54,14 @@ const (
 )
 
 func init() {
-	registry.AddCtx("heidelberg", NewHeidelbergECFromConfig)
+	registry.Add("heidelberg", NewHeidelbergECFromConfig)
 }
 
 // https://wallbox.heidelberg.com/wp-content/uploads/2021/05/EC_ModBus_register_table_20210222.pdf (newer)
 // https://cdn.shopify.com/s/files/1/0101/2409/9669/files/heidelberg-energy-control-modbus.pdf (older)
 
 // NewHeidelbergECFromConfig creates a HeidelbergEC charger from generic config
-func NewHeidelbergECFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -71,11 +70,11 @@ func NewHeidelbergECFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	return NewHeidelbergEC(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
-func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -108,20 +107,14 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b) / 4; u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond)
+		go wb.heartbeat(time.Duration(u) * time.Millisecond)
 	}
 
 	return wb, nil
 }
 
-func (wb *HeidelbergEC) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *HeidelbergEC) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.Status(); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
@@ -157,6 +150,10 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 6, 7:
 		return api.StatusC, nil
+	case 8:
+		return api.StatusD, nil
+	case 9:
+		return api.StatusE, nil
 	case 10:
 		// ensure RemoteLock is disabled after wake-up
 		b, err := wb.conn.ReadHoldingRegisters(hecRegRemoteLock, 1)
@@ -176,7 +173,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 			return api.StatusB, nil
 		}
 
-		fallthrough
+		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}

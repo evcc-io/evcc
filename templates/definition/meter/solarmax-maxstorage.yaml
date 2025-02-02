@@ -17,7 +17,6 @@ params:
     id: 1
   - name: capacity
     advanced: true
-  - name: maxacpower
   # battery control
   - name: watchdog
     type: duration
@@ -42,7 +41,6 @@ render: |
       address: 110 # PV-Leistung MAX.STORAGE
       type: input
       decode: int32s
-  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus

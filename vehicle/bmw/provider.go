@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/provider"
 )
 
 // Provider implements the vehicle api
@@ -16,7 +16,7 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: util.Cached(func() (VehicleStatus, error) {
+		statusG: provider.Cached(func() (VehicleStatus, error) {
 			return api.Status(vin)
 		}, cache),
 		actionS: func(action string) error {
@@ -106,14 +106,6 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	}
 
 	return res.State.ElectricChargingState.ChargingTarget, nil
-}
-
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (bool, error) {
-	res, err := v.statusG()
-	return res.State.ClimateControlState.Activity == "HEATING" || res.State.ClimateControlState.Activity == "COOLING", err
 }
 
 var _ api.Resurrector = (*Provider)(nil)

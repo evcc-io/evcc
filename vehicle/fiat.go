@@ -15,7 +15,6 @@ import (
 type Fiat struct {
 	*embed
 	*fiat.Provider
-	*fiat.Controller
 }
 
 func init() {
@@ -60,7 +59,6 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
-		v.Controller = fiat.NewController(v.Provider, api, cc.VIN, cc.PIN)
 	}
 
 	return v, err

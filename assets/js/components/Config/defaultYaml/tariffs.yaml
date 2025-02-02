@@ -9,6 +9,5 @@
 #  price: 0.08 # EUR/kWh
 
 #co2: # carbon intensity forecast data
-#  type: template
-#  template: grünstromindex
+#  type: grünstromindex
 #  zip: <zip>

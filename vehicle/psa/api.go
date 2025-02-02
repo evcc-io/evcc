@@ -46,7 +46,9 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource, realm, id string) *AP
 }
 
 func (v *API) clientID() string {
-	return url.Values{"client_id": {v.id}}.Encode()
+	return url.Values{
+		"client_id": []string{v.id},
+	}.Encode()
 }
 
 // Vehicles implements the /vehicles response

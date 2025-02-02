@@ -17,7 +17,14 @@ requirements:
       This requires an active location-based charging profile with the lowest minimum charge (25%) and direct charging disabled.
       Otherwise the vehicle cannot be put into sleep mode.
 params:
-  - preset: vehicle-common
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -25,3 +32,4 @@ render: |
   soc:
     source: const
     value: 0
+  {{ include "vehicle-identify" . }}

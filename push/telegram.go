@@ -1,30 +1,28 @@
 package push
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func init() {
-	registry.AddCtx("telegram", NewTelegramFromConfig)
+	registry.Add("telegram", NewTelegramFromConfig)
 }
 
 // Telegram implements the Telegram messenger
 type Telegram struct {
 	log *util.Logger
 	sync.Mutex
-	bot   *bot.Bot
+	bot   *tgbotapi.BotAPI
 	chats map[int64]struct{}
 }
 
 // NewTelegramFromConfig creates new pushover messenger
-func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (Messenger, error) {
+func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
 		Token string
 		Chats []int64
@@ -34,61 +32,60 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (M
 		return nil, err
 	}
 
+	bot, err := tgbotapi.NewBotAPI(cc.Token)
+	if err != nil {
+		return nil, errors.New("telegram: invalid bot token")
+	}
+
 	log := util.NewLogger("telegram").Redact(cc.Token)
+	_ = tgbotapi.SetLogger(log.ERROR)
+
+	for _, i := range cc.Chats {
+		log.Redact(strconv.FormatInt(i, 10))
+	}
 
 	m := &Telegram{
 		log:   log,
+		bot:   bot,
 		chats: make(map[int64]struct{}),
 	}
 
-	bot, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
-		log.ERROR.Println(err)
-	}), bot.WithDebugHandler(func(format string, args ...interface{}) {
-		log.TRACE.Printf(format, args...)
-	}))
-	if err != nil {
-		return nil, errors.New("invalid bot token")
-	}
-
-	m.bot = bot
-
-	go bot.Start(ctx)
-
 	for _, chat := range cc.Chats {
-		log.Redact(strconv.FormatInt(chat, 10))
 		m.chats[chat] = struct{}{}
 	}
+
+	go m.trackChats()
 
 	return m, nil
 }
 
-// handler captures ids of all chats that bot participates in
-func (m *Telegram) handler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	if update.Message == nil {
-		return
-	}
+// trackChats captures ids of all chats that bot participates in
+func (m *Telegram) trackChats() {
+	conf := tgbotapi.NewUpdate(0)
+	conf.Timeout = 1000
 
-	m.Lock()
-	defer m.Unlock()
-
-	if _, ok := m.chats[update.Message.Chat.ID]; !ok {
-		m.log.INFO.Printf("new chat id: %d", update.Message.Chat.ID)
+	for update := range m.bot.GetUpdatesChan(conf) {
+		if update.Message == nil || update.Message.Chat == nil {
+			continue
+		}
+		m.Lock()
+		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
+			m.log.INFO.Printf("new chat id: %d", update.Message.Chat.ID)
+		}
+		m.Unlock()
 	}
 }
 
 // Send sends to all receivers
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
-	defer m.Unlock()
-
 	for chat := range m.chats {
 		m.log.DEBUG.Printf("sending to %d", chat)
 
-		if _, err := m.bot.SendMessage(context.Background(), &bot.SendMessageParams{
-			ChatID: chat,
-			Text:   msg,
-		}); err != nil {
+		msg := tgbotapi.NewMessage(chat, msg)
+		if _, err := m.bot.Send(msg); err != nil {
 			m.log.ERROR.Println("send:", err)
 		}
 	}
+	m.Unlock()
 }

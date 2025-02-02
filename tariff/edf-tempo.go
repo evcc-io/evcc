@@ -50,11 +50,7 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.ClientID == "" || cc.ClientSecret == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	if err := cc.init(); err != nil {
-		return nil, err
+		return nil, errors.New("missing credentials")
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
@@ -107,7 +103,8 @@ func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res struct {
 			Data struct {
 				Values []struct {
@@ -140,7 +137,7 @@ func (t *EdfTempo) run(done chan error) {
 				ar := api.Rate{
 					Start: ts,
 					End:   ts.Add(time.Hour),
-					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)], ts),
+					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)]),
 				}
 				data = append(data, ar)
 			}

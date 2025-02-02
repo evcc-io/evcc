@@ -11,28 +11,7 @@ capacity: {{ .capacity }}
 {{- if .phases }}
 phases: {{ .phases }}
 {{- end }}
-
-{{- if or .mode .minCurrent .maxCurrent .priority }}
-onIdentify:
-{{- if .mode }}
-  mode: {{ .mode }}
+{{- if .cache }}
+cache: {{ .cache }}
 {{- end }}
-{{- if .minCurrent }}
-  minCurrent: {{ .minCurrent }}
-{{- end }}
-{{- if .maxCurrent }}
-  maxCurrent: {{ .maxCurrent }}
-{{- end }}
-{{- if .priority }}
-  priority: {{ .priority }}
-{{- end }}
-{{- end }}
-
-{{- if len .identifiers }}
-identifiers:
-{{- range .identifiers }}
-- {{ . }}
-{{- end }}
-{{- end }}
-
 {{- end }}

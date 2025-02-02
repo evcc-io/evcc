@@ -1,5 +1,4 @@
 template: elering
-deprecated: true
 products:
   - brand: Nordpool
     description:
@@ -12,8 +11,7 @@ group: price
 params:
   - name: region
     example: ee
-    type: choice
-    choice: ["ee", "lt", "lv", "fi"]
+    validvalues: ["ee", "lt", "lv", "fi"]
   - preset: tariff-base
 render: |
   type: elering

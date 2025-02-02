@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,7 +16,7 @@ type Provider struct {
 
 func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{
-		statusG: util.Cached(func() (VehicleStatus, error) {
+		statusG: provider.Cached(func() (VehicleStatus, error) {
 			return api.Status(vin)
 		}, cache),
 	}
@@ -34,7 +35,7 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.StatusOfChargerConnection {
+	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargerState {
 	case 1, 3:
 		return api.StatusB, err
 	case 2:
@@ -63,7 +64,7 @@ func (v *Provider) Position() (float64, float64, error) {
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer implements the api.VehicleOdometer interface
+// Odometer implements the Provider.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	return res.AdditionalVehicleStatus.MaintenanceStatus.Odometer, err

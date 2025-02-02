@@ -147,7 +147,8 @@ export default {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
-						axis: "xy",
+						intersect: false,
+						mode: "index",
 						position: "topBottomCenter",
 						callbacks: {
 							label: (tooltipItem) => {

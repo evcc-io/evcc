@@ -10,6 +10,7 @@ requirements:
     en: e-Golf, e-Up, ID family
 params:
   - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vin
     example: WVWZZZ...
   - name: timeout
@@ -17,4 +18,5 @@ params:
 render: |
   type: vw
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}
   timeout: {{ .timeout }}

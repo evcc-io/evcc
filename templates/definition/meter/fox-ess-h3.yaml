@@ -14,12 +14,11 @@ params:
     advanced: true
   # battery control
   - name: minsoc
-    type: int
+    type: number
     advanced: true
   - name: maxsoc
-    type: int
+    type: number
     advanced: true
-  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -72,7 +71,6 @@ render: |
         address: 31005 # PV2
         type: holding
         decode: int16
-  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

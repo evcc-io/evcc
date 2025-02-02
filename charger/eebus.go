@@ -15,6 +15,7 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
@@ -71,7 +72,7 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewEEBus(cc.Ski, cc.Ip, cc.Meter, cc.ChargedEnergy, cc.VasVW)
 }
 
-//go:generate decorate -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 // NewEEBus creates EEBus charger
 func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
@@ -87,7 +88,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charg
 	}
 
 	c.Connector = eebus.NewConnector()
-	c.minMaxG = util.Cached(c.minMax, time.Second)
+	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
@@ -216,8 +217,10 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
+	case ucapi.EVChargeStateTypeError: // Error
+		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", currentState)
+		return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 	}
 }
 
@@ -328,7 +331,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// if VAS VW is available, limits are completely covered by it
-	// this way evcc can fully control the charging behavior
+	// this way evcc can fully control the charging behaviour
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
@@ -407,7 +410,7 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	return false
 }
 
-// provides support for the special VW VAS ISO15118-2 charging behavior if supported
+// provides support for the special VW VAS ISO15118-2 charging behaviour if supported
 // will return false if it isn't supported or successful
 //
 // this functionality allows to fully control charging without the EV actually having a

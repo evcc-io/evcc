@@ -18,7 +18,7 @@ const colors = reactive({
   price: "#FF912FFF",
   co2: "#00916EFF",
   background: null,
-  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
+  selfPalette: ["#0fde41ff", "#0ba631ff", "#076f20ff", "#054e18ff", "#043611ff", "#02230bff"],
   palette: [
     "#03C1EFFF",
     "#FD6158FF",
@@ -48,8 +48,7 @@ function updateCssColors() {
 }
 
 // update colors on theme change
-const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-darkModeMatcher?.addEventListener("change", updateCssColors);
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateCssColors);
 updateCssColors();
 
 export const dimColor = (color) => {

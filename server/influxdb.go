@@ -67,84 +67,66 @@ func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]an
 }
 
 // writeComplexPoint asynchronously writes a point to influx
-func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags map[string]string) {
+func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags map[string]string) {
 	fields := make(map[string]any)
 
-	// loop struct
-	writeStruct := func(sv any) {
-		typ := reflect.TypeOf(sv)
-		val := reflect.ValueOf(sv)
-
-		for i := range typ.NumField() {
-			if f := typ.Field(i); f.IsExported() {
-				if val.Field(i).IsZero() && omitEmpty(f) {
-					continue
-				}
-
-				key := key + strings.ToUpper(f.Name[:1]) + f.Name[1:]
-				val := val.Field(i).Interface()
-
-				m.writeComplexPoint(writer, key, val, tags)
-			}
-		}
-	}
-
-	switch valueType := val.(type) {
+	switch val := param.Val.(type) {
 	case string:
 		return
 
 	case int, int64, float64:
-		fields["value"] = val
+		fields["value"] = param.Val
 
 	case []float64:
-		if len(valueType) != 3 {
+		if len(val) != 3 {
 			return
 		}
 
 		// add array as phase values
-		for i, v := range valueType {
+		for i, v := range val {
 			fields[fmt.Sprintf("l%d", i+1)] = v
 		}
 
 	case [3]float64:
 		// add array as phase values
-		for i, v := range valueType {
+		for i, v := range val {
 			fields[fmt.Sprintf("l%d", i+1)] = v
 		}
 
 	default:
 		// allow writing nil values
-		if val == nil {
+		if param.Val == nil {
 			fields["value"] = nil
 			break
 		}
 
-		switch typ := reflect.TypeOf(val); {
-		// pointer
-		case typ.Kind() == reflect.Ptr:
-			if val := reflect.ValueOf(val); !val.IsNil() {
-				m.writeComplexPoint(writer, key, reflect.Indirect(val).Interface(), tags)
-			}
-
-		// struct
-		case typ.Kind() == reflect.Struct:
-			writeStruct(val)
-
 		// slice of structs
-		case typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct:
-			val := reflect.ValueOf(val)
+		if typ := reflect.TypeOf(param.Val); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
+			val := reflect.ValueOf(param.Val)
 
 			// loop slice
-			for i := range val.Len() {
-				tags["id"] = strconv.Itoa(i + 1)
-				writeStruct(val.Index(i).Interface())
+			for i := 0; i < val.Len(); i++ {
+				val := val.Index(i)
+				typ := val.Type()
+
+				// loop struct
+				for j := 0; j < typ.NumField(); j++ {
+					n := typ.Field(j).Name
+					v := val.Field(j).Interface()
+
+					key := param.Key + strings.ToUpper(n[:1]) + n[1:]
+					fields["value"] = v
+					tags["id"] = strconv.Itoa(i + 1)
+
+					m.writePoint(writer, key, fields, tags)
+				}
 			}
 		}
 
 		return
 	}
 
-	m.writePoint(writer, key, fields, tags)
+	m.writePoint(writer, param.Key, fields, tags)
 }
 
 // Run Influx publisher
@@ -165,13 +147,13 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 		if param.Loadpoint != nil {
 			lp := site.Loadpoints()[*param.Loadpoint]
 
-			tags["loadpoint"] = lp.GetTitle()
+			tags["loadpoint"] = lp.Title()
 			if v := lp.GetVehicle(); v != nil {
 				tags["vehicle"] = v.Title()
 			}
 		}
 
-		m.writeComplexPoint(writer, param.Key, param.Val, tags)
+		m.writeComplexPoint(writer, param, tags)
 	}
 
 	m.client.Close()

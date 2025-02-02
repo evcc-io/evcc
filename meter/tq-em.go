@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -54,7 +55,7 @@ type TqEm struct {
 	dataG func() (tqemData, error)
 }
 
-//go:generate decorate -f decorateTqEm -b api.Meter -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateTqEm -b api.Meter -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTqEmFromConfig creates a new configurable meter
 func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -90,7 +91,7 @@ func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("no serial")
 	}
 
-	dataG := util.Cached(func() (tqemData, error) {
+	dataG := provider.Cached(func() (tqemData, error) {
 		var res tqemData
 
 		uri := fmt.Sprintf("%s/mum-webservice/data.php", base)

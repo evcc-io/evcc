@@ -101,7 +101,7 @@
             "type": "string"
           },
           "capacity": {
-            "type": "number"
+            "type": "integer"
           },
           "phases": {
             "type": "integer"

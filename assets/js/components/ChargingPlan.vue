@@ -7,12 +7,7 @@
 			data-testid="charging-plan"
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
-				<button
-					class="value-button p-0"
-					:class="buttonColor"
-					data-testid="charging-plan-button"
-					@click="openModal"
-				>
+				<button class="value-button p-0" :class="buttonColor" @click="openModal">
 					<strong v-if="enabled">
 						<span class="targetTimeLabel"> {{ targetTimeLabel }}</span>
 						<div
@@ -38,7 +33,6 @@
 				tabindex="-1"
 				role="dialog"
 				aria-hidden="true"
-				data-testid="charging-plan-modal"
 			>
 				<div class="modal-dialog modal-dialog-centered" role="document">
 					<div class="modal-content">
@@ -80,12 +74,11 @@
 								</li>
 							</ul>
 							<div v-if="isModalVisible">
-								<ChargingPlansSettings
+								<ChargingPlanSettings
 									v-if="departureTabActive"
-									v-bind="chargingPlansSettingsProps"
-									@static-plan-updated="updateStaticPlan"
-									@static-plan-removed="removeStaticPlan"
-									@repeating-plans-updated="updateRepeatingPlans"
+									v-bind="chargingPlanSettingsProps"
+									@plan-updated="updatePlan"
+									@plan-removed="removePlan"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
@@ -105,7 +98,7 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "./LabelAndValue.vue";
-import ChargingPlansSettings from "./ChargingPlansSettings.vue";
+import ChargingPlanSettings from "./ChargingPlanSettings.vue";
 import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 
 import formatter from "../mixins/formatter";
@@ -117,7 +110,7 @@ const ONE_MINUTE = 60 * 1000;
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, ChargingPlansSettings, ChargingPlanArrival },
+	components: { LabelAndValue, ChargingPlanSettings, ChargingPlanArrival },
 	mixins: [formatter, collector],
 	props: {
 		currency: String,
@@ -134,6 +127,7 @@ export default {
 		planTimeUnreachable: Boolean,
 		planOverrun: Number,
 		rangePerSoc: Number,
+		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedPlanning: Boolean,
 		socBasedCharging: Boolean,
@@ -168,18 +162,12 @@ export default {
 		limitSoc: function () {
 			return this.vehicle?.limitSoc;
 		},
-		staticPlan: function () {
+		plans: function () {
 			if (this.socBasedPlanning) {
-				return this.vehicle?.plan;
+				return this.vehicle?.plans || [];
 			}
 			if (this.planEnergy && this.planTime) {
-				return { energy: this.planEnergy, time: this.planTime };
-			}
-			return null;
-		},
-		repeatingPlans: function () {
-			if (this.vehicle?.repeatingPlans.length > 0) {
-				return [...this.vehicle.repeatingPlans];
+				return [{ energy: this.planEnergy, time: this.planTime }];
 			}
 			return [];
 		},
@@ -195,8 +183,8 @@ export default {
 		arrivalTabActive: function () {
 			return this.activeTab === "arrival";
 		},
-		chargingPlansSettingsProps: function () {
-			return this.collectProps(ChargingPlansSettings);
+		chargingPlanSettingsProps: function () {
+			return this.collectProps(ChargingPlanSettings);
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
@@ -222,11 +210,6 @@ export default {
 	watch: {
 		effectivePlanTime() {
 			this.updateTargetTimeLabel();
-		},
-		"$i18n.locale": {
-			handler() {
-				this.updateTargetTimeLabel();
-			},
 		},
 	},
 	mounted() {
@@ -271,7 +254,6 @@ export default {
 			this.modal.show();
 		},
 		updateTargetTimeLabel: function () {
-			if (!this.effectivePlanTime) return "";
 			const targetDate = new Date(this.effectivePlanTime);
 			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},
@@ -281,7 +263,7 @@ export default {
 		showArrivalTab: function () {
 			this.activeTab = "arrival";
 		},
-		updateStaticPlan: function ({ soc, time, energy }) {
+		updatePlan: function ({ soc, time, energy }) {
 			const timeISO = time.toISOString();
 			if (this.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
@@ -289,15 +271,12 @@ export default {
 				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
 			}
 		},
-		removeStaticPlan: function () {
+		removePlan: function () {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
-		},
-		updateRepeatingPlans: function (plans) {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
 		},
 		setMinSoc: function (soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

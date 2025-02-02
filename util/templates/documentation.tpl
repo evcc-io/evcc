@@ -3,7 +3,7 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- $help := localize .Help | replace "\n" " " -}}
+  {{- $help := localize .Help -}}
   {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
 {{- end }}
 

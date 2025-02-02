@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
-	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -32,32 +34,28 @@ func runTariff(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
-	if err != nil {
-		fatal(err)
-	}
-
 	var name string
 	if len(args) == 1 {
 		name = args[0]
 	}
 
-	for key, tf := range map[string]api.Tariff{
-		"grid":    tariffs.Grid,
-		"feedin":  tariffs.FeedIn,
-		"co2":     tariffs.Co2,
-		"planner": tariffs.Planner,
+	for key, cc := range map[string]config.Typed{
+		"grid":    conf.Tariffs.Grid,
+		"feedin":  conf.Tariffs.FeedIn,
+		"co2":     conf.Tariffs.Co2,
+		"planner": conf.Tariffs.Planner,
 	} {
-		if name != "" && key != name {
-			continue
-		}
-
-		if tf == nil {
+		if cc.Type == "" || (name != "" && key != name) {
 			continue
 		}
 
 		if name == "" {
 			fmt.Println(key + ":")
+		}
+
+		tf, err := tariff.NewFromConfig(context.TODO(), cc.Type, cc.Other)
+		if err != nil {
+			fatal(err)
 		}
 
 		rates, err := tf.Rates()

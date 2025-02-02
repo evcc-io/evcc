@@ -42,30 +42,6 @@ const openemsMiddleware = (req, res, next) => {
   }
 };
 
-const teslaloggerMiddleware = (req, res, next) => {
-  if (req.method === "GET" && req.originalUrl.startsWith("/currentjson/")) {
-    const id = parseInt(req.originalUrl.split("/")[2]);
-    const vehicle = state.vehicles[id - 1];
-    if (!vehicle) {
-      res.statusCode = 404;
-      res.end(JSON.stringify({ error: "Vehicle not found" }));
-      return;
-    }
-    const data = {
-      battery_level: vehicle.soc,
-      battery_range_km: vehicle.range,
-      plugged_in: true,
-      charging: false,
-      odometer: 10000,
-      is_preconditioning: false,
-      charge_current_request: 10,
-    };
-    res.end(JSON.stringify(data));
-  } else {
-    next();
-  }
-};
-
 export default () => ({
   name: "api",
   enforce: "pre",
@@ -75,7 +51,6 @@ export default () => ({
       server.middlewares.use(bodyParser.json());
       server.middlewares.use(stateApiMiddleware);
       server.middlewares.use(openemsMiddleware);
-      server.middlewares.use(teslaloggerMiddleware);
     };
   },
 });

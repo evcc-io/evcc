@@ -33,10 +33,6 @@ func NewSmartEnergyFromConfig(other map[string]interface{}) (api.Tariff, error) 
 		return nil, err
 	}
 
-	if err := cc.init(); err != nil {
-		return nil, err
-	}
-
 	t := &SmartEnergy{
 		embed: &cc.embed,
 		log:   util.NewLogger("smartenergy"),
@@ -54,7 +50,8 @@ func (t *SmartEnergy) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res smartenergy.Prices
 
 		if err := backoff.Retry(func() error {
@@ -71,7 +68,7 @@ func (t *SmartEnergy) run(done chan error) {
 			ar := api.Rate{
 				Start: r.Date.Local(),
 				End:   r.Date.Add(15 * time.Minute).Local(),
-				Price: t.totalPrice(r.Value/100, r.Date),
+				Price: t.totalPrice(r.Value / 100),
 			}
 			data = append(data, ar)
 		}

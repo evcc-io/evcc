@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -18,11 +19,11 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: util.Cached(func() (StatusResponse, error) {
+		statusG: provider.Cached(func() (StatusResponse, error) {
 			return connect.Status(vin)
 		}, cache),
 
-		emobilityG: util.Cached(func() (EmobilityResponse, error) {
+		emobilityG: provider.Cached(func() (EmobilityResponse, error) {
 			if carModel != "" {
 				return emobility.Status(vin, carModel)
 			}
@@ -106,12 +107,14 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				return api.StatusA, nil
 			}
 			switch res2.BatteryChargeStatus.ChargingState {
+			case "ERROR":
+				return api.StatusF, nil
 			case "OFF", "COMPLETED":
 				return api.StatusB, nil
 			case "ON", "CHARGING":
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, errors.New("emobility - invalid status: " + res2.BatteryChargeStatus.ChargingState)
+				return api.StatusNone, errors.New("emobility - unknown charging state: " + res2.BatteryChargeStatus.ChargingState)
 			}
 		}
 	}

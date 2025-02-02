@@ -44,9 +44,6 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewFritzDECT creates a new connection with standbypower for charger
 func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
 	conn, err := fritzdect.NewConnection(uri, ain, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	c := &FritzDECT{
 		conn: conn,
@@ -54,7 +51,7 @@ func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower flo
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, nil
+	return c, err
 }
 
 // Status implements the api.Charger interface

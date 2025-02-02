@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -45,17 +45,17 @@ type Salia struct {
 	uri     string
 	current int64
 	fw      int // 2 if fw 2.0
-	apiG    util.Cacheable[salia.Api]
+	apiG    provider.Cacheable[salia.Api]
 }
 
 func init() {
-	registry.AddCtx("hardybarth-salia", NewSaliaFromConfig)
+	registry.Add("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
-func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -67,11 +67,11 @@ func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewSalia(ctx, cc.URI, cc.Cache)
+	return NewSalia(cc.URI, cc.Cache)
 }
 
 // NewSalia creates Hardy Barth charger with Salia controller
-func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger, error) {
+func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("salia")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
@@ -83,7 +83,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		current: 6,
 	}
 
-	wb.apiG = util.ResettableCached(func() (salia.Api, error) {
+	wb.apiG = provider.ResettableCached(func() (salia.Api, error) {
 		var res salia.Api
 		err := wb.GetJSON(wb.uri, &res)
 		return res, err
@@ -122,7 +122,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		return nil, err
 	}
 
-	go wb.heartbeat(ctx)
+	go wb.heartbeat()
 
 	wb.pause(false)
 
@@ -148,18 +148,12 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 	return decorateSalia(wb, currentPower, totalEnergy, currents, phasesS, phasesG), nil
 }
 
-func (wb *Salia) heartbeat(ctx context.Context) {
+func (wb *Salia) heartbeat() {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(5*time.Second),
 		backoff.WithMaxInterval(time.Minute))
 
-	for tick := time.Tick(30 * time.Second); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+	for range time.Tick(30 * time.Second) {
 		if err := backoff.Retry(func() error {
 			return wb.post(salia.HeartBeat, "alive")
 		}, bo); err != nil {

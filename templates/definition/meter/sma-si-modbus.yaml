@@ -20,12 +20,6 @@ params:
     type: duration
     default: 60s
     advanced: true
-  - name: chargepower
-    default: 4200 # W
-    advanced: true
-    help:
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt
-      en: Maximum charging power for forced charging of the battery in Watt
 render: |
   type: custom
   power:
@@ -95,7 +89,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: -{{ .chargepower }} # Wirkleistungsvorgabe
+            value: -2147483647 # Wirkleistungsvorgabe
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

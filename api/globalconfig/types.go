@@ -6,8 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin/mqtt"
+	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -31,14 +30,14 @@ type All struct {
 	Go           []Go
 	Influx       Influx
 	EEBus        eebus.Config
-	HEMS         Hems
+	HEMS         config.Typed
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named
 	Vehicles     []config.Named
 	Tariffs      Tariffs
 	Site         map[string]interface{}
-	Loadpoints   []config.Named
+	Loadpoints   []map[string]interface{}
 	Circuits     []config.Named
 }
 
@@ -58,20 +57,6 @@ type ModbusProxy struct {
 	modbus.Settings `mapstructure:",squash"`
 }
 
-var _ api.Redactor = (*Hems)(nil)
-
-type Hems config.Typed
-
-func (c Hems) Redacted() any {
-	return struct {
-		Type string `json:"type,omitempty"`
-	}{
-		Type: c.Type,
-	}
-}
-
-var _ api.Redactor = (*Mqtt)(nil)
-
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -83,9 +68,9 @@ func (m Mqtt) Redacted() any {
 	return struct {
 		Broker   string `json:"broker"`
 		Topic    string `json:"topic"`
-		User     string `json:"user,omitempty"`
-		ClientID string `json:"clientID,omitempty"`
-		Insecure bool   `json:"insecure,omitempty"`
+		User     string `json:"user"`
+		ClientID string `json:"clientID"`
+		Insecure bool   `json:"insecure"`
 	}{
 		Broker:   m.Broker,
 		Topic:    m.Topic,

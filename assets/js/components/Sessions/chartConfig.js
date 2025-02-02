@@ -45,8 +45,6 @@ export const commonOptions = {
       boxPadding: 5,
       usePointStyle: false,
       borderWidth: 0.00001,
-      mode: "index",
-      intersect: false,
     },
   },
 };

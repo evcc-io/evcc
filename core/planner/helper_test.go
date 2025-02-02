@@ -18,7 +18,7 @@ func TestSlotHasSuccessor(t *testing.T) {
 		plan[i], plan[j] = plan[j], plan[i]
 	})
 
-	for i := range plan {
+	for i := 0; i < len(plan); i++ {
 		if plan[i] != last {
 			require.True(t, SlotHasSuccessor(plan[i], plan))
 		}

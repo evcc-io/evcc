@@ -49,6 +49,7 @@ type Pulsatrix struct {
 	conn    *websocket.Conn
 	uri     string
 	enabled bool
+	quit    chan struct{}
 	data    *util.Monitor[pulsatrixData]
 }
 
@@ -114,9 +115,9 @@ func (c *Pulsatrix) connectWs() error {
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
 	}
-
+	c.quit = make(chan struct{})
 	go c.wsReader()
-	go c.heartbeat(ctx)
+	go c.heartbeat()
 
 	return nil
 }
@@ -150,6 +151,7 @@ func (c *Pulsatrix) wsReader() {
 	c.mu.Lock()
 	c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
 	c.conn = nil
+	close(c.quit)
 	c.mu.Unlock()
 
 	c.reconnectWs()
@@ -193,16 +195,18 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 }
 
 // Heartbeat sends a heartbeat to the pulsatrix SECC
-func (c *Pulsatrix) heartbeat(ctx context.Context) {
-	for tick := time.Tick(3 * time.Minute); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
+func (c *Pulsatrix) heartbeat() {
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
 
-		if err := c.Enable(c.enabled); err != nil {
-			c.log.ERROR.Println(err)
+	for {
+		select {
+		case <-ticker.C:
+			if err := c.Enable(c.enabled); err != nil {
+				c.log.ERROR.Println(err)
+			}
+		case <-c.quit:
+			return
 		}
 	}
 }

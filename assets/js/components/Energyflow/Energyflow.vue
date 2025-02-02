@@ -91,7 +91,6 @@
 							:name="batteryDischargeLabel"
 							icon="battery"
 							:power="batteryDischarge"
-							:powerTooltip="batteryDischargeTooltip"
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
@@ -104,9 +103,7 @@
 							data-testid="energyflow-entry-batterydischarge"
 							@details-clicked="openBatterySettingsModal"
 						>
-							<template v-if="batteryGridChargeLimitSet" #subline>
-								<div class="d-none d-md-block">&nbsp;</div>
-							</template>
+							<template v-if="batteryGridChargeActive" #subline> &nbsp; </template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
@@ -167,7 +164,6 @@
 							:name="batteryChargeLabel"
 							icon="battery"
 							:power="batteryCharge"
-							:powerTooltip="batteryChargeTooltip"
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
@@ -179,25 +175,13 @@
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
 						>
-							<template v-if="batteryGridChargeLimitSet" #subline>
+							<template v-if="batteryGridChargeActive" #subline>
 								<button
 									type="button"
-									class="btn-reset d-flex justify-content-between text-start pe-4"
+									class="btn-reset d-flex justify-content-between"
 									@click.stop="openBatterySettingsModal"
 								>
-									<span v-if="batteryGridChargeActive">
-										{{ $t("main.energyflow.batteryGridChargeActive") }}
-										<span class="text-nowrap"
-											>(≤ <u>{{ batteryGridChargeLimitFmt }}</u
-											>)</span
-										>
-									</span>
-									<span v-else>
-										{{ $t("main.energyflow.batteryGridChargeLimit") }}
-										<span class="text-nowrap"
-											>≤ <u>{{ batteryGridChargeLimitFmt }}</u></span
-										>
-									</span>
+									{{ batteryGridChargeText }} (≤ {{ batteryGridChargeLimitFmt }})
 								</button>
 							</template>
 						</EnergyflowEntry>
@@ -278,10 +262,10 @@ export default {
 			return Math.abs(this.pvPower);
 		},
 		batteryDischarge: function () {
-			return this.dischargePower(this.batteryPower);
+			return Math.abs(Math.max(0, this.batteryPower));
 		},
 		batteryCharge: function () {
-			return this.chargePower(this.batteryPower);
+			return Math.abs(Math.min(0, this.batteryPower) * -1);
 		},
 		batteryChargeLabel: function () {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
@@ -346,12 +330,6 @@ export default {
 			}
 			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
 		},
-		batteryDischargeTooltip() {
-			return this.batteryTooltip(true);
-		},
-		batteryChargeTooltip() {
-			return this.batteryTooltip(false);
-		},
 		batteryFmt() {
 			return (soc) => this.fmtPercentage(soc, 0);
 		},
@@ -361,19 +339,19 @@ export default {
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
+		batteryGridChargeText() {
+			return this.$t(
+				`main.energyflow.${this.co2Available ? "clean" : "cheap"}BatteryGridCharge`
+			);
+		},
 		batteryGridChargeNow() {
 			if (this.co2Available) {
 				return this.fmtCo2Short(this.tariffCo2);
 			}
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
-		batteryGridChargeLimitSet() {
-			return (
-				this.batteryGridChargeLimit !== null && this.batteryGridChargeLimit !== undefined
-			);
-		},
 		batteryGridChargeLimitFmt() {
-			if (!this.batteryGridChargeLimitSet) {
+			if (this.batteryGridChargeLimit === null) {
 				return;
 			}
 			if (this.co2Available) {
@@ -390,9 +368,6 @@ export default {
 			this.$nextTick(this.updateHeight);
 		},
 		batteryConfigured() {
-			this.$nextTick(this.updateHeight);
-		},
-		batteryMode() {
 			this.$nextTick(this.updateHeight);
 		},
 	},
@@ -446,23 +421,6 @@ export default {
 				document.getElementById("batterySettingsModal")
 			);
 			modal.show();
-		},
-		dischargePower(power) {
-			return Math.abs(Math.max(0, power));
-		},
-		chargePower(power) {
-			return Math.abs(Math.min(0, power) * -1);
-		},
-		batteryTooltip(discharge = false) {
-			if (!Array.isArray(this.battery) || this.battery.length <= 1) {
-				return;
-			}
-			return this.battery.map(({ power, soc }) => {
-				const value = discharge ? this.dischargePower(power) : this.chargePower(power);
-				const powerFmt = this.fmtW(value, this.powerUnit);
-				const socFmt = this.fmtPercentage(soc, 0);
-				return `${powerFmt} (${socFmt})`;
-			});
 		},
 	},
 };

@@ -34,7 +34,6 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
-		Hcaptcha            string
 		Region              string
 		Cache               time.Duration
 	}{
@@ -46,7 +45,7 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" || cc.Hcaptcha == "" {
+	if cc.User == "" || cc.Password == "" {
 		return nil, api.ErrMissingCredentials
 	}
 
@@ -57,7 +56,7 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log, cc.Region)
 
-	ts, err := identity.Login(cc.User, cc.Password, cc.Hcaptcha)
+	ts, err := identity.Login(cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

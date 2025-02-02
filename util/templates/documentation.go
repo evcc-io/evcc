@@ -28,7 +28,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		}
 
 		switch p.Type {
-		case TypeList:
+		case TypeStringList:
 			for _, e := range v.([]string) {
 				t.Params[index].Values = append(p.Values, yamlQuote(e))
 			}

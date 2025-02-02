@@ -45,7 +45,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	var phases int
-	if flag := cmd.Flag(flagPhases); flag.Changed {
+	if flag := cmd.Flags().Lookup(flagPhases); flag.Changed {
 		var err error
 		phases, err = strconv.Atoi(flag.Value.String())
 		if err != nil {
@@ -57,7 +57,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range config.Instances(chargers) {
-		if flag := cmd.Flag(flagCurrent); flag.Changed {
+		if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
 			flagUsed = true
 
 			current, err := strconv.ParseFloat(flag.Value.String(), 64)
@@ -76,7 +76,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flag(flagEnable).Changed {
+		if cmd.Flags().Lookup(flagEnable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
@@ -84,7 +84,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flag(flagDisable).Changed {
+		if cmd.Flags().Lookup(flagDisable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(false); err != nil {
@@ -92,7 +92,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flag(flagWakeup).Changed {
+		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
@@ -119,7 +119,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	if !flagUsed {
 		d := dumper{len: len(chargers)}
-		flag := cmd.Flag(flagDiagnose).Changed
+		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
 		for _, dev := range chargers {
 			v := dev.Instance()

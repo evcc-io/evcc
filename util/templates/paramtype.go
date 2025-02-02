@@ -10,6 +10,6 @@ const (
 	TypeChargeModes
 	TypeDuration
 	TypeFloat
-	TypeInt
-	TypeList
+	TypeNumber
+	TypeStringList
 )

@@ -14,10 +14,10 @@ params:
     advanced: true
   # battery control (model 802)
   - name: minsoc
-    type: int
+    type: number
     advanced: true
   - name: maxsoc
-    type: int
+    type: number
     advanced: true
 render: |
   {{- if eq .usage "battery" }}

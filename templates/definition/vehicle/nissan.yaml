@@ -5,6 +5,8 @@ products:
       generic: Leaf
 params:
   - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: nissan
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

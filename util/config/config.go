@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
@@ -66,29 +65,6 @@ func (d *Config) Update(conf map[string]any) error {
 		}
 
 		val, err := detailsFromMap(conf)
-		if err != nil {
-			return err
-		}
-		d.Value = val
-
-		return tx.Save(&d).Error
-	})
-}
-
-// PartialUpdate partially updates a config's details to the database
-func (d *Config) PartialUpdate(conf map[string]any) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var config Config
-		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-			return err
-		}
-
-		actual := d.detailsAsMap()
-		if err := mergo.Merge(&actual, conf, mergo.WithOverride); err != nil {
-			return err
-		}
-
-		val, err := detailsFromMap(actual)
 		if err != nil {
 			return err
 		}

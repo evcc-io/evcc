@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, login } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_GRID_ONLY);
+  await start(CONFIG_GRID_ONLY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -18,10 +18,12 @@ test.describe("basics", async () => {
     await page.goto("/");
     await page.getByTestId("topnavigation-button").click();
     await page.getByRole("link", { name: "Configuration" }).click();
+    await login(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
   test.skip("alert box should always be visible", async ({ page }) => {
     await page.goto("/#/config");
+    await login(page);
     await enableExperimental(page);
     await expect(page.getByRole("alert")).toBeVisible();
   });
@@ -35,6 +37,7 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
+    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");

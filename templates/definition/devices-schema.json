@@ -65,9 +65,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "Template"
     },
     "Product": {
@@ -82,28 +80,14 @@
         }
       },
       "anyOf": [
-        {
-          "required": [
-            "brand"
-          ]
-        },
-        {
-          "required": [
-            "description"
-          ]
-        }
+        {"required": ["brand"]},
+        {"required": ["description"]}
       ],
       "title": "Product"
     },
     "Groups": {
       "type": "string",
-      "enum": [
-        "generic",
-        "heating",
-        "switchsockets",
-        "scooter",
-        "sockets"
-      ]
+      "enum": ["generic", "switchsockets", "scooter", "sockets"]
     },
     "Linked": {
       "type": "object",
@@ -115,11 +99,7 @@
         },
         "usage": {
           "type": "string",
-          "enum": [
-            "grid",
-            "pv",
-            "battery"
-          ]
+          "enum": ["grid", "pv", "battery"]
         },
         "multiple": {
           "type": "boolean"
@@ -129,21 +109,11 @@
           "minLength": 1
         }
       },
-      "required": [
-        "template",
-        "usage"
-      ]
+      "required": ["template", "usage"]
     },
     "Capability": {
       "type": "string",
-      "enum": [
-        "1p3p",
-        "battery-control",
-        "iso151182",
-        "rfid",
-        "smahems",
-        "mA"
-      ]
+      "enum": ["1p3p", "iso151182", "rfid", "smahems", "mA"]
     }
   }
 }

@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"encoding/binary"
 	"math"
 	"sync"
@@ -53,13 +52,13 @@ const (
 )
 
 func init() {
-	registry.AddCtx("alfen", NewAlfenFromConfig)
+	registry.Add("alfen", NewAlfenFromConfig)
 }
 
-//go:generate decorate -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
-func NewAlfenFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -68,11 +67,11 @@ func NewAlfenFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewAlfen(ctx, cc.URI, cc.ID)
+	return NewAlfen(cc.URI, cc.ID)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
+func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -90,7 +89,7 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		conn: conn,
 	}
 
-	go wb.heartbeat(ctx)
+	go wb.heartbeat()
 
 	_, v2, v3, err := wb.Voltages()
 
@@ -109,14 +108,8 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	return decorateAlfen(wb, phasesS, phasesG), err
 }
 
-func (wb *Alfen) heartbeat(ctx context.Context) {
-	for tick := time.Tick(25 * time.Second); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *Alfen) heartbeat() {
+	for range time.Tick(25 * time.Second) {
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {

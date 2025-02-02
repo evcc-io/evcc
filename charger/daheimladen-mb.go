@@ -18,15 +18,15 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"golang.org/x/text/encoding/unicode"
 )
 
 // DaheimLadenMB charger implementation
@@ -57,11 +57,11 @@ const (
 )
 
 func init() {
-	registry.AddCtx("daheimladen-mb", NewDaheimLadenMBFromConfig)
+	registry.Add("daheimladen-mb", NewDaheimLadenMBFromConfig)
 }
 
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
-func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDaheimLadenMBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -70,11 +70,11 @@ func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	return NewDaheimLadenMB(ctx, cc.URI, cc.ID)
+	return NewDaheimLadenMB(cc.URI, cc.ID)
 }
 
 // NewDaheimLadenMB creates DaheimLadenMB charger
-func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewDaheimLadenMB(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -104,20 +104,14 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, e
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
 	return wb, err
 }
 
-func (wb *DaheimLadenMB) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *DaheimLadenMB) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
@@ -140,6 +134,19 @@ func (wb *DaheimLadenMB) getCurrent() (uint16, error) {
 	}
 
 	return binary.BigEndian.Uint16(b), nil
+}
+
+// utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
+// to a UTF-8 encoded string.
+func utf16BytesToString(b []byte, o binary.ByteOrder) string {
+	utf := make([]uint16, (len(b)+(2-1))/2)
+	for i := 0; i+(2-1) < len(b); i += 2 {
+		utf[i/2] = o.Uint16(b[i:])
+	}
+	if len(b)/2 < len(utf) {
+		utf[len(utf)-1] = utf8.RuneError
+	}
+	return string(utf16.Decode(utf))
 }
 
 // Status implements the api.Charger interface
@@ -266,18 +273,13 @@ func (wb *DaheimLadenMB) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+	return utf16BytesToString(b, binary.BigEndian), nil
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenMB) Diagnose() {
-	utf16BytesToString := func(b []byte) string {
-		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
-		return s
-	}
-
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
@@ -291,10 +293,10 @@ func (wb *DaheimLadenMB) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b))
+		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
-		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b))
+		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))

@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -59,16 +58,16 @@ const (
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
-	mennekesHeartbeatInterval = 5 * time.Second
+	mennekesHeartbeatInterval = 8 * time.Second
 	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
 func init() {
-	registry.AddCtx("mennekes-compact", NewMennekesCompactFromConfig)
+	registry.Add("mennekes-compact", NewMennekesCompactFromConfig)
 }
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
-func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -84,11 +83,11 @@ func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interfac
 		return nil, err
 	}
 
-	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
+	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
 
 // NewMennekesCompact creates Mennekes charger
-func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
+func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -111,19 +110,14 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	}
 
 	// failsafe
-	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
+	go wb.heartbeat(mennekesHeartbeatInterval)
 
 	return wb, err
 }
 
-func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *MennekesCompact) heartbeat(timeout time.Duration) {
+	tick := time.NewTicker(timeout)
+	for ; true; <-tick.C {
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

@@ -30,7 +30,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate decorate -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -119,25 +119,48 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	}
 	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
+	var res api.ChargeStatus
 	switch chargeStatus {
 	case 0x00, 0x10: // notconnected
-		return api.StatusA, nil
+		res = api.StatusA
 	case 0x30: // connected
-		return api.StatusB, nil
+		res = api.StatusB
 	case 0x40: // charging
-		return api.StatusC, nil
+		res = api.StatusC
 	case 0x42, // chargepaused
 		0x50, // chargefinished
 		0x60: // chargecancelled
-		return api.StatusB, nil
+		res = api.StatusB
 	case 0x90: // unavailable
 		if sessionStartTime > 0 {
-			return api.StatusB, nil
+			res = api.StatusB
+		} else {
+			res = api.StatusF
 		}
-		fallthrough
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", chargeStatus)
+	case 0x95, // dcfault
+		0x96, // dchardwarefault
+		0x9A, // cpfault
+		0x9B: // cpshorted
+		res = api.StatusE
+	case 0x70, // overheat
+		0x80, // criticaltemperature
+		0x91, // reserved
+		0x9C, // remotedisabled
+		0x9D, // dlmfault
+		0xA0, // cablefault
+		0xA1,
+		0xA2, // lockingfault
+		0xA3,
+		0xA4, // contactorfault
+		0xA8, // rcdfault
+		0xF0, // wait
+		0xF1: // ventfault
+		res = api.StatusF
+	default: // generalfault
+		res = api.StatusF
 	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface

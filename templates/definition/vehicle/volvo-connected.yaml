@@ -6,6 +6,7 @@ products:
       en: latest
 params:
   - preset: vehicle-base
+  - preset: vehicle-identify
   - name: vccapikey
     required: true
     help:
@@ -15,3 +16,4 @@ render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

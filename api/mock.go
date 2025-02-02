@@ -19,7 +19,6 @@ import (
 type MockCharger struct {
 	ctrl     *gomock.Controller
 	recorder *MockChargerMockRecorder
-	isgomock struct{}
 }
 
 // MockChargerMockRecorder is the mock recorder for MockCharger.
@@ -40,17 +39,17 @@ func (m *MockCharger) EXPECT() *MockChargerMockRecorder {
 }
 
 // Enable mocks base method.
-func (m *MockCharger) Enable(enable bool) error {
+func (m *MockCharger) Enable(arg0 bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Enable", enable)
+	ret := m.ctrl.Call(m, "Enable", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Enable indicates an expected call of Enable.
-func (mr *MockChargerMockRecorder) Enable(enable any) *gomock.Call {
+func (mr *MockChargerMockRecorder) Enable(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enable", reflect.TypeOf((*MockCharger)(nil).Enable), enable)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enable", reflect.TypeOf((*MockCharger)(nil).Enable), arg0)
 }
 
 // Enabled mocks base method.
@@ -69,17 +68,17 @@ func (mr *MockChargerMockRecorder) Enabled() *gomock.Call {
 }
 
 // MaxCurrent mocks base method.
-func (m *MockCharger) MaxCurrent(current int64) error {
+func (m *MockCharger) MaxCurrent(arg0 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MaxCurrent", current)
+	ret := m.ctrl.Call(m, "MaxCurrent", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // MaxCurrent indicates an expected call of MaxCurrent.
-func (mr *MockChargerMockRecorder) MaxCurrent(current any) *gomock.Call {
+func (mr *MockChargerMockRecorder) MaxCurrent(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxCurrent", reflect.TypeOf((*MockCharger)(nil).MaxCurrent), current)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxCurrent", reflect.TypeOf((*MockCharger)(nil).MaxCurrent), arg0)
 }
 
 // Status mocks base method.
@@ -101,7 +100,6 @@ func (mr *MockChargerMockRecorder) Status() *gomock.Call {
 type MockChargeState struct {
 	ctrl     *gomock.Controller
 	recorder *MockChargeStateMockRecorder
-	isgomock struct{}
 }
 
 // MockChargeStateMockRecorder is the mock recorder for MockChargeState.
@@ -140,7 +138,6 @@ func (mr *MockChargeStateMockRecorder) Status() *gomock.Call {
 type MockCurrentLimiter struct {
 	ctrl     *gomock.Controller
 	recorder *MockCurrentLimiterMockRecorder
-	isgomock struct{}
 }
 
 // MockCurrentLimiterMockRecorder is the mock recorder for MockCurrentLimiter.
@@ -180,7 +177,6 @@ func (mr *MockCurrentLimiterMockRecorder) GetMinMaxCurrent() *gomock.Call {
 type MockCurrentGetter struct {
 	ctrl     *gomock.Controller
 	recorder *MockCurrentGetterMockRecorder
-	isgomock struct{}
 }
 
 // MockCurrentGetterMockRecorder is the mock recorder for MockCurrentGetter.
@@ -219,7 +215,6 @@ func (mr *MockCurrentGetterMockRecorder) GetMaxCurrent() *gomock.Call {
 type MockPhaseSwitcher struct {
 	ctrl     *gomock.Controller
 	recorder *MockPhaseSwitcherMockRecorder
-	isgomock struct{}
 }
 
 // MockPhaseSwitcherMockRecorder is the mock recorder for MockPhaseSwitcher.
@@ -240,24 +235,23 @@ func (m *MockPhaseSwitcher) EXPECT() *MockPhaseSwitcherMockRecorder {
 }
 
 // Phases1p3p mocks base method.
-func (m *MockPhaseSwitcher) Phases1p3p(phases int) error {
+func (m *MockPhaseSwitcher) Phases1p3p(arg0 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Phases1p3p", phases)
+	ret := m.ctrl.Call(m, "Phases1p3p", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Phases1p3p indicates an expected call of Phases1p3p.
-func (mr *MockPhaseSwitcherMockRecorder) Phases1p3p(phases any) *gomock.Call {
+func (mr *MockPhaseSwitcherMockRecorder) Phases1p3p(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases1p3p", reflect.TypeOf((*MockPhaseSwitcher)(nil).Phases1p3p), phases)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases1p3p", reflect.TypeOf((*MockPhaseSwitcher)(nil).Phases1p3p), arg0)
 }
 
 // MockPhaseGetter is a mock of PhaseGetter interface.
 type MockPhaseGetter struct {
 	ctrl     *gomock.Controller
 	recorder *MockPhaseGetterMockRecorder
-	isgomock struct{}
 }
 
 // MockPhaseGetterMockRecorder is the mock recorder for MockPhaseGetter.
@@ -296,7 +290,6 @@ func (mr *MockPhaseGetterMockRecorder) GetPhases() *gomock.Call {
 type MockIdentifier struct {
 	ctrl     *gomock.Controller
 	recorder *MockIdentifierMockRecorder
-	isgomock struct{}
 }
 
 // MockIdentifierMockRecorder is the mock recorder for MockIdentifier.
@@ -335,7 +328,6 @@ func (mr *MockIdentifierMockRecorder) Identify() *gomock.Call {
 type MockMeter struct {
 	ctrl     *gomock.Controller
 	recorder *MockMeterMockRecorder
-	isgomock struct{}
 }
 
 // MockMeterMockRecorder is the mock recorder for MockMeter.
@@ -374,7 +366,6 @@ func (mr *MockMeterMockRecorder) CurrentPower() *gomock.Call {
 type MockMeterEnergy struct {
 	ctrl     *gomock.Controller
 	recorder *MockMeterEnergyMockRecorder
-	isgomock struct{}
 }
 
 // MockMeterEnergyMockRecorder is the mock recorder for MockMeterEnergy.
@@ -413,7 +404,6 @@ func (mr *MockMeterEnergyMockRecorder) TotalEnergy() *gomock.Call {
 type MockPhaseCurrents struct {
 	ctrl     *gomock.Controller
 	recorder *MockPhaseCurrentsMockRecorder
-	isgomock struct{}
 }
 
 // MockPhaseCurrentsMockRecorder is the mock recorder for MockPhaseCurrents.
@@ -454,7 +444,6 @@ func (mr *MockPhaseCurrentsMockRecorder) Currents() *gomock.Call {
 type MockVehicle struct {
 	ctrl     *gomock.Controller
 	recorder *MockVehicleMockRecorder
-	isgomock struct{}
 }
 
 // MockVehicleMockRecorder is the mock recorder for MockVehicle.
@@ -603,7 +592,6 @@ func (mr *MockVehicleMockRecorder) Title() *gomock.Call {
 type MockChargeRater struct {
 	ctrl     *gomock.Controller
 	recorder *MockChargeRaterMockRecorder
-	isgomock struct{}
 }
 
 // MockChargeRaterMockRecorder is the mock recorder for MockChargeRater.
@@ -642,7 +630,6 @@ func (mr *MockChargeRaterMockRecorder) ChargedEnergy() *gomock.Call {
 type MockBattery struct {
 	ctrl     *gomock.Controller
 	recorder *MockBatteryMockRecorder
-	isgomock struct{}
 }
 
 // MockBatteryMockRecorder is the mock recorder for MockBattery.
@@ -681,7 +668,6 @@ func (mr *MockBatteryMockRecorder) Soc() *gomock.Call {
 type MockTariff struct {
 	ctrl     *gomock.Controller
 	recorder *MockTariffMockRecorder
-	isgomock struct{}
 }
 
 // MockTariffMockRecorder is the mock recorder for MockTariff.
@@ -734,7 +720,6 @@ func (mr *MockTariffMockRecorder) Type() *gomock.Call {
 type MockBatteryController struct {
 	ctrl     *gomock.Controller
 	recorder *MockBatteryControllerMockRecorder
-	isgomock struct{}
 }
 
 // MockBatteryControllerMockRecorder is the mock recorder for MockBatteryController.
@@ -772,7 +757,6 @@ func (mr *MockBatteryControllerMockRecorder) SetBatteryMode(arg0 any) *gomock.Ca
 type MockCircuit struct {
 	ctrl     *gomock.Controller
 	recorder *MockCircuitMockRecorder
-	isgomock struct{}
 }
 
 // MockCircuitMockRecorder is the mock recorder for MockCircuit.
@@ -891,15 +875,15 @@ func (mr *MockCircuitMockRecorder) HasMeter() *gomock.Call {
 }
 
 // RegisterChild mocks base method.
-func (m *MockCircuit) RegisterChild(child Circuit) {
+func (m *MockCircuit) RegisterChild(arg0 Circuit) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterChild", child)
+	m.ctrl.Call(m, "RegisterChild", arg0)
 }
 
 // RegisterChild indicates an expected call of RegisterChild.
-func (mr *MockCircuitMockRecorder) RegisterChild(child any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) RegisterChild(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), child)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), arg0)
 }
 
 // SetMaxCurrent mocks base method.
@@ -953,43 +937,43 @@ func (mr *MockCircuitMockRecorder) Update(arg0 any) *gomock.Call {
 }
 
 // ValidateCurrent mocks base method.
-func (m *MockCircuit) ValidateCurrent(old, new float64) float64 {
+func (m *MockCircuit) ValidateCurrent(arg0, arg1 float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateCurrent", old, new)
+	ret := m.ctrl.Call(m, "ValidateCurrent", arg0, arg1)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // ValidateCurrent indicates an expected call of ValidateCurrent.
-func (mr *MockCircuitMockRecorder) ValidateCurrent(old, new any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) ValidateCurrent(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), old, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), arg0, arg1)
 }
 
 // ValidatePower mocks base method.
-func (m *MockCircuit) ValidatePower(old, new float64) float64 {
+func (m *MockCircuit) ValidatePower(arg0, arg1 float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidatePower", old, new)
+	ret := m.ctrl.Call(m, "ValidatePower", arg0, arg1)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // ValidatePower indicates an expected call of ValidatePower.
-func (mr *MockCircuitMockRecorder) ValidatePower(old, new any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) ValidatePower(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), old, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), arg0, arg1)
 }
 
 // Wrap mocks base method.
-func (m *MockCircuit) Wrap(parent Circuit) error {
+func (m *MockCircuit) Wrap(arg0 Circuit) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wrap", parent)
+	ret := m.ctrl.Call(m, "Wrap", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Wrap indicates an expected call of Wrap.
-func (mr *MockCircuitMockRecorder) Wrap(parent any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) Wrap(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockCircuit)(nil).Wrap), parent)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockCircuit)(nil).Wrap), arg0)
 }

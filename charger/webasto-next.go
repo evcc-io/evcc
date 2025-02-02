@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -52,11 +51,11 @@ const (
 )
 
 func init() {
-	registry.AddCtx("webasto-next", NewWebastoNextFromConfig)
+	registry.Add("webasto-next", NewWebastoNextFromConfig)
 }
 
 // NewWebastoNextFromConfig creates a WebastoNext charger from generic config
-func NewWebastoNextFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWebastoNextFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -65,11 +64,11 @@ func NewWebastoNextFromConfig(ctx context.Context, other map[string]interface{})
 		return nil, err
 	}
 
-	return NewWebastoNext(ctx, cc.URI, cc.ID)
+	return NewWebastoNext(cc.URI, cc.ID)
 }
 
 // NewWebastoNext creates WebastoNext charger
-func NewWebastoNext(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -99,20 +98,14 @@ func NewWebastoNext(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
 	return wb, err
 }
 
-func (wb *WebastoNext) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *WebastoNext) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(tqRegLifeBit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

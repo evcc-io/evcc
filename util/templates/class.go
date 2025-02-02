@@ -9,6 +9,5 @@ const (
 	Meter
 	Vehicle
 	Tariff
-	Loadpoint
 	Circuit
 )

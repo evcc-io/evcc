@@ -290,10 +290,10 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
-	for _, suffix := range []types.Measurand{"", "-N"} {
-		if res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, suffix); found {
-			return res[0] + res[1] + res[2], err
-		}
+
+	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
+	if found {
+		return res[0] + res[1] + res[2], err
 	}
 
 	return 0, api.ErrNotAvailable
@@ -372,10 +372,9 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	for _, suffix := range []types.Measurand{"", "-N"} {
-		if res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, suffix); found {
-			return res[0], res[1], res[2], err
-		}
+	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
 	return 0, 0, 0, api.ErrNotAvailable
@@ -394,10 +393,14 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	for _, suffix := range []types.Measurand{"-N", ""} {
-		if res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, suffix); found {
-			return res[0], res[1], res[2], err
-		}
+	res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, "-N")
+	if found {
+		return res[0], res[1], res[2], err
+	}
+
+	res, found, err = conn.phaseMeasurements(types.MeasurandVoltage, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
 	return 0, 0, 0, api.ErrNotAvailable

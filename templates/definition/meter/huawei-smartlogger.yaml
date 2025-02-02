@@ -9,7 +9,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: storageunit
-    type: int
+    type: number
     default: 1
     advanced: true
   - name: modbus
@@ -18,7 +18,6 @@ params:
     default: 15s
   - name: capacity
     advanced: true
-  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -85,7 +84,6 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

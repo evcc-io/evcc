@@ -24,6 +24,6 @@ params:
 render: |
   type: keba-modbus
   {{- include "modbus" . }}
-  {{- if eq .welcomecharge "true" }}
+  {{- if .welcomecharge }}
   features: ["welcomecharge"]
   {{- end }}

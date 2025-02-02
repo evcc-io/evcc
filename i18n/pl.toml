@@ -5,7 +5,6 @@ control = "Kontrola baterii"
 discharge = "Zapobiegaj rozładowaniu w trybie szybkim i planowemu ładowaniu."
 disclaimerHint = "Uwaga:"
 disclaimerText = "te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
-gridChargeTab = "Ładowanie z sieci"
 legendBottomName = "Daj priorytet ładowaniu akumulatora domowego"
 legendBottomSubline = "aż osiągnie {soc}."
 legendMiddleName = "Ustaw priorytet ładowaniu pojazdów"
@@ -28,38 +27,29 @@ never = "tylko z wystarczającą nadwyżką."
 [config]
 
 [config.battery]
-titleAdd = "Dodaj baterię"
-titleEdit = "Edytuj baterię"
-
-[config.circuits]
-description = "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię."
-title = "Zarządzanie obciążeniem"
+titleAdd = "Dodaj miernik baterii"
+titleEdit = "Edytuj miernik baterii"
 
 [config.control]
-description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
 labelInterval = "Interwał aktualizacji"
 labelResidualPower = "Moc resztkowa"
 
 [config.deviceValue]
-broker = "Broker"
-bucket = "Bucket"
 capacity = "Pojemność"
 chargeStatus = "Status"
 chargeStatusA = "nie połączony"
 chargeStatusB = "połączony"
 chargeStatusC = "ładowanie"
-chargeStatusF = "błąd"
 chargedEnergy = "Naładowany"
 configured = "Skonfigurowany"
 currency = "Waluta"
 current = "Prąd"
 enabled = "Włączony"
 energy = "Energia"
-hemsType = "System"
 odometer = "Drogomierz"
-phaseCurrents = "Prąd L1, L2, L3"
-phasePowers = "Moc L1, L2, L3"
-phaseVoltages = "Napięcie L1, L2, L3"
+phaseCurrents = "Prąd L1..L3"
+phasePowers = "Moc L1..L3"
+phaseVoltages = "Napięcie L1..L3"
 power = "Moc"
 range = "Zasięg"
 soc = "Stan naładowania"
@@ -83,8 +73,6 @@ telemetry = "Telemetria"
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
 
-[config.hems]
-
 [config.influx]
 labelBucket = "Bucket"
 labelDatabase = "Baza danych"
@@ -102,9 +90,6 @@ title = "Konfiguracja"
 unconfigured = "nie skonfigurowane"
 vehicles = "Moje pojazdy"
 yaml = "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
-
-[config.messaging]
-description = "Otrzymuj wiadomości o sesjach ładowania."
 
 [config.meter]
 cancel = "Anulować"
@@ -127,8 +112,6 @@ labelPort = "Port"
 
 [config.options]
 
-[config.options.boolean]
-
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -145,11 +128,7 @@ titleEdit = "Edytuj licznik energii słonecznej"
 cancel = "Anulować"
 save = "Zapisz"
 
-[config.sponsor]
-
 [config.system]
-
-[config.tariffs]
 
 [config.title]
 
@@ -221,7 +200,7 @@ becomeSponsor = "Zostań sponsorem"
 confetti = "Gotowy na konfetti?"
 confettiPromise = "Będą naklejki i cyfrowe konfetti"
 sticker = "… lub naklejki evcc?"
-supportUs = "Nasza misja: Spraw, aby ładowanie słoneczne stało się standardem. Pomóż evcc, płacąc tyle, ile jest to dla Ciebie warte."
+supportUs = "Nasza misja: Spraw, aby ładowanie słoneczne stało się standardem. Pomóż nam i wesprzyj evcc finansowo."
 thanks = "Dzięki za wsparcie, {sponsor}! Pomaga nam to w dalszym rozwoju."
 titleNoSponsor = "Wesprzyj nas"
 titleSponsor = "Jesteś sponsorem"
@@ -300,7 +279,6 @@ titleMinSoc = "Minimalne ładowanie"
 titleTargetCharge = "Wyjazd"
 unsavedChanges = "Są niezapisane zmiany. Zastosować teraz?"
 update = "Wykorzystać"
-weekdays = "Dni"
 
 [main.energyflow]
 battery = "Bateria"
@@ -329,7 +307,7 @@ co2 = "⌀ CO₂"
 duration = "Czas trwania"
 fallbackName = "Ładowarka"
 power = "Moc"
-price = "Koszt"
+price = "Σ Cena"
 remaining = "Pozostało"
 remoteDisabledHard = "{source}: wyłączone"
 remoteDisabledSoft = "{source}: adaptacyjne ładowanie słonecznie wyłączone"
@@ -344,8 +322,6 @@ smartCostCheap = "Tanie ładowanie sieciowe"
 smartCostClean = "Czyste ładowanie sieci"
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
-
-[main.loadpointSettings.batteryBoost]
 
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
@@ -389,7 +365,7 @@ descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
 descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}?"
 inactiveLabel = "Czas docelowy"
 modalTitle = "Ustaw docelowy czas"
-notReachableInTime = "Cel zostanie osiągnięty {overrun} później."
+notReachableInTime = "Cel nieosiągalny na czas. Szacowane wykończenie: {endTime}."
 onlyInPvMode = "Plan ładowania działa tylko w trybie solarnym."
 planDuration = "Czas ładowania"
 planPeriodLabel = "Okres"
@@ -400,7 +376,7 @@ priceLimit = "limit ceny {cena}"
 remove = "Usuń"
 setTargetTime = "brak"
 targetIsAboveLimit = "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany."
-targetIsAboveVehicleLimit = "Limit pojazdu jest poniżej celu ładowania."
+targetIsAboveVehicleLimit = "Zwiększ limit pojazdu ({limit}) , aby osiągnąć cel ładowania."
 targetIsInThePast = "Wybierz czas w przyszłości."
 targetIsTooFarInTheFuture = "Dostosujemy plan, gdy tylko dowiemy się więcej o przyszłości."
 title = "Czas Docelowy"
@@ -444,20 +420,20 @@ vehicleLimit = "Limit pojazdu: {soc}"
 
 [main.vehicleStatus]
 charging = "Ładuje się..."
-cheapEnergyCharging = "Dostępna tania energia."
-cleanEnergyCharging = "Czysta energia dostępna."
+cheapEnergyCharging = "Ładowanie tanią energią: {price} (ograniczenie {limit})"
+cleanEnergyCharging = "Ładowanie czystą energią: {co2} (ograniczenie {limit})"
 climating = "Wykryto wstępne przygotowanie"
 connected = "Połączony."
 disconnected = "Rozłączony."
 minCharge = "Minimalne ładowanie do {soc}."
-pvDisable = "Za mało nadwyżki. Wkrótce przerwa."
-pvEnable = "Dostępne nadwyżki. Zaczynamy wkrótce."
-scale1p = "Wkrótce przejdziemy na ładowanie jednofazowe."
-scale3p = "Wkrótce przejdziemy na ładowanie 3-fazowe."
-targetChargeActive = "Plan ładowania aktywny. Szacunkowy czas zakończenia za {duration}."
-targetChargePlanned = "Zaplanowane ładowanie zacznie się {duration}."
-targetChargeWaitForVehicle = "Zaplanowane ładowanie gotowy. Czekajem na pojazd..."
-vehicleLimitReached = "Osiągnięto limit pojazdu."
+pvDisable = "Za mało nadwyżki. Pauza po {remaining}..."
+pvEnable = "Dostępna nadwyżka. Począwszy po {remaining}..."
+scale1p = "Zredukuje do jednej fazy po {remaining}..."
+scale3p = "Zwiększie do trzech faz po {remaining}..."
+targetChargeActive = "Zaplanowane ładowanie aktywno..."
+targetChargePlanned = "Zaplanowane ładowanie zacznie się {time}."
+targetChargeWaitForVehicle = "Zaplanowane ładowanie. Czekajem na pojazd..."
+vehicleLimitReached = "Osiągnięto limit pojazdu {soc}."
 waitForVehicle = "Gotowe. Czekam na pojazd..."
 
 [notifications]
@@ -496,16 +472,12 @@ downloadCsv = "Pobierz jako CSV"
 energy = "Naładowano"
 loadpoint = "Ładowarka"
 noData = "Brak sesji ładowania w tym miesiącu."
-overview = "Przegląd"
-price = "Koszt"
+price = "Σ Cena"
 reallyDelete = "Czy na pewno chcesz usunąć tę sesję?"
 solar = "Słoneczna"
 title = "Sesje ładowania"
 total = "Totalny"
 vehicle = "Pojazd"
-
-[sessions.chartTitle]
-solar = "Udział energii słonecznej w ciągu roku"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -523,16 +495,8 @@ allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
 
-[sessions.group]
-
-[sessions.groupBy]
-
-[sessions.period]
-
-[sessions.type]
-
 [settings]
-title = "Interfejs użytkownika"
+title = "Ustawienia główne"
 
 [settings.fullscreen]
 

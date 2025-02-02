@@ -96,15 +96,17 @@ func (wb *MennekesHcc3) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch status := binary.BigEndian.Uint16(b); status {
+	switch binary.BigEndian.Uint16(b) {
 	case 1, 2:
 		return api.StatusA, nil
 	case 3, 4:
 		return api.StatusB, nil
 	case 5, 6:
 		return api.StatusC, nil
+	case 7, 8:
+		return api.StatusD, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
 }
 

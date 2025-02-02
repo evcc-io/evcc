@@ -42,25 +42,18 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		var resem Gen2EmStatusResponse
 		var res Gen2StatusResponse
-		if d.app == "Pro3EM" && d.profile == "monophase" {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &resem); err != nil {
-				return 0, err
-			}
-		} else {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
+		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+			return 0, err
 		}
 
 		switch d.channel {
 		case 1:
-			power = res.Switch1.Apower + res.Pm1.Apower + resem.Em1.ActPower
+			power = res.Switch1.Apower + res.Pm1.Apower
 		case 2:
-			power = res.Switch2.Apower + res.Pm2.Apower + resem.Em2.ActPower
+			power = res.Switch2.Apower + res.Pm2.Apower
 		default:
-			power = res.Switch0.Apower + res.Pm0.Apower + resem.Em0.ActPower
+			power = res.Switch0.Apower + res.Pm0.Apower
 		}
 	}
 
@@ -130,25 +123,18 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		var resem Gen2EmStatusResponse
 		var res Gen2StatusResponse
-		if d.app == "Pro3EM" && d.profile == "monophase" {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &resem); err != nil {
-				return 0, err
-			}
-		} else {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
+		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+			return 0, err
 		}
 
 		switch d.channel {
 		case 1:
-			energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy - resem.Em1Data.TotalActRetEnergy
+			energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total
 		case 2:
-			energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy - resem.Em2Data.TotalActRetEnergy
+			energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total
 		default:
-			energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy - resem.Em0Data.TotalActRetEnergy
+			energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total
 		}
 	}
 

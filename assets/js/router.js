@@ -31,16 +31,7 @@ export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      {
-        path: "/",
-        component: () => import("./views/Main.vue"),
-        props: (route) => {
-          const { lp } = route.query;
-          return {
-            selectedLoadpointIndex: lp ? parseInt(lp, 10) - 1 : undefined,
-          };
-        },
-      },
+      { path: "/", component: () => import("./views/Main.vue"), props: true },
       {
         path: "/config",
         component: () => import("./views/Config.vue"),

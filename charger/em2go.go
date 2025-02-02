@@ -32,11 +32,8 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
-	log        *util.Logger
-	conn       *modbus.Connection
-	current    uint16
-	workaround bool
-	phases     int
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
@@ -62,14 +59,18 @@ const (
 )
 
 func init() {
-	registry.Add("em2go", NewEm2GoFromConfig)
-	registry.Add("em2go-home", NewEm2GoFromConfig)
+	registry.Add("em2go", func(other map[string]any) (api.Charger, error) {
+		return NewEm2GoFromConfig(other, true)
+	})
+	registry.Add("em2go-home", func(other map[string]any) (api.Charger, error) {
+		return NewEm2GoFromConfig(other, false)
+	})
 }
 
-//go:generate decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
-func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoFromConfig(other map[string]interface{}, milli bool) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -78,11 +79,11 @@ func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEm2Go(cc.URI, cc.ID)
+	return NewEm2Go(cc.URI, cc.ID, milli)
 }
 
 // NewEm2Go creates Em2Go charger
-func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
+func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
@@ -97,10 +98,8 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:        log,
-		conn:       conn,
-		current:    60,
-		workaround: false,
+		log:  log,
+		conn: conn,
 	}
 
 	var (
@@ -109,20 +108,7 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 		phasesG    func() (int, error)
 	)
 
-	// test if workaround is needed (Home fw <1.3)
-	if err := wb.maxCurrentMillis(6.1); err != nil {
-		return nil, err
-	}
-
-	chargerCurrent, err := wb.GetMaxCurrent()
-	if err != nil {
-		return nil, err
-	}
-
-	// did rounding occur?
-	if chargerCurrent == 6 {
-		wb.workaround = true
-	} else {
+	if milli {
 		maxCurrent = wb.maxCurrentMillis
 	}
 
@@ -148,8 +134,10 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 4, 6:
 		return api.StatusC, nil
+	case 5, 7:
+		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
 	}
 }
 
@@ -170,31 +158,7 @@ func (wb *Em2Go) Enable(enable bool) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, map[bool]uint16{true: 1, false: 2}[enable])
 
-	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b); err != nil {
-		return err
-	}
-
-	// re-set 1p if required
-	if wb.workaround && enable {
-		if wb.phases == 1 {
-			binary.BigEndian.PutUint16(b, uint16(wb.phases))
-			if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
-				return err
-			}
-		}
-
-		// send default current
-		return wb.setCurrent(wb.current)
-	}
-
-	return nil
-}
-
-func (wb *Em2Go) setCurrent(current uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, current)
-
-	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrentLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b)
 	return err
 }
 
@@ -205,11 +169,10 @@ func (wb *Em2Go) MaxCurrent(current int64) error {
 
 // maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Em2Go) maxCurrentMillis(current float64) error {
-	curr := uint16(current * 10)
-	err := wb.setCurrent(curr)
-	if err == nil {
-		wb.current = curr
-	}
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(10*current))
+
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrentLimit, 1, b)
 	return err
 }
 
@@ -305,34 +268,10 @@ func (wb *Em2Go) ChargeDuration() (time.Duration, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Em2Go) phases1p3p(phases int) error {
-	if wb.workaround {
-		// when enabled, disable, wait 10 seconds, enable and set phases
-		enabled, err := wb.Enabled()
-		if err != nil {
-			return err
-		}
-
-		if enabled {
-			if err := wb.Enable(false); err != nil {
-				return err
-			}
-
-			time.Sleep(10 * time.Second)
-
-			if err := wb.Enable(true); err != nil {
-				return err
-			}
-		}
-	}
-
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
 	_, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b)
-	if err == nil {
-		wb.phases = phases
-	}
-
 	return err
 }
 

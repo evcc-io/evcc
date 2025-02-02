@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -25,11 +24,11 @@ const (
 )
 
 func init() {
-	registry.AddCtx("obo", NewOboFromConfig)
+	registry.Add("obo", NewOboFromConfig)
 }
 
 // NewOboFromConfig creates a OBO Bettermann charger from generic config
-func NewOboFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOboFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 19200,
 		Comset:   "8E1",
@@ -40,11 +39,11 @@ func NewOboFromConfig(ctx context.Context, other map[string]interface{}) (api.Ch
 		return nil, err
 	}
 
-	return NewObo(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewObo(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewObo creates OBO Bettermann charger
-func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewObo(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -64,7 +63,7 @@ func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
+		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
 	}
 
 	// lightshow
@@ -83,14 +82,8 @@ func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto
 	return wb, nil
 }
 
-func (wb *Obo) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+func (wb *Obo) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

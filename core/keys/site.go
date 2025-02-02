@@ -3,13 +3,14 @@ package keys
 const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
-	Circuits              = "circuits"
 	Currency              = "currency"
-	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
-	Grid                  = "grid"
+	GridCurrents          = "gridCurrents"
+	GridEnergy            = "gridEnergy"
+	GridPower             = "gridPower"
+	GridPowers            = "gridPowers"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
@@ -27,6 +28,8 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
+	Circuits              = "circuits"
+	Ext                   = "ext"
 
 	// meters
 	GridMeter     = "gridMeter"

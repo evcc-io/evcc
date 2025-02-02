@@ -6,6 +6,8 @@ products:
       en: Others
 params:
   - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: skoda
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

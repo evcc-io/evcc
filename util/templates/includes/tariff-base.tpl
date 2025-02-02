@@ -5,7 +5,4 @@ charges: {{ .charges }}
 {{- if .tax }}
 tax: {{ .tax }}
 {{- end }}
-{{- if .formula }}
-formula: {{ .formula }}
-{{- end }}
 {{- end }}

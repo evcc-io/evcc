@@ -4,6 +4,8 @@ products:
   - brand: Porsche
 params:
   - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: porsche
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

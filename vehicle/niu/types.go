@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"golang.org/x/oauth2"
 )
 
@@ -36,7 +35,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 			if msg := res.Data.Desc; msg != "" {
 				return errors.New(msg)
 			}
-			return api.ErrMissingToken
+			return errors.New("missing token")
 		}
 
 		(*t) = (Token)(res.Data.Token.Token)

@@ -5,8 +5,13 @@ products:
       generic: "#1"
 params:
   - preset: vehicle-base
-  - preset: vehicle-features
+  - preset: vehicle-identify
+  - name: welcomecharge
+    advanced: true
 render: |
   type: smart-hello
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-identify" . }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
+  {{- end }}

@@ -68,6 +68,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
+          build-args: |
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: |
             evcc/evcc:nightly
 
@@ -104,6 +106,7 @@ jobs:
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - uses: actions/setup-python@v5
         with:

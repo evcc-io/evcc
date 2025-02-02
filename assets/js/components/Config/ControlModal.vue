@@ -52,6 +52,26 @@
 				</div>
 			</FormRow>
 
+			<FormRow
+				id="controlMaxGridSupply"
+				:label="$t('config.control.labelMaxGridSupply')"
+				:help="$t('config.control.descriptionMaxGridSupply')"
+				docsLink="/docs/reference/configuration/site#maxgridsupplywhilebatterycharging"
+			>
+				<div class="input-group w-50 w-sm-25">
+					<input
+						id="controlMaxGridSupply"
+						v-model="values.maxGridSupply"
+						type="number"
+						step="1"
+						required
+						aria-describedby="controlMaxGridSupplyUnit"
+						class="form-control text-end"
+					/>
+					<span id="controlMaxGridSupplyUnit" class="input-group-text">W</span>
+				</div>
+			</FormRow>
+
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
 				<button
 					type="button"
@@ -104,16 +124,25 @@ export default {
 		residualPowerChanged() {
 			return this.values.residualPower !== this.serverValues.residualPower;
 		},
+		maxGridSupplyChanged() {
+			return this.values.maxGridSupply !== this.serverValues.maxGridSupply;
+		},
 		nothingChanged() {
-			return !this.intervalChanged && !this.residualPowerChanged;
+			return (
+				!this.intervalChanged && !this.residualPowerChanged && !this.maxGridSupplyChanged
+			);
 		},
 	},
 	methods: {
 		reset() {
-			const { interval, residualPower } = store?.state || {};
+			const {
+				interval,
+				residualPower,
+				maxGridSupplyWhileBatteryCharging: maxGridSupply,
+			} = store?.state || {};
 			this.saving = false;
 			this.error = "";
-			this.values = { interval, residualPower };
+			this.values = { interval, residualPower, maxGridSupply };
 			this.serverValues = { ...this.values };
 		},
 		async open() {
@@ -125,6 +154,8 @@ export default {
 				url = `/config/interval/${encodeURIComponent(this.values.interval)}`;
 			} else if (name === "residualPower") {
 				url = `/residualpower/${encodeURIComponent(this.values.residualPower)}`;
+			} else if (name === "maxGridSupply") {
+				url = `/maxgridsupply/${encodeURIComponent(this.values.maxGridSupply)}`;
 			}
 			await api.post(url);
 		},
@@ -137,6 +168,9 @@ export default {
 				}
 				if (this.residualPowerChanged) {
 					await this.saveValue("residualPower");
+				}
+				if (this.maxGridSupplyChanged) {
+					await this.saveValue("maxGridSupply");
 				}
 				this.$emit("changed");
 				this.$refs.modal.close();
@@ -153,5 +187,8 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.btn-cancel {
+	margin-left: -0.75rem;
 }
 </style>

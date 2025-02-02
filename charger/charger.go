@@ -7,7 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -24,46 +24,46 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed                               `mapstructure:",squash"`
-		Status, Enable, Enabled, MaxCurrent plugin.Config
-		MaxCurrentMillis                    *plugin.Config
-		Identify, Phases1p3p                *plugin.Config
-		Wakeup                              *plugin.Config
-		Soc                                 *plugin.Config
+		Status, Enable, Enabled, MaxCurrent provider.Config
+		MaxCurrentMillis                    *provider.Config
+		Identify, Phases1p3p                *provider.Config
+		Wakeup                              *provider.Config
+		Soc                                 *provider.Config
 		Tos                                 bool
 
 		// optional measurements
-		Power  *plugin.Config
-		Energy *plugin.Config
+		Power  *provider.Config
+		Energy *provider.Config
 
-		Currents, Voltages []plugin.Config
+		Currents, Voltages []provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	status, err := cc.Status.StringGetter(ctx)
+	status, err := provider.NewStringGetterFromConfig(ctx, cc.Status)
 	if err != nil {
 		return nil, fmt.Errorf("status: %w", err)
 	}
 
-	enabled, err := cc.Enabled.BoolGetter(ctx)
+	enabled, err := provider.NewBoolGetterFromConfig(ctx, cc.Enabled)
 	if err != nil {
 		return nil, fmt.Errorf("enabled: %w", err)
 	}
 
-	enable, err := cc.Enable.BoolSetter(ctx, "enable")
+	enable, err := provider.NewBoolSetterFromConfig(ctx, "enable", cc.Enable)
 	if err != nil {
 		return nil, fmt.Errorf("enable: %w", err)
 	}
 
-	maxcurrent, err := cc.MaxCurrent.IntSetter(ctx, "maxcurrent")
+	maxcurrent, err := provider.NewIntSetterFromConfig(ctx, "maxcurrent", cc.MaxCurrent)
 	if err != nil {
 		return nil, fmt.Errorf("maxcurrent: %w", err)
 	}
@@ -75,9 +75,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 
 	c.embed = &cc.embed
 
-	maxcurrentmillis, err := cc.MaxCurrentMillis.FloatSetter(ctx, "maxcurrentmillis")
-	if err != nil {
-		return nil, fmt.Errorf("maxcurrentmillis: %w", err)
+	var maxcurrentmillis func(float64) error
+	if cc.MaxCurrentMillis != nil {
+		maxcurrentmillis, err = provider.NewFloatSetterFromConfig(ctx, "maxcurrentmillis", *cc.MaxCurrentMillis)
+		if err != nil {
+			return nil, fmt.Errorf("maxcurrentmillis: %w", err)
+		}
 	}
 
 	// decorate phases
@@ -87,7 +90,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 			return nil, errors.New("1p3p does no longer handle disable/enable. Use tos: true to confirm you understand the consequences")
 		}
 
-		phases1p3pS, err := cc.Phases1p3p.IntSetter(ctx, "phases")
+		phases1p3pS, err := provider.NewIntSetterFromConfig(ctx, "phases", *cc.Phases1p3p)
 		if err != nil {
 			return nil, fmt.Errorf("phases: %w", err)
 		}
@@ -98,28 +101,34 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	// decorate identifier
-	identify, err := cc.Identify.StringGetter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("identify: %w", err)
+	var identify func() (string, error)
+	if cc.Identify != nil {
+		identify, err = provider.NewStringGetterFromConfig(ctx, *cc.Identify)
+		if err != nil {
+			return nil, fmt.Errorf("identify: %w", err)
+		}
 	}
 
 	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
-		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
+		wakeupS, err := provider.NewBoolSetterFromConfig(ctx, "wakeup", *cc.Wakeup)
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
 
 		wakeup = func() error {
-			return set(true)
+			return wakeupS(true)
 		}
 	}
 
 	// decorate soc
-	soc, err := cc.Soc.FloatGetter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("soc: %w", err)
+	var soc func() (float64, error)
+	if cc.Soc != nil {
+		soc, err = provider.NewFloatGetterFromConfig(ctx, *cc.Soc)
+		if err != nil {
+			return nil, fmt.Errorf("soc: %w", err)
+		}
 	}
 
 	// decorate measurements

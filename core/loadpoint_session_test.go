@@ -38,10 +38,11 @@ func TestSession(t *testing.T) {
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		clock:       clock,
-		db:          db,
-		chargeMeter: cm,
+		log:           util.NewLogger("foo"),
+		clock:         clock,
+		db:            db,
+		chargeMeter:   cm,
+		sessionEnergy: NewEnergyMetrics(),
 	}
 
 	// create session
@@ -59,7 +60,7 @@ func TestSession(t *testing.T) {
 
 	// stop charging
 	clock.Add(time.Hour)
-	lp.energyMetrics.Update(1.23)
+	lp.sessionEnergy.Update(1.23)
 	me.EXPECT().TotalEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
@@ -74,7 +75,7 @@ func TestSession(t *testing.T) {
 
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
-	lp.energyMetrics.Update(lp.getChargedEnergy() * 2)
+	lp.sessionEnergy.Update(lp.getChargedEnergy() * 2)
 	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()

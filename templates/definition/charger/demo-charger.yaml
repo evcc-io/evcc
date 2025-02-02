@@ -13,14 +13,13 @@ params:
     description:
       de: Ladezustand
       en: Charge status
-    type: choice
-    choice: [A, B, C]
+    validvalues: [A, B, C, D, E, F]
     default: A
   - name: power
     description:
       de: Leistung
       en: Power
-    type: int
+    type: number
     default: 0
   - name: enabled
     description:
@@ -34,14 +33,7 @@ params:
       en: Maximum amperage (A)
     help:
     example: 16
-    type: int
-    advanced: true
-  - name: phases1p3p
-    description:
-      de: Phasenumschaltung
-      en: Phase switching
-    type: bool
-    default: false
+    type: number
     advanced: true
 
 render: |
@@ -62,10 +54,3 @@ render: |
   power:
     source: const
     value: {{ .power }}
-  {{ if eq .phases1p3p "true" }}
-  phases1p3p:
-    source: js
-    script: |
-      3
-  tos: true
-  {{ end }}

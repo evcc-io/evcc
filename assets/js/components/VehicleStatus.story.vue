@@ -14,7 +14,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 </script>
 
 <template>
-	<Story title="VehicleStatus" :layout="{ type: 'grid', iframe: false, width: 320 }">
+	<Story title="VehicleStatus" :layout="{ type: 'grid', iframe: false, width: 420 }">
 		<Variant title="status: disconnected">
 			<VehicleStatus />
 		</Variant>
@@ -124,6 +124,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			<VehicleStatus
 				connected
 				enabled
+				charging
 				:smartCostLimit="500"
 				smartCostType="co2"
 				:smartCostNextStart="planProjectedStart"
@@ -218,7 +219,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 		<Variant title="combination: maximal">
 			<VehicleStatus
 				connected
-				enabled
+				charging
 				:sessionSolarPercentage="94"
 				:minSoc="20"
 				:vehicleSoc="10"

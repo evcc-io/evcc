@@ -73,11 +73,6 @@ func jwtFromRequest(r *http.Request) string {
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
 func authStatusHandler(auth auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if auth.Disabled() {
-			w.Write([]byte("true"))
-			return
-		}
-
 		if !auth.IsAdminPasswordConfigured() {
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 			return
@@ -135,11 +130,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if auth.Disabled() {
-				next.ServeHTTP(w, r)
-				return
-			}
-
 			// check jwt token
 			ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
 			if !ok || err != nil {

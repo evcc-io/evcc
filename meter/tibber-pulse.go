@@ -3,8 +3,9 @@ package meter
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -16,20 +17,23 @@ import (
 )
 
 func init() {
-	registry.AddCtx("tibber-pulse", NewTibberFromConfig)
+	registry.Add("tibber-pulse", NewTibberFromConfig)
 }
 
 type Tibber struct {
-	data *util.Monitor[tibber.LiveMeasurement]
+	mu            sync.Mutex
+	log           *util.Logger
+	updated       time.Time
+	live          tibber.LiveMeasurement
+	url           string
+	token, homeID string
+	client        *graphql.SubscriptionClient
 }
 
-func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		Token   string
-		HomeID  string
-		Timeout time.Duration
-	}{
-		Timeout: time.Minute,
+func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
+	var cc struct {
+		Token  string
+		HomeID string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,7 +41,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}
 
 	if cc.Token == "" {
-		return nil, api.ErrMissingToken
+		return nil, errors.New("missing token")
 	}
 
 	log := util.NewLogger("pulse").Redact(cc.Token, cc.HomeID)
@@ -59,19 +63,29 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}
 	}
 
-	ctx2, cancel := context.WithTimeout(ctx, request.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	if err := qclient.Query(ctx2, &res, nil); err != nil {
+	if err := qclient.Query(ctx, &res, nil); err != nil {
 		return nil, err
 	}
 
 	t := &Tibber{
-		data: util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
+		log:    log,
+		url:    res.Viewer.WebsocketSubscriptionUrl,
+		token:  cc.Token,
+		homeID: cc.HomeID,
 	}
 
-	// subscription client
-	client := graphql.NewSubscriptionClient(res.Viewer.WebsocketSubscriptionUrl).
+	// run the client
+	err := t.reconnect()
+
+	return t, err
+}
+
+// newSubscriptionClient creates graphql subscription client
+func (t *Tibber) newSubscriptionClient() {
+	t.client = graphql.NewSubscriptionClient(t.url).
 		WithProtocol(graphql.GraphQLWS).
 		WithWebSocketOptions(graphql.WebsocketOptions{
 			HTTPClient: &http.Client{
@@ -84,71 +98,25 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			},
 		}).
 		WithConnectionParams(map[string]any{
-			"token": cc.Token,
+			"token": t.token,
 		}).
 		WithRetryTimeout(0).
-		WithTimeout(request.Timeout).
-		WithLog(log.TRACE.Println).
-		OnError(func(_ *graphql.SubscriptionClient, err error) error {
-			// exit the subscription client due to unauthorized error
-			if strings.Contains(err.Error(), "invalid x-hasura-admin-secret/x-hasura-access-key") {
-				return err
-			}
-			log.ERROR.Println(err)
-			return nil
-		})
-
-	done := make(chan error, 1)
-	go func(done chan error) {
-		done <- t.subscribe(client, cc.HomeID)
-	}(done)
-
-	select {
-	case err := <-done:
-		if err != nil {
-			return nil, err
-		}
-	case <-time.After(cc.Timeout):
-		return nil, api.ErrTimeout
-	}
-
-	go func() {
-		<-ctx.Done()
-		if err := client.Close(); err != nil {
-			log.ERROR.Println(err)
-		}
-	}()
-
-	go func() {
-		// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
-		// Therefore we need to restart the client when exiting gracefully upon server request
-		// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
-		for tick := time.Tick(10 * time.Second); ; {
-			if err := client.Run(); err != nil {
-				log.ERROR.Println(err)
-			}
-
-			select {
-			case <-tick:
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return t, nil
+		WithLog(t.log.TRACE.Println)
 }
 
-func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
-	var query struct {
-		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
-	}
+func (t *Tibber) subscribe(done chan error) {
+	var (
+		once  sync.Once
+		query struct {
+			tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
+		}
+	)
 
-	_, err := client.Subscribe(&query, map[string]any{
-		"homeId": graphql.ID(homeID),
+	_, err := t.client.Subscribe(&query, map[string]any{
+		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			return err
+			once.Do(func() { done <- err })
 		}
 
 		var res struct {
@@ -156,34 +124,75 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) er
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
-			return err
+			once.Do(func() { done <- err })
+
+			t.log.ERROR.Println(err)
+			return nil
 		}
 
-		t.data.Set(res.LiveMeasurement)
+		t.mu.Lock()
+		t.live = res.LiveMeasurement
+		t.updated = time.Now()
+		t.mu.Unlock()
+
+		once.Do(func() { close(done) })
 
 		return nil
 	})
+	if err != nil {
+		once.Do(func() { done <- err })
+	}
 
-	return err
+	go func() {
+		if err := t.client.Run(); err != nil {
+			once.Do(func() { done <- err })
+		}
+	}()
+}
+
+func (t *Tibber) reconnect() error {
+	const timeout = time.Minute
+
+	t.mu.Lock()
+	if time.Since(t.updated) <= timeout {
+		t.mu.Unlock()
+		return nil
+	}
+	t.mu.Unlock()
+
+	if t.client != nil {
+		if err := t.client.Close(); err != nil {
+			t.log.DEBUG.Println("close:", err)
+		}
+	}
+
+	t.newSubscriptionClient()
+
+	done := make(chan error)
+	go t.subscribe(done)
+
+	return <-done
 }
 
 func (t *Tibber) CurrentPower() (float64, error) {
-	res, err := t.data.Get()
-	if err != nil {
+	if err := t.reconnect(); err != nil {
 		return 0, err
 	}
 
-	return res.Power - res.PowerProduction, nil
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.live.Power - t.live.PowerProduction, nil
 }
 
 var _ api.PhaseCurrents = (*Tibber)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (t *Tibber) Currents() (float64, float64, float64, error) {
-	res, err := t.data.Get()
-	if err != nil {
+	if err := t.reconnect(); err != nil {
 		return 0, 0, 0, err
 	}
 
-	return res.CurrentL1, res.CurrentL2, res.CurrentL3, nil
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.live.CurrentL1, t.live.CurrentL2, t.live.CurrentL3, nil
 }

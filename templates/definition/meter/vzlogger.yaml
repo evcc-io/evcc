@@ -38,18 +38,18 @@ params:
   - name: l1poweruuid
     advanced: true
     description:
-      de: Die vzlogger Kanal uuid für Leistung in Phase 1 (OBIS Code 36.7.0)
-      en: The vzlogger channel uuid for power on phase 1 (OBIS Code 36.7.0)
+      de: Die vzlogger Kanal uuid für Leistung in Phase 1 (OBIS Code 16.7.0)
+      en: The vzlogger channel uuid for power on phase 1 (OBIS Code 16.7.0)
   - name: l2poweruuid
     advanced: true
     description:
-      de: Die vzlogger Kanal uuid für Leistung in Phase 2 (OBIS Code 56.7.0)
-      en: The vzlogger channel uuid for power on phase 2 (OBIS Code 56.7.0)
+      de: Die vzlogger Kanal uuid für Leistung in Phase 2 (OBIS Code 36.7.0)
+      en: The vzlogger channel uuid for power on phase 2 (OBIS Code 36.7.0)
   - name: l3poweruuid
     advanced: true
     description:
-      de: Die vzlogger Kanal uuid für Leistung in Phase 3 (OBIS Code 76.7.0)
-      en: The vzlogger channel uuid for power on phase 3 (OBIS Code 76.7.0)
+      de: Die vzlogger Kanal uuid für Leistung in Phase 3 (OBIS Code 56.7.0)
+      en: The vzlogger channel uuid for power on phase 3 (OBIS Code 56.7.0)
   - name: l1voltageuuid
     advanced: true
     description:

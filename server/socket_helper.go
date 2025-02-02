@@ -21,7 +21,7 @@ func encodeSliceAsString(v any) (string, error) {
 	rv := reflect.ValueOf(v)
 	res := make([]string, rv.Len())
 
-	for i := range rv.Len() {
+	for i := 0; i < rv.Len(); i++ {
 		var err error
 		if res[i], err = encodeAsString(rv.Index(i).Interface()); err != nil {
 			return "", err

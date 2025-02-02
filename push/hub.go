@@ -30,12 +30,12 @@ type Vehicles interface {
 type Hub struct {
 	definitions map[string]EventTemplateConfig
 	sender      []Messenger
-	cache       *util.ParamCache
+	cache       *util.Cache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.Cache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {

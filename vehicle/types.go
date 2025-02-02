@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"golang.org/x/oauth2"
 )
 
@@ -16,11 +15,11 @@ type ClientCredentials struct {
 // Error validates the credentials and returns an error if they are incomplete
 func (c *ClientCredentials) Error() error {
 	if c.ID == "" {
-		return errors.New("missing client id")
+		return errors.New("missing credentials id")
 	}
 
 	if c.Secret == "" {
-		return errors.New("missing client secret")
+		return errors.New("missing credentials secret")
 	}
 
 	return nil
@@ -34,7 +33,7 @@ type Tokens struct {
 // Token builds token from credentials and returns an error if they are incomplete
 func (t *Tokens) Token() (*oauth2.Token, error) {
 	if t.Access == "" && t.Refresh == "" {
-		return nil, api.ErrMissingToken
+		return nil, errors.New("missing access and/or refresh token, use `evcc token` to create")
 	}
 
 	return &oauth2.Token{

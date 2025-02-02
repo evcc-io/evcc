@@ -1,11 +1,8 @@
 package push
 
 import (
-	"context"
 	"fmt"
 	"strings"
-
-	reg "github.com/evcc-io/evcc/util/registry"
 )
 
 // Messenger implements message sending
@@ -13,19 +10,35 @@ type Messenger interface {
 	Send(title, msg string)
 }
 
-var registry = reg.New[Messenger]("messenger")
+type senderRegistry map[string]func(map[string]interface{}) (Messenger, error)
+
+func (r senderRegistry) Add(name string, factory func(map[string]interface{}) (Messenger, error)) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate messenger type: %s", name))
+	}
+	r[name] = factory
+}
+
+func (r senderRegistry) Get(name string) (func(map[string]interface{}) (Messenger, error), error) {
+	factory, exists := r[name]
+	if !exists {
+		return nil, fmt.Errorf("messenger type not registered: %s", name)
+	}
+	return factory, nil
+}
+
+var registry senderRegistry = make(map[string]func(map[string]interface{}) (Messenger, error))
 
 // NewFromConfig creates messenger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (Messenger, error) {
+func NewFromConfig(typ string, other map[string]interface{}) (v Messenger, err error) {
 	factory, err := registry.Get(strings.ToLower(typ))
-	if err != nil {
-		return nil, err
+	if err == nil {
+		if v, err = factory(other); err != nil {
+			err = fmt.Errorf("cannot create messenger '%s': %w", typ, err)
+		}
+	} else {
+		err = fmt.Errorf("invalid messenger type: %s", typ)
 	}
 
-	v, err := factory(ctx, other)
-	if err != nil {
-		err = fmt.Errorf("cannot create messenger type '%s': %w", typ, err)
-	}
-
-	return v, err
+	return
 }

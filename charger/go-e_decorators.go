@@ -6,43 +6,17 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoE(base *GoE, chargeRater func() (float64, error), phaseSwitcher func(int) error) api.Charger {
+func decorateGoE(base *GoE, phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case chargeRater == nil && phaseSwitcher == nil:
+	case phaseSwitcher == nil:
 		return base
 
-	case chargeRater != nil && phaseSwitcher == nil:
-		return &struct {
-			*GoE
-			api.ChargeRater
-		}{
-			GoE: base,
-			ChargeRater: &decorateGoEChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-		}
-
-	case chargeRater == nil && phaseSwitcher != nil:
+	case phaseSwitcher != nil:
 		return &struct {
 			*GoE
 			api.PhaseSwitcher
 		}{
 			GoE: base,
-			PhaseSwitcher: &decorateGoEPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case chargeRater != nil && phaseSwitcher != nil:
-		return &struct {
-			*GoE
-			api.ChargeRater
-			api.PhaseSwitcher
-		}{
-			GoE: base,
-			ChargeRater: &decorateGoEChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
 			PhaseSwitcher: &decorateGoEPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -50,14 +24,6 @@ func decorateGoE(base *GoE, chargeRater func() (float64, error), phaseSwitcher f
 	}
 
 	return nil
-}
-
-type decorateGoEChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateGoEChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
 }
 
 type decorateGoEPhaseSwitcherImpl struct {

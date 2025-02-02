@@ -18,9 +18,6 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
-  - name: defaultmode
-    default: 0 # "SelfUse"
-    advanced: true
 render: |
   type: custom
   power:
@@ -87,7 +84,7 @@ render: |
     - case: 1 # normal
       set:
         source: const
-        value: {{ .defaultmode }}
+        value: 0 # self use mode
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}

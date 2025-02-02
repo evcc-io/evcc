@@ -22,21 +22,18 @@ type Auth interface {
 	GenerateJwtToken(time.Duration) (string, error)
 	ValidateJwtToken(string) (bool, error)
 	IsAdminPasswordConfigured() bool
-	Disable()
-	Disabled() bool
 }
 
 type auth struct {
 	settings settings.API
-	disabled bool
 }
 
 func New() Auth {
-	return &auth{settings: new(settings.Settings), disabled: false}
+	return &auth{settings: new(settings.Settings)}
 }
 
 func NewMock(settings settings.API) Auth {
-	return &auth{settings: settings, disabled: false}
+	return &auth{settings: settings}
 }
 
 func (a *auth) hashPassword(password string) (string, error) {
@@ -142,12 +139,4 @@ func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (a *auth) Disable() {
-	a.disabled = true
-}
-
-func (a *auth) Disabled() bool {
-	return a.disabled
 }

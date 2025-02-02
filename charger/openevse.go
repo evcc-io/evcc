@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -19,7 +20,7 @@ import (
 type OpenEVSE struct {
 	*request.Helper
 	uri     string
-	statusG util.Cacheable[openevse.Status]
+	statusG provider.Cacheable[openevse.Status]
 	current int
 	enabled bool
 }
@@ -28,7 +29,7 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-//go:generate decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -66,7 +67,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 	}
 
-	c.statusG = util.ResettableCached(func() (openevse.Status, error) {
+	c.statusG = provider.ResettableCached(func() (openevse.Status, error) {
 		var res openevse.Status
 
 		uri := fmt.Sprintf("%s/status", c.uri)
@@ -136,10 +137,6 @@ func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
 // Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
-	if err != nil {
-		return api.StatusNone, err
-	}
-
 	/*
 		0: "unknown",
 		1: "not connected",
@@ -157,18 +154,22 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		255: "disabled"
 	*/
 
-	switch res.State {
+	switch state := res.State; state {
 	case 1:
-		return api.StatusA, nil
+		return api.StatusA, err
 	case 2, 254, 255:
 		if res.Vehicle == 1 {
-			return api.StatusB, nil
+			return api.StatusB, err
 		}
-		return api.StatusA, nil
+		return api.StatusA, err
 	case 3:
-		return api.StatusC, nil
+		return api.StatusC, err
+	case 4:
+		return api.StatusD, err
+	case 5, 6, 7, 8, 9, 10, 11:
+		return api.StatusF, err
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", res.State)
+		return api.StatusNone, fmt.Errorf("unknown EVSE state: %d", state)
 	}
 }
 

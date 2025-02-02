@@ -6,7 +6,7 @@ test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(simulatorConfig());
+  await start(simulatorConfig(), "password.sql");
 });
 test.afterAll(async () => {
   await stop();

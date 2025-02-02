@@ -35,21 +35,21 @@ func NewHelper(log *util.Logger) *Helper {
 // DoBody executes HTTP request and returns the response body
 func (r *Helper) DoBody(req *http.Request) ([]byte, error) {
 	resp, err := r.Do(req)
-	if err != nil {
-		return nil, err
+	var body []byte
+	if err == nil {
+		body, err = ReadBody(resp)
 	}
-
-	return ReadBody(resp)
+	return body, err
 }
 
 // GetBody executes HTTP GET request and returns the response body
 func (r *Helper) GetBody(url string) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
+	resp, err := r.Get(url)
+	var body []byte
+	if err == nil {
+		body, err = ReadBody(resp)
 	}
-
-	return r.DoBody(req)
+	return body, err
 }
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
@@ -66,25 +66,19 @@ func decodeJSON(resp *http.Response, res interface{}) error {
 // It returns a StatusError on response codes other than HTTP 2xx.
 func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 	resp, err := r.Do(req)
-	if err != nil {
-		return err
+	if err == nil {
+		defer resp.Body.Close()
+		err = decodeJSON(resp, &res)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNoContent {
-		return nil
-	}
-
-	return decodeJSON(resp, &res)
+	return err
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response.
 // It returns a StatusError on response codes other than HTTP 2xx.
 func (r *Helper) GetJSON(url string, res interface{}) error {
 	req, err := New(http.MethodGet, url, nil, AcceptJSON)
-	if err != nil {
-		return err
+	if err == nil {
+		err = r.DoJSON(req, &res)
 	}
-
-	return r.DoJSON(req, &res)
+	return err
 }

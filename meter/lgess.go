@@ -12,8 +12,7 @@ import (
 )
 
 /*
-This meter supports the LGESS HOME 8, LGESS HOME 10 and LGESS HOME 15 systems from LG with / without battery.
-
+This meter supports the LGESS HOME 8 and LGESS HOME 10 systems from LG with / without battery.
 
 ** Usages **
 The following usages are supported:
@@ -24,18 +23,15 @@ The following usages are supported:
 ** Example configuration **
 meters:
 - name: GridMeter
-  type: template
-  template: lg-ess-home-15
+  type: lgess
   usage: grid
   uri: https://192.168.1.23
   password: "DE200....."
 - name: PvMeter
-  type: template
-  template: lg-ess-home-15
+  type: lgess
   usage: pv
 - name: BatteryMeter
-  type: template
-  template: lg-ess-home-15
+  type: lgess
   usage: battery
 
 ** Limitations **
@@ -46,26 +42,17 @@ same hardware instance is accessed with the different usages.
 // LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string     // grid, pv, battery
-	conn  *lgpcs.Com // communication with the lgpcs device
+	lp    *lgpcs.Com // communication with the lgpcs device
 }
 
 func init() {
-	registry.Add("lgess8", NewLgEss8FromConfig)
-	registry.Add("lgess15", NewLgEss15FromConfig)
+	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//go:generate decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
-
-func NewLgEss8FromConfig(other map[string]interface{}) (api.Meter, error) {
-	return NewLgEssFromConfig(other, lgpcs.LgEss8)
-}
-
-func NewLgEss15FromConfig(other map[string]interface{}) (api.Meter, error) {
-	return NewLgEssFromConfig(other, lgpcs.LgEss15)
-}
+//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
-func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity               `mapstructure:",squash"`
 		URI, Usage             string
@@ -83,24 +70,24 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator(), essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, essType lgpcs.Model) (api.Meter, error) {
-	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+	lp, err := lgpcs.GetInstance(uri, registration, password, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
 		usage: strings.ToLower(usage),
-		conn:  conn,
+		lp:    lp,
 	}
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
-	if m.usage == "grid" && essType != lgpcs.LgEss15 {
+	if m.usage == "grid" {
 		totalEnergy = m.totalEnergy
 	}
 
@@ -115,18 +102,18 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 
 // CurrentPower implements the api.Meter interface
 func (m *LgEss) CurrentPower() (float64, error) {
-	data, err := m.conn.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
 
 	switch m.usage {
 	case "grid":
-		return data.GetGridPower(), nil
+		return data.GridPower, nil
 	case "pv":
-		return data.GetPvTotalPower(), nil
+		return data.PvTotalPower, nil
 	case "battery":
-		return data.GetBatConvPower(), nil
+		return data.BatConvPower, nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
@@ -134,14 +121,14 @@ func (m *LgEss) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *LgEss) totalEnergy() (float64, error) {
-	data, err := m.conn.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
 
 	switch m.usage {
 	case "grid":
-		return data.GetCurrentGridFeedInEnergy() / 1e3, nil
+		return data.CurrentGridFeedInEnergy / 1e3, nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
@@ -149,10 +136,10 @@ func (m *LgEss) totalEnergy() (float64, error) {
 
 // batterySoc implements the api.Battery interface
 func (m *LgEss) batterySoc() (float64, error) {
-	data, err := m.conn.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
 
-	return data.GetBatUserSoc(), nil
+	return data.BatUserSoc, nil
 }

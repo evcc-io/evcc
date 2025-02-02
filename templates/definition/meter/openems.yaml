@@ -11,7 +11,6 @@ params:
     mask: true
     default: user
     advanced: true
-  - name: maxacpower
   - name: capacity
     advanced: true
 render: |
@@ -32,9 +31,6 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
-  {{- if eq .usage "pv" }}
-  maxacpower: {{ .maxacpower }} # W
-  {{- end }}
   {{- if eq .usage "battery" }}
   soc:
     source: http
