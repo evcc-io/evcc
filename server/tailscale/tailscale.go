@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -45,20 +44,11 @@ func Run(host string, port int) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("sc: %+v\n", sc)
 
-	// if sc.Web == nil {
-	// 	sc.Web = make(map[ipn.HostPort]*ipn.WebServerConfig)
-	// }
+	// proxyPort := ":8443"
 
-	// hostPort := ipn.HostPort(fmt.Sprintf(":%d", port))
-	// if _, err := hostPort.Port(); err != nil {
-	// 	panic(err)
-	// }
-	// target := "http://localhost:" + strconv.Itoa(port)
-
-	// fmt.Println(hostPort, "->", target)
-
-	t, err := ipn.ExpandProxyTargetValue("localhost:"+strconv.Itoa(port), []string{"http", "https", "https+insecure"}, "http")
+	t, err := ipn.ExpandProxyTargetValue("localhost:7070", []string{"http", "https", "https+insecure"}, "http")
 	if err != nil {
 		return err
 	}
@@ -74,7 +64,8 @@ func Run(host string, port int) error {
 
 	sc.SetWebHandler(&ipn.HTTPHandler{
 		Proxy: t,
-	}, dnsName, 443, "", true)
+	}, dnsName, 8888, "", false)
+	fmt.Println("dnsName", dnsName)
 
 	fmt.Printf("sc: %+v\n", sc)
 
@@ -82,9 +73,9 @@ func Run(host string, port int) error {
 		return err
 	}
 
-	// ln, err := s.Listen("tcp", ":443")
+	// ln, err := net.Listen("tcp", proxyPort)
 	// if err != nil {
-	// 	return  err
+	// 	return err
 	// }
 
 	// ln = tls.NewListener(ln, &tls.Config{
@@ -102,6 +93,8 @@ func handleListener(ln net.Listener, port string) {
 		if err != nil {
 			continue
 		}
+
+		fmt.Println("!! CONNECTED")
 
 		go func(downstream net.Conn) {
 			defer downstream.Close()
