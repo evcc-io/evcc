@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Provider is an api.Vehicle implementation for Seat Cupra cars
@@ -19,13 +19,13 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (Status, error) {
+		statusG: util.Cached(func() (Status, error) {
 			return api.Status(userID, vin)
 		}, cache),
-		positionG: provider.Cached(func() (Position, error) {
+		positionG: util.Cached(func() (Position, error) {
 			return api.ParkingPosition(vin)
 		}, cache),
-		milageG: provider.Cached(func() (Mileage, error) {
+		milageG: util.Cached(func() (Mileage, error) {
 			return api.Mileage(vin)
 		}, cache),
 		action: func(action, cmd string) error {

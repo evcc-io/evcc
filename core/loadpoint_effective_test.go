@@ -2,10 +2,13 @@ package core
 
 import (
 	"testing"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -66,5 +69,39 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 
 		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
 		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
+	}
+}
+
+func TestNextPlan(t *testing.T) {
+	clock := clock.NewMock()
+
+	ctrl := gomock.NewController(t)
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.charger = api.NewMockCharger(ctrl)
+
+	for _, tc := range []struct {
+		planId int
+		plans  []plan
+	}{
+		{1, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+		}},
+		{1, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20},
+			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+		}},
+		{2, []plan{
+			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20},
+			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+		}},
+		{2, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60},
+		}},
+	} {
+		res := lp.nextActivePlan(1e4, tc.plans)
+		require.NotNil(t, res)
+		assert.Equal(t, tc.planId, res.Id)
 	}
 }

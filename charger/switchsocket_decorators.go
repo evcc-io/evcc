@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error)) api.Charger {
+func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error), battery func() (float64, error)) api.Charger {
 	switch {
-	case meterEnergy == nil:
+	case battery == nil && meterEnergy == nil:
 		return base
 
-	case meterEnergy != nil:
+	case battery == nil && meterEnergy != nil:
 		return &struct {
 			*SwitchSocket
 			api.MeterEnergy
@@ -21,9 +21,43 @@ func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error
 				meterEnergy: meterEnergy,
 			},
 		}
+
+	case battery != nil && meterEnergy == nil:
+		return &struct {
+			*SwitchSocket
+			api.Battery
+		}{
+			SwitchSocket: base,
+			Battery: &decorateSwitchSocketBatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && meterEnergy != nil:
+		return &struct {
+			*SwitchSocket
+			api.Battery
+			api.MeterEnergy
+		}{
+			SwitchSocket: base,
+			Battery: &decorateSwitchSocketBatteryImpl{
+				battery: battery,
+			},
+			MeterEnergy: &decorateSwitchSocketMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateSwitchSocketBatteryImpl struct {
+	battery func() (float64, error)
+}
+
+func (impl *decorateSwitchSocketBatteryImpl) Soc() (float64, error) {
+	return impl.battery()
 }
 
 type decorateSwitchSocketMeterEnergyImpl struct {

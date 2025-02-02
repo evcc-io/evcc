@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -23,10 +23,10 @@ type Provider struct {
 
 func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (StatusResponse, error) {
+		statusG: util.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
 		}, cache),
-		locationG: provider.Cached(func() (LocationResponse, error) {
+		locationG: util.Cached(func() (LocationResponse, error) {
 			return api.Location(vin)
 		}, cache),
 		action: func(action, cmd string) (ActionResponse, error) {
@@ -37,7 +37,7 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 
 	// use pin for refreshing
 	if pin != "" {
-		impl.statusG = provider.Cached(func() (StatusResponse, error) {
+		impl.statusG = util.Cached(func() (StatusResponse, error) {
 			return impl.status(
 				func() (StatusResponse, error) { return api.Status(vin) },
 			)
