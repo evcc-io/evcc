@@ -10,9 +10,8 @@ requirements:
     de: |
       Benötigt mindestens Firmware 052.1 oder neuer.
 
-      Aktiviere "HTTP-API v1" über die Go-e App. Für 1P/3P-Phasenumschaltung wird zusätzlich "HTTP API v2" benötigt.
-
-       In der Go-E App (Menüpunkt "Auto") sollte die Option "Ausstecken simulieren" aktiviert sein.
+      Es wird die "HTTP-API v1"benötigt, für 1P/3P-Phasenumschaltung die "HTTP API v2".
+      In der Go-E App (Menüpunkt "Auto") sollte die Option "Ausstecken simulieren" aktiviert sein.
     en: |
       Requires firmware 052.1 or later.
 
