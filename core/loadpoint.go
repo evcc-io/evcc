@@ -279,43 +279,36 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 func (lp *Loadpoint) migrateSettings() {
 	// One-time migrations MUST be mirrored in restoreSettings
 	if lp.DefaultMode != "" {
-		lp.log.WARN.Println("deprecated: mode setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Mode); err != nil {
 			lp.settings.SetString(keys.Mode, string(lp.DefaultMode))
 		}
 	}
 	if lp.Title_ != "" {
-		lp.log.WARN.Println("deprecated: title setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Title); err != nil {
 			lp.settings.SetString(keys.Title, lp.Title_)
 		}
 	}
 	if lp.Priority_ > 0 {
-		lp.log.WARN.Println("deprecated: priority setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Priority); err != nil {
 			lp.settings.SetInt(keys.Priority, int64(lp.Priority_))
 		}
 	}
 	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
 		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
 			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
 		}
 	}
 	if lp.MaxCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
 		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
 			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
 		}
 	}
 	if lp.Phases_ > 0 {
-		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
 		if _, err := lp.settings.Int(keys.Phases); err != nil {
 			lp.settings.SetInt(keys.Phases, int64(lp.Phases_))
 		}
 	}
 	if lp.Soc.Estimate != nil || lp.Soc.Poll.Mode != loadpoint.PollCharging || lp.Soc.Poll.Interval != 0 {
-		lp.log.WARN.Println("deprecated: soc setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Soc); err != nil {
 			lp.settings.SetJson(keys.Soc, lp.Soc)
 		}
