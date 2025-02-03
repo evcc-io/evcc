@@ -77,7 +77,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 			return nil, fmt.Errorf("battery mode: %w", err)
 		}
 
-		batModeS = cc.battery.ModeController(modeS)
+		batModeS = func(mode api.BatteryMode) error {
+			return modeS(int64(mode))
+		}
 	}
 
 	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), cc.maxpower.Decorator(), batModeS)

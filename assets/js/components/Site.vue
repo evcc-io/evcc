@@ -42,7 +42,7 @@
 				</div>
 			</div>
 			<Loadpoints
-				v-else
+				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
 				:vehicles="vehicleList"
@@ -54,6 +54,8 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:selectedIndex="selectedLoadpointIndex"
+				@index-changed="selectedLoadpointChanged"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -84,6 +86,7 @@ export default {
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
+		selectedLoadpointIndex: Number,
 
 		notifications: Array,
 		offline: Boolean,
@@ -188,6 +191,11 @@ export default {
 					currency: this.currency,
 				},
 			};
+		},
+	},
+	methods: {
+		selectedLoadpointChanged(index) {
+			this.$router.push({ query: { lp: index + 1 } });
 		},
 	},
 };
