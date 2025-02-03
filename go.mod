@@ -211,3 +211,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
 replace github.com/hasura/go-graphql-client => github.com/andig/go-graphql-client v0.0.0-20250123081454-14ac4443ffd9
+
+replace github.com/nicksnyder/go-i18n/v2 => github.com/nicksnyder/go-i18n/v2 v2.4.1
