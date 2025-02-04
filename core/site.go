@@ -101,7 +101,7 @@ type Site struct {
 	pvPower       float64         // PV power
 	excessDCPower float64         // PV excess DC charge power (hybrid only)
 	auxPower      float64         // Aux power
-	batteryPower  float64         // Battery power (negative = charge, positive = discharge)
+	batteryPower  float64         // Battery power (charge negative, discharge positive)
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
 
