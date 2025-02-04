@@ -112,10 +112,10 @@ render: |
   power:
     source: go
     script: |
-      	if (brs&0x4 > 0 || bc < 0) && bp >= 0 {
-          return bp
-        }
-        return -bp
+      if (brs&0x4 > 0 || bc < 0) && bp >= 0 {
+        return bp
+      }
+      return -bp
     in:
     - name: brs
       type: int
