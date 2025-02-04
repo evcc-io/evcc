@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
@@ -55,7 +54,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 			}
 
 			for _, c := range configurable {
-				fmt.Println(strconv.Itoa(c.ID)+":", c.Type, c.Value)
+				fmt.Println(config.NameForID(c.ID)+":", c.Type, c.Value)
 			}
 
 			fmt.Println("")

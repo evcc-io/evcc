@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -34,7 +33,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	id, err := strconv.Atoi(args[0])
+	id, err := config.IDForName(args[0])
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -44,7 +43,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	fmt.Println(strconv.Itoa(c.ID)+":", c.Type, c.Value)
+	fmt.Println(config.NameForID(c.ID)+":", c.Type, c.Value)
 
 	switch c.Class {
 	case templates.Charger:
