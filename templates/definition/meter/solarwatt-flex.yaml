@@ -7,9 +7,9 @@ products:
 requirements:
   description:
     en: |
-      Template combines data of all connected PV inverters or batteries.
+      Combines data of all connected PV inverters or batteries.
     de: |
-      Template kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+      Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
