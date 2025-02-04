@@ -49,26 +49,14 @@ func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
 	return res.GetConsumerCarsV2, err
 }
 
-func (v *API) Status(ctx context.Context, vin string) (BatteryData, error) {
+func (v *API) CarTelemetry(ctx context.Context, vin string) (CarTelemetryData, error) {
 	var res struct {
-		BatteryData `graphql:"getBatteryData(vin: $vin)"`
+		CarTelemetryData `graphql:"carTelematics(vin: $vin)"`
 	}
 
 	err := v.client.Query(ctx, &res, map[string]any{
 		"vin": vin,
-	}, graphql.OperationName("GetBatteryData"))
+	}, graphql.OperationName("CarTelematics"))
 
-	return res.BatteryData, err
-}
-
-func (v *API) Odometer(ctx context.Context, vin string) (OdometerData, error) {
-	var res struct {
-		OdometerData `graphql:"getOdometerData(vin: $vin)"`
-	}
-
-	err := v.client.Query(ctx, &res, map[string]any{
-		"vin": vin,
-	}, graphql.OperationName("GetOdometerData"))
-
-	return res.OdometerData, err
+	return res.CarTelemetryData, err
 }
