@@ -43,6 +43,7 @@ labelResidualPower = "Jäännösteho"
 title = "Hallitse käyttäytymistä"
 
 [config.deviceValue]
+amount = "Määrä"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapasiteetti"

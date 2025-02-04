@@ -43,6 +43,7 @@ labelResidualPower = "Vermogensoverschot"
 title = "Regelgedrag"
 
 [config.deviceValue]
+amount = "Aantal"
 broker = "Agent"
 bucket = "Bucket"
 capacity = "Capaciteit"

@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -54,13 +54,13 @@ const (
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed     `mapstructure:",squash"`
-		SetMode   provider.Config
-		GetMode   *provider.Config // optional
-		MaxPower  *provider.Config // optional
-		Power     *provider.Config // optional
-		Energy    *provider.Config // optional
-		Temp      *provider.Config // optional
-		LimitTemp *provider.Config // optional
+		SetMode   plugin.Config
+		GetMode   *plugin.Config // optional
+		MaxPower  *plugin.Config // optional
+		Power     *plugin.Config // optional
+		Energy    *plugin.Config // optional
+		Temp      *plugin.Config // optional
+		LimitTemp *plugin.Config // optional
 		Phases    int
 	}{
 		embed: embed{
@@ -74,25 +74,19 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	set, err := provider.NewIntSetterFromConfig(ctx, "mode", cc.SetMode)
+	set, err := cc.SetMode.IntSetter(ctx, "mode")
 	if err != nil {
 		return nil, err
 	}
 
-	var get func() (int64, error)
-	if cc.GetMode != nil {
-		get, err = provider.NewIntGetterFromConfig(ctx, *cc.GetMode)
-		if err != nil {
-			return nil, err
-		}
+	get, err := cc.GetMode.IntGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	var maxPower func(int64) error
-	if cc.MaxPower != nil {
-		maxPower, err = provider.NewIntSetterFromConfig(ctx, "maxpower", *cc.MaxPower)
-		if err != nil {
-			return nil, err
-		}
+	maxPower, err := cc.MaxPower.IntSetter(ctx, "maxpower")
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := NewSgReady(ctx, &cc.embed, set, get, maxPower, cc.Phases)
@@ -101,38 +95,26 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	}
 
 	// decorate power
-	var powerG func() (float64, error)
-	if cc.Power != nil {
-		powerG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Power)
-		if err != nil {
-			return nil, fmt.Errorf("power: %w", err)
-		}
+	powerG, err := cc.Power.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("power: %w", err)
 	}
 
 	// decorate energy
-	var energyG func() (float64, error)
-	if cc.Energy != nil {
-		energyG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
-		if err != nil {
-			return nil, fmt.Errorf("energy: %w", err)
-		}
+	energyG, err := cc.Energy.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("energy: %w", err)
 	}
 
 	// decorate temp
-	var tempG func() (float64, error)
-	if cc.Temp != nil {
-		tempG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Temp)
-		if err != nil {
-			return nil, fmt.Errorf("temp: %w", err)
-		}
+	tempG, err := cc.Temp.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("temp: %w", err)
 	}
 
-	var limitTempG func() (int64, error)
-	if cc.LimitTemp != nil {
-		limitTempG, err = provider.NewIntGetterFromConfig(ctx, *cc.LimitTemp)
-		if err != nil {
-			return nil, fmt.Errorf("limit temp: %w", err)
-		}
+	limitTempG, err := cc.LimitTemp.IntGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("limit temp: %w", err)
 	}
 
 	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil

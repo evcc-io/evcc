@@ -6,6 +6,7 @@
 			type="button"
 			class="btn flex-grow-1 flex-shrink-1"
 			:class="{ active: isActive(m) }"
+			tabindex="0"
 			@click="setTargetMode(m)"
 		>
 			{{ label(m) }}
@@ -72,6 +73,10 @@ export default {
 }
 .btn:hover {
 	color: var(--evcc-gray);
+}
+.btn:focus {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
 }
 .btn.active {
 	color: var(--evcc-background);
