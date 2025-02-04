@@ -43,7 +43,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	fmt.Println(config.NameForID(c.ID)+":", c.Type, c.Value)
+	fmt.Println(config.NameForID(c.ID), "type:"+c.Type, c.Value)
 
 	switch c.Class {
 	case templates.Charger:
