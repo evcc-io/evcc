@@ -261,11 +261,6 @@ func (c CountryCode) IsValid() bool {
 	return validCode.MatchString(string(c))
 }
 
-const (
-	CountryCodeDE CountryCode = "DE"
-	CountryCodeUS CountryCode = "US"
-)
-
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
