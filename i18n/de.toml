@@ -104,6 +104,7 @@ title = "EEBus"
 [config.form]
 example = "Beispiel"
 optional = "optional"
+deprecated = "veraltet"
 
 [config.general]
 cancel = "Abbrechen"
