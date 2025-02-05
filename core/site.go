@@ -549,7 +549,7 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	batterySocAccumulator := lo.SumBy(mm, func(m measurement) float64 {
+	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {
 		// weigh soc by capacity
 		if *m.Capacity > 0 {
 			return *m.Soc * *m.Capacity
