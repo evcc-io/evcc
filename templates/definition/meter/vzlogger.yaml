@@ -71,6 +71,7 @@ render: |
     source: http # use http plugin
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .uuid) }}) | .tuples[0][1] # parse response json
+    cache: 1s
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
@@ -79,34 +80,43 @@ render: |
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1currentuuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2currentuuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3currentuuid) }}) | .tuples[0][1]
+    cache: 1s
   {{ end -}}
   {{ if and .l1poweruuid .l2poweruuid .l3poweruuid -}}
   powers:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1poweruuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2poweruuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3poweruuid) }}) | .tuples[0][1]
+    cache: 1s
   {{ end -}}
   {{ if and .l1voltageuuid .l2voltageuuid .l3voltageuuid -}}
   voltages:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1voltageuuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2voltageuuid) }}) | .tuples[0][1]
+    cache: 1s
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3voltageuuid) }}) | .tuples[0][1]
+    cache: 1s
   {{ end -}}
