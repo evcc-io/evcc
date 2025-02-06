@@ -112,7 +112,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 
 	go func() {
 		for tick := time.Tick(10 * time.Second); ; {
-
 			err := client.Run()
 			if err != nil {
 				log.ERROR.Println(err)
@@ -144,7 +143,6 @@ func subscribe(t *Tibber, client *graphql.SubscriptionClient, cc struct {
 	HomeID  string
 	Timeout time.Duration
 }) error {
-
 	if t.subscriptionId != "" {
 		if err := client.Unsubscribe(t.subscriptionId); err != nil {
 			return err
