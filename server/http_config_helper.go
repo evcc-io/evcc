@@ -192,8 +192,8 @@ func testInstance(instance any) map[string]testResult {
 		res["phases1p3p"] = makeResult(true, nil)
 	}
 
-	if cc, ok := instance.(api.PhaseDescriber); ok {
-		res["singlePhase"] = makeResult(cc.Phases() == 1, nil)
+	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
+		res["singlePhase"] = makeResult(true, nil)
 	}
 
 	if dev, ok := instance.(api.VehicleRange); ok {
