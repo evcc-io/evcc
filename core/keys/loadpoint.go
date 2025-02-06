@@ -19,10 +19,12 @@ const (
 	DisableDelay     = "disableDelay"
 	BatteryBoost     = "batteryBoost"
 
+	// TODO FIX WORDING
 	Phases           = "phases"           // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
 	PhasesConfigured = "phasesConfigured" // TODO mirrors "phases" for UI purposes
-	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+	// TODO REMOVE
+	PhasesEnabled = "phasesEnabled" // enabled phases (1/3)
+	PhasesActive  = "phasesActive"  // active phases as used by vehicle (1/2/3)
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature

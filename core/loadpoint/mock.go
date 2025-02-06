@@ -209,6 +209,20 @@ func (mr *MockAPIMockRecorder) GetCircuitName() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitName", reflect.TypeOf((*MockAPI)(nil).GetCircuitName))
 }
 
+// GetConfiguredPhases mocks base method.
+func (m *MockAPI) GetConfiguredPhases() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConfiguredPhases")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetConfiguredPhases indicates an expected call of GetConfiguredPhases.
+func (mr *MockAPIMockRecorder) GetConfiguredPhases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfiguredPhases", reflect.TypeOf((*MockAPI)(nil).GetConfiguredPhases))
+}
+
 // GetDefaultMode mocks base method.
 func (m *MockAPI) GetDefaultMode() api.ChargeMode {
 	m.ctrl.T.Helper()
@@ -656,6 +670,20 @@ func (mr *MockAPIMockRecorder) SetBatteryBoost(enable any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).SetBatteryBoost), enable)
 }
 
+// SetConfiguredPhases mocks base method.
+func (m *MockAPI) SetConfiguredPhases(arg0 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetConfiguredPhases", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetConfiguredPhases indicates an expected call of SetConfiguredPhases.
+func (mr *MockAPIMockRecorder) SetConfiguredPhases(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfiguredPhases", reflect.TypeOf((*MockAPI)(nil).SetConfiguredPhases), arg0)
+}
+
 // SetDefaultMode mocks base method.
 func (m *MockAPI) SetDefaultMode(arg0 api.ChargeMode) {
 	m.ctrl.T.Helper()
@@ -778,20 +806,6 @@ func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
 func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
-}
-
-// SetPhases mocks base method.
-func (m *MockAPI) SetPhases(arg0 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPhases", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetPhases indicates an expected call of SetPhases.
-func (mr *MockAPIMockRecorder) SetPhases(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhases", reflect.TypeOf((*MockAPI)(nil).SetPhases), arg0)
 }
 
 // SetPlanEnergy mocks base method.

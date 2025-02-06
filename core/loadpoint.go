@@ -227,9 +227,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.phases = 3
 	}
 
-	// TODO deprecated
-	lp.migrateSettings()
-
 	// validate thresholds
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
@@ -275,53 +272,6 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	return lp
 }
 
-// migrateSettings migrates loadpoint settings
-func (lp *Loadpoint) migrateSettings() {
-	// One-time migrations MUST be mirrored in restoreSettings
-	if lp.DefaultMode != "" {
-		lp.log.WARN.Println("deprecated: mode setting is ignored, please remove")
-		if _, err := lp.settings.String(keys.Mode); err != nil {
-			lp.settings.SetString(keys.Mode, string(lp.DefaultMode))
-		}
-	}
-	if lp.Title_ != "" {
-		lp.log.WARN.Println("deprecated: title setting is ignored, please remove")
-		if _, err := lp.settings.String(keys.Title); err != nil {
-			lp.settings.SetString(keys.Title, lp.Title_)
-		}
-	}
-	if lp.Priority_ > 0 {
-		lp.log.WARN.Println("deprecated: priority setting is ignored, please remove")
-		if _, err := lp.settings.String(keys.Priority); err != nil {
-			lp.settings.SetInt(keys.Priority, int64(lp.Priority_))
-		}
-	}
-	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
-		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
-			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
-		}
-	}
-	if lp.MaxCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
-		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
-			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
-		}
-	}
-	if lp.Phases_ > 0 {
-		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
-		if _, err := lp.settings.Int(keys.Phases); err != nil {
-			lp.settings.SetInt(keys.Phases, int64(lp.Phases_))
-		}
-	}
-	if lp.Soc.Estimate != nil || lp.Soc.Poll.Mode != loadpoint.PollCharging || lp.Soc.Poll.Interval != 0 {
-		lp.log.WARN.Println("deprecated: soc setting is ignored, please remove")
-		if _, err := lp.settings.String(keys.Soc); err != nil {
-			lp.settings.SetJson(keys.Soc, lp.Soc)
-		}
-	}
-}
-
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
@@ -336,9 +286,12 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
 		lp.setPriority(int(v))
 	}
-	if v, err := lp.settings.Int(keys.Phases); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
-		lp.phases = lp.configuredPhases
+		if !lp.hasPhaseSwitching() {
+			// TODO FIX PUBLISHING/ use setter?
+			lp.phases = lp.configuredPhases
+		}
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
@@ -657,6 +610,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
+	// TODO REMOVE PhasesEnabled
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
