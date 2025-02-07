@@ -57,5 +57,15 @@ const state = reactive({
 				:chargeCurrents="[0, 13, 0]"
 			/>
 		</Variant>
+		<Variant title="mainly third phase">
+			<Phases
+				v-bind="state"
+				:phasesActive="1"
+				:chargeCurrent="10"
+				:chargeCurrents="[0.007, 0.009, 5.945]"
+				:minCurrent="6"
+				:maxCurrent="20"
+			/>
+		</Variant>
 	</Story>
 </template>

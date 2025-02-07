@@ -58,7 +58,7 @@ export default {
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
 				case "soc":
-				case "socLimit":
+				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
 					return this.fmtTemperature(value);
