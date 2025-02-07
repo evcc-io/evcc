@@ -209,18 +209,18 @@ func (mr *MockAPIMockRecorder) GetCircuitName() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitName", reflect.TypeOf((*MockAPI)(nil).GetCircuitName))
 }
 
-// GetConfiguredPhases mocks base method.
-func (m *MockAPI) GetConfiguredPhases() int {
+// GetPhasesConfigured mocks base method.
+func (m *MockAPI) GetPhasesConfigured() int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfiguredPhases")
+	ret := m.ctrl.Call(m, "GetPhasesConfigured")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
-// GetConfiguredPhases indicates an expected call of GetConfiguredPhases.
-func (mr *MockAPIMockRecorder) GetConfiguredPhases() *gomock.Call {
+// GetPhasesConfigured indicates an expected call of GetPhasesConfigured.
+func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfiguredPhases", reflect.TypeOf((*MockAPI)(nil).GetConfiguredPhases))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).GetPhasesConfigured))
 }
 
 // GetDefaultMode mocks base method.
@@ -670,18 +670,18 @@ func (mr *MockAPIMockRecorder) SetBatteryBoost(enable any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).SetBatteryBoost), enable)
 }
 
-// SetConfiguredPhases mocks base method.
-func (m *MockAPI) SetConfiguredPhases(arg0 int) error {
+// SetPhasesConfigured mocks base method.
+func (m *MockAPI) SetPhasesConfigured(arg0 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetConfiguredPhases", arg0)
+	ret := m.ctrl.Call(m, "SetPhasesConfigured", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetConfiguredPhases indicates an expected call of SetConfiguredPhases.
-func (mr *MockAPIMockRecorder) SetConfiguredPhases(arg0 any) *gomock.Call {
+// SetPhasesConfigured indicates an expected call of SetPhasesConfigured.
+func (mr *MockAPIMockRecorder) SetPhasesConfigured(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfiguredPhases", reflect.TypeOf((*MockAPI)(nil).SetConfiguredPhases), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).SetPhasesConfigured), arg0)
 }
 
 // SetDefaultMode mocks base method.

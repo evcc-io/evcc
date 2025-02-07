@@ -173,15 +173,15 @@ func (lp *Loadpoint) GetPhases() int {
 	return lp.phases
 }
 
-// GetConfiguredPhases returns statically configured phases
-func (lp *Loadpoint) GetConfiguredPhases() int {
+// GetPhasesConfigured returns statically configured phases
+func (lp *Loadpoint) GetPhasesConfigured() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.configuredPhases
+	return lp.phasesConfigured
 }
 
-// SetConfiguredPhases sets the statically configured phases
-func (lp *Loadpoint) SetConfiguredPhases(phases int) error {
+// SetPhasesConfigured sets the statically configured phases
+func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if !lp.hasPhaseSwitching() && phases == 0 {
 		return fmt.Errorf("charger does not support phase switching")
@@ -195,7 +195,7 @@ func (lp *Loadpoint) SetConfiguredPhases(phases int) error {
 	lp.log.DEBUG.Println("set phases:", phases)
 
 	lp.Lock()
-	lp.setConfiguredPhases(phases)
+	lp.setPhasesConfigured(phases)
 	lp.Unlock()
 
 	// apply immediately if not 1p3p

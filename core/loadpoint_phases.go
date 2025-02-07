@@ -5,15 +5,15 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 )
 
-// setConfiguredPhases sets the default phase configuration
-func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.configuredPhases = phases
+// setPhasesConfigured sets the default phase configuration
+func (lp *Loadpoint) setPhasesConfigured(phases int) {
+	lp.phasesConfigured = phases
 
 	// TODO CLARIFY
-	lp.publish(keys.Phases, lp.configuredPhases)
+	lp.publish(keys.Phases, lp.phasesConfigured)
 
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
+	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
+	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.phasesConfigured))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -22,9 +22,6 @@ func (lp *Loadpoint) setPhases(phases int) {
 		lp.Lock()
 		lp.phases = phases
 		lp.Unlock()
-
-		// publish updated phase configuration
-		lp.publish(keys.PhasesEnabled, lp.phases)
 
 		// reset timer to disabled state
 		lp.resetPhaseTimer()
@@ -81,11 +78,11 @@ func (lp *Loadpoint) ActivePhases() int {
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
 	lp.RLock()
-	configuredPhases := lp.configuredPhases
+	phasesConfigured := lp.phasesConfigured
 	lp.RUnlock()
 
 	// 1p3p supported or limit 1p
-	if lp.hasPhaseSwitching() || configuredPhases == 1 {
+	if lp.hasPhaseSwitching() || phasesConfigured == 1 {
 		return 1
 	}
 
@@ -107,7 +104,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 	// if 1p3p supported then assume configured limit or 3p
 	if lp.hasPhaseSwitching() {
 		lp.RLock()
-		physical = lp.configuredPhases
+		physical = lp.phasesConfigured
 		lp.RUnlock()
 	}
 

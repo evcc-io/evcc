@@ -106,7 +106,7 @@ type Loadpoint struct {
 	priority         int      // Priority
 	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
-	configuredPhases int      // Charger configured phase mode 0/1/3
+	phasesConfigured int      // Charger configured phase mode 0/1/3
 	limitSoc         int      // Session limit for soc
 	limitEnergy      float64  // Session limit for energy
 	smartCostLimit   *float64 // always charge if cost is below this value
@@ -223,7 +223,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
-		lp.configuredPhases = 3
+		lp.phasesConfigured = 3
 		lp.phases = 3
 	}
 
@@ -287,11 +287,11 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setPriority(int(v))
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
-		lp.setConfiguredPhases(int(v))
+		lp.setPhasesConfigured(int(v))
 		// for 1p3p charger, we don't know the physical state yet (phases == 0), so don't touch it
 		if !lp.hasPhaseSwitching() {
 			// TODO FIX PUBLISHING/ use setter?
-			lp.phases = lp.configuredPhases
+			lp.phases = lp.phasesConfigured
 		}
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
@@ -598,21 +598,19 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
-		if lp.configuredPhases != phases && lp.configuredPhases != 0 {
-			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", lp.configuredPhases, phases)
+		if lp.phasesConfigured != phases && lp.phasesConfigured != 0 {
+			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", lp.phasesConfigured, phases)
 		}
 		lp.phases = phases
-		lp.configuredPhases = phases
+		lp.phasesConfigured = phases
 		lp.publish(keys.Phases, phases)
 	} else {
 		lp.publish(keys.Phases, nil)
 	}
 
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
-	// TODO REMOVE PhasesEnabled
-	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
@@ -1136,13 +1134,13 @@ func (lp *Loadpoint) resetPhaseTimer() {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
-	return lp.hasPhaseSwitching() && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
+	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
-	if lp.configuredPhases != 0 {
-		phases = lp.configuredPhases
+	if lp.phasesConfigured != 0 {
+		phases = lp.phasesConfigured
 	}
 
 	if lp.hasPhaseSwitching() {
@@ -1206,7 +1204,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	var waiting bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
-	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.configuredPhases < 3
+	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.phasesConfigured < 3
 
 	lp.log.DEBUG.Printf("!! pvScalePhases DOWN activePhases: %d, available power: %.0fW, scalable: %t", activePhases, availablePower, scalable)
 
@@ -1800,7 +1798,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 		err = lp.setLimit(0)
 
 	case lp.scalePhasesRequired():
-		err = lp.scalePhases(lp.configuredPhases)
+		err = lp.scalePhases(lp.phasesConfigured)
 
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
 		remoteDisabled = loadpoint.RemoteHardDisable

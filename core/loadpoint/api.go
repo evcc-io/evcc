@@ -68,10 +68,10 @@ type API interface {
 	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the currently enabled phases
 	GetPhases() int
-	// GetConfiguredPhases returns statically configured phases
-	GetConfiguredPhases() int
-	// SetConfiguredPhases sets the statically configured phases
-	SetConfiguredPhases(int) error
+	// GetPhasesConfigured returns statically configured phases
+	GetPhasesConfigured() int
+	// SetPhasesConfigured sets the statically configured phases
+	SetPhasesConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 

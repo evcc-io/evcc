@@ -20,7 +20,7 @@ type DynamicConfig struct {
 	Title            string    `json:"title"`
 	DefaultMode      string    `json:"defaultMode"`
 	Priority         int       `json:"priority"`
-	ConfiguredPhases int       `json:"configuredPhases"`
+	PhasesConfigured int       `json:"phasesConfigured"`
 	MinCurrent       float64   `json:"minCurrent"`
 	MaxCurrent       float64   `json:"maxCurrent"`
 	SmartCostLimit   *float64  `json:"smartCostLimit"`
@@ -69,7 +69,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	}
 
 	if err == nil {
-		err = lp.SetConfiguredPhases(payload.ConfiguredPhases)
+		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
 	if err == nil && payload.MinCurrent != 0 {
