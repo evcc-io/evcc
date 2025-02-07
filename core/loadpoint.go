@@ -451,7 +451,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// energy
 	lp.energyMetrics.Reset()
 	lp.energyMetrics.Publish("session", lp)
-	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
@@ -489,7 +489,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// energy and duration
 	lp.energyMetrics.Publish("session", lp)
-	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
 
 	// charge status
@@ -943,19 +943,23 @@ func (lp *Loadpoint) vehicleHasSoc() bool {
 
 // remainingLimitEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingLimitEnergy() (float64, bool) {
-	limit := lp.GetLimitEnergy()
+	limit := lp.getLimitEnergy()
 	return max(0, limit-lp.getChargedEnergy()/1e3),
 		limit > 0 && !lp.socBasedPlanning()
 }
 
-// limitEnergyReached checks if target is configured and reached
-func (lp *Loadpoint) limitEnergyReached() bool {
+// LimitEnergyReached checks if target is configured and reached
+func (lp *Loadpoint) LimitEnergyReached() bool {
+	lp.RLock()
+	defer lp.RUnlock()
 	f, ok := lp.remainingLimitEnergy()
 	return ok && f <= 0
 }
 
-// limitSocReached returns true if the effective limit has been reached
-func (lp *Loadpoint) limitSocReached() bool {
+// LimitSocReached returns true if the effective limit has been reached
+func (lp *Loadpoint) LimitSocReached() bool {
+	lp.RLock()
+	defer lp.RUnlock()
 	limit := lp.effectiveLimitSoc()
 	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
 }
@@ -982,7 +986,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	}
 
 	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
-	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
+	return minEnergy > 0 && lp.GetChargedEnergy() < minEnergy
 }
 
 // disableUnlessClimater disables the charger unless climate is active
@@ -1579,7 +1583,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	lp.energyMetrics.Publish("session", lp)
 
 	// TODO deprecated: use sessionEnergy instead
-	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
 	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
 		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
@@ -1608,7 +1612,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
-		f, err := socEstimator.Soc(lp.getChargedEnergy())
+		f, err := socEstimator.Soc(lp.GetChargedEnergy())
 		if err != nil {
 			if loadpoint.AcceptableError(err) {
 				lp.socUpdated = time.Time{}
@@ -1638,7 +1642,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		// use minimum of vehicle and loadpoint
-		limitSoc := min(apiLimitSoc, lp.effectiveLimitSoc())
+		limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 
 		var d time.Duration
 		if lp.charging() {
@@ -1817,12 +1821,12 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	case lp.limitEnergyReached():
-		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.limitEnergy)
+	case lp.LimitEnergyReached():
+		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.limitSocReached():
-		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.effectiveLimitSoc())
+	case lp.LimitSocReached():
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	// immediate charging- must be placed after limits are evaluated
@@ -1863,7 +1867,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
 		// TODO take vehicle api limits into account
-		int(lp.vehicleSoc) < lp.effectiveLimitSoc() && lp.wakeUpTimer.Expired() {
+		int(lp.vehicleSoc) < lp.EffectiveLimitSoc() && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()
 	}
 

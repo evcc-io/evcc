@@ -70,7 +70,7 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 		return float64(soc), true
 	}
 
-	_, limit := lp.GetPlanEnergy()
+	_, limit := lp.getPlanEnergy()
 	return limit, false
 }
 

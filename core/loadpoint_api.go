@@ -133,10 +133,15 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns session charge energy in Wh
-func (lp *Loadpoint) getChargedEnergy() float64 {
+// GetChargedEnergy returns session charge energy in Wh
+func (lp *Loadpoint) GetChargedEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getChargedEnergy()
+}
+
+// getChargedEnergy returns session charge energy in Wh
+func (lp *Loadpoint) getChargedEnergy() float64 {
 	return lp.energyMetrics.TotalWh()
 }
 
@@ -170,6 +175,11 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getPhases()
+}
+
+// getPhases returns loadpoint enabled phases
+func (lp *Loadpoint) getPhases() int {
 	return lp.phases
 }
 
@@ -240,6 +250,11 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getLimitEnergy()
+}
+
+// getLimitEnergy returns the session limit energy
+func (lp *Loadpoint) getLimitEnergy() float64 {
 	return lp.limitEnergy
 }
 
@@ -268,6 +283,11 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getPlanEnergy()
+}
+
+// getPlanEnergy returns plan target energy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
 	return lp.planTime, lp.planEnergy
 }
 
@@ -588,6 +608,11 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 func (lp *Loadpoint) GetMaxCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getMaxCurrent()
+}
+
+// getMaxCurrent returns the max loadpoint current
+func (lp *Loadpoint) getMaxCurrent() float64 {
 	return lp.maxCurrent
 }
 
