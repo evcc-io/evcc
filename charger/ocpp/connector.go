@@ -61,7 +61,7 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 
 	// only trigger if we don't already have a status
 	if !ok && cp.HasRemoteTriggerFeature {
-    	if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
 			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
 		}
 	}
@@ -107,10 +107,8 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
-		if update {
-			if conn.cp.HasRemoteTriggerFeature {
-				conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-			}
+		if update && conn.cp.HasRemoteTriggerFeature {
+			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		}
 	}
 }
