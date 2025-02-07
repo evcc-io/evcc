@@ -166,7 +166,7 @@ func NewOCPP(id string, connector int, idTag string,
 		return nil, err
 	}
 
-	log.DEBUG.Printf("connected %s:%d", id, connector)
+	log.DEBUG.Printf("!! connected %s:%d", id, connector)
 
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
 		return nil, fmt.Errorf("invalid connector: %d", connector)
