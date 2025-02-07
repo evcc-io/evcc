@@ -288,6 +288,7 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
+		// for 1p3p charger, we don't know the physical state yet (phases == 0), so don't touch it
 		if !lp.hasPhaseSwitching() {
 			// TODO FIX PUBLISHING/ use setter?
 			lp.phases = lp.configuredPhases
