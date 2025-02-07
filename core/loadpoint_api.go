@@ -166,7 +166,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 	lp.log.DEBUG.Println("set priority:", prio)
 
-	if lp.Priority_ != prio {
+	if lp.Priority != prio {
 		lp.setPriority(prio)
 	}
 }
