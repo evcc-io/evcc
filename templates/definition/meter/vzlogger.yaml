@@ -68,9 +68,6 @@ params:
   - name: cache
     advanced: true
     default: 1s
-    description:
-      de: Cache Dauer
-      en: Cache duration
 render: |
   type: custom
   power: # power reading
