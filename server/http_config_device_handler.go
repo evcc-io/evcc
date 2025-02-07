@@ -94,10 +94,16 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		dc["id"] = configurable.ID()
 		dc["config"] = params
 	} else if title := conf.Other["title"]; title != nil {
-		// from yaml- add title only
+		// from yaml
+		config := make(map[string]any)
 		if s, ok := title.(string); ok {
-			dc["config"] = map[string]any{"title": s}
+			config["title"] = s
 		}
+		// add icon if available
+		if icon, ok := conf.Other["icon"].(string); ok {
+			config["icon"] = icon
+		}
+		dc["config"] = config
 	}
 
 	return dc, nil
