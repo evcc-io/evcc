@@ -102,6 +102,7 @@ description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Gerä
 title = "EEBus"
 
 [config.form]
+deprecated = "veraltet"
 example = "Beispiel"
 optional = "optional"
 

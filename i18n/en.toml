@@ -105,6 +105,7 @@ description = "Configuration that enables evcc to communicate with other EEBus d
 title = "EEBus"
 
 [config.form]
+deprecated = "deprecated"
 example = "Example"
 optional = "optional"
 
