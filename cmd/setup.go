@@ -986,7 +986,6 @@ func configureLoadpoints(conf globalconfig.All) error {
 		if err := dynamic.Apply(instance); err != nil {
 			return &DeviceError{cc.Name, err}
 		}
-
 	}
 
 	return nil
