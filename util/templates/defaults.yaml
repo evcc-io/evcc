@@ -165,7 +165,7 @@ params:
     type: int
   - name: maxsoc
     description:
-      de: Maximale Ladestand (%)
+      de: Maximaler Ladestand (%)
       en: Maximum charge (%)
     help:
       de: Oberes Limit beim Laden der Batterie aus dem Netz
