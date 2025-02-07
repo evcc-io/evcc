@@ -89,10 +89,10 @@ powerRange = "Power"
 range = "Range"
 singlePhase = "Single phase"
 soc = "Charge"
-vehicleLimitSoc = "Vehicle limit"
 temp = "Temperature"
 topic = "Topic"
 url = "URL"
+vehicleLimitSoc = "Vehicle limit"
 yes = "yes"
 
 [config.deviceValueChargeStatus]

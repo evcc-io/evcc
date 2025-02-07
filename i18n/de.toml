@@ -86,10 +86,10 @@ powerRange = "Leistung"
 range = "Reichweite"
 singlePhase = "Einphasig"
 soc = "Ladestand"
-vehicleLimitSoc = "Fahrzeuglimit"
 temp = "Temperatur"
 topic = "Thema"
 url = "URL"
+vehicleLimitSoc = "Fahrzeuglimit"
 yes = "Ja"
 
 [config.deviceValueChargeStatus]
