@@ -171,7 +171,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	}
 }
 
-// GetPhases returns the currently enabled phases
+// GetPhases returns the enabled phases
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
