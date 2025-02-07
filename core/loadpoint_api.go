@@ -183,14 +183,14 @@ func (lp *Loadpoint) getPhases() int {
 	return lp.phases
 }
 
-// GetPhasesConfigured returns statically configured phases
+// GetPhasesConfigured returns the configured phases
 func (lp *Loadpoint) GetPhasesConfigured() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.phasesConfigured
 }
 
-// SetPhasesConfigured sets the statically configured phases
+// SetPhasesConfigured sets the configured phases
 func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if !lp.hasPhaseSwitching() && phases == 0 {
