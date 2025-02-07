@@ -66,7 +66,7 @@ type API interface {
 	GetDefaultMode() api.ChargeMode
 	// SetDefaultMode sets the default charge mode (for reset)
 	SetDefaultMode(api.ChargeMode)
-	// GetPhases returns the currently enabled phases
+	// GetPhases returns the enabled phases
 	GetPhases() int
 	// GetPhasesConfigured returns statically configured phases
 	GetPhasesConfigured() int
