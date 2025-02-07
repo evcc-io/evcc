@@ -203,7 +203,7 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
-		res["socLimit"] = makeResult(val, err)
+		res["vehicleLimitSoc"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {
