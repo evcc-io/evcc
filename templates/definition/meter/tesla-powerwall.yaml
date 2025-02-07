@@ -38,15 +38,9 @@ params:
   - name: minsoc
     type: int
     advanced: true
-    help:
-      en: the battery reserve percentage to reset to when switching the Battery back to normal operations
-      de: die Energyreserve auf die zurückgesetzt wird, wenn die Entladung wieder freigegeben wird
   - name: maxsoc
     type: int
     advanced: true
-    help:
-      en: the battery reserve percentage to set to when switching the Battery to charge mode
-      de: die Energyreserve auf die gesetzt wird, wenn Batterieladung angefordert wird
 render: |
   type: powerwall
   uri: {{ .host }}
