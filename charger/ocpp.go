@@ -144,7 +144,7 @@ func NewOCPP(id string, connector int, idTag string,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	log.DEBUG.Printf("registering %s:%d", id, connector)
+	log.DEBUG.Printf("!! registering %s:%d", id, connector)
 
 	cp, err := ocpp.Instance().RegisterChargepoint(id,
 		func() *ocpp.CP {
