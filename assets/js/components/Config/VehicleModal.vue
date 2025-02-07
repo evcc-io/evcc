@@ -149,7 +149,6 @@
 						</FormRow>
 					</div>
 
-					<!-- todo: only show when multiple loadpoints exist -->
 					<FormRow
 						id="vehicleParamPriority"
 						label="Priority"
@@ -300,6 +299,8 @@ export default {
 					return p;
 				});
 
+			// non-optional fields first
+			params.sort((a, b) => (a.Required ? -1 : 1) - (b.Required ? -1 : 1));
 			// always start with title and icon field
 			const order = { title: -2, icon: -1 };
 			params.sort((a, b) => (order[a.Name] || 0) - (order[b.Name] || 0));
@@ -307,10 +308,10 @@ export default {
 			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		description() {
 			return this.template?.Requirements?.Description;

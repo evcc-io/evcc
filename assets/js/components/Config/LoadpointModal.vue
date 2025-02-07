@@ -284,12 +284,14 @@
 					:label="$t('config.loadpoint.priorityLabel')"
 					:help="$t('config.loadpoint.priorityHelp')"
 				>
-					<SelectGroup
+					<PropertyField
 						id="loadpointParamPriority"
 						v-model="values.priority"
-						class="w-100"
-						:options="priorityOptions"
-						transparent
+						type="Choice"
+						size="w-100"
+						class="me-2"
+						:choice="priorityOptions"
+						required
 					/>
 				</FormRow>
 
@@ -654,14 +656,13 @@ export default {
 			return !this.isNew;
 		},
 		showPriority() {
-			return this.priorityOptions.length > 1;
+			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
 		},
 		priorityOptions() {
-			const maxPriority = this.loadpointCount + (this.isNew ? 1 : 0);
-			const result = Array.from({ length: maxPriority }, (_, i) => ({
-				value: i,
-				name: `${i}`,
-			}));
+			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			result[0].name = "0 (default)";
+			result[0].key = undefined;
+			result[10].name = "10 (highest)";
 			return result;
 		},
 		showCircuit() {

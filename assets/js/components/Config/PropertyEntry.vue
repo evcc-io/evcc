@@ -2,6 +2,7 @@
 	<FormRow
 		:id="id"
 		:optional="!Required"
+		:deprecated="Deprecated"
 		:label="Description || `[${Name}]`"
 		:help="Description === Help ? undefined : Help"
 		:example="Example"
@@ -31,6 +32,7 @@ export default {
 		id: String,
 		Name: String,
 		Required: Boolean,
+		Deprecated: Boolean,
 		Description: String,
 		Help: String,
 		Example: String,
