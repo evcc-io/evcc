@@ -59,12 +59,10 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 		}
 	})
 
-	if cp.HasRemoteTriggerFeature {
-		// only trigger if we don't already have a status
-		if !ok {
-			if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-				cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
-			}
+	// only trigger if we don't already have a status
+	if !ok && cp.HasRemoteTriggerFeature {
+    	if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
 		}
 	}
 
