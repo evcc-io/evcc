@@ -93,14 +93,16 @@ type Loadpoint struct {
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
 
-	// TODO deprecated
-	DefaultMode    api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
-	Title_         string         `mapstructure:"title"`         // UI title
-	Priority_      int            `mapstructure:"priority"`      // Priority
-	GuardDuration_ time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
-	Phases_        int            `mapstructure:"phases"`
-	MinCurrent_    float64        `mapstructure:"minCurrent"`
-	MaxCurrent_    float64        `mapstructure:"maxCurrent"`
+	// from yaml
+	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
+	Title       string         `mapstructure:"title"`    // UI title
+	Priority    int            `mapstructure:"priority"` // Priority
+
+	// from yaml, deprecated
+	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
+	Phases_        int           `mapstructure:"phases"`        // ignored, present for compatibility
+	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
+	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
 	title            string   // UI title
 	priority         int      // Priority
@@ -277,9 +279,30 @@ func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
 		return
 	}
-	if v, err := lp.settings.String(keys.Title); err == nil && v != "" {
-		lp.setTitle(v)
+
+	// from yaml
+	if lp.Title != "" {
+		lp.setTitle(lp.Title)
 	}
+	if lp.Priority > 0 {
+		lp.setPriority(lp.Priority)
+	}
+
+	// deprecated yaml properties
+	if lp.Phases_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated phases: %d. please configure via UI", lp.Phases_)
+	}
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated minCurrent: %f. please configure via UI", lp.MinCurrent_)
+	}
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated maxCurrent: %f. please configure via UI", lp.MaxCurrent_)
+	}
+	if lp.GuardDuration_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated guardduration: %s. please configure via UI", lp.GuardDuration_)
+	}
+
+	// restore runtime configuration (database & yaml LPs)
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
