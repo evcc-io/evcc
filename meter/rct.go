@@ -145,6 +145,10 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(0.97))
 
 			case api.BatteryCharge:
+				if err := m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1}); err != nil {
+					return err
+				}
+
 				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-10_000))); err != nil {
 					return err
 				}
