@@ -112,10 +112,12 @@ render: |
   power:
     source: go
     script: |
+      res := float64(-bp)
+      # handling old and new firmware
       if (brs&0x4 > 0 || bc < 0) && bp >= 0 {
-        return bp
+        res = float64(bp)
       }
-      return -bp
+      res
     in:
     - name: brs
       type: int
