@@ -142,7 +142,7 @@ func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity
 					return err
 				}
 
-				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(maxSoc)/100))
+				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(0.97))
 
 			case api.BatteryCharge:
 				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-10_000))); err != nil {
