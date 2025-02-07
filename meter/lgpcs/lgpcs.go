@@ -64,7 +64,7 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 		}
 	})
 
-	// check if different uris are provided
+	// check if both password and registration are provided
 	if password != "" && registration != "" {
 		return nil, errors.New("cannot have registration and password")
 	}
@@ -102,6 +102,34 @@ func (m *Com) Login() error {
 
 	if err := m.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
+	}
+
+	// try to login as ESS installer if user login failed
+	if res.Status == "password mismatched" {
+		uri := fmt.Sprintf("%s/v1/login", m.uri)
+		req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err != nil {
+			return err
+		}
+
+		// read auth_key from response body
+		var res struct {
+			Status  string `json:"status,omitempty"`
+			AuthKey string `json:"auth_key"`
+		}
+
+		if err := m.DoJSON(req, &res); err != nil {
+			return fmt.Errorf("login failed: %w", err)
+		}
+
+		if res.Status != "success" {
+			return fmt.Errorf("login failed: %s", res.Status)
+		}
+
+		// read auth_key from response
+		m.authKey = res.AuthKey
+
+		return nil
 	}
 
 	// check login response status
@@ -143,7 +171,7 @@ func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	var res struct{}
 	return m.request(func(body io.ReadSeeker) (*http.Request, error) {
 		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
-		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
+		return request.New(http.MethodPut, uri, body, request.JSONEncoding)
 	}, map[string]string{
 		"backupmode": mode,
 		"backup_soc": strconv.Itoa(soc),
