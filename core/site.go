@@ -104,8 +104,6 @@ type Site struct {
 	batteryPower  float64         // Battery power (charge negative, discharge positive)
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
-
-	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the site's meter configuration
@@ -244,9 +242,8 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:          util.NewLogger("site"),
-		publishCache: make(map[string]any),
-		Voltage:      230, // V
+		log:     util.NewLogger("site"),
+		Voltage: 230, // V
 	}
 
 	return lp
@@ -418,16 +415,6 @@ func (site *Site) publish(key string, val interface{}) {
 	}
 
 	site.uiChan <- util.Param{Key: key, Val: val}
-}
-
-// publishDelta deduplicates messages before publishing
-func (site *Site) publishDelta(key string, val interface{}) {
-	if v, ok := site.publishCache[key]; ok && v == val {
-		return
-	}
-
-	site.publishCache[key] = val
-	site.publish(key, val)
 }
 
 func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
@@ -795,13 +782,13 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
 	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publishDelta(keys.TariffGrid, gridPrice)
+		site.publish(keys.TariffGrid, gridPrice)
 	}
 	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publishDelta(keys.TariffFeedIn, feedInPrice)
+		site.publish(keys.TariffFeedIn, feedInPrice)
 	}
 	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publishDelta(keys.TariffCo2, co2)
+		site.publish(keys.TariffCo2, co2)
 	}
 	if price := site.effectivePrice(greenShareHome); price != nil {
 		site.publish(keys.TariffPriceHome, price)

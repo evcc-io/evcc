@@ -1359,10 +1359,6 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 
 	// push demand to drain battery
 	delta := lp.EffectiveStepPower()
-	if !lp.coarseCurrent() {
-		// for >1p this will allow finer adjustments down to 100W
-		delta = max(100, delta/10)
-	}
 
 	// start boosting by setting maximum power
 	if boost == boostStart {
