@@ -201,13 +201,15 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	return 100
 }
 
-// effectiveStepPower returns the effective step power for the currently active phases
-func (lp *Loadpoint) effectiveStepPower() float64 {
+// EffectiveStepPower returns the effective step power for the currently active phases
+func (lp *Loadpoint) EffectiveStepPower() float64 {
 	return Voltage * float64(lp.ActivePhases())
 }
 
 // EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 

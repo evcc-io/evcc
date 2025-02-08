@@ -1247,7 +1247,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	// - https://github.com/evcc-io/evcc/issues/1572
 	// - https://github.com/evcc-io/evcc/issues/2230
 	// - https://github.com/evcc-io/evcc/issues/2613
-	measuredPhases := lp.getMeasuredPhases()
+	measuredPhases := lp.GetMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
 		if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
@@ -1287,7 +1287,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
-	maxPhases := lp.maxActivePhases()
+	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
@@ -1358,7 +1358,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	}
 
 	// push demand to drain battery
-	delta := lp.effectiveStepPower()
+	delta := lp.EffectiveStepPower()
 
 	// start boosting by setting maximum power
 	if boost == boostStart {
