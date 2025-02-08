@@ -80,11 +80,11 @@ type Loadpoint struct {
 	lpChan   chan<- *Loadpoint // update requests
 	log      *util.Logger
 
+	rwMutex      int64        // count reentrant RWMutex
+	sync.RWMutex              // guard status
+	vmu          sync.RWMutex // guard vehicle
+
 	// exposed public configuration
-	sync.RWMutex // guard status
-
-	vmu sync.RWMutex // guard vehicle
-
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
 	ChargerRef string `mapstructure:"charger"` // Charger reference
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
