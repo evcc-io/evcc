@@ -213,13 +213,7 @@ export default {
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
 		chargingPlanDisabled: function () {
-			if (!this.connected) {
-				return true;
-			}
-			if (["off", "now"].includes(this.mode)) {
-				return true;
-			}
-			return false;
+			return ["off", "now"].includes(this.mode);
 		},
 		smartCostDisabled: function () {
 			return ["off", "now"].includes(this.mode);
