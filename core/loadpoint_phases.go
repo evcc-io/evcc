@@ -99,7 +99,7 @@ func (lp *Loadpoint) MinActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	if lp.hasPhaseSwitching() || lp.configuredPhases == 1 {
+	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
 		return 1
 	}
 
@@ -127,7 +127,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 
 	// if 1p3p supported then assume configured limit or 3p
 	if lp.hasPhaseSwitching() {
-		physical = lp.configuredPhases
+		physical = lp.phasesConfigured
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))
