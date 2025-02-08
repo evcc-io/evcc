@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"dario.cat/mergo"
@@ -252,6 +253,14 @@ func (p Product) Title(lang string) string {
 	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
 }
 
+type CountryCode string
+
+func (c CountryCode) IsValid() bool {
+	// ensure ISO 3166-1 alpha-2 format
+	var validCode = regexp.MustCompile(`^[A-Z]{2}$`)
+	return validCode.MatchString(string(c))
+}
+
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
@@ -260,6 +269,7 @@ type TemplateDefinition struct {
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
+	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`

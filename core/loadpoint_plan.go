@@ -102,7 +102,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
-	// re-check since plannerActive() is called before conencted() check in Update()
+	// re-check since plannerActive() is called before connected() check in Update()
 	if !lp.connected() {
 		return false
 	}

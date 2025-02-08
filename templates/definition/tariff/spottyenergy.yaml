@@ -1,11 +1,8 @@
 template: spottyenergy
 products:
   - brand: Spotty Energie
-requirements:
-  description:
-    de: "Nur für Österreich verfügbar."
-    en: "Only available for Austria."
 group: price
+countries: ["AT"]
 params:
   - name: contractid
     example: ffffffff-4444-6666-2222-aaaaaabbbbbb
