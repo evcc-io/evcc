@@ -8,12 +8,15 @@ import (
 // setPhasesConfigured sets the default phase configuration
 func (lp *Loadpoint) setPhasesConfigured(phases int) {
 	lp.phasesConfigured = phases
-
-	// TODO CLARIFY
-	lp.publish(keys.Phases, lp.phasesConfigured)
-
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
 	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.phasesConfigured))
+
+	// configured phases are actual phases for non-1p3p charger
+	// for 1p3p charger, configuration does not mean that the physical state has changed, so don't touch it
+	if !lp.hasPhaseSwitching() {
+		lp.phases = phases
+		lp.publish(keys.Phases, lp.phases)
+	}
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
