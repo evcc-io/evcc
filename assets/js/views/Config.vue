@@ -262,7 +262,7 @@
 						>
 							<template #icon><ModbusProxyIcon /></template>
 							<template #tags>
-								<DeviceTags :tags="yamlTags('modbusproxy')" />
+								<DeviceTags :tags="modbusproxyTags" />
 							</template>
 						</DeviceCard>
 						<DeviceCard

@@ -101,7 +101,7 @@ type Site struct {
 	pvPower       float64         // PV power
 	excessDCPower float64         // PV excess DC charge power (hybrid only)
 	auxPower      float64         // Aux power
-	batteryPower  float64         // Battery charge power
+	batteryPower  float64         // Battery power (charge negative, discharge positive)
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
 
@@ -549,7 +549,7 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	site.batterySoc = lo.SumBy(mm, func(m measurement) float64 {
+	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {
 		// weigh soc by capacity
 		if *m.Capacity > 0 {
 			return *m.Soc * *m.Capacity
@@ -564,7 +564,7 @@ func (site *Site) updateBatteryMeters() {
 	if totalCapacity == 0 {
 		totalCapacity = float64(len(site.batteryMeters))
 	}
-	site.batterySoc /= totalCapacity
+	site.batterySoc = batterySocAcc / totalCapacity
 
 	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Power

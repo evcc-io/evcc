@@ -38,7 +38,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	// use cloud
-	if cmd.Flags().Lookup(flagCloud).Changed {
+	if cmd.Flag(flagCloud).Changed {
 		for _, conf := range conf.Vehicles {
 			conf.Other["cloud"] = "true"
 		}
@@ -52,7 +52,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range config.Instances(vehicles) {
-		if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
+		if flag := cmd.Flag(flagCurrent); flag.Changed {
 			flagUsed = true
 
 			f, err := strconv.ParseFloat(flag.Value.String(), 64)
@@ -73,7 +73,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Lookup(flagWakeup).Changed {
+		if cmd.Flag(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
@@ -85,7 +85,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Lookup(flagStart).Changed {
+		if cmd.Flag(flagStart).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.ChargeController); ok {
@@ -97,7 +97,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Lookup(flagStop).Changed {
+		if cmd.Flag(flagStop).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.ChargeController); ok {
@@ -112,7 +112,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	if !flagUsed {
 		d := dumper{len: len(vehicles)}
-		flag := cmd.Flags().Lookup(flagDiagnose).Changed
+		flag := cmd.Flag(flagDiagnose).Changed
 
 		for _, dev := range vehicles {
 			v := dev.Instance()

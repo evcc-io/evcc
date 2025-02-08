@@ -39,9 +39,9 @@ body:
       render: yaml
       description: >
         Show evcc configuration file <code>evcc.yaml</code>
-        
+
         Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
-        
+
         To quickly dump a redacted configuration without secrets, you can use the `evcc dump --cfg` command.
 
   - type: textarea
@@ -68,6 +68,15 @@ body:
         - HomeAssistant Add-on
         - macOS
         - other
+
+  - type: checkboxes
+    id: external
+    attributes:
+      label: External automation
+      description: Make sure the observed issue is caused by evcc and not by external automation
+      options:
+        - label: I have made sure that no external automation like HomeAssistant or Node-RED is active or accessing any of the mentioned devices when this issue occurs.
+          required: true
 
   - type: checkboxes
     id: nightly

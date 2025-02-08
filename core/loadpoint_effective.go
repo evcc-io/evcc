@@ -18,7 +18,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
-	lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
+	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
 // EffectivePriority returns the effective priority
@@ -82,7 +82,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 		}
 
 		// calculate earliest required plan start
-		if plan := lp.nextActivePlan(lp.EffectiveMaxPower(), plans); plan != nil {
+		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
 			return plan.End, plan.Soc, plan.Id
 		}
 	}
@@ -153,7 +153,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.GetMaxCurrent()
+	maxCurrent := lp.getMaxCurrent()
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
@@ -170,12 +170,16 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	return maxCurrent
 }
 
+// EffectiveLimitSoc returns the effective session limit soc
+func (lp *Loadpoint) EffectiveLimitSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveLimitSoc()
+}
+
 // effectiveLimitSoc returns the effective session limit soc
 // TODO take vehicle api limits into account
 func (lp *Loadpoint) effectiveLimitSoc() int {
-	lp.RLock()
-	defer lp.RUnlock()
-
 	if lp.limitSoc > 0 {
 		return lp.limitSoc
 	}
@@ -202,5 +206,12 @@ func (lp *Loadpoint) EffectiveMinPower() float64 {
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) EffectiveMaxPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveMaxPower()
+}
+
+// effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
+func (lp *Loadpoint) effectiveMaxPower() float64 {
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }

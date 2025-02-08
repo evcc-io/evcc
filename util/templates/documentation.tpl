@@ -52,6 +52,9 @@ product:
 {{- if .Capabilities }}
 capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- end }}
+{{- if .Countries }}
+countries: ["{{ join "\", \"" .Countries }}"]
+{{- end }}
 {{- if .Requirements }}
 requirements: ["{{ join "\", \"" .Requirements }}"]
 {{- end }}

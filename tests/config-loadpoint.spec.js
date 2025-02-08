@@ -136,43 +136,32 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
 
-    // add two more loadpoints
-    for (const title of ["Garage", "Garden"]) {
-      await newLoadpoint(page, title);
-      await addDemoCharger(page);
-      await lpModal.getByRole("button", { name: "Save" }).click();
-      await expect(lpModal).not.toBeVisible();
-    }
+    // add loadpoint via UI
+    await newLoadpoint(page, "Garage");
+    await addDemoCharger(page);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
 
-    // three loadpoints
-    await expect(page.getByTestId("loadpoint")).toHaveCount(3);
+    // two loadpoints
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Garage");
-    await expect(page.getByTestId("loadpoint").nth(2)).toContainText("Garden");
 
-    // second loadpoint > priority 2
+    // second loadpoint: increase priority
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
-    await lpModal.getByTestId("loadpointParamPriority-2").click();
+    await expect(lpModal).toBeVisible();
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
+    await lpModal.getByLabel("Priority").selectOption("1");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
 
-    // third loadpoint > priority 1
-    await page.getByTestId("loadpoint").nth(2).getByRole("button", { name: "edit" }).click();
-    await lpModal.getByTestId("loadpointParamPriority-1").click();
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expect(lpModal).not.toBeVisible();
     // restart
     await restart(CONFIG_ONE_LP);
     await page.reload();
 
     // check priorities
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
-    await expect(lpModal.getByTestId("loadpointParamPriority-2")).toHaveClass(/active/);
-    await lpModal.getByRole("button", { name: "Close" }).click();
-
-    await page.getByTestId("loadpoint").nth(2).getByRole("button", { name: "edit" }).click();
-    await expect(lpModal.getByTestId("loadpointParamPriority-1")).toHaveClass(/active/);
-    await lpModal.getByRole("button", { name: "Close" }).click();
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("1");
   });
 
   test("vehicle", async ({ page }) => {
