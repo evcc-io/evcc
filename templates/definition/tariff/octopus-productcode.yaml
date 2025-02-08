@@ -4,6 +4,7 @@ products:
     description:
       generic: Product Code
 group: price
+countries: ["GB"]
 params:
   - name: productCode
     type: string
