@@ -466,16 +466,11 @@ func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
 	}
 }
 
-// getBatteryBoost returns the battery boost
-func (lp *Loadpoint) getBatteryBoost() int {
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.batteryBoost
-}
-
-// GetBatteryBoost returns the battery boost
-func (lp *Loadpoint) GetBatteryBoost() bool {
-	return lp.getBatteryBoost() > 0
 }
 
 // setBatteryBoost returns the battery boost

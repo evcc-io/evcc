@@ -1352,7 +1352,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
-	boost := lp.getBatteryBoost()
+	boost := lp.GetBatteryBoost()
 	if boost == boostDisabled {
 		return 0
 	}
@@ -1392,7 +1392,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
-	} else if lp.getBatteryBoost() != boostDisabled {
+	} else if lp.GetBatteryBoost() != boostDisabled {
 		lp.log.DEBUG.Printf("!! pvScalePhases phasesSwitched: %v, %v", lp.phasesSwitched, time.Since(lp.phasesSwitched))
 	}
 

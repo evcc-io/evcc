@@ -126,10 +126,10 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 }
 
 // GetBatteryBoost mocks base method.
-func (m *MockAPI) GetBatteryBoost() bool {
+func (m *MockAPI) GetBatteryBoost() int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBatteryBoost")
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(int)
 	return ret0
 }
 
