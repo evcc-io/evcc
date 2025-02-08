@@ -206,6 +206,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
 				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
+				keys.TariffGrid, keys.TariffFeedIn, keys.TariffCo2,
 				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
 				pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()),
