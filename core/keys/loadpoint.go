@@ -19,7 +19,6 @@ const (
 	DisableDelay     = "disableDelay"
 	BatteryBoost     = "batteryBoost"
 
-	Phases           = "phases"           // phase mode of charger (1/3, 0 = unknown)
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 

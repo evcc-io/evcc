@@ -14,8 +14,7 @@ func (lp *Loadpoint) setPhasesConfigured(phases int) {
 	// configured phases are actual phases for non-1p3p charger
 	// for 1p3p charger, configuration does not mean that the physical state has changed, so don't touch it
 	if !lp.hasPhaseSwitching() {
-		lp.phases = phases
-		lp.publish(keys.Phases, lp.phases)
+		lp.setPhases(phases)
 	}
 }
 

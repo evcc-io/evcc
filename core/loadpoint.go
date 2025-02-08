@@ -621,9 +621,6 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		}
 		lp.phases = phases
 		lp.phasesConfigured = phases
-		lp.publish(keys.Phases, phases)
-	} else {
-		lp.publish(keys.Phases, nil)
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
