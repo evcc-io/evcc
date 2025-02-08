@@ -473,16 +473,11 @@ func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
 	}
 }
 
-// getBatteryBoost returns the battery boost
-func (lp *Loadpoint) getBatteryBoost() int {
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.batteryBoost
-}
-
-// GetBatteryBoost returns the battery boost
-func (lp *Loadpoint) GetBatteryBoost() bool {
-	return lp.getBatteryBoost() > 0
 }
 
 // setBatteryBoost returns the battery boost
@@ -642,11 +637,15 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 
 // GetMinPower returns the min loadpoint power for a single phase
 func (lp *Loadpoint) GetMinPower() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return Voltage * lp.effectiveMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 

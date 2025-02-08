@@ -146,7 +146,7 @@ type API interface {
 	SetDisableDelay(delay time.Duration)
 
 	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() bool
+	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 

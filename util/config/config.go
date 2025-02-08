@@ -3,6 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
@@ -173,6 +175,11 @@ func Init(instance *gorm.DB) error {
 // NameForID returns a unique config name for the given id
 func NameForID(id int) string {
 	return fmt.Sprintf("db:%d", id)
+}
+
+// IDForName returns a unique config name for the given id
+func IDForName(name string) (int, error) {
+	return strconv.Atoi(strings.TrimPrefix(name, "db:"))
 }
 
 // ConfigurationsByClass returns devices by class from the database

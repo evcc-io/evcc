@@ -4,9 +4,10 @@ products:
 requirements:
   evcc: ["skiptest"]
   description:
-    de: "Preisdaten von https://www.mercatoelettrico.org/it/. Wird oft zur Einspeisung ins Netz verwendet. Nur für Italien verfügbar."
-    en: "Price data from https://www.mercatoelettrico.org/it/. Often used for feeding into the grid. Only available for Italy."
+    de: "Preisdaten von https://www.mercatoelettrico.org/it/. Wird oft zur Einspeisung ins Netz verwendet."
+    en: "Price data from https://www.mercatoelettrico.org/it/. Often used for feeding into the grid."
 group: price
+countries: ["IT"]
 params:
   - preset: tariff-base
 render: |

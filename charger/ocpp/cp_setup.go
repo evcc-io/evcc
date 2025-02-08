@@ -155,13 +155,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
-	// trigger status for all connectors
-	if cp.HasRemoteTriggerFeature {
-		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
-		}
-	}
-
 	return nil
 }
 
