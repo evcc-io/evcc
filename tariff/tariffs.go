@@ -8,8 +8,8 @@ import (
 )
 
 type Tariffs struct {
-	Currency                   currency.Unit
-	Grid, FeedIn, Co2, Planner api.Tariff
+	Currency                          currency.Unit
+	Grid, FeedIn, Co2, Planner, Solar api.Tariff
 }
 
 func currentPrice(t api.Tariff) (float64, error) {

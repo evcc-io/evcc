@@ -47,6 +47,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 		"feedin":  tariffs.FeedIn,
 		"co2":     tariffs.Co2,
 		"planner": tariffs.Planner,
+		"solar":   tariffs.Solar,
 	} {
 		if name != "" && key != name {
 			continue

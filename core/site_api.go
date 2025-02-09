@@ -21,6 +21,7 @@ const (
 	GridTariff    = "grid"
 	FeedinTariff  = "feedin"
 	PlannerTariff = "planner"
+	SolarTariff   = "solar"
 )
 
 // isConfigurable checks if the meter is configurable
@@ -297,10 +298,17 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 			// prio 2: co2 tariff
 			return site.tariffs.Co2
 
+		case site.tariffs.Solar != nil:
+			// prio 3: solar tariff
+			return site.tariffs.Solar
+
 		default:
-			// prio 3: static grid tariff
+			// prio 4: static grid tariff
 			return site.tariffs.Grid
 		}
+
+	case SolarTariff:
+		return site.tariffs.Solar
 
 	default:
 		return nil

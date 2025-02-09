@@ -1,0 +1,15 @@
+template: solcast
+products:
+  - brand: Solcast
+requirements:
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: site
+    required: true
+  - name: token
+    required: true
+render: |
+  type: solcast
+  site: {{ .site }}
+  token: {{ .token }}

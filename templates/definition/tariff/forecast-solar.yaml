@@ -2,11 +2,8 @@ template: forecast-solar
 products:
   - brand: Forecast.Solar
 requirements:
-  description:
-    de: "PV Prognose"
-    en: "PV Prognosis"
   evcc: ["skiptest"]
-  group: solar
+group: solar
 params:
   - name: lat
     required: true

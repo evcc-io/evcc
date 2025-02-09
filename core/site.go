@@ -781,26 +781,30 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	site.publish(keys.GreenShareHome, greenShareHome)
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
-	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publish(keys.TariffGrid, gridPrice)
+	if v, err := site.tariffs.CurrentGridPrice(); err == nil {
+		site.publish(keys.TariffGrid, v)
 	}
-	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publish(keys.TariffFeedIn, feedInPrice)
+	if v, err := site.tariffs.CurrentFeedInPrice(); err == nil {
+		site.publish(keys.TariffFeedIn, v)
 	}
-	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publish(keys.TariffCo2, co2)
+	if v, err := site.tariffs.CurrentCo2(); err == nil {
+		site.publish(keys.TariffCo2, v)
 	}
-	if price := site.effectivePrice(greenShareHome); price != nil {
-		site.publish(keys.TariffPriceHome, price)
+	// TODO
+	// if v, err := site.tariffs.CurrentSolar(); err == nil {
+	// 	site.publish(keys.TariffSolar, v)
+	// }
+	if v := site.effectivePrice(greenShareHome); v != nil {
+		site.publish(keys.TariffPriceHome, v)
 	}
-	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
-		site.publish(keys.TariffCo2Home, co2)
+	if v := site.effectiveCo2(greenShareHome); v != nil {
+		site.publish(keys.TariffCo2Home, v)
 	}
-	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
-		site.publish(keys.TariffPriceLoadpoints, price)
+	if v := site.effectivePrice(greenShareLoadpoints); v != nil {
+		site.publish(keys.TariffPriceLoadpoints, v)
 	}
-	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		site.publish(keys.TariffCo2Loadpoints, co2)
+	if v := site.effectiveCo2(greenShareLoadpoints); v != nil {
+		site.publish(keys.TariffCo2Loadpoints, v)
 	}
 }
 

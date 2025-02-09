@@ -790,6 +790,7 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff("solar", conf.Solar, &tariffs.Solar) })
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
