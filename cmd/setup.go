@@ -755,11 +755,12 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
+func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
+	name := u.String()
 	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
@@ -786,10 +787,11 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageFeedin, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar, &tariffs.Solar) })
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}

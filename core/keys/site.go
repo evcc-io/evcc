@@ -30,6 +30,7 @@ const (
 	TariffGrid            = "tariffGrid"
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
+	TariffSolar           = "tariffSolar"
 	Vehicles              = "vehicles"
 
 	// meters

@@ -151,7 +151,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		})
 	}
 
-	tariff := site.GetTariff(PlannerTariff)
+	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
@@ -757,8 +757,8 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
 func (site *Site) effectivePrice(greenShare float64) *float64 {
-	if grid, err := site.tariffs.CurrentGridPrice(); err == nil {
-		feedin, err := site.tariffs.CurrentFeedInPrice()
+	if grid, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
+		feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedin))
 		if err != nil {
 			feedin = 0
 		}
@@ -770,7 +770,7 @@ func (site *Site) effectivePrice(greenShare float64) *float64 {
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
 func (site *Site) effectiveCo2(greenShare float64) *float64 {
-	if co2, err := site.tariffs.CurrentCo2(); err == nil {
+	if co2, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
 		effCo2 := co2 * (1 - greenShare)
 		return &effCo2
 	}
@@ -781,26 +781,29 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	site.publish(keys.GreenShareHome, greenShareHome)
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
-	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publish(keys.TariffGrid, gridPrice)
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
+		site.publish(keys.TariffGrid, v)
 	}
-	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publish(keys.TariffFeedIn, feedInPrice)
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageFeedin)); err == nil {
+		site.publish(keys.TariffFeedIn, v)
 	}
-	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publish(keys.TariffCo2, co2)
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
+		site.publish(keys.TariffCo2, v)
 	}
-	if price := site.effectivePrice(greenShareHome); price != nil {
-		site.publish(keys.TariffPriceHome, price)
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolar)); err == nil {
+		site.publish(keys.TariffSolar, v)
 	}
-	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
-		site.publish(keys.TariffCo2Home, co2)
+	if v := site.effectivePrice(greenShareHome); v != nil {
+		site.publish(keys.TariffPriceHome, v)
 	}
-	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
-		site.publish(keys.TariffPriceLoadpoints, price)
+	if v := site.effectiveCo2(greenShareHome); v != nil {
+		site.publish(keys.TariffCo2Home, v)
 	}
-	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		site.publish(keys.TariffCo2Loadpoints, co2)
+	if v := site.effectivePrice(greenShareLoadpoints); v != nil {
+		site.publish(keys.TariffPriceLoadpoints, v)
+	}
+	if v := site.effectiveCo2(greenShareLoadpoints); v != nil {
+		site.publish(keys.TariffCo2Loadpoints, v)
 	}
 
 	// forecast
@@ -941,7 +944,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {
 		site.publish(keys.SmartCostType, nil)
