@@ -6,7 +6,7 @@ requirements:
     de: "PV Prognose"
     en: "PV Prognosis"
   evcc: ["skiptest"]
-# group: solar
+  group: solar
 params:
   - name: lat
     required: true
@@ -18,9 +18,8 @@ params:
     required: true
   - name: kwp
     required: true
-  - name: kwp
-    required: true
   - name: apikey
+    advanced: true
 render: |
   type: custom
   tariff: solar
