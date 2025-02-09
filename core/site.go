@@ -802,6 +802,21 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
 		site.publish(keys.TariffCo2Loadpoints, co2)
 	}
+
+	// forecast
+	// TODO check rates deduplication
+	if val := tariff.Forecast(site.GetTariff(api.TariffUsageCo2)); val != nil {
+		site.publish(keys.ForecastCo2, val)
+	}
+	if val := tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)); val != nil {
+		site.publish(keys.ForecastFeedIn, val)
+	}
+	if val := tariff.Forecast(site.GetTariff(api.TariffUsageGrid)); val != nil {
+		site.publish(keys.ForecastGrid, val)
+	}
+	if val := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); val != nil {
+		site.publish(keys.ForecastSolar, val)
+	}
 }
 
 // updateLoadpoints updates all loadpoints' charge power

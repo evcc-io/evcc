@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +11,16 @@ import (
 type Tariffs struct {
 	Currency                   currency.Unit
 	Grid, FeedIn, Co2, Planner api.Tariff
+}
+
+func Forecast(t api.Tariff) []api.Rate {
+	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
+	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
+		if rr, err := t.Rates(); err == nil {
+			return rr
+		}
+	}
+	return nil
 }
 
 func currentPrice(t api.Tariff) (float64, error) {
