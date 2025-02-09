@@ -13,18 +13,18 @@ const slots: PriceSlot[] = [
 describe("aggregateEnergy", () => {
 	test("aggregates energy from power values for 30min slots", () => {
 		const result = aggregateEnergy(slots);
-		expect(result).toBeCloseTo(5.5);
+		expect(result).toBeCloseTo(5500);
 	});
 	test("ignore slots in the past", () => {
 		// will ignore the first two slots
 		vi.setSystemTime("2050-03-20T11:00:00+01:00");
 		const result = aggregateEnergy(slots, true);
-		expect(result).toBeCloseTo(2.5);
+		expect(result).toBeCloseTo(2500);
 	});
 	test("correctly split in-between slots", () => {
 		// start in the middle of the 4th slot
 		vi.setSystemTime("2050-03-20T11:45:00+01:00");
 		const result = aggregateEnergy(slots, true);
-		expect(result).toBeCloseTo(0.5);
+		expect(result).toBeCloseTo(500);
 	});
 });
