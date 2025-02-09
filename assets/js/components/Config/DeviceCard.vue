@@ -18,6 +18,7 @@
 				data-bs-toggle="tooltip"
 				data-bs-html="true"
 				:title="tooltipTitle"
+				:aria-label="editable ? $t('config.main.edit') : null"
 				:disabled="!editable"
 				@click="edit"
 			>
