@@ -31,6 +31,7 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	case api.TariffUsageFeedin:
 		return t.FeedIn
 
+	// TODO solar
 	case api.TariffUsagePlanner:
 		switch {
 		case t.Planner != nil:
@@ -45,12 +46,8 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 			// prio 2: co2 tariff
 			return t.Co2
 
-		case t.Solar != nil:
-			// prio 3: solar tariff
-			return t.Solar
-
 		default:
-			// prio 4: static grid tariff
+			// prio 3: static grid tariff
 			return t.Grid
 		}
 
