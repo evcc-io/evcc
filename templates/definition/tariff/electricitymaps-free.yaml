@@ -26,3 +26,4 @@ render: |
     headers:
     - auth-token: {{ .token }}
     jq: .carbonIntensity
+  tariff: co2

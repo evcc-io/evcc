@@ -3,7 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
@@ -65,6 +68,29 @@ func (d *Config) Update(conf map[string]any) error {
 		}
 
 		val, err := detailsFromMap(conf)
+		if err != nil {
+			return err
+		}
+		d.Value = val
+
+		return tx.Save(&d).Error
+	})
+}
+
+// PartialUpdate partially updates a config's details to the database
+func (d *Config) PartialUpdate(conf map[string]any) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var config Config
+		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
+			return err
+		}
+
+		actual := d.detailsAsMap()
+		if err := mergo.Merge(&actual, conf, mergo.WithOverride); err != nil {
+			return err
+		}
+
+		val, err := detailsFromMap(actual)
 		if err != nil {
 			return err
 		}
@@ -149,6 +175,11 @@ func Init(instance *gorm.DB) error {
 // NameForID returns a unique config name for the given id
 func NameForID(id int) string {
 	return fmt.Sprintf("db:%d", id)
+}
+
+// IDForName returns a unique config name for the given id
+func IDForName(name string) (int, error) {
+	return strconv.Atoi(strings.TrimPrefix(name, "db:"))
 }
 
 // ConfigurationsByClass returns devices by class from the database

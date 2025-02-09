@@ -3,11 +3,8 @@ products:
   - brand: SmartEnergy
     description:
       generic: smartCONTROL
-requirements:
-  description:
-    de: Nur für Österreich verfügbar.
-    en: Only available for Austria.
 group: price
+countries: ["AT"]
 params:
   - preset: tariff-base
 render: |

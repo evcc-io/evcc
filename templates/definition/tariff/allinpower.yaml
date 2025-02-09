@@ -4,10 +4,8 @@ products:
   - brand: All in Power
 requirements:
   evcc: ["skiptest"]
-  description:
-    de: "Nur für die Niederlande verfügbar."
-    en: "Only available for the Netherlands."
 group: price
+countries: ["NL"]
 params:
   - preset: tariff-base
 render: |

@@ -8,8 +8,9 @@ import (
 // setConfiguredPhases sets the default phase configuration
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	lp.configuredPhases = phases
-	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
+	lp.publish(keys.Phases, lp.configuredPhases)
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases) // TODO remove
+	lp.settings.SetInt(keys.Phases, int64(lp.configuredPhases))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -59,7 +60,7 @@ func expect(phases int) int {
 // ActivePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
 func (lp *Loadpoint) ActivePhases() int {
-	physical := lp.GetPhases()
+	physical := lp.getPhases()
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
 	charger := lp.getChargerPhysicalPhases()
@@ -90,7 +91,7 @@ func (lp *Loadpoint) minActivePhases() int {
 
 // maxActivePhases returns the maximum number of active phases for the loadpoint.
 func (lp *Loadpoint) maxActivePhases() int {
-	physical := lp.GetPhases()
+	physical := lp.getPhases()
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
 	charger := lp.getChargerPhysicalPhases()

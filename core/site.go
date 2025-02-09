@@ -101,11 +101,9 @@ type Site struct {
 	pvPower       float64         // PV power
 	excessDCPower float64         // PV excess DC charge power (hybrid only)
 	auxPower      float64         // Aux power
-	batteryPower  float64         // Battery charge power
+	batteryPower  float64         // Battery power (charge negative, discharge positive)
 	batterySoc    float64         // Battery soc
 	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
-
-	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
 // MetersConfig contains the site's meter configuration
@@ -162,7 +160,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 		if db.Instance != nil {
 			var err error
-			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+			if lp.db, err = session.NewStore(lp.GetTitle(), db.Instance); err != nil {
 				return err
 			}
 			// Fix any dangling history
@@ -244,9 +242,8 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:          util.NewLogger("site"),
-		publishCache: make(map[string]any),
-		Voltage:      230, // V
+		log:     util.NewLogger("site"),
+		Voltage: 230, // V
 	}
 
 	return lp
@@ -420,16 +417,6 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-// publishDelta deduplicates messages before publishing
-func (site *Site) publishDelta(key string, val interface{}) {
-	if v, ok := site.publishCache[key]; ok && v == val {
-		return
-	}
-
-	site.publishCache[key] = val
-	site.publish(key, val)
-}
-
 func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
@@ -549,7 +536,7 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	site.batterySoc = lo.SumBy(mm, func(m measurement) float64 {
+	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {
 		// weigh soc by capacity
 		if *m.Capacity > 0 {
 			return *m.Soc * *m.Capacity
@@ -564,7 +551,7 @@ func (site *Site) updateBatteryMeters() {
 	if totalCapacity == 0 {
 		totalCapacity = float64(len(site.batteryMeters))
 	}
-	site.batterySoc /= totalCapacity
+	site.batterySoc = batterySocAcc / totalCapacity
 
 	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Power
@@ -795,13 +782,13 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
 	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publishDelta(keys.TariffGrid, gridPrice)
+		site.publish(keys.TariffGrid, gridPrice)
 	}
 	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publishDelta(keys.TariffFeedIn, feedInPrice)
+		site.publish(keys.TariffFeedIn, feedInPrice)
 	}
 	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publishDelta(keys.TariffCo2, co2)
+		site.publish(keys.TariffCo2, co2)
 	}
 	if price := site.effectivePrice(greenShareHome); price != nil {
 		site.publish(keys.TariffPriceHome, price)

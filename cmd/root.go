@@ -33,11 +33,13 @@ import (
 const (
 	rebootDelay = 15 * time.Minute // delayed reboot on error
 	serviceDB   = "/var/lib/evcc/evcc.db"
+	userDB      = "~/.evcc/evcc.db"
 )
 
 var (
-	log     = util.NewLogger("main")
-	cfgFile string
+	log         = util.NewLogger("main")
+	cfgFile     string
+	cfgDatabase string
 
 	ignoreEmpty = ""                                      // ignore empty keys
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
@@ -63,6 +65,7 @@ func init() {
 
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
+	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
@@ -96,6 +99,9 @@ func initConfig() {
 		viper.AddConfigPath("/etc") // path to look for the config file in
 
 		viper.SetConfigName("evcc")
+	}
+	if cfgDatabase != "" {
+		viper.Set("Database.Dsn", cfgDatabase)
 	}
 
 	viper.SetEnvPrefix("evcc")
@@ -147,7 +153,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// value cache
-	cache := util.NewCache()
+	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
@@ -200,6 +206,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
 				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
+				keys.TariffGrid, keys.TariffFeedIn, keys.TariffCo2,
 				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
 				pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()),
@@ -284,7 +291,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
-		once.Do(func() { close(stopC) }) // signal loop to end
+		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
+		once.Do(func() { close(stopC) })     // signal loop to end
 	})
 
 	// show and check version, reduce api load during development

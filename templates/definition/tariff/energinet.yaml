@@ -2,11 +2,9 @@ template: energinet
 products:
   - brand: Energinet
 requirements:
-  description:
-    de: "Nur für Dänemark verfügbar."
-    en: "Only available for Denmark."
   evcc: ["skiptest"]
 group: price
+countries: ["DK"]
 params:
   - name: region
     example: dk1

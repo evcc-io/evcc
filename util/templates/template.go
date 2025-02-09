@@ -45,6 +45,12 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	for _, c := range t.Countries {
+		if !c.IsValid() {
+			return fmt.Errorf("invalid country code '%s' in template %s", c, t.Template)
+		}
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)

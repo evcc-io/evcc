@@ -70,7 +70,7 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 		return float64(soc), true
 	}
 
-	_, limit := lp.GetPlanEnergy()
+	_, limit := lp.getPlanEnergy()
 	return limit, false
 }
 
@@ -97,6 +97,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
+
+	// re-check since plannerActive() is called before connected() check in Update()
+	if !lp.connected() {
+		return false
+	}
 
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {

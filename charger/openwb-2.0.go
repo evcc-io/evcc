@@ -40,12 +40,13 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+//go:generate decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
+		Phases1p3p         bool
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
@@ -63,12 +64,17 @@ func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	var phases1p3p func(int) error
+	if cc.Phases1p3p {
+		phases1p3p = wb.phases1p3p
+	}
+
 	var identify func() (string, error)
 	if _, err := wb.identify(); err == nil {
 		identify = wb.identify
 	}
 
-	return decorateOpenWB20(wb, identify), nil
+	return decorateOpenWB20(wb, phases1p3p, identify), nil
 }
 
 // NewOpenWB20 creates OpenWB20 charger
@@ -201,10 +207,8 @@ func (wb *OpenWB20) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(wb.base + openwbRegVoltages)
 }
 
-var _ api.PhaseSwitcher = (*OpenWB20)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *OpenWB20) Phases1p3p(phases int) error {
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *OpenWB20) phases1p3p(phases int) error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegPhaseTarget, uint16(phases)); err != nil {
 		return err
 	}

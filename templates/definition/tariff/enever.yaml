@@ -2,11 +2,9 @@ template: enever
 products:
   - brand: Enever
 requirements:
-  description:
-    de: Nur für Niederlande verfügbar.
-    en: Only available for Netherlands.
   evcc: ["skiptest"]
 group: price
+countries: ["NL"]
 params:
   - name: token
     required: true
