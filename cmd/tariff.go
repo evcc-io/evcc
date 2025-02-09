@@ -42,13 +42,14 @@ func runTariff(cmd *cobra.Command, args []string) {
 		name = args[0]
 	}
 
-	for key, tf := range map[string]api.Tariff{
-		"grid":    tariffs.Grid,
-		"feedin":  tariffs.FeedIn,
-		"co2":     tariffs.Co2,
-		"planner": tariffs.Planner,
-		"solar":   tariffs.Solar,
+	for u, tf := range map[api.TariffUsage]api.Tariff{
+		api.TariffUsageGrid:    tariffs.Grid,
+		api.TariffUsageFeedin:  tariffs.FeedIn,
+		api.TariffUsageCo2:     tariffs.Co2,
+		api.TariffUsagePlanner: tariffs.Planner,
+		api.TariffUsageSolar:   tariffs.Solar,
 	} {
+		key := u.String()
 		if name != "" && key != name {
 			continue
 		}

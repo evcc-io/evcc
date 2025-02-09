@@ -17,13 +17,6 @@ var _ site.API = (*Site)(nil)
 
 var ErrBatteryNotConfigured = errors.New("battery not configured")
 
-const (
-	GridTariff    = "grid"
-	FeedinTariff  = "feedin"
-	PlannerTariff = "planner"
-	SolarTariff   = "solar"
-)
-
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
 	dev, _ := config.Meters().ByName(ref)
@@ -273,46 +266,10 @@ func (site *Site) SetResidualPower(power float64) error {
 }
 
 // GetTariff returns the respective tariff if configured or nil
-func (site *Site) GetTariff(tariff string) api.Tariff {
+func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
 	defer site.RUnlock()
-
-	switch tariff {
-	case GridTariff:
-		return site.tariffs.Grid
-
-	case FeedinTariff:
-		return site.tariffs.FeedIn
-
-	case PlannerTariff:
-		switch {
-		case site.tariffs.Planner != nil:
-			// prio 0: manually set planner tariff
-			return site.tariffs.Planner
-
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
-			// prio 1: grid tariff with forecast
-			return site.tariffs.Grid
-
-		case site.tariffs.Co2 != nil:
-			// prio 2: co2 tariff
-			return site.tariffs.Co2
-
-		case site.tariffs.Solar != nil:
-			// prio 3: solar tariff
-			return site.tariffs.Solar
-
-		default:
-			// prio 4: static grid tariff
-			return site.tariffs.Grid
-		}
-
-	case SolarTariff:
-		return site.tariffs.Solar
-
-	default:
-		return nil
-	}
+	return site.tariffs.Get(tariff)
 }
 
 // GetBatteryDischargeControl returns the battery control mode (no discharge only)

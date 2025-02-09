@@ -12,7 +12,7 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner, Solar api.Tariff
 }
 
-func currentPrice(t api.Tariff) (float64, error) {
+func CurrentPrice(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
 			if r, err := rr.Current(time.Now()); err == nil {
@@ -23,20 +23,41 @@ func currentPrice(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// CurrentGridPrice returns the current grid price.
-func (t *Tariffs) CurrentGridPrice() (float64, error) {
-	return currentPrice(t.Grid)
-}
+func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
+	switch u {
+	case api.TariffUsageGrid:
+		return t.Grid
 
-// CurrentFeedInPrice returns the current feed-in price.
-func (t *Tariffs) CurrentFeedInPrice() (float64, error) {
-	return currentPrice(t.FeedIn)
-}
+	case api.TariffUsageFeedin:
+		return t.FeedIn
 
-// CurrentCo2 determines the grids co2 emission.
-func (t *Tariffs) CurrentCo2() (float64, error) {
-	if t.Co2 != nil {
-		return currentPrice(t.Co2)
+	case api.TariffUsagePlanner:
+		switch {
+		case t.Planner != nil:
+			// prio 0: manually set planner tariff
+			return t.Planner
+
+		case t.Grid != nil && t.Grid.Type() == api.TariffTypePriceForecast:
+			// prio 1: grid tariff with forecast
+			return t.Grid
+
+		case t.Co2 != nil:
+			// prio 2: co2 tariff
+			return t.Co2
+
+		case t.Solar != nil:
+			// prio 3: solar tariff
+			return t.Solar
+
+		default:
+			// prio 4: static grid tariff
+			return t.Grid
+		}
+
+	case api.TariffUsageSolar:
+		return t.Solar
+
+	default:
+		return nil
 	}
-	return 0, api.ErrNotAvailable
 }
