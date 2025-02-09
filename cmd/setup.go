@@ -760,9 +760,10 @@ func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error 
 		return nil
 	}
 
-	res, err := tariffInstance(u.String(), conf)
+	name := u.String()
+	res, err := tariffInstance(name, conf)
 	if err != nil {
-		return &DeviceError{u.String(), err}
+		return &DeviceError{name, err}
 	}
 
 	*t = res
