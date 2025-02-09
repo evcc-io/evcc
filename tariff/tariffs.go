@@ -25,11 +25,14 @@ func CurrentPrice(t api.Tariff) (float64, error) {
 
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	switch u {
-	case api.TariffUsageGrid:
-		return t.Grid
+	case api.TariffUsageCo2:
+		return t.Co2
 
 	case api.TariffUsageFeedin:
 		return t.FeedIn
+
+	case api.TariffUsageGrid:
+		return t.Grid
 
 	// TODO solar
 	case api.TariffUsagePlanner:

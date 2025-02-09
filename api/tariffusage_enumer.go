@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _TariffUsageName = "gridfeedinco2plannersolar"
+const _TariffUsageName = "co2feedingridplannersolar"
 
-var _TariffUsageIndex = [...]uint8{0, 4, 10, 13, 20, 25}
+var _TariffUsageIndex = [...]uint8{0, 3, 9, 13, 20, 25}
 
-const _TariffUsageLowerName = "gridfeedinco2plannersolar"
+const _TariffUsageLowerName = "co2feedingridplannersolar"
 
 func (i TariffUsage) String() string {
 	i -= 1
@@ -25,22 +25,22 @@ func (i TariffUsage) String() string {
 // Re-run the stringer command to generate them again.
 func _TariffUsageNoOp() {
 	var x [1]struct{}
-	_ = x[TariffUsageGrid-(1)]
+	_ = x[TariffUsageCo2-(1)]
 	_ = x[TariffUsageFeedin-(2)]
-	_ = x[TariffUsageCo2-(3)]
+	_ = x[TariffUsageGrid-(3)]
 	_ = x[TariffUsagePlanner-(4)]
 	_ = x[TariffUsageSolar-(5)]
 }
 
-var _TariffUsageValues = []TariffUsage{TariffUsageGrid, TariffUsageFeedin, TariffUsageCo2, TariffUsagePlanner, TariffUsageSolar}
+var _TariffUsageValues = []TariffUsage{TariffUsageCo2, TariffUsageFeedin, TariffUsageGrid, TariffUsagePlanner, TariffUsageSolar}
 
 var _TariffUsageNameToValueMap = map[string]TariffUsage{
-	_TariffUsageName[0:4]:        TariffUsageGrid,
-	_TariffUsageLowerName[0:4]:   TariffUsageGrid,
-	_TariffUsageName[4:10]:       TariffUsageFeedin,
-	_TariffUsageLowerName[4:10]:  TariffUsageFeedin,
-	_TariffUsageName[10:13]:      TariffUsageCo2,
-	_TariffUsageLowerName[10:13]: TariffUsageCo2,
+	_TariffUsageName[0:3]:        TariffUsageCo2,
+	_TariffUsageLowerName[0:3]:   TariffUsageCo2,
+	_TariffUsageName[3:9]:        TariffUsageFeedin,
+	_TariffUsageLowerName[3:9]:   TariffUsageFeedin,
+	_TariffUsageName[9:13]:       TariffUsageGrid,
+	_TariffUsageLowerName[9:13]:  TariffUsageGrid,
 	_TariffUsageName[13:20]:      TariffUsagePlanner,
 	_TariffUsageLowerName[13:20]: TariffUsagePlanner,
 	_TariffUsageName[20:25]:      TariffUsageSolar,
@@ -48,9 +48,9 @@ var _TariffUsageNameToValueMap = map[string]TariffUsage{
 }
 
 var _TariffUsageNames = []string{
-	_TariffUsageName[0:4],
-	_TariffUsageName[4:10],
-	_TariffUsageName[10:13],
+	_TariffUsageName[0:3],
+	_TariffUsageName[3:9],
+	_TariffUsageName[9:13],
 	_TariffUsageName[13:20],
 	_TariffUsageName[20:25],
 }

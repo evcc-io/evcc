@@ -18,9 +18,9 @@ type TariffUsage int
 
 const (
 	_ TariffUsage = iota
-	TariffUsageGrid
-	TariffUsageFeedin
 	TariffUsageCo2
+	TariffUsageFeedin
+	TariffUsageGrid
 	TariffUsagePlanner
 	TariffUsageSolar
 )
