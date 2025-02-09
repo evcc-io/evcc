@@ -42,6 +42,7 @@
 							:key="loadpoint.name"
 							:name="loadpoint.title"
 							:editable="!!loadpoint.id"
+							:error="deviceError('loadpoint', loadpoint.name)"
 							data-testid="loadpoint"
 							@edit="editLoadpoint(loadpoint.id)"
 						>

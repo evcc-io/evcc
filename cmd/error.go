@@ -27,6 +27,7 @@ const (
 	ClassInflux
 	ClassMessenger
 	ClassSponsorship
+	ClassLoadpoint
 )
 
 // FatalError is an error that can be marshaled
@@ -57,7 +58,7 @@ type DeviceError struct {
 }
 
 func (e *DeviceError) Error() string {
-	return e.err.Error()
+	return "[" + e.Name + "] " + e.err.Error()
 }
 
 // ClassError indicates the class of devices that failed
@@ -67,7 +68,7 @@ type ClassError struct {
 }
 
 func (e *ClassError) Error() string {
-	return e.err.Error()
+	return e.Class.String() + " " + e.err.Error()
 }
 
 func (e ClassError) MarshalJSON() ([]byte, error) {

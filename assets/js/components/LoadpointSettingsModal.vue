@@ -183,7 +183,6 @@ export default {
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
-		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
 		batteryBoost: Boolean,
@@ -237,7 +236,7 @@ export default {
 					return this.maxPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtW(this.maxCurrent * V * this.phasesActive);
+			return this.fmtW(this.maxCurrent * V * this.phasesConfigured);
 		},
 		minPower() {
 			if (this.chargerPhases1p3p) {
@@ -248,7 +247,7 @@ export default {
 					return this.minPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtW(this.minCurrent * V * this.phasesActive);
+			return this.fmtW(this.minCurrent * V * this.phasesConfigured);
 		},
 		minCurrentOptions() {
 			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
