@@ -16,6 +16,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+// MQTTMarshaler is the interface implemented by types that
+// can marshal themselves into valid an MQTT string representation.
+type MQTTMarshaler interface {
+	MarshalMQTT() ([]byte, error)
+}
+
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
 	log       *util.Logger
@@ -73,6 +79,15 @@ func (m *MQTT) encode(v interface{}) string {
 func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) {
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
+		return
+	}
+
+	if mm, ok := payload.(MQTTMarshaler); ok {
+		if b, err := mm.MarshalMQTT(); err == nil {
+			m.publishSingleValue(topic, retained, string(b))
+		} else {
+			m.log.ERROR.Printf("marshal mqtt: %v", err)
+		}
 		return
 	}
 

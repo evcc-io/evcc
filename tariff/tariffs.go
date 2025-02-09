@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -12,7 +13,7 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner, Solar api.Tariff
 }
 
-func CurrentPrice(t api.Tariff) (float64, error) {
+func Now(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
 			if r, err := rr.Current(time.Now()); err == nil {
@@ -23,12 +24,22 @@ func CurrentPrice(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+func Forecast(t api.Tariff) api.Rates {
+	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
+	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
+		if rr, err := t.Rates(); err == nil {
+			return rr
+		}
+	}
+	return nil
+}
+
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	switch u {
 	case api.TariffUsageCo2:
 		return t.Co2
 
-	case api.TariffUsageFeedin:
+	case api.TariffUsageFeedIn:
 		return t.FeedIn
 
 	case api.TariffUsageGrid:
