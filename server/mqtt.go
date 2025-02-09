@@ -82,10 +82,6 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		return
 	}
 
-	if strings.Contains(topic, "forecast/solar") {
-		fmt.Println(topic)
-	}
-
 	if mm, ok := payload.(MQTTMarshaler); ok {
 		if b, err := mm.MarshalMQTT(); err == nil {
 			m.publishSingleValue(topic, retained, string(b))
