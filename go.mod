@@ -70,7 +70,7 @@ require (
 	github.com/mlnoga/rct v0.1.2-0.20250202175314-91abcbf32e53
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
-	github.com/nicksnyder/go-i18n/v2 v2.4.1
+	github.com/nicksnyder/go-i18n/v2 v2.5.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
 	github.com/prometheus-community/pro-bing v0.6.0
