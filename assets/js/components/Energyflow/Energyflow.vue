@@ -83,6 +83,11 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
+							:details="solarForecastToday"
+							:detailsFmt="forecastFmt"
+							:detailsTooltip="
+								forecastTooltip(solarForecastToday, solarForecastTomorrow)
+							"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
 						/>
@@ -229,7 +234,7 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-
+import { todaysEnergy, tomorrowsEnergy } from "../../utils/forecast";
 export default {
 	name: "Energyflow",
 	components: {
@@ -266,6 +271,7 @@ export default {
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
+		forecast: { type: Object, default: () => ({}) },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
@@ -381,6 +387,16 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
+		solarForecastToday() {
+			const slots = this.forecast.solar;
+			if (!slots?.length) return null;
+			return todaysEnergy(slots);
+		},
+		solarForecastTomorrow() {
+			const slots = this.forecast.solar;
+			if (!slots?.length) return null;
+			return tomorrowsEnergy(slots);
+		},
 	},
 	watch: {
 		pvConfigured() {
@@ -418,6 +434,19 @@ export default {
 			}
 			return result;
 		},
+		forecastTooltip(today, tomorrow) {
+			let result = [];
+			if (today !== null) {
+				result.push(`${this.fmtWh(today, POWER_UNIT.KW)} today`);
+			}
+			if (tomorrow !== null) {
+				result.push(`${this.fmtWh(tomorrow, POWER_UNIT.KW)} tomorrow`);
+			}
+			if (result.length !== 0) {
+				result = ["forecast", ...result];
+			}
+			return result;
+		},
 		detailsValue(price, co2) {
 			if (this.co2Available) {
 				return co2;
@@ -429,6 +458,12 @@ export default {
 				return this.fmtCo2Short(value);
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
+		},
+		forecastFmt(value) {
+			if (value === null) {
+				return "";
+			}
+			return `~ ${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
 		kw: function (watt) {
 			return this.fmtW(watt, this.powerUnit);
