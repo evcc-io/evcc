@@ -4,24 +4,22 @@
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
-			<strong class="flex-grow-1 text-nowrap text-truncate">{{ name }}</strong>
-			<button
-				v-if="editable"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:title="$t('config.main.edit')"
-				tabindex="0"
-				@click="$emit('edit')"
+			<strong
+				class="flex-grow-1 text-nowrap text-truncate"
+				data-bs-toggle="tooltip"
+				:title="name"
+				>{{ title }}</strong
 			>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
 			<button
-				v-else
 				ref="tooltip"
 				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 opacity-25"
+				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
+				:class="{ 'opacity-25': !editable }"
 				data-bs-toggle="tooltip"
-				:title="$t('config.main.yaml')"
+				data-bs-html="true"
+				:title="tooltipTitle"
+				:disabled="!editable"
+				@click="edit"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
@@ -40,6 +38,7 @@ export default {
 	name: "DeviceCard",
 	props: {
 		name: String,
+		title: String,
 		editable: Boolean,
 		error: Boolean,
 	},
@@ -49,8 +48,20 @@ export default {
 			tooltip: null,
 		};
 	},
+	computed: {
+		tooltipTitle() {
+			if (!this.name) {
+				return "";
+			}
+			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
+			if (!this.editable) {
+				title += `<div class="mt-1">${this.$t("config.main.yaml")}</div>`;
+			}
+			return `<div class="text-start">${title}</div>`;
+		},
+	},
 	watch: {
-		editable() {
+		tooltipTitle() {
 			this.initTooltip();
 		},
 	},
@@ -58,6 +69,12 @@ export default {
 		this.initTooltip();
 	},
 	methods: {
+		edit() {
+			if (this.editable) {
+				this.tooltip?.hide();
+				this.$emit("edit");
+			}
+		},
 		initTooltip() {
 			this.$nextTick(() => {
 				this.tooltip?.dispose();
@@ -84,5 +101,8 @@ export default {
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
+}
+button:disabled {
+	pointer-events: auto;
 }
 </style>
