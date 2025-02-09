@@ -26,19 +26,19 @@ func (i TariffUsage) String() string {
 func _TariffUsageNoOp() {
 	var x [1]struct{}
 	_ = x[TariffUsageCo2-(1)]
-	_ = x[TariffUsageFeedin-(2)]
+	_ = x[TariffUsageFeedIn-(2)]
 	_ = x[TariffUsageGrid-(3)]
 	_ = x[TariffUsagePlanner-(4)]
 	_ = x[TariffUsageSolar-(5)]
 }
 
-var _TariffUsageValues = []TariffUsage{TariffUsageCo2, TariffUsageFeedin, TariffUsageGrid, TariffUsagePlanner, TariffUsageSolar}
+var _TariffUsageValues = []TariffUsage{TariffUsageCo2, TariffUsageFeedIn, TariffUsageGrid, TariffUsagePlanner, TariffUsageSolar}
 
 var _TariffUsageNameToValueMap = map[string]TariffUsage{
 	_TariffUsageName[0:3]:        TariffUsageCo2,
 	_TariffUsageLowerName[0:3]:   TariffUsageCo2,
-	_TariffUsageName[3:9]:        TariffUsageFeedin,
-	_TariffUsageLowerName[3:9]:   TariffUsageFeedin,
+	_TariffUsageName[3:9]:        TariffUsageFeedIn,
+	_TariffUsageLowerName[3:9]:   TariffUsageFeedIn,
 	_TariffUsageName[9:13]:       TariffUsageGrid,
 	_TariffUsageLowerName[9:13]:  TariffUsageGrid,
 	_TariffUsageName[13:20]:      TariffUsagePlanner,

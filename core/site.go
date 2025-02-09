@@ -758,7 +758,7 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
 func (site *Site) effectivePrice(greenShare float64) *float64 {
 	if grid, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
-		feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedin))
+		feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn))
 		if err != nil {
 			feedin = 0
 		}
@@ -784,7 +784,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
 		site.publish(keys.TariffGrid, v)
 	}
-	if v, err := tariff.Now(site.GetTariff(api.TariffUsageFeedin)); err == nil {
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn)); err == nil {
 		site.publish(keys.TariffFeedIn, v)
 	}
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
@@ -807,19 +807,17 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// forecast
-	// TODO check rates deduplication
-	if val := tariff.Forecast(site.GetTariff(api.TariffUsageCo2)); val != nil {
-		site.publish(keys.ForecastCo2, val)
-	}
-	if val := tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)); val != nil {
-		site.publish(keys.ForecastFeedIn, val)
-	}
-	if val := tariff.Forecast(site.GetTariff(api.TariffUsageGrid)); val != nil {
-		site.publish(keys.ForecastGrid, val)
-	}
-	if val := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); val != nil {
-		site.publish(keys.ForecastSolar, val)
-	}
+	site.publish(keys.Forecast, struct {
+		Co2    api.Rates `json:"co2,omitempty"`
+		FeedIn api.Rates `json:"feedin,omitempty"`
+		Grid   api.Rates `json:"grid,omitempty"`
+		Solar  api.Rates `json:"solar,omitempty"`
+	}{
+		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
+		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Solar:  tariff.Forecast(site.GetTariff(api.TariffUsageSolar)),
+	})
 }
 
 // updateLoadpoints updates all loadpoints' charge power

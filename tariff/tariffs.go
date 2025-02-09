@@ -24,7 +24,7 @@ func Now(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-func Forecast(t api.Tariff) []api.Rate {
+func Forecast(t api.Tariff) api.Rates {
 	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
 	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
 		if rr, err := t.Rates(); err == nil {
@@ -39,7 +39,7 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	case api.TariffUsageCo2:
 		return t.Co2
 
-	case api.TariffUsageFeedin:
+	case api.TariffUsageFeedIn:
 		return t.FeedIn
 
 	case api.TariffUsageGrid:

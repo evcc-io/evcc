@@ -44,7 +44,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 
 	for u, tf := range map[api.TariffUsage]api.Tariff{
 		api.TariffUsageGrid:    tariffs.Grid,
-		api.TariffUsageFeedin:  tariffs.FeedIn,
+		api.TariffUsageFeedIn:  tariffs.FeedIn,
 		api.TariffUsageCo2:     tariffs.Co2,
 		api.TariffUsagePlanner: tariffs.Planner,
 		api.TariffUsageSolar:   tariffs.Solar,
