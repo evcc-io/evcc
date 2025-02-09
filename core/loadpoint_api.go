@@ -175,11 +175,6 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.getPhases()
-}
-
-// getPhases returns loadpoint enabled phases
-func (lp *Loadpoint) getPhases() int {
 	return lp.phases
 }
 
@@ -206,12 +201,12 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 
 	lp.Lock()
 	lp.setPhasesConfigured(phases)
-	lp.Unlock()
 
 	// apply immediately if not 1p3p
 	if !lp.hasPhaseSwitching() {
 		lp.setPhases(phases)
 	}
+	lp.Unlock()
 
 	lp.requestUpdate()
 

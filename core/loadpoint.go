@@ -503,7 +503,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.clearSession()
 
 	// phases are unknown when vehicle disconnects
-	lp.resetMeasuredPhases()
+	lp.ResetMeasuredPhases()
 
 	// energy and duration
 	lp.energyMetrics.Publish("session", lp)
@@ -780,7 +780,7 @@ func (lp *Loadpoint) syncCharger() error {
 				if chargerPhases, err = pg.GetPhases(); err == nil {
 					if chargerPhases > 0 && chargerPhases != phases {
 						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-						lp.setPhases(chargerPhases)
+						lp.SetPhases(chargerPhases)
 					}
 				} else {
 					if errors.Is(err, api.ErrNotAvailable) {
@@ -794,7 +794,7 @@ func (lp *Loadpoint) syncCharger() error {
 			if !isPg || errors.Is(err, api.ErrNotAvailable) {
 				if chargerPhases > phases {
 					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
-					lp.setPhases(chargerPhases)
+					lp.SetPhases(chargerPhases)
 				}
 			}
 		}
@@ -1189,7 +1189,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		lp.phasesSwitched = lp.clock.Now()
 
 		// update setting and reset timer
-		lp.setPhases(phases)
+		lp.SetPhases(phases)
 	}
 
 	return nil
@@ -1217,7 +1217,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
-		lp.resetMeasuredPhases()
+		lp.ResetMeasuredPhases()
 	}
 
 	var waiting bool
@@ -1569,7 +1569,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 
 	if phases >= 1 {
 		lp.log.DEBUG.Printf("detected connected phases: %dp", phases)
-		lp.setPhases(phases)
+		lp.SetPhases(phases)
 	}
 }
 
