@@ -431,6 +431,9 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
+[forecast]
+modalTitle = "Vorhersage"
+
 [header]
 about = "Über"
 blog = "Blog"

@@ -37,7 +37,6 @@ function filterSlotsByDate(slots: PriceSlot[], dayString: string): PriceSlot[] {
 	return slots.filter(({ start, end }) => {
 		const isPast = new Date(end) < now;
 		const dateMatches = toDayString(new Date(start)) === dayString;
-		console.log(start, end, isPast, dateMatches, dayString);
 		return !isPast && dateMatches;
 	});
 }

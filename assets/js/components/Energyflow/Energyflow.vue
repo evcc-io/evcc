@@ -83,13 +83,15 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
+							detailsIcon="forecast"
 							:details="solarForecastToday"
 							:detailsFmt="forecastFmt"
-							:detailsTooltip="
-								forecastTooltip(solarForecastToday, solarForecastTomorrow)
-							"
+							:detailsTooltip="forecastTooltip(solarForecastToday)"
+							:detailsInactive="solarForecastToday === 0"
+							:detailsClickable="solarForecastToday !== null"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
+							@details-clicked="openForecastModal"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -234,7 +236,7 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import { todaysEnergy, tomorrowsEnergy } from "../../utils/forecast";
+import { todaysEnergy } from "../../utils/forecast";
 export default {
 	name: "Energyflow",
 	components: {
@@ -392,11 +394,6 @@ export default {
 			if (!slots?.length) return null;
 			return todaysEnergy(slots);
 		},
-		solarForecastTomorrow() {
-			const slots = this.forecast.solar;
-			if (!slots?.length) return null;
-			return tomorrowsEnergy(slots);
-		},
 	},
 	watch: {
 		pvConfigured() {
@@ -434,18 +431,11 @@ export default {
 			}
 			return result;
 		},
-		forecastTooltip(today, tomorrow) {
-			let result = [];
-			if (today !== null) {
-				result.push(`${this.fmtWh(today, POWER_UNIT.KW)} today`);
+		forecastTooltip(value) {
+			if (value !== null) {
+				return ["solar forecast", `${this.fmtWh(value, POWER_UNIT.KW)} remaining today`];
 			}
-			if (tomorrow !== null) {
-				result.push(`${this.fmtWh(tomorrow, POWER_UNIT.KW)} tomorrow`);
-			}
-			if (result.length !== 0) {
-				result = ["forecast", ...result];
-			}
-			return result;
+			return [];
 		},
 		detailsValue(price, co2) {
 			if (this.co2Available) {
@@ -463,7 +453,7 @@ export default {
 			if (value === null) {
 				return "";
 			}
-			return `~ ${this.fmtWh(value, POWER_UNIT.KW)}`;
+			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
 		kw: function (watt) {
 			return this.fmtW(watt, this.powerUnit);
@@ -480,6 +470,10 @@ export default {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
 			);
+			modal.show();
+		},
+		openForecastModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
 			modal.show();
 		},
 		dischargePower(power) {
