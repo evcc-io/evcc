@@ -135,7 +135,7 @@ render: |
         register:
           type: input
           address: 13020 # Battery current
-          decode: uint16
+          decode: int16
     - name: bp
       type: int
       config:
