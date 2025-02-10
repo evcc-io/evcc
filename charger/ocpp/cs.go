@@ -75,12 +75,14 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 		cs.regs[id] = reg
 	}
 
+	cs.mu.Unlock()
+
 	// serialise on chargepoint id
 	reg.setup.Lock()
 	defer reg.setup.Unlock()
 
+	cs.mu.Lock()
 	cp := reg.cp
-
 	cs.mu.Unlock()
 
 	// setup already completed?

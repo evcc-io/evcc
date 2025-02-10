@@ -606,3 +606,6 @@ devicegroups:
   co2:
     de: CO₂ Vorhersage
     en: CO₂ forecast
+  solar:
+    de: PV Vorhersage
+    en: PV forecast
