@@ -39,7 +39,11 @@ func Init() error {
 
 		// load sessions.csv only
 		if sessions := data["sessions"]; sessions != nil && len(sessions["csv"]) != 0 {
-			b, err := toml.Marshal(sessions["csv"])
+			b, err := toml.Marshal(map[string]any{
+				"sessions": map[string]any{
+					"csv": sessions["csv"],
+				},
+			})
 			if err != nil {
 				return fmt.Errorf("marshal session.csv failed: %w", err)
 			}
