@@ -112,9 +112,9 @@ render: |
   power:
     source: go # handling old and new firmware
     script: |
-      res := float64(-bp)
-      if (brs&0x4 > 0 || bc < 0) && bp >= 0 {
-        res = float64(bp)
+      res := float64(bp)
+      if (brs&0x2 > 0 || bc < 0) && bp >= 0 {
+        res = float64(-bp)
       }
       res
     in:
