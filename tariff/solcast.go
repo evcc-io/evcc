@@ -71,7 +71,8 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Solcast) run(done chan error) {
 	var once sync.Once
 
-	for ; true; <-time.Tick(time.Duration(3*len(t.sites))*time.Hour) {
+	// don't exceed 10 requests per 24h
+	for ; true; <-time.Tick(time.Duration(2.4*float64(len(t.sites))) * time.Hour) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
