@@ -156,21 +156,21 @@ params:
     type: chargemodes
   - name: minsoc
     description:
-      de: Minimaler Ladestand (Soc) in %
-      en: Minimum state of charge (Soc) in %
+      de: Minimaler Ladestand (%)
+      en: Minimum charge (%)
     help:
-      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'
+      de: Untere Grenze beim Entladen der Batterie (normaler Betrieb)
+      en: Lower limit when discharging the battery (normal operation)
     example: 25
     type: int
-  - name: targetsoc
+  - name: maxsoc
     description:
-      de: Zielladestand (Soc) in %
-      en: Target state of charge (Soc) in %
+      de: Maximaler Ladestand (%)
+      en: Maximum charge (%)
     help:
-      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
-      en: Until which state of charge (Soc) should the vehicle be charged
-    example: 80
+      de: Oberes Limit beim Laden der Batterie aus dem Netz
+      en: Upper limit when charging the battery from the grid
+    example: 95
     type: int
   - name: mincurrent
     description:
@@ -606,3 +606,6 @@ devicegroups:
   co2:
     de: CO₂ Vorhersage
     en: CO₂ forecast
+  solar:
+    de: PV Vorhersage
+    en: PV forecast

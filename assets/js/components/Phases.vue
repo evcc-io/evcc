@@ -1,6 +1,11 @@
 <template>
-	<div :class="`phases phases--${numberOfVisiblePhases}p d-flex justify-content-between`">
-		<div v-for="num in [1, 2, 3]" :key="num" :class="`phase phase--${num} me-1`">
+	<div :class="`phases d-flex justify-content-between`">
+		<div
+			v-for="num in [1, 2, 3]"
+			:key="num"
+			class="phase me-1"
+			:class="{ 'phase-inactive': !isPhaseActive(num) }"
+		>
 			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
@@ -20,14 +25,8 @@ export default {
 		maxCurrent: { type: Number },
 	},
 	computed: {
-		numberOfVisiblePhases() {
-			if (!this.chargeCurrents) {
-				return this.phasesActive;
-			}
-			const [L1, L2, L3] = this.chargeCurrents.map((c) => c >= MIN_ACTIVE_CURRENT);
-			if (L1 && !L2 && !L3) return 1;
-			if (L1 && L2 && !L3) return 2;
-			return 3;
+		chargeCurrentsActive() {
+			return this.chargeCurrents?.filter((c) => c >= MIN_ACTIVE_CURRENT).length > 0;
 		},
 	},
 	methods: {
@@ -44,6 +43,12 @@ export default {
 				return (100 / this.maxCurrent) * current;
 			}
 			return this.targetWidth();
+		},
+		isPhaseActive(num) {
+			if (this.chargeCurrentsActive) {
+				return this.chargeCurrents[num - 1] >= MIN_ACTIVE_CURRENT;
+			}
+			return num <= this.phasesActive;
 		},
 	},
 };
@@ -69,14 +74,12 @@ export default {
 html.dark .phase {
 	background-color: var(--bs-gray-bright);
 }
-
-.phases--1p .phase--2,
-.phases--1p .phase--3,
-.phases--2p .phase--3 {
+.phase-inactive {
 	flex-basis: 0;
 	margin-right: 0 !important;
 	opacity: 0;
 }
+
 .target,
 .real {
 	position: absolute;

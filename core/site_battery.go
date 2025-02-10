@@ -78,7 +78,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 }
 
 func (site *Site) plannerRates() (api.Rates, error) {
-	tariff := site.GetTariff(PlannerTariff)
+	tariff := site.GetTariff(api.TariffUsagePlanner)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}

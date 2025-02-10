@@ -13,6 +13,22 @@ test.afterAll(async () => {
   await stop();
 });
 
+async function selectLoadpointFilter(page, value) {
+  await page
+    .getByTestId("filter-loadpoint")
+    .locator("visible=true")
+    .getByRole("combobox")
+    .selectOption(value);
+}
+
+async function selectVehicleFilter(page, value) {
+  await page
+    .getByTestId("filter-vehicle")
+    .locator("visible=true")
+    .getByRole("combobox")
+    .selectOption(value);
+}
+
 test.describe("basics", async () => {
   test("navigation to sessions", async ({ page }) => {
     await page.goto("/");
@@ -127,26 +143,17 @@ for (const [name, viewport] of Object.entries({ desktop, mobile })) {
       await page.goto("/#/sessions?year=2023&month=5");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("blauer e-Golf (2)");
+      await selectVehicleFilter(page, "blauer e-Golf (2)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/blauer e-Golf/);
       await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/blauer e-Golf/);
 
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("weißes Model 3 (2)");
+      await selectVehicleFilter(page, "weißes Model 3 (2)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/weißes Model 3/);
       await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/weißes Model 3/);
 
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("all vehicles (4)");
+      await selectVehicleFilter(page, "all vehicles (4)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
     });
 
@@ -155,23 +162,17 @@ for (const [name, viewport] of Object.entries({ desktop, mobile })) {
       await page.goto("/#/sessions?year=2023&month=5");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
-      await page
-        .getByTestId("filter-loadpoint")
-        .locator("visible=true")
-        .selectOption("Carport (3)");
+      await selectLoadpointFilter(page, "Carport (3)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Carport/);
       await expect(page.getByTestId("sessions-entry").nth(1)).toHaveText(/Carport/);
       await expect(page.getByTestId("sessions-entry").nth(2)).toHaveText(/Carport/);
 
-      await page.getByTestId("filter-loadpoint").locator("visible=true").selectOption("Garage (1)");
+      await selectLoadpointFilter(page, "Garage (1)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(1);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Garage/);
 
-      await page
-        .getByTestId("filter-loadpoint")
-        .locator("visible=true")
-        .selectOption("all charging points (4)");
+      await selectLoadpointFilter(page, "all charging points (4)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
     });
 
@@ -179,22 +180,13 @@ for (const [name, viewport] of Object.entries({ desktop, mobile })) {
       await page.setViewportSize(viewport);
       await page.goto("/#/sessions?year=2023&month=5");
 
-      await page
-        .getByTestId("filter-loadpoint")
-        .locator("visible=true")
-        .selectOption("Carport (3)");
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("weißes Model 3 (1)");
+      await selectLoadpointFilter(page, "Carport (3)");
+      await selectVehicleFilter(page, "weißes Model 3 (1)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(1);
       await expect(page.getByTestId("sessions-entry")).toHaveText(/Carport/);
       await expect(page.getByTestId("sessions-entry")).toHaveText(/weißes Model 3/);
 
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("blauer e-Golf (2)");
+      await selectVehicleFilter(page, "blauer e-Golf (2)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(2);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/Carport/);
       await expect(page.getByTestId("sessions-entry").nth(0)).toHaveText(/blauer e-Golf/);
@@ -206,10 +198,7 @@ for (const [name, viewport] of Object.entries({ desktop, mobile })) {
       await page.setViewportSize(viewport);
       await page.goto("/#/sessions?year=2023&month=5");
 
-      await page
-        .getByTestId("filter-vehicle")
-        .locator("visible=true")
-        .selectOption("blauer e-Golf (2)");
+      await selectVehicleFilter(page, "blauer e-Golf (2)");
       const option = page
         .getByTestId("filter-loadpoint")
         .locator("visible=true")
@@ -222,10 +211,7 @@ for (const [name, viewport] of Object.entries({ desktop, mobile })) {
       await page.setViewportSize(viewport);
       await page.goto("/#/sessions?year=2023&month=5");
 
-      await page
-        .getByTestId("filter-loadpoint")
-        .locator("visible=true")
-        .selectOption("Carport (3)");
+      await selectLoadpointFilter(page, "Carport (3)");
       await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
       if (name === "mobile") {
         await page.getByTestId("navigate-next-year-month").click();

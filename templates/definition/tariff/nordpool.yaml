@@ -7,6 +7,7 @@ requirements:
     en: "Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
   evcc: ["skiptest"]
 group: price
+countries: ["EU"]
 params:
   - name: region
     example: GER

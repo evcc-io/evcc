@@ -38,7 +38,7 @@ type All struct {
 	Vehicles     []config.Named
 	Tariffs      Tariffs
 	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
 
@@ -140,6 +140,7 @@ type Tariffs struct {
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
+	Solar    config.Typed
 }
 
 type Network struct {
