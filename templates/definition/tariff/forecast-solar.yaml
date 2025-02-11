@@ -24,7 +24,7 @@ render: |
     source: http
     uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&no_sun=1
     jq: |
-      [ .result.watts | to_entries.[] | {
+      [ .result.watt_hours_period | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
         "end":   (.key | strptime("%FT%T%z") | mktime+3600 | strftime("%FT%TZ")),
         "price": .value
