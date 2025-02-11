@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/jinzhu/now"
 )
 
 type Solcast struct {
@@ -77,7 +78,7 @@ func (t *Solcast) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			for _, site := range t.sites {
-				uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?format=json", site)
+				uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT60M&format=json", site)
 				if err := t.GetJSON(uri, &res); err != nil {
 					return err
 				}
@@ -94,12 +95,23 @@ func (t *Solcast) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Forecasts))
 
+	NEXT:
 		for _, r := range res.Forecasts {
-			data = append(data, api.Rate{
-				Start: r.PeriodEnd.Add(-r.Period.Duration()).Local(),
-				End:   r.PeriodEnd.Local(),
+			start := now.With(r.PeriodEnd.Add(-r.Period.Duration())).BeginningOfHour().Local()
+			rr := api.Rate{
+				Start: start,
+				End:   start.Add(time.Hour),
 				Price: r.PvEstimate * 1e3,
-			})
+			}
+			if r.Period.Duration() != time.Hour {
+				for i, r := range data {
+					if r.Start.Equal(rr.Start) {
+						data[i].Price = (r.Price + rr.Price) / 2
+						continue NEXT
+					}
+				}
+			}
+			data = append(data, rr)
 		}
 
 		mergeRates(t.data, data)
