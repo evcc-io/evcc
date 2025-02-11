@@ -32,8 +32,25 @@ func Init() error {
 	}
 
 	for _, d := range dir {
-		if _, err := Bundle.LoadMessageFileFS(assets.I18n, d.Name()); err != nil {
+		var data map[string]map[string]map[string]any
+		if _, err := toml.DecodeFS(assets.I18n, d.Name(), &data); err != nil {
 			return fmt.Errorf("loading locales failed: %w", err)
+		}
+
+		// load sessions.csv only
+		if sessions := data["sessions"]; sessions != nil && len(sessions["csv"]) != 0 {
+			b, err := toml.Marshal(map[string]any{
+				"sessions": map[string]any{
+					"csv": sessions["csv"],
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("marshal session.csv failed: %w", err)
+			}
+
+			if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
+				return fmt.Errorf("loading locales failed: %w", err)
+			}
 		}
 	}
 
