@@ -7,18 +7,10 @@
 		@open="modalVisible"
 		@closed="modalInvisible"
 	>
+		<ForecastChart :grid="forecast.grid" :solar="forecast.solar" :co2="forecast.co2" />
+
 		<h6>Solar</h6>
 		<p>{{ solarToday }}<br />{{ solarTomorrow }}</p>
-		<code>
-			{{ forecast.solar }}
-		</code>
-		<h6>Grid</h6>
-		<code>
-			{{ forecast.grid }}
-		</code>
-		<code>
-			{{ forecast.co2 }}
-		</code>
 	</GenericModal>
 </template>
 
@@ -26,6 +18,7 @@
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
 import GenericModal from "./GenericModal.vue";
+import ForecastChart from "./ForecastChart.vue";
 import { todaysEnergy, tomorrowsEnergy, type PriceSlot } from "../utils/forecast";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 
@@ -37,10 +30,11 @@ interface Forecast {
 
 export default defineComponent({
 	name: "ForecastModal",
-	components: { GenericModal },
+	components: { GenericModal, ForecastChart },
 	mixins: [formatter],
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		currency: { type: String },
 	},
 	data: function () {
 		return {

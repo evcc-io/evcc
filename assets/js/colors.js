@@ -35,6 +35,18 @@ const colors = reactive({
   ],
 });
 
+export const dimColor = (color) => {
+  return color.toLowerCase().replace(/ff$/, "20");
+};
+
+export const lighterColor = (color) => {
+  return color.toLowerCase().replace(/ff$/, "99");
+};
+
+export const fullColor = (color) => {
+  return color.toLowerCase().replace(/20$/, "ff");
+};
+
 function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");
@@ -45,19 +57,12 @@ function updateCssColors() {
   colors.background = style.getPropertyValue("--evcc-background");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
+  colors.light = style.getPropertyValue("--bs-gray-light");
 }
 
 // update colors on theme change
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 darkModeMatcher?.addEventListener("change", updateCssColors);
 updateCssColors();
-
-export const dimColor = (color) => {
-  return color.toLowerCase().replace(/ff$/, "20");
-};
-
-export const fullColor = (color) => {
-  return color.toLowerCase().replace(/20$/, "ff");
-};
 
 export default colors;
