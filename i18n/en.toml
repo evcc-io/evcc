@@ -436,6 +436,11 @@ modalUpdateStatusStart = "Installation started:"
 [forecast]
 modalTitle = "Forecast"
 
+[forecast.type]
+co2 = "CO₂"
+price = "Price"
+solar = "Solar"
+
 [header]
 about = "About"
 blog = "Blog"

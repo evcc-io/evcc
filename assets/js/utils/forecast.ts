@@ -41,17 +41,20 @@ function filterSlotsByDate(slots: PriceSlot[], dayString: string): PriceSlot[] {
 	});
 }
 
-// return the energy for today from now on
-export function todaysEnergy(slots: PriceSlot[]): number {
-	const now = new Date();
-	const todaysSlots = filterSlotsByDate(slots, toDayString(now));
-	return aggregateEnergy(todaysSlots, true);
+// return the energy for a given day (0 = today, 1 = tomorrow, etc.)
+export function energyByDay(slots: PriceSlot[], day: number = 0): number {
+	const date = new Date();
+	date.setDate(date.getDate() + day);
+	const daySlots = filterSlotsByDate(slots, toDayString(date));
+	return aggregateEnergy(daySlots, true);
 }
 
-// return the energy for tomorrow
-export function tomorrowsEnergy(slots: PriceSlot[]): number {
-	const tomorrow = new Date();
-	tomorrow.setDate(tomorrow.getDate() + 1);
-	const tomorrowsSlots = filterSlotsByDate(slots, toDayString(tomorrow));
-	return aggregateEnergy(tomorrowsSlots, true);
+// return the highest slot for a given day (0 = today, 1 = tomorrow, etc.)
+export function highestSlotIndexByDay(slots: PriceSlot[], day: number = 0): number {
+	const date = new Date();
+	date.setDate(date.getDate() + day);
+	const daySlots = filterSlotsByDate(slots, toDayString(date));
+	const sortedSlots = daySlots.sort((a, b) => b.price - a.price);
+	const highestSlot = sortedSlots[0] || {};
+	return slots.findIndex((slot) => slot.start === highestSlot.start);
 }

@@ -35,6 +35,7 @@
     "canvas-confetti": "^1.4.0",
     "chart.js": "^4.4.4",
     "chartjs-adapter-dayjs-4": "^1.0.4",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "countup.js": "^2.3.2",
     "dayjs": "^1.11.13",
     "eslint": "^9.13.0",

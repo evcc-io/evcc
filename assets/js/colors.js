@@ -40,7 +40,7 @@ export const dimColor = (color) => {
 };
 
 export const lighterColor = (color) => {
-  return color.toLowerCase().replace(/ff$/, "99");
+  return color.toLowerCase().replace(/ff$/, "aa");
 };
 
 export const fullColor = (color) => {
@@ -63,6 +63,8 @@ function updateCssColors() {
 // update colors on theme change
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 darkModeMatcher?.addEventListener("change", updateCssColors);
+// initialize colors
 updateCssColors();
+window.requestAnimationFrame(updateCssColors);
 
 export default colors;

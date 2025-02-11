@@ -236,7 +236,7 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import { todaysEnergy } from "../../utils/forecast";
+import { energyByDay } from "../../utils/forecast";
 export default {
 	name: "Energyflow",
 	components: {
@@ -392,7 +392,7 @@ export default {
 		solarForecastToday() {
 			const slots = this.forecast.solar;
 			if (!slots?.length) return null;
-			return todaysEnergy(slots);
+			return energyByDay(slots, 0);
 		},
 	},
 	watch: {
