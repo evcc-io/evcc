@@ -90,9 +90,7 @@ export default defineComponent({
 			});
 		},
 		chartData() {
-			const vThis = this;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const datasets: any[] = [];
+			const datasets: unknown[] = [];
 			if (this.solarSlots.length > 0) {
 				datasets.push({
 					label: "solar",
@@ -130,6 +128,7 @@ export default defineComponent({
 			};
 		},
 		options() {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
 			return {
 				...commonOptions,
@@ -174,7 +173,9 @@ export default defineComponent({
 								const { x } = tooltipItem[0].raw;
 								return this.fmtFullDateTime(new Date(x));
 							},
-							label: (tooltipItem) => {
+							label: () => {
+								return null;
+								/*
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw.y;
 
@@ -200,6 +201,7 @@ export default defineComponent({
 												: this.fmtGrams(value)
 										}`
 									: null;
+								*/
 							},
 						},
 					},
