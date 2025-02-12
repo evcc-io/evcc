@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-version"
 )

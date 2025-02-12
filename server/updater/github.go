@@ -12,7 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
 )
@@ -90,7 +90,7 @@ func (r *Repo) ReleaseNotes(from string) (rendered string, err error) {
 
 		if notes := strings.TrimSpace(rel.GetBody()); notes != "" {
 			var md string
-			if md, _, err = r.Markdown(context.Background(), notes, &github.MarkdownOptions{
+			if md, _, err = r.Markdown.Render(context.Background(), notes, &github.MarkdownOptions{
 				Mode:    "gfm",
 				Context: fmt.Sprintf("%s/%s", r.owner, r.repository),
 			}); err != nil {

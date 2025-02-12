@@ -5,7 +5,7 @@ package updater
 import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v69/github"
 )
 
 // Run regularly checks version
