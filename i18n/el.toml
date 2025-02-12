@@ -41,6 +41,7 @@ labelResidualPower = "Υπολειπόμενη ισχύς"
 title = "Έλεγχος συμπεριφοράς"
 
 [config.deviceValue]
+amount = "Ποσό"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Χωρητικότητα"
@@ -77,7 +78,6 @@ temp = "Θερμοκρασία"
 topic = "Topic"
 url = "URL"
 yes = "ναι"
-amount = "Ποσό"
 
 [config.eebus]
 description = "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus."
@@ -409,6 +409,8 @@ weekdays = "Ημέρες"
 battery = "Μπαταρία"
 batteryCharge = "Φόρτιση μπαταρίας"
 batteryDischarge = "Αποφόρτιση μπαταρίας"
+batteryGridChargeActive = "ενεργή φόρτιση από το δίκτυο"
+batteryGridChargeLimit = "φόρτιση από το δίκτυο όταν"
 batteryHold = "Μπαταρία (κλειδωμένο)"
 batteryTooltip = "{energy} από {total} ({soc})"
 gridImport = "Χρήση δικτύου"
@@ -418,8 +420,6 @@ noEnergy = "Χωρίς δεδομένα μετρητή"
 pvExport = "Εξαγωγή προς δικτύο"
 pvProduction = "Παραγωγή"
 selfConsumption = "«Αυτοκατανάλωση»"
-batteryGridChargeActive = "ενεργή φόρτιση από το δίκτυο"
-batteryGridChargeLimit = "φόρτιση από το δίκτυο όταν"
 
 [main.heatingStatus]
 charging = "Θερμαίνεται…"

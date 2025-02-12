@@ -30,6 +30,19 @@ never = "enkel bij voldoende overschot."
 titleAdd = "Voeg accu toe"
 titleEdit = "Accu aanpassen"
 
+[config.charge]
+titleAdd = "Voeg Lader Meter toe"
+titleEdit = "Editeer Lader Meter"
+
+[config.charger]
+chargers = "EV laders"
+ocppHelp = "kopieer dit adres in de configuratie van jouw lader"
+ocppLabel = "OCPP-Server URL"
+switchsockets = "schakelbare stopcontacten"
+template = "Fabrikant"
+titleAdd = "Voeg Lader toe"
+titleEdit = "Editeer Lader"
+
 [config.circuits]
 description = "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen."
 title = "Belastingbeheer"
@@ -812,17 +825,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[config.charge]
-titleAdd = "Voeg Lader Meter toe"
-titleEdit = "Editeer Lader Meter"
-
-[config.charger]
-chargers = "EV laders"
-titleEdit = "Editeer Lader"
-titleAdd = "Voeg Lader toe"
-template = "Fabrikant"
-switchsockets = "schakelbare stopcontacten"
-ocppLabel = "OCPP-Server URL"
-ocppHelp = "kopieer dit adres in de configuratie van jouw lader"
