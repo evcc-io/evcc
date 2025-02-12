@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="overflow-x-auto overflow-x-md-auto chart-container">
+		<div class="overflow-x-auto overflow-x-md-auto chart-container" @mouseleave="onMouseLeave">
 			<div style="position: relative; height: 220px" class="chart">
 				<Bar :data="chartData" :options="options" />
 			</div>
@@ -60,6 +60,12 @@ export default defineComponent({
 		currency: { type: String as PropType<string> },
 		selected: { type: String as PropType<ForecastType> },
 	},
+	emits: ["selected"],
+	data() {
+		return {
+			selectedIndex: null,
+		};
+	},
 	computed: {
 		startDate() {
 			const now = new Date();
@@ -80,6 +86,21 @@ export default defineComponent({
 		},
 		co2Slots() {
 			return this.filterSlots(this.co2);
+		},
+		currentSlots() {
+			switch (this.selected) {
+				case ForecastType.Price:
+					return this.gridSlots;
+				case ForecastType.Solar:
+					return this.solarSlots;
+				case ForecastType.Co2:
+					return this.co2Slots;
+				default:
+					return [];
+			}
+		},
+		selectedSlot() {
+			return this.selectedIndex !== null ? this.currentSlots[this.selectedIndex] : null;
 		},
 		maxPriceIndex() {
 			return this.gridSlots.reduce((max, slot, index) => {
@@ -121,7 +142,9 @@ export default defineComponent({
 						x: new Date(slot.start),
 						highlight:
 							active &&
-							this.solarHighlights.find(({ index: i }) => i === index)?.energy,
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: this.solarHighlights.find(({ index: i }) => i === index)?.energy),
 					})),
 					yAxisID: "yForecast",
 					backgroundColor: lighterColor(color),
@@ -129,6 +152,7 @@ export default defineComponent({
 					fill: "origin",
 					tension: 0.5,
 					pointRadius: 0,
+					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
 					order: active ? 0 : 1,
 				});
@@ -143,7 +167,9 @@ export default defineComponent({
 						x: new Date(slot.start),
 						highlight:
 							active &&
-							(index === this.maxPriceIndex || index === this.minPriceIndex),
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: index === this.maxPriceIndex || index === this.minPriceIndex),
 					})),
 					yAxisID: "yPrice",
 					borderRadius: 8,
@@ -162,13 +188,17 @@ export default defineComponent({
 						y: slot.price,
 						x: new Date(slot.start),
 						highlight:
-							active && (index === this.maxCo2Index || index === this.minCo2Index),
+							active &&
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: index === this.maxCo2Index || index === this.minCo2Index),
 					})),
 					yAxisID: "yCo2",
 					backgroundColor: color,
 					borderColor: color,
 					tension: 0.25,
 					pointRadius: 0,
+					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
 					order: active ? 0 : 1,
 				});
@@ -193,18 +223,17 @@ export default defineComponent({
 					numbers: false,
 				},
 				interaction: {
-					mode: "nearest",
+					mode: "index",
 					axis: "x",
 					intersect: false,
 				},
 				categoryPercentage: 0.7,
 				onHover: function (event, active) {
-					if (active.length > 0) {
-						console.log(active);
-						const hoveredElement = active[0];
-						const { datasetIndex, index } = hoveredElement;
-						console.log(datasetIndex, index);
-					}
+					const element = active.find(({ datasetIndex }) => {
+						const { label } = event.chart.getDatasetMeta(datasetIndex);
+						return label === vThis.selected;
+					});
+					vThis.selectedIndex = element ? element.index : null;
 				},
 				plugins: {
 					...commonOptions.plugins,
@@ -231,7 +260,11 @@ export default defineComponent({
 									case ForecastType.Co2:
 										return vThis.fmtGrams(data.y);
 									case ForecastType.Solar:
-										return vThis.fmtWh(data.highlight, POWER_UNIT.AUTO);
+										if (data.highlight === true) {
+											return vThis.fmtW(data.y, POWER_UNIT.AUTO);
+										} else {
+											return vThis.fmtWh(data.highlight, POWER_UNIT.AUTO);
+										}
 									default:
 										return null;
 								}
@@ -287,9 +320,17 @@ export default defineComponent({
 			};
 		},
 	},
+	watch: {
+		selectedSlot(slot) {
+			this.$emit("selected", slot);
+		},
+	},
 	methods: {
 		filterSlots(slots: PriceSlot[] = []) {
 			return slots.filter((slot) => new Date(slot.end) > this.startDate).slice(0, 48);
+		},
+		onMouseLeave() {
+			this.selectedIndex = null;
 		},
 	},
 });

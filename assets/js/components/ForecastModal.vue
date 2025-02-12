@@ -7,7 +7,7 @@
 		@open="modalVisible"
 		@closed="modalInvisible"
 	>
-		<div class="d-flex justify-content-start">
+		<div class="d-flex justify-content-between align-items-center">
 			<IconSelectGroup>
 				<IconSelectItem
 					v-for="type in types"
@@ -20,6 +20,9 @@
 					<component :is="typeIcons[type]"></component>
 				</IconSelectItem>
 			</IconSelectGroup>
+			<div v-if="activeSlotName">
+				{{ activeSlotName }}
+			</div>
 		</div>
 
 		<ForecastChart
@@ -29,6 +32,7 @@
 			:co2="forecast.co2"
 			:currency="currency"
 			:selected="selectedType"
+			@selected="updateSlot"
 		/>
 	</GenericModal>
 </template>
@@ -43,7 +47,7 @@ import ForecastChart from "./ForecastChart.vue";
 import IconSelectItem from "./IconSelectItem.vue";
 import IconSelectGroup from "./IconSelectGroup.vue";
 import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
-import { type PriceSlot } from "../utils/forecast";
+import { type PriceSlot, ForecastType } from "../utils/forecast";
 import formatter from "../mixins/formatter";
 
 interface Forecast {
@@ -51,12 +55,6 @@ interface Forecast {
 	solar?: PriceSlot[];
 	co2?: PriceSlot[];
 }
-
-export const TYPES = {
-	SOLAR: "solar",
-	PRICE: "price",
-	CO2: "co2",
-};
 
 export default defineComponent({
 	name: "ForecastModal",
@@ -66,11 +64,17 @@ export default defineComponent({
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		currency: { type: String },
 	},
-	data: function () {
+	data: function (): {
+		isModalVisible: boolean;
+		selectedType: ForecastType;
+		types: ForecastType[];
+		selectedSlot: PriceSlot | null;
+	} {
 		return {
 			isModalVisible: false,
-			selectedType: TYPES.PRICE,
-			types: Object.values(TYPES),
+			selectedType: ForecastType.Price,
+			types: Object.values(ForecastType),
+			selectedSlot: null,
 		};
 	},
 	computed: {
@@ -82,10 +86,21 @@ export default defineComponent({
 		},
 		typeIcons() {
 			return {
-				[TYPES.SOLAR]: "shopicon-regular-sun",
-				[TYPES.PRICE]: DynamicPriceIcon,
-				[TYPES.CO2]: "shopicon-regular-eco1",
+				[ForecastType.Solar]: "shopicon-regular-sun",
+				[ForecastType.Price]: DynamicPriceIcon,
+				[ForecastType.Co2]: "shopicon-regular-eco1",
 			};
+		},
+		activeSlotName() {
+			if (this.selectedSlot) {
+				const { start, end } = this.selectedSlot;
+				const startDate = new Date(start);
+				const endDate = new Date(end);
+				const day = this.weekdayShort(startDate);
+				const range = `${startDate.getHours()}–${endDate.getHours()}`;
+				return this.$t("main.targetChargePlan.timeRange", { day, range });
+			}
+			return null;
 		},
 	},
 	methods: {
@@ -95,8 +110,11 @@ export default defineComponent({
 		modalInvisible: function () {
 			this.isModalVisible = false;
 		},
-		updateType: function (type: string) {
+		updateType: function (type: ForecastType) {
 			this.selectedType = type;
+		},
+		updateSlot: function (slot: PriceSlot | null) {
+			this.selectedSlot = slot;
 		},
 	},
 });

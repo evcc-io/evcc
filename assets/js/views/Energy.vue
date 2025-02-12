@@ -91,7 +91,7 @@ export default defineComponent({
 		},
 		forecastAvailable() {
 			const { grid, solar, co2 } = this.forecast;
-			return grid && solar && co2;
+			return grid || solar || co2;
 		},
 		forecast(): Forecast {
 			return store.state?.forecast || {};

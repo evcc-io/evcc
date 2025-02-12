@@ -11,7 +11,7 @@
 			<span
 				v-if="label"
 				class="text-nowrap text-truncate"
-				:class="{ 'd-none d-lg-inline': hideLabelOnMobile }"
+				:class="{ 'd-none d-md-inline': hideLabelOnMobile }"
 			>
 				{{ label }}
 			</span>
@@ -56,7 +56,7 @@ export default {
 	width: auto;
 	padding: 0 1rem;
 }
-@media (max-width: 992px) {
+@media (max-width: 768px) {
 	.btn.hideLabelOnMobile {
 		width: 32px;
 		padding: 0;
