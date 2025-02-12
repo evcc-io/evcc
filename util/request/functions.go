@@ -43,7 +43,7 @@ type StatusError struct {
 	resp *http.Response
 }
 
-func (e StatusError) Error() string {
+func (e *StatusError) Error() string {
 	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
 }
 
@@ -70,7 +70,7 @@ func (e StatusError) HasStatus(codes ...int) bool {
 // ResponseError turns an HTTP status code into an error
 func ResponseError(resp *http.Response) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return StatusError{resp: resp}
+		return &StatusError{resp: resp}
 	}
 	return nil
 }
@@ -85,7 +85,7 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, StatusError{resp: resp}
+		return b, &StatusError{resp: resp}
 	}
 
 	return b, nil

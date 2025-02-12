@@ -1,12 +1,14 @@
 package vw
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -99,7 +101,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	if _, ok := err.(request.StatusError); ok {
+	if errors.As(err, lo.ToPtr(new(request.StatusError))) {
 		var rr RolesRights
 		rr, err = v.RolesRights(vin)
 
