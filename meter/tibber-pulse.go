@@ -87,6 +87,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			"token": cc.Token,
 		}).
 		WithRetryTimeout(0).
+		WithRetryDelay(5 * time.Second).
 		WithTimeout(request.Timeout).
 		WithLog(log.TRACE.Println).
 		OnError(func(_ *graphql.SubscriptionClient, err error) error {
@@ -120,8 +121,19 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}()
 
 	go func() {
-		if err := client.Run(); err != nil {
-			log.ERROR.Println(err)
+		// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
+		// Therefore we need to restart the client when exiting gracefully upon server request
+		// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
+		for tick := time.Tick(10 * time.Second); ; {
+			if err := client.Run(); err != nil {
+				log.ERROR.Println(err)
+			}
+
+			select {
+			case <-tick:
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 

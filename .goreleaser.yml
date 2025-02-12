@@ -38,14 +38,6 @@ builds:
         flags:
           - -trimpath
           - -tags=release,timetzdata
-      - goos: darwin
-        goarch: arm64
-        ldflags:
-          - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w -B gobuildid
-      - goos: darwin
-        goarch: amd64
-        ldflags:
-          - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w -B gobuildid
 
 env:
   - CGO_ENABLED=0

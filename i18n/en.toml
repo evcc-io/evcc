@@ -88,11 +88,11 @@ power = "Power"
 powerRange = "Power"
 range = "Range"
 singlePhase = "Single phase"
-soc = "SoC"
-socLimit = "Limit"
+soc = "Charge"
 temp = "Temperature"
 topic = "Topic"
 url = "URL"
+vehicleLimitSoc = "Vehicle limit"
 yes = "yes"
 
 [config.deviceValueChargeStatus]
@@ -105,6 +105,7 @@ description = "Configuration that enables evcc to communicate with other EEBus d
 title = "EEBus"
 
 [config.form]
+deprecated = "deprecated"
 example = "Example"
 optional = "optional"
 
@@ -231,10 +232,11 @@ addTariffs = "Add tariffs"
 addVehicle = "Add vehicle"
 configured = "configured"
 edit = "edit"
+name = "Name"
 title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
-yaml = "Configured in evcc.yaml. Not editable in the UI."
+yaml = "Device from evcc.yaml are not editable."
 
 [config.messaging]
 description = "Receive messages about your charging sessions."

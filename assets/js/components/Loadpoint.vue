@@ -180,7 +180,6 @@ export default {
 		chargeRemainingDuration: Number,
 
 		// other information
-		phases: Number,
 		phasesConfigured: Number,
 		phasesActive: Number,
 		chargerPhases1p3p: Boolean,

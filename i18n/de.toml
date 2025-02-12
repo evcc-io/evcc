@@ -85,11 +85,11 @@ power = "Leistung"
 powerRange = "Leistung"
 range = "Reichweite"
 singlePhase = "Einphasig"
-soc = "SoC"
-socLimit = "SoC Begrenzung"
+soc = "Ladestand"
 temp = "Temperatur"
 topic = "Thema"
 url = "URL"
+vehicleLimitSoc = "Fahrzeuglimit"
 yes = "Ja"
 
 [config.deviceValueChargeStatus]
@@ -102,6 +102,7 @@ description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Gerä
 title = "EEBus"
 
 [config.form]
+deprecated = "veraltet"
 example = "Beispiel"
 optional = "optional"
 
@@ -228,10 +229,11 @@ addTariffs = "Tarife hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
 configured = "konfiguriert"
 edit = "bearbeiten"
+name = "Name"
 title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
-yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+yaml = "Geräte aus evcc.yaml sind nicht editierbar."
 
 [config.messaging]
 description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."

@@ -28,7 +28,7 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-//go:generate decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {

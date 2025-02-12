@@ -284,12 +284,14 @@
 					:label="$t('config.loadpoint.priorityLabel')"
 					:help="$t('config.loadpoint.priorityHelp')"
 				>
-					<SelectGroup
+					<PropertyField
 						id="loadpointParamPriority"
 						v-model="values.priority"
-						class="w-100"
-						:options="priorityOptions"
-						transparent
+						type="Choice"
+						size="w-100"
+						class="me-2"
+						:choice="priorityOptions"
+						required
 					/>
 				</FormRow>
 
@@ -382,7 +384,7 @@
 					>
 						<SelectGroup
 							id="loadpointParamPhases"
-							v-model="values.phases"
+							v-model="values.phasesConfigured"
 							class="w-100"
 							:options="[
 								{ value: 1, name: $t('config.loadpoint.phases1p') },
@@ -557,7 +559,7 @@ const nsPerMin = 60 * 1e9;
 
 const defaultValues = {
 	title: "",
-	phases: 3,
+	phasesConfigured: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -654,14 +656,13 @@ export default {
 			return !this.isNew;
 		},
 		showPriority() {
-			return this.priorityOptions.length > 1;
+			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
 		},
 		priorityOptions() {
-			const maxPriority = this.loadpointCount + (this.isNew ? 1 : 0);
-			const result = Array.from({ length: maxPriority }, (_, i) => ({
-				value: i,
-				name: `${i}`,
-			}));
+			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			result[0].name = "0 (default)";
+			result[0].key = undefined;
+			result[10].name = "10 (highest)";
 			return result;
 		},
 		showCircuit() {
@@ -812,17 +813,17 @@ export default {
 			}
 		},
 		updatePhases() {
-			const { phases } = this.values;
+			const { phasesConfigured } = this.values;
 			if (this.chargerIsSinglePhase) {
-				this.values.phases = 1;
+				this.values.phasesConfigured = 1;
 				return;
 			}
 			if (this.chargerSupports1p3p && this.isNew) {
-				this.values.phases = 0; // automatic
+				this.values.phasesConfigured = 0; // automatic
 				return;
 			}
-			if (!this.chargerSupports1p3p && phases === 0) {
-				this.values.phases = 3; // no automatic switching, default to 3-phase
+			if (!this.chargerSupports1p3p && phasesConfigured === 0) {
+				this.values.phasesConfigured = 3; // no automatic switching, default to 3-phase
 				return;
 			}
 		},

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+//go:generate go tool mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
 
 // Controller gives access to loadpoint
 type Controller interface {
@@ -68,8 +68,10 @@ type API interface {
 	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the enabled phases
 	GetPhases() int
-	// SetPhases sets the enabled phases
-	SetPhases(int) error
+	// GetPhasesConfigured returns the configured phases
+	GetPhasesConfigured() int
+	// SetPhasesConfigured sets the configured phases
+	SetPhasesConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 
@@ -144,7 +146,7 @@ type API interface {
 	SetDisableDelay(delay time.Duration)
 
 	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() bool
+	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 

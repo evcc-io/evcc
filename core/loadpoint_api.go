@@ -133,10 +133,15 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns session charge energy in Wh
-func (lp *Loadpoint) getChargedEnergy() float64 {
+// GetChargedEnergy returns session charge energy in Wh
+func (lp *Loadpoint) GetChargedEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getChargedEnergy()
+}
+
+// getChargedEnergy returns session charge energy in Wh
+func (lp *Loadpoint) getChargedEnergy() float64 {
 	return lp.energyMetrics.TotalWh()
 }
 
@@ -161,20 +166,27 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 	lp.log.DEBUG.Println("set priority:", prio)
 
-	if lp.Priority_ != prio {
+	if lp.Priority != prio {
 		lp.setPriority(prio)
 	}
 }
 
-// GetPhases returns loadpoint enabled phases
+// GetPhases returns the enabled phases
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.phases
 }
 
-// SetPhases sets loadpoint enabled phases
-func (lp *Loadpoint) SetPhases(phases int) error {
+// GetPhasesConfigured returns the configured phases
+func (lp *Loadpoint) GetPhasesConfigured() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.phasesConfigured
+}
+
+// SetPhasesConfigured sets the configured phases
+func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
 	if !lp.hasPhaseSwitching() && phases == 0 {
 		return fmt.Errorf("charger does not support phase switching")
@@ -188,13 +200,13 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	lp.log.DEBUG.Println("set phases:", phases)
 
 	lp.Lock()
-	lp.setConfiguredPhases(phases)
-	lp.Unlock()
+	lp.setPhasesConfigured(phases)
 
 	// apply immediately if not 1p3p
 	if !lp.hasPhaseSwitching() {
 		lp.setPhases(phases)
 	}
+	lp.Unlock()
 
 	lp.requestUpdate()
 
@@ -233,6 +245,11 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getLimitEnergy()
+}
+
+// getLimitEnergy returns the session limit energy
+func (lp *Loadpoint) getLimitEnergy() float64 {
 	return lp.limitEnergy
 }
 
@@ -261,6 +278,11 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getPlanEnergy()
+}
+
+// getPlanEnergy returns plan target energy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
 	return lp.planTime, lp.planEnergy
 }
 
@@ -446,16 +468,11 @@ func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
 	}
 }
 
-// getBatteryBoost returns the battery boost
-func (lp *Loadpoint) getBatteryBoost() int {
+// GetBatteryBoost returns the battery boost
+func (lp *Loadpoint) GetBatteryBoost() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.batteryBoost
-}
-
-// GetBatteryBoost returns the battery boost
-func (lp *Loadpoint) GetBatteryBoost() bool {
-	return lp.getBatteryBoost() > 0
 }
 
 // setBatteryBoost returns the battery boost
@@ -581,6 +598,11 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 func (lp *Loadpoint) GetMaxCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getMaxCurrent()
+}
+
+// getMaxCurrent returns the max loadpoint current
+func (lp *Loadpoint) getMaxCurrent() float64 {
 	return lp.maxCurrent
 }
 
@@ -610,11 +632,15 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 
 // GetMinPower returns the min loadpoint power for a single phase
 func (lp *Loadpoint) GetMinPower() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return Voltage * lp.effectiveMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 
