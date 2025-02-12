@@ -30,7 +30,7 @@ type ErrUnknownMeasurement struct {
 	Measurement string
 }
 
-func (e ErrUnknownMeasurement) Error() string {
+func (e *ErrUnknownMeasurement) Error() string {
 	return "unknown measurement: " + e.Measurement
 }
 
