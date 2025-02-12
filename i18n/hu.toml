@@ -78,6 +78,9 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
+identifier = RFID-Azonosító
+phases1p3p = Fázis váltás
+singlePhase = Egyfázisú
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -101,6 +104,8 @@ save = "Mentés"
 showAdvancedSettings = "Speciális beállítások megjelenítése"
 telemetry = "Telemetria"
 title = "Cím"
+delete = Törlés
+validateSave = Ellenőrzés & mentés
 
 [config.grid]
 title = "Hálózati mérő"
@@ -137,6 +142,8 @@ title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
 yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
+addGrid = Hálózati fogyasztásmérő hozzáadása
+addTariffs = Tarifa hozzáadása
 
 [config.messaging]
 description = "Értesítési üzenetek beállítása a töltési folyamatokról."
@@ -209,13 +216,16 @@ system = "Rendszer"
 vehicles = "Járművek"
 
 [config.sponsor]
-addToken = "Szponzor token beírása"
-changeToken = "Szponzor token megváltoztatása"
+addToken = "Token beírása"
+changeToken = "Token megváltoztatása"
 description = "A szponzorációs modell segít a projekt fenntartásában és az új izgalmas funkciók bevezetésében. Szponzorként teljes hozzáférést kapsz az összes töltőberendezés implementációjához."
 descriptionToken = "A tokent innen kapja: {url}. A teszteléshez próba tokent is kínálunk."
 error = "A szponzor token nem érvényes."
 labelToken = "Szponzor token"
 title = "Szponzoráció"
+tokenRequired = Konfigurálnod kell egy tokent, mielőtt létre tudnád hozni ezt az eszközt.
+tokenRequiredLearnMore = Tudjon meg többet.
+trialToken = Próbaidős token
 
 [config.system]
 logs = "Napló"
@@ -382,6 +392,8 @@ title = "Hitelesítés"
 
 [main]
 vehicles = "Parkolás"
+startConfiguration = Konfiguráció elkezdése
+welcome = Üdv a fedélzeten!
 
 [main.chargingPlan]
 active = "Aktív"
@@ -766,3 +778,101 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[config.charger]
+template = Gyártó
+titleEdit = Töltő Szerkesztése
+titleAdd = Töltő Hozzáadása
+chargers = EV töltők
+generic = Általános integrációk
+ocppHelp = Másolja be ezt a címet a töltő konfigurációjába.
+ocppLabel = OCPP-Server URL
+switchsockets = Kapcsolható dugaljak
+
+[config.loadpoint]
+thresholdDisableDelayLabel = Késleletetés letiltása
+thresholdDisableHelpInvalid = Kérlek használj pozitív értéket.
+addCharger = Töltő hozzáadása
+chargerLabel = Töltő
+chargerPower11kwHelp = 6 és 16 A közötti áramtartomány lesz használatban.
+phases1p = 1-fázis
+phases3p = 3-fázis
+chargerPower22kwHelp = 6 és 32 A közötti áramtartomány lesz használatban.
+defaultModeLabel = Alapértelmezett mód
+cancel = Mégse
+energyMeterLabel = Fogyasztásmérő
+noVehicles = Nincs jármű konfigurálva.
+solarBehaviorCustomHelp = Definiálja a saját engedélyezési és letiltási küszöbértékeit és késleltetéseit.
+solarBehaviorDefaultHelp = Csak napelemes többlettel való töltés. Indítás {enableDelay} többlet esetén. Megállítás, ha nincs elég többlet {disableDelay}."
+maxCurrentLabel = Maximum áram
+phasesAutomatic = Automatikus fázisok
+addMeter = Dedikált töltő fogyasztásmérő hozzáadása
+chargerPower11kw = 11 kW
+chargerPower22kw = 22 kW
+chargerPowerCustom = egyéb
+chargerPowerCustomHelp = Definiáljon egy egyedi áramtartományt.
+chargerTypeLabel = Töltő típusa
+chargingTitle = Töltés
+circuitLabel = Áramkör
+circuitUnassigned = nincs hozzárendelve
+defaultModeHelp = Töltési mód, amikor csatlakoztatja a járművet.
+defaultModeHelpKeep = A legutoljára kiválasztott töltési mód lesz aktív.
+delete = Törlés
+electricalSubtitle = Ha kétséged van, kérdezd meg a villanyszerelődet.
+electricalTitle = Elektromos
+energyMeterHelp = További fogyasztásmérő, ha a töltő nem rendelkezik egy integrálttal.
+estimateLabel = Interpolálja a töltési szintet az API frissítések között
+maxCurrentHelp = Nagyobbnak kell lennie mint a minimális áram.
+minCurrentHelp = Csak akkor menj 6 A alá, ha tudod, hogy mit csinálsz.
+minCurrentLabel = Minimum áram
+phasesAutomaticHelp = A töltőd támogatja az automatikus váltást az 1- és a 3 fázisú töltés között. A főképernyőn lehet állítani a fázisokat töltés közben.
+phasesHelp = Fázisok száma csatlakoztatva a töltőhöz.
+phasesLabel = Fázisok
+pollIntervalHelp = Idő a jármű API frissítései között. A rövid intervallumok meríthetik a jármű akkumulátorát.
+pollIntervalLabel = Frissítési intervallum
+pollModeAlways = mindíg
+pollModeAlwaysHelp = Mindig kérjen állapotfrissítéseket rendszeres időközönként.
+pollModeCharging = töltés
+pollModeChargingHelp = Csak töltés közben kérjen frissítést a jármű állapotáról.
+pollModeConnected = csatlakoztatva
+pollModeConnectedHelp = Rendszeres időközönként frissítse a jármű állapotát, amikor csatlakoztatva van.
+pollModeLabel = Frissítés viselkedése
+priorityHelp = A magasabb prioritású töltőpontok lesznek előnyben részesítve a napelemes többletből.
+priorityLabel = Prioritás
+save = Mentés
+showAllSettings = Összes beállítás megjelenítése
+solarBehaviorLabel = Szolár viselkedése
+solarModeCustom = egyedi
+solarModeMaximum = maximum szolár
+thresholdDisableHelpPositive = Töltés megállítása, amikor több mint {power} lett a hálózatból vételezve {delay} ideig.
+thresholdDisableLabel = Hálózati áramellátás letiltása
+thresholdEnableDelayLabel = Késleltetés engedélyezése
+thresholdEnableHelpInvalid = Kérlek használj negatív értéket.
+thresholdEnableHelpNegative = Töltés elindítása, amikor {surplus} többlet elérhető {delay} ideig."
+thresholdEnableHelpZero = Indítás, amikor a minimum töltési teljesítmény többlet elérhető {delay} ideig.
+thresholdDisableHelpZero = Megállítás, amikor a minimum töltési teljesítmény nem biztosítható {delay} ideig.
+thresholdEnableLabel = Hálózati áramellátás engedélyezése
+titleEdit = Töltőpont Szerkesztése
+titleAdd = Töltőpont Hozzáadása
+titleExample = Garázs, Kocsibeálló, stb.
+titleLabel = Megnevezés
+vehicleAutoDetection = auto felismerés
+vehicleHelpAutoDetection = Automatikusan kiválasztja a legvalószínűbb járművet. Kézi felülírás lehetséges.
+vehicleHelpDefault = Mindig feltételezze, hogy ez a jármű itt töltődik. Az automatikus felismerés letiltva. Kézi felülírás lehetséges.
+vehicleLabel = Alapértelmezett jármű
+vehiclesTitle = Járművek
+
+[config.deviceValueChargeStatus]
+A = A (nincs csatlakoztatva)
+B = B (csatlakoztatva)
+C = C (töltés)
+
+[config.charge]
+titleAdd = Töltő Fogyasztásmérő hozzáadása
+titleEdit = Töltő Fogyasztásmérő szerkesztése
+
+[config.options.status]
+A = A (nincs csatlakoztatva)
+B = B (csatlakoztatva)
+C = C (töltés)
