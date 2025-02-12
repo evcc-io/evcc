@@ -91,6 +91,9 @@ topic = "Thema"
 url = "URL"
 vehicleLimitSoc = "Fahrzeuglimit"
 yes = "Ja"
+chargeStatusE = Keine Leistung
+chargeStatusF = Fehler
+identifier = RFID-Kennung
 
 [config.deviceValueChargeStatus]
 A = "A (nicht verbunden)"
