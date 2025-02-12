@@ -141,7 +141,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57 // indirect
-	github.com/gokrazy/tools v0.0.0-20250128200151-63160424957c // indirect
+	github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
