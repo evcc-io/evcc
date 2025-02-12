@@ -28,7 +28,12 @@ import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "./Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import colors, { lighterColor } from "../colors";
-import { energyByDay, highestSlotIndexByDay, type PriceSlot } from "../utils/forecast";
+import {
+	energyByDay,
+	highestSlotIndexByDay,
+	type PriceSlot,
+	ForecastType,
+} from "../utils/forecast";
 
 registerChartComponents([
 	BarController,
@@ -53,6 +58,7 @@ export default defineComponent({
 		solar: { type: Array as PropType<PriceSlot[]> },
 		co2: { type: Array as PropType<PriceSlot[]> },
 		currency: { type: String as PropType<string> },
+		selected: { type: String as PropType<ForecastType> },
 	},
 	computed: {
 		startDate() {
@@ -72,6 +78,9 @@ export default defineComponent({
 		gridSlots() {
 			return this.filterSlots(this.grid);
 		},
+		co2Slots() {
+			return this.filterSlots(this.co2);
+		},
 		maxPriceIndex() {
 			return this.gridSlots.reduce((max, slot, index) => {
 				return slot.price > this.gridSlots[max].price ? index : max;
@@ -80,6 +89,16 @@ export default defineComponent({
 		minPriceIndex() {
 			return this.gridSlots.reduce((min, slot, index) => {
 				return slot.price < this.gridSlots[min].price ? index : min;
+			}, 0);
+		},
+		maxCo2Index() {
+			return this.co2Slots.reduce((max, slot, index) => {
+				return slot.price > this.co2Slots[max].price ? index : max;
+			}, 0);
+		},
+		minCo2Index() {
+			return this.co2Slots.reduce((min, slot, index) => {
+				return slot.price < this.co2Slots[min].price ? index : min;
 			}, 0);
 		},
 		solarHighlights() {
@@ -92,37 +111,69 @@ export default defineComponent({
 		chartData() {
 			const datasets: unknown[] = [];
 			if (this.solarSlots.length > 0) {
+				const active = this.selected === ForecastType.Solar;
+				const color = active ? colors.self : colors.border;
 				datasets.push({
-					label: "solar",
+					label: ForecastType.Solar,
 					type: "line",
 					data: this.solarSlots.map((slot, index) => ({
 						y: slot.price,
 						x: new Date(slot.start),
-						highlight: this.solarHighlights.find(({ index: i }) => i === index)?.energy,
+						highlight:
+							active &&
+							this.solarHighlights.find(({ index: i }) => i === index)?.energy,
 					})),
 					yAxisID: "yForecast",
-					backgroundColor: lighterColor(colors.self),
-					borderColor: colors.self,
+					backgroundColor: lighterColor(color),
+					borderColor: color,
 					fill: "origin",
 					tension: 0.5,
 					pointRadius: 0,
 					spanGaps: true,
+					order: active ? 0 : 1,
 				});
 			}
 			if (this.gridSlots.length > 0) {
+				const active = this.selected === ForecastType.Price;
+				const color = active ? colors.price : colors.border;
 				datasets.push({
-					label: "price",
+					label: ForecastType.Price,
 					data: this.gridSlots.map((slot, index) => ({
 						y: slot.price,
 						x: new Date(slot.start),
-						highlight: index === this.maxPriceIndex || index === this.minPriceIndex,
+						highlight:
+							active &&
+							(index === this.maxPriceIndex || index === this.minPriceIndex),
 					})),
 					yAxisID: "yPrice",
 					borderRadius: 8,
-					backgroundColor: colors.light,
-					borderColor: colors.light,
+					backgroundColor: color,
+					borderColor: color,
+					order: active ? 0 : 1,
 				});
 			}
+			if (this.co2Slots.length > 0) {
+				const active = this.selected === ForecastType.Co2;
+				const color = active ? colors.co2 : colors.border;
+				datasets.push({
+					label: ForecastType.Co2,
+					type: "line",
+					data: this.co2Slots.map((slot, index) => ({
+						y: slot.price,
+						x: new Date(slot.start),
+						highlight:
+							active && (index === this.maxCo2Index || index === this.minCo2Index),
+					})),
+					yAxisID: "yCo2",
+					backgroundColor: color,
+					borderColor: color,
+					tension: 0.25,
+					pointRadius: 0,
+					spanGaps: true,
+					order: active ? 0 : 1,
+				});
+			}
+
 			return {
 				datasets,
 			};
@@ -133,11 +184,28 @@ export default defineComponent({
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
-				layout: { padding: { top: 32 } },
+				layout: { padding: { top: 40 } },
 				color: colors.text,
 				borderSkipped: false,
-				animation: false,
+				animation: {
+					duration: 500, // --evcc-transition-medium
+					colors: true,
+					numbers: false,
+				},
+				interaction: {
+					mode: "nearest",
+					axis: "x",
+					intersect: false,
+				},
 				categoryPercentage: 0.7,
+				onHover: function (event, active) {
+					if (active.length > 0) {
+						console.log(active);
+						const hoveredElement = active[0];
+						const { datasetIndex, index } = hoveredElement;
+						console.log(datasetIndex, index);
+					}
+				},
 				plugins: {
 					...commonOptions.plugins,
 					datalabels: {
@@ -146,76 +214,39 @@ export default defineComponent({
 						},
 						align: "end",
 						anchor: "end",
+						offset: 8,
 						borderRadius: 4,
-						color: "white",
-						font: {
-							weight: "bold",
-						},
+						color: colors.background,
+						font: { weight: "bold" },
 						formatter: function (data, ctx) {
 							if (data.highlight) {
-								if (ctx.dataset.label === "price") {
-									return vThis.fmtPricePerKWh(data.y, vThis.currency, true, true);
+								switch (ctx.dataset.label) {
+									case ForecastType.Price:
+										return vThis.fmtPricePerKWh(
+											data.y,
+											vThis.currency,
+											true,
+											true
+										);
+									case ForecastType.Co2:
+										return vThis.fmtGrams(data.y);
+									case ForecastType.Solar:
+										return vThis.fmtWh(data.highlight, POWER_UNIT.AUTO);
+									default:
+										return null;
 								}
-								if (ctx.dataset.label === "solar") {
-									return vThis.fmtWh(data.highlight, POWER_UNIT.AUTO);
-								}
-								return null;
 							}
 							return null;
 						},
 						padding: 6,
 					},
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "x",
-						callbacks: {
-							title: (tooltipItem) => {
-								const { x } = tooltipItem[0].raw;
-								return this.fmtFullDateTime(new Date(x));
-							},
-							label: () => {
-								return null;
-								/*
-								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.raw.y;
-
-								// line datasets have null values
-								if (tooltipItem.dataset.type === "line") {
-									if (value === null) {
-										return null;
-									}
-
-									const valueFmt = this.fmtW(value, POWER_UNIT.AUTO);
-									return `${datasetLabel}: ${valueFmt}`;
-								}
-
-								return value
-									? `${datasetLabel}: ${
-											this.costType === "price" || true
-												? this.fmtPricePerKWh(
-														value,
-														this.currency,
-														true,
-														true
-													)
-												: this.fmtGrams(value)
-										}`
-									: null;
-								*/
-							},
-						},
-					},
+					tooltip: null,
 				},
 				scales: {
 					x: {
 						type: "timeseries",
 						display: true,
-						time: {
-							unit: "day",
-						},
-						ticks: {
-							source: "data",
-						},
+						time: { unit: "day" },
 						border: { display: false },
 						grid: {
 							display: true,
@@ -249,40 +280,16 @@ export default defineComponent({
 							},
 						},
 					},
-					yForecast: {
-						display: false,
-						border: { display: false },
-						grid: { color: colors.border, drawOnChartArea: false },
-						ticks: {
-							callback: (value) => this.fmtW(value, POWER_UNIT.KW, true),
-							color: colors.muted,
-							maxTicksLimit: 3,
-						},
-						position: "right",
-						min: 0,
-					},
-					yPrice: {
-						display: false,
-						border: { display: false },
-						grid: {
-							color: colors.border,
-							drawOnChartArea: false,
-						},
-						ticks: {
-							callback: (value) =>
-								this.fmtPricePerKWh(value, this.currency, true, true),
-							color: colors.muted,
-							maxTicksLimit: 3,
-						},
-						position: "left",
-					},
+					yForecast: { display: false },
+					yCo2: { display: false },
+					yPrice: { display: false },
 				},
 			};
 		},
 	},
 	methods: {
 		filterSlots(slots: PriceSlot[] = []) {
-			return slots.filter((slot) => new Date(slot.end) > this.startDate);
+			return slots.filter((slot) => new Date(slot.end) > this.startDate).slice(0, 48);
 		},
 	},
 });

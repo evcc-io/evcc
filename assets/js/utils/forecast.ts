@@ -4,6 +4,12 @@ export interface PriceSlot {
 	price: number;
 }
 
+export enum ForecastType {
+	Solar = "solar",
+	Price = "price",
+	Co2 = "co2",
+}
+
 export function aggregateEnergy(slots: PriceSlot[], ignorePast: boolean = false): number {
 	const now = new Date();
 	return slots.reduce((acc: number, { start, end, price: power }: PriceSlot) => {

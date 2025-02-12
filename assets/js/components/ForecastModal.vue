@@ -28,11 +28,14 @@
 			:solar="forecast.solar"
 			:co2="forecast.co2"
 			:currency="currency"
+			:selected="selectedType"
 		/>
 	</GenericModal>
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/eco1";
+import "@h2d2/shopicons/es/regular/sun";
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
 import GenericModal from "./GenericModal.vue";
@@ -47,7 +50,6 @@ interface Forecast {
 	grid?: PriceSlot[];
 	solar?: PriceSlot[];
 	co2?: PriceSlot[];
-	currency?: string;
 }
 
 export const TYPES = {
