@@ -106,7 +106,6 @@ apt-release::
 
 # gokrazy
 gok::
-	which gok || go install github.com/gokrazy/tools/cmd/gok@main
 	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
 	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS) -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
 	${GOK} add .
