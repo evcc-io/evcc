@@ -1,7 +1,7 @@
 package api
 
-//go:generate enumer -type TariffType -trimprefix TariffType -transform=lower -text
-//go:generate enumer -type TariffUsage -trimprefix TariffUsage -transform=lower
+//go:generate go tool enumer -type TariffType -trimprefix TariffType -transform=lower -text
+//go:generate go tool enumer -type TariffUsage -trimprefix TariffUsage -transform=lower
 
 type TariffType int
 

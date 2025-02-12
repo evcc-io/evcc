@@ -33,14 +33,6 @@ builds:
         flags:
           - -trimpath
           - -tags=release,timetzdata
-      - goos: darwin
-        goarch: arm64
-        ldflags:
-          - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w -B gobuildid
-      - goos: darwin
-        goarch: amd64
-        ldflags:
-          - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w -B gobuildid
 
 archives:
   - builds:
