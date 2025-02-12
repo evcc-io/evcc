@@ -234,8 +234,8 @@ github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7a
 github.com/gogo/protobuf v1.2.1/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zVXpSg4=
 github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57 h1:f5bEvO4we3fbfiBkECrrUgWQ8OH6J3SdB2Dwxid/Yx4=
 github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57/go.mod h1:SJG1KwuJQXFEoBgryaNCkMbdISyovDgZd0xmXJRZmiw=
-github.com/gokrazy/tools v0.0.0-20250128200151-63160424957c h1:iEbS8GrNOn671ze8J/AfrYFEVzf8qMx8aR5K0VxPK2w=
-github.com/gokrazy/tools v0.0.0-20250128200151-63160424957c/go.mod h1:f2vZhnaPzy92+Bjpx1iuZHK7VuaJx6SNCWQWmu23HZA=
+github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 h1:JS8xlGmF5UXVzZV9Sc1GX5B5jNIe6YvKYa7KQCCS5Zs=
+github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8/go.mod h1:c8f1EjCxMYk5IiEkBFb5d+WiPXWgqc1yPnAl4nlKyJM=
 github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33 h1:m6NVAznErzAL9fzaIh+HeFbbImxV6ku4iaUUHhYctmg=
 github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33/go.mod h1:PYOvzGOL4nlBmuxu7IyKQTFLaxr61+WPRNRzVtuYOHw=
 github.com/golang-jwt/jwt/v5 v5.2.1 h1:OuVbFODueb089Lh128TAcimifWaLhJwVflnrgM17wHk=
