@@ -8,6 +8,7 @@ builds:
   - id: evcc
     main: .
     flags:
+      - -race
       - -trimpath
       - -tags=release
     ldflags:
@@ -28,9 +29,17 @@ builds:
       - goos: windows
         goarch: arm64
     overrides:
+      - goos: linux
+        goarch: arm
+        flags:
+          # drop -race
+          - -trimpath
+          - -tags=release
       - goos: windows
         goarch: amd64
         flags:
+          # add timetzdata
+          - -race
           - -trimpath
           - -tags=release,timetzdata
 
