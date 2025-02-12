@@ -1,6 +1,9 @@
 <template>
 	<div>
-		<div class="overflow-x-auto overflow-x-md-auto chart-container" @mouseleave="onMouseLeave">
+		<div
+			class="overflow-x-auto overflow-x-md-auto chart-container border-1"
+			@mouseleave="onMouseLeave"
+		>
 			<div style="position: relative; height: 220px" class="chart">
 				<Bar :data="chartData" :options="options" />
 			</div>
@@ -103,24 +106,19 @@ export default defineComponent({
 			return this.selectedIndex !== null ? this.currentSlots[this.selectedIndex] : null;
 		},
 		maxPriceIndex() {
-			return this.gridSlots.reduce((max, slot, index) => {
-				return slot.price > this.gridSlots[max].price ? index : max;
-			}, 0);
+			return this.maxIndex(this.gridSlots);
 		},
 		minPriceIndex() {
-			return this.gridSlots.reduce((min, slot, index) => {
-				return slot.price < this.gridSlots[min].price ? index : min;
-			}, 0);
+			return this.minIndex(this.gridSlots);
 		},
 		maxCo2Index() {
-			return this.co2Slots.reduce((max, slot, index) => {
-				return slot.price > this.co2Slots[max].price ? index : max;
-			}, 0);
+			return this.maxIndex(this.co2Slots);
 		},
 		minCo2Index() {
-			return this.co2Slots.reduce((min, slot, index) => {
-				return slot.price < this.co2Slots[min].price ? index : min;
-			}, 0);
+			return this.minIndex(this.co2Slots);
+		},
+		maxSolarIndex() {
+			return this.maxIndex(this.solarSlots);
 		},
 		solarHighlights() {
 			return [0, 1, 2].map((day) => {
@@ -214,7 +212,7 @@ export default defineComponent({
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
-				layout: { padding: { top: 40 } },
+				layout: { padding: { top: 32 } },
 				color: colors.text,
 				borderSkipped: false,
 				animation: {
@@ -241,7 +239,17 @@ export default defineComponent({
 						backgroundColor: function (context) {
 							return context.dataset.borderColor;
 						},
-						align: "end",
+						align: function (context) {
+							// rotate label position to avoid horizontal clipping
+							const step = 20;
+							const adjust = {
+								0: step * 2,
+								1: step * 1,
+								46: step * -1,
+								47: step * -2,
+							};
+							return -90 + (adjust[context.dataIndex] || 0);
+						},
 						anchor: "end",
 						offset: 8,
 						borderRadius: 4,
@@ -271,7 +279,6 @@ export default defineComponent({
 							}
 							return null;
 						},
-						padding: 6,
 					},
 					tooltip: null,
 				},
@@ -303,19 +310,20 @@ export default defineComponent({
 							callback: function (value) {
 								const date = new Date(value);
 								const hour = date.getHours();
+								const hourFmt = vThis.hourShort(date);
 								if (hour === 0) {
-									return [hour, vThis.weekdayShort(date)];
+									return [hourFmt, vThis.weekdayShort(date)];
 								}
 								if (hour % 6 === 0) {
-									return hour;
+									return hourFmt;
 								}
 								return "";
 							},
 						},
 					},
-					yForecast: { display: false },
-					yCo2: { display: false },
-					yPrice: { display: false },
+					yForecast: { display: false, min: 0, max: this.yMax(this.solarSlots) },
+					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
+					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
 				},
 			};
 		},
@@ -331,6 +339,23 @@ export default defineComponent({
 		},
 		onMouseLeave() {
 			this.selectedIndex = null;
+		},
+		yMax(slots: PriceSlot[] = []): number | undefined {
+			const value = this.maxValue(slots);
+			return value ? value * 1.15 : undefined;
+		},
+		maxIndex(slots: PriceSlot[] = []) {
+			return slots.reduce((max, slot, index) => {
+				return slot.price > slots[max].price ? index : max;
+			}, 0);
+		},
+		minIndex(slots: PriceSlot[] = []) {
+			return slots.reduce((min, slot, index) => {
+				return slot.price < slots[min].price ? index : min;
+			}, 0);
+		},
+		maxValue(slots: PriceSlot[] = []) {
+			return slots[this.maxIndex(slots)]?.price || null;
 		},
 	},
 });
