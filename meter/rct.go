@@ -1,8 +1,10 @@
 package meter
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -52,14 +54,15 @@ func init() {
 	registry.Add("rct", NewRCTFromConfig)
 }
 
-//go:generate decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		Uri, Usage string
-		Cache      time.Duration
+		capacity       `mapstructure:",squash"`
+		Uri, Usage     string
+		MinSoc, MaxSoc int
+		Cache          time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -72,13 +75,13 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
+	return NewRCT(cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.Cache, cc.capacity.Decorator())
 }
 
 var rctMu sync.Mutex
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewRCT(uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	rctMu.Lock()
 	defer rctMu.Unlock()
 
@@ -105,11 +108,66 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
+	var batteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+
+		batteryMode = func(mode api.BatteryMode) error {
+			if mode != api.BatteryNormal {
+				batStatus, err := m.queryInt32(rct.BatteryBatStatus)
+				if err != nil {
+					return err
+				}
+
+				// see https://github.com/weltenwort/home-assistant-rct-power-integration/issues/264#issuecomment-2124811644
+				if batStatus != 0 {
+					return errors.New("invalid battery operating mode")
+				}
+			}
+
+			switch mode {
+			case api.BatteryNormal:
+				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
+					return err
+				}
+
+				if err := m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(minSoc)/100)); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
+
+			case api.BatteryHold:
+				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(maxSoc)/100))
+
+			case api.BatteryCharge:
+				if err := m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1}); err != nil {
+					return err
+				}
+
+				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-10_000))); err != nil {
+					return err
+				}
+
+				return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+
+			default:
+				return api.ErrNotAvailable
+			}
+		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, capacity), nil
+	return decorateRCT(m, totalEnergy, batterySoc, batteryMode, capacity), nil
+}
+
+func (m *RCT) floatVal(f float32) []byte {
+	data := make([]byte, 4)
+	binary.BigEndian.PutUint32(data, math.Float32bits(f))
+	return data
 }
 
 // CurrentPower implements the api.Meter interface
@@ -186,4 +244,20 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 	}, m.bo)
 
 	return float64(res), err
+}
+
+// queryInt32 adds retry logic of recoverable errors to QueryInt32
+func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
+	m.bo.Reset()
+
+	res, err := backoff.RetryWithData(func() (int32, error) {
+		res, err := m.conn.QueryInt32(id)
+		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+			err = backoff.Permanent(err)
+		}
+
+		return res, err
+	}, m.bo)
+
+	return res, err
 }

@@ -1,0 +1,79 @@
+template: solarwatt-flex
+products:
+  - brand: Solarwatt
+    description:
+      generic: Manager flex
+requirements:
+  description:
+    en: |
+      Combines data of all connected PV inverters or batteries.
+    de: |
+      Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power: # W
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      first(
+        (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_power_in$")).state | parseSecondNumber)
+        -
+        (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_power_out$")).state | parseSecondNumber)
+      )
+  energy: # kWh
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      .[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_work_in_total$")).state | parseSecondNumber / 1000
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: # W
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      .[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_power_produced$")).state | parseSecondNumber
+  energy: # kWh
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      .[] | select(.name | test("^kiwigrid_location_standard_.*_work_produced_total$")).state | parseSecondNumber / 1000
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power: # W
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      (
+        first(
+          (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_power_released$")).state | parseSecondNumber)
+          -
+          (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_power_buffered$")).state | parseSecondNumber)
+        )
+      ) // 0
+  soc: # %
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseFirstNumber: sub("(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      [(.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)] | add // 0
+  energy: # kWh
+    source: http
+    uri: http://{{ .host }}/rest/items # EnergyManager flex
+    jq: >
+      def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
+      (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_work_released_total$")).state | parseSecondNumber / 1000) // 0
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

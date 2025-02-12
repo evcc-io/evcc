@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -18,8 +17,8 @@ type Connection struct {
 	*request.Helper
 	uri, user, password string
 	channels            []int
-	statusSnsG          provider.Cacheable[StatusSNSResponse]
-	statusStsG          provider.Cacheable[StatusSTSResponse]
+	statusSnsG          util.Cacheable[StatusSNSResponse]
+	statusStsG          util.Cacheable[StatusSTSResponse]
 }
 
 // NewConnection creates a Tasmota connection
@@ -50,7 +49,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	c.statusSnsG = provider.ResettableCached(func() (StatusSNSResponse, error) {
+	c.statusSnsG = util.ResettableCached(func() (StatusSNSResponse, error) {
 		parameters := url.Values{
 			"user":     {c.user},
 			"password": {c.password},
@@ -61,7 +60,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return res, err
 	}, cache)
 
-	c.statusStsG = provider.ResettableCached(func() (StatusSTSResponse, error) {
+	c.statusStsG = util.ResettableCached(func() (StatusSTSResponse, error) {
 		parameters := url.Values{
 			"user":     {c.user},
 			"password": {c.password},

@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/suite"
@@ -59,9 +60,11 @@ loadpoints:
 		Name: "test",
 	}, api.Charger(nil))))
 
-	lps, err := configureLoadpoints(conf)
+	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
-	suite.Require().NotNil(lps[0].GetCircuit())
+
+	lps := config.Loadpoints().Devices()
+	suite.Require().NotNil(lps[0].Instance().GetCircuit())
 }
 
 func (suite *circuitsTestSuite) TestCircuitMissingLoadpoint() {
@@ -88,8 +91,14 @@ loadpoints:
 		Name: "test",
 	}, api.Charger(nil))))
 
-	lps, err := configureLoadpoints(conf)
+	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
+
+	lpsd := config.Loadpoints().Devices()
+	lps := make([]*core.Loadpoint, 0, len(lpsd))
+	for _, lp := range lpsd {
+		lps = append(lps, lp.Instance().(*core.Loadpoint))
+	}
 
 	// circuit without device
 	err = validateCircuits(lps)
@@ -140,8 +149,14 @@ loadpoints:
 		Name: "test",
 	}, api.Charger(nil))))
 
-	lps, err := configureLoadpoints(conf)
+	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
+
+	lpsd := config.Loadpoints().Devices()
+	lps := make([]*core.Loadpoint, 0, len(lpsd))
+	for _, lp := range lpsd {
+		lps = append(lps, lp.Instance().(*core.Loadpoint))
+	}
 
 	// lp using root circuit is valid
 	suite.Require().NoError(validateCircuits(lps))

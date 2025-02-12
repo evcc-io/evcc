@@ -7,21 +7,21 @@ group: heating
 requirements:
   # evcc: ["sponsorship"]
   description:
-    de: Die Boost Funktion erwärmt Warmwasser und optional eine Boostzone. Die Boostzone wird durch die ID identifiziert. Die Boost Temperatur wird in Grad Celsius angegeben.
-    en: The boost function heats hot water and optionally a boost zone. The boost zone is identified by the ID. The boost temperature is specified in degrees Celsius.
+    de: Die Boost Funktion erwärmt Warmwasser oder eine Boostzone. Die Boostzone wird durch die ID identifiziert. Die Boost Temperatur wird in Grad Celsius angegeben. Ist eine Boost Temperatur angegeben, wird die Boostzone aktiviert, anderenfalls Warmwasser.
+    en: The boost function heats hot water or a boost zone. The boost zone is identified by the ID. The boost temperature is specified in degrees Celsius. If boost temperature is specified, the boost zone is activated, otherwise hot water.
 params:
   - name: user
   - name: password
   - name: zone
     type: int
     help:
-      de: Id der Boostzone (zusätzlich zu Warmwasser)
-      en: Boost zone id (in addition to hot water)
+      de: Id der Boostzone
+      en: Boost zone id
   - name: setpoint
     type: float
     help:
-      de: Boost Temperatur (zusätzlich zu Warmwasser)
-      en: Boost temperature setpoint (in addition to hot water)
+      de: Boost Temperatur
+      en: Boost temperature setpoint
   - name: phases
     type: int
     advanced: true

@@ -20,10 +20,12 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -31,48 +33,57 @@ import (
 
 // MyPv charger implementation
 type MyPv struct {
-	log      *util.Logger
-	conn     *modbus.Connection
-	power    uint32
-	regPower uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	lp      loadpoint.API
+	power   uint32
+	statusC uint16
+	enabled bool
+	regTemp uint16
 }
 
 const (
 	elwaRegSetPower  = 1000
-	elwaRegTemp      = 1001
 	elwaRegTempLimit = 1002
 	elwaRegStatus    = 1003
-	elwaRegPower     = 1074
-	thorRegPower     = 1060
+	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 )
+
+var elwaTemp = []uint16{1001, 1030, 1031}
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
 	registry.AddCtx("ac-elwa-2", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-		return newMyPvFromConfig(ctx, "ac-elwa-2", other, elwaRegPower)
+		return newMyPvFromConfig(ctx, "ac-elwa-2", other, 2)
 	})
 
 	// https: // github.com/evcc-io/evcc/issues/18020
 	registry.AddCtx("ac-thor", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-		return newMyPvFromConfig(ctx, "ac-thor", other, thorRegPower)
+		return newMyPvFromConfig(ctx, "ac-thor", other, 9)
 	})
 }
 
 // newMyPvFromConfig creates a MyPv charger from generic config
-func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, regPower uint16) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, statusC uint16) (api.Charger, error) {
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		TempSource         int
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1, // default
+		},
+		TempSource: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, regPower)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.TempSource, statusC)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
-func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, regPower uint16) (api.Charger, error) {
+func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -82,13 +93,18 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, regPower uint
 		return nil, api.ErrSponsorRequired
 	}
 
+	if tempSource < 1 || tempSource > len(elwaTemp) {
+		return nil, fmt.Errorf("invalid temp source: %d", tempSource)
+	}
+
 	log := util.NewLogger(name)
 	conn.Logger(log.TRACE)
 
 	wb := &MyPv{
-		log:      log,
-		conn:     conn,
-		regPower: regPower,
+		log:     log,
+		conn:    conn,
+		statusC: statusC,
+		regTemp: elwaTemp[tempSource-1],
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)
@@ -132,14 +148,13 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	res := api.StatusA
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
-		return res, err
+		return api.StatusNone, err
 	}
 
-	res = api.StatusB
-	if binary.BigEndian.Uint16(b) == 2 {
+	res := api.StatusB
+	if binary.BigEndian.Uint16(b) == wb.statusC {
 		res = api.StatusC
 	}
 
@@ -153,7 +168,11 @@ func (wb *MyPv) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	if binary.BigEndian.Uint16(b) == 0 {
+		wb.enabled = false
+	}
+
+	return wb.enabled, nil
 }
 
 func (wb *MyPv) setPower(power uint16) error {
@@ -171,7 +190,12 @@ func (wb *MyPv) Enable(enable bool) error {
 		power = uint16(atomic.LoadUint32(&wb.power))
 	}
 
-	return wb.setPower(power)
+	res := wb.setPower(power)
+	if res == nil {
+		wb.enabled = enable
+	}
+
+	return res
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -183,7 +207,13 @@ var _ api.ChargerEx = (*MyPv)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *MyPv) MaxCurrentMillis(current float64) error {
-	power := uint16(230 * current)
+	phases := 1
+	if wb.lp != nil {
+		if p := wb.lp.GetPhases(); p != 0 {
+			phases = p
+		}
+	}
+	power := uint16(voltage * current * float64(phases))
 
 	err := wb.setPower(power)
 	if err == nil {
@@ -197,7 +227,7 @@ var _ api.Meter = (*MyPv)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPv) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.regPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -209,7 +239,7 @@ var _ api.Battery = (*MyPv)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPv) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegTemp, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.regTemp, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -227,4 +257,11 @@ func (wb *MyPv) GetLimitSoc() (int64, error) {
 	}
 
 	return int64(binary.BigEndian.Uint16(b)) / 10, nil
+}
+
+var _ loadpoint.Controller = (*MyPv)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }

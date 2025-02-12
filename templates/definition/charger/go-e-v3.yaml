@@ -9,11 +9,11 @@ requirements:
   description:
     de: |
       Benötigt mindestens Firmware 052.1 oder neuer.
-      Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
+      Es wird die "HTTP-API v1"benötigt, für 1P/3P-Phasenumschaltung die "HTTP API v2".
       In der Go-E App (Menüpunkt "Auto") sollte die Option "Ausstecken simulieren" aktiviert sein.
     en: |
       Requires firmware 052.1 or later.
-      For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
+      Requires "HTTP API v1" api, "HTTP API v2" for 1P/3P phase switching.
       The “simulate unplugging” option should be activated in the Go-E app ("Car" menu item).
   evcc: ["sponsorship"]
 params:

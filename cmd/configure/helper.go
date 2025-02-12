@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"

@@ -30,7 +30,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -46,14 +45,14 @@ type Salia struct {
 	uri     string
 	current int64
 	fw      int // 2 if fw 2.0
-	apiG    provider.Cacheable[salia.Api]
+	apiG    util.Cacheable[salia.Api]
 }
 
 func init() {
 	registry.AddCtx("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -84,7 +83,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		current: 6,
 	}
 
-	wb.apiG = provider.ResettableCached(func() (salia.Api, error) {
+	wb.apiG = util.ResettableCached(func() (salia.Api, error) {
 		var res salia.Api
 		err := wb.GetJSON(wb.uri, &res)
 		return res, err

@@ -31,10 +31,13 @@ titleEdit = "Upravit měřič baterie"
 [config.circuits]
 
 [config.control]
+description = "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte. "
 
 [config.deviceValue]
 capacity = "Kapacita"
 chargeStatus = "Stav"
+chargeStatusA = "nepřipojeno"
+chargeStatusB = "připojeno"
 chargedEnergy = "Nabito"
 configured = "Nastaveno"
 currency = "Měna"

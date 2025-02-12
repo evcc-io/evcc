@@ -497,6 +497,7 @@ test.describe("repeating", async () => {
     const plan1 = modal.getByTestId("plan-entry").nth(0);
     await plan1.getByTestId("static-plan-day").selectOption({ index: 1 });
     await plan1.getByTestId("static-plan-time").fill("09:30");
+    await plan1.getByTestId("static-plan-soc").selectOption("80%");
     await plan1.getByTestId("static-plan-active").click();
 
     // add repeating plan for tomorrow

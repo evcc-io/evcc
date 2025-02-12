@@ -37,7 +37,7 @@ func TestConcurrentRead(t *testing.T) {
 			conn, err := modbus.NewConnection(l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
 			require.NoError(t, err)
 
-			for i := 0; i < 50; i++ {
+			for range 50 {
 				addr := uint16(rand.Int31n(200) + 1)
 				qty := uint16(rand.Int31n(32) + 1)
 

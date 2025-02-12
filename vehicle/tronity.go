@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -49,7 +48,7 @@ func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
 
-//go:generate decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
+//go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
@@ -120,7 +119,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.vid = vehicle.ID
-	v.bulkG = provider.Cached(v.bulk, cc.Cache)
+	v.bulkG = util.Cached(v.bulk, cc.Cache)
 
 	var status func() (api.ChargeStatus, error)
 	if slices.Contains(vehicle.Scopes, tronity.ReadCharge) {
