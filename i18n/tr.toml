@@ -71,12 +71,17 @@ phaseVoltages = "Faz Voltajı L1, L2, L3"
 power = "Güç"
 powerRange = "“Güç”"
 range = "Menzil"
-soc = "Doluluk durumu"
+soc = "Doluluk"
 socLimit = "Doluluk Sınırlaması"
 temp = "Isı"
 topic = "Konu"
 url = "URL"
 yes = "evet"
+vehicleLimitSoc = “Araç sınırı”
+amount = “Miktar”
+identifier = “RFID tanımlayıcısı”
+phases1p3p = “Faz değiştirme”
+singlePhase = “Tek fazlı”
 
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
@@ -85,6 +90,7 @@ title = "EEBus"
 [config.form]
 example = "Örnek"
 optional = "isteğe bağlı"
+deprecated = “kullanımdan kaldırıldı”
 
 [config.general]
 cancel = "İptal"
@@ -100,6 +106,8 @@ save = "Kaydet"
 showAdvancedSettings = "“Gelişmiş ayarları göster”"
 telemetry = "Uzölçüm"
 title = "Başlık"
+validateSave = “Doğrula ve kaydet”
+delete = “Sil”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -765,3 +773,56 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[config.charge]
+titleEdit = “Doldurma sayacını düzenle”
+titleAdd = “Doldurma sayacı ekle”
+
+[config.charger]
+chargers = "Doldurma cihazları"
+switchsockets = “Açılıp kapanabilen prizler”
+template = “Üretici”
+titleAdd = “Doldurma Cihazı Ekle”
+titleEdit = “Doldurma Cihazını Düzenle”
+generic = “Genel bütünleşmeler”
+ocppHelp = “Bu adresi doldurma cihazının yapılandırmasına kopyala.”
+ocppLabel = “OCPP sunucusu URL'si”
+
+[config.deviceValueChargeStatus]
+A = “A (bağlı değil)”
+B = “B (bağlı)”
+C = “C (dolduruyor)”
+
+[config.loadpoint]
+addCharger = “Doldurma cihazı ekle”
+cancel = “İptal”
+chargerLabel = “Doldurma Cihazı”
+chargerPower11kw = "11 kW"
+addMeter = “Ek doldurma sayacı ekle”
+chargerPower11kwHelp = “6 ila 16 A akım aralığını kullanır.”
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = “6 ila 32 A akım aralığını kullanır.”
+chargerPowerCustom = “diğeri”
+chargerPowerCustomHelp = “Kendine özgü bir akım aralığı tanımla.”
+chargerTypeLabel = “Doldurma gücü”
+chargingTitle = “Dolduruyor”
+circuitLabel = “Devre”
+circuitUnassigned = “atanmamış”
+defaultModeHelp = “Araç bağlanırken doldurma şekli.”
+defaultModeHelpKeep = “Son seçilen doldurma şeklini korur.”
+defaultModeLabel = “Varsayılan şekil”
+delete = “Sil”
+electricalSubtitle = “Gerekirse elektrikçine sor.”
+electricalTitle = “Elektrikli”
+energyMeterHelp = “Doldurma cihazında bütünleşik bir sayaç yoksa ek sayaç.”
+energyMeterLabel = “Enerji sayacı”
+estimateLabel = “API güncellemeleri arasında doldurma seviyesini hesapla”
+maxCurrentHelp = “Asgari akımdan büyük olmalı.”
+maxCurrentLabel = “Azami akım”
+minCurrentHelp = “Sadece ne yaptığını biliyorsan 6 A altına in.”
+minCurrentLabel = “Asgari akım”
+noVehicles = “Hiçbir araç yapılandırılmamış.”
+phases3p = “3 fazlı”
+phases1p = “1 fazlı”
+phasesAutomatic = “Otomatik fazlar”
