@@ -122,7 +122,7 @@ render: |
       address: 590 # "Battery output power"
       {{- end }}
       {{- if eq .storageunit "2" }}
-      address: 595 # "Battery output power"
+      address: 595 # "Battery2 output power"
       {{- end }}
       type: holding
       decode: int16
