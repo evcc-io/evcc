@@ -77,6 +77,7 @@ temp = "Θερμοκρασία"
 topic = "Topic"
 url = "URL"
 yes = "ναι"
+amount = "Ποσό"
 
 [config.eebus]
 description = "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus."
@@ -214,7 +215,7 @@ description = "Το μοντέλο χορηγίας μας βοηθά να δι�
 descriptionToken = "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή."
 error = "Δεν είναι έγκυρο το sponsor token."
 labelToken = "Sponsor token"
-title = "Χορηγεία"
+title = "Χορηγία"
 
 [config.system]
 logs = "Καταγραφές"
@@ -417,6 +418,8 @@ noEnergy = "Χωρίς δεδομένα μετρητή"
 pvExport = "Εξαγωγή προς δικτύο"
 pvProduction = "Παραγωγή"
 selfConsumption = "«Αυτοκατανάλωση»"
+batteryGridChargeActive = "ενεργή φόρτιση από το δίκτυο"
+batteryGridChargeLimit = "φόρτιση από το δίκτυο όταν"
 
 [main.heatingStatus]
 charging = "Θερμαίνεται…"
