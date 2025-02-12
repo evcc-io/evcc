@@ -80,7 +80,6 @@ jobs:
           fetch-depth: 0
 
       - uses: actions/setup-go@v5
-        with:
         id: go
 
       - name: Patch ASN1

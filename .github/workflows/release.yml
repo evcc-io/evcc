@@ -60,7 +60,6 @@ jobs:
 
       - name: Setup Go
         uses: actions/setup-go@v5
-        with:
         id: go
 
       - name: Patch ASN1
