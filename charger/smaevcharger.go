@@ -237,8 +237,11 @@ var _ api.MeterEnergy = (*Smaevcharger)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Smaevcharger) TotalEnergy() (float64, error) {
-	val, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
-	return val / 1e3, err
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
+	if errors.As(err, lo.ToPtr(new(smaevcharger.ErrUnknownMeasurement))) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
+	}
+	return res / 1e3, err
 }
 
 var _ api.Meter = (*Smaevcharger)(nil)
