@@ -80,6 +80,9 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
+identifier = "RFID-identifierare"
+phases1p3p = "Fasväxlare"
+singlePhase = "En-fas"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
@@ -103,6 +106,7 @@ save = "Spara"
 showAdvancedSettings = "Visa avancerade inställningar"
 telemetry = "Telemetri"
 title = "Titel"
+delete = "Radera"
 
 [config.grid]
 title = "Elmätare"
@@ -794,3 +798,22 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.charger]
+chargers = "Elbilsladdare"
+ocppLabel = "OCPP-Server URL"
+titleEdit = "Ändra laddare"
+generic = "Generisk integration"
+ocppHelp = "Kopiera in denna adress i din laddarkonfiguration"
+template = "Tillverkare"
+titleAdd = "Lägg till laddare"
+
+[config.charge]
+titleAdd = "Lägg till energimätare"
+titleEdit = "Ändra energimätare"
+
+[config.deviceValueChargeStatus]
+A = "A (ej ansluten)"
+B = "B (ansluten)"
+C = "C (laddar)"
