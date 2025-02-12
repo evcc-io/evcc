@@ -13,8 +13,8 @@ builds:
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
-    env:
-      - CGO_ENABLED=0
+    # env:
+    #   - CGO_ENABLED=0
     goos:
       - linux
     goarch:
@@ -35,13 +35,20 @@ builds:
           # drop -race
           - -trimpath
           - -tags=release
+      - goos: linux
+        goarch: amd64
+        flags:
+          # drop -race
+          - -trimpath
+          - -tags=release
       - goos: windows
         goarch: amd64
         flags:
-          # add timetzdata
-          - -race
+          # drop -race, add timetzdata
           - -trimpath
           - -tags=release,timetzdata
+        # env:
+        #   - CGO_ENABLED=0
 
 archives:
   - builds:
