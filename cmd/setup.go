@@ -755,11 +755,12 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
+func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
+	name := u.String()
 	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
@@ -786,10 +787,11 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar, &tariffs.Solar) })
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
@@ -862,7 +864,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
+		return nil, &ClassError{ClassLoadpoint, err}
 	}
 
 	tariffs, err := configureTariffs(conf.Tariffs)
@@ -945,7 +947,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
+			return &DeviceError{cc.Name, err}
 		}
 
 		if err := config.Loadpoints().Add(config.NewStaticDevice(cc, loadpoint.API(instance))); err != nil {
@@ -970,21 +972,21 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
+			return &DeviceError{cc.Name, err}
 		}
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
-		}
-
-		if err := dynamic.Apply(instance); err != nil {
-			return err
+			return &DeviceError{cc.Name, err}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
 		if err := config.Loadpoints().Add(dev); err != nil {
-			return err
+			return &DeviceError{cc.Name, err}
+		}
+
+		if err := dynamic.Apply(instance); err != nil {
+			return &DeviceError{cc.Name, err}
 		}
 	}
 

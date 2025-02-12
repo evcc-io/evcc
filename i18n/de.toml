@@ -229,10 +229,11 @@ addTariffs = "Tarife hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
 configured = "konfiguriert"
 edit = "bearbeiten"
+name = "Name"
 title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
-yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+yaml = "Geräte aus evcc.yaml sind nicht editierbar."
 
 [config.messaging]
 description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."

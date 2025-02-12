@@ -384,7 +384,7 @@
 					>
 						<SelectGroup
 							id="loadpointParamPhases"
-							v-model="values.phases"
+							v-model="values.phasesConfigured"
 							class="w-100"
 							:options="[
 								{ value: 1, name: $t('config.loadpoint.phases1p') },
@@ -559,7 +559,7 @@ const nsPerMin = 60 * 1e9;
 
 const defaultValues = {
 	title: "",
-	phases: 3,
+	phasesConfigured: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -813,17 +813,17 @@ export default {
 			}
 		},
 		updatePhases() {
-			const { phases } = this.values;
+			const { phasesConfigured } = this.values;
 			if (this.chargerIsSinglePhase) {
-				this.values.phases = 1;
+				this.values.phasesConfigured = 1;
 				return;
 			}
 			if (this.chargerSupports1p3p && this.isNew) {
-				this.values.phases = 0; // automatic
+				this.values.phasesConfigured = 0; // automatic
 				return;
 			}
-			if (!this.chargerSupports1p3p && phases === 0) {
-				this.values.phases = 3; // no automatic switching, default to 3-phase
+			if (!this.chargerSupports1p3p && phasesConfigured === 0) {
+				this.values.phasesConfigured = 3; // no automatic switching, default to 3-phase
 				return;
 			}
 		},

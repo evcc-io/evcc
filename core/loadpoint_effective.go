@@ -40,7 +40,7 @@ type plan struct {
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	for i, p := range plans {
-		requiredDuration := lp.GetPlanRequiredDuration(float64(p.Soc), maxPower)
+		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower)
 		plans[i].Start = p.End.Add(-requiredDuration)
 	}
 
@@ -54,6 +54,13 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	}
 
 	return nil
+}
+
+// NextVehiclePlan returns the next vehicle plan time, soc and id
+func (lp *Loadpoint) NextVehiclePlan() (time.Time, int, int) {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.nextVehiclePlan()
 }
 
 // nextVehiclePlan returns the next vehicle plan time, soc and id
@@ -91,14 +98,14 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, soc, _ := lp.nextVehiclePlan()
+	_, soc, _ := lp.NextVehiclePlan()
 	return soc
 }
 
 // EffectivePlanId returns the id for the current plan
 func (lp *Loadpoint) EffectivePlanId() int {
 	if lp.socBasedPlanning() {
-		_, _, id := lp.nextVehiclePlan()
+		_, _, id := lp.NextVehiclePlan()
 		return id
 	}
 	if lp.planEnergy > 0 {
@@ -111,7 +118,7 @@ func (lp *Loadpoint) EffectivePlanId() int {
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _, _ := lp.nextVehiclePlan()
+		ts, _, _ := lp.NextVehiclePlan()
 		return ts
 	}
 
@@ -194,13 +201,15 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	return 100
 }
 
-// effectiveStepPower returns the effective step power for the currently active phases
-func (lp *Loadpoint) effectiveStepPower() float64 {
+// EffectiveStepPower returns the effective step power for the currently active phases
+func (lp *Loadpoint) EffectiveStepPower() float64 {
 	return Voltage * float64(lp.ActivePhases())
 }
 
 // EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
