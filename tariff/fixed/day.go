@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//go:generate enumer -type Day
+//go:generate go tool enumer -type Day
 type Day int
 
 const (

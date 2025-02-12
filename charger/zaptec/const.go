@@ -4,7 +4,7 @@ const ApiURL = "https://api.zaptec.com"
 
 type ObservationID int
 
-//go:generate enumer -type ObservationID
+//go:generate go tool enumer -type ObservationID
 
 // Commands
 const (
