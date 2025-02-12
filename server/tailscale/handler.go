@@ -28,6 +28,9 @@ func (h *handler) watchState(w *tailscale.IPNBusWatcher, done chan struct{}) {
 
 		if n.State != nil {
 			h.log.DEBUG.Println("state:", n.State.String())
+			if n.BrowseToURL != nil {
+				h.log.DEBUG.Println("url:", *n.BrowseToURL)
+			}
 
 			switch *n.State {
 			case ipn.NeedsLogin:

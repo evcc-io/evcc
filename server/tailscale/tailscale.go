@@ -44,11 +44,13 @@ func Run(host string, port int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("sc: %+v\n", sc)
+	fmt.Println("host", host, "port", port)
+	fmt.Printf("old sc: %+v\n", sc)
 
 	// proxyPort := ":8443"
 
-	t, err := ipn.ExpandProxyTargetValue("localhost:80", []string{"http", "https", "https+insecure"}, "http")
+	// t, err := ipn.ExpandProxyTargetValue("localhost:80", []string{"http", "https", "https+insecure"}, "http")
+	t, err := ipn.ExpandProxyTargetValue("http://localhost:80", []string{"http", "https", "https+insecure"}, "http")
 	if err != nil {
 		return err
 	}
@@ -64,16 +66,19 @@ func Run(host string, port int) error {
 	_ = dnsName
 	_ = t
 
-	// sc.SetWebHandler(&ipn.HTTPHandler{
-	// 	Proxy: t,
-	// }, dnsName, 8888, "", false)
-	// fmt.Println("dnsName", dnsName)
+	sc.SetWebHandler(&ipn.HTTPHandler{
+		Proxy: t,
+	}, dnsName, 80, "", false)
+	sc.SetWebHandler(&ipn.HTTPHandler{
+		Proxy: t,
+	}, dnsName, 443, "", true)
 
-	// fmt.Printf("sc: %+v\n", sc)
+	fmt.Printf("new sc: %+v\n", sc)
+	fmt.Println("dnsName", dnsName)
 
-	// if err := lc.SetServeConfig(context.Background(), sc); err != nil {
-	// 	return err
-	// }
+	if err := lc.SetServeConfig(context.Background(), sc); err != nil {
+		return err
+	}
 
 	// ln, err := net.Listen("tcp", proxyPort)
 	// if err != nil {
