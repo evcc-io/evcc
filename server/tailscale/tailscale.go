@@ -48,7 +48,7 @@ func Run(host string, port int) error {
 
 	// proxyPort := ":8443"
 
-	t, err := ipn.ExpandProxyTargetValue("localhost:7070", []string{"http", "https", "https+insecure"}, "http")
+	t, err := ipn.ExpandProxyTargetValue("localhost:80", []string{"http", "https", "https+insecure"}, "http")
 	if err != nil {
 		return err
 	}
@@ -61,17 +61,19 @@ func Run(host string, port int) error {
 		return errors.New("no self node")
 	}
 	dnsName := strings.TrimSuffix(st.Self.DNSName, ".")
+	_ = dnsName
+	_ = t
 
-	sc.SetWebHandler(&ipn.HTTPHandler{
-		Proxy: t,
-	}, dnsName, 8888, "", false)
-	fmt.Println("dnsName", dnsName)
+	// sc.SetWebHandler(&ipn.HTTPHandler{
+	// 	Proxy: t,
+	// }, dnsName, 8888, "", false)
+	// fmt.Println("dnsName", dnsName)
 
-	fmt.Printf("sc: %+v\n", sc)
+	// fmt.Printf("sc: %+v\n", sc)
 
-	if err := lc.SetServeConfig(context.Background(), sc); err != nil {
-		return err
-	}
+	// if err := lc.SetServeConfig(context.Background(), sc); err != nil {
+	// 	return err
+	// }
 
 	// ln, err := net.Listen("tcp", proxyPort)
 	// if err != nil {

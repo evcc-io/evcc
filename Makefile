@@ -119,6 +119,7 @@ gok-image:: gok
 
 # run qemu
 gok-vm:: gok
+	# ${GOK} get github.com/gokrazy/kernel.rpi@latest
 	${GOK} vm run --netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 
 # update instance
