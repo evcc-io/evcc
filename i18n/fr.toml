@@ -148,6 +148,7 @@ vehicles = "Mes véhicules"
 yaml = "Les appareils provenant de evcc.yaml ne sont pas modifiables."
 addGrid = "Ajouter un compteur pour le réseau"
 addTariffs = "Ajouter les tarifs"
+name = "Nom"
 
 [config.messaging]
 description = "Recevoir des messages à propos de vos sessions de charge."
