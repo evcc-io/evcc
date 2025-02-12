@@ -1,22 +1,14 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-
+import { enableExperimental } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start("battery-settings.evcc.yaml", "password.sql");
+  await start("battery-settings.evcc.yaml");
 });
 test.afterAll(async () => {
   await stop();
 });
-
-async function enableExperimental(page) {
-  await page.getByTestId("topnavigation-button").click();
-  await page.getByTestId("topnavigation-settings").click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-  await expect(page.locator(".modal-backdrop")).not.toBeVisible();
-}
 
 test.describe("battery settings", async () => {
   test("open modal", async ({ page }) => {
@@ -56,7 +48,11 @@ test.describe("battery settings", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
     await page.getByTestId("energyflow").click();
-    await page.getByRole("button", { name: "cheap grid energy (≤ 50.0 ct)" }).click();
+    await page.getByRole("button", { name: "grid charging active (≤ 50.0 ct)" }).click();
     await expect(page.getByTestId("battery-settings-modal")).toBeVisible();
+    await page.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "grid charging when ≤ -10.0 ct" })).toBeVisible();
   });
 });

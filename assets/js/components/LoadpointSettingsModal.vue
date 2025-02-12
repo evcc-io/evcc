@@ -2,8 +2,8 @@
 	<Teleport to="body">
 		<div
 			:id="`loadpointSettingsModal_${id}`"
-			class="modal fade text-dark modal-xl"
 			ref="modal"
+			class="modal fade text-dark modal-xl"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -29,6 +29,12 @@
 								v-if="isModalVisible && smartCostAvailable"
 								v-bind="smartCostLimitProps"
 								class="mt-2"
+							/>
+							<LoadpointSettingsBatteryBoost
+								v-if="batteryBoostAvailable"
+								v-bind="batteryBoostProps"
+								class="mt-2"
+								@batteryboost-updated="changeBatteryBoost"
 							/>
 							<h6>
 								{{ $t("main.loadpointSettings.currents") }}
@@ -153,6 +159,7 @@ import collector from "../mixins/collector";
 import formatter from "../mixins/formatter";
 import SmartCostLimit from "./SmartCostLimit.vue";
 import smartCostAvailable from "../utils/smartCostAvailable";
+import LoadpointSettingsBatteryBoost from "./LoadpointSettingsBatteryBoost.vue";
 
 const V = 230;
 
@@ -171,14 +178,16 @@ const insertSorted = (arr, num) => {
 
 export default {
 	name: "LoadpointSettingsModal",
+	components: { SmartCostLimit, LoadpointSettingsBatteryBoost },
 	mixins: [formatter, collector],
-	components: { SmartCostLimit },
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
-		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
-		chargerPhysicalPhases: Number,
+		chargerSinglePhase: Boolean,
+		batteryBoost: Boolean,
+		batteryBoostAvailable: Boolean,
+		mode: String,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -189,8 +198,13 @@ export default {
 		currency: String,
 		multipleLoadpoints: Boolean,
 	},
-	emits: ["phasesconfigured-updated", "maxcurrent-updated", "mincurrent-updated"],
-	data: function () {
+	emits: [
+		"phasesconfigured-updated",
+		"maxcurrent-updated",
+		"mincurrent-updated",
+		"batteryboost-updated",
+	],
+	data() {
 		return {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
@@ -199,9 +213,8 @@ export default {
 		};
 	},
 	computed: {
-		phasesOptions: function () {
-			if (this.chargerPhysicalPhases == 1) {
-				// known fixed phase configuration, no settings required
+		phasesOptions() {
+			if (this.chargerSinglePhase) {
 				return [];
 			}
 			if (this.chargerPhases1p3p) {
@@ -211,7 +224,10 @@ export default {
 			// 1p or 3p possible
 			return [PHASES_3, PHASES_1];
 		},
-		maxPower: function () {
+		batteryBoostProps() {
+			return this.collectProps(LoadpointSettingsBatteryBoost);
+		},
+		maxPower() {
 			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.maxPowerPhases(3);
@@ -220,9 +236,9 @@ export default {
 					return this.maxPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtW(this.maxCurrent * V * this.phasesActive);
+			return this.fmtW(this.maxCurrent * V * this.phasesConfigured);
 		},
-		minPower: function () {
+		minPower() {
 			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.minPowerPhases(1);
@@ -231,24 +247,24 @@ export default {
 					return this.minPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtW(this.minCurrent * V * this.phasesActive);
+			return this.fmtW(this.minCurrent * V * this.phasesConfigured);
 		},
-		minCurrentOptions: function () {
+		minCurrentOptions() {
 			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.minCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 6));
 		},
-		maxCurrentOptions: function () {
+		maxCurrentOptions() {
 			const opt1 = range(32, Math.ceil(this.minCurrent));
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.maxCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 16));
 		},
-		smartCostLimitProps: function () {
+		smartCostLimitProps() {
 			return this.collectProps(SmartCostLimit);
 		},
-		loadpointId: function () {
+		loadpointId() {
 			return this.id;
 		},
 		smartCostAvailable() {
@@ -256,16 +272,16 @@ export default {
 		},
 	},
 	watch: {
-		maxCurrent: function (value) {
+		maxCurrent(value) {
 			this.selectedMaxCurrent = value;
 		},
-		minCurrent: function (value) {
+		minCurrent(value) {
 			this.selectedMinCurrent = value;
 		},
-		phasesConfigured: function (value) {
+		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
-		minSoc: function (value) {
+		minSoc(value) {
 			this.selectedMinSoc = value;
 		},
 	},
@@ -278,36 +294,39 @@ export default {
 		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
-		maxPowerPhases: function (phases) {
+		maxPowerPhases(phases) {
 			return this.fmtW(this.maxCurrent * V * phases);
 		},
-		minPowerPhases: function (phases) {
+		minPowerPhases(phases) {
 			return this.fmtW(this.minCurrent * V * phases);
 		},
-		formId: function (name) {
+		formId(name) {
 			return `loadpoint_${this.id}_${name}`;
 		},
-		changeMaxCurrent: function () {
+		changeMaxCurrent() {
 			this.$emit("maxcurrent-updated", this.selectedMaxCurrent);
 		},
-		changeMinCurrent: function () {
+		changeMinCurrent() {
 			this.$emit("mincurrent-updated", this.selectedMinCurrent);
 		},
-		changePhasesConfigured: function () {
+		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOption: function (value, isDefault) {
+		currentOption(value, isDefault) {
 			let name = `${this.fmtNumber(value)} A`;
 			if (isDefault) {
 				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}
 			return { value, name };
 		},
-		modalVisible: function () {
+		modalVisible() {
 			this.isModalVisible = true;
 		},
-		modalInvisible: function () {
+		modalInvisible() {
 			this.isModalVisible = false;
+		},
+		changeBatteryBoost(boost) {
+			this.$emit("batteryboost-updated", boost);
 		},
 	},
 };
@@ -320,5 +339,9 @@ export default {
 
 .container h4:first-child {
 	margin-top: 0 !important;
+}
+
+.custom-select-inline {
+	display: inline-block !important;
 }
 </style>

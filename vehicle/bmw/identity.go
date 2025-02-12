@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -23,6 +24,8 @@ const (
 type Identity struct {
 	*request.Helper
 	region Region
+	log    *util.Logger
+	user   string
 }
 
 // NewIdentity creates BMW identity
@@ -30,14 +33,31 @@ func NewIdentity(log *util.Logger, region string) *Identity {
 	v := &Identity{
 		Helper: request.NewHelper(log),
 		region: regions[strings.ToUpper(region)],
+		log:    log,
 	}
 
 	return v
 }
 
-func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
+func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, error) {
 	v.Client.CheckRedirect = request.DontFollow
 	defer func() { v.Client.CheckRedirect = nil }()
+
+	v.user = user
+
+	// database token
+	var tok oauth2.Token
+	if err := settings.Json(v.settingsKey(), &tok); err == nil {
+		v.log.DEBUG.Println("identity.Login - database token found")
+		tok, err := v.RefreshToken(&tok)
+		if err == nil {
+			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(tok, v), 15*time.Minute)
+			return ts, nil
+		}
+		v.log.DEBUG.Println("identity.Login - database token invalid. Proceeding to login via user, password and captcha.")
+	} else {
+		v.log.DEBUG.Println("identity.Login - no database token found. Proceeding to login via user, password and captcha.")
+	}
 
 	cv := oauth2.GenerateVerifier()
 
@@ -60,7 +80,11 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	}
 
 	uri := fmt.Sprintf("%s/oauth/authenticate", v.region.AuthURI)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	headers := map[string]string{
+		"Content-Type":  "application/x-www-form-urlencoded",
+		"hcaptchatoken": hcaptcha,
+	}
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
 		return nil, err
 	}
@@ -141,17 +165,30 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	var tok oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &tok)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, err
 	}
 
-	return util.TokenWithExpiry(&tok), err
+	tokex := util.TokenWithExpiry(&tok)
+
+	err = settings.SetJson(v.settingsKey(), tokex)
+
+	return tokex, err
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"redirect_uri":  []string{RedirectURI},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
+		"redirect_uri":  {RedirectURI},
+		"refresh_token": {token.RefreshToken},
+		"grant_type":    {"refresh_token"},
 	}
 
 	return v.retrieveToken(data)
+}
+
+func (v *Identity) settingsKey() string {
+	return fmt.Sprintf("bmw.%s", v.user)
 }

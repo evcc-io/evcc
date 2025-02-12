@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
-	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/api"
 	"github.com/spf13/cobra"
 )
 
@@ -34,18 +32,29 @@ func runTariff(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
+	tariffs, err := configureTariffs(conf.Tariffs)
+	if err != nil {
+		fatal(err)
+	}
+
 	var name string
 	if len(args) == 1 {
 		name = args[0]
 	}
 
-	for key, cc := range map[string]config.Typed{
-		"grid":    conf.Tariffs.Grid,
-		"feedin":  conf.Tariffs.FeedIn,
-		"co2":     conf.Tariffs.Co2,
-		"planner": conf.Tariffs.Planner,
+	for u, tf := range map[api.TariffUsage]api.Tariff{
+		api.TariffUsageGrid:    tariffs.Grid,
+		api.TariffUsageFeedIn:  tariffs.FeedIn,
+		api.TariffUsageCo2:     tariffs.Co2,
+		api.TariffUsagePlanner: tariffs.Planner,
+		api.TariffUsageSolar:   tariffs.Solar,
 	} {
-		if cc.Type == "" || (name != "" && key != name) {
+		key := u.String()
+		if name != "" && key != name {
+			continue
+		}
+
+		if tf == nil {
 			continue
 		}
 
@@ -53,18 +62,25 @@ func runTariff(cmd *cobra.Command, args []string) {
 			fmt.Println(key + ":")
 		}
 
-		tf, err := tariff.NewFromConfig(context.TODO(), cc.Type, cc.Other)
-		if err != nil {
-			fatal(err)
-		}
-
 		rates, err := tf.Rates()
 		if err != nil {
 			fatal(err)
 		}
 
+		unit := "Price/Cost"
+		switch tf.Type() {
+		case api.TariffTypeCo2:
+			unit += "Footprint (gCO2/kWh)"
+		case api.TariffTypeSolar:
+			unit = "Yield (W)"
+		default:
+			if c := conf.Tariffs.Currency; c != "" {
+				unit += fmt.Sprintf(" (%s/kWh)", c)
+			}
+		}
+
 		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(tw, "From\tTo\tPrice/Cost")
+		fmt.Fprintln(tw, "From\tTo\t"+unit)
 		const format = "2006-01-02 15:04:05"
 
 		for _, r := range rates {

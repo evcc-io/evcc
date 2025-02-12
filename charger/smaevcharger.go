@@ -26,7 +26,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/smaevcharger"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -41,8 +40,8 @@ type Smaevcharger struct {
 	uri          string // 192.168.XXX.XXX
 	cache        time.Duration
 	oldstate     float64
-	measurementG provider.Cacheable[[]smaevcharger.Measurements]
-	parameterG   provider.Cacheable[[]smaevcharger.Parameters]
+	measurementG util.Cacheable[[]smaevcharger.Measurements]
+	parameterG   util.Cacheable[[]smaevcharger.Parameters]
 }
 
 func init() {
@@ -95,8 +94,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.measurementG = provider.ResettableCached(wb._measurementData, wb.cache)
-	wb.parameterG = provider.ResettableCached(wb._parameterData, wb.cache)
+	wb.measurementG = util.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterG = util.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
@@ -231,6 +230,14 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	}
 
 	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
+}
+
+var _ api.MeterEnergy = (*Smaevcharger)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Smaevcharger) TotalEnergy() (float64, error) {
+	val, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
+	return val / 1e3, err
 }
 
 var _ api.Meter = (*Smaevcharger)(nil)

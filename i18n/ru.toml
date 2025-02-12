@@ -25,7 +25,13 @@ never = "только при достаточном избытке"
 
 [config.battery]
 
+[config.circuits]
+
+[config.control]
+
 [config.deviceValue]
+
+[config.eebus]
 
 [config.form]
 example = "Пример"
@@ -35,15 +41,29 @@ optional = "опционально"
 
 [config.grid]
 
+[config.hems]
+
+[config.influx]
+
 [config.main]
 addVehicle = "Добавить транспортное средство"
 edit = "редактировать"
 title = "Конфигурация"
 vehicles = "Мои транспортные средства"
 
+[config.messaging]
+
 [config.meter]
 
+[config.modbusproxy]
+
+[config.mqtt]
+
+[config.network]
+
 [config.options]
+
+[config.options.boolean]
 
 [config.options.endianness]
 
@@ -53,7 +73,11 @@ vehicles = "Мои транспортные средства"
 
 [config.section]
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -169,6 +193,8 @@ disclaimerHint = "Заметка:"
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
@@ -271,6 +297,8 @@ loadpoint = "Зарядная станция"
 title = "Сессии зарядки"
 vehicle = "Транспортное средство"
 
+[sessions.chartTitle]
+
 [sessions.csv]
 chargedenergy = "Электроэнергия (кВт/ч)"
 created = "Создано"
@@ -281,6 +309,14 @@ odometer = "Пробег (км)"
 vehicle = "Транспортное средство"
 
 [sessions.filter]
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Настройки"

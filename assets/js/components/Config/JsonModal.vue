@@ -6,7 +6,7 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p class="text-danger" v-if="error">
+		<p v-if="error" class="text-danger">
 			<span v-if="errorMessage" class="d-block">{{ errorMessage }}</span>
 			{{ error }}
 		</p>
@@ -71,16 +71,6 @@ import store from "../../store";
 export default {
 	name: "JsonModal",
 	components: { GenericModal },
-	emits: ["changed", "open"],
-	data() {
-		return {
-			saving: false,
-			removing: false,
-			error: "",
-			values: {},
-			serverValues: {},
-		};
-	},
 	props: {
 		title: String,
 		description: String,
@@ -92,6 +82,16 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
+	},
+	emits: ["changed", "open"],
+	data() {
+		return {
+			saving: false,
+			removing: false,
+			error: "",
+			values: {},
+			serverValues: {},
+		};
 	},
 	computed: {
 		docsLink() {
@@ -167,8 +167,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.btn-cancel {
-	margin-left: -0.75rem;
 }
 </style>

@@ -47,7 +47,7 @@ export default {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 1_000_000) {
+        if (watt >= 10_000_000) {
           unit = POWER_UNIT.MW;
         } else if (watt >= 1000 || 0 === watt) {
           unit = POWER_UNIT.KW;
@@ -81,6 +81,20 @@ export default {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);
+    },
+    fmtGrams: function (gramms, withUnit = true) {
+      let unit = "gram";
+      let value = gramms;
+      if (gramms >= 1000) {
+        unit = "kilogram";
+        value = gramms / 1000;
+      }
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: withUnit ? "unit" : "decimal",
+        unit,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
     },
     fmtCo2Short: function (gramms) {
       return `${this.fmtNumber(gramms, 0)} g`;
@@ -150,13 +164,17 @@ export default {
       return tomorrow.toDateString() === date.toDateString();
     },
     weekdayPrefix: function (date) {
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       if (this.isToday(date)) {
-        return ""; //rtf.formatToParts(0, "day")[0].value;
+        return "";
       }
       if (this.isTomorrow(date)) {
-        return rtf.formatToParts(1, "day")[0].value;
+        try {
+          const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+          return rtf.formatToParts(1, "day")[0].value;
+        } catch (e) {
+          console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
+          return "tomorrow";
+        }
       }
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
@@ -192,6 +210,13 @@ export default {
         minute: "numeric",
       }).format(date);
     },
+    fmtWeekdayTime: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
+      }).format(date);
+    },
     fmtMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: "long",
@@ -203,6 +228,11 @@ export default {
         month: short ? "short" : "long",
       }).format(date);
     },
+    fmtYear: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        year: "numeric",
+      }).format(date);
+    },
     fmtDayMonthYear: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         day: "numeric",
@@ -210,16 +240,40 @@ export default {
         year: "numeric",
       }).format(date);
     },
-    fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
+    fmtDayMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtDayOfMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+      }).format(date);
+    },
+    fmtDurationUnit: function (value, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: "unit",
+        unit,
+        unitDisplay: "long",
+      })
+        .formatToParts(value)
+        .find((part) => part.type === "unit").value;
+    },
+    fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
+      const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const digits = decimals ? undefined : 0;
+      const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
-        currencyDisplay: "code",
-        maximumFractionDigits: decimals ? undefined : 0,
-      })
-        .format(amout)
-        .replace(currency, "")
-        .trim();
+        currencyDisplay,
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }).format(amout);
+
+      return withSymbol ? result : result.replace(currency, "").trim();
     },
     fmtCurrencySymbol: function (currency = "EUR") {
       const symbols = { EUR: "€", USD: "$" };
@@ -244,6 +298,9 @@ export default {
       }
       return price;
     },
+    timezone: function () {
+      return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
+    },
     pricePerKWhUnit: function (currency = "EUR", short = false) {
       const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
@@ -256,12 +313,17 @@ export default {
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
-
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)
-        if (Math.abs(elapsed) > units[u] || u == "second")
-          return rtf.format(Math.round(elapsed / units[u]), u);
+        if (Math.abs(elapsed) > units[u] || u == "second") {
+          try {
+            const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
+            return rtf.format(Math.round(elapsed / units[u]), u);
+          } catch (e) {
+            console.warn("fmtTimeAgo: Intl.RelativeTimeFormat not supported", e);
+            return `${elapsed} ${u}s ago`;
+          }
+        }
     },
     fmtSocOption: function (soc, rangePerSoc, distanceUnit, heating) {
       let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;
@@ -284,6 +346,64 @@ export default {
     fmtTemperature: function (value) {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
+    },
+    getWeekdaysList: function (weekdayFormat) {
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
+      const mondayToSaturday = [7, 8, 9, 10, 11, 12].map((day, index) => {
+        return { name: format(new Date(Date.UTC(2021, 5, day))), value: index + 1 };
+      });
+      const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
+      return [...mondayToSaturday, sunday];
+    },
+    getShortenedWeekdaysLabel: function (selectedWeekdays) {
+      if (0 === selectedWeekdays.length) {
+        return "–";
+      }
+
+      const weekdays = this.getWeekdaysList("short");
+      let label = "";
+
+      // the week in the input-parameter starts with 0 for sunday and ends with 6 for saturday
+      // this algorithms works only if the week starts with 1 for monday and ends with 7 for sunday because
+      // then we are able to count from 1 to 7 by incrementing the number
+      // so we have to transform the input accordingly
+      const selectedWeekdaysTransformed = selectedWeekdays.map(function (dayIndex) {
+        return 0 === dayIndex ? 7 : dayIndex;
+      });
+      function getWeekdayName(dayIndex) {
+        return weekdays.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex)).name;
+      }
+
+      let maxWeekday = Math.max(...selectedWeekdaysTransformed);
+
+      for (let weekdayRangeStart = 1; weekdayRangeStart < 8; weekdayRangeStart++) {
+        if (selectedWeekdaysTransformed.includes(weekdayRangeStart)) {
+          label += getWeekdayName(weekdayRangeStart);
+
+          let weekdayRangeEnd = weekdayRangeStart;
+          while (selectedWeekdaysTransformed.includes(weekdayRangeEnd + 1)) {
+            weekdayRangeEnd++;
+          }
+
+          if (weekdayRangeEnd - weekdayRangeStart > 1) {
+            // more than 2 consecutive weekdays selected
+            label += " – " + getWeekdayName(weekdayRangeEnd);
+            weekdayRangeStart = weekdayRangeEnd;
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          } else if (weekdayRangeStart !== weekdayRangeEnd) {
+            // exactly 2 consecutive weekdays selected
+            label += ", ";
+          } else {
+            // exactly 1 single day selected
+            if (maxWeekday !== weekdayRangeEnd) {
+              label += ", ";
+            }
+          }
+        }
+      }
+      return label;
     },
   },
 };

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, restart, cleanRestart, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
+import { enableExperimental } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -11,27 +12,11 @@ test.afterEach(async () => {
   await stop();
 });
 
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
-
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
@@ -79,10 +64,9 @@ test.describe("vehicles", async () => {
   });
 
   test("config should survive restart", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
@@ -113,10 +97,9 @@ test.describe("vehicles", async () => {
   });
 
   test("mixed config (yaml + db)", async ({ page }) => {
-    await start(CONFIG_WITH_VEHICLE, "password.sql");
+    await start(CONFIG_WITH_VEHICLE);
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
@@ -134,10 +117,9 @@ test.describe("vehicles", async () => {
   });
 
   test("advanced fields", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await page.getByTestId("add-vehicle").click();
@@ -173,10 +155,9 @@ test.describe("vehicles", async () => {
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY, "password.sql");
+    await start(CONFIG_GRID_ONLY);
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await page.getByTestId("add-vehicle").click();

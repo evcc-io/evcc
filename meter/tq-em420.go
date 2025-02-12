@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -115,7 +114,7 @@ func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	base := util.DefaultScheme(strings.TrimRight(cc.URI, "/"), "http")
 
-	dataG := provider.Cached(func() (TqEm420Data, error) {
+	dataG := util.Cached(func() (TqEm420Data, error) {
 		var res TqEm420Data
 
 		headers := map[string]string{
@@ -124,7 +123,6 @@ func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 
 		req, err := request.New(http.MethodGet, fmt.Sprintf("%s/api/json/"+cc.Device+"/values/smart-meter", base), nil, headers)
-
 		if err == nil {
 			err = client.DoJSON(req, &res)
 		}
@@ -132,13 +130,12 @@ func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
 		return res, err
 	}, cc.Cache)
 
-	m := &TqEM420{
-		dataG: dataG,
+	if _, err := dataG(); err != nil {
+		return nil, err
 	}
 
-	_, err := dataG()
-	if err != nil {
-		return nil, err
+	m := &TqEM420{
+		dataG: dataG,
 	}
 
 	return m, nil
@@ -153,7 +150,7 @@ var _ api.MeterEnergy = (*TqEM420)(nil)
 
 func (m *TqEM420) TotalEnergy() (float64, error) {
 	res, err := m.dataG()
-	return res.SmartMeter.Values.ActiveEnergyP / 1e3, err
+	return res.SmartMeter.Values.ActiveEnergyP / 1e6, err
 }
 
 var _ api.PhaseCurrents = (*TqEM420)(nil)

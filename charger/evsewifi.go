@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/evse"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -20,7 +19,7 @@ type EVSEWifi struct {
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
 	hires        bool
-	paramG       provider.Cacheable[evse.ListEntry]
+	paramG       util.Cacheable[evse.ListEntry]
 }
 
 func init() {
@@ -28,7 +27,7 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -122,7 +121,7 @@ func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
 		current: 6, // 6A defined value
 	}
 
-	wb.paramG = provider.ResettableCached(func() (evse.ListEntry, error) {
+	wb.paramG = util.ResettableCached(func() (evse.ListEntry, error) {
 		var res evse.ParameterResponse
 		uri := fmt.Sprintf("%s/getParameters", wb.uri)
 		if err := wb.GetJSON(uri, &res); err != nil {
@@ -154,12 +153,8 @@ func (wb *EVSEWifi) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // charging
 		return api.StatusC, nil
-	case 4: // charging with ventilation
-		return api.StatusD, nil
-	case 5: // failure (e.g. diode check, RCD failure)
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", params.VehicleState)
 	}
 }
 

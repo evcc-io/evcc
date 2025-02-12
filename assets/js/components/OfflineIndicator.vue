@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="modal-backdrop" v-if="offline" />
+		<div v-if="offline" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
 			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
@@ -12,6 +12,7 @@
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
 					disabled
+					tabindex="0"
 				>
 					<span
 						class="spinner-border spinner-border-sm m-1 me-2"
@@ -30,6 +31,7 @@
 				<button
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
+					tabindex="0"
 					@click="restart"
 				>
 					<Sync class="restart me-2" />
@@ -56,12 +58,13 @@
 							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
-					<div v-if="fatal">{{ fatal.error }}</div>
+					<div v-if="fatal" class="text-break">{{ fatal.error }}</div>
 				</div>
 				<button
 					type="button"
 					class="btn-close mt-1"
 					aria-label="Close"
+					tabindex="0"
 					@click="dismissed = true"
 				></button>
 			</div>
@@ -88,14 +91,6 @@ export default {
 	data() {
 		return { dismissed: false };
 	},
-	watch: {
-		offline: function () {
-			if (!this.offline) {
-				restartComplete();
-				this.dismissed = false;
-			}
-		},
-	},
 	computed: {
 		restartNeeded() {
 			return restart.restartNeeded;
@@ -114,6 +109,14 @@ export default {
 				this.fatal?.error &&
 				!this.dismissed
 			);
+		},
+	},
+	watch: {
+		offline: function () {
+			if (!this.offline) {
+				restartComplete();
+				this.dismissed = false;
+			}
 		},
 	},
 	methods: {

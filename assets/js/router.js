@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
-import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
 import { openLoginModal, statusUnknown, updateAuthStatus, isLoggedIn, isConfigured } from "./auth";
 
@@ -32,7 +31,16 @@ export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      { path: "/", component: Main, props: true },
+      {
+        path: "/",
+        component: () => import("./views/Main.vue"),
+        props: (route) => {
+          const { lp } = route.query;
+          return {
+            selectedLoadpointIndex: lp ? parseInt(lp, 10) - 1 : undefined,
+          };
+        },
+      },
       {
         path: "/config",
         component: () => import("./views/Config.vue"),
@@ -41,12 +49,13 @@ export default function setupRouter(i18n) {
       },
       {
         path: "/sessions",
-        component: () => import("./views/ChargingSessions.vue"),
+        component: () => import("./views/Sessions.vue"),
         props: (route) => {
-          const { month, year, loadpoint, vehicle } = route.query;
+          const { month, year, loadpoint, vehicle, period } = route.query;
           return {
             month: month ? parseInt(month, 10) : undefined,
             year: year ? parseInt(year, 10) : undefined,
+            period,
             loadpointFilter: loadpoint,
             vehicleFilter: vehicle,
           };

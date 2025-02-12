@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
+import { enableExperimental } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -8,27 +9,12 @@ test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(CONFIG_GRID_ONLY, "password.sql");
+  await start(CONFIG_GRID_ONLY);
 });
 test.afterAll(async () => {
   await stop();
   await stopSimulator();
 });
-
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.locator("#loginPassword")).not.toBeVisible();
-}
-
-async function enableExperimental(page) {
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-}
 
 test.describe("battery meter", async () => {
   test("create, edit and remove battery meter", async ({ page }) => {
@@ -39,7 +25,6 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
@@ -56,13 +41,16 @@ test.describe("battery meter", async () => {
     await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
+    await expect(meterModal).not.toBeVisible();
     await expect(page.getByTestId("battery")).toBeVisible(1);
     await expect(page.getByTestId("battery")).toContainText("openems");
 
     // edit #1
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
+    await expect(meterModal).toBeVisible();
     await meterModal.getByLabel("Battery capacity in kWh").fill("20");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
+    await expect(meterModal).not.toBeVisible();
 
     const battery = page.getByTestId("battery");
     await expect(battery).toBeVisible(1);
@@ -87,7 +75,6 @@ test.describe("battery meter", async () => {
 
   test("advanced fields", async ({ page }) => {
     await page.goto("/#/config");
-    await login(page);
     await enableExperimental(page);
 
     await page.getByRole("button", { name: "Add solar or battery" }).click();

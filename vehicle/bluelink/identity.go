@@ -182,10 +182,10 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 	if err == nil {
 		data := url.Values{
-			"username":     []string{user},
-			"password":     []string{password},
-			"credentialId": []string{""},
-			"rememberMe":   []string{"on"},
+			"username":     {user},
+			"password":     {password},
+			"credentialId": {""},
+			"rememberMe":   {"on"},
 		}
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
@@ -399,7 +399,7 @@ func (v *Identity) stamp() (string, error) {
 	}
 
 	enc := make([]byte, 0, 50)
-	for i := 0; i < len(cfb); i++ {
+	for i := range cfb {
 		enc = append(enc, cfb[i]^raw[i])
 	}
 

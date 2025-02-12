@@ -62,7 +62,7 @@ export default {
 			return this.result.activeClients;
 		},
 		chargePower() {
-			let { chargePower = 0 } = this.result;
+			const { chargePower = 0 } = this.result;
 			if (chargePower < 1e6) return { value: chargePower / 1e3, unit: "kW" };
 			if (chargePower < 1e9) return { value: chargePower / 1e6, unit: "MW" };
 			if (chargePower < 1e12) return { value: chargePower / 1e9, unit: "GW" };

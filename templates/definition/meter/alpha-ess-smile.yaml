@@ -22,12 +22,13 @@ params:
     advanced: true
   - name: minsoc
     default: 20
-    type: number
+    type: int
     advanced: true
   - name: maxsoc
     default: 95
-    type: number
+    type: int
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -123,6 +124,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

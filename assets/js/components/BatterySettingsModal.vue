@@ -30,7 +30,7 @@
 			</li>
 		</ul>
 
-		<div class="row" v-show="usageTabActive">
+		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
 				<strong>{{ fmtSoc(batterySoc) }}</strong>
@@ -224,7 +224,7 @@
 						</i18n-t>
 					</span>
 				</p>
-				<div class="form-check form-switch mt-4" v-if="controllable">
+				<div v-if="controllable" class="form-check form-switch mt-4">
 					<input
 						id="batteryDischargeControl"
 						:checked="batteryDischargeControl"
@@ -263,8 +263,8 @@ import smartCostAvailable from "../utils/smartCostAvailable";
 
 export default {
 	name: "BatterySettingsModal",
-	mixins: [formatter, collector],
 	components: { SmartCostLimit, CustomSelect, GenericModal },
+	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,
@@ -337,7 +337,7 @@ export default {
 			}
 			options.push({
 				value: 0,
-				name: this.$t("batterySettings.bufferStart.never"),
+				name: this.getBufferStartName(0),
 			});
 			return options;
 		},
@@ -362,7 +362,7 @@ export default {
 			}
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
-				.map(({ soc, capacity }) => {
+				.map(({ soc = 0, capacity }) => {
 					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
@@ -489,10 +489,10 @@ export default {
 				console.error(err);
 			}
 		},
-		getBufferStartName(soc) {
-			return this.$t(`batterySettings.bufferStart.${soc === 100 ? "full" : "above"}`, {
-				soc: this.fmtSoc(soc),
-			});
+		getBufferStartName(value) {
+			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
+			const soc = this.fmtSoc(value);
+			return this.$t(`batterySettings.bufferStart.${key}`, { soc });
 		},
 	},
 };

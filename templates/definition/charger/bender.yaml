@@ -44,7 +44,7 @@ products:
       generic: C11E, C22E
   - brand: Spelsberg
     description:
-      generic: Wallbox
+      generic: Wallbox Smart Pro
 capabilities: ["rfid"]
 requirements:
   description:

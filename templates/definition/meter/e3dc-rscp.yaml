@@ -34,7 +34,7 @@ params:
     help:
       de: Limitiert die Entladeleistung im 'Halten' Batteriemodus
       en: Limits discharge power in 'Hold' battery mode
-    type: number
+    type: int
     advanced: true
   - name: capacity
     advanced: true

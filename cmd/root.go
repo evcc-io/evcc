@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,17 +33,21 @@ import (
 const (
 	rebootDelay = 15 * time.Minute // delayed reboot on error
 	serviceDB   = "/var/lib/evcc/evcc.db"
+	userDB      = "~/.evcc/evcc.db"
 )
 
 var (
-	log     = util.NewLogger("main")
-	cfgFile string
+	log         = util.NewLogger("main")
+	cfgFile     string
+	cfgDatabase string
 
 	ignoreEmpty = ""                                      // ignore empty keys
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
 	viper *vpr.Viper
+
+	runAsService bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -60,6 +65,7 @@ func init() {
 
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
+	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
@@ -73,6 +79,8 @@ func init() {
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -91,6 +99,9 @@ func initConfig() {
 		viper.AddConfigPath("/etc") // path to look for the config file in
 
 		viper.SetConfigName("evcc")
+	}
+	if cfgDatabase != "" {
+		viper.Set("Database.Dsn", cfgDatabase)
 	}
 
 	viper.SetEnvPrefix("evcc")
@@ -111,6 +122,8 @@ func Execute() {
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
+	runAsService = true
+
 	// load config and re-configure logging after reading config file
 	var err error
 	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
@@ -140,7 +153,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// value cache
-	cache := util.NewCache()
+	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
@@ -173,7 +186,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup modbus proxy
 	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(conf.ModbusProxy))
+		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
 	}
 
 	// setup site and loadpoints
@@ -193,22 +206,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
 				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
+				keys.TariffCo2, keys.TariffFeedIn, keys.TariffGrid,
 				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
-				pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()),
+				pipe.NewDropper(append(ignoreLogs, ignoreEmpty, keys.Forecast)...).Pipe(tee.Attach()),
 			))
 		}
 	}
 
 	// remove previous fatal startup errors
 	valueChan <- util.Param{Key: keys.Fatal, Val: nil}
-	// publish initial settings
-	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
-	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
-	// TODO
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
@@ -226,15 +233,26 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
 	}
 
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
+
+	// publish initial settings
+	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
+	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
+	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
+	valueChan <- util.Param{Key: keys.Messaging, Val: pushChan != nil}
+	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
+	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
+	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -265,9 +283,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
-	httpd.RegisterSystemHandler(valueChan, cache, func() {
+	auth := auth.New()
+	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
+		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
+		auth.Disable()
+	}
+
+	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
-		once.Do(func() { close(stopC) }) // signal loop to end
+		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
+		once.Do(func() { close(stopC) })     // signal loop to end
 	})
 
 	// show and check version, reduce api load during development

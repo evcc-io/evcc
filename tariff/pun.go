@@ -1,12 +1,12 @@
 package tariff
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,7 +16,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/net/html"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 type Pun struct {
@@ -55,6 +55,10 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Pun{
 		log:   util.NewLogger("pun"),
 		embed: &cc,
@@ -71,22 +75,19 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Pun) run(done chan error) {
 	var once sync.Once
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
-		var today api.Rates
-		if err := backoff.Retry(func() error {
-			var err error
-
-			today, err = t.getData(time.Now())
-
-			return err
-		}, bo()); err != nil {
+	for tick := time.Tick(time.Hour); ; <-tick {
+		// get today data
+		today, err := backoff.RetryWithData(func() (api.Rates, error) {
+			res, err := t.getData(time.Now())
+			return res, backoffPermanentError(err)
+		}, bo())
+		if err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
 
+		// get tomorrow data
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
@@ -120,61 +121,55 @@ func (t *Pun) Type() api.TariffType {
 }
 
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
-	// Initial URL
-	urlString := "https://www.mercatoelettrico.org/It/WebServerDataStore/MGP_Prezzi/" + day.Format("20060102") + "MGPPrezzi.xml"
+	client := request.NewClient(t.log)
+	client.Jar, _ = cookiejar.New(nil)
 
-	// Cookie Jar zur Speicherung von Cookies zwischen den Requests
-	jar, _ := cookiejar.New(nil)
-	client := &http.Client{
-		Jar: jar,
+	// Request the ZIP file
+	uri := "https://gme.mercatoelettrico.org/DesktopModules/GmeDownload/API/ExcelDownload/downloadzipfile?DataInizio=" + day.Format("20060102") + "&DataFine=" + day.Format("20060102") + "&Date=" + day.Format("20060102") + "&Mercato=MGP&Settore=Prezzi&FiltroDate=InizioFine"
+	req, _ := http.NewRequest("GET", uri, nil)
+	req.Header = http.Header{
+		"Referer":            {"https://gme.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Download?valore=Prezzi"},
+		"moduleid":           {"12103"},
+		"sec-ch-ua-mobile":   {"?0"},
+		"sec-ch-ua-platform": {"Windows"},
+		"sec-fetch-dest":     {"empty"},
+		"sec-fetch-mode":     {"cors"},
+		"sec-fetch-site":     {"same-origin"},
+		"sec-gpc":            {"1"},
+		"tabid":              {"1749"},
+		"userid":             {"-1"},
 	}
 
-	// Erster Request
-	resp, err := client.Get(urlString)
-	if err != nil {
-		fmt.Println("Error fetching URL:", err)
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode == http.StatusNotFound {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	formData, err := parseFormFields(body)
+	body, err := request.ReadBody(resp)
 	if err != nil {
-		fmt.Println("Error parsing form fields:", err)
 		return nil, err
 	}
 
-	redirectURL := resp.Request.URL.String()
-
-	// Hinzufügen der spezifizierten Parameter
-	formData.Set("ctl00$ContentPlaceHolder1$CBAccetto1", "on")
-	formData.Set("ctl00$ContentPlaceHolder1$CBAccetto2", "on")
-	formData.Set("ctl00$ContentPlaceHolder1$Button1", "Accetto")
-
-	// Formular senden
-	resp, err = client.PostForm(redirectURL, formData)
+	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		fmt.Println("Error submitting form:", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	// Erneuter Request auf die ursprüngliche URL
-	resp, err = client.Get(urlString)
+	if len(zipReader.File) != 1 {
+		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
+	}
+
+	zipFile := zipReader.File[0]
+	f, err := zipFile.Open()
 	if err != nil {
-		fmt.Println("Error fetching URL after form submission:", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer f.Close()
 
-	// Verarbeitung der erhaltenen Daten
-	body, _ = io.ReadAll(resp.Body)
-	xmlData := []byte(string(body)) // Ersetzen Sie [Ihr XML-Datenstring hier] mit Ihrem XML-String
-
+	// Process the received data
 	var dataSet NewDataSet
-	err = xml.Unmarshal(xmlData, &dataSet)
-	if err != nil {
-		fmt.Println("Error unmarshalling XML: ", err)
+	if err := xml.NewDecoder(f).Decode(&dataSet); err != nil {
+		return nil, err
 	}
 
 	data := make(api.Rates, 0, len(dataSet.Prezzi))
@@ -182,69 +177,39 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	for _, p := range dataSet.Prezzi {
 		date, err := time.Parse("20060102", p.Data)
 		if err != nil {
-			fmt.Println("Error parsing date: ", err)
+			return nil, fmt.Errorf("parse date: %w", err)
 		}
 
 		hour, err := strconv.Atoi(p.Ora)
 		if err != nil {
-			fmt.Println("Error parsing hour: ", err)
+			return nil, fmt.Errorf("parse hour: %w", err)
+		}
+
+		// Adjust hour to handle edge case where p.Ora is "00"
+		if hour == 0 {
+			hour = 24
+			date = date.AddDate(0, 0, -1)
 		}
 
 		location, err := time.LoadLocation("Europe/Rome")
 		if err != nil {
-			fmt.Println("Error loading location: ", err)
+			return nil, fmt.Errorf("load location: %w", err)
 		}
 
-		start := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
-		end := start.Add(time.Hour)
-
-		priceStr := strings.Replace(p.PUN, ",", ".", -1) // Ersetzen Sie Komma durch Punkt
-		price, err := strconv.ParseFloat(priceStr, 64)
+		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
 		if err != nil {
-			fmt.Println("Error parsing price: ", err)
+			return nil, fmt.Errorf("parse price: %w", err)
 		}
 
+		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
 		ar := api.Rate{
-			Start: start,
-			End:   end,
-			Price: t.totalPrice(price / 1e3),
+			Start: ts,
+			End:   ts.Add(time.Hour),
+			Price: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
 	}
 
 	data.Sort()
 	return data, nil
-}
-
-func parseFormFields(body []byte) (url.Values, error) {
-	formData := url.Values{}
-	doc, err := html.Parse(strings.NewReader(string(body)))
-	if err != nil {
-		return formData, err
-	}
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "input" {
-			inputType := ""
-			inputName := ""
-			inputValue := ""
-			for _, a := range n.Attr {
-				if a.Key == "type" {
-					inputType = a.Val
-				} else if a.Key == "name" {
-					inputName = a.Val
-				} else if a.Key == "value" {
-					inputValue = a.Val
-				}
-			}
-			if inputType == "hidden" && inputName != "" {
-				formData.Set(inputName, inputValue)
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-	return formData, nil
 }

@@ -17,24 +17,17 @@ import (
 // https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
 
 // OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
-var OAuth2Config = &oauth2.Config{
-	RedirectURL: "https://auth.tesla.com/void/callback",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:   "https://auth.tesla.com/en_us/oauth2/v3/authorize",
-		TokenURL:  "https://auth.tesla.com/oauth2/v3/token",
-		AuthStyle: oauth2.AuthStyleInParams,
-	},
-	Scopes: []string{"openid", "email", "offline_access"},
-}
-
-var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
-
-func init() {
-	if TESLA_CLIENT_ID != "" {
-		OAuth2Config.ClientID = TESLA_CLIENT_ID
-	}
-	if TESLA_CLIENT_SECRET != "" {
-		OAuth2Config.ClientSecret = TESLA_CLIENT_SECRET
+func OAuth2Config(id, secret string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		RedirectURL:  "https://auth.tesla.com/void/callback",
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://auth.tesla.com/en_us/oauth2/v3/authorize",
+			TokenURL:  "https://auth.tesla.com/oauth2/v3/token",
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+		Scopes: []string{"openid", "email", "offline_access"},
 	}
 }
 
@@ -42,10 +35,11 @@ type Identity struct {
 	oauth2.TokenSource
 	mu      sync.Mutex
 	log     *util.Logger
+	oc      *oauth2.Config
 	subject string
 }
 
-func NewIdentity(log *util.Logger, token *oauth2.Token) (oauth2.TokenSource, error) {
+func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oauth2.TokenSource, error) {
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
@@ -67,6 +61,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (oauth2.TokenSource, err
 
 	v := &Identity{
 		log:     log,
+		oc:      oc,
 		subject: claims.Subject,
 	}
 
@@ -104,10 +99,9 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
+	// refresh token source
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(v.log))
-	ts := OAuth2Config.TokenSource(ctx, token)
-
-	token, err := ts.Token()
+	token, err := v.oc.TokenSource(ctx, token).Token()
 	if err != nil {
 		return nil, err
 	}

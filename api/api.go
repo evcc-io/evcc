@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -44,8 +44,8 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
-// BatteryMaxACPower provides max AC power in W
-type BatteryMaxACPower interface {
+// MaxACPower provides max AC power in W
+type MaxACPower interface {
 	MaxACPower() float64
 }
 
@@ -68,7 +68,7 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
-// BatteryController optionally allows to control home battery (dis)charging behaviour
+// BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
@@ -120,7 +120,8 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
-// PhaseDescriber returns the number of availablephases
+// PhaseDescriber returns the number of physically connected phases
+// Used for vehicles and to limit switch sockets to 1p only
 type PhaseDescriber interface {
 	Phases() int
 }
@@ -240,4 +241,9 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+}
+
+// Redactor is an interface to redact sensitive data
+type Redactor interface {
+	Redacted() any
 }

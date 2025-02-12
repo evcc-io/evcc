@@ -8,6 +8,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -81,7 +82,7 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				configuredPhases: configured, // fixed phases or default
+				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
 				measuredPhases:   tc.measuredPhases,
@@ -133,7 +134,7 @@ func TestMinActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
 
 			lp := &Loadpoint{
-				configuredPhases: configured, // fixed phases or default
+				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
 				measuredPhases:   tc.measuredPhases,
@@ -230,7 +231,7 @@ func TestPvScalePhases(t *testing.T) {
 			minCurrent:       minA,
 			maxCurrent:       maxA,
 			vehicle:          vehicle,
-			configuredPhases: 0, // allow switching
+			phasesConfigured: 0, // allow switching
 			phases:           tc.physical,
 			status:           api.StatusC,
 		}
@@ -405,10 +406,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			status:         api.StatusC,
-			Enable: ThresholdConfig{
+			Enable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			Disable: ThresholdConfig{
+			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
 		}
@@ -462,7 +463,7 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				phaseCharger,
 			},
 			minCurrent:       minA,
-			configuredPhases: tc.dflt,     // fixed phases or default
+			phasesConfigured: tc.dflt,     // fixed phases or default
 			phases:           tc.physical, // current phase status
 		}
 

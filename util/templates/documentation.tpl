@@ -3,7 +3,7 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- $help := localize .Help -}}
+  {{- $help := localize .Help | replace "\n" " " -}}
   {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
 {{- end }}
 
@@ -54,6 +54,9 @@ protocol: {{ .Protocol }}
 {{- end }}
 {{- if .Capabilities }}
 capabilities: ["{{ join "\", \"" .Capabilities }}"]
+{{- end }}
+{{- if .Countries }}
+countries: ["{{ join "\", \"" .Countries }}"]
 {{- end }}
 {{- if .Requirements }}
 requirements: ["{{ join "\", \"" .Requirements }}"]

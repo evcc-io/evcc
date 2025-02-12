@@ -43,6 +43,10 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Elering{
 		embed:  &cc.embed,
 		log:    util.NewLogger("elering"),
@@ -61,8 +65,7 @@ func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	tick := time.NewTicker(time.Hour)
-	for ; true; <-tick.C {
+	for tick := time.Tick(time.Hour); ; <-tick {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)
@@ -81,12 +84,12 @@ func (t *Elering) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Data[t.region]))
 		for _, r := range res.Data[t.region] {
-			ts := time.Unix(r.Timestamp, 0)
+			ts := time.Unix(r.Timestamp, 0).Local()
 
 			ar := api.Rate{
-				Start: ts.Local(),
-				End:   ts.Add(time.Hour).Local(),
-				Price: t.totalPrice(r.Price / 1e3),
+				Start: ts,
+				End:   ts.Add(time.Hour),
+				Price: t.totalPrice(r.Price/1e3, ts),
 			}
 			data = append(data, ar)
 		}

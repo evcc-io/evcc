@@ -1,8 +1,5 @@
 name: Release
 
-env:
-  GO_VERSION: ^1.23
-
 on:
   push:
     tags:
@@ -48,7 +45,6 @@ jobs:
           push: true
           build-args: |
             RELEASE=1
-            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: ${{ steps.meta.outputs.tags }}
 
   apt:
@@ -64,8 +60,6 @@ jobs:
 
       - name: Setup Go
         uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Patch ASN1
@@ -100,7 +94,6 @@ jobs:
         env:
           # use GH_TOKEN for access to evcc-io/homebrew-tap
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - uses: actions/setup-python@v5
         with:

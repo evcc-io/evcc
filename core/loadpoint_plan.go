@@ -28,9 +28,11 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 }
 
-// deletePlan deletes the charging plan, either loadpoint or vehicle
-func (lp *Loadpoint) deletePlan() {
-	if !lp.socBasedPlanning() {
+// finishPlan deletes the charging plan, either loadpoint or vehicle
+func (lp *Loadpoint) finishPlan() {
+	if lp.repeatingPlanning() {
+		return // noting to do
+	} else if !lp.socBasedPlanning() {
 		lp.setPlanEnergy(time.Time{}, 0)
 	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
@@ -46,7 +48,11 @@ func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
 func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getPlanRequiredDuration(goal, maxPower)
+}
 
+// getPlanRequiredDuration is the estimated total charging duration
+func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
 		if lp.socEstimator == nil {
 			return 0
@@ -64,11 +70,11 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, soc := vehicle.Settings(lp.log, lp.GetVehicle()).GetPlanSoc()
+		_, soc, _ := lp.nextVehiclePlan()
 		return float64(soc), true
 	}
 
-	_, limit := lp.GetPlanEnergy()
+	_, limit := lp.getPlanEnergy()
 	return limit, false
 }
 
@@ -96,6 +102,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
+	// re-check since plannerActive() is called before connected() check in Update()
+	if !lp.connected() {
+		return false
+	}
+
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
 		return false
@@ -104,7 +115,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
-		lp.deletePlan()
+		lp.finishPlan()
 		return false
 	}
 
@@ -117,7 +128,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		}
 
-		lp.deletePlan()
+		lp.finishPlan()
 		return false
 	}
 
@@ -169,7 +180,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Println("plan: continuing until end of slot")
 			return true
-		case requiredDuration < smallGapDuration:
+		case requiredDuration < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:

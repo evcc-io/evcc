@@ -45,6 +45,12 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	for _, c := range t.Countries {
+		if !c.IsValid() {
+			return fmt.Errorf("invalid country code '%s' in template %s", c, t.Template)
+		}
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement '%s' in template %s. valid options: %s", r, t.Template, ValidCapabilities)
@@ -244,7 +250,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 		}
 
 		switch p.Type {
-		case TypeStringList:
+		case TypeList:
 			for _, e := range v.([]string) {
 				t.Params[index].Values = append(p.Values, yamlQuote(e))
 			}
@@ -263,7 +269,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	for _, param := range t.Params {
 		if !param.IsRequired() {
 			switch param.Type {
-			case TypeStringList:
+			case TypeList:
 				if len(param.Values) == 0 {
 					continue
 				}

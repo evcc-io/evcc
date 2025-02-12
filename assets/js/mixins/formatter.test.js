@@ -13,7 +13,7 @@ const fmt = mount({
 describe("fmtW", () => {
   test("should format with units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1,2 MW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kW");
     expect(fmt.fmtW(0, POWER_UNIT.MW)).eq("0,0 MW");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW)).eq("1,2 MW");
     expect(fmt.fmtW(0, POWER_UNIT.KW)).eq("0,0 kW");
@@ -23,7 +23,7 @@ describe("fmtW", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1,2");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
     expect(fmt.fmtW(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtW(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -50,7 +50,7 @@ describe("fmtW", () => {
 describe("fmtWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1,2 MWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kWh");
     expect(fmt.fmtWh(0, POWER_UNIT.MW)).eq("0,0 MWh");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW)).eq("1,2 MWh");
     expect(fmt.fmtWh(0, POWER_UNIT.KW)).eq("0,0 kWh");
@@ -60,7 +60,7 @@ describe("fmtWh", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1,2");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
     expect(fmt.fmtWh(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtWh(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -135,5 +135,37 @@ describe("fmtDuration", () => {
     expect(fmt.fmtDuration(90, false)).eq("١:٣٠");
     expect(fmt.fmtDuration(60 * 100, false)).eq("١:٤٠");
     config.global.mocks["$i18n"].locale = "de-DE";
+  });
+});
+
+describe("getWeekdaysList", () => {
+  test("should return the correct weekday-order", () => {
+    expect(fmt.getWeekdaysList("long")).toEqual([
+      { name: "Montag", value: 1 },
+      { name: "Dienstag", value: 2 },
+      { name: "Mittwoch", value: 3 },
+      { name: "Donnerstag", value: 4 },
+      { name: "Freitag", value: 5 },
+      { name: "Samstag", value: 6 },
+      { name: "Sonntag", value: 0 },
+    ]);
+  });
+});
+
+describe("getShortenedWeekdaysLabel", () => {
+  test("should format single days", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0])).eq("So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Di, Do, Sa, So");
+    expect(fmt.getShortenedWeekdaysLabel([6])).eq("Sa");
+    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Mi, Sa");
+  });
+  test("should format ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([1, 2])).eq("Mo, Di");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
+  });
+  test("should format single days and ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
   });
 });

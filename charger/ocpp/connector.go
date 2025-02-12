@@ -45,9 +45,28 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 		remoteIdTag: idTag,
 	}
 
-	err := cp.registerConnector(id, conn)
+	if err := cp.registerConnector(id, conn); err != nil {
+		return nil, err
+	}
 
-	return conn, err
+	// trigger status for all connectors
+
+	var ok bool
+	// apply cached status if available
+	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+		if _, err := cp.OnStatusNotification(status); err == nil {
+			ok = true
+		}
+	})
+
+	// only trigger if we don't already have a status
+	if !ok && cp.HasRemoteTriggerFeature {
+		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
+		}
+	}
+
+	return conn, nil
 }
 
 func (conn *Connector) TestClock(clock clock.Clock) {
@@ -88,7 +107,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
-		if update {
+		if update && conn.cp.HasRemoteTriggerFeature {
 			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		}
 	}
@@ -103,7 +122,7 @@ func (conn *Connector) Initialized() error {
 		case <-conn.statusC:
 			return nil
 
-		case <-trigger: // try to trigger StatusNotification again as last resort
+		case <-trigger: // try to trigger StatusNotification again as last resort even when the charger does not report RemoteTrigger support
 			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
 		case <-timeout:
@@ -265,10 +284,10 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
-
-	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
-	if found {
-		return res[0] + res[1] + res[2], err
+	for _, suffix := range []types.Measurand{"", "-N"} {
+		if res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, suffix); found {
+			return res[0] + res[1] + res[2], err
+		}
 	}
 
 	return 0, api.ErrNotAvailable
@@ -347,9 +366,10 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
-	if found {
-		return res[0], res[1], res[2], err
+	for _, suffix := range []types.Measurand{"", "-N"} {
+		if res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, suffix); found {
+			return res[0], res[1], res[2], err
+		}
 	}
 
 	return 0, 0, 0, api.ErrNotAvailable
@@ -368,14 +388,10 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, "-N")
-	if found {
-		return res[0], res[1], res[2], err
-	}
-
-	res, found, err = conn.phaseMeasurements(types.MeasurandVoltage, "")
-	if found {
-		return res[0], res[1], res[2], err
+	for _, suffix := range []types.Measurand{"-N", ""} {
+		if res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, suffix); found {
+			return res[0], res[1], res[2], err
+		}
 	}
 
 	return 0, 0, 0, api.ErrNotAvailable

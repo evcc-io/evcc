@@ -3,11 +3,11 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"maps"
 	"regexp"
 	"slices"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
@@ -15,11 +15,6 @@ import (
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
-
-// Truish returns true if value is truish (true/1/on)
-func Truish(s string) bool {
-	return s == "1" || strings.ToLower(s) == "true" || strings.ToLower(s) == "on"
-}
 
 // FormatValue will apply specific formatting in addition to standard sprintf
 func FormatValue(format string, val interface{}) string {
@@ -55,9 +50,10 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprig.FuncMap()).
+		Funcs(sprig.TxtFuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
+			"addDate":   addDate,
 		}).Parse(s)
 	if err != nil {
 		return s, err

@@ -2,12 +2,6 @@ package polestar
 
 import "time"
 
-type Token struct {
-	AccessToken  string `graphql:"access_token"`
-	RefreshToken string `graphql:"refresh_token"`
-	ExpiresIn    int    `graphql:"expires_in"`
-}
-
 type ConsumerCar struct {
 	VIN                       string
 	InternalVehicleIdentifier string
@@ -25,6 +19,11 @@ type BatteryData struct {
 type OdometerData struct {
 	OdometerMeters        float64
 	EventUpdatedTimestamp EventUpdatedTimestamp
+}
+
+type CarTelemetryData struct {
+	Battery  BatteryData
+	Odometer OdometerData
 }
 
 type EventUpdatedTimestamp struct {
