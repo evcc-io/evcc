@@ -55,6 +55,13 @@ export function energyByDay(slots: PriceSlot[], day: number = 0): number {
 	return aggregateEnergy(daySlots, true);
 }
 
+export function isDayComplete(slots: PriceSlot[], day: number = 0): boolean {
+	const date = new Date();
+	date.setDate(date.getDate() + day);
+	const daySlots = filterSlotsByDate(slots, toDayString(date));
+	return daySlots.length === 24;
+}
+
 // return the highest slot for a given day (0 = today, 1 = tomorrow, etc.)
 export function highestSlotIndexByDay(slots: PriceSlot[], day: number = 0): number {
 	const date = new Date();
