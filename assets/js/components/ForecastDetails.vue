@@ -60,7 +60,13 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { energyByDay, isDayComplete, ForecastType, type PriceSlot } from "../utils/forecast";
+import {
+	energyByDay,
+	dayStringByOffset,
+	filterSlotsByDate,
+	ForecastType,
+	type PriceSlot,
+} from "../utils/forecast";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
@@ -98,11 +104,16 @@ export default defineComponent({
 			const days = ["today", "tomorrow", "dayAfterTomorrow"];
 			return days.reduce((acc, day, index) => {
 				const energy = energyByDay(this.slots, index);
-				const energyFmt = this.fmtW(energy, POWER_UNIT.AUTO);
-				const complete = isDayComplete(this.slots, index);
+				const date = new Date();
+				date.setDate(date.getDate() + index);
+				const dayString = dayStringByOffset(index);
+				const count = filterSlotsByDate(this.slots, dayString).length;
+				const empty = count === 0;
+				const complete = count === 24;
+				const energyFmt = empty ? "-" : this.fmtWh(energy, POWER_UNIT.AUTO);
 				acc[day] = {
 					energy: energyFmt,
-					incomplete: energy && !complete,
+					incomplete: energy && !complete && !empty,
 				};
 				return acc;
 			}, {} as EnergyByDay);

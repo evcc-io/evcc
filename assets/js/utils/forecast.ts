@@ -38,7 +38,7 @@ function toDayString(date: Date): string {
 }
 
 // return only slots that are on a given date, ignores slots that are in the past
-function filterSlotsByDate(slots: PriceSlot[], dayString: string): PriceSlot[] {
+export function filterSlotsByDate(slots: PriceSlot[], dayString: string): PriceSlot[] {
 	const now = new Date();
 	return slots.filter(({ start, end }) => {
 		const isPast = new Date(end) < now;
@@ -49,24 +49,21 @@ function filterSlotsByDate(slots: PriceSlot[], dayString: string): PriceSlot[] {
 
 // return the energy for a given day (0 = today, 1 = tomorrow, etc.)
 export function energyByDay(slots: PriceSlot[], day: number = 0): number {
-	const date = new Date();
-	date.setDate(date.getDate() + day);
-	const daySlots = filterSlotsByDate(slots, toDayString(date));
+	const dayString = dayStringByOffset(day);
+	const daySlots = filterSlotsByDate(slots, dayString);
 	return aggregateEnergy(daySlots, true);
 }
 
-export function isDayComplete(slots: PriceSlot[], day: number = 0): boolean {
+export function dayStringByOffset(day: number): string {
 	const date = new Date();
 	date.setDate(date.getDate() + day);
-	const daySlots = filterSlotsByDate(slots, toDayString(date));
-	return daySlots.length === 24;
+	return toDayString(date);
 }
 
 // return the highest slot for a given day (0 = today, 1 = tomorrow, etc.)
 export function highestSlotIndexByDay(slots: PriceSlot[], day: number = 0): number {
-	const date = new Date();
-	date.setDate(date.getDate() + day);
-	const daySlots = filterSlotsByDate(slots, toDayString(date));
+	const dayString = dayStringByOffset(day);
+	const daySlots = filterSlotsByDate(slots, dayString);
 	const sortedSlots = daySlots.sort((a, b) => b.price - a.price);
 	const highestSlot = sortedSlots[0] || {};
 	return slots.findIndex((slot) => slot.start === highestSlot.start);

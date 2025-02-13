@@ -433,7 +433,7 @@ export default {
 		},
 		forecastTooltip(value) {
 			if (value !== null) {
-				return ["solar forecast", `${this.fmtWh(value, POWER_UNIT.KW)} remaining today`];
+				return ["forecast: remaining solar production today"];
 			}
 			return [];
 		},

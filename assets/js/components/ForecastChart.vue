@@ -252,6 +252,14 @@ export default defineComponent({
 						},
 						anchor: "end",
 						offset: 8,
+						padding: function (context) {
+							const data = context.dataset.data[context.dataIndex];
+							const x = typeof data.highlight === "number" ? 32 : 8;
+							return {
+								x,
+								y: 4,
+							};
+						},
 						borderRadius: 4,
 						color: colors.background,
 						font: { weight: "bold" },
