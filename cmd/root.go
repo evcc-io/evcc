@@ -246,12 +246,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup tailscale
 	if err == nil {
-		if err := tailscale.Run("evcc", conf.Network.Port); err != nil {
-			// 	valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
-			// 	log.INFO.Println("tailscale: authorize at ", authUrl)
-			// } else if err != nil {
-			log.ERROR.Println("tailscale:", err)
-		}
+		go func() {
+			if err := tailscale.Run(conf.Network.Port); err != nil {
+				// 	valueChan <- util.Param{Key: "tailscaleAuthUri", Val: authUrl}
+				// 	log.INFO.Println("tailscale: authorize at ", authUrl)
+				// } else if err != nil {
+				log.ERROR.Println("tailscale:", err)
+			}
+		}()
 	}
 
 	// publish initial settings
