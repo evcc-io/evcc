@@ -30,6 +30,20 @@ never = "apenas com excesso suficiente."
 titleAdd = "Adicionar bateria"
 titleEdit = "Editar bateria"
 
+[config.charge]
+titleAdd = "Adicionar contador de carga"
+titleEdit = "Editar contador de carga"
+
+[config.charger]
+chargers = "Carregadores de veículos eléctricos"
+generic = "Integrações genéricas"
+ocppHelp = "Copie este endereço para a configuração do seu carregador."
+ocppLabel = "URL do servidor OCPP"
+switchsockets = "Tomadas comutáveis"
+template = "Fabricante"
+titleAdd = "Adicionar carregador"
+titleEdit = "Editar carregador"
+
 [config.circuits]
 description = "Assegura que a soma de todos os pontos de recarga conectados a um circuito não exceda os limites de potência e corrente configurados. Circuitos podem ser combinados para construir uma hierarquia."
 title = "Gerir a recarga"
@@ -65,32 +79,43 @@ energy = "Energia"
 feedinPrice = "Preço de alimentação"
 gridPrice = "Preço da rede"
 hemsType = "Sistema"
+identifier = "Identificador RFID"
 no = "não"
 odometer = "Odómetro"
 org = "Organização"
 phaseCurrents = "Corrente L1, L2, L3"
 phasePowers = "Energia L1, L2, L3"
 phaseVoltages = "Voltagem L1, L2, L3"
+phases1p3p = " Comutador de fases"
 power = "Energia"
 powerRange = "Potência"
 range = "Distância"
-soc = "Nível de carga"
+singlePhase = "Monofásico"
+soc = "Carga"
 socLimit = "Limitação do SoC"
 temp = "Temperatura"
 topic = "Tema"
 url = "URL"
+vehicleLimitSoc = "Limite do veículo"
 yes = "sim"
+
+[config.deviceValueChargeStatus]
+A = "A (não ligado)"
+B = "B (ligado)"
+C = "C (carregando)"
 
 [config.eebus]
 description = "Configuração que permite o evcc se comunicar com outros dispositivos EEBus."
 title = "EEBus"
 
 [config.form]
+deprecated = "obsoleto "
 example = "Exemplo"
 optional = "opcional"
 
 [config.general]
 cancel = "Cancelar"
+delete = "Apagar"
 docsLink = "Ver documentação."
 experimental = "Experimental"
 hideAdvancedSettings = "Ocultar definições avançadas"
@@ -103,6 +128,7 @@ save = "Guardar"
 showAdvancedSettings = "Mostrar definições avançadas"
 telemetry = "Telemetria"
 title = "Título"
+validateSave = "Validar e guardar"
 
 [config.grid]
 title = "Medidor de rede"
@@ -128,6 +154,19 @@ labelUser = "Nome de usuário"
 title = "InfluxDB"
 v1Support = "Apoio necessário para o InfluxDB 1.x?"
 v2Support = "Voltar ao InfluxDB 2.x"
+
+[config.loadpoint]
+addCharger = "Adicionar carregador"
+addMeter = "Adicionar um contador de carregador próprio"
+cancel = "Cancelar"
+chargerLabel = "Carregador"
+chargerPower11kw = "11 kW"
+chargerPower11kwHelp = " Utilização de uma gama de corrente de 6 a 16 A."
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = " Utilização de uma gama de corrente de 6 a 32 A."
+chargerPowerCustom = "outro"
+chargerPowerCustomHelp = "Definir um intervalo de corrente personalizado."
+chargerTypeLabel = "Tipo de carregador"
 
 [config.main]
 addLoadpoint = "Adicionar ponto de recarga"
