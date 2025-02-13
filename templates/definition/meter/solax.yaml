@@ -56,6 +56,12 @@ render: |
         address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register: # manual non-sunspec register configuration
+        address: 292 # 0x0124 Powerdc3
+        type: input
+        decode: uint16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
