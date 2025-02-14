@@ -7,7 +7,7 @@ import (
 
 type Class int
 
-//go:generate enumer -type Class -trimprefix Class -transform=lower -text
+//go:generate go tool enumer -type Class -trimprefix Class -transform=lower -text
 const (
 	_ Class = iota
 	ClassConfigFile
