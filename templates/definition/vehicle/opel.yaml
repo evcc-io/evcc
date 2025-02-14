@@ -3,10 +3,9 @@ products:
   - brand: Opel
 requirements:
   description:
-    de: |
-      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
-    en: |
-      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+    de: Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+    en: Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+    fr: Nécessite les jetons `access` et `refresh`. Ils peuvent être générés avec la commande `evcc token [name]`.
 params:
   - preset: vehicle-common
   - name: user

@@ -13,6 +13,7 @@ params:
     help:
       de: Einrichtung unter https://app.tronity.tech
       en: Setup at https://app.tronity.tech
+      fr: Installation sur https://app.tronity.tech
     required: true
   - name: clientsecret
     description:
@@ -20,6 +21,7 @@ params:
     help:
       de: Einrichtung unter https://app.tronity.tech
       en: Setup at https://app.tronity.tech
+      fr: Installation sur https://app.tronity.tech
     required: true
   - name: vin
     example: W...

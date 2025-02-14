@@ -7,6 +7,7 @@ requirements:
   description:
     en: Some models (e.g. Kona) switch internally to 2 phases at low charging currents (< 8A). In cases where the wallbox also measures the phase currents, this leads to undesirable fluctuations in the charging power. The remedy here is to set the minimum charging current to 8A.
     de: Manche Modelle (z.B. Kona) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
+    fr: Certains modèles (p. ex. Kona) commutent en interne sur 2 phases à des courants de charge faibles (< 8A). Dans les cas où la wallbox mesure également les courants de phase, cela entraîne des fluctuations indésirables de la puissance de charge. La solution consiste à régler le courant de charge minimum sur 8A.
 params:
   - preset: vehicle-base
   - preset: vehicle-language

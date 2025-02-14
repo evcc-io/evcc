@@ -7,6 +7,7 @@ requirements:
   description:
     en: Requires MQTT broker configuration and a volvo2mqtt installation https://github.com/Dielee/volvo2mqtt
     de: Erforderlich ist eine konfigurierte MQTT Broker-Konfiguration und eine volvo2mqtt-Installation https://github.com/Dielee/volvo2mqtt.
+    fr: Nécessite une configuration de courtier MQTT configurée et une installation de volvo2mqtt https://github.com/Dielee/volvo2mqtt.
 params:
   - preset: vehicle-common
   - name: vin

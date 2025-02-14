@@ -7,6 +7,7 @@ requirements:
   description:
     en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
     de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
+    fr: La condition préalable est un broker MQTT configuré et une passerelle SAIC/MQTT (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway ou https://github.com/SAIC-iSmart-API/saic-java-client). 
 params:
   - name: user
     required: true

@@ -16,6 +16,11 @@ requirements:
       Using ISO15118 with some VW group vehicles, e.g. Porsche Taycan, requires additional configuration in the vehicle.
       This requires an active location-based charging profile with the lowest minimum charge (25%) and direct charging disabled.
       Otherwise the vehicle cannot be put into sleep mode.
+    fr: |
+      Pris en charge uniquement si le véhicule peut fournir l'état de charge (Soc) au chargeur connecté.
+      L'utilisation de la norme ISO15118 avec certains véhicules du groupe VW, par exemple la Porsche Taycan, nécessite une configuration supplémentaire dans le véhicule.
+      Il faut un profil de charge actif basé sur la localisation avec la charge minimale la plus basse (25 %) et la charge directe désactivée.
+      Sinon, le véhicule ne peut pas être mis en mode veille.
 params:
   - preset: vehicle-common
 render: |

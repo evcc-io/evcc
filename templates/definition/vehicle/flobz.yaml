@@ -21,6 +21,7 @@ params:
     help:
       de: alternativer wakeup-Code; könnte zu erhöhter Entladung der 12V-Batterie führen.
       en: alternative wakeup-code; could lead to increased discharge of the 12V battery.
+      fr: code de réveil alternatif ; pourrait conduire à une décharge accrue de la batterie 12V.
     default: false
     advanced: true
 render: |

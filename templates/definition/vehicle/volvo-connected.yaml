@@ -4,6 +4,7 @@ products:
     description:
       de: aktuell
       en: latest
+      fr: dernière version
 params:
   - preset: vehicle-base
   - name: vccapikey
@@ -11,6 +12,7 @@ params:
     help:
       en: "Volvo developer portal VCC API Key, see https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
       de: "Volvo developer portal VCC API Key, siehe https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
+      fr: "Volvo developer portal VCC API Key, voir https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}

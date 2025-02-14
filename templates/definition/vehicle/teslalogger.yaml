@@ -7,12 +7,14 @@ requirements:
   description:
     de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger
     en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger
+    fr: Enregistreur de données Tesla open source https://github.com/bassmaster187/TeslaLogger
 params:
   - preset: vehicle-common
   - name: id
     description:
       de: TeslaLogger CarID
       en: TeslaLogger CarID
+      fr: TeslaLogger CarID
     default: 1
   - name: url
     required: true

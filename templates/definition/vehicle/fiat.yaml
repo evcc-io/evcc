@@ -11,6 +11,7 @@ params:
     help:
       en: Required for evcc to refresh the SoC while charging. When connected to TWC3, used to start/stop charging.
       de: Benötigt zur Aktualisierung des Ladestands während der Ladung. Bei Nutzung mit TWC3 kann der Ladevorgang mittels PIN gestartet und gestoppt werden.
+      fr: Nécessaire à evcc pour rafraîchir le SoC pendant la charge. Lorsqu'il est connecté au TWC3, il est utilisé pour démarrer/arrêter la charge.
   - preset: vehicle-features
 render: |
   type: fiat

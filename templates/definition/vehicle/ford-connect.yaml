@@ -9,6 +9,7 @@ params:
     help:
       de: Einrichtung unter https://developer.ford.com
       en: Setup at https://developer.ford.com
+      fr: Instalation sur https://developer.ford.com
     required: true
   - name: clientsecret
     description:
@@ -16,6 +17,7 @@ params:
     help:
       de: Einrichtung unter https://developer.ford.com
       en: Setup at https://developer.ford.com
+      fr: Instalation sur https://developer.ford.com
     required: true
   - name: accessToken
     required: true

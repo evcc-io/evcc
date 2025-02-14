@@ -10,6 +10,7 @@ params:
     description:
       de: Alternativer Aufweckmechanismus
       en: Alternative wakeup mechanism
+      fr: Mécanisme de réveil alternatif
     advanced: true
 render: |
   type: renault

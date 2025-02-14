@@ -7,6 +7,7 @@ requirements:
   description:
     de: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
     en: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
+    fr: Proxy HTTP open source pour protocole Tesla BLE https://github.com/wimaha/TeslaBleHttpProxy
 params:
   - preset: vehicle-common
   - name: vin
@@ -15,18 +16,21 @@ params:
     help:
       de: Erforderlich für BLE-Verbindung
       en: Required for BLE connection
+      fr: Nécessaire pour la connection BLE
   - name: url
     required: true
     example: http://192.168.178.27
     help:
       de: URL des Tesla BLE HTTP Proxy
       en: URL of the Tesla BLE HTTP Proxy
+      fr: URL du proxy HTTP pour Tesla BLE
   - name: port
     example: 8080
     default: 8080
     help:
       de: Port des Tesla BLE HTTP Proxy
       en: Port of the Tesla BLE HTTP Proxy
+      fr: Port du proxy HTTP pour Tesla BLE
 render: |
   type: custom
   {{- include "vehicle-common" . }}

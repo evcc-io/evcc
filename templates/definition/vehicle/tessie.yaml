@@ -7,17 +7,20 @@ requirements:
   description:
     de: Verbinden Sie Ihr Tesla-Fahrzeug über die Tessie-API. Dies wird das Fahrzeug niemals aufwecken; das Polling kann auf „always“ und interval „1M“ eingestellt werden. Wenn das Fahrzeug wach ist, sind die Daten normalerweise weniger als 15 Sekunden alt. Wenn das Fahrzeug schläft, stammen die Daten aus dem Zeitpunkt, zu dem es eingeschlafen ist. Holen Sie sich Ihr Token unter https://dash.tessie.com/settings/api
     en: Connect your Tesla using the Tessie API. This will never wake up the car, polling can be set to "always" and interval "1M". If the vehicle is awake, the data is usually less than 15 seconds old. If the vehicle is asleep, the data is from the time the vehicle went to sleep. Get your token at https://dash.tessie.com/settings/api
+    fr: Connectez votre Tesla en utilisant l'API Tessie. Cela ne réveillera jamais la voiture, l'interrogation peut être réglée sur « toujours » et l'intervalle sur « 1M ». Si le véhicule est réveillé, les données datent généralement de moins de 15 secondes. Si le véhicule est endormi, les données datent du moment où le véhicule s'est endormi. Obtenez votre jeton à l'adresse suivante : https://dash.tessie.com/settings/api
 params:
   - preset: vehicle-common
   - name: vin
     description:
       de: Fahrzeug-VIN
       en: Vehicle VIN
+      fr: VIN du véhicule
     required: true
   - name: token
     description:
       de: Tessie API Token
       en: Tessie API Token
+      fr: Jeton d'API Tessie
     required: true
 render: |
   type: custom

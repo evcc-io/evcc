@@ -16,6 +16,7 @@ params:
     description:
       de: Scooter Seriennummer, wie in der NIU app angegeben
       en: Scooter serial number like shown in NIU app
+      fr: Numéro de série du scooter comme indiqué dans l'application NIU
     required: true
   - name: capacity
     default: 4

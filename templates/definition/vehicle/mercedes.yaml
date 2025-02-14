@@ -3,10 +3,9 @@ products:
   - brand: Mercedes-Benz
 requirements:
   description:
-    de: |
-      Benötigt `access` und `refresh` Tokens. Anleitung zur Generierung hier: https://tinyurl.com/mbapi2020helptoken.
-    en: |
-      Requires `access` and `refresh` tokens. Documentation here: https://tinyurl.com/mbapi2020helptoken.
+    de: Benötigt `access` und `refresh` Tokens. Anleitung zur Generierung hier: https://tinyurl.com/mbapi2020helptoken.
+    en: Requires `access` and `refresh` tokens. Documentation here: https://tinyurl.com/mbapi2020helptoken.
+    fr: Nécessite les jetons `access` et `refresh`. Documentation ici : https://tinyurl.com/mbapi2020helptoken.
 params:
   - preset: vehicle-common
   - name: user

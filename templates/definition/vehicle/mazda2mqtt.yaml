@@ -8,6 +8,7 @@ requirements:
   description:
     en: Required MQTT broker configuration and a mazda2mqtt installation https://github.com/C64Axel/mazda2mqtt.
     de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
+    fr: La condition préalable est un broker MQTT configuré et une installation mazda2mqtt https://github.com/C64Axel/mazda2mqtt.
 params:
   - preset: vehicle-common
   - name: vin

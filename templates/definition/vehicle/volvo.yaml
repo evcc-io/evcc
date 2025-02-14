@@ -4,6 +4,7 @@ products:
     description:
       de: veraltet
       en: legacy
+      fr: ancienne version
 params:
   - preset: vehicle-base
 render: |

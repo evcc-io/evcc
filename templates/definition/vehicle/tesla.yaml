@@ -19,23 +19,33 @@ requirements:
       The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token. With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla API. You can see your used credit at Tesla.
 
       To use a Tesla Wall Connector, you need a public Command Proxy Server. [myteslamate.com](https://app.myteslamate.com/) provides this service for 12€/year. Configure the Command permissions at myteslamate.com and enter the Proxy Token here. Start, stopp and current commands are sent to Tesla via this proxy.
+    fr: |
+      Tesla propose une API officielle, mais payante, pour les véhicules.
+      Pour un usage privé, vous pouvez créer un [Tesla Developer Account] (https://developer.tesla.com/) et recevoir un crédit API mensuel de 10 $. Cela est généralement suffisant pour les cas d'utilisation courants de l'evcc.
+
+      Le guide [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) explique le processus et génère un jeton d'accès et de rafraîchissement gratuit. Avec cette paire de jetons et votre identifiant client créé dans le compte développeur Tesla, evcc peut communiquer directement avec l'API Tesla. Vous pouvez voir votre crédit utilisé chez Tesla.
+
+      Pour utiliser un Tesla Wall Connector, vous avez besoin d'un serveur proxy de commande public. [myteslamate.com](https://app.myteslamate.com/) fournit ce service pour 12€/an. Configurez les autorisations de commande sur myteslamate.com et entrez le jeton de proxy ici. Les commandes de démarrage, d'arrêt et de courant sont envoyées à Tesla via ce proxy.
 params:
   - preset: vehicle-common
   - name: clientId
     help:
       en: Client ID of your [Tesla Developer App](https://developer.tesla.com/dashboard).
       de: Kunden ID deiner [Tesla Developer App](https://developer.tesla.com/dashboard).
+      fr: ID client de votre [Tesla Developer App](https://developer.tesla.com/dashboard).
     required: true
   - name: accessToken
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
+      fr: depuis [myteslamate.com](https://app.myteslamate.com/).
     required: true
     mask: true
   - name: refreshToken
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
-      de: von [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).      
+      fr: depuis [myteslamate.com](https://app.myteslamate.com/).
     required: true
     mask: true
   - name: vin
@@ -48,11 +58,13 @@ params:
     help:
       en: "When using a TWC3 (or other 'dumb' charger not capable of control), evcc can manage the charge directly by communicating with the vehicle through a Command Proxy. By default the [myteslamate.com](https://app.myteslamate.com/) proxy is used. With this parameter, you set the base URL of a custom Command Proxy. See for example [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy) for a proxy sending commands via bluetooth."
       de: "Bei Verwendung eines TWC3 (oder eines anderen 'dummen' Ladegeräts, das nicht steuerbar ist) kann evcc die Ladung direkt verwalten, indem es über einen Command Proxy mit dem Fahrzeug kommuniziert. Standardmäßig wird der [myteslamate.com](https://app.myteslamate.com/) Proxy verwendet. Mit diesem Parameter kannst du die Basis-URL ändern. Siehe zum Beispiel [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy) für einen Proxy, der Kommandos über Bluetooth sendet."
+      fr: "Lors de l'utilisation d'un TWC3 (ou d'un autre chargeur « muet » non capable de contrôle), evcc peut gérer la charge directement en communiquant avec le véhicule par l'intermédiaire d'un proxy de commande. Par défaut, le proxy [myteslamate.com](https://app.myteslamate.com/) est utilisé. Ce paramètre permet de définir l'URL de base d'un Command Proxy personnalisé. Voir par exemple [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy) pour un proxy envoyant des commandes via bluetooth."
   - name: proxyToken
     advanced: true
     help:
       en: Token for the [myteslamate.com](https://app.myteslamate.com/) command proxy (12€/year fee). Ensure, that you've installed their Virtual Key and granted 'Charge Start', 'Charge Stop' and 'Set Charging Amps' permissions.
       de: Token für den Command Proxy von [myteslamate.com](https://app.myteslamate.com/) (12€/Jahr). Stelle sicher, dass du den Virtual Key installiert hast und die Berechtigungen 'Ladung starten', 'Ladung stoppen' und 'Ladestrom setzen' erteilt hast.
+      fr: Token pour le Command Proxy de [myteslamate.com](https://app.myteslamate.com/) (12€/an). Assure-toi que tu as installé la clé virtuelle et que tu as donné les autorisations 'Démarrer la charge', 'Arrêter la charge' et 'Définir le courant de charge'.
   - name: cache
     default: 15m
 render: |

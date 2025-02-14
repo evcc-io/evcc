@@ -8,6 +8,7 @@ requirements:
   description:
     de: e-Golf, e-Up, ID Familie
     en: e-Golf, e-Up, ID family
+    fr: e-Golf, e-Up, gamme ID
 params:
   - preset: vehicle-base
   - name: vin
