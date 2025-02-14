@@ -1,6 +1,7 @@
 package toyota
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,16 +30,6 @@ type Identity struct {
 	uuid string
 }
 
-// NewIdentity creates Nissan identity
-// prettyJSON converts a structure to indented JSON string
-func prettyJSON(v interface{}) string {
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("%+v", v)
-	}
-	return string(b)
-}
-
 func NewIdentity(log *util.Logger) *Identity {
 	return &Identity{
 		log:    log,
@@ -64,7 +55,11 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 	}
 
 	// Send authentication request
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(prettyJSON(auth)), map[string]string{
+	data, err := json.Marshal(auth)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal auth data: %w", err)
+	}
+	req, err := request.New(http.MethodPost, uri, bytes.NewReader(data), map[string]string{
 		"Content-type": "application/json",
 		"Accept":       "application/json",
 	})
