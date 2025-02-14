@@ -4,6 +4,7 @@
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
+		<ForecastModal v-bind="forecastModalProps" />
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal />
@@ -15,6 +16,7 @@
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
+import ForecastModal from "../components/ForecastModal.vue";
 import OfflineIndicator from "../components/OfflineIndicator.vue";
 import PasswordModal from "../components/PasswordModal.vue";
 import LoginModal from "../components/LoginModal.vue";
@@ -37,6 +39,7 @@ export default {
 		GlobalSettingsModal,
 		HelpModal,
 		BatterySettingsModal,
+		ForecastModal,
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
@@ -68,6 +71,9 @@ export default {
 		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, store.state);
+		},
+		forecastModalProps() {
+			return this.collectProps(ForecastModal, store.state);
 		},
 	},
 	watch: {
