@@ -161,7 +161,7 @@ func (v *Identity) Login(user, password string) error {
 		return fmt.Errorf("authentication failed: %w", err)
 	}
 
-	if err = token.Error(); err != nil {
+	if err := token.Error(); err != nil {
 		return fmt.Errorf("token error: %w", err)
 	}
 
