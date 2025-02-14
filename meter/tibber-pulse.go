@@ -145,13 +145,10 @@ func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient, cc tibberC
 
 	select {
 	case err := <-done:
-		if err != nil {
-			return err
-		}
+		return err
 	case <-time.After(cc.Timeout):
 		return api.ErrTimeout
 	}
-	return nil
 }
 
 func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
