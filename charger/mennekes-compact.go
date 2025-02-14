@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) 2023-2025 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -87,6 +87,8 @@ func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interfac
 	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
 
+//go:generate go tool decorate -f decorateMennekesCompact -b *MennekesCompact -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewMennekesCompact creates Mennekes charger
 func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
@@ -110,10 +112,16 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 		conn: conn,
 	}
 
+	// check phase switching support
+	var phasesS func(int) error
+	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseOptionsHW, 1); err == nil && encoding.Uint16(b) == 2 {
+		phasesS = wb.phases1p3p
+	}
+
 	// failsafe
 	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
-	return wb, err
+	return decorateMennekesCompact(wb, phasesS), err
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -265,10 +273,8 @@ func (wb *MennekesCompact) ChargeDuration() (time.Duration, error) {
 }
 */
 
-var _ api.PhaseSwitcher = (*MennekesCompact)(nil)
-
 // Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *MennekesCompact) Phases1p3p(phases int) error {
+func (wb *MennekesCompact) phases1p3p(phases int) error {
 	var u uint16
 	if phases == 1 {
 		u = 1
