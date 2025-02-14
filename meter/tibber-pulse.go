@@ -20,7 +20,9 @@ func init() {
 }
 
 type Tibber struct {
-	data *util.Monitor[tibber.LiveMeasurement]
+	data    *util.Monitor[tibber.LiveMeasurement]
+	homeID  string
+	timeout time.Duration
 }
 
 type tibberConfig struct {
@@ -69,7 +71,9 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}
 
 	t := &Tibber{
-		data: util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
+		data:    util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
+		homeID:  cc.HomeID,
+		timeout: cc.Timeout,
 	}
 
 	// subscription client
@@ -100,7 +104,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			return nil
 		})
 
-	if err := t.ensureSubscribed(client, cc); err != nil {
+	if err := t.ensureSubscribed(client); err != nil {
 		return nil, err
 	}
 
@@ -119,7 +123,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 				// This invalidates the subscription, and therefore we resubscribe when exiting Run() gracefully
 				// upon server request.
 				// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
-				err = t.ensureSubscribed(client, cc)
+				err = t.ensureSubscribed(client)
 			}
 			if err != nil {
 				log.ERROR.Println(err)
@@ -136,16 +140,16 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	return t, nil
 }
 
-func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient, cc tibberConfig) error {
+func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient) error {
 	done := make(chan error, 1)
 	go func(done chan error) {
-		done <- t.subscribe(client, cc.HomeID)
+		done <- t.subscribe(client, t.homeID)
 	}(done)
 
 	select {
 	case err := <-done:
 		return err
-	case <-time.After(cc.Timeout):
+	case <-time.After(t.timeout):
 		return api.ErrTimeout
 	}
 }
