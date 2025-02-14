@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -19,7 +20,8 @@ type Helper struct {
 // NewClient creates http client with default transport
 func NewClient(log *util.Logger) *http.Client {
 	return &http.Client{
-		Timeout: Timeout,
+		Timeout:   Timeout,
+		Transport: NewTripper(log, transport.Default()),
 	}
 }
 
