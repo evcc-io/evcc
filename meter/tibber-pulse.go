@@ -114,16 +114,16 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	go func() {
 		for tick := time.Tick(10 * time.Second); ; {
 			err := client.Run()
-			if err != nil {
-				log.ERROR.Println(err)
-			} else {
+			if err == nil {
 				// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
 				// This invalidates the subscription, and therefore we resubscribe when exiting Run() gracefully
 				// upon server request.
 				// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
-				if subErr := t.ensureSubscribed(client, cc); subErr != nil {
-					log.ERROR.Println(subErr)
-				}
+				err = t.ensureSubscribed(client, cc)
+			}
+			if err != nil {
+				log.ERROR.Println(err)
+			}
 			}
 
 			select {
