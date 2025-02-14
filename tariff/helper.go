@@ -11,6 +11,8 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
+const SlotDuration = time.Hour
+
 func bo() backoff.BackOff {
 	return backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(time.Second),
@@ -45,13 +47,33 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 	data.SetFunc(func(old api.Rates) api.Rates {
 		now := time.Now()
 
-		var between api.Rates
+		var prepend api.Rates
 		for _, r := range old {
 			if (r.Start.Before(newStart) || newStart.IsZero()) && r.End.After(now) {
-				between = append(between, r)
+				prepend = append(prepend, r)
 			}
 		}
 
-		return append(between, new...)
+		// add missing slots
+		var res api.Rates
+		for _, r := range append(prepend, new...) {
+			var lastSlot time.Time
+			if len(res) > 0 {
+				lastSlot = res[len(res)-1].Start
+			}
+
+			if !lastSlot.IsZero() {
+				for missingSlot := lastSlot.Add(SlotDuration); r.Start.After(missingSlot); missingSlot = missingSlot.Add(SlotDuration) {
+					res = append(res, api.Rate{
+						Start: missingSlot,
+						End:   missingSlot.Add(SlotDuration),
+					})
+				}
+			}
+
+			res = append(res, r)
+		}
+
+		return res
 	})
 }
