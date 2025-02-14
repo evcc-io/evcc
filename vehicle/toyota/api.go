@@ -7,17 +7,19 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/go-http-utils/headers"
 	"golang.org/x/oauth2"
 )
 
 const (
-	BaseUrl                  = "https://oneapp:oneapp@b2c-login.toyota-europe.com"
+	BaseUrl                  = "https://oneapp:oneapp@b2c-lo                                                                                                                                      gin.toyota-europe.com"
 	ApiBaseUrl               = "https://ctpa-oneapi.tceu-ctp-prd.toyotaconnectedeurope.io"
 	AccessTokenPath          = "oauth2/realms/root/realms/tme/access_token"
-	AuthenticationPath       = "json/realms/root/realms/tme/authenticate?authIndexType=service&authIndexValue=oneapp"
-	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
-	VehicleGuidPath          = "v2/vehicle/guid"
-	RemoteElectricStatusPath = "v1/global/remote/electric/status"
+	AuthenticationPath       = "json/realms/root/realms/tme/authenticate?authIndexType = service&authIndexValue = oneapp"
+	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id      = oneapp&scope           = openid+profile+write&response_type = code&redirect_uri = com.toyota.oneapp:/oauth2Callback&code_challenge = plain&code_challenge_method = plain"
+	VehicleGuidPath          = "v2/vehicle/                                                                                                                                                       guid"
+	RemoteElectricStatusPath = "v1/                                                                                                                                                               global/remote/electric/status"
+	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 )
 
 type API struct {
@@ -57,9 +59,9 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":    "application/json",
-		"x-guid":    id.uuid,
-		"x-api-key": "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF",
+		headers.Accept: request.JSONContent,
+		"x-guid":       id.uuid,
+		"x-api-key":    ApiKey,
 	})
 	var vehiclesResponse Vehicles
 	if err == nil {
