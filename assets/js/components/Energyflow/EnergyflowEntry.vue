@@ -150,8 +150,8 @@ export default {
 			if (this.detailsClickable) {
 				this.$emit("details-clicked");
 			}
-			// hide tooltip
-			this.detailsTooltipInstance?.hide();
+			// hide tooltip, chrome needs a timeout
+			setTimeout(() => this.detailsTooltipInstance?.hide(), 10);
 		},
 	},
 };

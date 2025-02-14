@@ -1,11 +1,11 @@
 <template>
 	<div>
 		<div
-			class="overflow-x-auto overflow-x-md-auto chart-container border-1"
+			class="overflow-x-auto overflow-x-md-hidden chart-container border-1"
 			@mouseleave="onMouseLeave"
 		>
-			<div style="position: relative; height: 220px" class="chart">
-				<Bar :data="chartData" :options="options" />
+			<div style="position: relative; height: 220px" class="chart user-select-none">
+				<Bar ref="chart" :data="chartData" :options="options" />
 			</div>
 		</div>
 	</div>
@@ -64,9 +64,15 @@ export default defineComponent({
 		selected: { type: String as PropType<ForecastType> },
 	},
 	emits: ["selected"],
-	data() {
+	data(): {
+		selectedIndex: number | null;
+		ignoreEvents: boolean;
+		ignoreEventsTimeout: ReturnType<typeof setTimeout> | null;
+	} {
 		return {
 			selectedIndex: null,
+			ignoreEvents: false,
+			ignoreEventsTimeout: null,
 		};
 	},
 	computed: {
@@ -182,15 +188,19 @@ export default defineComponent({
 				datasets.push({
 					label: ForecastType.Co2,
 					type: "line",
-					data: this.co2Slots.map((slot, index) => ({
-						y: slot.price,
-						x: new Date(slot.start),
-						highlight:
+					data: this.co2Slots.map((slot, index) => {
+						const dataActive =
 							active &&
 							(this.selectedIndex !== null
 								? this.selectedIndex === index
-								: index === this.maxCo2Index || index === this.minCo2Index),
-					})),
+								: index === this.maxCo2Index || index === this.minCo2Index);
+						return {
+							y: slot.price,
+							x: new Date(slot.start),
+							highlight: dataActive,
+							active: dataActive,
+						};
+					}),
 					yAxisID: "yCo2",
 					backgroundColor: color,
 					borderColor: color,
@@ -226,12 +236,17 @@ export default defineComponent({
 					intersect: false,
 				},
 				categoryPercentage: 0.7,
+				events: ["mousemove", "click", "touchstart", "touchend"],
 				onHover: function (event, active) {
+					if (["touchend", "click"].includes(event.type)) {
+						vThis.selectIndex(null, true);
+						return;
+					}
 					const element = active.find(({ datasetIndex }) => {
 						const { label } = event.chart.getDatasetMeta(datasetIndex);
 						return label === vThis.selected;
 					});
-					vThis.selectedIndex = element ? element.index : null;
+					vThis.selectIndex(element ? element.index : null);
 				},
 				plugins: {
 					...commonOptions.plugins,
@@ -346,7 +361,27 @@ export default defineComponent({
 			return slots.filter((slot) => new Date(slot.end) > this.startDate).slice(0, 48);
 		},
 		onMouseLeave() {
-			this.selectedIndex = null;
+			this.selectIndex(null, true);
+		},
+		selectIndex(index: number | null, timeout = false) {
+			if (this.ignoreEvents) return;
+			this.selectedIndex = index;
+
+			// reset hover state (points, highlights)
+			if (this.selectedIndex === null) {
+				this.$nextTick(() => {
+					// @ts-expect-error unknown chart type
+					this.$refs.chart?.chart?.setActiveElements([]);
+				});
+			}
+
+			// ignore events after selection reset because chart.js triggers delayed mousemove events
+			if (timeout) {
+				this.ignoreEvents = true;
+				this.ignoreEventsTimeout = setTimeout(() => {
+					this.ignoreEvents = false;
+				}, 100);
+			}
 		},
 		yMax(slots: PriceSlot[] = []): number | undefined {
 			const value = this.maxValue(slots);
