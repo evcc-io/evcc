@@ -4,17 +4,15 @@
 package toyota
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAPI(t *testing.T) {
-	request.EnableRequestLogging(t)
-	util.LogLevel("TRACE", nil)
 	// Skip if no credentials provided
 	user := os.Getenv("TOYOTA_USER")
 	password := os.Getenv("TOYOTA_PASSWORD")
@@ -23,7 +21,7 @@ func TestAPI(t *testing.T) {
 	}
 
 	// Create and login identity
-	log := util.NewLogger("test")
+	log := util.NewLogger("foo")
 	identity := NewIdentity(log)
 	err := identity.Login(user, password)
 	require.NoError(t, err)
@@ -34,7 +32,7 @@ func TestAPI(t *testing.T) {
 	// Test Vehicles method
 	vehicles, err := api.Vehicles()
 	require.NoError(t, err)
-	log.INFO.Printf("Vehicles: %+v", vehicles)
+	fmt.Printf("Vehicles: %+v\n", vehicles)
 	require.NotEmpty(t, vehicles, "expected at least one vehicle")
 
 	for _, vin := range vehicles {
@@ -45,5 +43,5 @@ func TestAPI(t *testing.T) {
 	status, err := api.Status(vehicles[0])
 	require.NoError(t, err)
 	require.NotNil(t, status)
-	log.INFO.Printf("Vehicle status: %+v", status)
+	fmt.Printf("Vehicle status: %+v\n", status)
 }
