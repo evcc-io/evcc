@@ -445,6 +445,8 @@ export default {
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			isComponentMounted: true,
+			isPageVisible: true,
 		};
 	},
 	computed: {
@@ -546,12 +548,25 @@ export default {
 		},
 	},
 	mounted() {
+		this.isComponentMounted = true;
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
+		this.isPageVisible = document.visibilityState === "visible";
 		this.loadAll();
 	},
 	unmounted() {
+		this.isComponentMounted = false;
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 		clearTimeout(this.deviceValueTimeout);
 	},
 	methods: {
+		handleVisibilityChange() {
+			this.isPageVisible = document.visibilityState === "visible";
+			if (this.isPageVisible) {
+				this.updateValues();
+			} else {
+				clearTimeout(this.deviceValueTimeout);
+			}
+		},
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
@@ -792,14 +807,17 @@ export default {
 				};
 				for (const type in devices) {
 					for (const device of devices[type]) {
-						await this.updateDeviceValue(type, device.name);
+						if (this.isComponentMounted && this.isPageVisible) {
+							await this.updateDeviceValue(type, device.name);
+						}
 					}
 				}
 			}
-			// ensure that component is still mounted
-			if (!this.$el) return;
-			const interval = (store.state?.interval || 30) * 1000;
-			this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+
+			if (this.isComponentMounted && this.isPageVisible) {
+				const interval = (store.state?.interval || 30) * 1000;
+				this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+			}
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || {};
