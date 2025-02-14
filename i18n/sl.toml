@@ -44,7 +44,7 @@ title = "Nadzor vedenja"
 
 [config.deviceValue]
 broker = "Broker"
-bucket = "Bucket"
+bucket = "Vedro"
 capacity = "Kapaciteta"
 chargeStatus = "Status"
 chargeStatusA = "brez povezave"
@@ -73,12 +73,17 @@ phaseVoltages = "Napetost L1, L2, L3"
 power = "Moč"
 powerRange = "Moč"
 range = "Doseg"
-soc = "SoC"
+soc = "Polnjenje"
 socLimit = "Omejitev"
 temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 yes = "da"
+vehicleLimitSoc = "Omejitev vozila"
+amount = "Znesek"
+phases1p3p = "Fazno stikalo"
+identifier = "RFID-Identifier"
+singlePhase = "Enofazni"
 
 [config.eebus]
 description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
@@ -87,6 +92,7 @@ title = "EEBus"
 [config.form]
 example = "Primer"
 optional = "neobvezno"
+deprecated = "deprecated"
 
 [config.general]
 cancel = "Prekliči"
@@ -102,6 +108,7 @@ save = "Shrani"
 showAdvancedSettings = "Prikaži napredne nastavitve"
 telemetry = "Telemetrija"
 title = "Naslov"
+delete = "Izbriši"
 
 [config.grid]
 title = "Omrežni meter"
@@ -591,6 +598,7 @@ vehicleLimit = "Omejitev vozila."
 vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 welcome = "Kratko začetno polnjenje za potrditev povezave."
+unknown = ""
 
 [notifications]
 dismissAll = "Opusti vse"
@@ -787,3 +795,23 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.charger]
+ocppHelp = "Kopirajte ta naslov v konfiguracijo vaše polnilnice."
+template = "Proizvajalec"
+chargers = "polnilnice za EV"
+generic = "Splošne integracije"
+ocppLabel = "URL strežnika OCPP"
+switchsockets = "Preklopne vtičnice"
+titleAdd = "Dodaj polnilnik"
+titleEdit = "Uredi polnilec"
+
+[config.deviceValueChargeStatus]
+A = "A (brez povezave)"
+B = "B (povezan)"
+C = "C (polnjenje)"
+
+[config.charge]
+titleAdd = "Dodaj števec polnjenja"
+titleEdit = "Urejanje merilnika polnjenja"
