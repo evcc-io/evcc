@@ -25,10 +25,10 @@ const (
 type API struct {
 	*request.Helper
 	log      *util.Logger
-	identity oauth2.TokenSource
+	identity *Identity
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		log:      log,
@@ -51,15 +51,15 @@ func (v *API) Vehicles() ([]string, error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		headers.Accept: request.JSONContent,
-		"x-guid":       v.identity.(*Identity).uuid,
+		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 	})
-	var vehiclesResponse Vehicles
+	var resp Vehicles
 	if err == nil {
-		err = v.DoJSON(req, &vehiclesResponse)
+		err = v.DoJSON(req, &resp)
 	}
 	var vehicles []string
-	for _, v := range vehiclesResponse.Payload {
+	for _, v := range resp.Payload {
 		vehicles = append(vehicles, v.VIN)
 	}
 	return vehicles, err
@@ -70,7 +70,7 @@ func (v *API) Status(vin string) (Status, error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		headers.Accept: request.JSONContent,
-		"x-guid":       v.identity.(*Identity).uuid,
+		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 		"vin":          vin,
 	})
