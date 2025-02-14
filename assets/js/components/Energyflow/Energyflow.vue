@@ -83,12 +83,12 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
-							detailsIcon="forecast"
-							:details="solarForecastToday"
+							:details="solarForecast"
 							:detailsFmt="forecastFmt"
-							:detailsTooltip="forecastTooltip(solarForecastToday)"
-							:detailsInactive="solarForecastToday === 0"
-							:detailsClickable="solarForecastToday !== null"
+							:detailsTooltip="forecastTooltip(solarForecast)"
+							:detailsInactive="solarForecast === 0"
+							:detailsIcon="solarForecast !== undefined ? 'forecast' : undefined"
+							:detailsClickable="solarForecast !== undefined"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
 							@details-clicked="openForecastModal"
@@ -389,9 +389,9 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
-		solarForecastToday() {
-			const slots = this.forecast.solar;
-			if (!slots?.length) return null;
+		solarForecast() {
+			const slots = this.forecast.solar || [];
+			if (slots.length === 0) return undefined;
 			return energyByDay(slots, 0);
 		},
 	},
@@ -433,7 +433,7 @@ export default {
 		},
 		forecastTooltip(value) {
 			if (value !== null) {
-				return ["forecast: remaining solar production today"];
+				return [this.$t("main.energyflow.forecastTooltip")];
 			}
 			return [];
 		},
