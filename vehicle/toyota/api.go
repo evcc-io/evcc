@@ -24,13 +24,15 @@ const (
 
 type API struct {
 	*request.Helper
-	log *util.Logger
+	log      *util.Logger
+	identity oauth2.TokenSource
 }
 
 func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
-		Helper: request.NewHelper(log),
-		log:    log,
+		Helper:   request.NewHelper(log),
+		log:      log,
+		identity: identity,
 	}
 
 	v.Timeout = 120 * time.Second
@@ -47,19 +49,9 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 
-	identity, ok := v.Transport.(*oauth2.Transport)
-	if !ok || identity.Source == nil {
-		return nil, fmt.Errorf("missing identity")
-	}
-
-	id, ok := identity.Source.(*Identity)
-	if !ok {
-		return nil, fmt.Errorf("invalid identity type")
-	}
-
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		headers.Accept: request.JSONContent,
-		"x-guid":       id.uuid,
+		"x-guid":       v.identity.(*Identity).uuid,
 		"x-api-key":    ApiKey,
 	})
 	var vehiclesResponse Vehicles
@@ -75,17 +67,10 @@ func (v *API) Vehicles() ([]string, error) {
 
 func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
-	identity, ok := v.Client.Transport.(*oauth2.Transport)
-	if !ok || identity.Source == nil {
-		return Status{}, fmt.Errorf("missing identity")
-	}
-	id, ok := identity.Source.(*Identity)
-	if !ok {
-		return Status{}, fmt.Errorf("invalid identity type")
-	}
+
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		headers.Accept: request.JSONContent,
-		"x-guid":       id.uuid,
+		"x-guid":       v.identity.(*Identity).uuid,
 		"x-api-key":    ApiKey,
 		"vin":          vin,
 	})
