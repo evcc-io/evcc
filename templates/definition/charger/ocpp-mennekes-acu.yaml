@@ -1,4 +1,4 @@
-template: mennekes-acu
+template: ocpp-mennekes-acu
 products:
   - brand: Mennekes
     description:
@@ -22,3 +22,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  meterinterval: 60s
