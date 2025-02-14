@@ -50,7 +50,7 @@ func unwrap(err error) (res []string) {
 var redactSecrets = []string{
 	"mac",                   // infrastructure
 	"sponsortoken", "plant", // global settings
-	"user", "password", "pin", // users
+	"apikey", "user", "password", "pin", // users
 	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 	"app", "chats", "recipients", // push messaging
