@@ -124,7 +124,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			if err != nil {
 				log.ERROR.Println(err)
 			}
-			}
 
 			select {
 			case <-tick:
