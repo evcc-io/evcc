@@ -345,8 +345,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
@@ -742,8 +741,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
