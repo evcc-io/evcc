@@ -106,12 +106,13 @@ func (v *Identity) authorize(token Token) (string, error) {
 func (v *Identity) fetchTokenCredentials(code string) error {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AccessTokenPath)
 
-	data := url.Values{}
-	data.Set("client_id", ClientID)
-	data.Set("code", code)
-	data.Set("redirect_uri", RedirectURI)
-	data.Set("grant_type", "authorization_code")
-	data.Set("code_verifier", "plain")
+	data := url.Values{
+		"client_id":     {ClientID},
+		"code":          {code},
+		"redirect_uri":  {RedirectURI},
+		"grant_type":    {"authorization_code"},
+		"code_verifier": {"plain"},
+	}
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Authorization": "Basic b25lYXBwOm9uZWFwcA==",
