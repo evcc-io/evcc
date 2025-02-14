@@ -69,7 +69,7 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 
 	// Otherwise continue with Auth flow
 	var res Auth
-	if err = v.DoJSON(req, &res); err != nil {
+	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
