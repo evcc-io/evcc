@@ -22,4 +22,3 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  
