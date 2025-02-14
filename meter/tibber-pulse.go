@@ -143,7 +143,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient) error {
 	done := make(chan error, 1)
 	go func(done chan error) {
-		done <- t.subscribe(client, t.homeID)
+		done <- t.subscribe(client)
 	}(done)
 
 	select {
@@ -154,13 +154,13 @@ func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient) error {
 	}
 }
 
-func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
+func (t *Tibber) subscribe(client *graphql.SubscriptionClient) error {
 	var query struct {
 		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 	}
 
 	_, err := client.Subscribe(&query, map[string]any{
-		"homeId": graphql.ID(homeID),
+		"homeId": graphql.ID(t.homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
 			return err
