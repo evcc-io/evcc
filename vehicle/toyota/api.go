@@ -84,10 +84,10 @@ func (v *API) Status(vin string) (Status, error) {
 		return Status{}, fmt.Errorf("invalid identity type")
 	}
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":    "application/json",
-		"x-guid":    id.uuid,
-		"x-api-key": "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF",
-		"vin":       vin,
+		headers.Accept: request.JSONContent,
+		"x-guid":       id.uuid,
+		"x-api-key":    ApiKey,
+		"vin":          vin,
 	})
 	var status Status
 	if err == nil {

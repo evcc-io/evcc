@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/go-http-utils/headers"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
@@ -60,8 +61,8 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 		return nil, fmt.Errorf("failed to marshal auth data: %w", err)
 	}
 	req, err := request.New(http.MethodPost, uri, bytes.NewReader(data), map[string]string{
-		"Content-type": "application/json",
-		"Accept":       "application/json",
+		headers.ContentType: request.JSONContent,
+		headers.Accept:      request.JSONContent,
 	})
 	if err != nil {
 		return nil, err
@@ -114,10 +115,9 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		"code_verifier": {"plain"},
 	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Authorization": "Basic b25lYXBwOm9uZWFwcA==",
-		"Content-Type":  "application/x-www-form-urlencoded",
-	})
+	headers := request.URLEncoding
+	headers["Authorization"] = "Basic b25lYXBwOm9uZWFwcA=="
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
 		return err
 	}
