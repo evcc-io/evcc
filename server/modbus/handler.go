@@ -74,9 +74,8 @@ func coilsToBytes(b []bool) []byte {
 func (h *handler) bytesToBoolResult(op string, qty uint16, b []byte, err error) ([]bool, error) {
 	h.logResult(op, b, err)
 
-	var modbusError *gridx.Error
-	if errors.As(err, &modbusError) {
-		err = mbserver.MapExceptionCodeToError(modbusError.ExceptionCode)
+	if me := new(gridx.Error); errors.As(err, &me) {
+		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
 	}
 
 	var res []bool
