@@ -25,14 +25,12 @@ type Tibber struct {
 	timeout time.Duration
 }
 
-type tibberConfig struct {
-	Token   string
-	HomeID  string
-	Timeout time.Duration
-}
-
 func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
-	cc := tibberConfig{
+	cc := struct {
+		Token   string
+		HomeID  string
+		Timeout time.Duration
+	}{
 		Timeout: time.Minute,
 	}
 
