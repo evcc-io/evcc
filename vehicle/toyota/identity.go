@@ -61,7 +61,7 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 	// If we've already set the password, expect a token response
 	if passwordSet {
 		var token Token
-		if err = v.DoJSON(req, &token); err != nil {
+		if err := v.DoJSON(req, &token); err != nil {
 			return nil, err
 		}
 		return &token, nil
