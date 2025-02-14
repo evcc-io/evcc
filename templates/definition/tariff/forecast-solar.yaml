@@ -2,20 +2,52 @@ template: forecast-solar
 products:
   - brand: Forecast.Solar
 requirements:
+  description:
+    en: "[forecast.solar](https://forecast.solar) can be used for free. Paid plans can also be used by specifying an API key."
+    de: "[forecast.solar](https://forecast.solar) kann kostenlos verwendet werden. Kostenpflichtige Pläne können ebenfalls verwendet werden, indem ein API-Key angegeben wird."
   evcc: ["skiptest"]
 group: solar
 params:
   - name: lat
+    description:
+      en: latitude
+      de: Breitengrad
+    example: "55.7351"
     required: true
   - name: lon
+    description:
+      en: longitude
+      de: Längengrad
+    example: "9.1275"
     required: true
   - name: dec
+    description:
+      en: decline
+      de: Winkel
+    help:
+      en: 0 = horizontal, 90 = vertical
+      de: 0 = horizontal, 90 = vertikal
+    example: 25
     required: true
   - name: az
+    description:
+      en: azimuth
+      de: Azimut
+    help:
+      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+    example: 180
     required: true
   - name: kwp
+    description:
+      en: Maximum power (kWp)
+      de: Maximalleistung (kWp)
+    example: 9.8
     required: true
   - name: apikey
+    description:
+      en: API key
+      de: API-Key
     advanced: true
 render: |
   type: custom
