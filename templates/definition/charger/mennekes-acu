@@ -21,6 +21,5 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
-
 render: |
   {{ include "ocpp" . }}
