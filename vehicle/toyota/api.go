@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	BaseUrl                  = "https://oneapp:oneapp@b2c-lo                                                                                                                                      gin.toyota-europe.com"
+	BaseUrl                  = "https://oneapp:oneapp@b2c-login.toyota-europe.com"
 	ApiBaseUrl               = "https://ctpa-oneapi.tceu-ctp-prd.toyotaconnectedeurope.io"
 	AccessTokenPath          = "oauth2/realms/root/realms/tme/access_token"
-	AuthenticationPath       = "json/realms/root/realms/tme/authenticate?authIndexType = service&authIndexValue = oneapp"
-	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id      = oneapp&scope           = openid+profile+write&response_type = code&redirect_uri = com.toyota.oneapp:/oauth2Callback&code_challenge = plain&code_challenge_method = plain"
-	VehicleGuidPath          = "v2/vehicle/                                                                                                                                                       guid"
-	RemoteElectricStatusPath = "v1/                                                                                                                                                               global/remote/electric/status"
+	AuthenticationPath       = "json/realms/root/realms/tme/authenticate?authIndexType=service&authIndexValue=oneapp"
+	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
+	VehicleGuidPath          = "v2/vehicle/guid"
+	RemoteElectricStatusPath = "v1/global/remote/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 )
 
@@ -33,13 +33,12 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 		log:    log,
 	}
 
-	// api is unbelievably slow when retrieving status
-	v.Client.Timeout = 120 * time.Second
+	v.Timeout = 120 * time.Second
 
 	// replace client transport with authenticated transport
-	v.Client.Transport = &oauth2.Transport{
+	v.Transport = &oauth2.Transport{
 		Source: identity,
-		Base:   v.Client.Transport,
+		Base:   v.Transport,
 	}
 
 	return v
@@ -48,7 +47,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 
-	identity, ok := v.Client.Transport.(*oauth2.Transport)
+	identity, ok := v.Transport.(*oauth2.Transport)
 	if !ok || identity.Source == nil {
 		return nil, fmt.Errorf("missing identity")
 	}
