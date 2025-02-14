@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
@@ -56,20 +54,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 			}
 
 			for _, c := range configurable {
-
-				var j map[string]any
-				if err := json.Unmarshal([]byte(c.Value), &j); err != nil {
-					panic(err)
-				}
-
-				for k := range j {
-					if slices.Contains(redactSecrets, k) {
-						j[k] = "*****"
-					}
-				}
-
-				jstr, _ := json.Marshal(j)
-				fmt.Println(config.NameForID(c.ID), "type:"+c.Type, string(jstr))
+				fmt.Println(config.NameForID(c.ID), "type:"+c.Type, redactJson(c.Value))
 			}
 
 			fmt.Println("")
