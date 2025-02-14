@@ -1,0 +1,49 @@
+//go:build integration
+// +build integration
+
+package toyota
+
+import (
+	"os"
+	"testing"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/stretchr/testify/require"
+)
+
+func TestAPI(t *testing.T) {
+	request.EnableRequestLogging(t)
+	util.LogLevel("TRACE", nil)
+	// Skip if no credentials provided
+	user := os.Getenv("TOYOTA_USER")
+	password := os.Getenv("TOYOTA_PASSWORD")
+	if user == "" || password == "" {
+		t.Skip("TOYOTA_USER or TOYOTA_PASSWORD not set")
+	}
+
+	// Create and login identity
+	log := util.NewLogger("test")
+	identity := NewIdentity(log)
+	err := identity.Login(user, password)
+	require.NoError(t, err)
+
+	// Create API client
+	api := NewAPI(log, identity)
+
+	// Test Vehicles method
+	vehicles, err := api.Vehicles()
+	require.NoError(t, err)
+	log.INFO.Printf("Vehicles: %+v", vehicles)
+	require.NotEmpty(t, vehicles, "expected at least one vehicle")
+
+	for _, vin := range vehicles {
+		require.NotEmpty(t, vin, "expected non-empty VIN")
+	}
+
+	// Test Status method for first vehicle
+	status, err := api.Status(vehicles[0])
+	require.NoError(t, err)
+	require.NotNil(t, status)
+	log.INFO.Printf("Vehicle status: %+v", status)
+}
