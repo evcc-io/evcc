@@ -16,7 +16,7 @@ func TestIdentityLogin(t *testing.T) {
 	user := os.Getenv("TOYOTA_USER")
 	password := os.Getenv("TOYOTA_PASSWORD")
 	if user == "" || password == "" {
-		t.Skip("TOYOTA_USER or TOYOTA_PASSWORD not set")
+		t.Fatal("TOYOTA_USER or TOYOTA_PASSWORD not set")
 	}
 
 	log := util.NewLogger("test")
