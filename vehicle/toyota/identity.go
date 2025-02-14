@@ -127,12 +127,17 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		return fmt.Errorf("failed to parse id token: %w", err)
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if uuid, ok := claims["uuid"].(string); ok {
-			v.uuid = uuid
-		}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return fmt.Errorf("invalid token claims format")
 	}
 
+	uuid, ok := claims["uuid"].(string)
+	if !ok {
+		return fmt.Errorf("uuid claim missing or invalid in token")
+	}
+
+	v.uuid = uuid
 	v.TokenSource = oauth2.StaticTokenSource(&resp.Token)
 	return nil
 }
