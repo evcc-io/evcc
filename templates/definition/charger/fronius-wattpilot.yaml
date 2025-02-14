@@ -11,6 +11,7 @@ requirements:
       Benötigt mindestens Firmware 36.3 oder neuer.
     en: |
       Requires firmware 36.3 or later.
+    fr: Requiert le firmware 36.3 au moins
 params:
   - name: host
   - name: password

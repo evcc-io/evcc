@@ -8,6 +8,7 @@ requirements:
   description:
     de: Das Gerät benötigt eine feste IP Adresse. Es ist wichtig, zuerst EEBus einzurichten. Danach erkennt das Ladegerät evcc als HEMS-Gerät im Netzwerk. Verwende das Installationstool, um evcc als HEMS auszuwählen. Kopiere anschließend den angegebenen SKI aus der Installations-App und fügen ihn zu Ihrem YAML hinzu.
     en: The device requires a fixed IP addres. It's important to set up EEBus first. After setting up EEBus the charger will recognize evcc as a HEMS device on the network. Please use the installer tool to select evcc as HEMS. After this has been done, copy the given SKI from the Install app and add it to your yaml.
+    fr: L'appareil a besoin d'une adresse IP fixe. Il est important de configurer d'abord EEBus. Après avoir configuré EEBus, le chargeur reconnaîtra evcc comme un appareil HEMS sur le réseau. Veuillez utiliser l'outil d'installation pour sélectionner evcc comme HEMS. Une fois que cela a été fait, copiez le SKI donné à partir de l'application Install et ajoutez-le à votre yaml. 
 params:
   - preset: eebus
 render: |

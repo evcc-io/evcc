@@ -4,6 +4,7 @@ products:
     description:
       de: einphasig
       en: single phase
+      fr: une phase
 group: switchsockets
 params:
   - name: host
@@ -12,6 +13,7 @@ params:
     help:
       de: Standard-User ist admin
       en: admin is default
+      fr: par défaut "admin"
   - name: password
     required: false
     mask: true
@@ -21,9 +23,11 @@ params:
     description:
       de: Schaltkanal Nummer
       en: Relaychannel number
+      fr: Numéro de canal
     help:
       de: Schaltkanal (1-8)
       en: Relaychannel number (1-8)
+      fr: Numéro du canal du relai (1-8)
   - preset: switchsocket
 render: |
   type: tasmota

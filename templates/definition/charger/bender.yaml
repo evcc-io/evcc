@@ -50,6 +50,7 @@ requirements:
   description:
     de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
     en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+    fr: Le 'Serveur Modbus TCP' doit être activé. Le paramètre 'Register Address Set' ne doit PAS être réglé sur 'Phoenix' ou 'TQ-DM100'. Utilisez la troisième sélection intitulée 'Ebee', 'Bender', 'MENNEKES', etc. Réglez le paramètre « Allow UID Disclose » sur On.
   evcc: ["sponsorship"]
 params:
   - name: host

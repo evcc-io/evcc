@@ -3,6 +3,7 @@ products:
   - description:
       de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
       en: OCPP 1.6J compatible charger with Smart Charging Profile
+      fr: Chargeur compatible OCPP 1.6J avec profil Smart Charging
 group: generic
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:
@@ -47,6 +48,26 @@ requirements:
       * Local network connection
 
       The specific configuration and the actual usable functionality depend on the charger model and its software.
+    fr: |
+      Avec OCPP, la connexion est établie entre le chargeur (client) et l'evcc (serveur).
+      Le chargeur doit pouvoir atteindre evcc via le nom d'hôte (résolution DNS fonctionnelle requise !) ou via l'adresse IP sur le port 8887.
+      Par défaut, la première connexion entrante avec un identifiant de station est utilisée.
+      Pour pouvoir attribuer clairement plusieurs points de charge, il faut configurer l'identifiant de la station (`stationid : `) et le numéro du connecteur (`connector : `).
+      De nombreuses wallbox ajoutent automatiquement l'identifiant de la station à l'URL du backend, tandis que d'autres doivent le faire manuellement `ws://<evcc>:8887/<stationid>`.
+      Si le chargeur prend en charge l'envoi de valeurs de comptage, essayez d'ajuster l'intervalle à une courte durée (< 10s).
+      Utilisez vos étiquettes RFID (cela permet par exemple d'identifier le véhicule) ou réglez votre chargeur sur « free charging » ou « autostart » pour générer la transaction nécessaire à la libération de la charge.
+
+      Si le chargeur n'offre pas la possibilité de démarrer les transactions localement, l'option avancée `remotestart` peut être utilisée pour démarrer automatiquement une transaction dès qu'un véhicule est connecté.
+      Cela ne devrait être nécessaire que dans des cas exceptionnels.
+
+      Exigences :
+      * Si nécessaire, supprimer les profils OCPP précédemment configurés (par exemple, utilisés pour une connexion backend différente) dans la configuration du chargeur.
+      * URL du backend (système central) dans la configuration du chargeur : `ws://[evcc-adresse]:8887/` (ajouter éventuellement `stationid`)
+      * Protocole : OCPP-J v1.6, ocpp16j, JSO
+      * Pas d'encryption, pas d'authentification, pas de mot de passe
+      * Connection en réseau local
+
+      La configuration spécifique et les fonctionnalités réellement utilisables dépendent du modèle de chargeur et de son logiciel.
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp

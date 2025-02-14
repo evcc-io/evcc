@@ -21,6 +21,13 @@ requirements:
       * Server URL: ws://[evcc-address]:8887/ (local network connection)
       * Charger ID: Leave empty (for use the serial number) or set custom value which is reused in configuration as *stationid*
       * Authorisation Key: leave empty
+    fr: |
+      Guide d'installation :
+      * Dans l'application Autel Charge, cliquez sur « Serveur OCPP »
+      * Dans la barre de recherche, tapez « Custom » et sélectionnez-le.
+      * URL du serveur : ws://[evcc-address]:8887/ (connexion réseau locale)
+      * ID du chargeur : Laisser vide (pour utiliser le numéro de série) ou définir une valeur personnalisée qui sera réutilisée dans la configuration en tant que *stationid*.
+      * Clé d'autorisation : laisser vide
 params:
   - preset: ocpp
 render: |

@@ -35,6 +35,14 @@ requirements:
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox. Using a LAN connection is highly recommended.
 
       Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
+    fr: |
+      L'appareil doit avoir une adresse IP fixe (manuelle ou via DHCP).
+
+      L'identification d'un véhicule à l'aide de la carte RFID n'est pas possible.
+
+      Important : une fonctionnalité presque parfaite ne peut être assurée qu'avec un compteur d'énergie externe et sans utilisation de bobines de TC, en raison de bogues logiciels de la Wallbox. L'utilisation d'une connexion LAN est fortement recommandée.
+
+      Note : Si vous avez ajouté un compteur d'énergie à votre chargeur, veuillez utiliser l'intégration Pro ou Connected+.
 params:
   - preset: eebus
   - name: ip

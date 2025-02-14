@@ -8,6 +8,7 @@ requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.
     de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+    fr: Le Wallbe doit être connecté par Ethernet et le commutateur DIP 10 doit être réglé sur 'ON'.
 params:
   - name: host
   - name: port

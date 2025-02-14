@@ -8,6 +8,7 @@ requirements:
   description:
     en: Requires firmware 040.0 or later. HTTP API v1 or v2 must be activated.
     de: Benötigt mindestens Firmware 040.0 oder neuer. Das HTTP API v1 oder v2 muss aktiviert sein.
+    fr: Nécessite le firmware 040.0 ou plus récent. L'API HTTP v1 ou v2 doit être activée.
   evcc: ["sponsorship"]
 params:
   - name: host

@@ -12,6 +12,9 @@ requirements:
     en: |
       S0 meters must be configured separately as charge meter.
       Phase switching is only available with the Solar variant and must be enabled by the user.
+    fr: |
+      Les compteurs S0 doivent être configurés séparément en tant que compteur de charge.
+      La commutation de phase n'est disponible qu'avec la variante solaire et doit être activée par l'utilisateur.
   evcc: ["sponsorship"]
 params:
   - name: host

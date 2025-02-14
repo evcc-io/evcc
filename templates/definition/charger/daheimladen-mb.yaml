@@ -7,6 +7,7 @@ requirements:
   description:
     de: Die Wallbox muss über eine aktuelle Firmware mit Modbus-Unterstützung verfügen. In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
     en: Wallbox must be operated with a recent firmware including Modbus support. Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
+    fr: La Wallbox doit fonctionner avec un firmware récent incluant la prise en charge du Modbus. En outre, la fonction « Nachladen » (Smart) ou « RSDA » (Touch) doit être activée dans les paramètres.
 params:
   - name: host
   - name: port

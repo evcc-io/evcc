@@ -3,6 +3,7 @@ products:
   - description:
       de: EEBUS kompatible Wallbox
       en: EEBUS compatible Wallbox
+      en: Chargeur compatible EEBUS
 group: generic
 capabilities: ["mA"]
 requirements:

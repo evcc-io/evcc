@@ -15,6 +15,7 @@ requirements:
   description:
     de: Die Wallbox muss sich im Modus "Schnell" befinden und vom Wechselrichtersystem entkoppelt sein.
     en: The charger must be in “Fast” mode and decoupled from the inverter system.
+    fr: Le chargeur doit être en mode « rapide » et découplé du système d'onduleur.
 params:
   - name: modbus
     choice: ["rs485"]

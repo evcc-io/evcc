@@ -9,6 +9,7 @@ requirements:
   description:
     de: Die Wallbox muss sich im "Power" Modus befinden.
     en: The charger must be switched to "Power" charging mode.
+    fr: Le mode "Power" soit être défini sur le chargeur.
 params:
   - name: connector
   - name: host

@@ -8,6 +8,7 @@ requirements:
   description:
     de: Modus "HEMS activated" muss aktiviert sein. RFID-Tags können durch evcc nur gelesen werden.
     en: Mode "HEMS activated" must be enabled. RFID tags can only be read by evcc.
+    fr: Le mode « HEMS activé » doit être activé. Les étiquettes RFID ne peuvent être lues que par evcc.
   evcc: ["sponsorship"]
 params:
   - name: host

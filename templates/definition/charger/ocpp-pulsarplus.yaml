@@ -19,6 +19,13 @@ requirements:
       * URL: ws://[evcc-adresse]:8887/ (local network connection)
       * Charge Point Identity: Custom value (e.g. serial number of charger) which is reused in configuration as *stationid*
       * Password: leave empty
+    fr: |
+      Guide d'installation : https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+      * Activer « Enable OCPP » (myWallbox app) ou activer l'interrupteur « OCPP WebSocket connection » (myWallbox Portal)
+      * Activer « Improved charger control » (Profile -> Experimental functions) (myWallbox app) 
+      * URL : ws://[evcc-adresse]:8887/ (connexion réseau locale)
+      * Identité du point de charge : Valeur personnalisée (par exemple, le numéro de série du chargeur) qui est réutilisée dans la configuration comme *stationid*.
+      * Mot de passe : laisser vide
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp

@@ -15,6 +15,7 @@ params:
     description:
       en: "Temperature sensor"
       de: "Temperatursensor"
+      fr: "Senseur de température"
 render: |
   type: ac-thor
   {{- include "modbus" . }}

@@ -21,11 +21,13 @@ params:
     help:
       de: Emailadresse
       en: Email address
+      fr: Adresse email
   - name: password
     required: true
     help:
       de: wie Login für Easee App oder Web Portal (https://easee.cloud)
       en: same as Easee app or the web portal (https://easee.cloud)
+      en: identique à celui utilisé dans l'app Easee ou le portail web (https://easee.cloud)
   - name: charger
     required: true
     example: EH______
@@ -36,6 +38,7 @@ params:
     help:
       de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
       en: Controls wether evcc shall perform authentication against charger. Benefit is a contolled start of charging. Not compatible with RFID identification of vehicles.
+      en: Contrôle si evcc doit s'authentifier sur le chargeur. L'avantage est un démarrage contrôlé de la charge. Non compatible avec l'identification RFID des véhicules.
 render: |
   type: easee
   user: {{ .user }}

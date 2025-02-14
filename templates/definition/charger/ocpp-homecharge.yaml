@@ -13,6 +13,10 @@ requirements:
       The charger must be equipped with a built-in meter (models HC11L/HC22L Energy or Profi).
       For the OCPP configuration, you need to access the EFR-SECC charge controller at http://host/secc.
       For login credentials, ask your dealer or the vendor EFR (www.efr.de).
+    fr: |
+      Le chargeur doit être équipé d'un compteur intégré (modèles HC11L/HC22L Energy ou Profi).
+      Pour la configuration de l'OCPP, vous devez accéder au régulateur de charge EFR-SECC à l'adresse http://host/secc.
+      Pour obtenir les identifiants de connexion, demandez à votre revendeur ou au vendeur EFR (www.efr.de).
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp

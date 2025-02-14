@@ -17,6 +17,7 @@ requirements:
   description:
     de: Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
     en: Please read the wiring and configuration manual carefully. All boxes must be configured for external control in follower mode (DIP S5/4 OFF). Each box needs an individual Modbus ID (DIP S4). Ensure correct RS485 cabling including bus termination (DIP S6/2).
+    fr: Veuillez lire attentivement le manuel de câblage et de configuration. Tous les boîtiers doivent être configurés pour une commande externe en mode suiveur (DIP S5/4 OFF). Chaque boîtier a besoin d'un ID Modbus individuel (DIP S4). Veillez à ce que le câblage RS485 soit correct, y compris la terminaison du bus (DIP S6/2).
   evcc: ["sponsorship"]
 params:
   - name: modbus

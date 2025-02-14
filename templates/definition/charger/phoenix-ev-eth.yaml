@@ -17,6 +17,7 @@ requirements:
   description:
     en: DIP switch 10 at the controller needs to be set to 'ON'. A recent controller firmware is recommended.
     de: DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+    fr: Le commutateur DIP 10 du contrôleur doit être réglé sur 'ON'. Il est recommandé d'avoir un firmware du contrôleur à jour.
   evcc: ["sponsorship"]
 params:
   - name: modbus

@@ -17,6 +17,7 @@ params:
     help:
       de: Aktiviert Phasenumschaltung. Erweiterte Funktion "Phasenumschaltung" muss in der NRGkick App aktiviert sein.
       en: Activates phase switching. Extended feature "Phase Switching" must be activated in the NRGKick app.
+      fr: Active la commutation de phase. La fonction étendue « Commutation de phase » doit être activée dans l'application NRGKick.
 render: |
   type: nrggen2
   {{- include "modbus" . }}

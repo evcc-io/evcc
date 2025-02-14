@@ -11,6 +11,7 @@ requirements:
   description:
     de: Als Betriebsmodus muss `manual` ausgewählt sein
     en: Charge mode must be configured as `manual`
+    fr: Le mode de charge 'manuel' doit être configuré 
 params:
   - name: host
   - name: connector

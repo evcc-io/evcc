@@ -31,6 +31,12 @@ requirements:
       The identification of a vehicle using the RFID card is not possible.
 
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox.  Using a LAN connection is highly recommended.
+    fr: |
+      L'appareil doit avoir une adresse IP fixe (manuelle ou via DHCP).
+
+      L'identification d'un véhicule à l'aide de la carte RFID n'est pas possible.
+
+      Important : une fonctionnalité presque parfaite ne peut être assurée qu'avec un compteur d'énergie externe et sans utilisation de bobines de TC, en raison de bogues logiciels de la Wallbox. L'utilisation d'une connexion LAN est fortement recommandée.
 params:
   - preset: eebus
   - name: ip

@@ -21,6 +21,10 @@ requirements:
       The wallbox must be configured as satellite/slave using the DIP switches on the mainboard and Modbus RTU must be enabled (bank S1: 4=ON, 5=ON, 7=OFF).
       No external meter should be connected directly to the wallbox, as all functions are controlled directly by evcc.
       For Kostal systems with Smart Energy Meter (KSEM), the additional activation code (Solar Pure Mode / Solar Plus Mode) for the KSEM is *not* required.
+    fr: |
+      La wallbox doit être configurée comme satellite/esclave à l'aide des commutateurs DIP de la carte mère et le Modbus RTU doit être activé (banque S1 : 4=ON, 5=ON, 7=OFF).
+      Aucun compteur externe ne doit être connecté directement à la wallbox, car toutes les fonctions sont contrôlées directement par evcc.
+      Pour les systèmes Kostal avec Smart Energy Meter (KSEM), le code d'activation supplémentaire (Solar Pure Mode / Solar Plus Mode) pour le KSEM n'est *pas* nécessaire.
   evcc: ["sponsorship"]
 params:
   - name: modbus

@@ -4,15 +4,18 @@ products:
   - description:
       de: Demowallbox
       en: Demo charger
+      fr: Chargeur de démo
 requirements:
   description:
     en: For demonstration purposes. Charger with a fixed set of values.
     de: Zu Demonstrationszwecken. Wallbox mit festen Werten.
+    fr: Chargeur avec des valeurs fixes pour démonstration
 params:
   - name: status
     description:
       de: Ladezustand
       en: Charge status
+      fr: Status de charge
     type: choice
     choice: [A, B, C]
     default: A
@@ -20,18 +23,21 @@ params:
     description:
       de: Leistung
       en: Power
+      en: Puissance
     type: int
     default: 0
   - name: enabled
     description:
       de: Ladebereit
       en: Enabled
+      fr: Activé
     type: bool
     default: true
   - name: maxcurrent
     description:
       de: Maximale Stromstärke (A)
       en: Maximum amperage (A)
+      fr: Courant maximum (A)
     help:
     example: 16
     type: int
@@ -40,6 +46,7 @@ params:
     description:
       de: Phasenumschaltung
       en: Phase switching
+      fr: Commutation de phases
     type: bool
     default: false
     advanced: true

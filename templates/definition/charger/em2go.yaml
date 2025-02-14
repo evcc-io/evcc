@@ -8,6 +8,7 @@ requirements:
   description:
     de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig (Pro Power: 1.01 bzw. OCPP/ONC: 3.15)"
     en: "Recent firmware with Modbus support required (Pro Power: 1.01 and OCPP/ONC: 3.15)"
+    fr: "Un firmware récent avec support Modbus est requis (Pro Power: 1.01 and OCPP/ONC: 3.15)"
 params:
   - name: modbus
     choice: ["tcpip"]

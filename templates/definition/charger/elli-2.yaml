@@ -52,6 +52,12 @@ requirements:
       The usage of phase switching is currently not possible in evcc.
 
       The identification of a vehicle using the RFID card is not possible.
+    fr: |
+      Le dispositif doit être utilisé en mode de charge normal.
+
+      L'utilisation de la commutation de phase n'est actuellement pas possible dans l'evcc.
+      
+      L'identification d'un véhicule à l'aide de la carte RFID n'est pas possible.
 params:
   - preset: eebus
 render: |

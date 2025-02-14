@@ -9,6 +9,7 @@ requirements:
   description:
     de: Der EV Charger muss sich im Modus "Fast" befinden und der Benutzer muss die Rechte "Administrator" haben.
     en: The charger must be switched to "Fast" charging mode and the user must have "Administrator" rights.
+    fr: Le chargeur doit être en mode de charge « rapide » et l'utilisateur doit avoir les droits « Administrateur ».
 params:
   - name: host
   - name: user

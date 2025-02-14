@@ -8,6 +8,7 @@ requirements:
   description:
     de: "Benötigt FW version >= E3C_V1.1. mA Regelung benötigt FW version >= E3C_V1.3."
     en: "Requires FW Version >= E3C_V1.1. mA regulation requires FW version >= E3C_V1.3."
+    fr: "Requiert une version de FW >= E3C_V1.1. La régulation mA requiert un FW version >= E3C_V1.3."
 params:
   - name: host
 render: |

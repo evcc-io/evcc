@@ -13,6 +13,7 @@ requirements:
   description:
     de: Die Hauptplatine benötigt eine aktuelle Firmware. Eine aktuelle Softwareversion kann man daran erkennen, dass die Seriennummer auf dem braunen Relais mit 2022 beginnt oder auf den kleinen weißen Relais eine 15 steht. Andernfalls bitte direkt an den Hersteller wenden.
     en: The motherboard requires current firmware. You can recognize a current software version by the fact that the serial number on the brown relay starts with 2022 or there is a 15 on the small white relays. Otherwise, please contact the manufacturer directly.
+    fr: La carte mère doit être dotée d'un micrologiciel à jour. La version actuelle du logiciel est reconnaissable au fait que le numéro de série du relais marron commence par 2022 ou qu'il y a un 15 sur les petits relais blancs. Dans le cas contraire, veuillez contacter directement le fabricant.
   evcc: ["sponsorship"]
 params:
   - name: modbus

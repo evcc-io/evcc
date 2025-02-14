@@ -8,6 +8,7 @@ requirements:
   description:
     de: Erfordert Firmware >= 2.135
     en: Requires firmware >= 2.135
+    fr: Requiert le firmware >= 2.135
 params:
   - name: modbus
     choice: ["tcpip"]

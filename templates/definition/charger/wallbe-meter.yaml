@@ -5,10 +5,12 @@ products:
     description:
       de: Eco, Pro (mit Strommessgerät)
       en: Eco, Pro (with meter)
+      fr: Eco, Pro (avec compteur)
 requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.
     de: Im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+    fr: Le commutateur DIP 10 doit être sur 'ON'.
 params:
   - name: host
   - name: port
