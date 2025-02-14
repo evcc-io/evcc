@@ -1,8 +1,6 @@
 package toyota
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/go-http-utils/headers"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
@@ -56,14 +53,7 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 	}
 
 	// Send authentication request
-	data, err := json.Marshal(auth)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal auth data: %w", err)
-	}
-	req, err := request.New(http.MethodPost, uri, bytes.NewReader(data), map[string]string{
-		headers.ContentType: request.JSONContent,
-		headers.Accept:      request.JSONContent,
-	})
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(auth), request.JSONEncoding)
 	if err != nil {
 		return nil, err
 	}
