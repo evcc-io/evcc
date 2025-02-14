@@ -7,6 +7,7 @@ requirements:
   description:
     de: "CO₂-Daten für viele Länder von https://electricitymaps.com/. Der 'Free Personal Tier' beinhaltet leider keine Prognosedaten. Dafür benötigst du einen kommerziellen Account von https://api-portal.electricitymaps.com/. Kostenloser Testmonat verfügbar."
     en: "CO₂ data for many countries from https://electricitymaps.com/. The 'Free Personal Tier' unfortunately does not include forecast data. You'll need a commercial account from https://api-portal.electricitymaps.com/. Free trial available."
+    fr: "CO₂ pour de nombreux pays à partir de https://electricitymaps.com/. Le « Free Personal Tier » ne comprend malheureusement pas les données de prévision. Vous aurez besoin d'un compte commercial sur https://api-portal.electricitymaps.com/. Essai gratuit disponible."
   evcc: ["skiptest"]
 group: co2
 params:
@@ -18,6 +19,7 @@ params:
     help:
       de: "siehe https://api.electricitymap.org/v3/zones"
       en: "see https://api.electricitymap.org/v3/zones"
+      fr: "voir https://api.electricitymap.org/v3/zones"
 render: |
   type: custom
   price:

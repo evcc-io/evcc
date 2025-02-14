@@ -5,6 +5,7 @@ requirements:
   description:
     de: "Day-ahead Energiepreise (je kWh) an der Börse. Kann ohne vorherige Anmeldung auf https://api.energy-charts.info/ abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet."
     en: "Day-ahead forecast of energy prices (per kWh) on the exchange. No prior registration for https://api.energy-charts.info/ necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
+    fr: "Prévisions à court terme des prix de l'énergie (par kWh) sur la bourse. Aucun enregistrement préalable sur https://api.energy-charts.info/ n'est nécessaire. Peut être utilisé pour les tarifs d'électricité dynamiques, par exemple, lorsque le fournisseur ne propose pas encore de prévisions de prix sur l'interface client."
   evcc: ["skiptest"]
 group: price
 countries: ["EU"]
@@ -35,6 +36,7 @@ params:
     help:
       de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
       en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+      fr: "Zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
   - preset: tariff-base
 render: |
   type: custom
