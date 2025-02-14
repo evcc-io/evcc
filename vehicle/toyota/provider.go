@@ -21,10 +21,5 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.status()
-
-	if err == nil {
-		return float64(res.Payload.BatteryLevel), nil
-	}
-
-	return 0, err
+	return float64(res.Payload.BatteryLevel), err
 }

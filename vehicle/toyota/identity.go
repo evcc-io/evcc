@@ -143,21 +143,21 @@ func (v *Identity) Login(user, password string) error {
 		"Accept": "application/json",
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create authentication request: %w", err)
 	}
 
 	var auth Auth
 	if err = v.DoJSON(req, &auth); err != nil {
-		return err
+		return fmt.Errorf("failed to get initial auth response: %w", err)
 	}
 
 	token, err := v.authenticate(auth, user, password, false)
 	if err != nil {
-		return err
+		return fmt.Errorf("authentication failed: %w", err)
 	}
 
 	if err = token.Error(); err != nil {
-		return err
+		return fmt.Errorf("token error: %w", err)
 	}
 
 	code, err := v.authorize(*token)
@@ -165,9 +165,9 @@ func (v *Identity) Login(user, password string) error {
 		return fmt.Errorf("authorization failed: %w", err)
 	}
 
-	err = v.fetchTokenCredentials(code)
-	if err != nil {
+	if err = v.fetchTokenCredentials(code); err != nil {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
-	return err
+
+	return nil
 }
