@@ -4,10 +4,12 @@ products:
   - description:
       de: Demobatterie
       en: Demo battery
+      fr: Batterie de démo
 requirements:
   description:
     en: For demonstration purposes. Battery with a fixed set of values.
     de: Zu Demonstrationszwecken. Hausbatterie mit festen Werten.
+    fr: Une batterie domestique avec des valeurs fixes pour démonstration.
 params:
   - name: usage
     choice: ["battery"]
@@ -15,42 +17,50 @@ params:
     description:
       de: Leistung (W)
       en: Power (W)
+      fr: Puissance (W)
     type: int
   - name: soc
     description:
       de: Ladestand (%)
       en: Charge (%)
+      fr: Charge (%)
     type: int
   - name: controllable
     description:
       de: Steuerbar
       en: Controllable
+      fr: Contrôlable
     type: bool
     help:
       de: "Unterstützt aktive Batteriesteuerung"
       en: "Supports active battery control"
+      fr: "Supporte un contrôle actif de la batterie"
   - name: energy
     description:
       de: Zählerstand (kWh)
       en: Meter reading (kWh)
+      fr: Valeur du compteur (kWh)
     type: int
     advanced: true
   - name: currentL1
     description:
       de: L1 Stromstärke (A)
       en: L1 current (A)
+      fr: L1 courant (A)
     type: int
     advanced: true
   - name: currentL2
     description:
       de: L2 Stromstärke (A)
       en: L2 current (A)
+      fr: L2 courant (A)
     type: int
     advanced: true
   - name: currentL3
     description:
       de: L3 Stromstärke (A)
       en: L3 current (A)
+      fr: L3 courant (A)
     type: int
     advanced: true
 

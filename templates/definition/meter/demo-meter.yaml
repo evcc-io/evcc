@@ -4,10 +4,12 @@ products:
   - description:
       de: Demozähler
       en: Demo meter
+      fr: Compteur de démo
 requirements:
   description:
     en: For demonstration purposes. Meter with a fixed set of values.
     de: Zu Demonstrationszwecken. Zähler mit festen Werten.
+    fr: Compteur avec valeurs fixes pour démonstration.
 params:
   - name: usage
     choice: ["grid", "pv", "aux", "charge"]
@@ -15,29 +17,34 @@ params:
     description:
       de: Leistung (W)
       en: Power (W)
+      fr: Puissance (W)
     type: int
   - name: energy
     description:
       de: Zählerstand (kWh)
       en: Meter reading (kWh)
+      fr: Valeur du compteur (kWh)
     type: int
     advanced: true
   - name: currentL1
     description:
       de: L1 Stromstärke (A)
       en: L1 current (A)
+      fr: L1 courant (A)
     type: int
     advanced: true
   - name: currentL2
     description:
       de: L2 Stromstärke (A)
       en: L2 current (A)
+      fr: L2 courant (A)
     type: int
     advanced: true
   - name: currentL3
     description:
       de: L3 Stromstärke (A)
       en: L3 current (A)
+      fr: L3 courant (A)
     type: int
     advanced: true
 
