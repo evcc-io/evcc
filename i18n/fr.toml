@@ -31,7 +31,7 @@ titleAdd = "Ajouter une batterie domestique"
 titleEdit = "Modifier batterie"
 
 [config.charge]
-titleAdd = "Ajouter mesure de charge"
+titleAdd = "Ajouter un compteur de charge"
 titleEdit = "Modifier le compteur de charge"
 
 [config.charger]
@@ -41,7 +41,7 @@ ocppHelp = "Copier cette adresse dans votre configuration de chargeurs."
 ocppLabel = "URL du serveur OCPP"
 switchsockets = "Prises commutables"
 template = "Fabricant"
-titleAdd = "Ajouter chargeur"
+titleAdd = "Ajouter un chargeur"
 titleEdit = "Modifier chargeur"
 
 [config.circuits]
@@ -50,7 +50,7 @@ title = "Gestion de la charge"
 
 [config.control]
 description = "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites."
-descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
+descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des compteurs, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
 descriptionResidualPower = "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau."
 labelInterval = "Intervalle de mise à jour"
 labelResidualPower = "Puissance résiduelle"
@@ -132,8 +132,8 @@ validateSave = "Valider & enregistrer"
 
 [config.grid]
 title = "Compteur du réseau"
-titleAdd = "Ajouter compteur pour réseau"
-titleEdit = "Modifier compteur pour réseau"
+titleAdd = "Ajouter un compteur pour réseau"
+titleEdit = "Modifier le compteur pour réseau"
 
 [config.hems]
 description = "Connecter evcc à un autre Système de Gestion d’Energie Domestique."
@@ -157,7 +157,7 @@ v2Support = "Revenir à InfluxDB 2.x"
 
 [config.loadpoint]
 addCharger = "Ajouter un chargeur"
-addMeter = "Ajouter une mesure dédiée pour le chargeur"
+addMeter = "Ajouter un compteur dédié pour le chargeur"
 cancel = "Annuler"
 chargerLabel = "Chargeur"
 chargerPower11kw = "11 kW"
@@ -176,8 +176,8 @@ defaultModeLabel = "Mode par défaut"
 delete = "Supprimer"
 electricalSubtitle = "En cas de doute, demandez à votre électricien."
 electricalTitle = "Électricité"
-energyMeterHelp = "Appareil de mesure supplémentaire si le chargeur n’en a pas un intégré."
-energyMeterLabel = "Mesure de l’énergie"
+energyMeterHelp = "Compteur supplémentaire si le chargeur n’en a pas un intégré."
+energyMeterLabel = "Compteur d’énergie"
 estimateLabel = "Interpoler le niveau de charge entre deux mises à jour via l’API"
 maxCurrentHelp = "Doit être supérieur au courant minimum."
 maxCurrentLabel = "Courant maximum"
@@ -305,8 +305,8 @@ B = "B (connecté)"
 C = "C (en charge)"
 
 [config.pv]
-titleAdd = "Ajouter un compteur pour le solaire"
-titleEdit = "Modifier le compteur pour le solaire"
+titleAdd = "Ajouter un compteur de production solaire"
+titleEdit = "Modifier le compteur de production solaire"
 
 [config.section]
 general = "Général"
@@ -367,7 +367,7 @@ online = "Véhicules avec API en ligne"
 save = "Enregistrer"
 scooter = "Trottinette"
 template = "Fabricant"
-titleAdd = "Ajouter le véhicule"
+titleAdd = "Ajouter un véhicule"
 titleEdit = "Modifier le véhicule"
 validateSave = "Valider & enregistrer"
 
