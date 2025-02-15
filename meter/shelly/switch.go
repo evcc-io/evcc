@@ -9,11 +9,13 @@ import (
 
 type Switch struct {
 	*Connection
+	IgnorePowerDirection bool
 }
 
-func NewSwitch(conn *Connection) *Switch {
+func NewSwitch(conn *Connection, ignorepowerdirection bool) *Switch {
 	res := &Switch{
-		Connection: conn,
+		Connection:           conn,
+		IgnorePowerDirection: ignorepowerdirection,
 	}
 
 	return res
@@ -64,8 +66,12 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 	}
 
-	// Assure positive power response (Gen 1 EM devices can provide negative values)
-	return math.Abs(power), nil
+	if sh.IgnorePowerDirection {
+		// Assure positive power response (Gen 1 EM devices can provide negative values)
+		return math.Abs(power), nil
+	} else {
+		return power, nil
+	}
 }
 
 // Enabled implements the api.Charger interface

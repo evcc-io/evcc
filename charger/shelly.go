@@ -44,7 +44,7 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: shelly.NewSwitch(conn),
+		conn: shelly.NewSwitch(conn, true),
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
