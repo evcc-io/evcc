@@ -23,4 +23,4 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   vin: {{ .vin }}
-  cache: {{ .cache }} 
+  cache: {{ .cache }}
