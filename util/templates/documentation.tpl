@@ -3,8 +3,8 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
-  {{- $help := localize .Help | replace "\n" " " -}}
-  {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
+  {{- $description := localize .Description | replace "\n" " " -}}
+  {{- if $description }} # {{ $description }}{{- end }}{{- if not .IsRequired }}{{ if not $description }} # {{ else }} ({{ end }}optional{{ if $description }}){{ end }}{{ end }}
 {{- end }}
 
 {{- define "header" }}
