@@ -40,10 +40,18 @@ params:
     required: true
   - name: kwp
     description:
-      en: Maximum power (kWp)
-      de: Maximalleistung (kWp)
+      en: Maximum generator power [kWp]
+      de: Maximale Generatorleistung [kWp]
     example: 9.8
     required: true
+  - name: horizon
+    description:
+      en: Horizon / terrain shadows
+      de: Horizont / Geländeschatten
+    help:
+      en: Horizon line as comma separated list of angles in degrees. Leave empty for calculated horizon shading.
+      de: Horizontlinie als kommaseparierte Liste von Winkeln in Grad. Leer lassen für berechnete Horizontschattierung.
+    example: 0,0,15,30,45,60,60,60,45,30,15,0
   - name: apikey
     description:
       en: API key
@@ -54,7 +62,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60
+    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ .horizon }}{{ end }}
     jq: |
       [ .result.watt_hours_period | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
