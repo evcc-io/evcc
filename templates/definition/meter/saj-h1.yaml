@@ -110,7 +110,6 @@ render: |
               address: 0x3247 # AppMode
               type: writeholding
               decode: uint16
-        {{- end }}
     - case: 3 # charge
       set:
         source: sequence
