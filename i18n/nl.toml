@@ -93,6 +93,8 @@ temp = "Temperatuur"
 topic = "Onderwerp"
 url = "URL"
 yes = "ja"
+vehicleLimitSoc = "Voertuig limiet"
+singlePhase = "Monofase"
 
 [config.eebus]
 description = "Configuratie voor communicatie met andere EEBus apparaten."
@@ -101,6 +103,7 @@ title = "EEBus"
 [config.form]
 example = "Voorbeeld"
 optional = "optioneel"
+deprecated = "verouderd"
 
 [config.general]
 cancel = "Annuleren"
@@ -116,6 +119,8 @@ save = "Opslaan"
 showAdvancedSettings = "Toon geavanceerde instellingen"
 telemetry = "Telemetrie"
 title = "Titel"
+delete = "Wissen"
+validateSave = "Valideren & opslaan"
 
 [config.grid]
 title = "Netmeter"
@@ -825,3 +830,20 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.loadpoint]
+cancel = "Annuleren"
+chargerLabel = "Oplader"
+chargerPower11kwHelp = "Zal een stroom van 6 tot 16 A gebruiken."
+chargerPower11kw = "11 kW"
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = "Zal een stroom van 6 tot 32 A gebruiken."
+chargerPowerCustom = "andere"
+defaultModeLabel = "Standaard mode"
+delete = "Wissen"
+
+[config.deviceValueChargeStatus]
+A = "A (niet aangesloten)"
+B = "B (aangesloten)"
+C = "C (opladen)"
