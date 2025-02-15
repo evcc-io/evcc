@@ -72,7 +72,7 @@ phaseVoltages = "Τάση L1, L2, L3"
 power = "Ισχύς"
 powerRange = "Ισχύς"
 range = "Αυτονομία"
-soc = "Κατάσταση φόρτισης (SoC)"
+soc = "Κατάσταση φόρτισης"
 socLimit = "Όριο"
 temp = "Θερμοκρασία"
 topic = "Topic"
@@ -86,6 +86,7 @@ title = "EEBus"
 [config.form]
 example = "Παράδειγμα"
 optional = "προαιρετικό"
+deprecated = "καταργήθηκε"
 
 [config.general]
 cancel = "Ακύρωση"
@@ -101,6 +102,8 @@ save = "Αποθήκευση"
 showAdvancedSettings = "Εμφάνιση ρυθμίσεων για προχωρημένους"
 telemetry = "Τηλεμετρία"
 title = "Τίτλος"
+delete = "Διαγραφή"
+validateSave = "Επικύρωση και αποθήκευση"
 
 [config.grid]
 title = "Μετρητής δικτύου"
@@ -136,7 +139,8 @@ edit = "επεξεργασία"
 title = "Διαμόρφωση"
 unconfigured = "δεν έχει ρυθμιστεί"
 vehicles = "Τα Οχήματά μου"
-yaml = "Ορίζεται στο evcc.yaml. Δεν μεταβάλλεται από το UI"
+yaml = "Συσκευή που έχει οριστεί στο evcc.yaml δεν είναι προς επεξεργασία από εδώ."
+name = "Όνομα"
 
 [config.messaging]
 description = "Λάβετε μηνύματα σχετικά με τις συνεδρίες φόρτισης."
@@ -209,13 +213,16 @@ system = "Σύστημα"
 vehicles = "Οχήματα"
 
 [config.sponsor]
-addToken = "Εισαγάγετε το sponsor token"
-changeToken = "Αλλαγή του sponsor token"
+addToken = "Εισαγάγετε το token"
+changeToken = "Αλλαγή του token"
 description = "Το μοντέλο χορηγίας μας βοηθά να διατηρήσουμε το έργο και να δημιουργήσουμε με βιώσιμο τρόπο νέες και συναρπαστικές λειτουργίες. Ως χορηγός έχετε πρόσβαση σε όλες τις εφαρμογές φορτιστή."
 descriptionToken = "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή."
-error = "Δεν είναι έγκυρο το sponsor token."
+error = "Το sponsor token δεν είναι έγκυρο ."
 labelToken = "Sponsor token"
 title = "Χορηγία"
+tokenRequired = "Πρέπει να εισάγετε ένα sponsor token για να μπορέσετε να δημιουργήσετε αυτή τη συσκευή."
+trialToken = "Δοκιμαστικό token"
+tokenRequiredLearnMore = "Μάθετε περισσότερα."
 
 [config.system]
 logs = "Καταγραφές"
