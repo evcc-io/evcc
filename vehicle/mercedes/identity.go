@@ -39,7 +39,6 @@ var OAuth2Config = &oauth2.Config{
 
 // NewIdentity creates Mercedes identity
 func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region string) (*Identity, error) {
-
 	v := &Identity{
 		Helper:  request.NewHelper(log),
 		log:     log,
