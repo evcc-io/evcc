@@ -187,6 +187,14 @@ export default {
         minute: "numeric",
       }).format(date);
     },
+    hourShort: function (date) {
+      const locale = this.$i18n?.locale;
+      // special: use shorter german format
+      if (locale === "de") return date.getHours();
+      return new Intl.DateTimeFormat(locale, {
+        hour: "numeric",
+      }).format(date);
+    },
     weekdayShort: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
