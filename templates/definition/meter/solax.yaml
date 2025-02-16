@@ -104,7 +104,6 @@ render: |
       decode: uint16
   # energy:
   #   source: modbus
-  #   {{- include "modbus" . | indent 2 }}
   #   register:
   #     address: 29 # 0x001D Battery Output Energy Total
   #     type: input
