@@ -12,8 +12,8 @@ params:
   - name: password
   - name: channel
     default: 0
-  - name: ignorepowerdirection
-    default: true
+  - name: invert
+    default: false
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
@@ -24,4 +24,4 @@ render: |
   password: {{ .password }}
   {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
-  ignorepowerdirection: {{ .ignorepowerdirection }}
+  invert: {{ .invert }}

@@ -14,13 +14,13 @@ func init() {
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI                  string
-		User                 string
-		Password             string
-		Channel              int
-		IgnorePowerDirection bool
+		URI      string
+		User     string
+		Password string
+		Channel  int
+		Invert   bool
 	}{
-		IgnorePowerDirection: true,
+		Invert: false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -32,5 +32,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewSwitch(conn, cc.IgnorePowerDirection), nil
+	return shelly.NewSwitch(conn, cc.Invert), nil
 }

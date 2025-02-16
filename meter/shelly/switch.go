@@ -3,19 +3,18 @@ package shelly
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 )
 
 type Switch struct {
 	*Connection
-	IgnorePowerDirection bool
+	Invert bool
 }
 
-func NewSwitch(conn *Connection, ignorepowerdirection bool) *Switch {
+func NewSwitch(conn *Connection, invert bool) *Switch {
 	res := &Switch{
-		Connection:           conn,
-		IgnorePowerDirection: ignorepowerdirection,
+		Connection: conn,
+		Invert:     invert,
 	}
 
 	return res
@@ -66,9 +65,8 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 	}
 
-	if sh.IgnorePowerDirection {
-		// Assure positive power response (Gen 1 EM devices can provide negative values)
-		return math.Abs(power), nil
+	if sh.Invert {
+		return -power, nil
 	} else {
 		return power, nil
 	}
