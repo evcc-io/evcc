@@ -824,10 +824,10 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// energy demand
 	ed := struct {
-		SolarForecastYet   *float64 `json:"solarForecastYet,omitempty"`
-		SolarProductionYet float64  `json:"solarProductionYet,omitempty"`
-		BatteryDemand      float64  `json:"batteryDemand"`
-		LoadpointDemand    float64  `json:"loadpointDemand"`
+		SolarForecasted *float64 `json:"solarForecasted,omitempty"`
+		SolarActual     float64  `json:"solarActual,omitempty"`
+		BatteryDemand   float64  `json:"batteryDemand"`
+		LoadpointDemand float64  `json:"loadpointDemand"`
 	}{
 		LoadpointDemand: lo.SumBy(site.loadpoints, func(lp *Loadpoint) float64 {
 			return lp.GetRemainingEnergy()
@@ -836,7 +836,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// TODO production today
 	if solar != nil {
-		ed.SolarForecastYet = lo.ToPtr(tariff.Energy(solar))
+		ed.SolarForecasted = lo.ToPtr(tariff.Energy(solar))
 	}
 	if site.batteryCapacity > 0 {
 		ed.BatteryDemand = 1 - site.batterySoc*site.batteryCapacity
