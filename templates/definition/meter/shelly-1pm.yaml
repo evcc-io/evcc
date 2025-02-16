@@ -6,7 +6,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "pv", "battery"]
   - name: host
   - name: user
   - name: password
@@ -14,6 +14,14 @@ params:
     default: 0
   - name: invert
     default: false
+    advanced: true
+    description:
+      en: Invert measure logic
+      de: Ivertiere die Messlogik
+    help:
+      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow. 
+      de: Invertiere die MEsslogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden. 
+
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
@@ -24,4 +32,5 @@ render: |
   password: {{ .password }}
   {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
+  usage: {{ .usage }}
   invert: {{ .invert }}

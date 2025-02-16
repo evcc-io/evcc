@@ -8,12 +8,14 @@ import (
 
 type Switch struct {
 	*Connection
+	Usage  string
 	Invert bool
 }
 
-func NewSwitch(conn *Connection, invert bool) *Switch {
+func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
 	res := &Switch{
 		Connection: conn,
+		Usage:      usage,
 		Invert:     invert,
 	}
 
@@ -65,11 +67,12 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 	}
 
-	if sh.Invert {
-		return -power, nil
-	} else {
-		return power, nil
+	if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+		power = -power
 	}
+
+	return power, nil
+
 }
 
 // Enabled implements the api.Charger interface
@@ -124,9 +127,17 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			energy = res.Meters[d.channel].Total
+			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+				energy = res.Meters[d.channel].Total_Returned
+			} else {
+				energy = res.Meters[d.channel].Total
+			}
 		case d.channel < len(res.EMeters):
-			energy = res.EMeters[d.channel].Total
+			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+				energy = res.EMeters[d.channel].Total_Returned
+			} else {
+				energy = res.EMeters[d.channel].Total
+			}
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
@@ -146,13 +157,24 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 			}
 		}
 
-		switch d.channel {
-		case 1:
-			energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy - resem.Em1Data.TotalActRetEnergy
-		case 2:
-			energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy - resem.Em2Data.TotalActRetEnergy
-		default:
-			energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy - resem.Em0Data.TotalActRetEnergy
+		if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+			switch d.channel {
+			case 1:
+				energy = res.Switch1.Ret_Aenergy.Total + res.Pm1.Ret_Aenergy.Total + resem.Em1Data.TotalActRetEnergy
+			case 2:
+				energy = res.Switch2.Ret_Aenergy.Total + res.Pm2.Ret_Aenergy.Total + resem.Em2Data.TotalActRetEnergy
+			default:
+				energy = res.Switch0.Ret_Aenergy.Total + res.Pm0.Ret_Aenergy.Total + resem.Em0Data.TotalActRetEnergy
+			}
+		} else {
+			switch d.channel {
+			case 1:
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy
+			case 2:
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy
+			default:
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy
+			}
 		}
 	}
 

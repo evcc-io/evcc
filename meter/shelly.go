@@ -18,6 +18,7 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User     string
 		Password string
 		Channel  int
+		Usage    string // grid, pv, battery
 		Invert   bool
 	}{
 		Invert: false,
@@ -32,5 +33,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewSwitch(conn, cc.Invert), nil
+	return shelly.NewSwitch(conn, cc.Usage, cc.Invert), nil
 }
