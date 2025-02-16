@@ -47,6 +47,8 @@
 	--evcc-pv: var(--evcc-dark-green);
 	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
+	--evcc-price: #ff912fff;
+	--evcc-co2: #00916eff;
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
 	--evcc-box-border: var(--bs-gray-brighter);
@@ -163,6 +165,14 @@ h5 {
 
 .text-primary {
 	color: var(--bs-primary) !important;
+}
+
+.text-price {
+	color: var(--evcc-price) !important;
+}
+
+.text-co2 {
+	color: var(--evcc-co2) !important;
 }
 
 a {

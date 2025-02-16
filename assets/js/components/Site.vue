@@ -131,6 +131,7 @@ export default {
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
+		forecast: Object,
 	},
 	computed: {
 		batteryConfigured: function () {

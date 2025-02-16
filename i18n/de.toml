@@ -62,6 +62,8 @@ chargeStatus = "Status"
 chargeStatusA = "nicht verbunden"
 chargeStatusB = "verbunden"
 chargeStatusC = "lädt"
+chargeStatusE = "Keine Leistung"
+chargeStatusF = "Fehler"
 chargedEnergy = "Geladen"
 co2 = "Netz-CO₂"
 configured = "Konfiguriert"
@@ -74,6 +76,7 @@ energy = "Energie"
 feedinPrice = "Einspeisevergütung"
 gridPrice = "Netzpreis"
 hemsType = "System"
+identifier = "RFID-Kennung"
 no = "Nein"
 odometer = "Kilometerstand"
 org = "Organisation"
@@ -431,6 +434,31 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
+[forecast]
+modalTitle = "Vorhersage"
+
+[forecast.co2]
+average = "Durchschnitt"
+lowestHour = "Sauberste Stunde"
+range = "Bereich"
+
+[forecast.price]
+average = "Durchschnitt"
+lowestHour = "Günstigste Stunde"
+range = "Bereich"
+
+[forecast.solar]
+dayAfterTomorrow = "Übermorgen"
+partly = "teilweise"
+remaining = "verbleibend"
+today = "Heute"
+tomorrow = "Morgen"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Preis"
+solar = "Solar"
+
 [header]
 about = "Über"
 blog = "Blog"
@@ -521,6 +549,7 @@ batteryGridChargeActive = "Netzladen aktiv"
 batteryGridChargeLimit = "Netzladen wenn"
 batteryHold = "Batterie (gesperrt)"
 batteryTooltip = "{energy} von {total} ({soc})"
+forecastTooltip = "Vorhersage: erwartete Sonnenenergie heute"
 gridImport = "Netzbezug"
 homePower = "Verbrauch"
 loadpoints = "Ladepunkt | Ladepunkt | {count} Ladepunkte"

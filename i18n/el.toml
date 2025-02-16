@@ -41,6 +41,7 @@ labelResidualPower = "Υπολειπόμενη ισχύς"
 title = "Έλεγχος συμπεριφοράς"
 
 [config.deviceValue]
+amount = "Ποσό"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Χωρητικότητα"
@@ -214,7 +215,7 @@ description = "Το μοντέλο χορηγίας μας βοηθά να δι�
 descriptionToken = "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή."
 error = "Δεν είναι έγκυρο το sponsor token."
 labelToken = "Sponsor token"
-title = "Χορηγεία"
+title = "Χορηγία"
 
 [config.system]
 logs = "Καταγραφές"
@@ -408,6 +409,8 @@ weekdays = "Ημέρες"
 battery = "Μπαταρία"
 batteryCharge = "Φόρτιση μπαταρίας"
 batteryDischarge = "Αποφόρτιση μπαταρίας"
+batteryGridChargeActive = "ενεργή φόρτιση από το δίκτυο"
+batteryGridChargeLimit = "φόρτιση από το δίκτυο όταν"
 batteryHold = "Μπαταρία (κλειδωμένο)"
 batteryTooltip = "{energy} από {total} ({soc})"
 gridImport = "Χρήση δικτύου"
