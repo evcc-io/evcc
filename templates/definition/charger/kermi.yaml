@@ -1,5 +1,6 @@
 template: kermi
 products:
+  - brand: Bösch
   - brand: Kermi
     description:
       generic: x-change
