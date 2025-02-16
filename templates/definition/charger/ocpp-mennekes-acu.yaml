@@ -16,7 +16,7 @@ requirements:
     en: |
       To configure, open the web interface of the ACU.
       Setup, Backend, Communication Protocol: Open Charge Point Protocol v1.6J
-      Setup, Backend, Backend Server: The EVCC URL ws://<evcc-address>:8887/ must be entered here. Basic Authentication: Disabled. OCPP 1.6 Settings: Enable all options.
+      Setup, Backend, Backend Server: The evcc URL `ws://<evcc-address>:8887/` must be entered here. Basic Authentication: Disabled. OCPP 1.6 Settings: Enable all options.
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
