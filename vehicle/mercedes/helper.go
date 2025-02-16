@@ -3,7 +3,6 @@ package mercedes
 import (
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/google/uuid"
 )
@@ -11,20 +10,6 @@ import (
 // Helper provides utility primitives
 type Helper struct {
 	*http.Client
-}
-
-var (
-	mu         sync.Mutex
-	identities = make(map[string]*Identity)
-)
-
-func getInstance(subject string) *Identity {
-	v := identities[subject]
-	return v
-}
-
-func addInstance(subject string, identity *Identity) {
-	identities[subject] = identity
 }
 
 const (

@@ -10,6 +10,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: user
+    deprecated: true
     required: true
   - name: region
     required: true
@@ -17,21 +18,22 @@ params:
     choice: ["EMEA", "APAC", "NORAM"]
     default: EMEA
   - name: accessToken
-    required: true
+    required: false
     mask: true
+    deprecated: true
+    default: not_used
   - name: refreshToken
     required: true
     mask: true
   - name: vin
     example: V...
+    required: true
   - name: cache
     default: 15m
 render: |
   type: mercedes
   vin: {{ .vin }}
-  user: {{ .user }}
   region: {{ .region }}
   tokens:
-    access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
