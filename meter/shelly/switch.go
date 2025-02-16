@@ -159,11 +159,11 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
 			switch d.channel {
 			case 1:
-				energy = res.Switch1.Ret_Aenergy.Total + res.Pm1.Ret_Aenergy.Total + resem.Em1Data.TotalActRetEnergy
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Ret_Aenergy.Total + resem.Em1Data.TotalActRetEnergy
 			case 2:
-				energy = res.Switch2.Ret_Aenergy.Total + res.Pm2.Ret_Aenergy.Total + resem.Em2Data.TotalActRetEnergy
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Ret_Aenergy.Total + resem.Em2Data.TotalActRetEnergy
 			default:
-				energy = res.Switch0.Ret_Aenergy.Total + res.Pm0.Ret_Aenergy.Total + resem.Em0Data.TotalActRetEnergy
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Ret_Aenergy.Total + resem.Em0Data.TotalActRetEnergy
 			}
 		} else {
 			switch d.channel {
