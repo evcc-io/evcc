@@ -19,9 +19,8 @@ params:
       en: Invert measure logic
       de: Ivertiere die Messlogik
     help:
-      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow. 
-      de: Invertiere die MEsslogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden. 
-
+      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow.
+      de: Invertiere die MEsslogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden.
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)

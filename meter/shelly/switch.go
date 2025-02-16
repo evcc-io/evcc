@@ -72,7 +72,6 @@ func (sh *Switch) CurrentPower() (float64, error) {
 	}
 
 	return power, nil
-
 }
 
 // Enabled implements the api.Charger interface
