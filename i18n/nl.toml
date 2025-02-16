@@ -87,26 +87,32 @@ phaseVoltages = "Spanning L1, L2, L3"
 power = "Vermogen"
 powerRange = "Vermogen"
 range = "Actieradius"
+singlePhase = "Monofase"
 soc = "Batterijpercentage"
 socLimit = "Limiet"
 temp = "Temperatuur"
 topic = "Onderwerp"
 url = "URL"
-yes = "ja"
 vehicleLimitSoc = "Voertuig limiet"
-singlePhase = "Monofase"
+yes = "ja"
+
+[config.deviceValueChargeStatus]
+A = "A (niet aangesloten)"
+B = "B (aangesloten)"
+C = "C (opladen)"
 
 [config.eebus]
 description = "Configuratie voor communicatie met andere EEBus apparaten."
 title = "EEBus"
 
 [config.form]
+deprecated = "verouderd"
 example = "Voorbeeld"
 optional = "optioneel"
-deprecated = "verouderd"
 
 [config.general]
 cancel = "Annuleren"
+delete = "Wissen"
 docsLink = "Zie documentatie."
 experimental = "Experimenteel"
 hideAdvancedSettings = "Verberg geavanceerde instellingen"
@@ -119,7 +125,6 @@ save = "Opslaan"
 showAdvancedSettings = "Toon geavanceerde instellingen"
 telemetry = "Telemetrie"
 title = "Titel"
-delete = "Wissen"
 validateSave = "Valideren & opslaan"
 
 [config.grid]
@@ -146,6 +151,17 @@ labelUser = "Gebruikersnaam"
 title = "InfluxDB"
 v1Support = "Hulp nodig voor InfluxDB 1.x?"
 v2Support = "Terug naar InfluxDB 2.x"
+
+[config.loadpoint]
+cancel = "Annuleren"
+chargerLabel = "Oplader"
+chargerPower11kw = "11 kW"
+chargerPower11kwHelp = "Zal een stroom van 6 tot 16 A gebruiken."
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = "Zal een stroom van 6 tot 32 A gebruiken."
+chargerPowerCustom = "andere"
+defaultModeLabel = "Standaard mode"
+delete = "Wissen"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
@@ -830,20 +846,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[config.loadpoint]
-cancel = "Annuleren"
-chargerLabel = "Oplader"
-chargerPower11kwHelp = "Zal een stroom van 6 tot 16 A gebruiken."
-chargerPower11kw = "11 kW"
-chargerPower22kw = "22 kW"
-chargerPower22kwHelp = "Zal een stroom van 6 tot 32 A gebruiken."
-chargerPowerCustom = "andere"
-defaultModeLabel = "Standaard mode"
-delete = "Wissen"
-
-[config.deviceValueChargeStatus]
-A = "A (niet aangesloten)"
-B = "B (aangesloten)"
-C = "C (opladen)"

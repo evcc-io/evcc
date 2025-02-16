@@ -94,8 +94,8 @@ socLimit = "Limit"
 temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
-yes = "igen"
 vehicleLimitSoc = "Jármű limit"
+yes = "igen"
 
 [config.deviceValueChargeStatus]
 A = "A (nincs csatlakoztatva)"
@@ -107,9 +107,9 @@ description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon 
 title = "EEBus"
 
 [config.form]
+deprecated = "elavult"
 example = "Példa"
 optional = "opcionális"
-deprecated = "elavult"
 
 [config.general]
 cancel = "Mégse"
@@ -234,11 +234,11 @@ addTariffs = "Tarifa hozzáadása"
 addVehicle = "Jármű hozzáadása"
 configured = "konfigurálva"
 edit = "szerkesztés"
+name = "Név"
 title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
 yaml = "Eszköz az evcc.yaml fájlból nem szerkeszthető."
-name = "Név"
 
 [config.messaging]
 description = "Értesítési üzenetek beállítása a töltési folyamatokról."

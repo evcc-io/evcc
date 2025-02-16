@@ -84,12 +84,13 @@ description = "Διαμόρφωση που επιτρέπει στο evcc να �
 title = "EEBus"
 
 [config.form]
+deprecated = "καταργήθηκε"
 example = "Παράδειγμα"
 optional = "προαιρετικό"
-deprecated = "καταργήθηκε"
 
 [config.general]
 cancel = "Ακύρωση"
+delete = "Διαγραφή"
 docsLink = "Δείτε την τεκμηρίωση."
 experimental = "Πειραματικό"
 hideAdvancedSettings = "Απόκρυψη ρυθμίσεων για προχωρημένους"
@@ -102,7 +103,6 @@ save = "Αποθήκευση"
 showAdvancedSettings = "Εμφάνιση ρυθμίσεων για προχωρημένους"
 telemetry = "Τηλεμετρία"
 title = "Τίτλος"
-delete = "Διαγραφή"
 validateSave = "Επικύρωση και αποθήκευση"
 
 [config.grid]
@@ -136,11 +136,11 @@ addPvBattery = "Προσθήκη Φ/Β ενέργειας ή μπαταρίας"
 addVehicle = "Προσθήκη οχήματος"
 configured = "ρυθμίστηκε"
 edit = "επεξεργασία"
+name = "Όνομα"
 title = "Διαμόρφωση"
 unconfigured = "δεν έχει ρυθμιστεί"
 vehicles = "Τα Οχήματά μου"
 yaml = "Συσκευή που έχει οριστεί στο evcc.yaml δεν είναι προς επεξεργασία από εδώ."
-name = "Όνομα"
 
 [config.messaging]
 description = "Λάβετε μηνύματα σχετικά με τις συνεδρίες φόρτισης."
@@ -221,8 +221,8 @@ error = "Το sponsor token δεν είναι έγκυρο ."
 labelToken = "Sponsor token"
 title = "Χορηγία"
 tokenRequired = "Πρέπει να εισάγετε ένα sponsor token για να μπορέσετε να δημιουργήσετε αυτή τη συσκευή."
-trialToken = "Δοκιμαστικό token"
 tokenRequiredLearnMore = "Μάθετε περισσότερα."
+trialToken = "Δοκιμαστικό token"
 
 [config.system]
 logs = "Καταγραφές"
