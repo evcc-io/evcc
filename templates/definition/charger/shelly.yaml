@@ -14,10 +14,10 @@ params:
     advanced: true
     description:
       en: Invert measure logic
-      de: Ivertiere die Messlogik
+      de: Invertiere die Messlogik
     help:
-      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow. 
-      de: Invertiere die MEsslogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden. 
+      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow.
+      de: Invertiere die Messlogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden.
   - preset: switchsocket
 render: |
   type: shelly
