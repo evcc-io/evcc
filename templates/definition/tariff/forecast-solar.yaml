@@ -46,12 +46,13 @@ params:
     required: true
   - name: horizon
     description:
-      en: Horizon / terrain shadows
-      de: Horizont / Geländeschatten
+      en: Horizon
+      de: Horizont
     help:
-      en: Horizon line as comma separated list of angles in degrees. Leave empty for calculated horizon shading.
-      de: Horizontlinie als kommaseparierte Liste von Winkeln in Grad. Leer lassen für berechnete Horizontschattierung.
+      en: Simulates terrain shadows, [more information](https://doc.forecast.solar/horizon)
+      de: Simuliert Verschattung durch Gelände, [mehr Informationen](https://doc.forecast.solar/horizon)
     example: 0,0,15,30,45,60,60,60,45,30,15,0
+    advanced: true
   - name: apikey
     description:
       en: API key
