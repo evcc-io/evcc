@@ -34,6 +34,25 @@ func Forecast(t api.Tariff) api.Rates {
 	return nil
 }
 
+func Energy(rr api.Rates) float64 {
+	var power, energy float64
+	for _, r := range rr {
+		if !r.Start.Before(time.Now()) {
+			break
+		}
+
+		end := r.End
+		if r.End.After(time.Now()) {
+			end = time.Now()
+		}
+
+		energy += (r.Price + power) / 2 * end.Sub(r.Start).Hours()
+		power = r.Price
+	}
+
+	return energy / 1e3
+}
+
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	switch u {
 	case api.TariffUsageCo2:

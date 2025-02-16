@@ -97,13 +97,14 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// cached state
-	gridPower     float64         // Grid power
-	pvPower       float64         // PV power
-	excessDCPower float64         // PV excess DC charge power (hybrid only)
-	auxPower      float64         // Aux power
-	batteryPower  float64         // Battery power (charge negative, discharge positive)
-	batterySoc    float64         // Battery soc
-	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
+	gridPower       float64         // Grid power
+	pvPower         float64         // PV power
+	excessDCPower   float64         // PV excess DC charge power (hybrid only)
+	auxPower        float64         // Aux power
+	batteryPower    float64         // Battery power (charge negative, discharge positive)
+	batterySoc      float64         // Battery soc
+	batteryCapacity float64         // Battery capacity
+	batteryMode     api.BatteryMode // Battery mode (runtime only, not persisted)
 }
 
 // MetersConfig contains the site's meter configuration
@@ -552,6 +553,7 @@ func (site *Site) updateBatteryMeters() {
 		totalCapacity = float64(len(site.batteryMeters))
 	}
 	site.batterySoc = batterySocAcc / totalCapacity
+	site.batteryCapacity = totalCapacity
 
 	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Power
@@ -565,7 +567,7 @@ func (site *Site) updateBatteryMeters() {
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 	}
 
-	site.publish(keys.BatteryCapacity, totalCapacity)
+	site.publish(keys.BatteryCapacity, site.batteryCapacity)
 	site.publish(keys.BatterySoc, site.batterySoc)
 
 	site.publish(keys.BatteryPower, site.batteryPower)
@@ -807,6 +809,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// forecast
+	solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar))
 	site.publish(keys.Forecast, struct {
 		Co2    api.Rates `json:"co2,omitempty"`
 		FeedIn api.Rates `json:"feedin,omitempty"`
@@ -816,8 +819,32 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
 		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
 		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
-		Solar:  tariff.Forecast(site.GetTariff(api.TariffUsageSolar)),
+		Solar:  solar,
 	})
+
+	// energy demand
+	var ed struct {
+		SolarForecastUntilNow *float64 `json:"solarForecastUntilNow,omitempty"`
+		BatteryDemand         float64  `json:"batteryDemand"`
+		LoadpointDemand       float64  `json:"loadpointDemand"`
+	}
+
+	// TODO production today
+	if solar != nil {
+		ed.SolarForecastUntilNow = lo.ToPtr(tariff.Energy(solar))
+	}
+	if site.batteryCapacity > 0 {
+		ed.BatteryDemand = 1 - site.batterySoc*site.batteryCapacity
+	}
+	var ld float64
+	for _, lp := range site.loadpoints {
+		if v := lp.GetVehicle(); v != nil {
+			ld += lp.GetRemainingEnergy()
+		}
+	}
+	ed.LoadpointDemand = ld
+
+	site.publish(keys.EnergyDemand, ed)
 }
 
 // updateLoadpoints updates all loadpoints' charge power
