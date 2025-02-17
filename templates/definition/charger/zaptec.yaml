@@ -1,8 +1,12 @@
 template: zaptec
+protocol: localapi
 products:
   - brand: Zaptec
     description:
-      generic: Go, Pro
+      generic: Go
+  - brand: Zaptec
+    description:
+      generic: Pro
 requirements:
   evcc: ["sponsorship"]
 params:
