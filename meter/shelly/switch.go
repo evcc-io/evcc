@@ -24,8 +24,8 @@ func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
 
 // CurrentPower implements the api.Meter interface
 func (sh *Switch) CurrentPower() (float64, error) {
-	var switchpower float64
-	var meterpower float64
+	var switchpower float64 // without direction indication - always positve
+	var meterpower float64  // with direction indication +/-
 
 	d := sh.Connection
 	switch d.gen {
