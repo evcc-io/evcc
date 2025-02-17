@@ -72,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	if forecastG != nil {

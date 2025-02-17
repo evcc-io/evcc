@@ -57,7 +57,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		sites:  []string{cc.Site},
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](6 * /*len(cc.Sites)*/ time.Hour),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
