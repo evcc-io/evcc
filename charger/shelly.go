@@ -20,7 +20,7 @@ func init() {
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
@@ -28,8 +28,6 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Channel      int
 		StandbyPower float64
 		Invert       bool
-	}{
-		Invert: false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
