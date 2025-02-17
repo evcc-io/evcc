@@ -95,6 +95,7 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
+	pvStats     meterStats
 
 	// cached state
 	gridPower       float64         // Grid power
@@ -242,12 +243,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
-	lp := &Site{
+	site := &Site{
 		log:     util.NewLogger("site"),
 		Voltage: 230, // V
+		pvStats: meterStats{startFunc: beginningOfDay},
 	}
 
-	return lp
+	return site
 }
 
 // restoreMetersAndTitle restores site meter configuration
@@ -502,6 +504,13 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
+
+	// update statistics
+	if totalEnergy > 0 {
+		site.pvStats.AddEnergy(totalEnergy)
+	} else {
+		site.pvStats.AddPower(site.pvPower)
+	}
 }
 
 // updateBatteryMeters updates battery meters
@@ -809,17 +818,39 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// forecast
+	var (
+		solarForecasted float64
+		solarAdjusted   api.Rates
+	)
+
 	solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar))
+	if solar != nil {
+		// adjusted solar forecast
+		solarForecasted = tariff.Energy(solar)
+		if solarForecasted > 0 && site.pvStats.energy > 0 {
+			scale := site.pvStats.energy / solarForecasted
+			for _, r := range solar {
+				solarAdjusted = append(solarAdjusted, api.Rate{
+					Start: r.Start,
+					End:   r.End,
+					Price: r.Price * scale,
+				})
+			}
+		}
+	}
+
 	site.publish(keys.Forecast, struct {
-		Co2    api.Rates `json:"co2,omitempty"`
-		FeedIn api.Rates `json:"feedin,omitempty"`
-		Grid   api.Rates `json:"grid,omitempty"`
-		Solar  api.Rates `json:"solar,omitempty"`
+		Co2           api.Rates `json:"co2,omitempty"`
+		FeedIn        api.Rates `json:"feedin,omitempty"`
+		Grid          api.Rates `json:"grid,omitempty"`
+		Solar         api.Rates `json:"solar,omitempty"`
+		SolarAdjusted api.Rates `json:"solarAdjusted,omitempty"`
 	}{
-		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
-		Solar:  solar,
+		Co2:           tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:        tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
+		Grid:          tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Solar:         solar,
+		SolarAdjusted: solarAdjusted,
 	})
 
 	// energy demand
@@ -829,14 +860,14 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		BatteryDemand   float64  `json:"batteryDemand"`
 		LoadpointDemand float64  `json:"loadpointDemand"`
 	}{
+		SolarActual: site.pvStats.energy,
 		LoadpointDemand: lo.SumBy(site.loadpoints, func(lp *Loadpoint) float64 {
 			return lp.GetRemainingEnergy()
 		}),
 	}
 
-	// TODO production today
 	if solar != nil {
-		ed.SolarForecasted = lo.ToPtr(tariff.Energy(solar))
+		ed.SolarForecasted = lo.ToPtr(solarForecasted)
 	}
 	if site.batteryCapacity > 0 {
 		ed.BatteryDemand = 1 - site.batterySoc*site.batteryCapacity
