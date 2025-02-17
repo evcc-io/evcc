@@ -6,33 +6,36 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/samber/lo"
 )
 
 type combined struct {
-	tt []api.Tariff
+	tariffs []api.Tariff
 }
 
-func NewCombined(tt []api.Tariff) api.Tariff {
+func NewCombined(tariffs []api.Tariff) api.Tariff {
 	return &combined{
-		tt: tt,
+		tariffs: tariffs,
 	}
 }
 
 func (t *combined) Rates() (api.Rates, error) {
 	var keys []time.Time
-	for _, t := range t.tt {
+	for _, t := range t.tariffs {
 		rr, err := t.Rates()
 		if err != nil {
 			return nil, err
 		}
 
 		for _, r := range rr {
-			keys = append(keys, r.Start)
+			if !slices.ContainsFunc(keys, func(ts time.Time) bool {
+				return ts.Equal(r.Start)
+			}) {
+				keys = append(keys, r.Start)
+			}
 		}
 	}
 
-	keys = slices.SortedFunc(slices.Values(lo.Uniq(keys)), func(a, b time.Time) int {
+	keys = slices.SortedFunc(slices.Values(keys), func(a, b time.Time) int {
 		return a.Compare(b)
 	})
 
@@ -40,7 +43,7 @@ func (t *combined) Rates() (api.Rates, error) {
 	for _, ts := range keys {
 		var rate api.Rate
 
-		for _, t := range t.tt {
+		for _, t := range t.tariffs {
 			r, err := At(t, ts)
 			if err != nil {
 				continue

@@ -34,7 +34,7 @@ func TestCombined(t *testing.T) {
 
 	a := &tariff{api.Rates{rate(1, 1), rate(2, 2)}}
 	b := &tariff{api.Rates{rate(2, 2), rate(3, 3)}}
-	c := &combined{tt: []api.Tariff{a, b}}
+	c := &combined{[]api.Tariff{a, b}}
 
 	rr, err := c.Rates()
 	require.NoError(t, err)
