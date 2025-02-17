@@ -24,7 +24,8 @@ func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
 
 // CurrentPower implements the api.Meter interface
 func (sh *Switch) CurrentPower() (float64, error) {
-	var power float64
+	var switchpower float64
+	var meterpower float64
 
 	d := sh.Connection
 	switch d.gen {
@@ -37,9 +38,9 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			power = res.Meters[d.channel].Power
+			switchpower = res.Meters[d.channel].Power
 		case d.channel < len(res.EMeters):
-			power = res.EMeters[d.channel].Power
+			meterpower = res.EMeters[d.channel].Power
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
@@ -59,19 +60,22 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 		switch d.channel {
 		case 1:
-			power = res.Switch1.Apower + res.Pm1.Apower + resem.Em1.ActPower
+			switchpower = res.Switch1.Apower
+			meterpower = res.Pm1.Apower + resem.Em1.ActPower
 		case 2:
-			power = res.Switch2.Apower + res.Pm2.Apower + resem.Em2.ActPower
+			switchpower = res.Switch2.Apower
+			meterpower = res.Pm2.Apower + resem.Em2.ActPower
 		default:
-			power = res.Switch0.Apower + res.Pm0.Apower + resem.Em0.ActPower
+			switchpower = res.Switch0.Apower
+			meterpower = res.Pm0.Apower + resem.Em0.ActPower
 		}
 	}
 
 	if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
-		power = -power
+		meterpower = -meterpower
 	}
 
-	return power, nil
+	return switchpower + meterpower, nil
 }
 
 // Enabled implements the api.Charger interface
