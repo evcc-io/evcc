@@ -38,6 +38,5 @@ func TestCombined(t *testing.T) {
 
 	rr, err := c.Rates()
 	require.NoError(t, err)
-	t.Log(rr)
 	assert.Equal(t, api.Rates{rate(1, 1), rate(2, 4), rate(3, 3)}, rr)
 }
