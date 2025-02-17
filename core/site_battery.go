@@ -88,12 +88,12 @@ func (site *Site) plannerRates() (api.Rates, error) {
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Price <= *limit
 }
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Price <= *limit
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {

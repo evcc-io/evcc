@@ -14,8 +14,8 @@ type Rate struct {
 	Price float64   `json:"price"`
 }
 
-// IsEmpty returns is the rate is the zero value
-func (r Rate) IsEmpty() bool {
+// IsZero returns is the rate is the zero value
+func (r Rate) IsZero() bool {
 	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
 }
 
