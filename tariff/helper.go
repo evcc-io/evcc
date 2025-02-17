@@ -8,8 +8,17 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 )
+
+// Name returns the tariff type name
+func Name(conf config.Typed) string {
+	if conf.Other != nil && conf.Other["tariff"] != nil {
+		return conf.Other["tariff"].(string)
+	}
+	return conf.Type
+}
 
 func bo() backoff.BackOff {
 	return backoff.NewExponentialBackOff(

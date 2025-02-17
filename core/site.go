@@ -873,7 +873,7 @@ func (site *Site) update(lp updater) {
 		site.log.WARN.Println("planner:", err)
 	}
 
-	rate, err := rates.Current(time.Now())
+	rate, err := rates.At(time.Now())
 	if rates != nil && err != nil {
 		site.log.WARN.Println("planner:", err)
 	}

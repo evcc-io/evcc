@@ -1847,7 +1847,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		rate, _ := rates.Current(time.Now())
+		rate, _ := rates.At(time.Now())
 		if smartCostActive {
 			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Price)
 			err = lp.fastCharging()
