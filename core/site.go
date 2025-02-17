@@ -95,15 +95,17 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
+	pvStats     meterStats
 
 	// cached state
-	gridPower     float64         // Grid power
-	pvPower       float64         // PV power
-	excessDCPower float64         // PV excess DC charge power (hybrid only)
-	auxPower      float64         // Aux power
-	batteryPower  float64         // Battery power (charge negative, discharge positive)
-	batterySoc    float64         // Battery soc
-	batteryMode   api.BatteryMode // Battery mode (runtime only, not persisted)
+	gridPower       float64         // Grid power
+	pvPower         float64         // PV power
+	excessDCPower   float64         // PV excess DC charge power (hybrid only)
+	auxPower        float64         // Aux power
+	batteryPower    float64         // Battery power (charge negative, discharge positive)
+	batterySoc      float64         // Battery soc
+	batteryCapacity float64         // Battery capacity
+	batteryMode     api.BatteryMode // Battery mode (runtime only, not persisted)
 }
 
 // MetersConfig contains the site's meter configuration
@@ -241,12 +243,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
-	lp := &Site{
+	site := &Site{
 		log:     util.NewLogger("site"),
 		Voltage: 230, // V
+		pvStats: meterStats{startFunc: beginningOfDay},
 	}
 
-	return lp
+	return site
 }
 
 // restoreMetersAndTitle restores site meter configuration
@@ -501,6 +504,13 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
+
+	// update statistics
+	if totalEnergy > 0 {
+		site.pvStats.AddEnergy(totalEnergy)
+	} else {
+		site.pvStats.AddPower(site.pvPower)
+	}
 }
 
 // updateBatteryMeters updates battery meters
@@ -552,6 +562,7 @@ func (site *Site) updateBatteryMeters() {
 		totalCapacity = float64(len(site.batteryMeters))
 	}
 	site.batterySoc = batterySocAcc / totalCapacity
+	site.batteryCapacity = totalCapacity
 
 	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Power
@@ -565,7 +576,7 @@ func (site *Site) updateBatteryMeters() {
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
 	}
 
-	site.publish(keys.BatteryCapacity, totalCapacity)
+	site.publish(keys.BatteryCapacity, site.batteryCapacity)
 	site.publish(keys.BatterySoc, site.batterySoc)
 
 	site.publish(keys.BatteryPower, site.batteryPower)
@@ -807,17 +818,62 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// forecast
+	var (
+		solarForecasted float64
+		solarAdjusted   api.Rates
+	)
+
+	solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar))
+	if solar != nil {
+		// adjusted solar forecast
+		solarForecasted = tariff.Energy(solar)
+		if solarForecasted > 0 && site.pvStats.energy > 0 {
+			scale := site.pvStats.energy / solarForecasted
+			for _, r := range solar {
+				solarAdjusted = append(solarAdjusted, api.Rate{
+					Start: r.Start,
+					End:   r.End,
+					Price: r.Price * scale,
+				})
+			}
+		}
+	}
+
 	site.publish(keys.Forecast, struct {
-		Co2    api.Rates `json:"co2,omitempty"`
-		FeedIn api.Rates `json:"feedin,omitempty"`
-		Grid   api.Rates `json:"grid,omitempty"`
-		Solar  api.Rates `json:"solar,omitempty"`
+		Co2           api.Rates `json:"co2,omitempty"`
+		FeedIn        api.Rates `json:"feedin,omitempty"`
+		Grid          api.Rates `json:"grid,omitempty"`
+		Solar         api.Rates `json:"solar,omitempty"`
+		SolarAdjusted api.Rates `json:"solarAdjusted,omitempty"`
 	}{
-		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
-		Solar:  tariff.Forecast(site.GetTariff(api.TariffUsageSolar)),
+		Co2:           tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:        tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
+		Grid:          tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Solar:         solar,
+		SolarAdjusted: solarAdjusted,
 	})
+
+	// energy demand
+	ed := struct {
+		SolarForecasted *float64 `json:"solarForecasted,omitempty"`
+		SolarActual     float64  `json:"solarActual,omitempty"`
+		BatteryDemand   float64  `json:"batteryDemand"`
+		LoadpointDemand float64  `json:"loadpointDemand"`
+	}{
+		SolarActual: site.pvStats.energy,
+		LoadpointDemand: lo.SumBy(site.loadpoints, func(lp *Loadpoint) float64 {
+			return lp.GetRemainingEnergy()
+		}),
+	}
+
+	if solar != nil {
+		ed.SolarForecasted = lo.ToPtr(solarForecasted)
+	}
+	if site.batteryCapacity > 0 {
+		ed.BatteryDemand = 1 - site.batterySoc*site.batteryCapacity
+	}
+
+	site.publish(keys.EnergyDemand, ed)
 }
 
 // updateLoadpoints updates all loadpoints' charge power

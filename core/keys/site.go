@@ -19,6 +19,7 @@ const (
 	SiteTitle             = "siteTitle"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
+	EnergyDemand          = "energyDemand"
 	Forecast              = "forecast"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
