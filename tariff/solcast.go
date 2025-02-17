@@ -69,7 +69,7 @@ func (t *Solcast) run(done chan error) {
 	var once sync.Once
 
 	// don't exceed 10 requests per 24h
-	for ; true; <-time.Tick(time.Duration(3 * time.Hour)) {
+	for ; true; <-time.Tick(3 * time.Hour) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
