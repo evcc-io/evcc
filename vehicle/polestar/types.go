@@ -21,6 +21,11 @@ type OdometerData struct {
 	EventUpdatedTimestamp EventUpdatedTimestamp
 }
 
+type CarTelemetryData struct {
+	Battery  BatteryData
+	Odometer OdometerData
+}
+
 type EventUpdatedTimestamp struct {
 	ISO time.Time
 	// Unix int64 `json:",string"`

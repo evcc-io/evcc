@@ -1,8 +1,5 @@
 name: Default
 
-env:
-  GO_VERSION: ^1.23
-
 on:
   push:
     branches:
@@ -13,14 +10,13 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -58,7 +54,6 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -91,7 +86,6 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -117,7 +111,6 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
           cache: false # avoid cache thrashing
         id: go
 
@@ -183,7 +176,6 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -208,13 +200,11 @@ jobs:
       - name: Build Go
         run: make build
 
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
       - name: Run tests
         run: npx playwright test
-
-      # - name: Run tests
-      #   uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
-      #   with:
-      #     args: npx playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

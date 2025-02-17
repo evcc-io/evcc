@@ -9,7 +9,6 @@ endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-TESLA_CLIENT_ID := ${TESLA_CLIENT_ID}
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
@@ -19,8 +18,9 @@ DOCKER_TAG := testing
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
-IMAGE_FILE := evcc_$(TAG_NAME).image
-IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/gokrazy/mkfs github.com/gokrazy/wifi github.com/evcc-io/evcc
+GOK_DIR := packaging/gokrazy
+GOK := gok -i evcc --parent_dir $(GOK_DIR)
+IMAGE_FILE := evcc_$(TAG_NAME).img
 
 # deb
 PACKAGES = ./release
@@ -37,7 +37,7 @@ clean::
 	rm -rf dist/
 
 install::
-	go install $$(go list -e -f '{{join .Imports " "}}' tools.go)
+	go install tool
 
 install-ui::
 	npm ci
@@ -84,15 +84,15 @@ release::
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
 
 publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
 
 publish-release::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --build-arg RELEASE=1 --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg RELEASE=1 --push .
 
 apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
@@ -104,25 +104,27 @@ apt-release::
 		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
 	)
 
-# gokrazy image
-gokrazy::
-	go install github.com/gokrazy/tools/cmd/gokr-packer@main
-	mkdir -p flags/github.com/gokrazy/breakglass
-	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
-	mkdir -p env/github.com/evcc-io/evcc
-	echo "EVCC_NETWORK_PORT=80" > env/github.com/evcc-io/evcc/env.txt
-	echo "EVCC_DATABASE_DSN=/perm/evcc.db" >> env/github.com/evcc-io/evcc/env.txt
-	mkdir -p buildflags/github.com/evcc-io/evcc
-	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
-	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
-	gokr-packer -hostname evcc -http_port 8080 -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+# gokrazy
+gok::
+	which gok || go install github.com/gokrazy/tools/cmd/gok@main
+	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
+	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS) -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
+	${GOK} add .
+	# ${GOK} add tailscale.com/cmd/tailscaled
+	# ${GOK} add tailscale.com/cmd/tailscale
+
+# build image
+gok-image:: gok
+	${GOK} overwrite --full=$(IMAGE_FILE) --target_storage_bytes=1258299392
 	# gzip -f $(IMAGE_FILE)
 
-gokrazy-run::
-	MACHINE=arm64 IMAGE_FILE=$(IMAGE_FILE) ./packaging/gokrazy/run.sh
+# run qemu
+gok-vm:: gok
+	${GOK} vm run --netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 
-gokrazy-update::
-	gokr-packer -update yes $(IMAGE_OPTIONS)
+# update instance
+gok-update::
+	${GOK} update yes
 
 soc::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)

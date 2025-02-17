@@ -206,9 +206,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
 				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
+				keys.TariffCo2, keys.TariffFeedIn, keys.TariffGrid,
 				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
-				pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()),
+				pipe.NewDropper(append(ignoreLogs, ignoreEmpty, keys.Forecast)...).Pipe(tee.Attach()),
 			))
 		}
 	}
@@ -290,7 +291,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
-		once.Do(func() { close(stopC) }) // signal loop to end
+		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
+		once.Do(func() { close(stopC) })     // signal loop to end
 	})
 
 	// show and check version, reduce api load during development

@@ -48,7 +48,11 @@ func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
 func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getPlanRequiredDuration(goal, maxPower)
+}
 
+// getPlanRequiredDuration is the estimated total charging duration
+func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
 		if lp.socEstimator == nil {
 			return 0
@@ -70,7 +74,7 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 		return float64(soc), true
 	}
 
-	_, limit := lp.GetPlanEnergy()
+	_, limit := lp.getPlanEnergy()
 	return limit, false
 }
 
@@ -98,7 +102,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
-	// re-check since plannerActive() is called before conencted() check in Update()
+	// re-check since plannerActive() is called before connected() check in Update()
 	if !lp.connected() {
 		return false
 	}

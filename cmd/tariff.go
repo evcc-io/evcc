@@ -42,12 +42,14 @@ func runTariff(cmd *cobra.Command, args []string) {
 		name = args[0]
 	}
 
-	for key, tf := range map[string]api.Tariff{
-		"grid":    tariffs.Grid,
-		"feedin":  tariffs.FeedIn,
-		"co2":     tariffs.Co2,
-		"planner": tariffs.Planner,
+	for u, tf := range map[api.TariffUsage]api.Tariff{
+		api.TariffUsageGrid:    tariffs.Grid,
+		api.TariffUsageFeedIn:  tariffs.FeedIn,
+		api.TariffUsageCo2:     tariffs.Co2,
+		api.TariffUsagePlanner: tariffs.Planner,
+		api.TariffUsageSolar:   tariffs.Solar,
 	} {
+		key := u.String()
 		if name != "" && key != name {
 			continue
 		}
@@ -65,8 +67,20 @@ func runTariff(cmd *cobra.Command, args []string) {
 			fatal(err)
 		}
 
+		unit := "Price/Cost"
+		switch tf.Type() {
+		case api.TariffTypeCo2:
+			unit += "Footprint (gCO2/kWh)"
+		case api.TariffTypeSolar:
+			unit = "Yield (W)"
+		default:
+			if c := conf.Tariffs.Currency; c != "" {
+				unit += fmt.Sprintf(" (%s/kWh)", c)
+			}
+		}
+
 		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(tw, "From\tTo\tPrice/Cost")
+		fmt.Fprintln(tw, "From\tTo\t"+unit)
 		const format = "2006-01-02 15:04:05"
 
 		for _, r := range rates {

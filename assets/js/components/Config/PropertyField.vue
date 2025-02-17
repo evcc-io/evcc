@@ -147,14 +147,14 @@ export default {
 			return null;
 		},
 		unitValue() {
+			if (this.type === "Duration") {
+				return this.fmtDurationUnit(this.value, this.unit);
+			}
 			if (this.unit) {
 				return this.unit;
 			}
 			if (this.property === "capacity") {
 				return "kWh";
-			}
-			if (this.type === "Duration") {
-				return this.fmtSecondUnit(this.value);
 			}
 			return null;
 		},
@@ -172,6 +172,9 @@ export default {
 		},
 		select() {
 			return this.choice.length > 0;
+		},
+		durationFactor() {
+			return this.unit === "minute" ? 60 : 1;
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
@@ -211,7 +214,7 @@ export default {
 				}
 
 				if (this.type === "Duration" && typeof this.modelValue === "number") {
-					return this.modelValue / NS_PER_SECOND;
+					return this.modelValue / this.durationFactor / NS_PER_SECOND;
 				}
 
 				return this.modelValue;
@@ -228,7 +231,7 @@ export default {
 				}
 
 				if (this.type === "Duration" && typeof newValue === "number") {
-					newValue = newValue * NS_PER_SECOND;
+					newValue = newValue * this.durationFactor * NS_PER_SECOND;
 				}
 
 				this.$emit("update:modelValue", newValue);

@@ -55,7 +55,7 @@ type API interface {
 	//
 
 	// GetTariff returns the respective tariff
-	GetTariff(string) api.Tariff
+	GetTariff(api.TariffUsage) api.Tariff
 
 	//
 	// battery control

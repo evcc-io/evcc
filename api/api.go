@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -120,7 +120,8 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
-// PhaseDescriber returns the number of available phases
+// PhaseDescriber returns the number of physically connected phases
+// Used for vehicles and to limit switch sockets to 1p only
 type PhaseDescriber interface {
 	Phases() int
 }

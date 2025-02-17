@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+//go:generate go tool mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
 
 // Controller gives access to loadpoint
 type Controller interface {
@@ -23,11 +23,28 @@ type API interface {
 	GetStatus() api.ChargeStatus
 
 	//
+	// references
+	//
+
+	// GetCharger returns the loadpoint charger
+	GetChargerName() string
+	// GetMeter returns the loadpoint meter
+	GetMeterName() string
+	// GetCircuitName returns the loadpoint circuit name
+	GetCircuitName() string
+	// GetCircuit returns the loadpoint circuit
+	GetCircuit() api.Circuit
+	// GetDefaultVehicle returns the loadpoint default vehicle
+	GetDefaultVehicle() string
+
+	//
 	// settings
 	//
 
-	// Title returns the defined loadpoint title
-	Title() string
+	// GetTitle returns the loadpoint title
+	GetTitle() string
+	// SetTitle sets the loadpoint title
+	SetTitle(string)
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority
@@ -41,14 +58,20 @@ type API interface {
 	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64) error
 
-	// GetMode returns the charge mode
+	// GetMode returns the current charge mode
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetDefaultMode returns the default charge mode (for reset)
+	GetDefaultMode() api.ChargeMode
+	// SetDefaultMode sets the default charge mode (for reset)
+	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the enabled phases
 	GetPhases() int
-	// SetPhases sets the enabled phases
-	SetPhases(int) error
+	// GetPhasesConfigured returns the configured phases
+	GetPhasesConfigured() int
+	// SetPhasesConfigured sets the configured phases
+	SetPhasesConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 
@@ -95,6 +118,15 @@ type API interface {
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
+	// GetSocConfig returns the soc poll settings
+	GetSocConfig() SocConfig
+	// SetSocConfig sets the soc poll settings
+	SetSocConfig(soc SocConfig)
+
+	// GetThresholds returns the PV mode threshold settings
+	GetThresholds() ThresholdsConfig
+	// SetThresholds sets the PV mode threshold settings
+	SetThresholds(thresholds ThresholdsConfig)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold
@@ -114,7 +146,7 @@ type API interface {
 	SetDisableDelay(delay time.Duration)
 
 	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() bool
+	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
@@ -164,7 +196,4 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
-
-	// GetCircuit gets the assigned circuit
-	GetCircuit() api.Circuit
 }

@@ -25,8 +25,9 @@
 	--evcc-green: #baffcb;
 	--evcc-dark-green: #0fde41ff;
 	--evcc-darker-green: #0ba631ff;
+	--evcc-darker-green-rgb: 11, 166, 49;
 	--evcc-darkest-green: #076f20ff;
-	--evcc-darkest-green-rgb: 11, 166, 49;
+	--evcc-darkest-green-rgb: 7, 111, 32;
 	--evcc-yellow: #faf000;
 	--evcc-dark-yellow: #bbb400;
 	--evcc-orange: #ff9000;
@@ -46,6 +47,8 @@
 	--evcc-pv: var(--evcc-dark-green);
 	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
+	--evcc-price: #ff912fff;
+	--evcc-co2: #00916eff;
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
 	--evcc-box-border: var(--bs-gray-brighter);
@@ -164,6 +167,14 @@ h5 {
 	color: var(--bs-primary) !important;
 }
 
+.text-price {
+	color: var(--evcc-price) !important;
+}
+
+.text-co2 {
+	color: var(--evcc-co2) !important;
+}
+
 a {
 	color: var(--bs-primary);
 }
@@ -269,8 +280,14 @@ a:hover {
 	--bs-btn-hover-border-color: var(--bs-gray-medium);
 }
 
-.btn-link:hover {
+.btn-link:hover,
+.btn-link:focus {
 	color: var(--bs-primary);
+}
+
+.btn-link:focus {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
 }
 
 .dark .btn-outline-secondary {
@@ -362,6 +379,16 @@ a:hover {
 	transition-property: opacity, backdrop-filter, background-color;
 	transition-duration: var(--evcc-transition-fast);
 	transition-timing-function: linear;
+}
+
+.modal.fade-left .modal-dialog {
+	transform: translate(-50px, 0);
+}
+.modal.fade-right .modal-dialog {
+	transform: translate(50px, 0);
+}
+.modal.show .modal-dialog {
+	transform: none;
 }
 
 .modal-header {
@@ -517,8 +544,13 @@ input::-webkit-datetime-edit {
 .form-control {
 	color: var(--evcc-default-text);
 }
-.form-control:disabled {
+.form-control:disabled,
+.form-control:read-only,
+.dark .form-control:disabled,
+.dark .form-control:read-only {
+	background-color: var(--bs-secondary-bg);
 	color: var(--bs-gray-dark);
+	opacity: 1;
 }
 
 .dark .form-control {
@@ -631,6 +663,12 @@ html.app .modal-dialog {
 
 .alert-danger code {
 	color: var(--evcc-darkest-green);
+}
+
+.hyphenate {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+	hyphens: auto;
 }
 
 input::-webkit-date-and-time-value {

@@ -1,11 +1,8 @@
 template: amber
 products:
   - brand: Amber Electric
-requirements:
-  description:
-    de: "Nur für Australien verfügbar."
-    en: "Only available for Australia."
 group: price
+countries: ["AU"]
 params:
   - name: token
   - name: siteid

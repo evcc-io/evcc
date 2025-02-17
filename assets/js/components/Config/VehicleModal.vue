@@ -1,260 +1,234 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="vehicleModal"
-			ref="modal"
-			class="modal fade text-dark"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-testid="vehicle-modal"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ $t(`config.vehicle.${isNew ? "titleAdd" : "titleEdit"}`) }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<form ref="form" class="container mx-0 px-0">
-							<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
-								<select
-									id="vehicleTemplate"
-									v-model="templateName"
-									:disabled="!isNew"
-									class="form-select w-100"
-									@change="templateChanged"
-								>
-									<option value="offline">
-										{{ $t("config.vehicle.offline") }}
-									</option>
-									<option disabled>----------</option>
-									<optgroup :label="$t('config.vehicle.online')">
-										<option
-											v-for="option in templateOptions.online"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.scooter')">
-										<option
-											v-for="option in templateOptions.scooter"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.generic')">
-										<option
-											v-for="option in templateOptions.generic"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-								</select>
-							</FormRow>
-							<p v-if="loadingTemplate">Loading ...</p>
-							<Markdown v-if="description" :markdown="description" class="my-4" />
-							<PropertyEntry
-								v-for="param in normalParams"
-								:id="`vehicleParam${param.Name}`"
-								:key="param.Name"
-								v-bind="param"
-								v-model="values[param.Name]"
+	<GenericModal
+		id="vehicleModal"
+		:title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
+		data-testid="vehicle-modal"
+		@open="open"
+		@closed="closed"
+	>
+		<form ref="form" class="container mx-0 px-0">
+			<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
+				<select
+					id="vehicleTemplate"
+					v-model="templateName"
+					:disabled="!isNew"
+					class="form-select w-100"
+					@change="templateChanged"
+				>
+					<option value="offline">
+						{{ $t("config.vehicle.offline") }}
+					</option>
+					<option disabled>----------</option>
+					<optgroup :label="$t('config.vehicle.online')">
+						<option
+							v-for="option in templateOptions.online"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.vehicle.scooter')">
+						<option
+							v-for="option in templateOptions.scooter"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.vehicle.generic')">
+						<option
+							v-for="option in templateOptions.generic"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+				</select>
+			</FormRow>
+			<p v-if="loadingTemplate">Loading ...</p>
+			<Markdown v-if="description" :markdown="description" class="my-4" />
+			<PropertyEntry
+				v-for="param in normalParams"
+				:id="`vehicleParam${param.Name}`"
+				:key="param.Name"
+				v-bind="param"
+				v-model="values[param.Name]"
+			/>
+
+			<PropertyCollapsible>
+				<template v-if="advancedParams.length" #advanced>
+					<PropertyEntry
+						v-for="param in advancedParams"
+						:id="`vehicleParam${param.Name}`"
+						:key="param.Name"
+						v-bind="param"
+						v-model="values[param.Name]"
+					/>
+				</template>
+				<template #more>
+					<h6 class="mt-3">Charging settings</h6>
+					<FormRow
+						id="vehicleParamMode"
+						label="Default mode"
+						help="Charging point mode when connecting this vehicle."
+					>
+						<PropertyField
+							id="vehicleParamMode"
+							v-model="values.mode"
+							type="Choice"
+							class="w-100"
+							:choice="[
+								{ key: 'off', name: $t('main.mode.off') },
+								{ key: 'pv', name: $t('main.mode.pv') },
+								{ key: 'minpv', name: $t('main.mode.minpv') },
+								{ key: 'now', name: $t('main.mode.now') },
+							]"
+						/>
+					</FormRow>
+					<FormRow
+						id="vehicleParamPhases"
+						label="Maximum phases"
+						help="How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
+					>
+						<SelectGroup
+							id="vehicleParamPhases"
+							v-model="values.phases"
+							class="w-100"
+							:options="[
+								{ name: '1-phase', value: '1' },
+								{ name: '2-phases', value: '2' },
+								{ name: '3-phases', value: undefined },
+							]"
+							equal-width
+							transparent
+						/>
+					</FormRow>
+					<div class="row mb-3">
+						<FormRow
+							id="vehicleParamMinCurrent"
+							label="Minimum current"
+							class="col-sm-6 mb-sm-0"
+							:help="
+								values.minCurrent && values.minCurrent < 6
+									? 'Only go below 6 A if you know what you\'re doing.'
+									: null
+							"
+						>
+							<PropertyField
+								id="vehicleParamMinCurrent"
+								v-model="values.minCurrent"
+								type="Float"
+								unit="A"
+								size="w-25 w-min-200"
+								class="me-2"
 							/>
-
-							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
-									<PropertyEntry
-										v-for="param in advancedParams"
-										:id="`vehicleParam${param.Name}`"
-										:key="param.Name"
-										v-bind="param"
-										v-model="values[param.Name]"
-									/>
-								</template>
-								<template #more>
-									<h6 class="mt-3">Charging settings</h6>
-									<FormRow
-										id="vehicleParamMode"
-										label="Default mode"
-										help="Charging point mode when connecting this vehicle."
-									>
-										<PropertyField
-											id="vehicleParamMode"
-											v-model="values.mode"
-											type="Choice"
-											class="w-100"
-											:choice="[
-												{ key: 'off', name: $t('main.mode.off') },
-												{ key: 'pv', name: $t('main.mode.pv') },
-												{ key: 'minpv', name: $t('main.mode.minpv') },
-												{ key: 'now', name: $t('main.mode.now') },
-											]"
-										/>
-									</FormRow>
-									<FormRow
-										id="vehicleParamPhases"
-										label="Maximum phases"
-										help="How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
-									>
-										<SelectGroup
-											id="vehicleParamPhases"
-											v-model="values.phases"
-											class="w-100"
-											:options="[
-												{ name: '1-phase', value: '1' },
-												{ name: '2-phases', value: '2' },
-												{ name: '3-phases', value: undefined },
-											]"
-											transparent
-											equal-width
-										/>
-									</FormRow>
-									<div class="row mb-3">
-										<FormRow
-											id="vehicleParamMinCurrent"
-											label="Minimum current"
-											class="col-sm-6 mb-sm-0"
-											:help="
-												values.minCurrent && values.minCurrent < 6
-													? 'Only go below 6 A if you know what you\'re doing.'
-													: null
-											"
-										>
-											<PropertyField
-												id="vehicleParamMinCurrent"
-												v-model="values.minCurrent"
-												type="Float"
-												unit="A"
-												size="w-25 w-min-200"
-												class="me-2"
-											/>
-										</FormRow>
-
-										<FormRow
-											id="vehicleParamMaxCurrent"
-											label="Maximum current"
-											class="col-sm-6 mb-sm-0"
-											:help="
-												values.minCurrent &&
-												values.maxCurrent &&
-												values.maxCurrent < values.minCurrent
-													? 'Must be greater than minimum current.'
-													: null
-											"
-										>
-											<PropertyField
-												id="vehicleParamMaxCurrent"
-												v-model="values.maxCurrent"
-												type="Float"
-												unit="A"
-												size="w-25 w-min-200"
-												class="me-2"
-											/>
-										</FormRow>
-									</div>
-
-									<!-- todo: only show when multiple loadpoints exist -->
-									<FormRow
-										id="vehicleParamPriority"
-										label="Priority"
-										help="Changes the charging point priority when connecting this vehicle."
-									>
-										<PropertyField
-											id="vehicleParamPriority"
-											v-model="values.priority"
-											type="Choice"
-											size="w-100"
-											class="me-2"
-											:choice="priorityOptions"
-											required
-										/>
-									</FormRow>
-
-									<FormRow
-										id="vehicleParamIdentifiers"
-										label="RFID identifiers"
-										help="List of RFID strings to identify the vehicle. One per line. See the current identifier on the configuration overview."
-									>
-										<PropertyField
-											id="vehicleParamIdentifiers"
-											v-model="values.identifiers"
-											type="List"
-											property="identifiers"
-											size="w-100"
-											class="me-2"
-										/>
-									</FormRow>
-								</template>
-							</PropertyCollapsible>
-
-							<TestResult
-								v-if="templateName"
-								:success="testSuccess"
-								:failed="testFailed"
-								:unknown="testUnknown"
-								:running="testRunning"
-								:result="testResult"
-								:error="testError"
-								@test="testManually"
+						</FormRow>
+						<FormRow
+							id="vehicleParamMaxCurrent"
+							label="Maximum current"
+							class="col-sm-6 mb-sm-0"
+							:help="
+								values.minCurrent &&
+								values.maxCurrent &&
+								values.maxCurrent < values.minCurrent
+									? 'Must be greater than minimum current.'
+									: null
+							"
+						>
+							<PropertyField
+								id="vehicleParamMaxCurrent"
+								v-model="values.maxCurrent"
+								type="Float"
+								unit="A"
+								size="w-25 w-min-200"
+								class="me-2"
 							/>
-
-							<div v-if="templateName" class="my-4 d-flex justify-content-between">
-								<button
-									v-if="isDeletable"
-									type="button"
-									class="btn btn-link text-danger"
-									@click.prevent="remove"
-								>
-									{{ $t("config.vehicle.delete") }}
-								</button>
-								<button
-									v-else
-									type="button"
-									class="btn btn-link text-muted"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("config.vehicle.cancel") }}
-								</button>
-								<button
-									type="submit"
-									class="btn btn-primary"
-									:disabled="testRunning || saving"
-									@click.prevent="isNew ? create() : update()"
-								>
-									<span
-										v-if="saving"
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									></span>
-									{{
-										testUnknown
-											? $t("config.vehicle.validateSave")
-											: $t("config.vehicle.save")
-									}}
-								</button>
-							</div>
-						</form>
+						</FormRow>
 					</div>
-				</div>
+
+					<FormRow
+						id="vehicleParamPriority"
+						label="Priority"
+						help="Changes the charging point priority when connecting this vehicle."
+					>
+						<PropertyField
+							id="vehicleParamPriority"
+							v-model="values.priority"
+							type="Choice"
+							size="w-100"
+							class="me-2"
+							:choice="priorityOptions"
+							required
+						/>
+					</FormRow>
+
+					<FormRow
+						id="vehicleParamIdentifiers"
+						label="RFID identifiers"
+						help="List of RFID strings to identify the vehicle. One per line. See the current identifier on the configuration overview."
+					>
+						<PropertyField
+							id="vehicleParamIdentifiers"
+							v-model="values.identifiers"
+							type="List"
+							property="identifiers"
+							size="w-100"
+							class="me-2"
+						/>
+					</FormRow>
+				</template>
+			</PropertyCollapsible>
+
+			<TestResult
+				v-if="templateName"
+				:success="testSuccess"
+				:failed="testFailed"
+				:unknown="testUnknown"
+				:running="testRunning"
+				:result="testResult"
+				:error="testError"
+				@test="testManually"
+			/>
+
+			<div v-if="templateName" class="my-4 d-flex justify-content-between">
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					@click.prevent="remove"
+				>
+					{{ $t("config.vehicle.delete") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-link text-muted"
+					data-bs-dismiss="modal"
+				>
+					{{ $t("config.vehicle.cancel") }}
+				</button>
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="testRunning || saving"
+					@click.prevent="isNew ? create() : update()"
+				>
+					<span
+						v-if="saving"
+						class="spinner-border spinner-border-sm"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{
+						testUnknown ? $t("config.vehicle.validateSave") : $t("config.vehicle.save")
+					}}
+				</button>
 			</div>
-		</div>
-	</Teleport>
+		</form>
+	</GenericModal>
 </template>
 
 <script>
@@ -264,6 +238,7 @@ import TestResult from "./TestResult.vue";
 import SelectGroup from "../SelectGroup.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
+import GenericModal from "../GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import api from "../../api";
 import test from "./mixins/test";
@@ -282,6 +257,7 @@ export default {
 		FormRow,
 		PropertyField,
 		TestResult,
+		GenericModal,
 		SelectGroup,
 		PropertyCollapsible,
 		PropertyEntry,
@@ -323,6 +299,8 @@ export default {
 					return p;
 				});
 
+			// non-optional fields first
+			params.sort((a, b) => (a.Required ? -1 : 1) - (b.Required ? -1 : 1));
 			// always start with title and icon field
 			const order = { title: -2, icon: -1 };
 			params.sort((a, b) => (order[a.Name] || 0) - (order[b.Name] || 0));
@@ -330,10 +308,10 @@ export default {
 			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		description() {
 			return this.template?.Requirements?.Description;
@@ -385,14 +363,6 @@ export default {
 			deep: true,
 		},
 	},
-	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
-	},
 	methods: {
 		reset() {
 			this.values = { ...initialValues };
@@ -410,7 +380,8 @@ export default {
 		},
 		async loadProducts() {
 			try {
-				this.products = (await api.get("config/products/vehicle")).data.result;
+				const opts = { params: { lang: this.$i18n?.locale } };
+				this.products = (await api.get("config/products/vehicle", opts)).data.result;
 			} catch (e) {
 				console.error(e);
 			}
@@ -450,7 +421,7 @@ export default {
 			try {
 				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -477,7 +448,7 @@ export default {
 			try {
 				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -488,16 +459,16 @@ export default {
 			try {
 				await api.delete(`config/devices/vehicle/${this.id}`);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
 			}
 		},
-		modalVisible() {
+		open() {
 			this.isModalVisible = true;
 		},
-		modalInvisible() {
+		closed() {
 			this.isModalVisible = false;
 		},
 		templateChanged() {
@@ -513,4 +484,3 @@ export default {
 	padding-right: 0;
 }
 </style>
-import type MarkdownVue from "./Markdown.vue";

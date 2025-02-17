@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
+const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorshiploadpoint"
 
-var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 96, 105, 116}
+var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 96, 105, 116, 125}
 
-const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
+const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorshiploadpoint"
 
 func (i Class) String() string {
 	i -= 1
@@ -42,9 +42,10 @@ func _ClassNoOp() {
 	_ = x[ClassInflux-(15)]
 	_ = x[ClassMessenger-(16)]
 	_ = x[ClassSponsorship-(17)]
+	_ = x[ClassLoadpoint-(18)]
 }
 
-var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship}
+var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:10]:         ClassConfigFile,
@@ -81,6 +82,8 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[96:105]:  ClassMessenger,
 	_ClassName[105:116]:      ClassSponsorship,
 	_ClassLowerName[105:116]: ClassSponsorship,
+	_ClassName[116:125]:      ClassLoadpoint,
+	_ClassLowerName[116:125]: ClassLoadpoint,
 }
 
 var _ClassNames = []string{
@@ -101,6 +104,7 @@ var _ClassNames = []string{
 	_ClassName[90:96],
 	_ClassName[96:105],
 	_ClassName[105:116],
+	_ClassName[116:125],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.
