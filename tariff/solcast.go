@@ -18,9 +18,9 @@ import (
 
 type Solcast struct {
 	*request.Helper
-	log   *util.Logger
-	sites []string
-	data  *util.Monitor[api.Rates]
+	log  *util.Logger
+	site string
+	data *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -42,10 +42,6 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	if cc.Site == "" {
 		return nil, errors.New("missing site id")
 	}
-	// TODO multiple sites
-	// if len(cc.Site) > 1 {
-	// 	return nil, errors.New("multiple sites not supported (yet)")
-	// }
 
 	if cc.Token == "" {
 		return nil, errors.New("missing token")
@@ -55,9 +51,9 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Solcast{
 		log:    log,
-		sites:  []string{cc.Site},
+		site:   cc.Site,
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](6 * /*len(cc.Sites)*/ time.Hour),
+		data:   util.NewMonitor[api.Rates](6 * time.Hour),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
@@ -73,17 +69,12 @@ func (t *Solcast) run(done chan error) {
 	var once sync.Once
 
 	// don't exceed 10 requests per 24h
-	for ; true; <-time.Tick(time.Duration(3*len(t.sites)) * time.Hour) {
+	for ; true; <-time.Tick(time.Duration(3 * time.Hour)) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
-			for _, site := range t.sites {
-				uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT60M&format=json", site)
-				if err := t.GetJSON(uri, &res); err != nil {
-					return err
-				}
-			}
-			return nil
+			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT60M&format=json", t.site)
+			return t.GetJSON(uri, &res)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

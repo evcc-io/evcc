@@ -13,6 +13,17 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner, Solar api.Tariff
 }
 
+func At(t api.Tariff, ts time.Time) (api.Rate, error) {
+	if t != nil {
+		if rr, err := t.Rates(); err == nil {
+			if r, err := rr.Current(ts); err == nil {
+				return r, nil
+			}
+		}
+	}
+	return api.Rate{}, api.ErrNotAvailable
+}
+
 func Now(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
