@@ -8,7 +8,7 @@ import (
 
 func (lp *Loadpoint) smartCostActive(rates api.Rates) bool {
 	// potential error has already been logged by site, ignore
-	rate, _ := rates.Current(time.Now())
+	rate, _ := rates.At(time.Now())
 	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }

@@ -23,25 +23,34 @@ func (r Rate) IsEmpty() bool {
 type Rates []Rate
 
 // Sort rates by start time
-func (r Rates) Sort() {
-	slices.SortStableFunc(r, func(i, j Rate) int {
+func (rr Rates) Sort() {
+	slices.SortStableFunc(rr, func(i, j Rate) int {
 		return i.Start.Compare(j.Start)
 	})
 }
 
-// Current returns the rates current rate or error
-func (r Rates) Current(now time.Time) (Rate, error) {
-	for _, rr := range r {
-		if !rr.Start.After(now) && rr.End.After(now) {
-			return rr, nil
+// At returns the rate for given timestamp or error.
+// Rates MUST be sorted by start time.
+func (rr Rates) At(ts time.Time) (Rate, error) {
+	if i, ok := slices.BinarySearchFunc(rr, ts, func(r Rate, t time.Time) int {
+		switch {
+		case ts.Before(r.Start):
+			return +1
+		case !ts.Before(r.End):
+			return -1
+		default:
+			return 0
 		}
+	}); ok {
+		return rr[i], nil
 	}
 
-	if len(r) == 0 {
-		return Rate{}, fmt.Errorf("no matching rate for: %s", now.Local().Format(time.RFC3339))
+	var zero Rate
+	if len(rr) == 0 {
+		return zero, fmt.Errorf("no matching rate for: %s", ts.Local().Format(time.RFC3339))
 	}
-	return Rate{}, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
-		now.Local().Format(time.RFC3339), len(r), r[0].Start.Local().Format(time.RFC3339), r[len(r)-1].End.Local().Format(time.RFC3339))
+	return zero, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
+		ts.Local().Format(time.RFC3339), len(rr), rr[0].Start.Local().Format(time.RFC3339), rr[len(rr)-1].End.Local().Format(time.RFC3339))
 }
 
 // MarshalMQTT implements server.MQTTMarshaler

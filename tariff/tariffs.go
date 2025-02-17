@@ -16,7 +16,7 @@ type Tariffs struct {
 func At(t api.Tariff, ts time.Time) (api.Rate, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
-			if r, err := rr.Current(ts); err == nil {
+			if r, err := rr.At(ts); err == nil {
 				return r, nil
 			}
 		}
@@ -25,12 +25,8 @@ func At(t api.Tariff, ts time.Time) (api.Rate, error) {
 }
 
 func Now(t api.Tariff) (float64, error) {
-	if t != nil {
-		if rr, err := t.Rates(); err == nil {
-			if r, err := rr.Current(time.Now()); err == nil {
-				return r.Price, nil
-			}
-		}
+	if r, err := At(t, time.Now()); err == nil {
+		return r.Price, nil
 	}
 	return 0, api.ErrNotAvailable
 }
