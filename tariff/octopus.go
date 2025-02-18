@@ -13,7 +13,6 @@ import (
 	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/registry"
 )
 
 type Octopus struct {
@@ -30,20 +29,21 @@ type Octopus struct {
 var _ api.Tariff = (*Octopus)(nil)
 
 func init() {
-	registry.Add("octopusenergy", NewOctopusFromConfig)
+	// Register the Octopus tariff
+	api.RegisterTariff("octopusenergy", NewOctopusFromConfig)
 }
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-			Region        string
-			Tariff        string // DEPRECATED: use ProductCode
-			ProductCode   string
-			ApiKey        string
-			Email         string
-			Password      string
-			RegionType    string
-			GoPrice       float64
-			StandardPrice float64
+		Region        string
+		Tariff        string // DEPRECATED: use ProductCode
+		ProductCode   string
+		ApiKey        string
+		Email         string
+		Password      string
+		RegionType    string
+		GoPrice       float64
+		StandardPrice float64
 	}
 
 	logger := util.NewLogger("octopus")
@@ -201,7 +201,7 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
 
 	// Fetch planned dispatch periods from the API
 	client := request.NewHelper(t.log)
-	err := client.Post(octoGql.GermanURI, struct {
+	resp, err := client.Post(octoGql.GermanURI, struct {
 		Query     string `json:"query"`
 		Variables struct {
 			AccountNumber string `json:"accountNumber"`
@@ -218,9 +218,14 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
 		}{
 			AccountNumber: "your_account_number", // Replace with actual account number
 		},
-	}, &dispatches)
-
+	})
 	if err != nil {
+		t.log.ERROR.Println(err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&dispatches); err != nil {
 		t.log.ERROR.Println(err)
 		return false
 	}
