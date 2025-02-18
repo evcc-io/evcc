@@ -95,7 +95,7 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
-	pvStats     meterStats
+	pvEnergy    meterEnergy
 
 	// cached state
 	gridPower       float64         // Grid power
@@ -244,9 +244,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
-		pvStats: meterStats{startFunc: beginningOfDay},
+		log:      util.NewLogger("site"),
+		Voltage:  230, // V
+		pvEnergy: meterEnergy{startFunc: beginningOfDay},
 	}
 
 	return site
@@ -507,9 +507,9 @@ func (site *Site) updatePvMeters() {
 
 	// update statistics
 	if totalEnergy > 0 {
-		site.pvStats.AddEnergy(totalEnergy)
+		site.pvEnergy.AddTotalEnergy(totalEnergy)
 	} else {
-		site.pvStats.AddPower(site.pvPower)
+		site.pvEnergy.AddPower(site.pvPower)
 	}
 }
 
@@ -827,8 +827,8 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if solar != nil {
 		// adjusted solar forecast
 		solarForecasted = tariff.Energy(solar)
-		if solarForecasted > 0 && site.pvStats.energy > 0 {
-			scale := site.pvStats.energy / solarForecasted
+		if generated := site.pvEnergy.AccumulatedEnergy(); solarForecasted > 0 && generated > 0 {
+			scale := generated / solarForecasted
 			for _, r := range solar {
 				solarAdjusted = append(solarAdjusted, api.Rate{
 					Start: r.Start,
@@ -860,7 +860,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		BatteryDemand   float64  `json:"batteryDemand"`
 		LoadpointDemand float64  `json:"loadpointDemand"`
 	}{
-		SolarActual: site.pvStats.energy,
+		SolarActual: site.pvEnergy.AccumulatedEnergy(),
 		LoadpointDemand: lo.SumBy(site.loadpoints, func(lp *Loadpoint) float64 {
 			return lp.GetRemainingEnergy()
 		}),
