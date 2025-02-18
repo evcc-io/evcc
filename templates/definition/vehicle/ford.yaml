@@ -2,6 +2,10 @@ template: ford
 deprecated: true
 products:
   - brand: Ford
+requirements:
+  description:
+    de: "Hinweis: Ford hat kürzlich den API-Zugriff für seine Benutzer deaktiviert."
+    en: "Note: Ford has recently disabled API-access for their users."
 params:
   - preset: vehicle-base
   - name: vin

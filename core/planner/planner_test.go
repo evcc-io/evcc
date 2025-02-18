@@ -215,11 +215,11 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 
 	plan, err := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
 	require.NoError(t, err)
-	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start if car can be charged completely after known prices ")
+	assert.False(t, !SlotAt(clock.Now(), plan).IsZero(), "should not start if car can be charged completely after known prices ")
 
 	plan, err = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour))
 	require.NoError(t, err)
-	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start if car can not be charged completely after known prices ")
+	assert.True(t, !SlotAt(clock.Now(), plan).IsZero(), "should start if car can not be charged completely after known prices ")
 }
 
 func TestChargeAfterTargetTime(t *testing.T) {

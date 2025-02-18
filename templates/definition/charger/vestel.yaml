@@ -10,6 +10,7 @@ products:
   - brand: E.ON Drive
     description:
       generic: vBox
+capabilities: ["1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:

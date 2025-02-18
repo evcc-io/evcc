@@ -2,7 +2,7 @@ template: cupra
 products:
   - brand: Seat
     description:
-      generic: CupraConnect Gen4 (Born)
+      generic: CupraConnect Gen4 (Born, Tavascan)
 params:
   - preset: vehicle-base
   - preset: vehicle-features

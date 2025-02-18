@@ -15,6 +15,10 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200
+  - name: storageunit
+    type: int
+    default: 1
+    advanced: true
   - name: capacity
     advanced: true
   - name: maxacpower
@@ -27,7 +31,7 @@ render: |
   {{- if eq .usage "grid" }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 70 # 0x0046 feedin_power(meter)
       type: input
       decode: int32s
@@ -35,7 +39,7 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
       decode: uint32s
@@ -46,20 +50,26 @@ render: |
     add:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 10 # 0x000A Powerdc1
         type: input
         decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 11 # 0x000B Powerdc2
+        type: input
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 292 # 0x0124 Powerdc3
         type: input
         decode: uint16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
@@ -69,8 +79,13 @@ render: |
   {{- if eq .usage "battery" }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
+      {{- if eq .storageunit "1" }}
       address: 22 # 0x0016 Batpower_Charge1
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 297 # 0x0129 Batpower_Charge2
+      {{- end }}
       type: input
       decode: int16
     scale: -1
@@ -78,9 +93,22 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 28 # 0x001C Battery Capacity
+      {{- if eq .storageunit "1" }}
+      address: 28 # 0x001C Battery 1 Capacity
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 301 # 0x012D Battery 2 Capacity
+      {{- end }}
+      # address: 302 # 0x012E Battery Total Capacity
       type: input
       decode: uint16
+  # energy:
+  #   source: modbus
+  #   register:
+  #     address: 29 # 0x001D Battery Output Energy Total
+  #     type: input
+  #     decode: uint32s
+  #   scale: 0.1
   batterymode:
     source: switch
     switch:

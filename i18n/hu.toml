@@ -89,11 +89,12 @@ power = "Teljesítmény"
 powerRange = "Teljesítmény"
 range = "Hatótáv"
 singlePhase = "Egyfázisú"
-soc = "SoC"
+soc = "Töltöttség"
 socLimit = "Limit"
 temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
+vehicleLimitSoc = "Jármű limit"
 yes = "igen"
 
 [config.deviceValueChargeStatus]
@@ -106,6 +107,7 @@ description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon 
 title = "EEBus"
 
 [config.form]
+deprecated = "elavult"
 example = "Példa"
 optional = "opcionális"
 
@@ -232,10 +234,11 @@ addTariffs = "Tarifa hozzáadása"
 addVehicle = "Jármű hozzáadása"
 configured = "konfigurálva"
 edit = "szerkesztés"
+name = "Név"
 title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
-yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
+yaml = "Eszköz az evcc.yaml fájlból nem szerkeszthető."
 
 [config.messaging]
 description = "Értesítési üzenetek beállítása a töltési folyamatokról."
@@ -653,7 +656,7 @@ targetSoc = "Limit"
 temp = "Hőm."
 tempLimit = "Hőm. limit"
 unknown = "Vendég jármű"
-vehicleSoc = "Töltés"
+vehicleSoc = "Töltöttség"
 
 [main.vehicleSoc]
 charging = "tölt"

@@ -241,6 +241,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.mode = api.ModeOff
 	}
 
+	if lp.Title != "" {
+		lp.setTitle(lp.Title)
+	}
+
+	if lp.Priority > 0 {
+		lp.setPriority(lp.Priority)
+	}
+
 	return lp, nil
 }
 
@@ -278,14 +286,6 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
 		return
-	}
-
-	// from yaml
-	if lp.Title != "" {
-		lp.setTitle(lp.Title)
-	}
-	if lp.Priority > 0 {
-		lp.setPriority(lp.Priority)
 	}
 
 	// deprecated yaml properties
@@ -1847,8 +1847,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		rate, _ := rates.Current(time.Now())
 		if smartCostActive {
+			rate, _ := rates.At(time.Now())
 			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Price)
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
