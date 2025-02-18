@@ -251,5 +251,4 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
         Variables: struct {
             AccountNumber string `json:"accountNumber"`
         }{
-            AccountNumber: "your_account_number", // Replace with actual account number
-        },
+            AccountNumber: "your_account_number", // Replace with actual account
