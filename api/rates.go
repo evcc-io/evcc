@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"slices"
 	"time"
 )
@@ -32,7 +31,7 @@ func (rr Rates) Sort() {
 // At returns the rate for given timestamp or error.
 // Rates MUST be sorted by start time.
 func (rr Rates) At(ts time.Time) (Rate, error) {
-	if i, ok := slices.BinarySearchFunc(rr, ts, func(r Rate, t time.Time) int {
+	if i, ok := slices.BinarySearchFunc(rr, ts, func(r Rate, ts time.Time) int {
 		switch {
 		case ts.Before(r.Start):
 			return +1
@@ -45,12 +44,7 @@ func (rr Rates) At(ts time.Time) (Rate, error) {
 		return rr[i], nil
 	}
 
-	var zero Rate
-	if len(rr) == 0 {
-		return zero, fmt.Errorf("no matching rate for: %s", ts.Local().Format(time.RFC3339))
-	}
-	return zero, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
-		ts.Local().Format(time.RFC3339), len(rr), rr[0].Start.Local().Format(time.RFC3339), rr[len(rr)-1].End.Local().Format(time.RFC3339))
+	return Rate{}, ErrNotAvailable
 }
 
 // MarshalMQTT implements server.MQTTMarshaler

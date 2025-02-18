@@ -7,10 +7,9 @@ import (
 )
 
 func (lp *Loadpoint) smartCostActive(rates api.Rates) bool {
-	// potential error has already been logged by site, ignore
-	rate, _ := rates.At(time.Now())
+	rate, err := rates.At(time.Now())
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && err == nil && rate.Price <= *limit
 }
 
 // smartCostNextStart returns the next start time for a smart cost rate below the limit

@@ -27,10 +27,8 @@ func At(t api.Tariff, ts time.Time) (api.Rate, error) {
 
 // Now returns the price/cost/value at the given time
 func Now(t api.Tariff) (float64, error) {
-	if r, err := At(t, time.Now()); err == nil {
-		return r.Price, nil
-	}
-	return 0, api.ErrNotAvailable
+	r, err := At(t, time.Now())
+	return r.Price, err
 }
 
 func Forecast(t api.Tariff) api.Rates {
