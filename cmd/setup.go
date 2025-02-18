@@ -778,7 +778,7 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 				return errors.New("missing type")
 			}
 
-			name := fmt.Sprintf("solar-%s-%d", tariff.Name(conf), i)
+			name := fmt.Sprintf("%s-%s-%d", api.TariffUsageSolar, tariff.Name(conf), i)
 			res, err := tariffInstance(name, conf)
 			if err != nil {
 				return &DeviceError{name, err}
@@ -818,7 +818,11 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
-	eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	if len(conf.Solar) == 1 {
+		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Planner) })
+	} else {
+		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	}
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
