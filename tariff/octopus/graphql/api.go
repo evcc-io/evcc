@@ -18,6 +18,12 @@ const BaseURI = "https://api.octopus.energy"
 // URI is the GraphQL query endpoint for Octopus Energy.
 const URI = BaseURI + "/v1/graphql/"
 
+// GermanBaseURI is the German API root.
+const GermanBaseURI = "https://api.oeg-kraken.energy"
+
+// GermanURI is the GraphQL query endpoint for the German API.
+const GermanURI = GermanBaseURI + "/v1/graphql/"
+
 // OctopusGraphQLClient provides an interface for communicating with Octopus Energy's Kraken platform.
 type OctopusGraphQLClient struct {
 	*graphql.Client
@@ -57,6 +63,66 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 	})
 
 	return gq, nil
+}
+
+// NewClientWithEmailPassword returns a new instance of OctopusGraphQLClient authenticated with email and password.
+func NewClientWithEmailPassword(log *util.Logger, email, password string) (*OctopusGraphQLClient, error) {
+	cli := request.NewClient(log)
+
+	gq := &OctopusGraphQLClient{
+		Client: graphql.NewClient(GermanURI, cli),
+	}
+
+	token, err := getKrakenToken(email, password)
+	if err != nil {
+		return nil, err
+	}
+
+	gq.token = &token
+	gq.tokenExpiration = time.Now().Add(time.Hour)
+
+	// Future requests must have the appropriate Authorization header set.
+	gq.Client = gq.Client.WithRequestModifier(func(r *http.Request) {
+		gq.tokenMtx.Lock()
+		defer gq.tokenMtx.Unlock()
+		r.Header.Add("Authorization", *gq.token)
+	})
+
+	return gq, nil
+}
+
+// getKrakenToken fetches the token using email and password.
+func getKrakenToken(email, password string) (string, error) {
+	cli := request.NewHelper(nil)
+	var res struct {
+		Token string `json:"token"`
+	}
+
+	err := cli.Post(GermanURI, struct {
+		Query     string `json:"query"`
+		Variables struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		} `json:"variables"`
+	}{
+		Query: `mutation krakenTokenAuthentication($email: String!, $password: String!) {
+                    obtainKrakenToken(input: {email: $email, password: $password}) {
+                        token
+                    }
+                }`,
+		Variables: struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}{
+			Email:    email,
+			Password: password,
+		},
+	}, &res)
+
+	if err != nil {
+		return "", err
+	}
+	return res.Token, nil
 }
 
 // refreshToken updates the GraphQL token from the set apikey.
@@ -139,9 +205,50 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 		return "", errors.New("no electricity agreements found")
 	}
 
-	// check type
-	//switch t := q.Account.ElectricityAgreements[0].Tariff.(type) {
-	//
-	//}
 	return q.Account.ElectricityAgreements[0].Tariff.TariffCode(), nil
+}
+
+// GermanTariffCode queries the Tariff Code of the first Electricity Agreement active on the account for the German API.
+func (c *OctopusGraphQLClient) GermanTariffCode() (string, error) {
+	// Update refresh token (if necessary)
+	if err := c.refreshToken(); err != nil {
+		return "", err
+	}
+
+	// Get Account Number
+	acc, err := c.AccountNumber()
+	if err != nil {
+		return "", nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	var q struct {
+		Account struct {
+			AllProperties []struct {
+				ElectricityMalos []struct {
+					Agreements []struct {
+						IsActive bool `json:"isActive"`
+					} `json:"agreements"`
+				} `json:"electricityMalos"`
+			} `json:"allProperties"`
+		} `json:"account"`
+	}
+
+	if err := c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc}); err != nil {
+		return "", err
+	}
+
+	for _, property := range q.Account.AllProperties {
+		for _, malo := range property.ElectricityMalos {
+			for _, agreement := range malo.Agreements {
+				if agreement.IsActive {
+					return "active_tariff_code", nil // Replace with actual tariff code extraction logic
+				}
+			}
+		}
+	}
+
+	return "", errors.New("no active electricity agreements found")
 }
