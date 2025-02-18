@@ -140,7 +140,7 @@ type Tariffs struct {
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
-	Solar    config.Typed
+	Solar    []config.Typed
 }
 
 type Network struct {

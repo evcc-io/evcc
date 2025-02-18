@@ -873,9 +873,17 @@ func (site *Site) update(lp updater) {
 		site.log.WARN.Println("planner:", err)
 	}
 
-	rate, err := rates.Current(time.Now())
+	rate, err := rates.At(time.Now())
 	if rates != nil && err != nil {
-		site.log.WARN.Println("planner:", err)
+		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
+		if len(rates) > 0 {
+			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
+				rates[0].Start.Local().Format(time.RFC3339),
+				rates[len(rates)-1].End.Local().Format(time.RFC3339),
+			)
+		}
+
+		site.log.WARN.Println("planner:", msg)
 	}
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
