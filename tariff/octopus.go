@@ -260,3 +260,5 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
         return false
     }
 
+    for _, d := range dispatches {
+        if (start.Before(d.End) && end
