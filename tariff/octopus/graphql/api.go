@@ -1,7 +1,9 @@
 package graphql
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -119,10 +121,27 @@ func getKrakenToken(email, password string) (string, error) {
 		},
 	}
 
-	_, err := cli.PostJSON(GermanURI, payload, &res)
+	body, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
 	}
+
+	req, err := http.NewRequest("POST", GermanURI, bytes.NewBuffer(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return "", err
+	}
+
 	return res.Token, nil
 }
 
