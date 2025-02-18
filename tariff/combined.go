@@ -35,11 +35,9 @@ func (t *combined) Rates() (api.Rates, error) {
 		}
 	}
 
-	keys = slices.SortedFunc(slices.Values(keys), func(a, b time.Time) int {
-		return a.Compare(b)
-	})
-
 	var res api.Rates
+	keys = slices.SortedFunc(slices.Values(keys), time.Time.Compare)
+
 	for _, ts := range keys {
 		var rate api.Rate
 
