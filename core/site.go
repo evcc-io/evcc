@@ -828,6 +828,26 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	)
 
 	solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar))
+
+	type quality struct {
+		Adjusted   api.Rates `json:"solar,omitempty"`
+		Forecasted float64   `json:"forecasted,omitempty"`
+		YieldToday float64   `json:"yieldToday,omitempty"`
+	}
+
+	fc := struct {
+		Co2     api.Rates `json:"co2,omitempty"`
+		FeedIn  api.Rates `json:"feedin,omitempty"`
+		Grid    api.Rates `json:"grid,omitempty"`
+		Solar   api.Rates `json:"solar,omitempty"`
+		Quality quality   `json:"adjusted,omitempty"`
+	}{
+		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
+		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Solar:  solar,
+	}
+
 	if solar != nil {
 		// adjusted solar forecast
 		solarForecasted = tariff.Energy(solar)
@@ -841,43 +861,15 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 				})
 			}
 		}
+
+		fc.Quality = quality{
+			Adjusted:   solar,
+			Forecasted: solarForecasted,
+			YieldToday: site.pvEnergy.AccumulatedEnergy(),
+		}
 	}
 
-	site.publish(keys.Forecast, struct {
-		Co2           api.Rates `json:"co2,omitempty"`
-		FeedIn        api.Rates `json:"feedin,omitempty"`
-		Grid          api.Rates `json:"grid,omitempty"`
-		Solar         api.Rates `json:"solar,omitempty"`
-		SolarAdjusted api.Rates `json:"solarAdjusted,omitempty"`
-	}{
-		Co2:           tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:        tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Grid:          tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
-		Solar:         solar,
-		SolarAdjusted: solarAdjusted,
-	})
-
-	// energy demand
-	ed := struct {
-		SolarActual       float64  `json:"solarActual,omitempty"`
-		SolarForecasted   *float64 `json:"solarForecasted,omitempty"`
-		BatteryUntilFull  *float64 `json:"batteryUntilFull,omitempty"`
-		VehicleUntilLimit float64  `json:"vehicleUntilLimit"`
-	}{
-		SolarActual: site.pvEnergy.AccumulatedEnergy(),
-		VehicleUntilLimit: lo.SumBy(site.loadpoints, func(lp *Loadpoint) float64 {
-			return lp.GetRemainingEnergy()
-		}),
-	}
-
-	if solar != nil {
-		ed.SolarForecasted = lo.ToPtr(solarForecasted)
-	}
-	if site.batteryCapacity > 0 {
-		ed.BatteryUntilFull = lo.ToPtr(1 - site.batterySoc*site.batteryCapacity)
-	}
-
-	site.publish(keys.EnergyDemand, ed)
+	site.publish(keys.Forecast, fc)
 }
 
 // updateLoadpoints updates all loadpoints' charge power
