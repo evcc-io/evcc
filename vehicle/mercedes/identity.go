@@ -68,19 +68,19 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
 	}
 
-	if !token.Valid() && token.RefreshToken != "" {
-		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
-		if tok, err := v.RefreshToken(token); err == nil {
-			token = tok
-		}
-	}
-
 	// database token
 	if !token.Valid() {
 		var tok oauth2.Token
 		if err := settings.Json(v.settingsKey(), &tok); err == nil {
 			v.log.DEBUG.Println("identity.NewIdentity - database token found")
 			token = &tok
+		}
+	}
+
+	if !token.Valid() && token.RefreshToken != "" {
+		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
+		if tok, err := v.RefreshToken(token); err == nil {
+			token = tok
 		}
 	}
 
