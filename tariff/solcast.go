@@ -30,9 +30,12 @@ func init() {
 }
 
 func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	var cc struct {
-		Site  string
-		Token string
+	cc := struct {
+		Site     string
+		Token    string
+		Interval time.Duration
+	}{
+		Interval: 3 * time.Hour,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,23 +56,23 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		site:   cc.Site,
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](6 * time.Hour),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
 
 	done := make(chan error)
-	go t.run(done)
+	go t.run(cc.Interval, done)
 	err := <-done
 
 	return t, err
 }
 
-func (t *Solcast) run(done chan error) {
+func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	// don't exceed 10 requests per 24h
-	for ; true; <-time.Tick(3 * time.Hour) {
+	for ; true; <-time.Tick(interval) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {

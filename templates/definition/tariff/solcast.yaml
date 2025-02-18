@@ -18,7 +18,11 @@ params:
       en: Solcast API Token
       de: Solcast API Token
     required: true
+  - name: interval
+    default: 3h
+    advanced: true
 render: |
   type: solcast
   site: {{ .site }}
   token: {{ .token }}
+  interval: {{ .interval }}

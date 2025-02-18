@@ -58,6 +58,9 @@ params:
       en: API key
       de: API-Key
     advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
 render: |
   type: custom
   tariff: solar
@@ -70,3 +73,4 @@ render: |
         "end":   (.key | strptime("%FT%T%z") | mktime+3600 | strftime("%FT%TZ")),
         "price": .value
       } ] | tostring
+  interval: {{ .interval }}
