@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
