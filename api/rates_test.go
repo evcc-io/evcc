@@ -27,6 +27,10 @@ func TestRates(t *testing.T) {
 		r, err := rr.At(clock.Now().Add(time.Duration(i) * time.Hour))
 		assert.NoError(t, err)
 		assert.Equal(t, float64(i), r.Price)
+
+		r, err = rr.At(clock.Now().Add(time.Duration(i)*time.Hour + 30*time.Minute))
+		assert.NoError(t, err)
+		assert.Equal(t, float64(i), r.Price)
 	}
 
 	_, err = rr.At(clock.Now().Add(5 * time.Hour))
