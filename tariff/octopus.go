@@ -1,7 +1,9 @@
 package tariff
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"slices"
 	"strings"
 	"sync"
@@ -201,7 +203,7 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
 
 	// Fetch planned dispatch periods from the API
 	client := request.NewHelper(t.log)
-	resp, err := client.Post(octoGql.GermanURI, struct {
+	body, err := json.Marshal(struct {
 		Query     string `json:"query"`
 		Variables struct {
 			AccountNumber string `json:"accountNumber"`
@@ -219,6 +221,12 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
 			AccountNumber: "your_account_number", // Replace with actual account number
 		},
 	})
+	if err != nil {
+		t.log.ERROR.Println(err)
+		return false
+	}
+
+	resp, err := client.Post(octoGql.GermanURI, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		t.log.ERROR.Println(err)
 		return false
