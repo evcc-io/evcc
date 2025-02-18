@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -244,9 +245,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:      util.NewLogger("site"),
-		Voltage:  230, // V
-		pvEnergy: meterEnergy{startFunc: beginningOfDay},
+		log:     util.NewLogger("site"),
+		Voltage: 230, // V
+		pvEnergy: meterEnergy{
+			clock:     clock.New(),
+			startFunc: beginningOfDay,
+		},
 	}
 
 	return site

@@ -3,11 +3,13 @@ package core
 import (
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
 
 type meterEnergy struct {
+	clock     clock.Clock
 	updated   time.Time
 	startFunc func(time.Time) time.Time
 	energy    *float64 // kWh
@@ -15,22 +17,24 @@ type meterEnergy struct {
 }
 
 // reset previous period
-func (m *meterEnergy) resetPeriod(now time.Time) {
-	if m.startFunc != nil && !m.updated.After(m.startFunc(now)) {
+func (m *meterEnergy) resetPeriod() {
+	sod := m.startFunc(m.clock.Now())
+	if m.startFunc != nil && m.updated.Before(sod) {
+		m.updated = time.Time{}
 		m.energy = nil
 		m.acc = 0
 	}
 }
 
 func (m *meterEnergy) AccumulatedEnergy() float64 {
-	m.resetPeriod(time.Now())
+	m.resetPeriod()
 	return m.acc
 }
 
 func (m *meterEnergy) AddTotalEnergy(v float64) {
-	m.resetPeriod(time.Now())
+	m.resetPeriod()
 	defer func() {
-		m.updated = time.Now()
+		m.updated = m.clock.Now()
 		m.energy = lo.ToPtr(v)
 	}()
 
@@ -42,14 +46,15 @@ func (m *meterEnergy) AddTotalEnergy(v float64) {
 }
 
 func (m *meterEnergy) AddPower(v float64) {
-	m.resetPeriod(time.Now())
-	defer func() { m.updated = time.Now() }()
+	m.resetPeriod()
+	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
 		return
 	}
 
-	m.acc += v * time.Since(m.updated).Hours() / 1e3
+	d := m.clock.Since(m.updated)
+	m.acc += v * d.Hours() / 1e3
 }
 
 func beginningOfDay(t time.Time) time.Time {
