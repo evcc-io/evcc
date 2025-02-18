@@ -98,7 +98,7 @@ func getKrakenToken(email, password string) (string, error) {
 		Token string `json:"token"`
 	}
 
-	err := cli.Post(GermanURI, struct {
+	payload := struct {
 		Query     string `json:"query"`
 		Variables struct {
 			Email    string `json:"email"`
@@ -117,8 +117,9 @@ func getKrakenToken(email, password string) (string, error) {
 			Email:    email,
 			Password: password,
 		},
-	}, &res)
+	}
 
+	_, err := cli.PostJSON(GermanURI, payload, &res)
 	if err != nil {
 		return "", err
 	}
