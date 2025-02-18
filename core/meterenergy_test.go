@@ -32,7 +32,7 @@ func TestMeterEnergy(t *testing.T) {
 	me.AddPower(1e3)
 	assert.Equal(t, 1.5, me.AccumulatedEnergy())
 
-	clock.Add(22*time.Hour + 30*time.Minute)
+	clock.Add(23*time.Hour + 30*time.Minute)
 	t.Log(clock.Now().Local().Format(time.RFC3339))
 	me.AddPower(1e3)
 	assert.Equal(t, 0.0, me.AccumulatedEnergy())
