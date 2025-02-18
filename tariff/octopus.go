@@ -12,8 +12,8 @@ import (
 	octoGql "github.com/evcc-io/evcc/tariff/octopus/graphql"
 	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/registry"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/registry"
 )
 
 type Octopus struct {
@@ -35,15 +35,15 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region        string
-		Tariff        string // DEPRECATED: use ProductCode
-		ProductCode   string
-		ApiKey        string
-		Email         string
-		Password      string
-		RegionType    string
-		GoPrice       float64
-		StandardPrice float64
+			Region        string
+			Tariff        string // DEPRECATED: use ProductCode
+			ProductCode   string
+			ApiKey        string
+			Email         string
+			Password      string
+			RegionType    string
+			GoPrice       float64
+			StandardPrice float64
 	}
 
 	logger := util.NewLogger("octopus")
@@ -87,7 +87,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	// Get token if Email and Password are provided
 	if cc.Email != "" && cc.Password != "" {
-		token, err := getKrakenToken(cc.Email, cc.Password)
+		token, err := octoGql.GetKrakenToken(cc.Email, cc.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -99,41 +99,6 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	err := <-done
 
 	return t, err
-}
-
-func getKrakenToken(email, password string) (string, error) {
-	// Implement the logic to get the token using email and password
-	// Example implementation
-	gqlClient := request.NewHelper(nil) // Replace with actual logger if needed
-	var res struct {
-		Token string `json:"token"`
-	}
-
-	err := gqlClient.PostJSON("https://api.oeg-kraken.energy/v1/graphql", struct {
-		Query     string `json:"query"`
-		Variables struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		} `json:"variables"`
-	}{
-		Query: `mutation krakenTokenAuthentication($email: String!, $password: String!) {
-					obtainKrakenToken(input: {email: $email, password: $password}) {
-						token
-					}
-				}`,
-		Variables: struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}{
-			Email:    email,
-			Password: password,
-		},
-	}, &res)
-
-	if err != nil {
-		return "", err
-	}
-	return res.Token, nil
 }
 
 func (t *Octopus) run(regionType string, done chan error) {
@@ -159,13 +124,13 @@ func (t *Octopus) run(regionType string, done chan error) {
 		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
 	} else if t.token != "" && regionType == "DE" {
 		// Use GraphQL with token to get appropriate tariff code before entering execution loop.
-		gqlCli, err := octoGql.NewClientWithToken(t.log, t.token)
+		gqlCli, err := octoGql.NewClientWithEmailPassword(t.log, t.token)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
 			return
 		}
-		tariffCode, err := gqlCli.TariffCode()
+		tariffCode, err := gqlCli.GermanTariffCode()
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
@@ -236,7 +201,7 @@ func (t *Octopus) isPlannedDispatch(start, end time.Time) bool {
 
 	// Fetch planned dispatch periods from the API
 	client := request.NewHelper(t.log)
-	err := client.PostJSON("https://api.oeg-kraken.energy/v1/graphql", struct {
+	err := client.Post(octoGql.GermanURI, struct {
 		Query     string `json:"query"`
 		Variables struct {
 			AccountNumber string `json:"accountNumber"`
