@@ -32,14 +32,13 @@ func (m *meterStats) AddEnergy(v float64) {
 
 func (m *meterStats) AddPower(v float64) {
 	m.resetPeriod(time.Now())
+	defer func() { m.updated = time.Now() }()
 
-	d := time.Since(m.updated)
-	m.updated = time.Now()
 	if m.updated.IsZero() {
 		return
 	}
 
-	m.energy += v * d.Hours() / 1e3
+	m.energy += v * time.Since(m.updated).Hours() / 1e3
 }
 
 func beginningOfDay(t time.Time) time.Time {
