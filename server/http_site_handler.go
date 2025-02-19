@@ -292,6 +292,11 @@ func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
 }
 
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	util.ResetCached()
+	jsonResult(w, "OK")
+}
+
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	a := r.URL.Query()["area"]
 	l := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
