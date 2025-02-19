@@ -99,7 +99,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	pc := request.NewClient(log)
 	pc.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": "Bearer " + cc.ProxyToken,
+			"X-Authorization": "Bearer " + cc.ProxyToken,
 		}),
 		Base: baseTransport,
 	}
