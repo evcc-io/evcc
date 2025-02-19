@@ -101,7 +101,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"X-Authorization": "Bearer " + cc.ProxyToken,
 		}),
-		Base: baseTransport,
+		Base: &oauth2.Transport{
+			Source: identity,
+			Base:   baseTransport,
+		},
 	}
 
 	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
