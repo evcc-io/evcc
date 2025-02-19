@@ -78,12 +78,6 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-  maxcurrent:
-    source: http
-    uri: https://api.tessie.com/{{ .vin }}/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=${maxcurrent}
-    headers:
-      Authorization: Bearer {{ .token }}
-    method: POST
   wakeup:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/wake
