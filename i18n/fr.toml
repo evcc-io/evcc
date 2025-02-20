@@ -918,3 +918,27 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[forecast.price]
+lowestHour = Heure la moins chère
+average = Moyenne
+
+[forecast.co2]
+lowestHour = Heure la plus propre
+average = Moyenne
+
+[forecast.type]
+price = Prix
+solar = Solaire
+co2 = CO₂
+
+[forecast.solar]
+tomorrow = Demain
+today = Aujourd'hui
+dayAfterTomorrow = Après demain
+partly = Partiellement
+remaining = Restant
+
+[forecast]
+modalTitle = Prévisions
