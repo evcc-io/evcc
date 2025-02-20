@@ -472,8 +472,8 @@ export default {
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		loadpointList() {
-			const loadpoints = store.state.loadpoints || {};
-			return Object.entries(loadpoints).map(([_, loadpoint]) => loadpoint.title);
+			const loadpoints = store.state.loadpoints || [];
+			return loadpoints.map(({ title }) => title);
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
