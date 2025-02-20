@@ -16,7 +16,7 @@ const (
 
 // SgReadyModeController controller implementation
 type SgReadyModeController struct {
-	_mode int64
+	mode  int64
 	modeG func() (int64, error)
 	modeS func(int64) error
 }
@@ -24,22 +24,22 @@ type SgReadyModeController struct {
 // NewSgReadyModeController creates SgReady mode controller
 func NewSgReadyModeController(ctx context.Context, modeS func(int64) error, modeG func() (int64, error)) *SgReadyModeController {
 	return &SgReadyModeController{
-		_mode: Normal,
+		mode:  Normal,
 		modeG: modeG,
 		modeS: modeS,
 	}
 }
 
-func (wb *SgReadyModeController) mode() (int64, error) {
+func (wb *SgReadyModeController) getMode() (int64, error) {
 	if wb.modeG == nil {
-		return wb._mode, nil
+		return wb.mode, nil
 	}
 	return wb.modeG()
 }
 
 // Status implements the api.Charger interface
 func (wb *SgReadyModeController) Status() (api.ChargeStatus, error) {
-	mode, err := wb.mode()
+	mode, err := wb.getMode()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -54,7 +54,7 @@ func (wb *SgReadyModeController) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SgReadyModeController) Enabled() (bool, error) {
-	mode, err := wb.mode()
+	mode, err := wb.getMode()
 	return mode == Boost, err
 }
 
@@ -63,7 +63,7 @@ func (wb *SgReadyModeController) Enable(enable bool) error {
 	mode := map[bool]int64{false: Normal, true: Boost}[enable]
 	err := wb.modeS(mode)
 	if err == nil {
-		wb._mode = mode
+		wb.mode = mode
 	}
 	return err
 }
