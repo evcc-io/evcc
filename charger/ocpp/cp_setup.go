@@ -12,7 +12,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
+func (cp *CP) Setup(meterValues string, meterInterval time.Duration, forceWattCtrl bool) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -153,6 +153,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	// configure websocket ping interval
 	if err := cp.ChangeConfigurationRequest(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
+	}
+
+	if forceWattCtrl {
+		cp.ChargingRateUnit = types.ChargingRateUnitWatts
 	}
 
 	return nil
