@@ -48,7 +48,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20241004123532-f6c6fb5201b3
 	github.com/hashicorp/go-version v1.7.0
-	github.com/hasura/go-graphql-client v0.13.2-0.20250210080311-cf325bddb83b
+	github.com/hasura/go-graphql-client v0.13.2-0.20250219070609-5970b87363a3
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
