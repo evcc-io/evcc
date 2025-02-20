@@ -8,21 +8,24 @@ import (
 
 // PowerModeController controller implementation
 type PowerModeController struct {
-	ctrl      *PowerController
+	phases    int
+	_power    int64
 	maxPowerG func() (int64, error)
+	maxPowerS func(int64) error
 }
 
 // NewPowerModeController creates power mode controller
-func NewPowerModeController(ctx context.Context, ctrl *PowerController, maxPowerG func() (int64, error)) *PowerModeController {
+func NewPowerModeController(ctx context.Context, maxPowerS func(int64) error, maxPowerG func() (int64, error), phases int) *PowerModeController {
 	return &PowerModeController{
-		ctrl:      ctrl,
 		maxPowerG: maxPowerG,
+		maxPowerS: maxPowerS,
+		phases:    phases,
 	}
 }
 
 func (wb *PowerModeController) power() (int64, error) {
 	if wb.maxPowerG == nil {
-		return wb.ctrl.power, nil
+		return wb._power, nil
 	}
 	return wb.maxPowerG()
 }
@@ -48,7 +51,26 @@ func (wb *PowerModeController) Enabled() (bool, error) {
 func (wb *PowerModeController) Enable(enable bool) error {
 	var power int64
 	if enable {
-		power = wb.ctrl.power
+		power = wb._power
 	}
-	return wb.ctrl.maxPower(power)
+	return wb.maxPower(power)
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *PowerModeController) MaxCurrent(current int64) error {
+	return wb.MaxCurrentEx(float64(current))
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *PowerModeController) MaxCurrentEx(current float64) error {
+	return wb.maxPower(int64(230 * current * float64(wb.phases)))
+}
+
+func (wb *PowerModeController) maxPower(power int64) error {
+	err := wb.maxPowerS(power)
+	if err == nil {
+		wb._power = power
+	}
+
+	return err
 }

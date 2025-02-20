@@ -30,7 +30,6 @@ import (
 type Heatpump struct {
 	*embed
 	*heating.PowerModeController
-	*heating.PowerController
 }
 
 func init() {
@@ -87,13 +86,10 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 }
 
 // NewHeatpump creates heatpump charger
-func NewHeatpump(ctx context.Context, embed *embed, setMaxPower func(int64) error, getMaxPower func() (int64, error), phases int) (*Heatpump, error) {
-	pc := heating.NewPowerController(ctx, setMaxPower, phases)
-
+func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error), phases int) (*Heatpump, error) {
 	res := &Heatpump{
 		embed:               embed,
-		PowerModeController: heating.NewPowerModeController(ctx, pc, getMaxPower),
-		PowerController:     pc,
+		PowerModeController: heating.NewPowerModeController(ctx, maxPowerS, maxPowerG, phases),
 	}
 
 	return res, nil
