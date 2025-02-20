@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SgReady charger implementation
@@ -87,6 +88,10 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	maxPower, err := cc.MaxPower.IntSetter(ctx, "maxpower")
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	res, err := NewSgReady(ctx, &cc.embed, set, get, maxPower, cc.Phases)
