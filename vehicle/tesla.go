@@ -66,11 +66,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	hc := request.NewClient(log)
-	baseTransport := hc.Transport
-
 	hc.Transport = &oauth2.Transport{
 		Source: identity,
-		Base:   baseTransport,
+		Base:   hc.Transport,
 	}
 
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
@@ -101,7 +99,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"X-Authorization": "Bearer " + cc.ProxyToken,
 		}),
-		Base: baseTransport,
+		Base: hc.Transport,
 	}
 
 	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
