@@ -43,8 +43,8 @@ func init() {
 func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed            `mapstructure:",squash"`
+		SetMaxPower      plugin.Config
 		GetMaxPower      *plugin.Config // optional
-		SetMaxPower      *plugin.Config
 		heating.Readings `mapstructure:",squash"`
 		Phases           int
 	}{

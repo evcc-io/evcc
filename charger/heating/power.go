@@ -2,8 +2,6 @@ package heating
 
 import (
 	"context"
-
-	"github.com/evcc-io/evcc/api"
 )
 
 // PowerController controller implementation
@@ -32,11 +30,6 @@ func (wb *PowerController) MaxCurrentEx(current float64) error {
 }
 
 func (wb *PowerController) maxPower(power int64) error {
-	// TODO
-	if wb.maxPowerS == nil {
-		return api.ErrNotAvailable
-	}
-
 	err := wb.maxPowerS(power)
 	if err == nil {
 		wb.power = power

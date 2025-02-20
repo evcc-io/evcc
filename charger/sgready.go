@@ -30,7 +30,6 @@ import (
 type SgReady struct {
 	*embed
 	*heating.SgReadyModeController
-	*heating.PowerController
 }
 
 func init() {
@@ -45,7 +44,6 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		embed            `mapstructure:",squash"`
 		SetMode          plugin.Config
 		GetMode          *plugin.Config // optional
-		SetMaxPower      *plugin.Config // optional
 		heating.Readings `mapstructure:",squash"`
 		Phases           int
 	}{
@@ -70,12 +68,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	maxPowerS, err := cc.SetMaxPower.IntSetter(ctx, "maxpower")
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG, maxPowerS, cc.Phases)
+	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG)
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +82,16 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error, phases int) (*SgReady, error) {
+func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error)) (*SgReady, error) {
 	res := &SgReady{
 		embed:                 embed,
 		SgReadyModeController: heating.NewSgReadyModeController(ctx, modeS, modeG),
-		PowerController:       heating.NewPowerController(ctx, maxPowerS, phases),
 	}
 
 	return res, nil
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *SgReady) MaxCurrent(current int64) error {
+	return nil
 }
