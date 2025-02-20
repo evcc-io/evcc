@@ -17,16 +17,16 @@ const (
 // SgReadyModeController controller implementation
 type SgReadyModeController struct {
 	mode  int64
-	modeG func() (int64, error)
 	modeS func(int64) error
+	modeG func() (int64, error)
 }
 
 // NewSgReadyModeController creates SgReady mode controller
 func NewSgReadyModeController(ctx context.Context, modeS func(int64) error, modeG func() (int64, error)) *SgReadyModeController {
 	return &SgReadyModeController{
 		mode:  Normal,
-		modeG: modeG,
 		modeS: modeS,
+		modeG: modeG,
 	}
 }
 

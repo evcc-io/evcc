@@ -30,6 +30,15 @@ func (wb *PowerModeController) getMaxPower() (int64, error) {
 	return wb.maxPowerG()
 }
 
+func (wb *PowerModeController) setMaxPower(power int64) error {
+	err := wb.maxPowerS(power)
+	if err == nil {
+		wb.power = power
+	}
+
+	return err
+}
+
 // Status implements the api.Charger interface
 func (wb *PowerModeController) Status() (api.ChargeStatus, error) {
 	power, err := wb.getMaxPower()
@@ -64,13 +73,4 @@ func (wb *PowerModeController) MaxCurrent(current int64) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *PowerModeController) MaxCurrentEx(current float64) error {
 	return wb.setMaxPower(int64(230 * current * float64(wb.phases)))
-}
-
-func (wb *PowerModeController) setMaxPower(power int64) error {
-	err := wb.maxPowerS(power)
-	if err == nil {
-		wb.power = power
-	}
-
-	return err
 }
