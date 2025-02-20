@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -58,6 +59,10 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.URI == "" {
+		return nil, errors.New("missing uri")
 	}
 
 	log := contextLogger(ctx, util.NewLogger("http"))
