@@ -26,7 +26,22 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ session.loadpoint }}
+										<LoadpointOptions
+											:id="session.vehicle"
+											class="options"
+											:loadpoints="loadpointOptions"
+											:selected="session.loadpoint"
+											@change-loadpoint="changeLoadpoint"
+											@remove-loadpoint="removeLoadpoint"
+										>
+											<span class="flex-grow-1 text-truncate loadpoint-name">
+												{{
+													session.loadpoint
+														? session.loadpoint
+														: $t("main.loadpoint.none")
+												}}
+											</span>
+										</LoadpointOptions>
 									</td>
 								</tr>
 								<tr>
@@ -185,17 +200,19 @@ import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
 import VehicleOptions from "../VehicleOptions.vue";
+import LoadpointOptions from "../LoadpointOptions.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 
 export default {
 	name: "SessionDetailsModal",
-	components: { VehicleOptions },
+	components: { VehicleOptions, LoadpointOptions },
 	mixins: [formatter],
 	props: {
 		session: Object,
 		currency: String,
 		vehicles: Array,
+		loadpoints: Array,
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -214,6 +231,9 @@ export default {
 				name: v.title,
 				title: v.title,
 			}));
+		},
+		loadpointOptions: function () {
+			return this.loadpoints;
 		},
 	},
 	methods: {
@@ -235,6 +255,12 @@ export default {
 		},
 		async removeVehicle() {
 			await this.updateSession({ vehicle: null });
+		},
+		async changeLoadpoint(title) {
+			await this.updateSession({ loadpoint: title });
+		},
+		async removeLoadpoint() {
+			await this.updateSession({ loadpoint: null });
 		},
 		async updateSession(data) {
 			try {
@@ -258,6 +284,10 @@ export default {
 
 <style scoped>
 .options .vehicle-name {
+	text-decoration: underline;
+}
+
+.options .loadpoint-name {
 	text-decoration: underline;
 }
 </style>
