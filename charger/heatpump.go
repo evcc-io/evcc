@@ -26,26 +26,25 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// SgReady charger implementation
-type SgReady struct {
+// Heatpump charger implementation
+type Heatpump struct {
 	*embed
-	*heating.SgReadyModeController
+	*heating.PowerModeController
 	*heating.PowerController
 }
 
 func init() {
-	registry.AddCtx("sgready", NewSgReadyFromConfig)
+	registry.AddCtx("heatpump", NewHeatpumpFromConfig)
 }
 
-//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
+//go:generate go tool decorate -f decorateHeatpump -b *Heatpump -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
 
-// NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
-func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+// NewHeatpumpFromConfig creates an SG Ready configurable charger from generic config
+func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed            `mapstructure:",squash"`
-		SetMode          plugin.Config
-		GetMode          *plugin.Config // optional
-		SetMaxPower      *plugin.Config // optional
+		GetMaxPower      *plugin.Config // optional
+		SetMaxPower      *plugin.Config
 		heating.Readings `mapstructure:",squash"`
 		Phases           int
 	}{
@@ -60,12 +59,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	modeS, err := cc.SetMode.IntSetter(ctx, "mode")
-	if err != nil {
-		return nil, err
-	}
-
-	modeG, err := cc.GetMode.IntGetter(ctx)
+	maxPowerG, err := cc.GetMaxPower.IntGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +69,11 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG, maxPowerS, cc.Phases)
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, api.ErrSponsorRequired
+	// }
+
+	res, err := NewHeatpump(ctx, &cc.embed, maxPowerS, maxPowerG, cc.Phases)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +83,17 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil
+	return decorateHeatpump(res, powerG, energyG, tempG, limitTempG), nil
 }
 
-// NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error, phases int) (*SgReady, error) {
-	res := &SgReady{
-		embed:                 embed,
-		SgReadyModeController: heating.NewSgReadyModeController(ctx, modeS, modeG),
-		PowerController:       heating.NewPowerController(ctx, maxPowerS, phases),
+// NewHeatpump creates heatpump charger
+func NewHeatpump(ctx context.Context, embed *embed, setMaxPower func(int64) error, getMaxPower func() (int64, error), phases int) (*Heatpump, error) {
+	pc := heating.NewPowerController(ctx, setMaxPower, phases)
+
+	res := &Heatpump{
+		embed:               embed,
+		PowerModeController: heating.NewPowerModeController(ctx, pc, getMaxPower),
+		PowerController:     pc,
 	}
 
 	return res, nil

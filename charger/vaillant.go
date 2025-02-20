@@ -26,6 +26,7 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/heating"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -93,17 +94,17 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	systemId := homes[0].SystemID
-	heating := cc.HeatingSetpoint > 0
+	isHeating := cc.HeatingSetpoint > 0
 
 	set := func(mode int64) error {
 		switch mode {
-		case Normal:
-			if heating {
+		case heating.Normal:
+			if isHeating {
 				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
 			}
 			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
-		case Boost:
-			if heating {
+		case heating.Boost:
+			if isHeating {
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
 			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT) // zone 255
@@ -142,7 +143,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	var heatingTempSensor bool
-	if heating {
+	if isHeating {
 		system, err := conn.GetSystem(systemId)
 		if err != nil {
 			return nil, err
@@ -151,7 +152,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	}
 
 	var temp func() (float64, error)
-	if !heating || heatingTempSensor {
+	if !isHeating || heatingTempSensor {
 		temp = util.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
