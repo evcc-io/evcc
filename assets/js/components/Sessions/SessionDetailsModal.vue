@@ -26,22 +26,17 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										<LoadpointOptions
-											:id="session.vehicle"
+										<CustomSelect
+											id="session.vehicle"
 											class="options"
-											:loadpoints="loadpointOptions"
+											:options="loadpointOptions"
 											:selected="session.loadpoint"
-											@change-loadpoint="changeLoadpoint"
-											@remove-loadpoint="removeLoadpoint"
+											@change="changeLoadpoint($event.target.value)"
 										>
 											<span class="flex-grow-1 text-truncate loadpoint-name">
-												{{
-													session.loadpoint
-														? session.loadpoint
-														: $t("main.loadpoint.none")
-												}}
+												{{ session.loadpoint ? session.loadpoint : "____" }}
 											</span>
-										</LoadpointOptions>
+										</CustomSelect>
 									</td>
 								</tr>
 								<tr>
@@ -200,13 +195,13 @@ import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
 import VehicleOptions from "../VehicleOptions.vue";
-import LoadpointOptions from "../LoadpointOptions.vue";
+import CustomSelect from "../CustomSelect.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 
 export default {
 	name: "SessionDetailsModal",
-	components: { VehicleOptions, LoadpointOptions },
+	components: { VehicleOptions, CustomSelect },
 	mixins: [formatter],
 	props: {
 		session: Object,
@@ -233,7 +228,10 @@ export default {
 			}));
 		},
 		loadpointOptions: function () {
-			return this.loadpoints;
+			return this.loadpoints.map((loadpoint) => ({
+				value: loadpoint,
+				name: loadpoint,
+			}));
 		},
 	},
 	methods: {
@@ -258,9 +256,6 @@ export default {
 		},
 		async changeLoadpoint(title) {
 			await this.updateSession({ loadpoint: title });
-		},
-		async removeLoadpoint() {
-			await this.updateSession({ loadpoint: null });
 		},
 		async updateSession(data) {
 			try {
