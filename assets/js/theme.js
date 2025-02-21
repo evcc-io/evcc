@@ -62,7 +62,9 @@ function updateMetaThemeForBackdrop() {
 }
 
 export function watchThemeChanges() {
-  darkModeMatcher?.addEventListener("change", updateTheme);
+  if (darkModeMatcher && darkModeMatcher.addEventListener) {
+    darkModeMatcher.addEventListener("change", updateTheme);
+  }
   updateTheme();
 
   // listen for modal backdrops
