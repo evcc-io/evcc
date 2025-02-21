@@ -34,7 +34,11 @@
 											@change="changeLoadpoint($event.target.value)"
 										>
 											<span class="flex-grow-1 text-truncate loadpoint-name">
-												{{ session.loadpoint ? session.loadpoint : "____" }}
+												{{
+													session.loadpoint
+														? session.loadpoint
+														: $t("main.loadpoint.fallbackname")
+													}}
 											</span>
 										</CustomSelect>
 									</td>
