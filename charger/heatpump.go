@@ -29,7 +29,10 @@ import (
 // Heatpump charger implementation
 type Heatpump struct {
 	*embed
-	*heating.PowerModeController
+	phases    int
+	power     int64
+	maxPowerG func() (int64, error)
+	maxPowerS func(int64) error
 }
 
 func init() {
@@ -88,9 +91,63 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 // NewHeatpump creates heatpump charger
 func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error), phases int) (*Heatpump, error) {
 	res := &Heatpump{
-		embed:               embed,
-		PowerModeController: heating.NewPowerModeController(ctx, maxPowerS, maxPowerG, phases),
+		embed:     embed,
+		maxPowerG: maxPowerG,
+		maxPowerS: maxPowerS,
+		phases:    phases,
 	}
 
 	return res, nil
+}
+
+func (wb *Heatpump) getMaxPower() (int64, error) {
+	if wb.maxPowerG == nil {
+		return wb.power, nil
+	}
+	return wb.maxPowerG()
+}
+
+func (wb *Heatpump) setMaxPower(power int64) error {
+	err := wb.maxPowerS(power)
+	if err == nil {
+		wb.power = power
+	}
+
+	return err
+}
+
+// Status implements the api.Charger interface
+func (wb *Heatpump) Status() (api.ChargeStatus, error) {
+	power, err := wb.getMaxPower()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	status := map[bool]api.ChargeStatus{false: api.StatusB, true: api.StatusC}
+	return status[power > 0], nil
+}
+
+// Enabled implements the api.Charger interface
+func (wb *Heatpump) Enabled() (bool, error) {
+	power, err := wb.getMaxPower()
+	return power > 0, err
+}
+
+// Enable implements the api.Charger interface
+func (wb *Heatpump) Enable(enable bool) error {
+	var power int64
+	if enable {
+		power = wb.power
+	}
+	return wb.setMaxPower(power)
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *Heatpump) MaxCurrent(current int64) error {
+	return wb.MaxCurrentEx(float64(current))
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *Heatpump) MaxCurrentEx(current float64) error {
+	return wb.setMaxPower(int64(230 * current * float64(wb.phases)))
 }
