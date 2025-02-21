@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -119,6 +120,8 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	if err = v.DoJSON(req, &resp); err != nil {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
+
+	resp.Expiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
 
 	// Parse ID token without verification to extract UUID
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
