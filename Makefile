@@ -106,7 +106,6 @@ apt-release::
 
 # gokrazy
 gok::
-	which gok || go install github.com/gokrazy/tools/cmd/gok@main
 	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
 	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS) -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
 	${GOK} add .
@@ -120,6 +119,7 @@ gok-image:: gok
 
 # run qemu
 gok-vm:: gok
+	# ${GOK} get github.com/gokrazy/kernel.rpi@latest
 	${GOK} vm run --netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 
 # update instance
