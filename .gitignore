@@ -1,11 +1,12 @@
 __debug_bin*
+.vscode
+!.vscode/extensions.json
 .cache
 .DS_store
 *.gz
 *.py
 *.log
 *.json
-!extensions.json
 !.devcontainer/devcontainer.json
 *.yaml
 !templates/**/*.yaml
