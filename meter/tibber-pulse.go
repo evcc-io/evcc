@@ -20,8 +20,7 @@ func init() {
 }
 
 type Tibber struct {
-	data   *util.Monitor[tibber.LiveMeasurement]
-	homeID string
+	data *util.Monitor[tibber.LiveMeasurement]
 }
 
 func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
@@ -68,8 +67,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}
 
 	t := &Tibber{
-		data:   util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
-		homeID: cc.HomeID,
+		data: util.NewMonitor[tibber.LiveMeasurement](cc.Timeout),
 	}
 
 	// subscription client
@@ -101,8 +99,18 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			return nil
 		})
 
-	if err := t.ensureSubscribed(client, cc.Timeout); err != nil {
-		return nil, err
+	done := make(chan error, 1)
+	go func(done chan error) {
+		done <- t.subscribe(client, cc.HomeID)
+	}(done)
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return nil, err
+		}
+	case <-time.After(cc.Timeout):
+		return nil, api.ErrTimeout
 	}
 
 	go func() {
@@ -113,16 +121,11 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}()
 
 	go func() {
+		// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
+		// Therefore we need to restart the client when exiting gracefully upon server request
+		// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
 		for tick := time.Tick(10 * time.Second); ; {
-			err := client.Run()
-			if err == nil {
-				// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
-				// This invalidates the subscription, and therefore we resubscribe when exiting Run() gracefully
-				// upon server request.
-				// https://github.com/evcc-io/evcc/issues/17925#issuecomment-2621458890
-				err = t.ensureSubscribed(client, cc.Timeout)
-			}
-			if err != nil {
+			if err := client.Run(); err != nil {
 				log.ERROR.Println(err)
 			}
 
@@ -137,27 +140,13 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 	return t, nil
 }
 
-func (t *Tibber) ensureSubscribed(client *graphql.SubscriptionClient, timeout time.Duration) error {
-	done := make(chan error, 1)
-	go func(done chan error) {
-		done <- t.subscribe(client)
-	}(done)
-
-	select {
-	case err := <-done:
-		return err
-	case <-time.After(timeout):
-		return api.ErrTimeout
-	}
-}
-
-func (t *Tibber) subscribe(client *graphql.SubscriptionClient) error {
+func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string) error {
 	var query struct {
 		tibber.LiveMeasurement `graphql:"liveMeasurement(homeId: $homeId)"`
 	}
 
 	_, err := client.Subscribe(&query, map[string]any{
-		"homeId": graphql.ID(t.homeID),
+		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
 			return err
