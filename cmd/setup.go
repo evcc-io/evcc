@@ -142,15 +142,16 @@ func isWritable(filePath string) bool {
 	return true
 }
 
-func configureCircuits(conf []config.Named) error {
+func configureCircuits(conf *[]config.Named) error {
 	// migrate settings
 	if settings.Exists(keys.Circuits) {
+		conf = &[]config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 	}
 
-	children := slices.Clone(conf)
+	children := slices.Clone(*conf)
 
 	// TODO: check for circular references
 NEXT:
@@ -641,6 +642,7 @@ func configureGo(conf []globalconfig.Go) error {
 func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
+		conf = new(globalconfig.Hems)
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -687,6 +689,7 @@ func configureMDNS(conf globalconfig.Network) error {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
+		conf = new(eebus.Config)
 		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -711,6 +714,7 @@ func configureEEBus(conf *eebus.Config) error {
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
+		conf = new(globalconfig.Messaging)
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -797,9 +801,10 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	return nil
 }
 
-func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
+func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
+		conf = new(globalconfig.Tariffs)
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -847,7 +852,7 @@ func configureDevices(conf globalconfig.All) error {
 	if err := configureVehicles(conf.Vehicles); err != nil {
 		return &ClassError{ClassVehicle, err}
 	}
-	if err := configureCircuits(conf.Circuits); err != nil {
+	if err := configureCircuits(&conf.Circuits); err != nil {
 		return &ClassError{ClassCircuit, err}
 	}
 	return nil
@@ -856,7 +861,8 @@ func configureDevices(conf globalconfig.All) error {
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), conf); err != nil {
+		conf = &[]globalconfig.ModbusProxy{}
+		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 	}
@@ -898,7 +904,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		return nil, &ClassError{ClassLoadpoint, err}
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
