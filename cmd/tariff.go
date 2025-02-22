@@ -32,7 +32,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	tariffs, err := configureTariffs(&conf.Tariffs)
+	tariffs, err := configureTariffs(conf.Tariffs)
 	if err != nil {
 		fatal(err)
 	}
