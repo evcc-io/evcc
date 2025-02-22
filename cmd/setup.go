@@ -720,10 +720,6 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		}
 	}
 
-	if len(conf.Services) == 0 {
-		return nil, nil
-	}
-
 	messageChan := make(chan push.Event, 1)
 
 	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
