@@ -4,6 +4,8 @@
     "wscats.vue",
     "golang.go",
     "esbenp.prettier-vscode",
-    "fill-labs.dependi"
+    "fill-labs.dependi",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github"
   ]
 }
