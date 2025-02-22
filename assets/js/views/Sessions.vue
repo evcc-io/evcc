@@ -182,6 +182,7 @@
 			<SessionDetailsModal
 				:session="selectedSession"
 				:vehicles="vehicleList"
+				:loadpoints="loadpointList"
 				:currency="currency"
 				@session-changed="loadSessions"
 			/>
@@ -469,6 +470,10 @@ export default {
 		vehicleList() {
 			const vehicles = store.state.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+		},
+		loadpointList() {
+			const loadpoints = store.state.loadpoints || [];
+			return loadpoints.map(({ title }) => title);
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
