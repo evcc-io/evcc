@@ -1,0 +1,45 @@
+template: idm
+products:
+  - brand: IDM
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: phases
+    type: int
+    advanced: true
+render: |
+  type: heatpump
+  phases: {{ .phases }}
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 74 # PV Überschussleistung
+      type: holding
+      decode: float32s
+    scale: 0.001
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4122 # aktuelle Aufnahmeleistung der WP
+      type: holding
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4128
+      type: holding
+      decode: float32s
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1014
+      type: holding
+      decode: float32s
