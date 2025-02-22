@@ -42,7 +42,8 @@ params:
     type: int
     advanced: true
   - name: maxsoc
-    deprecated: true
+    type: int
+    advanced: true
   - name: watchdog
     type: duration
     default: 60s
