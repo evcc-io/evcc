@@ -7,6 +7,12 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
   - name: phases
     type: int
     advanced: true
@@ -36,10 +42,12 @@ render: |
       address: 4128
       type: holding
       decode: float32s
+  {{- if .tempsource }}
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1014
+      address: {{ if eq .tempsource "warmwater" -}} 1014 {{ else }} 1008 {{- end }} # 1014 Trinkwasser, 1008 Wärmespeicher
       type: holding
       decode: float32s
+  {{- end }}
