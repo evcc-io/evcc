@@ -27,9 +27,7 @@ func (t *combined) Rates() (api.Rates, error) {
 		}
 
 		for _, r := range rr {
-			if !slices.ContainsFunc(keys, func(ts time.Time) bool {
-				return ts.Equal(r.Start)
-			}) {
+			if !slices.ContainsFunc(keys, r.Start.Equal) {
 				keys = append(keys, r.Start)
 			}
 		}
