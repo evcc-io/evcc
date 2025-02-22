@@ -1,7 +1,13 @@
 template: lambda-zewotherm
 products:
   - brand: Lambda
+    description:
+      de: EU-L Serie
+      en: EU-L Series
   - brand: Zewotherm
+    description:
+      de: EU-L Serie
+      en: EU-L Series
 group: heating
 requirements:
   # evcc: ["sponsorship"]
