@@ -8,6 +8,9 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: phases
+    type: int
+    advanced: true
 render: |
   type: heatpump
   phases: {{ .phases }}
@@ -23,3 +26,4 @@ render: |
       address: 103 # aktuelle Aufnahmeleistung der WP
       type: holding
       decode: int16
+  phases: {{ .phases }}
