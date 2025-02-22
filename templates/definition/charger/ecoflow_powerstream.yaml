@@ -1,0 +1,24 @@
+template: ecoflow-powerstream
+products:
+  - brand: Ecoflow
+    description:
+      generic: Powerstream Inverter
+requirements:
+  description:
+    de: Der Wechselrichter muss über eine aktuelle Firmware verfügen und mit dem Netzwerk verbunden sein.
+    en: The inverter must be operated with a recent firmware and connected to the network.
+params:
+  - name: uri
+    description:
+      de: URI des Ecoflow Powerstream Wechselrichters
+      en: URI of the Ecoflow Powerstream inverter
+    required: true
+  - name: sn
+    description:
+      de: Seriennummer des Ecoflow Powerstream Wechselrichters
+      en: Serial number of the Ecoflow Powerstream inverter
+    required: true
+render: |
+  type: ecoflow-powerstream
+  uri: {{ .uri }}
+  sn: {{ .sn }}
