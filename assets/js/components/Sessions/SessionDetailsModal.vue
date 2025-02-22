@@ -37,7 +37,7 @@
 												{{
 													session.loadpoint
 														? session.loadpoint
-														: $t("main.loadpoint.fallbackname")
+														: $t("main.loadpoint.fallbackName")
 												}}
 											</span>
 										</CustomSelect>
