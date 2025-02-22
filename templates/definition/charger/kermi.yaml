@@ -39,7 +39,7 @@ render: |
     switch:
     - case: 1 # normal
       set:
-      - source: const
+        source: const
         value: 2 # normal
         set:
           source: modbus
@@ -50,7 +50,7 @@ render: |
             encoding: uint16
     - case: 2 # boost
       set:
-      - source: const
+        source: const
         value: 3 # comfort
         set:
           source: modbus
@@ -61,7 +61,7 @@ render: |
             encoding: uint16
     - case: 3 # dimm
       set:
-      - source: const
+        source: const
         value: 1 # eco
         set:
           source: modbus
