@@ -1,4 +1,4 @@
-package meter
+package measurement
 
 import (
 	"context"
@@ -8,39 +8,27 @@ import (
 	"github.com/evcc-io/evcc/plugin"
 )
 
-// BuildMeasurements returns typical meter measurement getters from config
-func BuildMeasurements(ctx context.Context, power, energy *plugin.Config) (func() (float64, error), func() (float64, error), error) {
-	powerG, err := power.FloatGetter(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("power: %w", err)
-	}
-
-	energyG, err := energy.FloatGetter(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("energy: %w", err)
-	}
-
-	return powerG, energyG, nil
+type Phases struct {
+	Currents, Voltages, Powers []plugin.Config // optional
 }
 
-// BuildPhaseMeasurements returns typical meter measurement getters from config
-func BuildPhaseMeasurements(ctx context.Context, currents, voltages, powers []plugin.Config) (
+func (cc *Phases) Configure(ctx context.Context) (
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
 	func() (float64, float64, float64, error),
 	error,
 ) {
-	currentsG, err := buildPhaseProviders(ctx, currents)
+	currentsG, err := buildPhaseProviders(ctx, cc.Currents)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("currents: %w", err)
 	}
 
-	voltagesG, err := buildPhaseProviders(ctx, voltages)
+	voltagesG, err := buildPhaseProviders(ctx, cc.Voltages)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	powersG, err := buildPhaseProviders(ctx, powers)
+	powersG, err := buildPhaseProviders(ctx, cc.Powers)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("powers: %w", err)
 	}

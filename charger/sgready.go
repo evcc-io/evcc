@@ -22,7 +22,7 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/heating"
+	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -51,11 +51,12 @@ const (
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed            `mapstructure:",squash"`
-		SetMode          plugin.Config
-		GetMode          *plugin.Config // optional
-		heating.Readings `mapstructure:",squash"`
-		Phases           int
+		embed               `mapstructure:",squash"`
+		SetMode             plugin.Config
+		GetMode             *plugin.Config // optional
+		measurement.Heating `mapstructure:",squash"`
+		measurement.Energy  `mapstructure:",squash"`
+		Phases              int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -83,7 +84,12 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	powerG, energyG, tempG, limitTempG, err := cc.Readings.Configure(ctx)
+	powerG, energyG, err := cc.Energy.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tempG, limitTempG, err := cc.Heating.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
