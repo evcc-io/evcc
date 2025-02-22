@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/api"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,15 +13,14 @@ func TestAccumulatedEnergy(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
 
-	rate := func(start int, val float64) api.Rate {
-		return api.Rate{
-			Start: clock.Now().Add(time.Duration(start) * time.Hour),
-			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
-			Price: val,
+	rate := func(start int, val float64) tsValue {
+		return tsValue{
+			Timestamp: clock.Now().Add(time.Duration(start) * time.Hour),
+			Value:     val,
 		}
 	}
 
-	rr := api.Rates{rate(0, 0), rate(1, 1), rate(2, 2), rate(3, 3), rate(4, 4)}
+	rr := timeseries{rate(0, 0), rate(1, 1), rate(2, 2), rate(3, 3), rate(4, 4)}
 
 	for i, tc := range []struct {
 		from, to float64

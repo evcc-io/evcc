@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math"
 	"time"
 
@@ -55,31 +56,31 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 
 // accumulatedEnergy calculates the energy consumption between from and to,
 // assuming the rates containing the power at given timestamp.
-func accumulatedEnergy(rr api.Rates, from, to time.Time) float64 {
+func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
 	var energy float64
-	var last api.Rate
+	var last tsValue
 
 	for _, r := range rr {
 		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
 
-		if !r.Start.After(from) {
+		if !r.Timestamp.After(from) {
 			last = r
 			continue
 		}
 
-		start := last.Start
+		start := last.Timestamp
 		if start.Before(from) {
 			start = from
 		}
 
-		end := r.Start
+		end := r.Timestamp
 		if end.After(to) {
 			end = to
 		}
 
-		energy += (r.Price + last.Price) / 2 * end.Sub(start).Hours()
+		energy += (r.Value + last.Value) / 2 * end.Sub(start).Hours()
 
-		if !r.Start.Before(to) {
+		if !r.Timestamp.Before(to) {
 			break
 		}
 
@@ -87,6 +88,27 @@ func accumulatedEnergy(rr api.Rates, from, to time.Time) float64 {
 	}
 
 	return energy
+}
+
+type (
+	timeseries []tsValue
+	tsValue    struct {
+		Timestamp time.Time `json:"ts"`
+		Value     float64   `json:"val"`
+	}
+)
+
+func (rr *timeseries) MarshalJSON() ([]byte, error) {
+	return json.Marshal(rr)
+}
+
+func timestampSeries(rr api.Rates) timeseries {
+	return lo.Map(rr, func(r api.Rate, _ int) tsValue {
+		return tsValue{
+			Timestamp: r.Start,
+			Value:     r.Price,
+		}
+	})
 }
 
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
@@ -120,19 +142,19 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// forecast
 
-	solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar))
+	solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar)))
 
 	type solarDetails struct {
-		Forecast        api.Rates `json:"solar,omitempty"`
-		ForecastedToday *float64  `json:"forecastedToday,omitempty"` // until now
-		YieldToday      *float64  `json:"yieldToday,omitempty"`      // until now
+		Forecast        timeseries `json:"solar,omitempty"`
+		ForecastedToday *float64   `json:"forecastedToday,omitempty"` // until now
+		YieldToday      *float64   `json:"yieldToday,omitempty"`      // until now
 	}
 
 	fc := struct {
 		Co2           api.Rates    `json:"co2,omitempty"`
 		FeedIn        api.Rates    `json:"feedin,omitempty"`
 		Grid          api.Rates    `json:"grid,omitempty"`
-		Solar         api.Rates    `json:"solar,omitempty"`
+		Solar         timeseries   `json:"solar,omitempty"`
 		SolarAdjusted solarDetails `json:"adjusted,omitempty"`
 	}{
 		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
@@ -150,13 +172,12 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		if forecastedToday > 0 && generatedToday > 0 {
 			scale := generatedToday / forecastedToday
 
-			var solarAdjusted api.Rates
-			for _, r := range solar {
-				solarAdjusted = append(solarAdjusted, api.Rate{
-					Start: r.Start,
-					End:   r.End,
-					Price: r.Price * scale,
-				})
+			solarAdjusted := make(timeseries, 0, len(solar))
+			for i, r := range solar {
+				solarAdjusted[i] = tsValue{
+					Timestamp: r.Timestamp,
+					Value:     r.Value * scale,
+				}
 			}
 
 			fc.SolarAdjusted = solarDetails{
