@@ -14,16 +14,17 @@ params:
 render: |
   type: heatpump
   phases: {{ .phases }}
-  setpower:
+  setmaxpower:
     source: modbus
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 103 # PV Überschussleistung
       type: holding
       decode: int16
   power:
     source: modbus
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 103 # aktuelle Aufnahmeleistung der WP
       type: holding
       decode: int16
-  phases: {{ .phases }}
