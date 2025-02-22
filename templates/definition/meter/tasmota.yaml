@@ -1,7 +1,7 @@
 template: tasmota
 products:
   - description:
-      generic: Tasmota (1 Phase Meter)
+      generic: Tasmota (1 Phase + SML Meter)
 group: switchsockets
 params:
   - name: usage
