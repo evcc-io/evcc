@@ -163,7 +163,7 @@ tariffs:
     # type: template
     # template: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
-    # see: https://docs.evcc.io/en/docs/devices/tariffs#co-forecast
+    # see: https://docs.evcc.io/en/docs/tariffs#co-forecast
 
 # mqtt message broker
 mqtt:
