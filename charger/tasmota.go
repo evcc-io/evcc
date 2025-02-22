@@ -87,7 +87,8 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+	total_out, _, err := c.conn.TotalEnergy()
+	return total_out, err
 }
 
 // Currents implements the api.PhaseCurrents interface
