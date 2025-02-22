@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -18,11 +19,8 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Power    plugin.Config
-		Energy   *plugin.Config  // optional
-		Currents []plugin.Config // optional
-		Voltages []plugin.Config // optional
-		Powers   []plugin.Config // optional
+		measurement.Energy `mapstructure:",squash"` // energy optional
+		measurement.Phases `mapstructure:",squash"` // optional
 
 		// battery
 		capacity    `mapstructure:",squash"`
@@ -42,12 +40,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	powerG, energyG, err := BuildMeasurements(ctx, &cc.Power, cc.Energy)
+	powerG, energyG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	currentsG, voltagesG, powersG, err := BuildPhaseMeasurements(ctx, cc.Currents, cc.Voltages, cc.Powers)
+	currentsG, voltagesG, powersG, err := cc.Phases.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}

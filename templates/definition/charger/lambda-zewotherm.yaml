@@ -1,0 +1,30 @@
+template: lambda-zewotherm
+products:
+  - brand: Lambda
+  - brand: Zewotherm
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: phases
+    type: int
+    advanced: true
+render: |
+  type: heatpump
+  phases: {{ .phases }}
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103 # PV Überschussleistung
+      type: holding
+      decode: int16
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103 # aktuelle Aufnahmeleistung der WP
+      type: holding
+      decode: int16

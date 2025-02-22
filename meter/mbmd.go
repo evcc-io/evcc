@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -155,7 +156,7 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 		}
 	}
 
-	return collectPhaseProviders(phases), nil
+	return measurement.CombinePhases(phases), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
