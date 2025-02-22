@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jinzhu/now"
 )
 
 // Name returns the tariff type name
@@ -40,9 +41,15 @@ func backoffPermanentError(err error) error {
 	return err
 }
 
-// mergeRates merges new rates into existing rates,
-// keeping current slots from the existing rates.
+// mergeRates merges new rates into existing rates, keeping current slots from the existing rates.
+// old rates before current timestamp are discarded.
 func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
+	mergeRatesAfter(data, new, now.With(time.Now()).BeginningOfHour())
+}
+
+// mergeRatesAfter merges new rates into existing rates, keeping current slots from the existing rates.
+// old rates before timestamp are discarded.
+func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
 	new.Sort()
 
 	var newStart time.Time
@@ -51,15 +58,18 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 	}
 
 	data.SetFunc(func(old api.Rates) api.Rates {
-		now := time.Now()
-
 		var between api.Rates
 		for _, r := range old {
-			if (r.Start.Before(newStart) || newStart.IsZero()) && r.End.After(now) {
+			if (r.Start.Before(newStart) && !r.Start.Before(now) || newStart.IsZero()) && r.End.After(now) {
 				between = append(between, r)
 			}
 		}
 
 		return append(between, new...)
 	})
+}
+
+// BeginningOfDay returns the beginning of the current day
+func BeginningOfDay() time.Time {
+	return now.With(time.Now()).BeginningOfDay()
 }
