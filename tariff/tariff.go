@@ -112,7 +112,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		mergeRates(t.data, data)
+		// only prune rates older than current period
+		periodStart := now.With(time.Now()).BeginningOfHour()
+		if t.typ == api.TariffTypeSolar {
+			periodStart = BeginningOfDay()
+		}
+		mergeRatesAfter(t.data, data, periodStart)
+
 		once.Do(func() { close(done) })
 	}
 }
