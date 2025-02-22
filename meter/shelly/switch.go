@@ -3,17 +3,20 @@ package shelly
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 )
 
 type Switch struct {
 	*Connection
+	Usage  string
+	Invert bool
 }
 
-func NewSwitch(conn *Connection) *Switch {
+func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
 	res := &Switch{
 		Connection: conn,
+		Usage:      usage,
+		Invert:     invert,
 	}
 
 	return res
@@ -21,7 +24,8 @@ func NewSwitch(conn *Connection) *Switch {
 
 // CurrentPower implements the api.Meter interface
 func (sh *Switch) CurrentPower() (float64, error) {
-	var power float64
+	var switchpower float64 // without direction indication - always positive
+	var meterpower float64  // with direction indication +/-
 
 	d := sh.Connection
 	switch d.gen {
@@ -34,9 +38,9 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			power = res.Meters[d.channel].Power
+			switchpower = res.Meters[d.channel].Power
 		case d.channel < len(res.EMeters):
-			power = res.EMeters[d.channel].Power
+			meterpower = res.EMeters[d.channel].Power
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
@@ -56,16 +60,22 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 		switch d.channel {
 		case 1:
-			power = res.Switch1.Apower + res.Pm1.Apower + resem.Em1.ActPower
+			switchpower = res.Switch1.Apower
+			meterpower = res.Pm1.Apower + resem.Em1.ActPower
 		case 2:
-			power = res.Switch2.Apower + res.Pm2.Apower + resem.Em2.ActPower
+			switchpower = res.Switch2.Apower
+			meterpower = res.Pm2.Apower + resem.Em2.ActPower
 		default:
-			power = res.Switch0.Apower + res.Pm0.Apower + resem.Em0.ActPower
+			switchpower = res.Switch0.Apower
+			meterpower = res.Pm0.Apower + resem.Em0.ActPower
 		}
 	}
 
-	// Assure positive power response (Gen 1 EM devices can provide negative values)
-	return math.Abs(power), nil
+	if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+		meterpower = -meterpower
+	}
+
+	return switchpower + meterpower, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -120,9 +130,17 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			energy = res.Meters[d.channel].Total
+			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+				energy = res.Meters[d.channel].Total_Returned
+			} else {
+				energy = res.Meters[d.channel].Total
+			}
 		case d.channel < len(res.EMeters):
-			energy = res.EMeters[d.channel].Total
+			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+				energy = res.EMeters[d.channel].Total_Returned
+			} else {
+				energy = res.EMeters[d.channel].Total
+			}
 		default:
 			return 0, errors.New("invalid channel, missing power meter")
 		}
@@ -142,13 +160,24 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 			}
 		}
 
-		switch d.channel {
-		case 1:
-			energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy - resem.Em1Data.TotalActRetEnergy
-		case 2:
-			energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy - resem.Em2Data.TotalActRetEnergy
-		default:
-			energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy - resem.Em0Data.TotalActRetEnergy
+		if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+			switch d.channel {
+			case 1:
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Ret_Aenergy.Total + resem.Em1Data.TotalActRetEnergy
+			case 2:
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Ret_Aenergy.Total + resem.Em2Data.TotalActRetEnergy
+			default:
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Ret_Aenergy.Total + resem.Em0Data.TotalActRetEnergy
+			}
+		} else {
+			switch d.channel {
+			case 1:
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy
+			case 2:
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy
+			default:
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy
+			}
 		}
 	}
 
