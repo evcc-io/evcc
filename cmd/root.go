@@ -205,9 +205,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 		if err == nil && influx != nil {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
-				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
-				keys.TariffCo2, keys.TariffFeedIn, keys.TariffGrid,
-				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
+				keys.VehicleSoc,
+				keys.VehicleRange,
+				keys.VehicleOdometer,
+				keys.TariffCo2,
+				keys.TariffCo2Home,
+				keys.TariffCo2Loadpoints,
+				keys.TariffFeedIn,
+				keys.TariffGrid,
+				keys.TariffPriceHome,
+				keys.TariffPriceLoadpoints,
+				keys.ChargedEnergy,
+				keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
 				pipe.NewDropper(append(ignoreLogs, ignoreEmpty, keys.Forecast)...).Pipe(tee.Attach()),
 			))
