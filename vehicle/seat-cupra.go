@@ -50,7 +50,7 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
-	ts, err := service.TokenRefreshServiceTokenSource(log, cupra.TRSParams, cupra.AuthParams, cc.User, cc.Password)
+	ts, err := service.TokenRefreshServiceTokenSource(log, cupra.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

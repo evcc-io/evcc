@@ -17,8 +17,3 @@ var AuthParams = url.Values{
 	"redirect_uri":  {"myskoda://redirect/login/"},
 	"scope":         {"address badge birthdate cars driversLicense dealers email mileage mbb nationalIdentifier openid phone profession profile vin"},
 }
-
-// TokenRefreshService parameters
-var TRSParams = url.Values{
-	"brand": {"skoda"},
-}
