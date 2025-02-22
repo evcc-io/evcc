@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/charger/openwb"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -73,7 +74,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			curr[i] = current
 		}
 
-		currents = collectPhaseProviders(curr)
+		currents = measurement.CombinePhases(curr)
 
 	case "pv":
 		// first pv

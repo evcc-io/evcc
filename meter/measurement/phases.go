@@ -56,11 +56,11 @@ func buildPhaseProviders(ctx context.Context, providers []plugin.Config) (func()
 		phases[idx] = c
 	}
 
-	return collectPhaseProviders(phases), nil
+	return CombinePhases(phases), nil
 }
 
-// collectPhaseProviders combines phase getters into combined api function
-func collectPhaseProviders(g [3]func() (float64, error)) func() (float64, float64, float64, error) {
+// CombinePhases combines phase getters into combined api function
+func CombinePhases(g [3]func() (float64, error)) func() (float64, float64, float64, error) {
 	return func() (float64, float64, float64, error) {
 		var res [3]float64
 		for idx, currentG := range g {

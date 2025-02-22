@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
+	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -36,10 +37,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
 		Tos                                 bool
-
-		// optional measurements
-		measurement.Energy `mapstructure:",squash"`
-		measurement.Phases `mapstructure:",squash"`
+		measurement.Energy                  `mapstructure:",squash"` // optional
+		meter.Phases                        `mapstructure:",squash"` // optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

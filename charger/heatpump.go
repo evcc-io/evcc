@@ -44,12 +44,12 @@ func init() {
 // NewHeatpumpFromConfig creates an SG Ready configurable charger from generic config
 func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		SetMaxPower         plugin.Config
-		GetMaxPower         *plugin.Config // optional
-		measurement.Heating `mapstructure:",squash"`
-		measurement.Energy  `mapstructure:",squash"`
-		Phases              int
+		embed                   `mapstructure:",squash"`
+		SetMaxPower             plugin.Config
+		GetMaxPower             *plugin.Config // optional
+		measurement.Temperature `mapstructure:",squash"`
+		measurement.Energy      `mapstructure:",squash"`
+		Phases                  int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -86,7 +86,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	tempG, limitTempG, err := cc.Heating.Configure(ctx)
+	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
