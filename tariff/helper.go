@@ -41,14 +41,12 @@ func backoffPermanentError(err error) error {
 	return err
 }
 
-// mergeRates merges new rates into existing rates, keeping current slots from the existing rates.
-// old rates before current timestamp are discarded.
+// mergeRates blends new and existing rates, keeping existing rates after current hour
 func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 	mergeRatesAfter(data, new, now.With(time.Now()).BeginningOfHour())
 }
 
-// mergeRatesAfter merges new rates into existing rates, keeping current slots from the existing rates.
-// old rates before timestamp are discarded.
+// mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
 func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
 	new.Sort()
 
