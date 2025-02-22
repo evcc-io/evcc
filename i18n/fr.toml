@@ -550,6 +550,7 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
+forecastTooltip = "prévision : production solaire restante aujourd’hui"
 
 [main.heatingStatus]
 charging = "Chauffage… "
@@ -918,3 +919,29 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[forecast.price]
+lowestHour = Heure la moins chère
+average = Moyenne
+range = "Amplitude"
+
+[forecast.co2]
+lowestHour = Heure la plus propre
+average = Moyenne
+range = "Amplitude"
+
+[forecast.type]
+price = Prix
+solar = Solaire
+co2 = CO₂
+
+[forecast.solar]
+tomorrow = Demain
+today = Aujourd'hui
+dayAfterTomorrow = Après demain
+partly = Partiellement
+remaining = Restant
+
+[forecast]
+modalTitle = Prévisions

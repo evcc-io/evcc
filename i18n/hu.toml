@@ -532,6 +532,7 @@ noEnergy = "Nincs mérési adat"
 pvExport = "Hálózatba export"
 pvProduction = "Napelem termelés"
 selfConsumption = "Saját fogyasztás"
+forecastTooltip = "előrejelzés: ma fennmaradó napenergia-termelés"
 
 [main.heatingStatus]
 charging = "Fűtés…"
@@ -878,3 +879,29 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[forecast.co2]
+range = "Tartomány"
+average = "Átlag"
+lowestHour = "Legtisztább óra"
+
+[forecast]
+modalTitle = "Előrejelzés"
+
+[forecast.price]
+average = "Átlag"
+lowestHour = "Legolcsóbb óra"
+range = "Tartomány"
+
+[forecast.solar]
+dayAfterTomorrow = "Holnap után"
+partly = "részlegesen"
+remaining = "hátralévő"
+today = "Ma"
+tomorrow = "Holnap"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ár"
+solar = "Szolár"

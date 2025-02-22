@@ -78,6 +78,10 @@ temp = "Θερμοκρασία"
 topic = "Topic"
 url = "URL"
 yes = "ναι"
+vehicleLimitSoc = "Όριο οχήματος"
+identifier = "Αναγνωριστικό RFID"
+phases1p3p = "Eναλλαγή φάσεων"
+singlePhase = "Μονοφασικό"
 
 [config.eebus]
 description = "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus."
@@ -141,6 +145,8 @@ title = "Διαμόρφωση"
 unconfigured = "δεν έχει ρυθμιστεί"
 vehicles = "Τα Οχήματά μου"
 yaml = "Συσκευή που έχει οριστεί στο evcc.yaml δεν είναι προς επεξεργασία από εδώ."
+addGrid = "Προσθήκη Μετρητή Δικτύου"
+addTariffs = "Προσθήκη τιμολογίων"
 
 [config.messaging]
 description = "Λάβετε μηνύματα σχετικά με τις συνεδρίες φόρτισης."
@@ -389,6 +395,8 @@ title = "Πιστοποίηση"
 
 [main]
 vehicles = "Στάθμευση"
+welcome = "Γεια σας!"
+startConfiguration = "Ας ξεκινήσουμε τη διαμόρφωση
 
 [main.chargingPlan]
 active = "Ενεργό"
@@ -427,6 +435,7 @@ noEnergy = "Χωρίς δεδομένα μετρητή"
 pvExport = "Εξαγωγή προς δικτύο"
 pvProduction = "Παραγωγή"
 selfConsumption = "«Αυτοκατανάλωση»"
+forecastTooltip = "πρόβλεψη: εναπομένουσα ηλιακή παραγωγή σήμερα"
 
 [main.heatingStatus]
 charging = "Θερμαίνεται…"
@@ -770,3 +779,108 @@ lineError = "Σφάλμα στο {0}."
 lineErrorLink = "γραμμή {0}"
 restartButton = "Επανεκκίνηση"
 title = "Σφάλμα εκκίνησης"
+
+
+[config.loadpoint]
+vehiclesTitle = "Οχήματα"
+chargerPower22kwHelp = "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 32 A."
+vehicleHelpAutoDetection = "Επιλέγει αυτόματα το πιο πιθανό όχημα. Είναι δυνατή και η χειροκίνητη επιλογή."
+addCharger = "Προσθήκη φορτιστή"
+addMeter = "Προσθήκη αποκλειστικού μετρητή για το φορτιστή"
+cancel = "Άκυρο"
+electricalSubtitle = "Όταν έχετε αμφιβολίες, ρωτήστε τον ηλεκτρολόγο σας."
+chargerPower11kw = "11 kW"
+chargerLabel = "Φορτιστής"
+chargerPower11kwHelp = "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 16 Α."
+chargerPower22kw = "22 kW"
+chargerPowerCustom = "άλλο"
+chargerPowerCustomHelp = "Ορίστε ένα προσαρμοσμένο εύρος έντασης ρεύματος."
+chargerTypeLabel = "Τύπος φορτιστή"
+chargingTitle = "Φορτίζει"
+circuitLabel = "Κύκλωμα"
+circuitUnassigned = "μη εκχωρημένο"
+defaultModeHelpKeep = "Διατηρεί τον τελευταίο επιλεγμένο τρόπο φόρτισης."
+defaultModeLabel = "Προεπιλεγμένη λειτουργία"
+delete = "Διαγραφή"
+electricalTitle = "Ηλεκτρολογικό"
+energyMeterHelp = "Πρόσθετος μετρητής εάν ο φορτιστής δεν έχει ενσωματωμένο."
+energyMeterLabel = "Μετρητής ενέργειας"
+maxCurrentHelp = "Πρέπει να είναι μεγαλύτερο από την ελάχιστη ένταση."
+maxCurrentLabel = "Μέγιστη ένταση"
+minCurrentHelp = "Πηγαίνετε κάτω από 6A μόνο εάν ξέρετε τι κάνετε."
+minCurrentLabel = "Ελάχιστη ένταση"
+noVehicles = "Δεν έχουν προστεθεί οχήματα."
+pollModeConnected = "συνδεδεμένο"
+pollModeConnectedHelp = "Ενημέρωση της κατάστασης του οχήματος σε τακτά χρονικά διαστήματα όταν είναι συνδεδεμένο."
+pollModeLabel = "Συμπεριφορά ενημέρωσης"
+priorityHelp = "Τα σημεία φόρτισης μεγαλύτερης προτεραιότητας έχουν προτιμότερη πρόσβαση σε ηλιακό πλεόνασμα."
+save = "Αποθήκευση"
+solarModeCustom = "προσαρμοσμένo"
+titleAdd = "Προσθήκη Σημείου Φόρτισης"
+titleEdit = "Επεξεργασία Σημείου Φόρτισης"
+titleExample = "Γκαράζ, Υπόστεγο, κλπ."
+titleLabel = "Τίτλος"
+vehicleAutoDetection = "αυτόματος εντοπισμός"
+vehicleHelpDefault = "Υποθέτει ότι πάντα θα φορτίζει εδώ αυτό το όχημα. Η αυτόματη ανίχνευση είναι απενεργοποιημένη. Είναι δυνατή η χειροκίνητη επιλογή."
+vehicleLabel = "Προεπιλεγμένο όχημα"
+phasesLabel = "Φάσεις"
+pollIntervalHelp = "Χρόνος μεταξύ των ενημερώσεων API του οχήματος. Τα μικρά διαστήματα ενδέχεται να ταλαιπωρήσουν τη μπαταρία του οχήματος."
+pollIntervalLabel = "Διάστημα ενημέρωσης"
+pollModeAlways = "πάντοτε"
+pollModeAlwaysHelp = "Να ζητά πάντα ενημερώσεις κατάστασης σε τακτά χρονικά διαστήματα."
+pollModeCharging = "φορτίζει"
+priorityLabel = "Προτεραιότητα"
+pollModeChargingHelp = "Να ζητά ενημερώσεις κατάστασης οχήματος μόνο κατά τη φόρτιση."
+phases1p = "μονοφασικό"
+phases3p = "τριφασικό"
+phasesAutomatic = "Αυτόματα οι φάσεις"
+phasesAutomaticHelp = "Ο φορτιστής σας υποστηρίζει αυτόματη εναλλαγή μεταξύ φόρτισης 1 και 3 φάσεων. Στην οθόνη του μπορείτε να προσαρμόσετε αυτή τη λειτουργία επιλογής φάσεων κατά τη φόρτιση."
+phasesHelp = "Αριθμός φάσεων που είναι συνδεδεμένες στον φορτιστή."
+showAllSettings = "Εμφάνιση όλων των ρυθμίσεων"
+solarBehaviorCustomHelp = "Ορίστε το δικό σας εύρος ενεργοποίησης και απενεργοποίησης κατώτατων ορίων και καθυστερήσεων."
+defaultModeHelp = "Λειτουργία φόρτισης όταν συνδεθεί το όχημα."
+estimateLabel = "Παρεμβολή επιπέδου φόρτισης μεταξύ ενημερώσεων API"
+
+[forecast.co2]
+lowestHour = «Πιο καθαρή ώρα»
+average = "Μέσος όρος"
+range = "'Εύρος"
+
+[forecast.solar]
+remaining = "Απομένει"
+dayAfterTomorrow = "Μεθαύριο"
+partly = "μερικώς"
+today = "Σήμερα"
+tomorrow = "Αύριο"
+
+[config.options.status]
+A = "A (δεν είναι συνδεδεμένο)"
+B = "B (συνδεδεμένο)"
+C = "C (φορτίζει)"
+
+[config.charger]
+chargers = "Φορτιστές οχημάτων"
+generic = "Γενικές ενσωματώσεις"
+ocppHelp = "Αντιγράψτε αυτή τη διεύθυνση στη διαμόρφωση των φορτιστών σας."
+ocppLabel = "OCPP-Server URL"
+template = "Κατασκευαστής"
+titleAdd = "Προσθήκη Φορτιστή"
+titleEdit = "Επεξεργασία Φορτιστή"
+
+[config.deviceValueChargeStatus]
+A = "A (δεν είναι συνδεδεμένο)"
+B = "B (συνδεδεμένο)"
+C = "C (φορτίζει)"
+
+[forecast]
+modalTitle = "Πρόγνωση"
+
+[forecast.price]
+average = "Μέσος όρος"
+lowestHour = "Πιο φθηνή ώρα"
+range = "'Εύρος"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Τιμή"
+solar = "Ηλιακή"

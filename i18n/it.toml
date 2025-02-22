@@ -78,6 +78,10 @@ temp = "Temperatura"
 topic = "Argomento"
 url = "URL"
 yes = "sì"
+vehicleLimitSoc = "Limite del veicolo"
+identifier = "Identificatore RFID"
+phases1p3p = "Commutazione di fase"
+singlePhase = "Singola fase"
 
 [config.eebus]
 description = "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus"
@@ -86,6 +90,7 @@ title = "EEBus"
 [config.form]
 example = "Esempio"
 optional = "facoltativo"
+deprecated = "deprecato"
 
 [config.general]
 cancel = "Cancella"
@@ -101,6 +106,8 @@ save = "Salva"
 showAdvancedSettings = "Mostra impostazioni avanzate"
 telemetry = "Telemetria"
 title = "Titolo"
+delete = "Cancella"
+validateSave = "Conferma e salva"
 
 [config.grid]
 title = "Contatore"
@@ -788,3 +795,44 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
+
+
+[config.loadpoint]
+addCharger = "Aggiungi caricatore"
+addMeter = "Aggiungi un contatore dedicato per il caricabatterie"
+cancel = "Annulla"
+chargerLabel = "Caricatore"
+chargerPower11kw = "11 kW"
+chargerPower11kwHelp = "Utilizzerà un range di corrente tra 6 e 16A"
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = "Utilizzerà un range di corrente tra 6 e 32A"
+chargerPowerCustom = "altro"
+chargerPowerCustomHelp = "Definire un range di corrente personalizzato"
+chargerTypeLabel = "Tipo di caricatore"
+chargingTitle = "In carica"
+circuitLabel = "Circuito"
+circuitUnassigned = "non assegnato"
+defaultModeHelp = "Modalità di ricarica quando si collega il veicolo"
+defaultModeHelpKeep = "Mantiene l'ultima modalità di ricarica selezionata"
+defaultModeLabel = "Modalità predefinita"
+delete = "Cancella"
+electricalSubtitle = "Se non sei sicuro, chiedi al tuo elettricista"
+
+[config.charge]
+titleAdd = “Aggiungi un misuratore di carica"
+titleEdit = "Modifica misuratore di carica"
+
+[config.charger]
+chargers = "Caricatori EV"
+generic = "Integrazioni generiche"
+ocppHelp = "Copia questo indirizzo nella configurazione dei tuoi caricatori"
+ocppLabel = "URL Server OCPP"
+switchsockets = "Prese commutabili"
+template = "Produttore"
+titleAdd = "Aggiungi caricatore"
+titleEdit = "Modifica caricatore"
+
+[config.deviceValueChargeStatus]
+A = "A (non collegato)"
+B = "B (collegato)"
+C = "C (in carica)"

@@ -545,6 +545,7 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
+forecastTooltip = "Prognos: återstående solproduktion idag"
 
 [main.heatingStatus]
 charging = "Värmer..."
@@ -802,7 +803,7 @@ loadpoint = "Laddplats"
 meterstart = "Mätare start (kWh)"
 meterstop = "Mätare slut (kWh)"
 odometer = "Mätarställning (km)"
-price = "Pris"
+price = "Kostnad"
 priceperkwh = "Pris/kWh"
 solarpercentage = "Sol (%)"
 vehicle = "Fordon"
@@ -815,7 +816,7 @@ filter = "Filter"
 [sessions.group]
 co2 = "Emissioner"
 grid = "Nät"
-price = "Pris"
+price = "Kostnad"
 self = "Sol"
 
 [sessions.groupBy]
@@ -830,7 +831,7 @@ year = "År"
 
 [sessions.type]
 co2 = "CO₂"
-price = "Pris"
+price = "Kostnad"
 solar = "Sol"
 
 [settings]
@@ -906,3 +907,29 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[forecast]
+modalTitle = "Prognos"
+
+[forecast.co2]
+average = "Genomsnitt"
+range = "Intervall"
+lowestHour = "Timme med lägst CO₂"
+
+[forecast.price]
+average = "Genomsnitt"
+lowestHour = "Billigaste timmen"
+range = "Intervall"
+
+[forecast.type]
+price = "Pris"
+co2 = "CO₂"
+solar = "Sol"
+
+[forecast.solar]
+dayAfterTomorrow = "I övermorgon"
+partly = "delvis"
+remaining = "återstående"
+today = "Idag"
+tomorrow = "I morgon"
