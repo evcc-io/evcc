@@ -4,8 +4,5 @@
     "vitest.explorer",
     "golang.go",
     "esbenp.prettier-vscode",
-    "fill-labs.dependi",
-    "eamodio.gitlens",
-    "github.vscode-pull-request-github"
   ]
 }
