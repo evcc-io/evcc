@@ -1,7 +1,7 @@
 {
   "recommendations": [
-    "vue.volar",
-    "wscats.vue",
+    "Vue.volar",
+    "vitest.explorer",
     "golang.go",
     "esbenp.prettier-vscode",
     "fill-labs.dependi",
