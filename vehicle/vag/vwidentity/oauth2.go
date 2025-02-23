@@ -74,7 +74,7 @@ func (v *Oauth2Service) retrieveToken(data url.Values) (*vag.Token, error) {
 	return &res, err
 }
 
-func (v *Oauth2Service) Refresh(token *vag.Token) (*vag.Token, error) {
+func (v *Oauth2Service) refresh(token *vag.Token) (*vag.Token, error) {
 	return v.retrieveToken(url.Values{
 		"client_id":     {v.ClientID},
 		"client_secret": {v.ClientSecret},
@@ -85,5 +85,5 @@ func (v *Oauth2Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 // TokenSource creates token source. Token is refreshed automatically.
 func (v *Oauth2Service) TokenSource(token *vag.Token) vag.TokenSource {
-	return vag.RefreshTokenSource(token, v.Refresh)
+	return vag.RefreshTokenSource(token, v.refresh)
 }
