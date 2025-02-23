@@ -51,7 +51,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
-	trs, err := service.TokenRefreshServiceTokenSource(log, skoda.AuthParams, cc.User, cc.Password)
+	trs, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

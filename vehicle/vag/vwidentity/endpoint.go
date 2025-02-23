@@ -1,7 +1,6 @@
 package vwidentity
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -58,41 +56,6 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	}
 
 	return q, nil
-}
-
-func TokenSource(log *util.Logger, q url.Values, user, password string) (vag.TokenSource, error) {
-	data, err := LoginWithAuthURL(log, Config.AuthURL, q, user, password)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := urlvalues.Require(q, "id_token", "code"); err != nil {
-		return nil, err
-	}
-
-	oc := &oauth2.Config{
-		ClientID:     q.Get("client_id"),
-		ClientSecret: q.Get("client_secret"),
-		RedirectURL:  q.Get("redirect_uri"),
-		Endpoint:     Config.NewProvider(context.Background()).Endpoint(),
-		Scopes:       strings.Split(q.Get("scope"), " "),
-	}
-
-	client := request.NewClient(log)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	token, err := oc.Exchange(ctx, data.Get("code"))
-	if err != nil {
-		return nil, err
-	}
-
-	ts := oc.TokenSource(ctx, token)
-	t, err := ts.Token()
-	if err != nil {
-		panic(err)
-	}
-	panic(t)
-
-	// return oc.TokenSource(ctx, token)
 }
 
 type Service struct {
