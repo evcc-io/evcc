@@ -86,8 +86,8 @@ params:
     advanced: true
   - name: interval
     help:
-      en: Interval for updating the forecast (?NanoSec? Minutes)
-      de: Intervall für die Aktualisierung der Vorhersage (?NanoSec? Minuten)
+      en: Interval for updating the forecast (??NanoSec? Minutes)
+      de: Intervall für die Aktualisierung der Vorhersage (??NanoSec? Minuten)
     default: 150000000000
     advanced: true
 render: |
