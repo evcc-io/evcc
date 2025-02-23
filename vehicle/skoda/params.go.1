@@ -14,9 +14,8 @@ const (
 var AuthParams = url.Values{
 	"response_type": {"code id_token"},
 	"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
-	// "redirect_uri":  {"skodaconnect://oidc.login/"}, // old
-	"redirect_uri": {"myskoda://redirect/login/"}, // new
-	"scope":        {"openid mbb profile"},
+	"redirect_uri":  {"skodaconnect://oidc.login/"}, // old
+	"scope":         {"openid mbb profile"},
 }
 
 // TokenRefreshService parameters
