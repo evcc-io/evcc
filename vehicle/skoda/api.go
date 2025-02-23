@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const BaseURI = "https://api.connect.skoda-auto.cz/api"
+const BaseURI = "https://mysmob.api.connect.skoda-auto.cz" // /api/v2/garage?connectivityGenerations=MOD1&connectivityGenerations=MOD2&connectivityGenerations=MOD3&connectivityGenerations=MOD4"
 
 // API is the Skoda api client
 type API struct {
