@@ -1,6 +1,7 @@
 package vwidentity
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,6 +16,8 @@ import (
 
 // Login performs VW identity login with optional code challenge
 func Oauth2Login(log *util.Logger, oc *oauth2.Config, user, password string) (vag.TokenSource, error) {
+	oc.Endpoint = Config.NewProvider(context.Background()).Endpoint()
+
 	// add code challenge
 	cv := oauth2.GenerateVerifier()
 	q := url.Values{
