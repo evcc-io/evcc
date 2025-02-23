@@ -44,26 +44,36 @@ func Oauth2Login(log *util.Logger, oc *oauth2.Config, user, password string) (va
 	v := url.Values{
 		"client_id":     {oc.ClientID},
 		"client_secret": {oc.ClientSecret},
+		"redirect_uri":  {oc.RedirectURL},
 		"grant_type":    {"authorization_code"},
 		"code":          {q.Get("code")},
 		"code_verifier": {cv},
-		"redirect_uri":  {oc.RedirectURL},
 	}
 
-	var token vag.Token
+	os := &Oauth2Service{Helper: request.NewHelper(log), Config: oc}
 
-	client := request.NewHelper(log)
-	req, _ := request.New(http.MethodPost, oc.Endpoint.TokenURL, strings.NewReader(v.Encode()), request.URLEncoding, request.AcceptJSON)
-	if err := client.DoJSON(req, &token); err != nil {
+	token, err := os.Token(v)
+	if err != nil {
 		return nil, err
 	}
 
-	return (&Oauth2Service{Helper: client, Config: oc}).TokenSource(&token), nil
+	return os.TokenSource(token), nil
 }
 
 type Oauth2Service struct {
 	*oauth2.Config
 	*request.Helper
+}
+
+func (v *Oauth2Service) Token(data url.Values) (*vag.Token, error) {
+	var res vag.Token
+
+	req, err := request.New(http.MethodPost, v.Endpoint.TokenURL, strings.NewReader(data.Encode()), request.URLEncoding, request.AcceptJSON)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return &res, err
 }
 
 func (v *Oauth2Service) Refresh(token *vag.Token) (*vag.Token, error) {
@@ -74,14 +84,7 @@ func (v *Oauth2Service) Refresh(token *vag.Token) (*vag.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	var res vag.Token
-
-	req, err := request.New(http.MethodPost, v.Endpoint.TokenURL, strings.NewReader(data.Encode()), request.URLEncoding, request.AcceptJSON)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return &res, err
+	return v.Token(data)
 }
 
 // TokenSource creates token source. Token is refreshed automatically.
