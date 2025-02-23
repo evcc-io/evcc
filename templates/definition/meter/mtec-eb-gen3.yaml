@@ -8,13 +8,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485"]
-    id: 252
+    choice: ["rs485", "tcpip"]
+    id: 255
   - name: capacity
-    advanced: true
-  # battery control
-  - name: minsoc
-    type: int
     advanced: true
 render: |
   type: custom
