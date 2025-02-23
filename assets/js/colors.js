@@ -65,7 +65,9 @@ function updateCssColors() {
 
 // update colors on theme change
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-darkModeMatcher?.addEventListener("change", updateCssColors);
+if (darkModeMatcher && darkModeMatcher.addEventListener) {
+  darkModeMatcher.addEventListener("change", updateCssColors);
+}
 // initialize colors
 updateCssColors();
 window.requestAnimationFrame(updateCssColors);
