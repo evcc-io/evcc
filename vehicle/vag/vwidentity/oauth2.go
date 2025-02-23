@@ -41,18 +41,16 @@ func Oauth2Login(log *util.Logger, oc *oauth2.Config, user, password string) (va
 		return nil, err
 	}
 
-	v := url.Values{
+	os := &Oauth2Service{Helper: request.NewHelper(log), Config: oc}
+
+	token, err := os.retrieveToken(url.Values{
 		"client_id":     {oc.ClientID},
 		"client_secret": {oc.ClientSecret},
 		"redirect_uri":  {oc.RedirectURL},
 		"grant_type":    {"authorization_code"},
 		"code":          {q.Get("code")},
 		"code_verifier": {cv},
-	}
-
-	os := &Oauth2Service{Helper: request.NewHelper(log), Config: oc}
-
-	token, err := os.Token(v)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +63,7 @@ type Oauth2Service struct {
 	*request.Helper
 }
 
-func (v *Oauth2Service) Token(data url.Values) (*vag.Token, error) {
+func (v *Oauth2Service) retrieveToken(data url.Values) (*vag.Token, error) {
 	var res vag.Token
 
 	req, err := request.New(http.MethodPost, v.Endpoint.TokenURL, strings.NewReader(data.Encode()), request.URLEncoding, request.AcceptJSON)
@@ -77,14 +75,12 @@ func (v *Oauth2Service) Token(data url.Values) (*vag.Token, error) {
 }
 
 func (v *Oauth2Service) Refresh(token *vag.Token) (*vag.Token, error) {
-	data := url.Values{
+	return v.retrieveToken(url.Values{
 		"client_id":     {v.ClientID},
 		"client_secret": {v.ClientSecret},
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
-	}
-
-	return v.Token(data)
+	})
 }
 
 // TokenSource creates token source. Token is refreshed automatically.
