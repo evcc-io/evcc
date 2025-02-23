@@ -35,41 +35,41 @@ render: |
     jq: .values.value[] | select(.attrid=="energyValue")."#content" | rtrimstr(" kWh")
   voltages: # grid voltages in V
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="voltageL1Value")."#content" | rtrimstr(" V")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="voltageL2Value")."#content" | rtrimstr(" V")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="voltageL3Value")."#content" | rtrimstr(" V")
   currents: # grid currents in A
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="ampereL1Value")."#content" | rtrimstr(" A")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="ampereL2Value")."#content" | rtrimstr(" A")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="ampereL3Value")."#content" | rtrimstr(" A")
   powers: # grid powers in W
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="powerL1Value")."#content" | rtrimstr(" W")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="powerL2Value")."#content" | rtrimstr(" W")
   - source: http
-  cache: {{ .cache }}
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="powerL3Value")."#content" | rtrimstr(" W")
   {{- end }}
