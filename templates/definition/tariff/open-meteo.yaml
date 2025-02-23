@@ -1,0 +1,109 @@
+template: open-meteo
+products:
+  - brand: OpenMeteo
+requirements:
+  description:
+    en: Requires an [open-meteo.com](https://open-meteo.com) account.
+    de: Benötigt einen [open-meteo.com](https://open-meteo.com)-Account.
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: latitude
+    help:
+      en: Latitude of the location (array supported)
+      de: Breitengrad des Standorts (Array unterstützt)
+    required: true
+  - name: longitude
+    help:
+      en: Longitude of the location (array supported)
+      de: Längengrad des Standorts (Array unterstützt)
+    required: true
+  - name: azimuth
+    help:
+      en: Azimuth angle of the solar panels (array supported)
+      de: Azimutwinkel der Solarpaneele (Array unterstützt)
+    required: true
+  - name: declination
+    help:
+      en: Declination angle of the solar panels (array supported)
+      de: Neigungswinkel der Solarpaneele (Array unterstützt)
+    required: true
+  - name: dc_kwp
+    help:
+      en: DC power of the solar panels in kWp (array supported)
+      de: DC-Leistung der Solarpaneele in kWp (Array unterstützt)
+    required: true
+  - name: ac_kwp
+    help:
+      en: AC power of the solar panels in kWp
+      de: AC-Leistung der Solarpaneele in kWp
+    required: true
+  - name: api_key
+    help:
+      en: OpenMeteo API Key
+      de: OpenMeteo API-Schlüssel
+    required: false
+  - name: base_url
+    help:
+      en: Base URL of the OpenMeteo API
+      de: Basis-URL der OpenMeteo API
+    default: "https://api.open-meteo.com"
+    advanced: true
+  - name: weather_model
+    help:
+      en: Weather model to use
+      de: Zu verwendendes Wettermodell
+    required: false
+  - name: damping_morning
+    help:
+      en: Damping factor for the morning (array supported)
+      de: Dämpfungsfaktor für den Morgen (Array unterstützt)
+    default: 0.0
+    advanced: true
+  - name: damping_evening
+    help:
+      en: Damping factor for the evening (array supported)
+      de: Dämpfungsfaktor für den Abend (Array unterstützt)
+    default: 0.0
+    advanced: true
+  - name: efficiency_factor
+    help:
+      en: Efficiency factor of the solar panels (array supported)
+      de: Wirkungsgrad der Solarpaneele (Array unterstützt)
+    default: 1.0
+    advanced: true
+  - name: past_days
+    help:
+      en: Number of past days to include in the forecast
+      de: Anzahl der vergangenen Tage, die in die Vorhersage einbezogen werden sollen
+    default: 0
+    advanced: true
+  - name: forecast_days
+    help:
+      en: Number of forecast days to include in the forecast
+      de: Anzahl der Vorhersagetage, die in die Vorhersage einbezogen werden sollen
+    default: 1
+    advanced: true
+  - name: interval
+    help:
+      en: Interval for updating the forecast (Minutes)
+      de: Intervall für die Aktualisierung der Vorhersage (Minuten)
+    default: 150000000000
+    advanced: true
+render: |
+  type: open-meteo
+  Latitude: {{ .latitude }}
+  Longitude: {{ .longitude }}
+  Azimuth: {{ .azimuth }}
+  Declination: {{ .declination }}
+  DcKwp: {{ .dc_kwp }}
+  AcKwp: {{ .ac_kwp }}
+  ApiKey: {{ .api_key }}
+  BaseURL: {{ .base_url }}
+  WeatherModel: {{ .weather_model }}
+  DampingMorning: {{ .damping_morning }}
+  DampingEvening: {{ .damping_evening }}
+  EfficiencyFactor: {{ .efficiency_factor }}
+  PastDays: {{ .past_days }}
+  ForecastDays: {{ .forecast_days }}
+  Interval: {{ .interval }}
