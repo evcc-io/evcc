@@ -225,7 +225,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
 	}
 	// use SML TotalOut for pv and battery usage
-	return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
+	return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalOut, err
 }
 
 // Currents implements the api.PhaseCurrents interface
