@@ -1,4 +1,4 @@
-package myskoda
+package skoda
 
 import (
 	"fmt"

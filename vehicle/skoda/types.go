@@ -1,4 +1,4 @@
-package myskoda
+package skoda
 
 // VehiclesResponse is the /v3/garage api
 type VehiclesResponse struct {
