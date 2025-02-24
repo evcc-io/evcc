@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMeterEnergy(t *testing.T) {
 	clock := clock.NewMock()
+	clock.Set(now.BeginningOfDay())
+
 	me := &meterEnergy{
 		clock:     clock,
 		startFunc: beginningOfDay,

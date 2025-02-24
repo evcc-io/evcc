@@ -9,52 +9,57 @@ import (
 )
 
 type meterEnergy struct {
-	clock     clock.Clock
-	updated   time.Time
-	startFunc func(time.Time) time.Time
-	energy    *float64 // kWh
-	acc       float64  // kWh
+	clock       clock.Clock
+	startFunc   func(time.Time) time.Time
+	Updated     time.Time `json:"updated"`
+	Meter       *float64  `json:"meter,omitempty"` // kWh
+	Accumulated float64   `json:"accumulated"`     // kWh
 }
 
-// reset previous period
+// reset resets data
+func (m *meterEnergy) reset() {
+	m.Updated = time.Time{}
+	m.Meter = nil
+	m.Accumulated = 0
+}
+
+// resetPeriod resets data on period boundary
 func (m *meterEnergy) resetPeriod() {
 	sod := m.startFunc(m.clock.Now())
-	if m.startFunc != nil && m.updated.Before(sod) {
-		m.updated = time.Time{}
-		m.energy = nil
-		m.acc = 0
+	if m.startFunc != nil && m.Updated.Before(sod) {
+		m.reset()
 	}
 }
 
 func (m *meterEnergy) AccumulatedEnergy() float64 {
 	m.resetPeriod()
-	return m.acc
+	return m.Accumulated
 }
 
 func (m *meterEnergy) AddTotalEnergy(v float64) {
 	m.resetPeriod()
 	defer func() {
-		m.updated = m.clock.Now()
-		m.energy = lo.ToPtr(v)
+		m.Updated = m.clock.Now()
+		m.Meter = lo.ToPtr(v)
 	}()
 
-	if m.energy == nil {
+	if m.Meter == nil {
 		return
 	}
 
-	m.acc += v - *m.energy
+	m.Accumulated += v - *m.Meter
 }
 
 func (m *meterEnergy) AddPower(v float64) {
 	m.resetPeriod()
-	defer func() { m.updated = m.clock.Now() }()
+	defer func() { m.Updated = m.clock.Now() }()
 
-	if m.updated.IsZero() {
+	if m.Updated.IsZero() {
 		return
 	}
 
-	d := m.clock.Since(m.updated)
-	m.acc += v * d.Hours() / 1e3
+	d := m.clock.Since(m.Updated)
+	m.Accumulated += v * d.Hours() / 1e3
 }
 
 func beginningOfDay(t time.Time) time.Time {
