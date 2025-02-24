@@ -9,7 +9,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const BaseURI = "https://mysmob.api.connect.skoda-auto.cz/api"
+const (
+	BaseURI = "https://mysmob.api.connect.skoda-auto.cz/api"
+	AllGen  = "connectivityGenerations=MOD1&connectivityGenerations=MOD2&connectivityGenerations=MOD3&connectivityGenerations=MOD4"
+)
 
 // API is the Skoda api client
 type API struct {
@@ -34,7 +37,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res VehiclesResponse
 
-	uri := fmt.Sprintf("%s/v2/garage", BaseURI)
+	uri := fmt.Sprintf("%s/v2/garage?%s", BaseURI, AllGen)
 	err := v.GetJSON(uri, &res)
 
 	return res.Vehicles, err
@@ -42,7 +45,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 func (v *API) VehicleDetails(vin string) (Vehicle, error) {
 	var res Vehicle
-	uri := fmt.Sprintf("%s/v2/garage/vehicles/%s", BaseURI, vin)
+	uri := fmt.Sprintf("%s/v2/garage/vehicles/%s?%s", BaseURI, vin, AllGen)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
