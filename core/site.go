@@ -96,7 +96,7 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
-	pvEnergy    meterEnergy
+	pvEnergy    map[string]*meterEnergy
 
 	// cached state
 	gridPower       float64         // Grid power
@@ -197,6 +197,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.pvMeters = append(site.pvMeters, dev.Instance())
+
+		// accumulator
+		site.pvEnergy[ref] = &meterEnergy{
+			clock:     clock.New(),
+			startFunc: beginningOfDay,
+		}
 	}
 
 	// multiple batteries
@@ -245,17 +251,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:     util.NewLogger("site"),
-		Voltage: 230, // V
-		pvEnergy: meterEnergy{
-			clock:     clock.New(),
-			startFunc: beginningOfDay,
-		},
-	}
-
-	// restore current value if not older than 15 minutes
-	if settings.Json(keys.SolarYieldToday, &site.pvEnergy) != nil || time.Since(site.pvEnergy.Updated) > 15*time.Minute {
-		site.pvEnergy.reset()
+		log:      util.NewLogger("site"),
+		Voltage:  230, // V
+		pvEnergy: make(map[string]*meterEnergy),
 	}
 
 	return site
@@ -319,6 +317,16 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		site.SetBatteryGridChargeLimit(&v)
+	}
+
+	// restore accumulated energy if not older than 15 minutes
+	pvEnergy := make(map[string]meterEnergy)
+	if settings.Json(keys.SolarYieldToday, &pvEnergy) == nil {
+		for _, name := range site.Meters.PVMetersRef {
+			if me, ok := pvEnergy[name]; ok && time.Since(me.Updated) <= 15*time.Minute {
+				site.pvEnergy[name] = &me
+			}
+		}
 	}
 
 	return nil
@@ -514,13 +522,13 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
 
-	// TODO pro Zähler
-
 	// update solar yield
-	if totalEnergy > 0 {
-		site.pvEnergy.AddMeterTotal(totalEnergy)
-	} else {
-		site.pvEnergy.AddPower(site.pvPower)
+	for i, name := range site.Meters.PVMetersRef {
+		if mm[i].Energy > 0 {
+			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
+		} else {
+			site.pvEnergy[name].AddPower(mm[i].Power)
+		}
 	}
 
 	// store

@@ -2,7 +2,9 @@ package core
 
 import (
 	"encoding/json"
+	"maps"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -182,7 +184,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		tomorrow := accumulatedEnergy(solar, eod, eot)
 		dayAfterTomorrow := accumulatedEnergy(solar, eot, eot.AddDate(0, 0, 1))
 
-		yieldToday := site.pvEnergy.AccumulatedEnergy()
+		yieldToday := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
+			return v.AccumulatedEnergy()
+		})
 
 		fc.SolarAdjusted = solarDetails{
 			Today: dailyDetails{

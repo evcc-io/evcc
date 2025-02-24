@@ -16,7 +16,7 @@ func TestAccumulatedEnergy(t *testing.T) {
 	rate := func(start int, val float64) tsValue {
 		return tsValue{
 			Timestamp: clock.Now().Add(time.Duration(start) * time.Hour),
-			Value:     val,
+			Power:     val,
 		}
 	}
 
