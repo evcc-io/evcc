@@ -199,7 +199,8 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			},
 		}
 
-		// TODO Anfang
+		// TODO && !solar[0].Timestamp.After(bod)
+
 		const minEnergy = 0.4
 		if yieldToday > minEnergy /*kWh*/ && forecastedToday > minEnergy /*kWh*/ {
 			fc.SolarAdjusted.Scale = lo.ToPtr(yieldToday / forecastedToday)
