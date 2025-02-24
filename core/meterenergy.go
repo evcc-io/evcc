@@ -36,7 +36,7 @@ func (m *meterEnergy) AccumulatedEnergy() float64 {
 	return m.Accumulated
 }
 
-func (m *meterEnergy) AddTotalEnergy(v float64) {
+func (m *meterEnergy) AddMeterTotal(v float64) {
 	m.resetPeriod()
 	defer func() {
 		m.Updated = m.clock.Now()

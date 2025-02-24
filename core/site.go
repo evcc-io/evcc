@@ -232,12 +232,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
-		// store accumulated solar yield
-		if err := settings.SetJson(keys.SolarYieldToday, site.pvEnergy); err != nil {
-			site.log.ERROR.Println("solar yield today:", err)
-		}
-
-		// restore battery mode
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
@@ -520,11 +514,18 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
 
-	// update statistics
+	// TODO pro Zähler
+
+	// update solar yield
 	if totalEnergy > 0 {
-		site.pvEnergy.AddTotalEnergy(totalEnergy)
+		site.pvEnergy.AddMeterTotal(totalEnergy)
 	} else {
 		site.pvEnergy.AddPower(site.pvPower)
+	}
+
+	// store
+	if err := settings.SetJson(keys.SolarYieldToday, site.pvEnergy); err != nil {
+		site.log.ERROR.Println("solar yield today:", err)
 	}
 }
 

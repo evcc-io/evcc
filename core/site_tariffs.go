@@ -78,7 +78,7 @@ func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
 			end = to
 		}
 
-		energy += (r.Value + last.Value) / 2 * end.Sub(start).Hours()
+		energy += (r.Power + last.Power) / 2 * end.Sub(start).Hours()
 
 		if !r.Timestamp.Before(to) {
 			break
@@ -94,7 +94,7 @@ type (
 	timeseries []tsValue
 	tsValue    struct {
 		Timestamp time.Time `json:"ts"`
-		Value     float64   `json:"val"`
+		Power     float64   `json:"power"`
 	}
 )
 
@@ -106,7 +106,7 @@ func timestampSeries(rr api.Rates) timeseries {
 	return lo.Map(rr, func(r api.Rate, _ int) tsValue {
 		return tsValue{
 			Timestamp: r.Start,
-			Value:     r.Price,
+			Power:     r.Price,
 		}
 	})
 }
@@ -150,13 +150,10 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	type solarDetails struct {
-		YieldToday       float64      `json:"yieldToday"`      // until now
-		ForecastedToday  float64      `json:"forecastedToday"` // until now
-		RemainingToday   float64      `json:"remainingToday"`  // from now on
-		Complete         bool         `json:"complete"`
+		Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
+		Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 		Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-		DayAfterTomorrow dailyDetails `json:"DayAfterTomorrow,omitempty"` // day after tomorrow
-		Scale            *float64     `json:"scale,omitempty"`            // scale factor YieldToday/ForecastedToday
+		DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
 	}
 
 	fc := struct {
@@ -188,10 +185,10 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		yieldToday := site.pvEnergy.AccumulatedEnergy()
 
 		fc.SolarAdjusted = solarDetails{
-			YieldToday:      yieldToday,
-			ForecastedToday: forecastedToday,
-			RemainingToday:  remainingToday,
-			Complete:        !last.Before(eod),
+			Today: dailyDetails{
+				Yield:    remainingToday,
+				Complete: !last.Before(eod),
+			},
 			Tomorrow: dailyDetails{
 				Yield:    tomorrow,
 				Complete: !last.Before(eot),
@@ -202,19 +199,10 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			},
 		}
 
-		// TODO add lower limit for adjustment
-		if yieldToday > 0 && forecastedToday > 0 {
-			scale := yieldToday / forecastedToday
-
-			// solarAdjusted := make(timeseries, 0, len(solar))
-			// for i, r := range solar {
-			// 	solarAdjusted[i] = tsValue{
-			// 		Timestamp: r.Timestamp,
-			// 		Value:     r.Value * scale,
-			// 	}
-			// }
-
-			fc.SolarAdjusted.Scale = lo.ToPtr(scale)
+		// TODO Anfang
+		const minEnergy = 0.4
+		if yieldToday > minEnergy /*kWh*/ && forecastedToday > minEnergy /*kWh*/ {
+			fc.SolarAdjusted.Scale = lo.ToPtr(yieldToday / forecastedToday)
 		}
 	}
 

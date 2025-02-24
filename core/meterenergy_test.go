@@ -18,11 +18,11 @@ func TestMeterEnergy(t *testing.T) {
 		startFunc: beginningOfDay,
 	}
 
-	me.AddTotalEnergy(10)
+	me.AddMeterTotal(10)
 	assert.Equal(t, 0.0, me.AccumulatedEnergy())
-	me.AddTotalEnergy(11)
+	me.AddMeterTotal(11)
 	assert.Equal(t, 1.0, me.AccumulatedEnergy())
-	me.AddTotalEnergy(11)
+	me.AddMeterTotal(11)
 	assert.Equal(t, 1.0, me.AccumulatedEnergy())
 
 	me.AddPower(1e3)
@@ -40,8 +40,8 @@ func TestMeterEnergy(t *testing.T) {
 	me.AddPower(1e3)
 	assert.Equal(t, 1.0, me.AccumulatedEnergy())
 
-	me.AddTotalEnergy(12)
+	me.AddMeterTotal(12)
 	assert.Equal(t, 1.0, me.AccumulatedEnergy())
-	me.AddTotalEnergy(13)
+	me.AddMeterTotal(13)
 	assert.Equal(t, 2.0, me.AccumulatedEnergy())
 }
