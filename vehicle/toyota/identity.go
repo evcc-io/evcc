@@ -107,7 +107,6 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	headers := request.URLEncoding
-	headers["Authorization"] = "Basic b25lYXBwOm9uZWFwcA=="
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
 		return err
