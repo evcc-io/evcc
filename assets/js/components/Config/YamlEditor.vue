@@ -25,6 +25,8 @@
 
 <script>
 import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
+import { cleanYaml } from "../../utils/cleanYaml";
+
 const $html = document.querySelector("html");
 export default {
 	name: "YamlEditor",
@@ -32,6 +34,7 @@ export default {
 	props: {
 		modelValue: String,
 		errorLine: Number,
+		removeKey: String,
 		disabled: Boolean,
 	},
 	emits: ["update:modelValue"],
@@ -50,6 +53,7 @@ export default {
 				overviewRulerLanes: 0,
 			},
 			active: true,
+			pasteDisposable: null,
 		};
 	},
 	computed: {
@@ -79,12 +83,23 @@ export default {
 	},
 	unmounted() {
 		$html.removeEventListener("themechange", this.updateTheme);
+		this.pasteDisposable?.dispose();
 	},
 	methods: {
 		updateTheme() {
 			this.theme = $html.classList.contains("dark") ? "vs-dark" : "vs";
 		},
 		ready(editor, monaco) {
+			const disposable = editor.onDidPaste(async () => {
+				if (!this.removeKey) return;
+				await this.$nextTick();
+				const model = editor.getModel();
+				const cleaned = cleanYaml(model.getValue(), this.removeKey);
+				model.setValue(cleaned);
+			});
+
+			this.pasteDisposable = disposable;
+
 			let decorations = null;
 			const highlight = () => {
 				decorations?.clear();
