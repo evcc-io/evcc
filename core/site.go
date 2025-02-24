@@ -260,7 +260,7 @@ func NewSite() *Site {
 	}
 
 	// restore current value if not older than 15 minutes
-	if settings.Json(keys.SolarYieldToday, &site.pvEnergy) != nil || time.Since(site.pvEnergy.Updated).Minutes() > 15 {
+	if settings.Json(keys.SolarYieldToday, &site.pvEnergy) != nil || time.Since(site.pvEnergy.Updated) > 15*time.Minute {
 		site.pvEnergy.reset()
 	}
 

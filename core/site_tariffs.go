@@ -144,10 +144,19 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar)))
 
+	type dailyDetails struct {
+		Yield    float64 `json:"forecast"`
+		Complete bool    `json:"complete"`
+	}
+
 	type solarDetails struct {
-		Forecast        timeseries `json:"solar,omitempty"`
-		ForecastedToday *float64   `json:"forecastedToday,omitempty"` // until now
-		YieldToday      *float64   `json:"yieldToday,omitempty"`      // until now
+		YieldToday       float64      `json:"yieldToday"`      // until now
+		ForecastedToday  float64      `json:"forecastedToday"` // until now
+		RemainingToday   float64      `json:"remainingToday"`  // from now on
+		Complete         bool         `json:"complete"`
+		Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
+		DayAfterTomorrow dailyDetails `json:"DayAfterTomorrow,omitempty"` // day after tomorrow
+		Scale            *float64     `json:"scale,omitempty"`            // scale factor YieldToday/ForecastedToday
 	}
 
 	fc := struct {
@@ -164,27 +173,48 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// calculate adjusted solar forecast
-	if solar != nil {
-		forecastedToday := accumulatedEnergy(solar, beginningOfDay(time.Now()), time.Now())
-		generatedToday := site.pvEnergy.AccumulatedEnergy()
+	if len(solar) > 0 {
+		last := solar[len(solar)-1].Timestamp
+
+		bod := beginningOfDay(time.Now())
+		eod := bod.AddDate(0, 0, 1)
+		eot := eod.AddDate(0, 0, 1)
+
+		forecastedToday := accumulatedEnergy(solar, bod, time.Now())
+		remainingToday := accumulatedEnergy(solar, time.Now(), eod)
+		tomorrow := accumulatedEnergy(solar, eod, eot)
+		dayAfterTomorrow := accumulatedEnergy(solar, eot, eot.AddDate(0, 0, 1))
+
+		yieldToday := site.pvEnergy.AccumulatedEnergy()
+
+		fc.SolarAdjusted = solarDetails{
+			YieldToday:      yieldToday,
+			ForecastedToday: forecastedToday,
+			RemainingToday:  remainingToday,
+			Complete:        !last.Before(eod),
+			Tomorrow: dailyDetails{
+				Yield:    tomorrow,
+				Complete: !last.Before(eot),
+			},
+			DayAfterTomorrow: dailyDetails{
+				Yield:    dayAfterTomorrow,
+				Complete: !last.Before(eot.AddDate(0, 0, 1)),
+			},
+		}
 
 		// TODO add lower limit for adjustment
-		if forecastedToday > 0 && generatedToday > 0 {
-			scale := generatedToday / forecastedToday
+		if yieldToday > 0 && forecastedToday > 0 {
+			scale := yieldToday / forecastedToday
 
-			solarAdjusted := make(timeseries, 0, len(solar))
-			for i, r := range solar {
-				solarAdjusted[i] = tsValue{
-					Timestamp: r.Timestamp,
-					Value:     r.Value * scale,
-				}
-			}
+			// solarAdjusted := make(timeseries, 0, len(solar))
+			// for i, r := range solar {
+			// 	solarAdjusted[i] = tsValue{
+			// 		Timestamp: r.Timestamp,
+			// 		Value:     r.Value * scale,
+			// 	}
+			// }
 
-			fc.SolarAdjusted = solarDetails{
-				Forecast:        solar,
-				ForecastedToday: lo.ToPtr(forecastedToday),
-				YieldToday:      lo.ToPtr(generatedToday),
-			}
+			fc.SolarAdjusted.Scale = lo.ToPtr(scale)
 		}
 	}
 
