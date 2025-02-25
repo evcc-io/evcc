@@ -26,7 +26,21 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ session.loadpoint }}
+										<CustomSelect
+											id="session.vehicle"
+											class="options"
+											:options="loadpointOptions"
+											:selected="session.loadpoint"
+											@change="changeLoadpoint($event.target.value)"
+										>
+											<span class="flex-grow-1 text-truncate loadpoint-name">
+												{{
+													session.loadpoint
+														? session.loadpoint
+														: $t("main.loadpoint.fallbackName")
+												}}
+											</span>
+										</CustomSelect>
 									</td>
 								</tr>
 								<tr>
@@ -185,17 +199,19 @@ import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
 import VehicleOptions from "../VehicleOptions.vue";
+import CustomSelect from "../CustomSelect.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 
 export default {
 	name: "SessionDetailsModal",
-	components: { VehicleOptions },
+	components: { VehicleOptions, CustomSelect },
 	mixins: [formatter],
 	props: {
 		session: Object,
 		currency: String,
 		vehicles: Array,
+		loadpoints: Array,
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -213,6 +229,12 @@ export default {
 			return this.vehicles.map((v) => ({
 				name: v.title,
 				title: v.title,
+			}));
+		},
+		loadpointOptions: function () {
+			return this.loadpoints.map((loadpoint) => ({
+				value: loadpoint,
+				name: loadpoint,
 			}));
 		},
 	},
@@ -236,6 +258,9 @@ export default {
 		async removeVehicle() {
 			await this.updateSession({ vehicle: null });
 		},
+		async changeLoadpoint(title) {
+			await this.updateSession({ loadpoint: title });
+		},
 		async updateSession(data) {
 			try {
 				await api.put("session/" + this.session.id, data);
@@ -258,6 +283,10 @@ export default {
 
 <style scoped>
 .options .vehicle-name {
+	text-decoration: underline;
+}
+
+.options .loadpoint-name {
 	text-decoration: underline;
 }
 </style>
