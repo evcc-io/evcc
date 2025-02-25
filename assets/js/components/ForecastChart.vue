@@ -137,7 +137,7 @@ export default defineComponent({
 					type: "line",
 					data: this.solarEntries.map((entry, index) => {
 						return {
-							y: entry.power,
+							y: entry.val,
 							x: new Date(entry.ts),
 							highlight:
 								active &&
@@ -464,11 +464,11 @@ export default defineComponent({
 			return slots[this.maxIndex(slots)]?.price || null;
 		},
 		maxEntryValue(entries: TimeseriesEntry[] = []) {
-			return entries[this.maxEntryIndex(entries)]?.power || null;
+			return entries[this.maxEntryIndex(entries)]?.val || null;
 		},
 		maxEntryIndex(entries: TimeseriesEntry[] = []) {
 			return entries.reduce((max, entry, index) => {
-				return entry.power > entries[max].power ? index : max;
+				return entry.val > entries[max].val ? index : max;
 			}, 0);
 		},
 	},

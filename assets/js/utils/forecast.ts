@@ -1,5 +1,5 @@
 export interface TimeseriesEntry {
-	power: number;
+	val: number;
 	ts: string;
 }
 
@@ -66,7 +66,7 @@ export function dayStringByOffset(day: number): string {
 export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 0): number {
 	const dayString = dayStringByOffset(day);
 	const dayEntries = filterEntriesByDate(entries, dayString);
-	const sortedEntries = dayEntries.sort((a, b) => b.power - a.power);
+	const sortedEntries = dayEntries.sort((a, b) => b.val - a.val);
 	const highestEntry = sortedEntries[0] || {};
 	return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
