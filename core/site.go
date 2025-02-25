@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
@@ -324,7 +325,9 @@ func (site *Site) restoreSettings() error {
 	if settings.Json(keys.SolarYieldToday, &pvEnergy) == nil {
 		for _, name := range site.Meters.PVMetersRef {
 			if me, ok := pvEnergy[name]; ok && time.Since(me.Updated) <= 15*time.Minute {
-				site.pvEnergy[name] = &me
+				if err := mergo.Merge(site.pvEnergy[name], me, mergo.WithOverride); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
