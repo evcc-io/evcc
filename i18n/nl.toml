@@ -97,6 +97,7 @@ url = "URL"
 vehicleLimitSoc = "Voertuig limiet"
 yes = "ja"
 identifier = "RFID-Nummer"
+phases1p3p = "Faseschakelaar"
 
 [config.deviceValueChargeStatus]
 A = "A (niet aangesloten)"
@@ -176,6 +177,8 @@ defaultModeHelp = "Laadmodus bij het aansluiten van een voertuig."
 electricalSubtitle = "Bij twijfel, raadpleeg een elektricien."
 electricalTitle = "Elektrisch"
 energyMeterLabel = "Energiemeter"
+chargerPowerCustomHelp = “Definieer een aangepast stroombereik.”
+circuitLabel = "Circuit"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
