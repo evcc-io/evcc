@@ -80,7 +80,7 @@ func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
 			end = to
 		}
 
-		energy += (r.Power + last.Power) / 2 * end.Sub(start).Hours()
+		energy += (r.Value + last.Value) / 2 * end.Sub(start).Hours()
 
 		if !r.Timestamp.Before(to) {
 			break
@@ -96,7 +96,7 @@ type (
 	timeseries []tsValue
 	tsValue    struct {
 		Timestamp time.Time `json:"ts"`
-		Power     float64   `json:"power"`
+		Value     float64   `json:"val"`
 	}
 )
 
@@ -108,7 +108,7 @@ func timestampSeries(rr api.Rates) timeseries {
 	return lo.Map(rr, func(r api.Rate, _ int) tsValue {
 		return tsValue{
 			Timestamp: r.Start,
-			Power:     r.Price,
+			Value:     r.Price,
 		}
 	})
 }
