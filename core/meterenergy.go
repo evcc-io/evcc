@@ -25,8 +25,7 @@ func (m *meterEnergy) reset() {
 
 // resetPeriod resets data on period boundary
 func (m *meterEnergy) resetPeriod() {
-	sod := m.startFunc(m.clock.Now())
-	if m.startFunc != nil && m.Updated.Before(sod) {
+	if m.startFunc != nil && m.Updated.Before(m.startFunc(m.clock.Now())) {
 		m.reset()
 	}
 }
