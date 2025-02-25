@@ -136,7 +136,7 @@ render: |
       address: 0x0667 # Power_Bat_Total
       type: holding
       decode: int16
-    scale: -10
+    scale: -100
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
