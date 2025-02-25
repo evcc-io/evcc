@@ -18,9 +18,10 @@ import (
 
 type Solcast struct {
 	*request.Helper
-	log  *util.Logger
-	site string
-	data *util.Monitor[api.Rates]
+	log    *util.Logger
+	site   string
+	params string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -31,9 +32,12 @@ func init() {
 
 func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Site     string
-		Token    string
-		Interval time.Duration
+		Site                string
+		Latitude, Longitude float64
+		Azimuth, Decline    float64
+		Kwp, Efficiency     float64
+		Token               string
+		Interval            time.Duration
 	}{
 		Interval: 3 * time.Hour,
 	}
@@ -42,8 +46,10 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	var params string
 	if cc.Site == "" {
-		return nil, errors.New("missing site id")
+		params = fmt.Sprintf("latitude=%.4f&longitude=%.4f&azimuth=%.1f&tilt=%.1f&capacity=%.3f&efficiency=%.3f",
+			cc.Latitude, cc.Longitude, cc.Azimuth, cc.Decline, cc.Kwp, cc.Efficiency)
 	}
 
 	if cc.Token == "" {
@@ -55,6 +61,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Solcast{
 		log:    log,
 		site:   cc.Site,
+		params: params,
 		Helper: request.NewHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
@@ -77,7 +84,10 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT60M&format=json", t.site)
-			return t.GetJSON(uri, &res)
+			if t.site == "" {
+				uri = fmt.Sprintf("https://api.solcast.com.au/data/forecast/rooftop_pv_power?%s&period=PT60M&format=json", t.params)
+			}
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

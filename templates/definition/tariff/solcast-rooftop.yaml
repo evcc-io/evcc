@@ -1,0 +1,70 @@
+template: solcast-rooftop
+products:
+  - brand: Solcast
+requirements:
+  description:
+    en: Requires a [solcast.com](https://solcast.com/free-rooftop-solar-forecasting) account. The free "Home User" tier is often sufficient for private use. This plan has an API limit of 10 requests per day.
+    de: Benötigt einen [solcast.com](https://solcast.com/free-rooftop-solar-forecasting)-Account. Der kostenlose "Home User" Tarif ist für private Anwendungen oft ausreichend. Dieser Plan hat ein API-Limit von 10 Anfragen pro Tag.
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: lat
+    description:
+      en: Latitude
+      de: Breitengrad
+    example: "55.7351"
+    required: true
+  - name: lon
+    description:
+      en: Longitude
+      de: Längengrad
+    example: "9.1275"
+    required: true
+  - name: dec
+    description:
+      en: Decline
+      de: Neigung
+    help:
+      en: 0 = horizontal, 90 = vertical
+      de: 0 = horizontal, 90 = vertikal
+    example: 25
+    required: true
+  - name: az
+    description:
+      en: Azimuth
+      de: Azimut
+    help:
+      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+    example: 180
+    required: true
+  - name: kwp
+    description:
+      en: Maximum generator power [kWp]
+      de: Maximale Generatorleistung [kWp]
+    example: 9.8
+    required: true
+  - name: efficiency
+    description:
+      en: Efficiency
+      de: Effizienz
+    default: 0.9
+    advanced: true
+  - name: token
+    help:
+      en: API Token
+      de: API Token
+    required: true
+  - name: interval
+    default: 3h
+    advanced: true
+render: |
+  type: solcast
+  latitude: {{ .lat }}
+  longitude: {{ .lon }}
+  azimuth: {{ .az }}
+  decline: {{ .dec }}
+  kwp: {{ .kwp }}
+  efficiency: {{ .efficiency }}
+  token: {{ .token }}
+  interval: {{ .interval }}
