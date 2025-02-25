@@ -134,6 +134,10 @@ type Messaging struct {
 	Services []config.Typed
 }
 
+func (c Messaging) Configured() bool {
+	return len(c.Services) > 0
+}
+
 type Tariffs struct {
 	Currency string
 	Grid     config.Typed
