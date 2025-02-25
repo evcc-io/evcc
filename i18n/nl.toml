@@ -42,6 +42,7 @@ switchsockets = "schakelbare stopcontacten"
 template = "Fabrikant"
 titleAdd = "Voeg Lader toe"
 titleEdit = "Editeer Lader"
+generic = "Algemene integraties"
 
 [config.circuits]
 description = "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen."
@@ -95,6 +96,7 @@ topic = "Onderwerp"
 url = "URL"
 vehicleLimitSoc = "Voertuig limiet"
 yes = "ja"
+identifier = "RFID-Nummer"
 
 [config.deviceValueChargeStatus]
 A = "A (niet aangesloten)"
@@ -166,6 +168,14 @@ pollModeAlways = "altijd"
 priorityLabel = "Prioriteit"
 save = "Opslaan"
 showAllSettings = "Alle instellingen tonen"
+addCharger = "Laadpunt toevoegen"
+chargerTypeLabel = "Type laadpunt"
+chargingTitle = "Opladen"
+circuitUnassigned = "niet toegewezen"
+defaultModeHelp = "Laadmodus bij het aansluiten van een voertuig."
+electricalSubtitle = "Bij twijfel, raadpleeg een elektricien."
+electricalTitle = "Elektrisch"
+energyMeterLabel = "Energiemeter"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
