@@ -135,7 +135,7 @@ type Messaging struct {
 }
 
 func (c Messaging) Configured() bool {
-	return len(c.Services) > 0
+	return len(c.Services) > 0 || len(c.Events) > 0
 }
 
 type Tariffs struct {
