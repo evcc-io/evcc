@@ -10,8 +10,8 @@ params:
   - name: id
     type: int
     description:
-      de: Wechselrichter ID (falls mehrere vorhanden)
-      en: Inverter ID (if multiple exist)
+      de: Wechselrichter ID (falls mehrere vorhanden, started bei 0 und steigt auf, siehe [AhoyDTU IP]/api/inverter/id/[ID] mit [ID] gleich 0,1,2 )
+      en: Inverter ID (if multiple exist, starts at 0 and increments, check using [AhoyDTU IP]/api/inverter/id/[ID] where [ID] is 0,1,2 )
     default: 0
 render: |
   type: custom
