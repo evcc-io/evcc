@@ -142,12 +142,8 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		site.publish(keys.TariffCo2Loadpoints, v)
 	}
 
-	// forecast
-
-	solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar)))
-
 	type dailyDetails struct {
-		Yield    float64 `json:"forecast"`
+		Yield    float64 `json:"energy"`
 		Complete bool    `json:"complete"`
 	}
 
@@ -156,23 +152,25 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 		Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 		DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
+		Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 	}
 
 	fc := struct {
-		Co2           api.Rates    `json:"co2,omitempty"`
-		FeedIn        api.Rates    `json:"feedin,omitempty"`
-		Grid          api.Rates    `json:"grid,omitempty"`
-		Solar         timeseries   `json:"solar,omitempty"`
-		SolarAdjusted solarDetails `json:"adjusted,omitempty"`
+		Co2    api.Rates    `json:"co2,omitempty"`
+		FeedIn api.Rates    `json:"feedin,omitempty"`
+		Grid   api.Rates    `json:"grid,omitempty"`
+		Solar  solarDetails `json:"solar,omitempty"`
 	}{
 		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
 		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
 		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
-		Solar:  solar,
 	}
 
 	// calculate adjusted solar forecast
+	solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar)))
 	if len(solar) > 0 {
+		fc.Solar.Timeseries = solar
+
 		last := solar[len(solar)-1].Timestamp
 
 		bod := beginningOfDay(time.Now())
@@ -188,26 +186,24 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			return v.AccumulatedEnergy()
 		})
 
-		fc.SolarAdjusted = solarDetails{
-			Today: dailyDetails{
-				Yield:    remainingToday,
-				Complete: !last.Before(eod),
-			},
-			Tomorrow: dailyDetails{
-				Yield:    tomorrow,
-				Complete: !last.Before(eot),
-			},
-			DayAfterTomorrow: dailyDetails{
-				Yield:    dayAfterTomorrow,
-				Complete: !last.Before(eot.AddDate(0, 0, 1)),
-			},
+		fc.Solar.Today = dailyDetails{
+			Yield:    remainingToday,
+			Complete: !last.Before(eod),
+		}
+		fc.Solar.Tomorrow = dailyDetails{
+			Yield:    tomorrow,
+			Complete: !last.Before(eot),
+		}
+		fc.Solar.DayAfterTomorrow = dailyDetails{
+			Yield:    dayAfterTomorrow,
+			Complete: !last.Before(eot.AddDate(0, 0, 1)),
 		}
 
 		// TODO && !solar[0].Timestamp.After(bod)
 
 		const minEnergy = 0.4
 		if yieldToday > minEnergy /*kWh*/ && forecastedToday > minEnergy /*kWh*/ {
-			fc.SolarAdjusted.Scale = lo.ToPtr(yieldToday / forecastedToday)
+			fc.Solar.Scale = lo.ToPtr(yieldToday / forecastedToday)
 		}
 	}
 
