@@ -7,22 +7,30 @@
 		@open="modalVisible"
 		@closed="modalInvisible"
 	>
-		<div v-if="isModalVisible" class="d-flex justify-content-between align-items-center gap-2">
-			<ForecastTypeSelect v-model="selectedType" :forecast="forecast" />
-			<ForecastActiveSlot :activeSlot="selectedSlot" />
+		<div v-if="isModalVisible">
+			<div class="d-flex justify-content-between align-items-center gap-2">
+				<ForecastTypeSelect v-model="selectedType" :forecast="forecast" />
+				<ForecastActiveSlot :activeSlot="selectedSlot" />
+			</div>
+
+			<ForecastChart
+				class="my-3"
+				:grid="forecast.grid"
+				:solar="forecast.solar"
+				:co2="forecast.co2"
+				:currency="currency"
+				:selected="selectedType"
+				@selected="updateSlot"
+			/>
+
+			<ForecastDetails
+				:type="selectedType"
+				:grid="forecast.grid"
+				:solar="forecast.solar"
+				:co2="forecast.co2"
+				:currency="currency"
+			/>
 		</div>
-
-		<ForecastChart
-			class="my-3"
-			:grid="forecast.grid"
-			:solar="forecast.solar"
-			:co2="forecast.co2"
-			:currency="currency"
-			:selected="selectedType"
-			@selected="updateSlot"
-		/>
-
-		<ForecastDetails :type="selectedType" :slots="selectedSlots" :currency="currency" />
 	</GenericModal>
 </template>
 
@@ -36,14 +44,13 @@ import ForecastChart from "./ForecastChart.vue";
 import ForecastTypeSelect from "./ForecastTypeSelect.vue";
 import ForecastDetails from "./ForecastDetails.vue";
 import ForecastActiveSlot from "./ForecastActiveSlot.vue";
-import { type PriceSlot, ForecastType } from "../utils/forecast";
+import {
+	type PriceSlot,
+	type TimeseriesEntry,
+	type Forecast,
+	ForecastType,
+} from "../utils/forecast";
 import formatter from "../mixins/formatter";
-
-interface Forecast {
-	grid?: PriceSlot[];
-	solar?: PriceSlot[];
-	co2?: PriceSlot[];
-}
 
 export default defineComponent({
 	name: "ForecastModal",
@@ -62,23 +69,13 @@ export default defineComponent({
 	data: function (): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
-		selectedSlot: PriceSlot | null;
+		selectedSlot: PriceSlot | TimeseriesEntry | null;
 	} {
 		return {
 			isModalVisible: false,
 			selectedType: ForecastType.Solar,
 			selectedSlot: null,
 		};
-	},
-	computed: {
-		selectedSlots() {
-			const slots = {
-				[ForecastType.Solar]: this.forecast.solar,
-				[ForecastType.Price]: this.forecast.grid,
-				[ForecastType.Co2]: this.forecast.co2,
-			};
-			return slots[this.selectedType] || [];
-		},
 	},
 	watch: {
 		isModalVisible: function (newVal) {
@@ -97,7 +94,7 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		updateSlot(slot: PriceSlot | null) {
+		updateSlot(slot: PriceSlot | TimeseriesEntry | null) {
 			this.selectedSlot = slot;
 		},
 		updateSelectedType() {
