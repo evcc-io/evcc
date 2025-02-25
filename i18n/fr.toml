@@ -550,6 +550,7 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
+forecastTooltip = "prévision : production solaire restante aujourd’hui"
 
 [main.heatingStatus]
 charging = "Chauffage… "
@@ -923,10 +924,12 @@ test = "Test"
 [forecast.price]
 lowestHour = Heure la moins chère
 average = Moyenne
+range = "Amplitude"
 
 [forecast.co2]
 lowestHour = Heure la plus propre
 average = Moyenne
+range = "Amplitude"
 
 [forecast.type]
 price = Prix
