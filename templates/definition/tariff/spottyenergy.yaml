@@ -25,4 +25,9 @@ render: |
   forecast:
     source: http
     uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ .contractid }}
-    jq: '[.[] | {start: .from, end: (.from | fromdate + 3600 | todate), price: (.price/100)}] | tostring'
+    jq: |
+      [.[] | {
+        "start":  .from,
+        "end":    (.from | fromdate + 3600 | todate),
+        "value":  (.price/100)
+      }] | tostring'

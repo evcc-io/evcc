@@ -71,6 +71,6 @@ render: |
       [ .result.watts | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
         "end":   (.key | strptime("%FT%T%z") | mktime+3600 | strftime("%FT%TZ")),
-        "price": .value
+        "value": .value
       } ] | tostring
   interval: {{ .interval }}

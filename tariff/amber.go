@@ -105,10 +105,10 @@ func (t *Amber) run(done chan error) {
 				ar := api.Rate{
 					Start: startTime.Local(),
 					End:   endTime.Local(),
-					Price: r.PerKwh / 1e2,
+					Value: r.PerKwh / 1e2,
 				}
 				if r.AdvancedPrice != nil {
-					ar.Price = r.AdvancedPrice.Predicted / 1e2
+					ar.Value = r.AdvancedPrice.Predicted / 1e2
 				}
 				data = append(data, ar)
 			}

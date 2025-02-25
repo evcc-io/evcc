@@ -95,12 +95,12 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 			rr := api.Rate{
 				Start: start,
 				End:   start.Add(time.Hour),
-				Price: r.PvEstimate * 1e3,
+				Value: r.PvEstimate * 1e3,
 			}
 			if r.Period.Duration() != time.Hour {
 				for i, r := range data {
 					if r.Start.Equal(rr.Start) {
-						data[i].Price = (r.Price + rr.Price) / 2
+						data[i].Value = (r.Value + rr.Value) / 2
 						continue NEXT
 					}
 				}

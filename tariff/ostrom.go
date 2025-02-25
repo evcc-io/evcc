@@ -190,7 +190,7 @@ func (t *Ostrom) runStatic(done chan error) {
 			data[i] = api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
-				Price: price / 100.0,
+				Value: price / 100.0,
 			}
 		}
 
@@ -232,7 +232,7 @@ func (t *Ostrom) run(done chan error) {
 			data = append(data, api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
-				Price: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
+				Value: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
 			})
 		}
 

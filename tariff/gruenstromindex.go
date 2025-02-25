@@ -88,9 +88,9 @@ func (t *GrünStromIndex) run(done chan error) {
 		data := make(api.Rates, 0, len(res.Forecast))
 		for _, r := range res.Forecast {
 			data = append(data, api.Rate{
-				Price: float64(r.Co2GStandard),
 				Start: time.UnixMilli(r.Timeframe.Start).Local(),
 				End:   time.UnixMilli(r.Timeframe.End).Local(),
+				Value: float64(r.Co2GStandard),
 			})
 		}
 
