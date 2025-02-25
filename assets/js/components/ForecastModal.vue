@@ -16,20 +16,34 @@
 			<ForecastChart
 				class="my-3"
 				:grid="forecast.grid"
-				:solar="forecast.solar"
+				:solar="solar"
 				:co2="forecast.co2"
 				:currency="currency"
 				:selected="selectedType"
 				@selected="updateSlot"
 			/>
-
 			<ForecastDetails
 				:type="selectedType"
 				:grid="forecast.grid"
-				:solar="forecast.solar"
+				:solar="solar"
 				:co2="forecast.co2"
 				:currency="currency"
 			/>
+			<div v-if="showSolarAdjust" class="form-check form-switch mt-4">
+				<input
+					id="solarForecastAdjust"
+					:checked="solarAdjusted"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+					@change="changeAdjusted"
+				/>
+				<div class="form-check-label">
+					<label for="solarForecastAdjust"
+						><small>🧪 {{ $t("forecast.solarAdjust") }}</small></label
+					>
+				</div>
+			</div>
 		</div>
 	</GenericModal>
 </template>
@@ -49,9 +63,10 @@ import {
 	type TimeseriesEntry,
 	type Forecast,
 	ForecastType,
+	adjustedSolar,
 } from "../utils/forecast";
 import formatter from "../mixins/formatter";
-
+import settings from "../settings";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -76,6 +91,19 @@ export default defineComponent({
 			selectedType: ForecastType.Solar,
 			selectedSlot: null,
 		};
+	},
+	computed: {
+		solarAdjusted() {
+			return settings.solarAdjusted;
+		},
+		showSolarAdjust() {
+			return !!this.forecast.solar && this.$hiddenFeatures();
+		},
+		solar() {
+			return this.showSolarAdjust && this.solarAdjusted
+				? adjustedSolar(this.forecast.solar)
+				: this.forecast.solar;
+		},
 	},
 	watch: {
 		isModalVisible: function (newVal) {
@@ -110,6 +138,9 @@ export default defineComponent({
 			this.selectedType =
 				Object.values(ForecastType).find((type) => availableTypes[type]) ||
 				Object.values(ForecastType)[0];
+		},
+		changeAdjusted() {
+			settings.solarAdjusted = !settings.solarAdjusted;
 		},
 	},
 });

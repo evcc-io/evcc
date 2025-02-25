@@ -71,6 +71,7 @@ export default defineComponent({
 		interval: ReturnType<typeof setTimeout> | null;
 		ignoreEvents: boolean;
 		ignoreEventsTimeout: ReturnType<typeof setTimeout> | null;
+		animations: boolean;
 	} {
 		return {
 			selectedIndex: null,
@@ -78,6 +79,7 @@ export default defineComponent({
 			interval: null,
 			ignoreEvents: false,
 			ignoreEventsTimeout: null,
+			animations: false,
 		};
 	},
 	computed: {
@@ -153,6 +155,9 @@ export default defineComponent({
 					fill: "start",
 					tension: 0.5,
 					pointRadius: 0,
+					animation: {
+						y: { duration: this.animations ? 500 : 0 },
+					},
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
 					order: active ? 0 : 1,
@@ -361,7 +366,8 @@ export default defineComponent({
 					yForecast: {
 						display: false,
 						min: 0,
-						max: this.yMaxEntry(this.solarEntries),
+						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
+						beginAtZero: true,
 					},
 					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
 					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
@@ -390,6 +396,9 @@ export default defineComponent({
 			this.updateStartDate();
 		}, 1000 * 60);
 		this.updateStartDate();
+		setTimeout(() => {
+			this.animations = true;
+		}, 1000);
 	},
 	beforeUnmount() {
 		clearTimeout(this.interval);
@@ -446,9 +455,11 @@ export default defineComponent({
 			const value = this.maxValue(slots);
 			return value ? value * 1.15 : undefined;
 		},
-		yMaxEntry(entries: TimeseriesEntry[] = []): number | undefined {
-			const value = this.maxEntryValue(entries);
-			return value ? value * 1.15 : undefined;
+		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
+			const maxValue = this.maxEntryValue(entries);
+			if (!maxValue) return undefined;
+			// use scale and unscaled to determine max scale
+			return Math.max(maxValue * scale, maxValue) * 1.15;
 		},
 		maxIndex(slots: PriceSlot[] = []) {
 			return slots.reduce((max, slot, index) => {

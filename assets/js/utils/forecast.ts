@@ -1,3 +1,5 @@
+import deepCopy from "./deepClone";
+
 export interface TimeseriesEntry {
 	val: number;
 	ts: string;
@@ -69,4 +71,17 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
 	const sortedEntries = dayEntries.sort((a, b) => b.val - a.val);
 	const highestEntry = sortedEntries[0] || {};
 	return entries.findIndex((entry) => entry.ts === highestEntry.ts);
+}
+
+export function adjustedSolar(solar: SolarDetails | undefined): SolarDetails | undefined {
+	if (!solar?.scale) return solar;
+
+	const { scale } = solar;
+	const result = deepCopy(solar);
+	result.today.energy *= scale;
+	result.tomorrow.energy *= scale;
+	result.dayAfterTomorrow.energy *= scale;
+	result.timeseries?.forEach((entry) => (entry.val *= scale));
+	result.scale = 1 / scale; // invert to allow back-adjustment
+	return result;
 }

@@ -3,7 +3,9 @@
 		<div class="col-6 col-sm-4 mb-3 d-flex flex-column">
 			<div class="label">{{ label("today") }}</div>
 			<div class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-lg-baseline">
-				<div class="text-primary text-nowrap">{{ fmtEnergy(solar.today?.energy) }}</div>
+				<div class="text-primary text-nowrap">
+					<AnimatedNumber :to="solar.today?.energy" :format="fmtEnergy" />
+				</div>
 				<div class="extraValue text-nowrap">{{ label("remaining") }}</div>
 			</div>
 		</div>
@@ -12,7 +14,9 @@
 			<div
 				class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-end align-items-sm-center align-items-lg-baseline"
 			>
-				<div class="text-primary text-nowrap">{{ fmtEnergy(solar.tomorrow?.energy) }}</div>
+				<div class="text-primary text-nowrap">
+					<AnimatedNumber :to="solar.tomorrow?.energy" :format="fmtEnergy" />
+				</div>
 				<div v-if="!solar.tomorrow?.complete" class="extraValue text-nowrap">
 					{{ label("partly") }}
 				</div>
@@ -24,7 +28,7 @@
 				class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-start align-items-sm-end align-items-lg-baseline"
 			>
 				<div class="text-primary text-nowrap">
-					{{ fmtEnergy(solar.dayAfterTomorrow?.energy) }}
+					<AnimatedNumber :to="solar.dayAfterTomorrow?.energy" :format="fmtEnergy" />
 				</div>
 				<div v-if="!solar.dayAfterTomorrow?.complete" class="extraValue text-nowrap">
 					{{ label("partly") }}
@@ -62,7 +66,7 @@
 import { defineComponent, type PropType } from "vue";
 import { ForecastType, type PriceSlot, type SolarDetails } from "../utils/forecast";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
-
+import AnimatedNumber from "./AnimatedNumber.vue";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
 export interface Energy {
@@ -78,6 +82,9 @@ export interface EnergyByDay {
 
 export default defineComponent({
 	name: "ForecastDetails",
+	components: {
+		AnimatedNumber,
+	},
 	mixins: [formatter],
 	props: {
 		type: { type: String as () => ForecastType, required: true },
