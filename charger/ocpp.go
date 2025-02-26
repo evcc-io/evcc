@@ -70,6 +70,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
+		ForceWattCtrl  bool
 		StackLevelZero *bool
 		RemoteStart    bool
 	}{
@@ -86,7 +87,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		stackLevelZero, cc.RemoteStart,
+		cc.ForceWattCtrl, stackLevelZero, cc.RemoteStart,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -139,7 +140,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	stackLevelZero, remoteStart bool,
+	forceWattCtrl bool, stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
@@ -159,7 +160,7 @@ func NewOCPP(id string, connector int, idTag string,
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(meterValues, meterInterval)
+			return cp.Setup(meterValues, meterInterval, forceWattCtrl)
 		},
 	)
 	if err != nil {
