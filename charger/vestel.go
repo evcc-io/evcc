@@ -284,7 +284,7 @@ func (wb *Vestel) Voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Vestel) phases1p3p(phases int) error {
-	_, err := wb.conn.WriteSingleRegister(vestelRegNumberPhases, uint16((phases-1)>>1))
+	_, err := wb.conn.WriteSingleRegister(vestelRegPhasesSwitch, uint16((phases-1)>>1))
 	return err
 }
 
