@@ -340,7 +340,7 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
 		delta := max(0, new-old)
 		potential := maxCurrent - c.current
-		
+
 		if delta > potential {
 			capped := max(0, old+potential)
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
