@@ -236,7 +236,7 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import { energyByDay } from "../../utils/forecast";
+
 export default {
 	name: "Energyflow",
 	components: {
@@ -390,9 +390,7 @@ export default {
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
 		solarForecast() {
-			const slots = this.forecast.solar || [];
-			if (slots.length === 0) return undefined;
-			return energyByDay(slots, 0);
+			return this.forecast?.solar?.today?.energy || undefined;
 		},
 	},
 	watch: {

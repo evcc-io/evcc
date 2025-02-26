@@ -20,6 +20,7 @@ const (
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	Forecast              = "forecast"
+	SolarYieldToday       = "solarYieldToday"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"

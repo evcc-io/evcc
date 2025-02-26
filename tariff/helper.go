@@ -67,7 +67,7 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 	})
 }
 
-// BeginningOfDay returns the beginning of the current day
-func BeginningOfDay() time.Time {
+// beginningOfDay returns the beginning of the current day
+func beginningOfDay() time.Time {
 	return now.With(time.Now()).BeginningOfDay()
 }

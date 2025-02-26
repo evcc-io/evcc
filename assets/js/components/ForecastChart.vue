@@ -32,10 +32,11 @@ import { registerChartComponents, commonOptions } from "./Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import colors, { lighterColor } from "../colors";
 import {
-	energyByDay,
 	highestSlotIndexByDay,
-	type PriceSlot,
 	ForecastType,
+	type PriceSlot,
+	type SolarDetails,
+	type TimeseriesEntry,
 } from "../utils/forecast";
 
 registerChartComponents([
@@ -58,7 +59,7 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		grid: { type: Array as PropType<PriceSlot[]> },
-		solar: { type: Array as PropType<PriceSlot[]> },
+		solar: { type: Object as PropType<SolarDetails> },
 		co2: { type: Array as PropType<PriceSlot[]> },
 		currency: { type: String as PropType<string> },
 		selected: { type: String as PropType<ForecastType> },
@@ -66,50 +67,35 @@ export default defineComponent({
 	emits: ["selected"],
 	data(): {
 		selectedIndex: number | null;
+		startDate: Date;
+		interval: ReturnType<typeof setTimeout> | null;
 		ignoreEvents: boolean;
 		ignoreEventsTimeout: ReturnType<typeof setTimeout> | null;
+		animations: boolean;
 	} {
 		return {
 			selectedIndex: null,
+			startDate: new Date(),
+			interval: null,
 			ignoreEvents: false,
 			ignoreEventsTimeout: null,
+			animations: false,
 		};
 	},
 	computed: {
-		startDate() {
-			const now = new Date();
-			const slots = this.grid || this.co2 || this.solar || [];
-			const currentSlot = slots.find(({ start, end }) => {
-				return new Date(start) <= now && new Date(end) > now;
-			});
-			if (currentSlot) {
-				return new Date(currentSlot.start);
-			}
-			return now;
+		endDate() {
+			const end = new Date(this.startDate);
+			end.setHours(end.getHours() + 48);
+			return end;
 		},
-		solarSlots() {
-			return this.filterSlots(this.solar);
+		solarEntries() {
+			return this.filterEntries(this.solar?.timeseries || []);
 		},
 		gridSlots() {
 			return this.filterSlots(this.grid);
 		},
 		co2Slots() {
 			return this.filterSlots(this.co2);
-		},
-		currentSlots() {
-			switch (this.selected) {
-				case ForecastType.Price:
-					return this.gridSlots;
-				case ForecastType.Solar:
-					return this.solarSlots;
-				case ForecastType.Co2:
-					return this.co2Slots;
-				default:
-					return [];
-			}
-		},
-		selectedSlot() {
-			return this.selectedIndex !== null ? this.currentSlots[this.selectedIndex] : null;
 		},
 		maxPriceIndex() {
 			return this.maxIndex(this.gridSlots);
@@ -124,38 +110,54 @@ export default defineComponent({
 			return this.minIndex(this.co2Slots);
 		},
 		maxSolarIndex() {
-			return this.maxIndex(this.solarSlots);
+			return this.maxEntryIndex(this.solarEntries);
 		},
 		solarHighlights() {
-			return [0, 1, 2].map((day) => {
-				const energy = energyByDay(this.solarSlots, day);
-				const index = highestSlotIndexByDay(this.solarSlots, day);
-				return { index, energy };
-			});
+			const { today, tomorrow, dayAfterTomorrow } = this.solar || {};
+			return [
+				{
+					index: highestSlotIndexByDay(this.solarEntries, 0),
+					energy: today?.energy,
+				},
+				{
+					index: highestSlotIndexByDay(this.solarEntries, 1),
+					energy: tomorrow?.energy,
+				},
+				{
+					index: highestSlotIndexByDay(this.solarEntries, 2),
+					energy: dayAfterTomorrow?.energy,
+				},
+			];
 		},
 		chartData() {
 			const datasets: unknown[] = [];
-			if (this.solarSlots.length > 0) {
+			if (this.solarEntries.length > 0) {
 				const active = this.selected === ForecastType.Solar;
 				const color = active ? colors.self : colors.border;
 				datasets.push({
 					label: ForecastType.Solar,
 					type: "line",
-					data: this.solarSlots.map((slot, index) => ({
-						y: slot.price,
-						x: new Date(slot.start),
-						highlight:
-							active &&
-							(this.selectedIndex !== null
-								? this.selectedIndex === index
-								: this.solarHighlights.find(({ index: i }) => i === index)?.energy),
-					})),
+					data: this.solarEntries.map((entry, index) => {
+						return {
+							y: entry.val,
+							x: new Date(entry.ts),
+							highlight:
+								active &&
+								(this.selectedIndex !== null
+									? this.selectedIndex === index
+									: this.solarHighlights.find(({ index: i }) => i === index)
+											?.energy),
+						};
+					}),
 					yAxisID: "yForecast",
 					backgroundColor: lighterColor(color),
 					borderColor: color,
-					fill: "origin",
+					fill: "start",
 					tension: 0.5,
 					pointRadius: 0,
+					animation: {
+						y: { duration: this.animations ? 500 : 0 },
+					},
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
 					order: active ? 0 : 1,
@@ -254,16 +256,27 @@ export default defineComponent({
 						backgroundColor: function (context) {
 							return context.dataset.borderColor;
 						},
-						align: function (context) {
-							// rotate label position to avoid horizontal clipping
+						align: function ({ chart, dataset, dataIndex }) {
+							const { min, max } = chart.scales.x;
+							const time = new Date(dataset.data[dataIndex].x).getTime();
+
+							// percent along the x axis (0: start, 1: end)
+							const percent = (time - min) / (max - min);
+							let adjust = 0;
 							const step = 20;
-							const adjust = {
-								0: step * 2,
-								1: step * 1,
-								46: step * -1,
-								47: step * -2,
-							};
-							return -90 + (adjust[context.dataIndex] || 0);
+
+							// tilt label left/right if it's close to the edge
+							if (percent < 0.02) {
+								adjust = 2;
+							} else if (percent < 0.04) {
+								adjust = 1;
+							} else if (percent > 0.98) {
+								adjust = -2;
+							} else if (percent > 0.96) {
+								adjust = -1;
+							}
+
+							return -90 + adjust * step;
 						},
 						anchor: "end",
 						offset: 8,
@@ -310,7 +323,7 @@ export default defineComponent({
 						type: "timeseries",
 						display: true,
 						time: { unit: "day" },
-						border: { display: false },
+						border: { display: true },
 						grid: {
 							display: true,
 							color: colors.border,
@@ -323,6 +336,8 @@ export default defineComponent({
 								return Array.isArray(label) ? 1 : 0;
 							},
 						},
+						min: this.startDate,
+						max: this.endDate,
 						ticks: {
 							color: colors.muted,
 							autoSkip: false,
@@ -333,6 +348,10 @@ export default defineComponent({
 							callback: function (value) {
 								const date = new Date(value);
 								const hour = date.getHours();
+								const minute = date.getMinutes();
+								if (minute !== 0) {
+									return "";
+								}
 								const hourFmt = vThis.hourShort(date);
 								if (hour === 0) {
 									return [hourFmt, vThis.weekdayShort(date)];
@@ -344,11 +363,27 @@ export default defineComponent({
 							},
 						},
 					},
-					yForecast: { display: false, min: 0, max: this.yMax(this.solarSlots) },
+					yForecast: {
+						display: false,
+						min: 0,
+						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
+						beginAtZero: true,
+					},
 					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
 					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
 				},
 			};
+		},
+		selectedSlot() {
+			if (this.selectedIndex === null || !this.selected) return null;
+
+			const slotMap = {
+				[ForecastType.Solar]: this.solarEntries,
+				[ForecastType.Price]: this.gridSlots,
+				[ForecastType.Co2]: this.co2Slots,
+			};
+
+			return slotMap[this.selected]?.[this.selectedIndex] ?? null;
 		},
 	},
 	watch: {
@@ -356,9 +391,42 @@ export default defineComponent({
 			this.$emit("selected", slot);
 		},
 	},
+	mounted() {
+		this.interval = setTimeout(() => {
+			this.updateStartDate();
+		}, 1000 * 60);
+		this.updateStartDate();
+		setTimeout(() => {
+			this.animations = true;
+		}, 1000);
+	},
+	beforeUnmount() {
+		clearTimeout(this.interval);
+	},
 	methods: {
+		updateStartDate() {
+			const now = new Date();
+			now.setMinutes(0);
+			now.setSeconds(0);
+			now.setMilliseconds(0);
+			this.startDate = now;
+		},
 		filterSlots(slots: PriceSlot[] = []) {
-			return slots.filter((slot) => new Date(slot.end) > this.startDate).slice(0, 48);
+			return slots.filter(
+				(slot) =>
+					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
+			);
+		},
+		filterEntries(entries: TimeseriesEntry[] = []) {
+			// include 1 hour before and after
+			const start = new Date(this.startDate);
+			start.setHours(start.getHours() - 1);
+			const end = new Date(this.endDate);
+			end.setHours(end.getHours() + 1);
+
+			return entries.filter(
+				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+			);
 		},
 		onMouseLeave() {
 			this.selectIndex(null, true);
@@ -387,6 +455,12 @@ export default defineComponent({
 			const value = this.maxValue(slots);
 			return value ? value * 1.15 : undefined;
 		},
+		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
+			const maxValue = this.maxEntryValue(entries);
+			if (!maxValue) return undefined;
+			// use scale and unscaled to determine max scale
+			return Math.max(maxValue * scale, maxValue) * 1.15;
+		},
 		maxIndex(slots: PriceSlot[] = []) {
 			return slots.reduce((max, slot, index) => {
 				return slot.price > slots[max].price ? index : max;
@@ -399,6 +473,14 @@ export default defineComponent({
 		},
 		maxValue(slots: PriceSlot[] = []) {
 			return slots[this.maxIndex(slots)]?.price || null;
+		},
+		maxEntryValue(entries: TimeseriesEntry[] = []) {
+			return entries[this.maxEntryIndex(entries)]?.val || null;
+		},
+		maxEntryIndex(entries: TimeseriesEntry[] = []) {
+			return entries.reduce((max, entry, index) => {
+				return entry.val > entries[max].val ? index : max;
+			}, 0);
 		},
 	},
 });
