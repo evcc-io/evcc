@@ -329,7 +329,7 @@ export default {
 		},
 		bufferStartOptions() {
 			const options = [];
-			for (let i = 100; i >= this.bufferSoc; i -= 5) {
+			for (let i = 100; i >= this.selectedBufferSoc; i -= 5) {
 				options.push({
 					value: i,
 					name: this.getBufferStartName(i),

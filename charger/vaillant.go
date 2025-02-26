@@ -112,7 +112,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}
 	}
 
-	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	sgr, err := NewSgReady(ctx, &cc.embed, set, nil)
 	if err != nil {
 		return nil, err
 	}

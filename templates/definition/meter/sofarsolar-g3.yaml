@@ -133,10 +133,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0606 # Power_Bat1
+      address: 0x0667 # Power_Bat_Total
       type: holding
       decode: int16
-    scale: -10
+    scale: -100
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -149,7 +149,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0608 # SOC_Bat1
+      address: 0x0668 # SOC_Bat_Average
       type: holding
       decode: uint16
   batterymode:
