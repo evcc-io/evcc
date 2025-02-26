@@ -154,14 +154,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"code_verifier": {"plain"},
 		"refresh_token": {token.RefreshToken},
 	}
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create refresh token request: %w", err)
+    var res oauth2.Token
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
 	}
-	if err = v.DoJSON(req, token); err != nil {
-		return nil, fmt.Errorf("failed to refresh token: %w", err)
-	}
-	return oauth.RefreshTokenSource(token, v).Token()
+	return oauth.RefreshTokenSource(&res, v).Token()
 }
 
 func (v *Identity) Login(user, password string) error {
