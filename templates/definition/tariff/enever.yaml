@@ -53,7 +53,7 @@ render: |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
-                "price": .prijs{{ .provider }} | tonumber
+                "value": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
       - name: tomorrow
@@ -66,7 +66,7 @@ render: |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
-                "price": .prijs{{ .provider }} | tonumber
+                "value": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
     interval: 3h
