@@ -236,7 +236,7 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 
 	res, err := backoff.RetryWithData(func() (float32, error) {
 		res, err := m.conn.QueryFloat32(id)
-		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+		if re := new(rct.RecoverableError); !errors.As(err, &re) {
 			err = backoff.Permanent(err)
 		}
 
@@ -252,7 +252,7 @@ func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 
 	res, err := backoff.RetryWithData(func() (int32, error) {
 		res, err := m.conn.QueryInt32(id)
-		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
+		if re := new(rct.RecoverableError); !errors.As(err, &re) {
 			err = backoff.Permanent(err)
 		}
 

@@ -2,16 +2,25 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/mlnoga/rct"
 )
+
+type item struct {
+	updated time.Time
+	dg      *rct.Datagram
+}
 
 func run() (any, error) {
 	conn, err := rct.NewConnection("localhost", time.Second)
 	if err != nil {
 		return nil, err
 	}
+
+	var mu sync.RWMutex
+	cache := make(map[rct.Identifier]item)
 
 	cconn := conn.Conn()
 	buf := make([]byte, 2048)
@@ -40,6 +49,11 @@ func run() (any, error) {
 			i += n
 
 			fmt.Printf("data: %d - %+v\n", n, dg)
+
+			mu.Lock()
+			cache[dg.Id] = item{updated: time.Now(), dg: dg}
+			fmt.Println("item:", len(cache))
+			mu.Unlock()
 		}
 
 		// os.Exit(0)
