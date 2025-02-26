@@ -30,4 +30,4 @@ render: |
         "start":  .from,
         "end":    (.from | fromdate + 3600 | todate),
         "value":  (.price/100)
-      }] | tostring'
+      }] | tostring
