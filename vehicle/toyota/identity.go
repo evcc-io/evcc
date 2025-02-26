@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
@@ -106,7 +108,6 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	headers := request.URLEncoding
-	headers["Authorization"] = "Basic b25lYXBwOm9uZWFwcA=="
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
 		return err
@@ -119,6 +120,8 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	if err = v.DoJSON(req, &resp); err != nil {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
+
+	resp.Expiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
 
 	// Parse ID token without verification to extract UUID
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
@@ -138,8 +141,25 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	v.uuid = uuid
-	v.TokenSource = oauth2.StaticTokenSource(&resp.Token)
+	v.TokenSource = oauth.RefreshTokenSource(&resp.Token, v)
 	return nil
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	uri := fmt.Sprintf("%s/%s", BaseUrl, AccessTokenPath)
+	data := url.Values{
+		"client_id":     {ClientID},
+		"redirect_uri":  {RedirectURI},
+		"grant_type":    {"refresh_token"},
+		"code_verifier": {"plain"},
+		"refresh_token": {token.RefreshToken},
+	}
+	var res oauth2.Token
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
+	}
+	return oauth.RefreshTokenSource(&res, v).Token()
 }
 
 func (v *Identity) Login(user, password string) error {
