@@ -154,7 +154,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"code_verifier": {"plain"},
 		"refresh_token": {token.RefreshToken},
 	}
-    var res oauth2.Token
+	var res oauth2.Token
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
