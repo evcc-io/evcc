@@ -201,6 +201,32 @@ pollModeConnectedHelp = "Atualizar o estado do veículo em intervalos regulares 
 pollModeLabel = "Comportamento de atualização"
 priorityHelp = "Os pontos de carregamento com maior prioridade têm acesso prioritário ao excedente solar."
 priorityLabel = "Prioridade"
+solarBehaviorLabel = "Comportamento solar"
+solarModeCustom = "personalizado"
+solarModeMaximum = "máximo solar"
+thresholdDisableDelayLabel = "Diferir desativação"
+thresholdDisableHelpZero = "Interromper quando a potência de carga mínima não for atingida durante {delay}."
+thresholdDisableLabel = "Desativar a energia da rede"
+thresholdEnableDelayLabel = "Diferir activação"
+thresholdEnableHelpZero = "Iniciar quando o excedente de energia de carga mínima estiver disponível durante {delay}."
+thresholdEnableLabel = "Ativar a energia da rede"
+titleAdd = "Adicionar ponto de carregamento"
+titleEdit = "Editar ponto de carregamento"
+titleLabel = "Título"
+vehicleHelpAutoDetection = "Seleciona automaticamente o veículo mais plausível. O cancelamento manual é possível."
+vehicleHelpDefault = "Presumir sempre que este veículo está a carregar aqui. Deteção automática desactivada. A desativação manual é possível."
+vehicleLabel = "Veículo predefinido"
+vehiclesTitle = "Veículos"
+thresholdDisableHelpInvalid = "É favor utilizar um valor positivo."
+thresholdEnableHelpNegative = "Iniciar o carregamento, quando {surplus} excedente estiver disponível durante {delay}."
+titleExample = "Garagem, carport, etc."
+thresholdDisableHelpPositive = "Interromper o carregamento, quando for utilizada mais de {power} da rede durante {delay}."
+thresholdEnableHelpInvalid = "É favor utilizar um valor negativo."
+vehicleAutoDetection = "deteção automática"
+showAllSettings = "Mostrar todas as definições"
+solarBehaviorCustomHelp = "Defina os seus próprios limiares e latências de ativação e desativação."
+solarBehaviorDefaultHelp = "Apenas carregar com excedente solar. Iniciar após {enableDelay} de excedente. Parar quando não houver excedente suficiente para {disableDelay}."
+save = "Guardar"
 
 [config.main]
 addLoadpoint = "Adicionar ponto de recarga"
@@ -211,7 +237,10 @@ edit = "editar"
 title = "Configuração"
 unconfigured = "não configurado"
 vehicles = "Meus Veículos"
-yaml = "Configurado em evcc.yaml. Não editável na UI."
+yaml = "Os dispositivos de evcc.yaml não são editáveis."
+name = "Nome"
+addGrid = "Adicionar contador de rede"
+addTariffs = "Adicionar tarifas"
 
 [config.messaging]
 description = "Receber mensagens sobre as sessões de carregamento."
@@ -284,13 +313,16 @@ system = "Sistema"
 vehicles = "Veículos"
 
 [config.sponsor]
-addToken = "Enter token patrocinador"
-changeToken = "Alterar token patrocinador"
+addToken = "Entanir token patrocinador"
+changeToken = "Alterar token"
 description = "O modelo patrocinador nos ajuda a manter o projeto e a construir de forma sustentável novas e emocionantes características. Como patrocinador, você tem acesso a todas as implementações do carregador."
 descriptionToken = "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste."
 error = "O token patrocinador não é válido."
 labelToken = "Token patrocinador"
 title = "Patrocínio"
+tokenRequiredLearnMore = "Mais informações."
+tokenRequired = "Tem de configurar um token de patrocinador antes de poder criar este dispositivo."
+trialToken = "Token de teste"
 
 [config.system]
 logs = "Registos"
@@ -469,6 +501,8 @@ title = "Autenticação"
 
 [main]
 vehicles = "Estacionamento"
+startConfiguration = "Iniciar a configuração"
+welcome = "Bem-vindo a bordo!"
 
 [main.chargingPlan]
 active = "Ativo"
@@ -507,6 +541,7 @@ noEnergy = "Sem leituras"
 pvExport = "Alimentação"
 pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
+forecastTooltip = "previsão: produção solar restante de hoje"
 
 [main.heatingStatus]
 charging = "Aquecendo..."
@@ -884,3 +919,34 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[config.options.status]
+C = "C (carregamento)"
+B = "B (ligado)"
+A = "A (não ligado)"
+
+[forecast]
+modalTitle = "Previsões"
+
+[forecast.co2]
+average = "Média"
+lowestHour = "Horário mais limpo "
+range = "Intervalo"
+
+[forecast.price]
+average = "Média"
+lowestHour = "Horário mais barato"
+range = "Intervalo"
+
+[forecast.solar]
+dayAfterTomorrow = "Depois de amanhã"
+partly = "parcialmente"
+remaining = "restante"
+today = "Hoje"
+tomorrow = "Amanhã"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Preço"
+solar = "Solar"

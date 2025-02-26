@@ -546,6 +546,7 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
+forecastTooltip = "Прогноз: залишкове виробництво сонячної енергії сьогодні"
 
 [main.heatingStatus]
 charging = "Опалення…"
@@ -903,3 +904,29 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[forecast]
+modalTitle = "Прогноз"
+
+[forecast.co2]
+average = "Середній"
+lowestHour = "Найчистіша година"
+range = "Діапазон"
+
+[forecast.price]
+average = "Середній"
+lowestHour = "Найдешевша година"
+range = "Діапазон"
+
+[forecast.solar]
+dayAfterTomorrow = "Післязавтра"
+partly = "частково"
+remaining = "залишилося"
+today = "Сьогодні"
+tomorrow = "Завтра"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ціна"
+solar = "Сонячна"
