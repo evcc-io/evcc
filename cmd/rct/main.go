@@ -13,14 +13,36 @@ func run() (any, error) {
 		return nil, err
 	}
 
+	cconn := conn.Conn()
+	buf := make([]byte, 2048)
+
 	for {
-		// var dg *rct.Datagram
-		dg, err := conn.Receive()
+		n, err := cconn.Read(buf)
 		if err != nil {
-			fmt.Println(err)
-			continue
+			return nil, err
 		}
-		fmt.Printf("%+v\n", dg)
+		fmt.Println("recv:", n, "-", fmt.Sprintf("% 0x", buf[:n]))
+
+		if n == len(buf) {
+			panic("large message")
+		}
+
+		var i int
+
+		for i < n {
+			// fmt.Println("i:", i, "n:", n, "len:", len(buf))
+			dg, n, err := rct.Parse(buf[i:n])
+			if err != nil {
+				fmt.Println("data:", n, err)
+				break
+			}
+
+			i += n
+
+			fmt.Printf("data: %d - %+v\n", n, dg)
+		}
+
+		// os.Exit(0)
 	}
 }
 
