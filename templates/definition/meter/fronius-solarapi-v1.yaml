@@ -46,12 +46,14 @@ render: |
   {{- if eq .usage "pv" }}
     jq: if .Body.Data.Site.P_PV == null then 0 else .Body.Data.Site.P_PV end
   {{- end }}
-  {{- if eq .usage "battery" }}
-    jq: if .Body.Data.Site.P_Akku == null then 0 else .Body.Data.Site.P_Akku end
+  {{- if eq .usage "pv" }}
   energy:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: if .Body.Data.Site.E_Total == null then 0 else .Body.Data.Site.E_Total end
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: if .Body.Data.Site.P_Akku == null then 0 else .Body.Data.Site.P_Akku end
   soc:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
