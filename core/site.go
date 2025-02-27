@@ -483,7 +483,7 @@ func (site *Site) updatePvMeters() {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
 
-		if m, ok := meter.(api.MaxACPower); ok {
+		if m, ok := meter.(api.MaxACPowerGetter); ok {
 			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
 				mm[i].ExcessDCPower = -dc
 				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, -dc)
