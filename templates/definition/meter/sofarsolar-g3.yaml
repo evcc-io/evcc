@@ -170,7 +170,6 @@ render: |
   # Removed for supporting multiple storage units
   # energy:
   #   source: modbus
-  #   {{- include "modbus" . | indent 2 }}
   #   register:
   #     address: 0x069A # Bat_Discharge_Total
   #     type: holding
