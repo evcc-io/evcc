@@ -98,18 +98,57 @@ type Meter struct {
 	currentPowerG func() (float64, error)
 }
 
-// Decorate attaches additional capabilities to the base meter
-func (m *Meter) Decorate(
-	totalEnergy func() (float64, error),
-	currents func() (float64, float64, float64, error),
-	voltages func() (float64, float64, float64, error),
-	powers func() (float64, float64, float64, error),
-	batterySoc func() (float64, error),
-	batteryCapacity func() float64,
-	MaxACPower func() float64,
-	setBatteryMode func(api.BatteryMode) error,
-) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoc, batteryCapacity, MaxACPower, setBatteryMode)
+type deco struct {
+	totalEnergy     func() (float64, error)
+	currents        func() (float64, float64, float64, error)
+	voltages        func() (float64, float64, float64, error)
+	powers          func() (float64, float64, float64, error)
+	batterySoc      func() (float64, error)
+	batteryCapacity func() float64
+	maxACPower      func() float64
+	setBatteryMode  func(api.BatteryMode) error
+}
+
+type meterOption func(*deco)
+
+func WithTotalEnergy(f func() (float64, error)) meterOption {
+	return func(d *deco) { d.totalEnergy = f }
+}
+
+func WithCurrents(f func() (float64, float64, float64, error)) meterOption {
+	return func(d *deco) { d.currents = f }
+}
+
+func WithVoltages(f func() (float64, float64, float64, error)) meterOption {
+	return func(d *deco) { d.voltages = f }
+}
+
+func WithPowers(f func() (float64, float64, float64, error)) meterOption {
+	return func(d *deco) { d.powers = f }
+}
+
+func WithBatterySoc(f func() (float64, error)) meterOption {
+	return func(d *deco) { d.batterySoc = f }
+}
+
+func WithBatteryCapacity(f func() float64) meterOption {
+	return func(d *deco) { d.batteryCapacity = f }
+}
+
+func WithMaxACPower(f func() float64) meterOption {
+	return func(d *deco) { d.maxACPower = f }
+}
+
+func WithBatteryMode(f func(api.BatteryMode) error) meterOption {
+	return func(d *deco) { d.setBatteryMode = f }
+}
+
+func (m *Meter) Decorate(opts ...meterOption) api.Meter {
+	res := new(deco)
+	for _, o := range opts {
+		o(res)
+	}
+	return decorateMeter(m, res.totalEnergy, res.currents, res.voltages, res.powers, res.batterySoc, res.batteryCapacity, res.maxACPower, res.setBatteryMode)
 }
 
 // CurrentPower implements the api.Meter interface
