@@ -12,7 +12,6 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
-# capabilities: ["battery-control"]
 requirements:
   description:
     de: Die Verbindung über einen LSE-3 Logger Stick mittels LAN Anschluss und ModBus TCP über Port 8899 ist die einfachste Anbindung. Der LSW-3 WLAN Stick wird nicht unterstützt. Bei seriellem Anschluss via RS485 am COM Port ist eine wechselrichterseitige Terminierung notwendig.
