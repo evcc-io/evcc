@@ -113,7 +113,7 @@ render: |
       register:
         address: 667 # "input power of micro-inverter connected at GEN-Port"
         type: holding
-        decode: uint16
+        decode: int16
       scale: 1
     {{- end }}
   energy:
