@@ -158,7 +158,6 @@ render: |
     scale: 0.1
   maxacpower: {{ .maxacpower }}
   {{- end }}
-
   {{- if eq .usage "battery" }}
   power:
     source: modbus
