@@ -115,7 +115,6 @@ render: |
       decode: uint32
     scale: 0.1
   {{- end }}
-
   {{- if eq .usage "pv" }}
   power:
     source: calc
