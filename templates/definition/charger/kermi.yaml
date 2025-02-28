@@ -1,6 +1,8 @@
 template: kermi
 products:
   - brand: Bösch
+    description:
+      generic: x-change
   - brand: Kermi
     description:
       generic: x-change
@@ -11,72 +13,36 @@ params:
   - name: modbus
     choice: ["tcpip"]
     # id TWE 50, HK 51
-  - name: tempsource
-    type: choice
-    choice: ["", "warmwater", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
+  # - name: tempsource
+  #   type: choice
+  #   choice: ["", "warmwater", "buffer"]
+  #   description:
+  #     de: "Temperaturquelle"
+  #     en: "Temperature source"
 render: |
-  type: sgready
-  getmode:
-    source: map
-    values:
-      0: 3 # Off
-      1: 1 # Eco
-      2: 1 # Normal
-      3: 2 # Comfort
-      4: 1 # Benutzerdefiniert
-    get:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 155
-        type: holding
-        encoding: uint16
-  setmode:
-    source: switch
-    switch:
-    - case: 1 # normal
-      set:
-        source: const
-        value: 2 # normal
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 155
-            type: writesingle
-            encoding: uint16
-    - case: 2 # boost
-      set:
-        source: const
-        value: 3 # comfort
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 155
-            type: writesingle
-            encoding: uint16
-    - case: 3 # dimm
-      set:
-        source: const
-        value: 1 # eco
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 155
-            type: writesingle
-            encoding: uint16
-  {{- if .tempsource }}
-  temp:
+  type: heatpump
+  phases: {{ .phases }}
+  setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "warmwater" -}} 100 {{ else }} 1 {{- end }}
+      address: 301 # PV Überschussleistung
       type: holding
-      encoding: int16
-    scale: 0.1
-  {{- end }}
+      decode: int16
+  # power:
+  #   source: modbus
+  #   {{- include "modbus" . | indent 2 }}
+  #   register:
+  #     address: 108 # aktuelle Aufnahmeleistung der WP (kWp)
+  #     type: holding
+  #     decode: int16
+  # {{- if .tempsource }}
+  # temp:
+  #   source: modbus
+  #   {{- include "modbus" . | indent 2 }}
+  #   register:
+  #     address: {{ if eq .tempsource "warmwater" -}} 100 {{ else }} 1 {{- end }}
+  #     type: holding
+  #     encoding: int16
+  #   scale: 0.1
+  # {{- end }}
