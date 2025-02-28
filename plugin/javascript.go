@@ -1,3 +1,5 @@
+//go:build !deadcode
+
 package plugin
 
 import (

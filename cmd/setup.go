@@ -27,7 +27,6 @@ import (
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
-	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
@@ -503,10 +502,10 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
-	// setup javascript VMs
-	if err == nil {
-		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
-	}
+	// // setup javascript VMs
+	// if err == nil {
+	// 	err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
+	// }
 
 	// setup go VMs
 	if err == nil {
@@ -618,15 +617,15 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	return nil
 }
 
-// setup javascript
-func configureJavascript(conf []globalconfig.Javascript) error {
-	for _, cc := range conf {
-		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
-			return fmt.Errorf("failed configuring javascript: %w", err)
-		}
-	}
-	return nil
-}
+// // setup javascript
+// func configureJavascript(conf []globalconfig.Javascript) error {
+// 	for _, cc := range conf {
+// 		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
+// 			return fmt.Errorf("failed configuring javascript: %w", err)
+// 		}
+// 	}
+// 	return nil
+// }
 
 // setup go
 func configureGo(conf []globalconfig.Go) error {
