@@ -31,18 +31,18 @@ render: |
       decode: int16
   # power:
   #   source: modbus
-  #   {{- include "modbus" . | indent 2 }}
+  #   {- include "modbus" . | indent 2 }}
   #   register:
   #     address: 108 # aktuelle Aufnahmeleistung der WP (kWp)
   #     type: holding
   #     decode: int16
-  # {{- if .tempsource }}
+  # {- if .tempsource }}
   # temp:
   #   source: modbus
-  #   {{- include "modbus" . | indent 2 }}
+  #   {- include "modbus" . | indent 2 }}
   #   register:
-  #     address: {{ if eq .tempsource "warmwater" -}} 100 {{ else }} 1 {{- end }}
+  #     address: { if eq .tempsource "warmwater" -}} 100 { else }} 1 {- end }}
   #     type: holding
   #     encoding: int16
   #   scale: 0.1
-  # {{- end }}
+  # {- end }}
