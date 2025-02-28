@@ -188,40 +188,46 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
+	var err error
+
 	if lp.CircuitRef != "" {
-		dev, err := config.Circuits().ByName(lp.CircuitRef)
-		if err != nil {
-			return nil, fmt.Errorf("circuit: %w", err)
+		dev, e := config.Circuits().ByName(lp.CircuitRef)
+		if e != nil && err == nil {
+			err = fmt.Errorf("circuit: %w", e)
+		} else {
+			lp.circuit = dev.Instance()
 		}
-		lp.circuit = dev.Instance()
 	}
 
 	if lp.MeterRef != "" {
-		dev, err := config.Meters().ByName(lp.MeterRef)
-		if err != nil {
-			return nil, fmt.Errorf("meter: %w", err)
+		dev, e := config.Meters().ByName(lp.MeterRef)
+		if e != nil && err == nil {
+			err = fmt.Errorf("meter: %w", e)
+		} else {
+			lp.chargeMeter = dev.Instance()
 		}
-		lp.chargeMeter = dev.Instance()
 	}
 
 	// default vehicle
 	if lp.VehicleRef != "" {
-		dev, err := config.Vehicles().ByName(lp.VehicleRef)
-		if err != nil {
-			return nil, fmt.Errorf("vehicle: %w", err)
+		dev, e := config.Vehicles().ByName(lp.VehicleRef)
+		if e != nil && err == nil {
+			err = fmt.Errorf("default vehicle: %w", e)
+		} else {
+			lp.defaultVehicle = dev.Instance()
 		}
-		lp.defaultVehicle = dev.Instance()
 	}
 
 	if lp.ChargerRef == "" {
-		return nil, errors.New("missing charger")
+		return lp, errors.New("missing charger")
 	}
-	dev, err := config.Chargers().ByName(lp.ChargerRef)
-	if err != nil {
-		return nil, fmt.Errorf("charger: %w", err)
+	dev, e := config.Chargers().ByName(lp.ChargerRef)
+	if e != nil && err == nil {
+		err = fmt.Errorf("charger: %w", e)
+	} else {
+		lp.charger = dev.Instance()
+		lp.configureChargerType(lp.charger)
 	}
-	lp.charger = dev.Instance()
-	lp.configureChargerType(lp.charger)
 
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
@@ -249,7 +255,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.setPriority(lp.Priority)
 	}
 
-	return lp, nil
+	return lp, err
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults

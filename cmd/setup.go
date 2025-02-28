@@ -1007,23 +1007,29 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
 
-		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
-		if err != nil {
-			return &DeviceError{cc.Name, err}
+		dynamic, static, e := loadpoint.SplitConfig(cc.Other)
+		if e != nil {
+			return &DeviceError{cc.Name, e}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
-		if err != nil {
-			return &DeviceError{cc.Name, err}
+		var err error
+
+		instance, e := core.NewLoadpointFromConfig(log, settings, static)
+		if e != nil {
+			err = &DeviceError{cc.Name, e}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
-		if err := config.Loadpoints().Add(dev); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
 		}
 
-		if err := dynamic.Apply(instance); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := dynamic.Apply(instance); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 

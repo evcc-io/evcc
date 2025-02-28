@@ -58,7 +58,7 @@
 							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
-					<div v-if="fatal" class="text-break">{{ fatal.error }}</div>
+					<div v-if="fatalText" class="text-break">{{ fatalText }}</div>
 				</div>
 				<button
 					type="button"
@@ -109,6 +109,11 @@ export default {
 				this.fatal?.error &&
 				!this.dismissed
 			);
+		},
+		fatalText() {
+			const { error, class: errorClass } = this.fatal || {};
+			if (!error) return;
+			return errorClass ? `${errorClass}: ${error}` : error;
 		},
 	},
 	watch: {
