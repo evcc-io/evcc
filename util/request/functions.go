@@ -43,6 +43,10 @@ type StatusError struct {
 	resp *http.Response
 }
 
+func NewStatusError(resp *http.Response) *StatusError {
+	return &StatusError{resp: resp}
+}
+
 func (e *StatusError) Error() string {
 	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
 }

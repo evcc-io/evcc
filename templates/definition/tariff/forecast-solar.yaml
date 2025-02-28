@@ -10,20 +10,20 @@ group: solar
 params:
   - name: lat
     description:
-      en: latitude
+      en: Latitude
       de: Breitengrad
     example: "55.7351"
     required: true
   - name: lon
     description:
-      en: longitude
+      en: Longitude
       de: Längengrad
     example: "9.1275"
     required: true
   - name: dec
     description:
-      en: decline
-      de: Winkel
+      en: Decline
+      de: Neigung
     help:
       en: 0 = horizontal, 90 = vertical
       de: 0 = horizontal, 90 = vertikal
@@ -31,7 +31,7 @@ params:
     required: true
   - name: az
     description:
-      en: azimuth
+      en: Azimuth
       de: Azimut
     help:
       en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
@@ -66,7 +66,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ .horizon }}{{ end }}
+    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}
     jq: |
       [ .result.watts | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
