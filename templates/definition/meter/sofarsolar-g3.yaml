@@ -26,6 +26,13 @@ params:
     id: 1
   - name: delay
     deprecated: true
+  - name: pvstring
+    help:
+      de: Nummer des PV-Strings, der gemessen wird. Der Default 0 nimmt statt eines Strings die Summe aller Strings, bietet aber eine schlechtere Genauigkeit.
+      en: Number of the PV string to measure. The default 0 takes the sum of all strings instead of a single string, but offers a lower accuracy.
+    type: int
+    default: 0
+    advanced: true
   - name: storageunit
     help:
       de: Nummer des Batteriespeichers. Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
@@ -120,10 +127,25 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .pvstring "0" }}
       address: 0x05C4 # Power_PV_Total
+      {{- else if eq .pvstring "1" }}
+      address: 0x0586 # Power_PV1
+      {{- else if eq .pvstring "2" }}
+      address: 0x0589 # Power_PV2
+      {{- else if eq .pvstring "3" }}
+      address: 0x058C # Power_PV3
+      {{- else if eq .pvstring "4" }}
+      address: 0x058F # Power_PV4
+      {{- end }}
       type: holding
       decode: uint16
+    {{- if eq .pvstring "0" }}
     scale: 100
+    {{- else }}
+    scale: 10
+    {{- end }}
+  {{- if eq .pvstring "0" }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -132,6 +154,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
