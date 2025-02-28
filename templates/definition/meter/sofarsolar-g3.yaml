@@ -166,14 +166,6 @@ render: |
       type: holding
       decode: int16
     scale: -10
-  # Removed for supporting multiple storage units
-  # energy:
-  #   source: modbus
-  #   register:
-  #     address: 0x069A # Bat_Discharge_Total
-  #     type: holding
-  #     decode: uint32
-  #   scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
