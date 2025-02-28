@@ -163,7 +163,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       {{- if eq .storageunit "1" }}
-      address: 0x0607 # Power_Bat1
+      address: 0x0606 # Power_Bat1
       {{- else if eq .storageunit "2" }}
       address: 0x060D # Power_Bat2
       {{- else if eq .storageunit "3" }}
