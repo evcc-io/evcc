@@ -30,6 +30,10 @@ params:
     default: 95
     advanced: true
   - name: maxacpower
+  - name: GenPortUse
+    choice: ["Generator", "SmartLoad", "MicroInverter"]
+    default: "Generator"
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -103,6 +107,7 @@ render: |
         type: holding
         decode: uint16
       scale: 10
+    {{- if eq .GenPortUse "MicroInverter" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -110,6 +115,7 @@ render: |
         type: holding
         decode: uint16
       scale: 1
+    {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
