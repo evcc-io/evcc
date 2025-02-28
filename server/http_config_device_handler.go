@@ -207,6 +207,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newDevice[T any](class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	// TODO @andig this does not terminate e.g. for OCPP
 	instance, err := newFromConf(context.TODO(), typeTemplate, req)
 	if err != nil {
 		return nil, err
