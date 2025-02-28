@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.24
+go 1.24.0
 
 require (
 	dario.cat/mergo v1.0.1
@@ -34,7 +34,6 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
-	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/go-telegram/bot v1.13.3
 	github.com/go-viper/mapstructure/v2 v2.2.1
@@ -49,7 +48,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20241004123532-f6c6fb5201b3
 	github.com/hashicorp/go-version v1.7.0
-	github.com/hasura/go-graphql-client v0.13.2-0.20250210080311-cf325bddb83b
+	github.com/hasura/go-graphql-client v0.13.2-0.20250219070609-5970b87363a3
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
@@ -135,6 +134,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

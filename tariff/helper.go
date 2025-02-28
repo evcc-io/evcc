@@ -8,8 +8,18 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jinzhu/now"
 )
+
+// Name returns the tariff type name
+func Name(conf config.Typed) string {
+	if conf.Other != nil && conf.Other["tariff"] != nil {
+		return conf.Other["tariff"].(string)
+	}
+	return conf.Type
+}
 
 func bo() backoff.BackOff {
 	return backoff.NewExponentialBackOff(
@@ -31,9 +41,13 @@ func backoffPermanentError(err error) error {
 	return err
 }
 
-// mergeRates merges new rates into existing rates,
-// keeping current slots from the existing rates.
+// mergeRates blends new and existing rates, keeping existing rates after current hour
 func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
+	mergeRatesAfter(data, new, now.With(time.Now()).BeginningOfHour())
+}
+
+// mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
+func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
 	new.Sort()
 
 	var newStart time.Time
@@ -42,15 +56,18 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 	}
 
 	data.SetFunc(func(old api.Rates) api.Rates {
-		now := time.Now()
-
 		var between api.Rates
 		for _, r := range old {
-			if (r.Start.Before(newStart) || newStart.IsZero()) && r.End.After(now) {
+			if (r.Start.Before(newStart) && !r.Start.Before(now) || newStart.IsZero()) && r.End.After(now) {
 				between = append(between, r)
 			}
 		}
 
 		return append(between, new...)
 	})
+}
+
+// BeginningOfDay returns the beginning of the current day
+func BeginningOfDay() time.Time {
+	return now.With(time.Now()).BeginningOfDay()
 }

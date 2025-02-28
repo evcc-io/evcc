@@ -134,13 +134,17 @@ type Messaging struct {
 	Services []config.Typed
 }
 
+func (c Messaging) Configured() bool {
+	return len(c.Services) > 0 || len(c.Events) > 0
+}
+
 type Tariffs struct {
 	Currency string
 	Grid     config.Typed
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
-	Solar    config.Typed
+	Solar    []config.Typed
 }
 
 type Network struct {

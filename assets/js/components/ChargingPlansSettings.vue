@@ -207,7 +207,7 @@ export default {
 		},
 		fetchActivePlan: async function () {
 			try {
-				const res = await api.get(`loadpoints/${this.id}/plan`);
+				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res.data.result;
 				this.nextPlanId = this.plan.planId;
 			} catch (e) {
@@ -217,18 +217,33 @@ export default {
 		},
 		fetchStaticPreviewSoc: async function (soc, time) {
 			const timeISO = time.toISOString();
-			return await api.get(`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`);
+			return await this.apiFetchPlan(
+				`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`
+			);
 		},
 		fetchRepeatingPreview: async function (weekdays, soc, time, tz) {
-			return await api.get(
+			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/repeating/preview/${soc}/${weekdays}/${time}/${encodeURIComponent(tz)}`
 			);
 		},
 		fetchStaticPreviewEnergy: async function (energy, time) {
 			const timeISO = time.toISOString();
-			return await api.get(
+			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${energy}/${timeISO}`
 			);
+		},
+		apiFetchPlan: async function (url) {
+			try {
+				const res = await api.get(url, {
+					validateStatus: (code) => [200, 404].includes(code),
+				});
+				if (res.status === 404) {
+					return { data: { result: {} } };
+				}
+				return res;
+			} catch (e) {
+				console.error(e);
+			}
 		},
 		fetchPreviewPlan: async function () {
 			// only show preview of no plan is active
