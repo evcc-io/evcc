@@ -103,6 +103,13 @@ render: |
         type: holding
         decode: uint16
       scale: 10
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 667 # "input power of micro-inverter connected at GEN-Port"
+        type: holding
+        decode: uint16
+      scale: 1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
