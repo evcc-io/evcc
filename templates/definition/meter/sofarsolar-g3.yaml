@@ -141,26 +141,19 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 0x0607 # Power_Bat1
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else if eq .storageunit "2" }}
       address: 0x060D # Power_Bat2
-      {{- end }}
-      {{- if eq .storageunit "3" }}
+      {{- else if eq .storageunit "3" }}
       address: 0x0614 # Power_Bat3
-      {{- end }}
-      {{- if eq .storageunit "4" }}
+      {{- else if eq .storageunit "4" }}
       address: 0x061B # Power_Bat4
-      {{- end }}
-      {{- if eq .storageunit "5" }}
+      {{- else if eq .storageunit "5" }}
       address: 0x0622 # Power_Bat5
-      {{- end }}
-      {{- if eq .storageunit "6" }}
+      {{- else if eq .storageunit "6" }}
       address: 0x0629 # Power_Bat6
-      {{- end }}
-      {{- if eq .storageunit "7" }}
+      {{- else if eq .storageunit "7" }}
       address: 0x0630 # Power_Bat7
-      {{- end }}
-      {{- if eq .storageunit "8" }}
+      {{- else if eq .storageunit "8" }}
       address: 0x0637 # Power_Bat8
       {{- end }}
       type: holding
@@ -172,26 +165,19 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 0x0608 # SOC_Bat1
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else if eq .storageunit "2" }}
       address: 0x060F # SOC_Bat2
-      {{- end }}
-      {{- if eq .storageunit "3" }}
+      {{- else if eq .storageunit "3" }}
       address: 0x0616 # SOC_Bat3
-      {{- end }}
-      {{- if eq .storageunit "4" }}
+      {{- else if eq .storageunit "4" }}
       address: 0x061D # SOC_Bat4
-      {{- end }}
-      {{- if eq .storageunit "5" }}
+      {{- else if eq .storageunit "5" }}
       address: 0x0624 # SOC_Bat5
-      {{- end }}
-      {{- if eq .storageunit "6" }}
+      {{- else if eq .storageunit "6" }}
       address: 0x062B # SOC_Bat6
-      {{- end }}
-      {{- if eq .storageunit "7" }}
+      {{- else if eq .storageunit "7" }}
       address: 0x0632 # SOC_Bat7
-      {{- end }}
-      {{- if eq .storageunit "8" }}
+      {{- else if eq .storageunit "8" }}
       address: 0x0639 # SOC_Bat8
       {{- end }}
       type: holding
