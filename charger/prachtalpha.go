@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -46,11 +47,11 @@ const (
 )
 
 func init() {
-	registry.Add("pracht-alpha", NewPrachtAlphaFromConfig)
+	registry.AddCtx("pracht-alpha", NewPrachtAlphaFromConfig)
 }
 
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
-func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPrachtAlphaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`
@@ -66,12 +67,12 @@ func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewPrachtAlpha(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout, cc.Connector)
+	return NewPrachtAlpha(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout, cc.Connector)
 }
 
 // NewPrachtAlpha creates PrachtAlpha charger
-func NewPrachtAlpha(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration, vehicle uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+func NewPrachtAlpha(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration, vehicle uint16) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
