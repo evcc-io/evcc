@@ -52,7 +52,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
 		if plan == nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
@@ -111,7 +111,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
 		if plan == nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
@@ -164,7 +164,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
 		if plan == nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 

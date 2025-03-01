@@ -381,6 +381,18 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
+	site.log.INFO.Println("  tariffs:")
+	trf := func(u api.TariffUsage) string {
+		if t := site.GetTariff(u); t != nil {
+			return t.Type().String()
+		}
+		return presence[false]
+	}
+	site.log.INFO.Printf("    grid:      %s", trf(api.TariffUsageGrid))
+	site.log.INFO.Printf("    feed-in:   %s", trf(api.TariffUsageFeedIn))
+	site.log.INFO.Printf("    co2:       %s", trf(api.TariffUsageCo2))
+	site.log.INFO.Printf("    solar:     %s", trf(api.TariffUsageSolar))
+
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
@@ -471,7 +483,7 @@ func (site *Site) updatePvMeters() {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
 
-		if m, ok := meter.(api.MaxACPower); ok {
+		if m, ok := meter.(api.MaxACPowerGetter); ok {
 			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
 				mm[i].ExcessDCPower = -dc
 				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, -dc)

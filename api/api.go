@@ -44,8 +44,8 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
-// MaxACPower provides max AC power in W
-type MaxACPower interface {
+// MaxACPowerGetter provides max AC power in W
+type MaxACPowerGetter interface {
 	MaxACPower() float64
 }
 
