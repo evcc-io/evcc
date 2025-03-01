@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
@@ -206,9 +207,8 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, testInstance(instance))
 }
 
-func newDevice[T any](class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
-	// TODO @andig this does not terminate e.g. for OCPP
-	instance, err := newFromConf(context.TODO(), typeTemplate, req)
+func newDevice[T any](ctx context.Context, class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(ctx, typeTemplate, req)
 	if err != nil {
 		return nil, err
 	}
@@ -240,28 +240,45 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(req, "type")
 
+	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-time.After(time.Minute):
+			// timeout - cancel context
+			cancel()
+		case <-done:
+			// success
+		}
+	}()
+
 	var conf *config.Config
 
 	switch class {
 	case templates.Charger:
-		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
+		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
+		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		conf, err = newDevice(class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		conf, err = newDevice(ctx, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
 			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	setConfigDirty()
 
