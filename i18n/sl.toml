@@ -128,6 +128,7 @@ save = "Shrani"
 showAdvancedSettings = "Prikaži napredne nastavitve"
 telemetry = "Telemetrija"
 title = "Naslov"
+validateSave = "Preveri in shrani"
 
 [config.grid]
 title = "Omrežni meter"
@@ -814,3 +815,11 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.loadpoint]
+addCharger = "Dodaj polnilnik"
+cancel = "Prekliči"
+chargerPower11kw = "11 kW"
+chargerPower22kw = "22 kW"
+chargingTitle = "Polnjenje"
