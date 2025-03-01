@@ -8,6 +8,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+const registerTimeout = 90 * time.Second
+
 type Connector struct {
 	once     sync.Once
 	connectC chan struct{}
@@ -17,11 +19,11 @@ func NewConnector() *Connector {
 	return &Connector{connectC: make(chan struct{})}
 }
 
-func (c *Connector) Wait(ctx context.Context, timeout time.Duration) error {
+func (c *Connector) Wait(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-time.After(timeout):
+	case <-time.After(registerTimeout):
 		return api.ErrTimeout
 	case <-c.connectC:
 		return nil

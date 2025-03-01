@@ -94,7 +94,7 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, v
 		return nil, err
 	}
 
-	if err := c.Wait(ctx, 90*time.Second); err != nil {
+	if err := c.Wait(ctx); err != nil {
 		return c, err
 	}
 
