@@ -19,6 +19,7 @@ package charger
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"math"
 	"slices"
@@ -50,11 +51,11 @@ type OCPP struct {
 const defaultIdTag = "evcc" // RemoteStartTransaction only
 
 func init() {
-	registry.Add("ocpp", NewOCPPFromConfig)
+	registry.AddCtx("ocpp", NewOCPPFromConfig)
 }
 
 // NewOCPPFromConfig creates a OCPP charger from generic config
-func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		StationId      string
 		IdTag          string
@@ -84,7 +85,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
+	c, err := NewOCPP(ctx,
+		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		stackLevelZero, cc.RemoteStart,
 		cc.ConnectTimeout)
@@ -137,7 +139,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go tool decorate -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idTag string,
+func NewOCPP(ctx context.Context,
+	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
@@ -154,12 +157,14 @@ func NewOCPP(id string, connector int, idTag string,
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
 			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			case <-time.After(connectTimeout):
 				return api.ErrTimeout
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(meterValues, meterInterval)
+			return cp.Setup(ctx, meterValues, meterInterval)
 		},
 	)
 	if err != nil {
@@ -188,7 +193,9 @@ func NewOCPP(id string, connector int, idTag string,
 		stackLevelZero: stackLevelZero,
 	}
 
-	go conn.WatchDog(10 * time.Second)
+	if cp.HasRemoteTriggerFeature {
+		go conn.WatchDog(ctx, 10*time.Second)
+	}
 
 	return c, conn.Initialized()
 }
