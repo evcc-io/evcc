@@ -179,6 +179,20 @@ electricalTitle = "Elektrisch"
 energyMeterLabel = "Energiemeter"
 chargerPowerCustomHelp = “Definieer een aangepast stroombereik.”
 circuitLabel = "Circuit"
+energyMeterHelp = “Extra meter voor laadstations zonder geïntegreerde meter”
+defaultModeHelpKeep = “Behoudt de laatst geselecteerde laad-modus”
+maxCurrentHelp = “Moet groter zijn dan de minimum stroom.”
+estimateLabel = “Interpoleer batterijpercentage tussen API updates”
+maxCurrentLabel = “Maximale stroom”
+minCurrentHelp = “Kies 6 A enkel wanneer je weet wat je aan het doen bent.”
+minCurrentLabel = “Minimale stroom”
+noVehicles = “Geen voertuigen ingesteld.”
+phases1p = “1-fase”
+phases3p = “3-fase”
+phasesAutomatic = “Automatische fasen”
+phasesAutomaticHelp = “Uw laadstation ondersteunt automatisch wissel tussen laden op 1 of 3-fasen. U kan dit aanpassen van op het startscherm tijdens de laadsessie.”
+phasesHelp = “Aantal aangesloten fasen op het laadstation’”
+phasesLabel = “Fasen”
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
