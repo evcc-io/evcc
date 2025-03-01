@@ -162,6 +162,10 @@ chargerPower22kwHelp = "Zal een stroom van 6 tot 32 A gebruiken."
 chargerPowerCustom = "andere"
 defaultModeLabel = "Standaard mode"
 delete = "Wissen"
+pollModeAlways = "altijd"
+priorityLabel = "Prioriteit"
+save = "Opslaan"
+showAllSettings = "Alle instellingen tonen"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
