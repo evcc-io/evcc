@@ -24,11 +24,11 @@ type CfosPowerBrain struct {
 }
 
 func init() {
-	registry.Add("cfos", NewCfosPowerBrainFromConfig)
+	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
 
 // NewCfosPowerBrainFromConfig creates a cFos meter from generic config
-func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -37,7 +37,7 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
 }
 
 // NewCfosPowerBrain creates a cFos meter
