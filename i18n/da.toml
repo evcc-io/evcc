@@ -545,6 +545,7 @@ noEnergy = "Ingen målerdata"
 pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
+forecastTooltip = "prognose: resterende solenergi produktion i dag"
 
 [main.heatingStatus]
 charging = "Opvarmer..."
@@ -900,3 +901,29 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[forecast.co2]
+lowestHour = "Reneste time"
+range = "spændvidde"
+average = "Gennemsnit"
+
+[forecast.price]
+lowestHour = "Billigste time"
+range = "Spændvidde"
+average = "Gennemsnit"
+
+[forecast.solar]
+dayAfterTomorrow = "I overmorgen"
+partly = "delvis"
+remaining = "resterende"
+today = "I dag"
+tomorrow = "I morgen"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
+
+[forecast]
+modalTitle = "Prognose"
