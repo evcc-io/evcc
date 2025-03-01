@@ -145,7 +145,7 @@ edit = "uredi"
 title = "Postavke"
 unconfigured = "nije postavljeno"
 vehicles = "Moja vozila"
-yaml = "Postavljeno u evcc.yaml. Nije moguće urediti u korisničkom sučelju."
+yaml = "Uređaji od evcc.yaml se ne mogu urediti."
 
 [config.messaging]
 description = "Primite poruke o vašim postupcima punjenja."
@@ -218,8 +218,8 @@ system = "Sustav"
 vehicles = "Vozila"
 
 [config.sponsor]
-addToken = "Unesite sponzorski token"
-changeToken = "Promijeniti sponzorski token"
+addToken = "Unesite token"
+changeToken = "Promijenite token"
 description = "Sponzorski model nam omogućava održavanje projekta i razvoj novih mogućnosti. Sponzori imaju pristup svim implementacijama za punjače."
 descriptionToken = "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje."
 error = "Sponzorski token nije ispravan."
