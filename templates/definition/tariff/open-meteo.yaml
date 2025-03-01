@@ -3,107 +3,127 @@ products:
   - brand: OpenMeteo
 requirements:
   description:
-    en: Requires an [open-meteo.com](https://open-meteo.com) account.
-    de: Benötigt einen [open-meteo.com](https://open-meteo.com)-Account.
+    en: "Free Weather API [open-meteo.com](https://open-meteo.com)"
+    de: "Freie Wetter API [open-meteo.com](https://open-meteo.com)"
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: latitude
-    help:
-      en: Latitude of the location (array supported)
-      de: Breitengrad des Standorts (Array unterstützt)
+  - name: lat
+    description:
+      en: latitude
+      de: Breitengrad
+    example: "55.7351"
     required: true
-  - name: longitude
-    help:
-      en: Longitude of the location (array supported)
-      de: Längengrad des Standorts (Array unterstützt)
+  - name: lon
+    description:
+      en: longitude
+      de: Längengrad
+    example: "9.1275"
     required: true
-  - name: azimuth
+  - name: dec
+    description:
+      en: decline
+      de: Winkel
     help:
-      en: Azimuth angle of the solar panels (array supported)
-      de: Azimutwinkel der Solarpaneele (Array unterstützt)
+      en: 0 = horizontal, 90 = vertical
+      de: 0 = horizontal, 90 = vertikal
+    example: 25
     required: true
-  - name: declination
+  - name: az
+    description:
+      en: azimuth
+      de: Azimut
     help:
-      en: Declination angle of the solar panels (array supported)
-      de: Neigungswinkel der Solarpaneele (Array unterstützt)
+      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+    example: 0
     required: true
-  - name: dc_kwp
-    help:
-      en: DC power of the solar panels in kWp (array supported)
-      de: DC-Leistung der Solarpaneele in kWp (Array unterstützt)
+  - name: dckwp
+    description:
+      en: DC-kWp
+      de: DC-kWp
+    example: 9.8
     required: true
-  - name: ac_kwp
-    help:
-      en: AC power of the solar panels in kWp
-      de: AC-Leistung der Solarpaneele in kWp
-    required: true
-  - name: api_key
-    help:
-      en: OpenMeteo API Key
-      de: OpenMeteo API-Schlüssel
-    required: false
-  - name: base_url
-    help:
-      en: Base URL of the OpenMeteo API
-      de: Basis-URL der OpenMeteo API
-    default: "https://api.open-meteo.com"
+  - name: ackwp
+    description:
+      en: AC-kWp
+      de: AC-kWp
+    default: 1000
     advanced: true
-  - name: weather_model
-    help:
-      en: Weather model to use
-      de: Zu verwendendes Wettermodell
-    required: false
-  - name: damping_morning
-    help:
-      en: Damping factor for the morning (array supported)
-      de: Dämpfungsfaktor für den Morgen (Array unterstützt)
-    default: 0.0
-    advanced: true
-  - name: damping_evening
-    help:
-      en: Damping factor for the evening (array supported)
-      de: Dämpfungsfaktor für den Abend (Array unterstützt)
-    default: 0.0
-    advanced: true
-  - name: efficiency_factor
-    help:
-      en: Efficiency factor of the solar panels (array supported)
-      de: Wirkungsgrad der Solarpaneele (Array unterstützt)
-    default: 1.0
-    advanced: true
-  - name: past_days
-    help:
-      en: Number of past days to include in the forecast
-      de: Anzahl der vergangenen Tage, die in die Vorhersage einbezogen werden sollen
+  - name: dm
+    description:
+      en: damping morning (0 = no damping)
+      de: Dämpfung morgens (0 = keine Dämpfung)
     default: 0
     advanced: true
-  - name: forecast_days
-    help:
-      en: Number of forecast days to include in the forecast
-      de: Anzahl der Vorhersagetage, die in die Vorhersage einbezogen werden sollen
+  - name: de
+    description:
+      en: damping evening (0 = no damping)
+      de: Dämpfung abends (0 = keine Dämpfung)
+    default: 0
+    advanced: true
+  - name: eff
+    description:
+      en: efficiency (1 = 100%)
+      de: Wirkungsgrad (1 = 100%)
     default: 1
     advanced: true
   - name: interval
-    help:
-      en: Interval for updating the forecast (??NanoSec? Minutes)
-      de: Intervall für die Aktualisierung der Vorhersage (??NanoSec? Minuten)
-    default: 150000000000
+    default: 1h
     advanced: true
 render: |
-  type: open-meteo
-  Latitude: {{ .latitude }}
-  Longitude: {{ .longitude }}
-  Azimuth: {{ .azimuth }}
-  Declination: {{ .declination }}
-  DcKwp: {{ .dc_kwp }}
-  AcKwp: {{ .ac_kwp }}
-  ApiKey: {{ .api_key }}
-  BaseURL: {{ .base_url }}
-  WeatherModel: {{ .weather_model }}
-  DampingMorning: {{ .damping_morning }}
-  DampingEvening: {{ .damping_evening }}
-  EfficiencyFactor: {{ .efficiency_factor }}
-  PastDays: {{ .past_days }}
-  ForecastDays: {{ .forecast_days }}
-  Interval: {{ .interval }}
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
+    jq: |
+      def eff: {{ .eff }}; # efficiency 1 = 100%
+      def dckwp: {{ .dckwp }} * 1000 ; # DC-kWp
+      def ackwp: {{ .ackwp }} * 1000 ; # AC-kWp
+      def dm: {{ .dm }}; # 1 = 100% damping morning (0 = no damping) 
+      def de: {{ .de }}; # damping evening
+      def clamp(min; x; max):
+        if x < min then min elif x > max then max else x end;
+      def midday(sunrise; sunset):
+        sunrise + ((sunset - sunrise) / 2);
+      def calculate_damping(time; sunrise; sunset; m; e):
+        if time < sunrise then m
+        elif time < midday(sunrise; sunset) then
+          m * (1 - ((time - sunrise) / (midday(sunrise; sunset) - sunrise)))
+        elif time < sunset then
+          e * ((time - midday(sunrise; sunset)) / (sunset - midday(sunrise; sunset)))
+        else
+          e
+        end;
+      .hourly as $h
+      | .daily as $d
+      | [ range(0; ($h.time | length))
+          | . as $i
+          | $h.time[$i] as $time
+          | ($i / 24 | floor) as $day
+          | {
+              start: ($time | todateiso8601),
+              end: (($time + 3600) | todateiso8601),
+              price: (
+                dckwp
+                * ($h.global_tilted_irradiance[$i] / 1000)
+                * (1 + (-0.00045 *
+                      (
+                        ( ($h.temperature_2m[$i]
+                            + ($h.temperature_2m[$i-1] // $h.temperature_2m[$i])
+                          ) / 2)
+                        + ($h.global_tilted_irradiance[$i] / 800.0) * 0.0342 - 25.0
+                      )
+                    ))
+                * (1 - calculate_damping($time;
+                      $d.sunrise[$day];
+                      $d.sunset[$day];
+                      dm; de))
+                * eff
+                | clamp(0; .; ackwp)
+              )
+            }
+        ]
+      | tostring
+  interval: {{ .interval }}
