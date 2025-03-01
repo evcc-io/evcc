@@ -105,7 +105,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesS func(int) error
 		phasesG func() (int, error)
 	)
-	if b, err := wb.conn.ReadHoldingRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
+	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
 		phasesS = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
@@ -314,6 +314,12 @@ func (wb *Vestel) Diagnose() {
 		fmt.Printf("Firmware:\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1); err == nil {
-		fmt.Printf("Failsafe timeout (plain):\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("Failsafe timeout:\t%#x\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil {
+		fmt.Printf("Number of phases:\t%#x\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(vestelRegPhasesSwitch, 1); err == nil {
+		fmt.Printf("Phase switch:\t%#x\n", binary.BigEndian.Uint16(b))
 	}
 }
