@@ -543,6 +543,7 @@ noEnergy = "Keng Moossdaten"
 pvExport = "Export an d'Stroumnetz"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Verbrauch"
+forecastTooltip = "Prognose: Rescht Solarproduktioun fir haut"
 
 [main.heatingStatus]
 charging = "Wiermen…"
@@ -904,3 +905,29 @@ lineError = "An {0} gouf ee Feeler fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
+
+
+[forecast]
+modalTitle = "Prognose"
+
+[forecast.co2]
+average = "Moyenne"
+lowestHour = "Déi properst Stonn"
+range = "Beräich"
+
+[forecast.price]
+average = "Duerchschnitt"
+lowestHour = "Bëllegst Stonn"
+range = "Beräich"
+
+[forecast.solar]
+dayAfterTomorrow = "Iwwermuer"
+partly = "deelweis"
+remaining = "verbleiwend"
+today = "Haut"
+tomorrow = "Muer"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Präis"
+solar = "Solar"
