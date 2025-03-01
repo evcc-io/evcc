@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -35,7 +36,7 @@ const (
 )
 
 func init() {
-	registry.Add("openwb-2.0", NewOpenWB20FromConfig)
+	registry.AddCtx("openwb-2.0", NewOpenWB20FromConfig)
 }
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
@@ -43,7 +44,7 @@ func init() {
 //go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
-func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewOpenWB20FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		Phases1p3p         bool
@@ -59,7 +60,7 @@ func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewOpenWB20(cc.URI, cc.ID, cc.Connector)
+	wb, err := NewOpenWB20(ctx, cc.URI, cc.ID, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -78,10 +79,10 @@ func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewOpenWB20 creates OpenWB20 charger
-func NewOpenWB20(uri string, slaveID uint8, connector uint16) (*OpenWB20, error) {
+func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint16) (*OpenWB20, error) {
 	uri = util.DefaultPort(uri, 1502)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

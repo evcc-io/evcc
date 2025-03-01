@@ -12,7 +12,6 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
-# capabilities: ["battery-control"]
 requirements:
   description:
     de: Die Verbindung über einen LSE-3 Logger Stick mittels LAN Anschluss und ModBus TCP über Port 8899 ist die einfachste Anbindung. Der LSW-3 WLAN Stick wird nicht unterstützt. Bei seriellem Anschluss via RS485 am COM Port ist eine wechselrichterseitige Terminierung notwendig.
@@ -27,6 +26,13 @@ params:
     id: 1
   - name: delay
     deprecated: true
+  - name: storageunit
+    help:
+      de: Nummer des Batteriespeichers. Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
+      en: Number of the battery storage. In case of a BTS storage not the address of a BTS 5K battery module, but the storage tower (BTS 5K-BDU control unit with 1-4 BTS 5K modules).
+    type: int
+    default: 1
+    advanced: true
   - name: capacity
     advanced: true
   - name: maxacpower
@@ -111,13 +117,36 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x05C4 # Power_PV_Total
-      type: holding
-      decode: uint16
-    scale: 100
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x586 #Power_PV1
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x589 #Power_PV2
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x58C #Power_PV3
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x58E #Power_PV4
+          type: holding
+          decode: uint16
+        scale: 10
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -133,23 +162,47 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .storageunit "1" }}
       address: 0x0606 # Power_Bat1
+      {{- else if eq .storageunit "2" }}
+      address: 0x060D # Power_Bat2
+      {{- else if eq .storageunit "3" }}
+      address: 0x0614 # Power_Bat3
+      {{- else if eq .storageunit "4" }}
+      address: 0x061B # Power_Bat4
+      {{- else if eq .storageunit "5" }}
+      address: 0x0622 # Power_Bat5
+      {{- else if eq .storageunit "6" }}
+      address: 0x0629 # Power_Bat6
+      {{- else if eq .storageunit "7" }}
+      address: 0x0630 # Power_Bat7
+      {{- else if eq .storageunit "8" }}
+      address: 0x0637 # Power_Bat8
+      {{- end }}
       type: holding
       decode: int16
     scale: -10
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x069A # Bat_Discharge_Total
-      type: holding
-      decode: uint32
-    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .storageunit "1" }}
       address: 0x0608 # SOC_Bat1
+      {{- else if eq .storageunit "2" }}
+      address: 0x060F # SOC_Bat2
+      {{- else if eq .storageunit "3" }}
+      address: 0x0616 # SOC_Bat3
+      {{- else if eq .storageunit "4" }}
+      address: 0x061D # SOC_Bat4
+      {{- else if eq .storageunit "5" }}
+      address: 0x0624 # SOC_Bat5
+      {{- else if eq .storageunit "6" }}
+      address: 0x062B # SOC_Bat6
+      {{- else if eq .storageunit "7" }}
+      address: 0x0632 # SOC_Bat7
+      {{- else if eq .storageunit "8" }}
+      address: 0x0639 # SOC_Bat8
+      {{- end }}
       type: holding
       decode: uint16
   batterymode:

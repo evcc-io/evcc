@@ -58,9 +58,13 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	}
 
 	resp, err := v.Post(CodeExchangeURL, request.JSONContent, request.MarshalJSON(data))
-
 	if err == nil {
 		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return nil, request.NewStatusError(resp)
+		}
+	}
+	if err == nil {
 		json.NewDecoder(resp.Body).Decode(&skTok)
 	}
 

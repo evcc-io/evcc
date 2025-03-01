@@ -1,12 +1,14 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -23,13 +25,13 @@ type ModbusMbmd struct {
 }
 
 func init() {
-	registry.Add("mbmd", NewModbusMbmdFromConfig)
+	registry.AddCtx("mbmd", NewModbusMbmdFromConfig)
 }
 
 //go:generate go tool decorate -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewModbusMbmdFromConfig creates api.Meter from config
-func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		capacity           `mapstructure:",squash"`
@@ -61,7 +63,7 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +157,7 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 		}
 	}
 
-	return collectPhaseProviders(phases), nil
+	return measurement.CombinePhases(phases), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -28,13 +29,13 @@ type PhoenixEMEth struct {
 }
 
 func init() {
-	registry.Add("phoenix-em-eth", NewPhoenixEMEthFromConfig)
+	registry.AddCtx("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
 //go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 180,
 	}
@@ -43,7 +44,7 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	wb, err := NewPhoenixEMEth(cc.URI, cc.ID)
+	wb, err := NewPhoenixEMEth(ctx, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +68,8 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 }
 
 // NewPhoenixEMEth creates a Phoenix charger
-func NewPhoenixEMEth(uri string, slaveID uint8) (*PhoenixEMEth, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEMEth, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

@@ -24,6 +24,7 @@ package charger
 // * Set 'Allow UID Disclose' to On
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -68,11 +69,11 @@ const (
 )
 
 func init() {
-	registry.Add("bender", NewBenderCCFromConfig)
+	registry.AddCtx("bender", NewBenderCCFromConfig)
 }
 
 // NewBenderCCFromConfig creates a BenderCC charger from generic config
-func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -81,14 +82,14 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewBenderCC(cc.URI, cc.ID)
+	return NewBenderCC(ctx, cc.URI, cc.ID)
 }
 
 //go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
-func NewBenderCC(uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

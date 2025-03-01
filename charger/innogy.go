@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -51,11 +52,11 @@ type Innogy struct {
 }
 
 func init() {
-	registry.Add("innogy", NewInnogyFromConfig)
+	registry.AddCtx("innogy", NewInnogyFromConfig)
 }
 
 // NewInnogyFromConfig creates a Innogy charger from generic config
-func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewInnogyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -64,7 +65,7 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewInnogy(cc.URI, cc.ID)
+	wb, err := NewInnogy(ctx, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +86,8 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go tool decorate -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewInnogy creates a Innogy charger
-func NewInnogy(uri string, id uint8) (*Innogy, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
