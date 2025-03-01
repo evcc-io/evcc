@@ -550,6 +550,7 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
+forecastTooltip = "prognozė: likusi saulės energijos gamyba šiandien"
 
 [main.heatingStatus]
 charging = "Šildoma…"
@@ -927,3 +928,29 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[forecast.price]
+average = "Vidurkis"
+lowestHour = "Pigiausia valanda"
+range = "Diapazonas"
+
+[forecast.solar]
+remaining = "likę"
+today = "Šiandien"
+partly = "dalinai"
+dayAfterTomorrow = "Poryt"
+tomorrow = "Rytoj"
+
+[forecast.type]
+solar = "Saulės"
+co2 = "CO₂"
+price = "Kaina"
+
+[forecast]
+modalTitle = "Prognozė"
+
+[forecast.co2]
+range = "Diapazonas"
+average = "Vidurkis"
+lowestHour = "Švariausia valanda"
