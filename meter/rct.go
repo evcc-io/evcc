@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/mlnoga/rct"
@@ -50,14 +48,15 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.Cache, cc.capacity.Decorator())
 }
 
-var rctMu sync.Mutex
-
 // NewRCT creates an RCT meter
 func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
-	rctMu.Lock()
-	defer rctMu.Unlock()
+	log := util.NewLogger("rct")
 
-	conn, err := rct.NewConnection(ctx, uri, cache)
+	conn, err := rct.NewConnection(ctx, uri, rct.WithErrorCallback(func(err error) {
+		if err != nil {
+			log.ERROR.Println(err)
+		}
+	}), rct.WithTimeout(cache))
 	if err != nil {
 		return nil, err
 	}
@@ -199,32 +198,11 @@ func (m *RCT) batterySoc() (float64, error) {
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
-	m.bo.Reset()
-
-	res, err := backoff.RetryWithData(func() (float32, error) {
-		res, err := m.conn.QueryFloat32(id)
-		if re := new(rct.RecoverableError); !errors.As(err, &re) {
-			err = backoff.Permanent(err)
-		}
-
-		return res, err
-	}, m.bo)
-
+	res, err := m.conn.QueryFloat32(id)
 	return float64(res), err
 }
 
 // queryInt32 adds retry logic of recoverable errors to QueryInt32
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
-	m.bo.Reset()
-
-	res, err := backoff.RetryWithData(func() (int32, error) {
-		res, err := m.conn.QueryInt32(id)
-		if re := new(rct.RecoverableError); !errors.As(err, &re) {
-			err = backoff.Permanent(err)
-		}
-
-		return res, err
-	}, m.bo)
-
-	return res, err
+	return m.conn.QueryInt32(id)
 }
