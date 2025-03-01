@@ -32,12 +32,12 @@ type TcpSettings struct {
 
 // Settings contains the ModBus settings
 type Settings struct {
-	ID                  uint8
-	SubDevice           int
-	URI, Device, Comset string
-	Baudrate            int
-	UDP                 bool
-	RTU                 *bool // indicates RTU over TCP if true
+	ID                  uint8  `json:",omitempty" yaml:",omitempty"`
+	SubDevice           int    `json:",omitempty" yaml:",omitempty"`
+	URI, Device, Comset string `json:",omitempty" yaml:",omitempty"`
+	Baudrate            int    `json:",omitempty" yaml:",omitempty"`
+	UDP                 bool   `json:",omitempty" yaml:",omitempty"`
+	RTU                 *bool  `json:",omitempty" yaml:",omitempty"`
 }
 
 // Protocol identifies the wire format from the RTU setting
