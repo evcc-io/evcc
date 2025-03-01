@@ -14,6 +14,8 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
+gridChargeTab = "Nabíjení ze sítě"
+usageTab = "Využití baterie"
 
 [batterySettings.bufferStart]
 above = "když je nad {soc}"
@@ -554,3 +556,17 @@ lineError = "Chyba v {0}."
 lineErrorLink = "řádek {0}."
 restartButton = "Restart"
 title = "Chyba při spuštění"
+
+
+[config.charger]
+ocppHelp = "Zkopíruj tuto adresu do nastavení nabíječky"
+chargers = "EV nabíječky"
+ocppLabel = "OCPP-Server URL"
+switchsockets = "Přepínatelné zásuvky"
+template = "Výrobce"
+titleAdd = "Přidat nabíječku"
+titleEdit = "Upravit nabíječku"
+
+[config.charge]
+titleAdd = "Přidat měřič nabití"
+titleEdit = "Upravit měřič nabití"
