@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -52,11 +53,11 @@ const (
 )
 
 func init() {
-	registry.Add("kse", NewKSEFromConfig)
+	registry.AddCtx("kse", NewKSEFromConfig)
 }
 
 // NewKSEFromConfig creates a KSE charger from generic config
-func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewKSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID:       100,
 		Baudrate: 9600,
@@ -67,14 +68,14 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewKSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 //go:generate go tool decorate -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewKSE creates KSE charger
-func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
+func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, modbus.Rtu, slaveID)
 	if err != nil {
 		return nil, err
 	}
