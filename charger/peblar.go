@@ -20,6 +20,7 @@ package charger
 // Details on the Peblar modbus server obtained from: https://developer.peblar.com/modbus-api
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -67,13 +68,13 @@ const (
 )
 
 func init() {
-	registry.Add("peblar", NewPeblarFromConfig)
+	registry.AddCtx("peblar", NewPeblarFromConfig)
 }
 
 //go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
-func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPeblarFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -82,12 +83,12 @@ func NewPeblarFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewPeblar(cc.URI, cc.ID)
+	return NewPeblar(ctx, cc.URI, cc.ID)
 }
 
 // NewPeblar creates Peblar charger
-func NewPeblar(uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
