@@ -51,6 +51,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, forceWattCt
 		case match(KeyChargingScheduleAllowedChargingRateUnit):
 			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
+				cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 			}
 
 		case match(KeyConnectorSwitch3to1PhaseSupported) || match(KeyChargeAmpsPhaseSwitchingSupported):
@@ -157,6 +158,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, forceWattCt
 
 	if forceWattCtrl {
 		cp.ChargingRateUnit = types.ChargingRateUnitWatts
+		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
 
 	return nil
