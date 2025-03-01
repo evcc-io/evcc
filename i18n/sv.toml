@@ -447,6 +447,31 @@ modalUpdateNow = "Installera nu"
 modalUpdateStarted = "Starta den nya versionen av evcc..."
 modalUpdateStatusStart = "Installationen har börjat:"
 
+[forecast]
+modalTitle = "Prognos"
+
+[forecast.co2]
+average = "Genomsnitt"
+lowestHour = "Timme med lägst CO₂"
+range = "Intervall"
+
+[forecast.price]
+average = "Genomsnitt"
+lowestHour = "Billigaste timmen"
+range = "Intervall"
+
+[forecast.solar]
+dayAfterTomorrow = "I övermorgon"
+partly = "delvis"
+remaining = "återstående"
+today = "Idag"
+tomorrow = "I morgon"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
+
 [header]
 about = "Om"
 blog = "Blogg"
@@ -538,6 +563,7 @@ batteryGridChargeActive = "nätladdning aktiv"
 batteryGridChargeLimit = "nätladdning när"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energy} av {total} ({soc})"
+forecastTooltip = "Prognos: återstående solproduktion idag"
 gridImport = "Import från elnät"
 homePower = "Konsumtion"
 loadpoints = "Laddare | Laddare | {count} laddare"
@@ -545,7 +571,6 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
-forecastTooltip = "Prognos: återstående solproduktion idag"
 
 [main.heatingStatus]
 charging = "Värmer..."
@@ -907,29 +932,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[forecast]
-modalTitle = "Prognos"
-
-[forecast.co2]
-average = "Genomsnitt"
-range = "Intervall"
-lowestHour = "Timme med lägst CO₂"
-
-[forecast.price]
-average = "Genomsnitt"
-lowestHour = "Billigaste timmen"
-range = "Intervall"
-
-[forecast.type]
-price = "Pris"
-co2 = "CO₂"
-solar = "Sol"
-
-[forecast.solar]
-dayAfterTomorrow = "I övermorgon"
-partly = "delvis"
-remaining = "återstående"
-today = "Idag"
-tomorrow = "I morgon"

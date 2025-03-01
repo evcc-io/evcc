@@ -448,6 +448,31 @@ modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
 
+[forecast]
+modalTitle = "Прогноз"
+
+[forecast.co2]
+average = "Середній"
+lowestHour = "Найчистіша година"
+range = "Діапазон"
+
+[forecast.price]
+average = "Середній"
+lowestHour = "Найдешевша година"
+range = "Діапазон"
+
+[forecast.solar]
+dayAfterTomorrow = "Післязавтра"
+partly = "частково"
+remaining = "залишилося"
+today = "Сьогодні"
+tomorrow = "Завтра"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ціна"
+solar = "Сонячна"
+
 [header]
 about = "Про evcc"
 blog = "Блог"
@@ -539,6 +564,7 @@ batteryGridChargeActive = "активна зарядка мережі"
 batteryGridChargeLimit = "зарядка мережі коли"
 batteryHold = "Акумулятор (locked)"
 batteryTooltip = "{energy} із {total} ({soc})"
+forecastTooltip = "Прогноз: залишкове виробництво сонячної енергії сьогодні"
 gridImport = "Використання мережі"
 homePower = "Споживання"
 loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
@@ -546,7 +572,6 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
-forecastTooltip = "Прогноз: залишкове виробництво сонячної енергії сьогодні"
 
 [main.heatingStatus]
 charging = "Опалення…"
@@ -904,29 +929,3 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
-
-
-[forecast]
-modalTitle = "Прогноз"
-
-[forecast.co2]
-average = "Середній"
-lowestHour = "Найчистіша година"
-range = "Діапазон"
-
-[forecast.price]
-average = "Середній"
-lowestHour = "Найдешевша година"
-range = "Діапазон"
-
-[forecast.solar]
-dayAfterTomorrow = "Післязавтра"
-partly = "частково"
-remaining = "залишилося"
-today = "Сьогодні"
-tomorrow = "Завтра"
-
-[forecast.type]
-co2 = "CO₂"
-price = "Ціна"
-solar = "Сонячна"

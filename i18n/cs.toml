@@ -5,6 +5,7 @@ control = "Ovládání baterie"
 discharge = "Zabránit vybití v rychlém režimu a plánovaném nabíjení."
 disclaimerHint = "Poznámka:"
 disclaimerText = "Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
+gridChargeTab = "Nabíjení ze sítě"
 legendBottomName = "priorita domu"
 legendBottomSubline = "nepoužito pro dobíjení"
 legendMiddleName = "nejdříve vozidlo"
@@ -14,7 +15,6 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
-gridChargeTab = "Nabíjení ze sítě"
 usageTab = "Využití baterie"
 
 [batterySettings.bufferStart]
@@ -29,6 +29,19 @@ never = "pouze když je dost přebytků"
 [config.battery]
 titleAdd = "Přidat měřič baterie"
 titleEdit = "Upravit měřič baterie"
+
+[config.charge]
+titleAdd = "Přidat měřič nabití"
+titleEdit = "Upravit měřič nabití"
+
+[config.charger]
+chargers = "EV nabíječky"
+ocppHelp = "Zkopíruj tuto adresu do nastavení nabíječky"
+ocppLabel = "OCPP-Server URL"
+switchsockets = "Přepínatelné zásuvky"
+template = "Výrobce"
+titleAdd = "Přidat nabíječku"
+titleEdit = "Upravit nabíječku"
 
 [config.circuits]
 
@@ -556,17 +569,3 @@ lineError = "Chyba v {0}."
 lineErrorLink = "řádek {0}."
 restartButton = "Restart"
 title = "Chyba při spuštění"
-
-
-[config.charger]
-ocppHelp = "Zkopíruj tuto adresu do nastavení nabíječky"
-chargers = "EV nabíječky"
-ocppLabel = "OCPP-Server URL"
-switchsockets = "Přepínatelné zásuvky"
-template = "Výrobce"
-titleAdd = "Přidat nabíječku"
-titleEdit = "Upravit nabíječku"
-
-[config.charge]
-titleAdd = "Přidat měřič nabití"
-titleEdit = "Upravit měřič nabití"

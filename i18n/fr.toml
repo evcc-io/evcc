@@ -447,6 +447,31 @@ modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
 
+[forecast]
+modalTitle = "Prévisions"
+
+[forecast.co2]
+average = "Moyenne"
+lowestHour = "Heure la plus propre"
+range = "Amplitude"
+
+[forecast.price]
+average = "Moyenne"
+lowestHour = "Heure la moins chère"
+range = "Amplitude"
+
+[forecast.solar]
+dayAfterTomorrow = "Après demain"
+partly = "Partiellement"
+remaining = "Restant"
+today = "Aujourd'hui"
+tomorrow = "Demain"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Prix"
+solar = "Solaire"
+
 [header]
 about = "À propos"
 blog = "Blog"
@@ -543,6 +568,7 @@ batteryGridChargeActive = "charge réseau active"
 batteryGridChargeLimit = "charge réseau quand"
 batteryHold = "Batterie (verrouillée)"
 batteryTooltip = "{energy} sur {total} ({soc})"
+forecastTooltip = "prévision : production solaire restante aujourd’hui"
 gridImport = "Utilisation du réseau"
 homePower = "Consommation"
 loadpoints = "Recharge| Recharge | {count} chargeurs"
@@ -550,7 +576,6 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
-forecastTooltip = "prévision : production solaire restante aujourd’hui"
 
 [main.heatingStatus]
 charging = "Chauffage… "
@@ -919,29 +944,3 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
-
-
-[forecast.price]
-lowestHour = Heure la moins chère
-average = Moyenne
-range = "Amplitude"
-
-[forecast.co2]
-lowestHour = Heure la plus propre
-average = Moyenne
-range = "Amplitude"
-
-[forecast.type]
-price = Prix
-solar = Solaire
-co2 = CO₂
-
-[forecast.solar]
-tomorrow = Demain
-today = Aujourd'hui
-dayAfterTomorrow = Après demain
-partly = Partiellement
-remaining = Restant
-
-[forecast]
-modalTitle = Prévisions

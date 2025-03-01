@@ -155,6 +155,13 @@ title = "InfluxDB"
 v1Support = "Potrebujete podporo za InfluxDB 1.x?"
 v2Support = "Nazaj na InfluxDB 2.x"
 
+[config.loadpoint]
+addCharger = "Dodaj polnilnik"
+cancel = "Prekliči"
+chargerPower11kw = "11 kW"
+chargerPower22kw = "22 kW"
+chargingTitle = "Polnjenje"
+
 [config.main]
 addLoadpoint = "Dodaj polnilno mesto"
 addPvBattery = "Dodaj sončne celice ali baterijo"
@@ -815,11 +822,3 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
-
-
-[config.loadpoint]
-addCharger = "Dodaj polnilnik"
-cancel = "Prekliči"
-chargerPower11kw = "11 kW"
-chargerPower22kw = "22 kW"
-chargingTitle = "Polnjenje"
