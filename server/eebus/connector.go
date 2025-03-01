@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -16,8 +17,10 @@ func NewConnector() *Connector {
 	return &Connector{connectC: make(chan struct{})}
 }
 
-func (c *Connector) Wait(timeout time.Duration) error {
+func (c *Connector) Wait(ctx context.Context, timeout time.Duration) error {
 	select {
+	case <-ctx.Done():
+		return ctx.Err()
 	case <-time.After(timeout):
 		return api.ErrTimeout
 	case <-c.connectC:
