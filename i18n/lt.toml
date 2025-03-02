@@ -447,6 +447,31 @@ modalUpdateNow = "Instaliuoti dabar"
 modalUpdateStarted = "Startuoja nauja evcc versija..."
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
+[forecast]
+modalTitle = "Prognozė"
+
+[forecast.co2]
+average = "Vidurkis"
+lowestHour = "Švariausia valanda"
+range = "Diapazonas"
+
+[forecast.price]
+average = "Vidurkis"
+lowestHour = "Pigiausia valanda"
+range = "Diapazonas"
+
+[forecast.solar]
+dayAfterTomorrow = "Poryt"
+partly = "dalinai"
+remaining = "likę"
+today = "Šiandien"
+tomorrow = "Rytoj"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Kaina"
+solar = "Saulės"
+
 [header]
 about = "Apie"
 blog = "Tinklaraštis"
@@ -543,6 +568,7 @@ batteryGridChargeActive = "įkraunama iš tinklo"
 batteryGridChargeLimit = "įkrauti iš tinklo, kai"
 batteryHold = "Kaupiklis (užblokuotas)"
 batteryTooltip = "{energy} iš {total} ({soc})"
+forecastTooltip = "prognozė: likusi saulės energijos gamyba šiandien"
 gridImport = "Iš tinklo"
 homePower = "Namo suvartojimas"
 loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"

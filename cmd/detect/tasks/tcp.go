@@ -44,7 +44,7 @@ func (h *TcpHandler) Test(_ *util.Logger, in ResultDetails) (res []ResultDetails
 		}
 
 		if err == nil {
-			out := in.Clone()
+			out := in
 			out.Port = port
 			res = append(res, out)
 		}

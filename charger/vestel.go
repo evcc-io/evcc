@@ -83,7 +83,7 @@ func NewVestelFromConfig(ctx context.Context, other map[string]interface{}) (api
 
 // NewVestel creates a Vestel charger
 func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesS func(int) error
 		phasesG func() (int, error)
 	)
-	if b, err := wb.conn.ReadHoldingRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 3 {
+	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
 		phasesS = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
@@ -284,7 +284,7 @@ func (wb *Vestel) Voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Vestel) phases1p3p(phases int) error {
-	_, err := wb.conn.WriteSingleRegister(vestelRegNumberPhases, uint16(phases))
+	_, err := wb.conn.WriteSingleRegister(vestelRegPhasesSwitch, uint16((phases-1)>>1))
 	return err
 }
 
@@ -294,7 +294,7 @@ func (wb *Vestel) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int(binary.BigEndian.Uint16(b)), nil
+	return 1 + int(binary.BigEndian.Uint16(b))<<1, nil
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)
@@ -314,6 +314,12 @@ func (wb *Vestel) Diagnose() {
 		fmt.Printf("Firmware:\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1); err == nil {
-		fmt.Printf("Failsafe timeout (plain):\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("Failsafe timeout:\t%#x\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil {
+		fmt.Printf("Number of phases:\t%#x\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(vestelRegPhasesSwitch, 1); err == nil {
+		fmt.Printf("Phase switch:\t%#x\n", binary.BigEndian.Uint16(b))
 	}
 }

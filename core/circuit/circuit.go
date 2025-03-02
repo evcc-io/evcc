@@ -315,10 +315,10 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	delta := max(0, new-old)
-
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
+		delta := max(0, new-old)
 		potential := maxPower - c.power
+
 		if delta > potential {
 			capped := max(0, old+potential)
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
@@ -337,10 +337,10 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 
 // ValidateCurrent validates current request
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
-	delta := max(0, new-old)
-
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		delta := max(0, new-old)
 		potential := maxCurrent - c.current
+
 		if delta > potential {
 			capped := max(0, old+potential)
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
