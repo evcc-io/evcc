@@ -253,8 +253,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
-			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
+		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
@@ -332,8 +332,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
-			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
+		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
