@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
@@ -240,20 +239,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(req, "type")
 
-	done := make(chan struct{})
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		select {
-		case <-time.After(10 * time.Second):
-			// timeout - cancel context
-			cancel()
-		case <-done:
-			// success
-		}
-	}()
-
 	var conf *config.Config
+	ctx, cancel, done := startDeviceTimeout()
 
 	switch class {
 	case templates.Charger:
@@ -293,8 +280,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	dev, instance, merged, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -332,18 +319,20 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(req, "type")
 
+	ctx, cancel, done := startDeviceTimeout()
+
 	switch class {
 	case templates.Charger:
-		err = updateDevice(id, class, req, charger.NewFromConfig, config.Chargers())
+		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		err = updateDevice(id, class, req, meter.NewFromConfig, config.Meters())
+		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = updateDevice(id, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		err = updateDevice(ctx, id, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
 			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
@@ -351,9 +340,13 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	setConfigDirty()
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	res := struct {
 		ID int `json:"id"`
@@ -430,12 +423,12 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
+func testConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(context.TODO(), typeTemplate, conf)
+		return newFromConf(ctx, typeTemplate, conf)
 	}
 
-	_, instance, _, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 
 	return instance, err
 }
@@ -468,25 +461,30 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	delete(req, "type")
 
 	var instance any
+	ctx, cancel, done := startDeviceTimeout()
 
 	switch class {
 	case templates.Charger:
-		instance, err = testConfig(id, class, req, charger.NewFromConfig, config.Chargers())
+		instance, err = testConfig(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		instance, err = testConfig(id, class, req, meter.NewFromConfig, config.Meters())
+		instance, err = testConfig(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
 	}
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	jsonResult(w, testInstance(instance))
 }
