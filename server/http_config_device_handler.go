@@ -245,7 +245,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		select {
-		case <-time.After(time.Minute):
+		case <-time.After(10 * time.Second):
 			// timeout - cancel context
 			cancel()
 		case <-done:
