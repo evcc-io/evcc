@@ -66,7 +66,7 @@ func NewEEBus(ctx context.Context, ski, ip string, timeout time.Duration) (*EEBu
 
 	if err := c.Wait(ctx); err != nil {
 		eebus.Instance.UnregisterDevice(ski, ip, c)
-		return c, err
+		return nil, err
 	}
 
 	return c, nil
