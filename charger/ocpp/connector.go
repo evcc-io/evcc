@@ -32,9 +32,11 @@ type Connector struct {
 	idTag string
 
 	remoteIdTag string
+
+	meterInterval time.Duration
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -43,7 +45,8 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 
-		remoteIdTag: idTag,
+		remoteIdTag:   idTag,
+		meterInterval: meterInterval,
 	}
 
 	if err := cp.registerConnector(id, conn); err != nil {
@@ -191,7 +194,7 @@ func (conn *Connector) isWaitingForAuth() bool {
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.clock.Since(conn.meterUpdated) > Timeout
+	return conn.clock.Since(conn.meterUpdated) > max(conn.meterInterval+10*time.Second, Timeout)
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
