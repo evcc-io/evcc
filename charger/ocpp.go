@@ -181,7 +181,7 @@ func NewOCPP(ctx context.Context,
 		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, idTag)
+	conn, err := ocpp.NewConnector(log, connector, cp, idTag, meterInterval)
 	if err != nil {
 		return nil, err
 	}
