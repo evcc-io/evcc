@@ -52,21 +52,21 @@ params:
     advanced: true
   - name: dm
     description:
-      en: damping morning (0 = no damping)
-      de: Dämpfung morgens (0 = keine Dämpfung)
+      en: damping morning (0 = no damping 100 = full damping)
+      de: Dämpfung morgens (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
   - name: de
     description:
-      en: damping evening (0 = no damping)
-      de: Dämpfung abends (0 = keine Dämpfung)
+      en: damping evening (0 = no damping 100 = full damping)
+      de: Dämpfung abends (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
   - name: eff
     description:
-      en: efficiency (1 = 100%)
-      de: Wirkungsgrad (1 = 100%)
-    default: 1
+      en: efficiency (0 - 100 = 100% efficiency)
+      de: Wirkungsgrad (0 - 100 = 100% Wirkungsgrad)
+    default: 100
     advanced: true
   - name: interval
     default: 1h
@@ -78,11 +78,11 @@ render: |
     source: http
     uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
     jq: |
-      def eff: {{ .eff }}; # efficiency 1 = 100%
+      def eff: {{ .eff }} / 100; # efficiency 1 = 100%
       def dckwp: {{ .dckwp }} * 1000 ; # DC-kWp
       def ackwp: {{ .ackwp }} * 1000 ; # AC-kWp
-      def dm: {{ .dm }}; # 1 = 100% damping morning (0 = no damping) 
-      def de: {{ .de }}; # damping evening
+      def dm: {{ .dm }} / 100; # 1 = 100% damping morning (0 = no damping) 
+      def de: {{ .de }} / 100; # damping evening
       def clamp(min; x; max):
         if x < min then min elif x > max then max else x end;
       def midday(sunrise; sunset):
