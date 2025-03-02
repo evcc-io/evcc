@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -59,11 +60,11 @@ type Etrel struct {
 }
 
 func init() {
-	registry.Add("etrel", NewEtrelFromConfig)
+	registry.AddCtx("etrel", NewEtrelFromConfig)
 }
 
 // NewEtrelFromConfig creates a Etrel charger from generic config
-func NewEtrelFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEtrelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector          int
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -78,12 +79,12 @@ func NewEtrelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEtrel(cc.Connector, cc.URI, cc.ID)
+	return NewEtrel(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewEtrel creates a Etrel charger
-func NewEtrel(connector int, uri string, id uint8) (*Etrel, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewEtrel(ctx context.Context, uri string, id uint8, connector int) (*Etrel, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

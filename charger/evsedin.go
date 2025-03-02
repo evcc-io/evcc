@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -21,14 +22,14 @@ const (
 )
 
 func init() {
-	registry.Add("simpleevse", NewEvseDINFromConfig) // deprecated
-	registry.Add("evsedin", NewEvseDINFromConfig)
+	registry.AddCtx("simpleevse", NewEvseDINFromConfig) // deprecated
+	registry.AddCtx("evsedin", NewEvseDINFromConfig)
 }
 
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
 
 // NewEvseDINFromConfig creates an EVSE DIN charger from generic config
-func NewEvseDINFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 9600,
 		Comset:   "8N1",
@@ -39,14 +40,14 @@ func NewEvseDINFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEvseDIN(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewEvseDIN(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewEvseDIN creates EVSE DIN charger
-func NewEvseDIN(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
