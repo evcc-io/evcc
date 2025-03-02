@@ -1,0 +1,27 @@
+template: octopus-de
+products:
+  - brand: Octopus Energy
+    description:
+      generic: Germany
+requirements:
+  description:
+    de: "Nutze deine octopusenergy.de Zugangsdaten (E-Mail und Passwort)"
+    en: "Use your octopusenergy.de access data (email and password)"
+  evcc: ["skiptest"]
+countries: ["DE"]
+group: price
+params:
+  - name: email
+    type: string
+    required: true
+    help:
+      generic: "Octopus Energy account email."
+  - name: password
+    type: string
+    required: true
+    help:
+      generic: "Octopus Energy account password."
+render: |
+  type: octopus-de
+  email: {{ .email }}
+  password: {{ .password }}
