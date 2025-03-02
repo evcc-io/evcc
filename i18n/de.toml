@@ -887,8 +887,8 @@ modalTitle = "Smartes Netzladen"
 none = "keine"
 priceLabel = "Energiepreis"
 priceLimit = "Preisgrenze"
-resetAction = "Limit löschen"
-resetWarning = "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist ein Limit von {limit} eingerichtet. Möchtest du dieses löschen?"
+resetAction = "Grenze löschen"
+resetWarning = "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?"
 saved = "Gepeichert."
 
 [startupError]
