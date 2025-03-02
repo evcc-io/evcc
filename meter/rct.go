@@ -56,7 +56,7 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache ti
 		if err != nil {
 			log.ERROR.Println(err)
 		}
-	}), rct.WithTimeout(cache))
+	}), rct.WithLogger(log.TRACE.Printf), rct.WithTimeout(cache))
 	if err != nil {
 		return nil, err
 	}
