@@ -318,14 +318,9 @@ func (c *OCPP) setCurrent(current float64) error {
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
+
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
-		// get (expectedly) active phases from loadpoint
-		if c.lp != nil {
-			phases = c.lp.GetPhases()
-		}
-		if phases == 0 {
-			phases = 3
-		}
+		phases = 0
 		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
 	}
 
