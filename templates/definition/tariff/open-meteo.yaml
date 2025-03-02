@@ -76,7 +76,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
     jq: |
       def eff: {{ .eff }}; # efficiency 1 = 100%
       def dckwp: {{ .dckwp }} * 1000 ; # DC-kWp
