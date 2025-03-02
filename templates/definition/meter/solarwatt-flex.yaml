@@ -1,5 +1,4 @@
 template: solarwatt-flex
-covers: ["solarwatt-myreserve"]
 products:
   - brand: Solarwatt
     description:
@@ -7,9 +6,9 @@ products:
 requirements:
   description:
     en: |
-      Template combines data of all connected PV inverters or batteries.
+      Combines data of all connected PV inverters or batteries.
     de: |
-      Template kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+      Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -70,9 +69,9 @@ render: |
     jq: |
       def parseFirstNumber: sub("(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
       # Variant 1
-      ([(.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)] | add // 0) as $soc
+      ([(.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)] | add ) as $soc
       |
-      if $soc > 0 then
+      if $soc != null then
         $soc
       # Variant 2
       else
