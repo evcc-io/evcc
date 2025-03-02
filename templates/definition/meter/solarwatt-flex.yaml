@@ -7,8 +7,10 @@ requirements:
   description:
     en: |
       Combines data of all connected PV inverters or batteries.
+      For multiple batteries, only the state of charge (SoC) of one is determined.
     de: |
       Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+      Bei mehreren Batterien wird nur der Füllstand (SoC) von einer ermittelt.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -68,15 +70,14 @@ render: |
     uri: http://{{ .host }}/rest/items # EnergyManager flex
     jq: |
       def parseFirstNumber: sub("(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
-      # Variant 1
-      ([(.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)] | add ) as $soc
-      |
-      if $soc != null then
-        $soc
-      # Variant 2
-      else
-        ([(.[] | select(.name | test(".*_batteryChannelGroup_batteryStateOfCharge$")).state | tonumber)] | add // 0)
-      end
+      first(
+        # Variant 1
+        (.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)
+        //
+        # Variant 1
+        (.[] | select(.name | test(".*_batteryChannelGroup_batteryStateOfCharge$")).state | tonumber)
+      )
+      // 0
   energy: # kWh
     source: http
     uri: http://{{ .host }}/rest/items # EnergyManager flex
