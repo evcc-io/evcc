@@ -194,7 +194,7 @@ func (conn *Connector) isWaitingForAuth() bool {
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.clock.Since(conn.meterUpdated) > max(conn.meterInterval, Timeout)
+	return conn.clock.Since(conn.meterUpdated) > max(conn.meterInterval+10*time.Second, Timeout)
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
