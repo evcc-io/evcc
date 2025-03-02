@@ -127,4 +127,3 @@ render: |
         ]
       | tostring
   interval: {{ .interval }}
-  
