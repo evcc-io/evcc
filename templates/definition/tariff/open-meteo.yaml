@@ -68,6 +68,29 @@ params:
       de: Wirkungsgrad (0 - 100 = 100% Wirkungsgrad)
     default: 100
     advanced: true
+  - name: alphatemp
+    description:
+      en: temperature coefficient
+      de: Temperaturkoeffizient
+    example: -0.004
+    default: -0.004
+    advanced: true
+  - name: rossmodel
+    description:
+      en: cooling type
+      de: Kühlung
+    example: NOT_SO_WELL_COOLED
+    type: choice
+    default: NOT_SO_WELL_COOLED
+    choice:
+      - WELL_COOLED
+      - FREE_STANDING
+      - FLAT_ON_ROOF
+      - NOT_SO_WELL_COOLED
+      - TRANSPARENT_PV
+      - FACADE_INTEGRATED
+      - ON_SLOPED_ROOF
+    advanced: true
   - name: interval
     default: 1h
     advanced: true
@@ -78,6 +101,17 @@ render: |
     source: http
     uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
     jq: |
+      def alphatemp: {{ .alphatemp }}; # temperature coefficient
+      def rossmodel: # cooling type
+        if "{{ .rossmodel }}" == "WELL_COOLED" then 0.0200
+        elif "{{ .rossmodel }}" == "FREE_STANDING" then 0.0208
+        elif "{{ .rossmodel }}" == "FLAT_ON_ROOF" then 0.0260
+        elif "{{ .rossmodel }}" == "NOT_SO_WELL_COOLED" then 0.0342
+        elif "{{ .rossmodel }}" == "TRANSPARENT_PV" then 0.0455
+        elif "{{ .rossmodel }}" == "FACADE_INTEGRATED" then 0.0538
+        elif "{{ .rossmodel }}" == "ON_SLOPED_ROOF" then 0.0563
+        else 0.0342
+        end;
       def eff: {{ .eff }} / 100; # efficiency 1 = 100%
       def dckwp: {{ .dckwp }} * 1000 ; # DC-kWp
       def ackwp: {{ .ackwp }} * 1000 ; # AC-kWp
@@ -108,12 +142,12 @@ render: |
               price: (
                 dckwp
                 * ($h.global_tilted_irradiance[$i] / 1000)
-                * (1 + (-0.00045 *
+                * (1 + ( alphatemp *
                       (
                         ( ($h.temperature_2m[$i]
                             + ($h.temperature_2m[$i-1] // $h.temperature_2m[$i])
                           ) / 2)
-                        + ($h.global_tilted_irradiance[$i] / 800.0) * 0.0342 - 25.0
+                        + ($h.global_tilted_irradiance[$i] / 800.0) * rossmodel - 25.0
                       )
                     ))
                 * (1 - calculate_damping($time;
