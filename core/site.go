@@ -733,6 +733,12 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
+	// https://github.com/evcc-io/evcc/discussions/18943#discussioncomment-12379107
+	if batteryCharge := -min(0, batteryPower); excessDCPower > batteryCharge {
+		excessDCPower = batteryCharge // cancel out to 0
+		site.log.DEBUG.Printf("clipping excess DC to battery charging: %.0fW", batteryCharge)
+	}
+
 	sitePower := site.gridPower + batteryPower + excessDCPower + residualPower - site.auxPower - flexiblePower
 
 	// handle priority
