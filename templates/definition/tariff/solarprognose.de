@@ -39,7 +39,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token=.accesstoken&item=.item&token=.token&algorithm=.algorithm&type=hourly
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token={{.accesstoken}}&item={{.item}}&token={{.token}}&algorithm={{.algorithm}}&type=hourly
     jq: |
       [ .data | to_entries.[] | {
         "start": (.key | tonumber | strftime("%FT%TZ") ),
