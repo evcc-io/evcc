@@ -833,7 +833,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 }
 
 // updateLoadpoints updates all loadpoints' charge power
-func (site *Site) updateLoadpoints() float64 {
+func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	var (
 		wg  sync.WaitGroup
 		mu  sync.Mutex
@@ -844,7 +844,7 @@ func (site *Site) updateLoadpoints() float64 {
 	for _, lp := range site.loadpoints {
 		go func() {
 			power := lp.UpdateChargePowerAndCurrents()
-			site.prioritizer.UpdateChargePowerFlexibility(lp)
+			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			mu.Lock()
 			sum += power
@@ -861,8 +861,14 @@ func (site *Site) updateLoadpoints() float64 {
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
+	// smart cost and battery mode handling
+	rates, err := site.plannerRates()
+	if err != nil {
+		site.log.WARN.Println("planner:", err)
+	}
+
 	// update loadpoints
-	totalChargePower := site.updateLoadpoints()
+	totalChargePower := site.updateLoadpoints(rates)
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
@@ -877,12 +883,6 @@ func (site *Site) update(lp updater) {
 	var flexiblePower float64
 	if lp.GetMode() == api.ModePV {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
-	}
-
-	// battery mode handling
-	rates, err := site.plannerRates()
-	if err != nil {
-		site.log.WARN.Println("planner:", err)
 	}
 
 	rate, err := rates.At(time.Now())

@@ -538,10 +538,9 @@ func (lp *Loadpoint) GetChargePower() float64 {
 }
 
 // GetChargePowerFlexibility returns the flexible amount of current charging power
-func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
-	// no locking
+func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.smartCostActive(rates) {
 		return 0
 	}
 
