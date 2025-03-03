@@ -40,7 +40,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		MinSoc, MaxSoc int
 		Cache          time.Duration
 	}{
-		Cache: 10 * time.Second,
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -58,7 +58,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
-	// prevent concurrent connections
+	// re-use connections
 	rctMu.Lock()
 	conn, ok := rctCache[uri]
 	if !ok {
@@ -76,8 +76,6 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache ti
 		rctCache[uri] = conn
 	}
 	rctMu.Unlock()
-
-	fmt.Println("connected")
 
 	m := &RCT{
 		usage: strings.ToLower(usage),
