@@ -886,6 +886,8 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+resetAction = "Remove limit"
+resetWarning = "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?"
 saved = "Saved."
 
 [startupError]
