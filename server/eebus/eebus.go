@@ -192,14 +192,9 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	return nil
 }
 
-func (c *EEBus) UnregisterDevice(ski, ip string, device Device) {
+func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("unregistering ski: %s", ski)
-
-	// TODO was passiert hiermit?
-	if len(ip) > 0 {
-		c.service.RemoteServiceForSKI(ski).SetIPv4(ip)
-	}
 
 	c.service.UnregisterRemoteSKI(ski)
 
