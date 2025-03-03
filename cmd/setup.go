@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -214,7 +213,7 @@ NEXT:
 }
 
 func configureMeters(static []config.Named, names ...string) error {
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(context.TODO())
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -230,7 +229,7 @@ func configureMeters(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+			ctx := util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
@@ -259,7 +258,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+			ctx := util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
@@ -278,7 +277,7 @@ func configureMeters(static []config.Named, names ...string) error {
 }
 
 func configureChargers(static []config.Named, names ...string) error {
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(context.TODO())
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -294,7 +293,7 @@ func configureChargers(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+			ctx := util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
@@ -323,7 +322,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+			ctx := util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
@@ -341,8 +340,8 @@ func configureChargers(static []config.Named, names ...string) error {
 	return eg.Wait()
 }
 
-func vehicleInstance(cc config.Named) (api.Vehicle, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+func vehicleInstance(baseCtx context.Context, cc config.Named) (api.Vehicle, error) {
+	ctx := util.WithLogger(baseCtx, util.NewLogger(cc.Name))
 
 	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
@@ -365,8 +364,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 }
 
 func configureVehicles(static []config.Named, names ...string) error {
-	var mu sync.Mutex
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(context.TODO())
 
 	// stable-sort vehicles by name
 	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
@@ -385,14 +383,12 @@ func configureVehicles(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			instance, err := vehicleInstance(cc)
+			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			mu.Lock()
-			defer mu.Unlock()
-			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
+			devs1[i] = config.NewStaticDevice(cc, instance)
 
 			return nil
 		})
@@ -407,7 +403,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	// stable-sort vehicles by id
 	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
-	for _, conf := range configurable {
+	for i, conf := range configurable {
 		eg.Go(func() error {
 			cc := conf.Named()
 
@@ -415,14 +411,12 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			instance, err := vehicleInstance(cc)
+			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			mu.Lock()
-			defer mu.Unlock()
-			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
+			devs2[i] = config.NewConfigurableDevice(&conf, instance)
 
 			return nil
 		})
@@ -740,8 +734,8 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 	return messageChan, nil
 }
 
-func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
+func tariffInstance(baseCtx context.Context, name string, conf config.Typed) (api.Tariff, error) {
+	ctx := util.WithLogger(baseCtx, util.NewLogger(name))
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
 	if err != nil {
@@ -757,13 +751,13 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
+func configureTariff(ctx context.Context, u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
 	name := u.String()
-	res, err := tariffInstance(name, conf)
+	res, err := tariffInstance(ctx, name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
 	}
@@ -772,8 +766,8 @@ func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error 
 	return nil
 }
 
-func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
-	var eg errgroup.Group
+func configureSolarTariff(baseCtx context.Context, conf []config.Typed, t *api.Tariff) error {
+	eg, ctx := errgroup.WithContext(baseCtx)
 	tt := make([]api.Tariff, len(conf))
 
 	for i, conf := range conf {
@@ -783,7 +777,7 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 			}
 
 			name := fmt.Sprintf("%s-%s-%d", api.TariffUsageSolar, tariff.Name(conf), i)
-			res, err := tariffInstance(name, conf)
+			res, err := tariffInstance(ctx, name, conf)
 			if err != nil {
 				return &DeviceError{name, err}
 			}
@@ -818,15 +812,15 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
-	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	eg, ctx := errgroup.WithContext(context.TODO())
+	eg.Go(func() error { return configureTariff(ctx, api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(ctx, api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(ctx, api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(ctx, api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
 	if len(conf.Solar) == 1 {
-		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
+		eg.Go(func() error { return configureTariff(ctx, api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
 	} else {
-		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+		eg.Go(func() error { return configureSolarTariff(ctx, conf.Solar, &tariffs.Solar) })
 	}
 
 	if err := eg.Wait(); err != nil {
