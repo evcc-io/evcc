@@ -28,7 +28,7 @@ params:
     advanced: false      
   - name: algorithm
     description:
-      en: algorithm used for forecast
+      en: forecasting algorithm
       de: Genutzer Algorithmus für die Prognose 
     default: mosmix  
     advanced: true          
