@@ -13,7 +13,6 @@ params:
       en: access token from user profile
       de: Zugriffs-Schlüssel aus Benutzer-Profil
     required: true  
-    advanced: false
   - name: item
     description:
       en: either provide location, plant or inverter as item
