@@ -47,7 +47,7 @@ params:
   - name: ackwp
     description:
       en: AC-kWp Inverter power
-      de: AC-kWp Wechselrichterleistung
+      de: AC Leistung (kW)
     default: 1000
     advanced: true
   - name: dm
