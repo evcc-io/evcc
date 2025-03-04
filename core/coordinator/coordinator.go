@@ -78,7 +78,7 @@ func (c *Coordinator) Delete(vehicle api.Vehicle) {
 		delete(c.tracked, vehicle)
 	}
 
-	// unlock before deferred SetVehicle executes a this will round-trip back here
+	// unlock before deferred SetVehicle executes as this will round-trip back here
 	c.mu.Unlock()
 }
 
