@@ -14,9 +14,7 @@ params:
       de: Zugriffs-Schlüssel aus Benutzer-Profil
     required: true  
   - name: item
-    description:
-      en: either provide location, plant or inverter as item
-      de: Entweder location, plant oder inverter als Element angeben
+    choice: ["location", "plant", "inverter"]
     required: true  
   - name: token
     description:
