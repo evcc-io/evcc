@@ -246,6 +246,16 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	return true
 }
 
+// vehicleDefaultOrDetect will assign and update default vehicle or start detection
+func (lp *Loadpoint) vehicleDefaultOrDetect() {
+	if len(lp.coordinatedVehicles()) > 1 {
+		lp.startVehicleDetection()
+	} else {
+		// maybe nil
+		lp.setActiveVehicle(lp.defaultVehicle)
+	}
+}
+
 // startVehicleDetection reset connection timer and starts api refresh timer
 func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts

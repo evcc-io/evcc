@@ -482,11 +482,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
-		if len(lp.coordinatedVehicles()) > 1 {
-			lp.startVehicleDetection()
-		} else if lp.defaultVehicle != nil {
-			lp.setActiveVehicle(lp.defaultVehicle)
-		}
+		lp.vehicleDefaultOrDetect()
 	}
 
 	// immediately allow pv mode activity
