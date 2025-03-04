@@ -3,27 +3,27 @@ products:
   - brand: OpenMeteo
 requirements:
   description:
-    en: "Free Weather API [open-meteo.com](https://open-meteo.com)"
-    de: "Freie Wetter API [open-meteo.com](https://open-meteo.com)"
+    en: Free Weather API [open-meteo.com](https://open-meteo.com) Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
+    de: Freie Wetter API [open-meteo.com](https://open-meteo.com) Open-Meteo ist eine Open-Source-Wetter-API und bietet kostenlosen Zugriff für nicht-kommerzielle Nutzung. Kein API-Schlüssel erforderlich.
   evcc: ["skiptest"]
 group: solar
 params:
   - name: lat
     description:
-      en: latitude
+      en: Latitude
       de: Breitengrad
     example: "55.7351"
     required: true
   - name: lon
     description:
-      en: longitude
+      en: Longitude
       de: Längengrad
     example: "9.1275"
     required: true
   - name: dec
     description:
-      en: decline
-      de: Winkel
+      en: Decline (tilt) of the solar panel
+      de: Winkel (Neigung) des Solarmoduls
     help:
       en: 0 = horizontal, 90 = vertical
       de: 0 = horizontal, 90 = vertikal
@@ -31,7 +31,7 @@ params:
     required: true
   - name: az
     description:
-      en: azimuth
+      en: Azimuth
       de: Azimut
     help:
       en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
@@ -46,39 +46,39 @@ params:
     required: true
   - name: ackwp
     description:
-      en: AC-kWp
-      de: AC-kWp
+      en: AC-kWp Inverter power
+      de: AC-kWp Wechselrichterleistung
     default: 1000
     advanced: true
   - name: dm
     description:
-      en: damping morning (0 = no damping 100 = full damping)
+      en: Damping morning (0 = no damping 100 = full damping)
       de: Dämpfung morgens (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
   - name: de
     description:
-      en: damping evening (0 = no damping 100 = full damping)
+      en: Damping evening (0 = no damping 100 = full damping)
       de: Dämpfung abends (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
   - name: eff
     description:
-      en: efficiency (0 - 100 = 100% efficiency)
+      en: Efficiency (0 - 100 = 100% efficiency)
       de: Wirkungsgrad (0 - 100 = 100% Wirkungsgrad)
     default: 100
     advanced: true
   - name: alphatemp
     description:
-      en: temperature coefficient
-      de: Temperaturkoeffizient
+      en: Temperature coefficient of PV module
+      de: Temperaturkoeffizient des PV-Moduls
     example: -0.004
     default: -0.004
     advanced: true
   - name: rossmodel
     description:
-      en: cooling type
-      de: Kühlung
+      en: Cooling type of PV module (Ross Model)
+      de: Kühlung des PV-Moduls (Ross-Modell)
     example: NOT_SO_WELL_COOLED
     type: choice
     default: NOT_SO_WELL_COOLED
