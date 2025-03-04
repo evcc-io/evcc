@@ -41,7 +41,7 @@ params:
   - name: dckwp
     description:
       en: DC-kWp
-      de: DC-kWp
+      de: DC Maximalleistung (kWp)
     example: 9.8
     required: true
   - name: ackwp
