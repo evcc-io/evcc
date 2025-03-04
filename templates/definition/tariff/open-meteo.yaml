@@ -65,7 +65,7 @@ params:
   - name: eff
     description:
       en: Efficiency (0 - 100 = 100% efficiency)
-      de: Wirkungsgrad (0 - 100 = 100% Wirkungsgrad)
+      de: Wirkungsgrad (%)
     default: 100
     advanced: true
   - name: alphatemp
