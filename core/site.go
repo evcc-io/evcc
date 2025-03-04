@@ -44,6 +44,7 @@ type updater interface {
 
 // measurement is used as slice element for publishing structured data
 type measurement struct {
+	Title         string    `json:"title,omitempty"`
 	Power         float64   `json:"power"`
 	Energy        float64   `json:"energy,omitempty"`
 	Powers        []float64 `json:"powers,omitempty"`
@@ -429,6 +430,15 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
+func (site *Site) withTitles(mm []measurement, refs []string) []measurement {
+	for i := range mm {
+		dev, _ := config.Meters().ByName(refs[i])
+		mm[i].Title = dev.Config().Title
+	}
+
+	return mm
+}
+
 func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
@@ -512,7 +522,7 @@ func (site *Site) updatePvMeters() {
 
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
-	site.publish(keys.Pv, mm)
+	site.publish(keys.Pv, site.withTitles(mm, site.Meters.PVMetersRef))
 }
 
 // updateBatteryMeters updates battery meters
@@ -582,7 +592,7 @@ func (site *Site) updateBatteryMeters() {
 
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
-	site.publish(keys.Battery, mm)
+	site.publish(keys.Battery, site.withTitles(mm, site.Meters.BatteryMetersRef))
 }
 
 // updateAuxMeters updates aux meters
@@ -601,7 +611,7 @@ func (site *Site) updateAuxMeters() {
 	}
 
 	site.publish(keys.AuxPower, site.auxPower)
-	site.publish(keys.Aux, mm)
+	site.publish(keys.Aux, site.withTitles(mm, site.Meters.AuxMetersRef))
 }
 
 // updateExtMeters updates ext meters
@@ -611,7 +621,7 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
-	site.publish(keys.Ext, mm)
+	site.publish(keys.Ext, site.withTitles(mm, site.Meters.ExtMetersRef))
 }
 
 // updateGridMeter updates grid meter

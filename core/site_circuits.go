@@ -7,6 +7,7 @@ import (
 )
 
 type circuitStruct struct {
+	Title      string   `json:"title,omitempty"`
 	Power      float64  `json:"power"`
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
@@ -22,6 +23,7 @@ func (site *Site) publishCircuits() {
 		instance := c.Instance()
 
 		data := circuitStruct{
+			Title:      c.Config().Title,
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
