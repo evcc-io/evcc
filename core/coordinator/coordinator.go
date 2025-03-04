@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -64,20 +65,17 @@ func (c *Coordinator) Add(vehicle api.Vehicle) {
 func (c *Coordinator) Delete(vehicle api.Vehicle) {
 	c.mu.Lock()
 
-	for i, v := range c.vehicles {
-		if v == vehicle {
-			c.vehicles = append(c.vehicles[:i], c.vehicles[i+1:]...)
+	if i := slices.Index(c.vehicles, vehicle); i >= 0 {
+		c.vehicles = slices.Delete(c.vehicles, i, i)
 
-			if o, ok := c.tracked[vehicle]; ok {
-				// defer call to SetVehicle to avoid deadlock on c.mu
-				defer func(o loadpoint.API) {
-					o.SetVehicle(nil)
-				}(o)
-			}
-			delete(c.tracked, vehicle)
-
-			break
+		if o, ok := c.tracked[vehicle]; ok {
+			// defer call to SetVehicle to avoid deadlock on c.mu
+			defer func(o loadpoint.API) {
+				o.SetVehicle(nil)
+			}(o)
 		}
+
+		delete(c.tracked, vehicle)
 	}
 
 	// unlock before deferred SetVehicle executes a this will round-trip back here
