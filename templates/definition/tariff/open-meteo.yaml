@@ -70,26 +70,20 @@ params:
     advanced: true
   - name: alphatemp
     description:
-      en: Temperature coefficient of pv module
-      de: Temperaturkoeffizient des PV-Moduls
+      en: Temperature coefficient
+      de: Temperaturkoeffizient
     example: -0.004
     default: -0.004
     advanced: true
   - name: rossmodel
     description:
-      en: Cooling type of pv module [Ross Model]
-      de: Kühlung des PV-Moduls [Ross-Modell]
-    example: NOT_SO_WELL_COOLED
-    type: choice
-    default: NOT_SO_WELL_COOLED
-    choice:
-      - WELL_COOLED
-      - FREE_STANDING
-      - FLAT_ON_ROOF
-      - NOT_SO_WELL_COOLED
-      - TRANSPARENT_PV
-      - FACADE_INTEGRATED
-      - ON_SLOPED_ROOF
+      en: Cooling type [Ross Model]
+      de: Kühlung [Ross-Modell]
+    help:
+      en: Well Cooled (0.0200), Free Standing (0.0208), Flat on Roof (0.0260), Not So Well Cooled (0.0342), Transparent PV (0.0455), Facade Integrated (0.0538), On Sloped Roof (0.0563) [Paper](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
+      de: Gut Gekühlt (0.0200), Freistehend (0.0208), Flach auf Dach (0.0260), Nicht So Gut Gekühlt (0.0342), Transparentes PV (0.0455), Fassadenintegriert (0.0538), Auf Schrägdach (0.0563) [Paper](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
+    example: 0.0342
+    default: 0.0342
     advanced: true
   - name: interval
     default: 1h
@@ -102,16 +96,7 @@ render: |
     uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
-      def rossmodel: # cooling type
-        if "{{ .rossmodel }}" == "WELL_COOLED" then 0.0200
-        elif "{{ .rossmodel }}" == "FREE_STANDING" then 0.0208
-        elif "{{ .rossmodel }}" == "FLAT_ON_ROOF" then 0.0260
-        elif "{{ .rossmodel }}" == "NOT_SO_WELL_COOLED" then 0.0342
-        elif "{{ .rossmodel }}" == "TRANSPARENT_PV" then 0.0455
-        elif "{{ .rossmodel }}" == "FACADE_INTEGRATED" then 0.0538
-        elif "{{ .rossmodel }}" == "ON_SLOPED_ROOF" then 0.0563
-        else 0.0342
-        end;
+      def rossmodel: {{ .rossmodel }}; # cooling type
       def eff: {{ .efficiency }} / 100; # efficiency 1 = 100%
       def kwp: {{ .kwp }} * 1000 ; # kWp
       def ac: {{ .ac }} * 1000 ; # AC
