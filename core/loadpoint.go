@@ -1062,7 +1062,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 		for _, ev := range statusEvents(prevStatus, status) {
 			lp.bus.Publish(ev)
 
-			// send connect/disconnect events except during startup
+			// don't send connect/disconnect events during startup
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
