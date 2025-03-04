@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -89,7 +90,24 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
+	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-time.After(10 * time.Second):
+			// timeout - cancel context
+			cancel()
+		case <-done:
+			// success
+		}
+	}()
+
+	return ctx, cancel, done
+}
+
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -102,7 +120,7 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(context.TODO(), typeTemplate, merged)
+	instance, err := newFromConf(ctx, typeTemplate, merged)
 
 	return dev, instance, merged, err
 }

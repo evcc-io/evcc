@@ -9,7 +9,7 @@ params:
     choice: ["tcpip"]
   - name: tempsource
     type: choice
-    choice: ["", "warmwater", "buffer"]
+    choice: ["", "warmwater_top", "warmwater_bottom", "buffer"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
@@ -24,7 +24,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 74 # PV Überschussleistung
-      type: holding
+      type: writeholdings
       decode: float32s
     scale: 0.001
   power:
@@ -47,7 +47,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "warmwater" -}} 1014 {{ else }} 1008 {{- end }} # 1014 Trinkwasser, 1008 Wärmespeicher
+      address: {{ if eq .tempsource "warmwater_top" -}} 1014 {{ else if eq .tempsource "warmwater_bottom" -}} 1012 {{ else }} 1008 {{- end }} # 1014 Trinkwasser Oben, 1012 Trinkwasser Unten, 1008 Wärmespeicher
       type: holding
       decode: float32s
   {{- end }}

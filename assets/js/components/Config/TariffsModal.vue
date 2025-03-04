@@ -3,7 +3,7 @@
 		id="tariffsModal"
 		:title="$t('config.tariffs.title')"
 		:description="$t('config.tariffs.description')"
-		docs="/docs/reference/configuration/tariffs"
+		docs="/docs/tariffs"
 		:defaultYaml="defaultYaml"
 		removeKey="tariffs"
 		endpoint="/config/tariffs"
