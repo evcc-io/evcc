@@ -1635,7 +1635,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// vehicle target soc
 		// TODO take vehicle api limits into account
 		apiLimitSoc := 100
-		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
+
+		// integrated device with charger limit
+		vs, ok := lp.charger.(api.SocLimiter)
+		if !ok {
+			// vehicle limit
+			vs, ok = lp.GetVehicle().(api.SocLimiter)
+		}
+		if ok {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
