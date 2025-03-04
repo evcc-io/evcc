@@ -484,9 +484,9 @@ func (site *Site) updatePvMeters() {
 		}
 
 		if m, ok := meter.(api.MaxACPowerGetter); ok {
-			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
-				mm[i].ExcessDCPower = -dc
-				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, -dc)
+			if dc := power - m.MaxACPower(); dc > 0 && power > 0 {
+				mm[i].ExcessDCPower = dc
+				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
 			}
 		}
 	}
@@ -503,8 +503,8 @@ func (site *Site) updatePvMeters() {
 
 	if len(site.pvMeters) > 1 {
 		var excessStr string
-		if site.excessDCPower < 0 {
-			excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
+		if site.excessDCPower > 0 {
+			excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.excessDCPower)
 		}
 
 		site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
@@ -733,7 +733,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := site.gridPower + batteryPower - excessDCPower + residualPower - site.auxPower - flexiblePower
+	sitePower := site.gridPower + batteryPower + excessDCPower + residualPower - site.auxPower - flexiblePower
 
 	// handle priority
 	var flexStr string

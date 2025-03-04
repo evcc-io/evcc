@@ -7,7 +7,7 @@
 		@open="modalVisible"
 		@closed="modalInvisible"
 	>
-		<ul v-if="gridChargePossible" class="nav nav-tabs mb-4">
+		<ul v-if="gridChargePossible || batteryGridChargeLimit !== null" class="nav nav-tabs mb-4">
 			<li class="nav-item">
 				<a
 					class="nav-link"
@@ -242,9 +242,10 @@
 			</div>
 		</div>
 		<SmartCostLimit
-			v-if="gridChargePossible"
+			v-if="modalVisible"
 			v-show="gridTabActive"
 			v-bind="smartCostLimitProps"
+			:possible="gridChargePossible"
 		/>
 	</GenericModal>
 </template>
@@ -400,6 +401,12 @@ export default {
 		bufferStartSoc(soc) {
 			this.selectedBufferStartSoc = soc;
 		},
+		batteryGridChargeLimit() {
+			this.verifyTabs();
+		},
+		gridChargePossible() {
+			this.verifyTabs();
+		},
 	},
 	mounted() {
 		this.selectedBufferSoc = this.bufferSoc || 100;
@@ -412,6 +419,15 @@ export default {
 		},
 		showUsageTab() {
 			this.gridTabActive = false;
+		},
+		verifyTabs() {
+			if (
+				this.gridTabActive &&
+				!this.gridChargePossible &&
+				this.batteryGridChargeLimit === null
+			) {
+				this.gridTabActive = false;
+			}
 		},
 		modalVisible: function () {
 			this.isModalVisible = true;
