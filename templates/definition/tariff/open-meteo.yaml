@@ -22,8 +22,8 @@ params:
     required: true
   - name: dec
     description:
-      en: Decline (tilt) of the solar panel
-      de: Winkel (Neigung) des Solarmoduls
+      en: Decline
+      de: Neigung
     help:
       en: 0 = horizontal, 90 = vertical
       de: 0 = horizontal, 90 = vertikal
@@ -38,21 +38,21 @@ params:
       de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
     example: 0
     required: true
-  - name: dckwp
+  - name: kwp
     description:
-      en: DC-kWp
-      de: DC Maximalleistung (kWp)
+      en: Maximum generator power [kWp]
+      de: Maximale Generatorleistung [kWp]
     example: 9.8
     required: true
-  - name: ackwp
+  - name: ac
     description:
-      en: AC-kWp Inverter power
-      de: AC Leistung (kW)
+      en: AC Power [kW]
+      de: AC Leistung [kW]
     default: 1000
     advanced: true
   - name: dm
     description:
-      en: Damping morning (0 = no damping 100 = full damping)
+      en: Damping morning (0 = no damping 100 = full damping
       de: Dämpfung morgens (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
@@ -62,23 +62,23 @@ params:
       de: Dämpfung abends (0 = keine Dämpfung 100 = volle Dämpfung)
     default: 0
     advanced: true
-  - name: eff
+  - name: efficiency
     description:
-      en: Efficiency (0 - 100 = 100% efficiency)
-      de: Wirkungsgrad (%)
+      en: Efficiency [%]
+      de: Wirkungsgrad [%]
     default: 100
     advanced: true
   - name: alphatemp
     description:
-      en: Temperature coefficient of PV module
+      en: Temperature coefficient of pv module
       de: Temperaturkoeffizient des PV-Moduls
     example: -0.004
     default: -0.004
     advanced: true
   - name: rossmodel
     description:
-      en: Cooling type of PV module (Ross Model)
-      de: Kühlung des PV-Moduls (Ross-Modell)
+      en: Cooling type of pv module [Ross Model]
+      de: Kühlung des PV-Moduls [Ross-Modell]
     example: NOT_SO_WELL_COOLED
     type: choice
     default: NOT_SO_WELL_COOLED
@@ -112,9 +112,9 @@ render: |
         elif "{{ .rossmodel }}" == "ON_SLOPED_ROOF" then 0.0563
         else 0.0342
         end;
-      def eff: {{ .eff }} / 100; # efficiency 1 = 100%
-      def dckwp: {{ .dckwp }} * 1000 ; # DC-kWp
-      def ackwp: {{ .ackwp }} * 1000 ; # AC-kWp
+      def eff: {{ .efficiency }} / 100; # efficiency 1 = 100%
+      def kwp: {{ .kwp }} * 1000 ; # kWp
+      def ac: {{ .ac }} * 1000 ; # AC
       def dm: {{ .dm }} / 100; # 1 = 100% damping morning (0 = no damping) 
       def de: {{ .de }} / 100; # damping evening
       def clamp(min; x; max):
@@ -140,7 +140,7 @@ render: |
               start: ($time | todateiso8601),
               end: (($time + 3600) | todateiso8601),
               price: (
-                dckwp
+                kwp
                 * ($h.global_tilted_irradiance[$i] / 1000)
                 * (1 + ( alphatemp *
                       (
@@ -155,7 +155,7 @@ render: |
                       $d.sunset[$day];
                       dm; de))
                 * eff
-                | clamp(0; .; ackwp)
+                | clamp(0; .; ac)
               )
             }
         ]
