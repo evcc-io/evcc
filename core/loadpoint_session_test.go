@@ -65,7 +65,6 @@ func TestSession(t *testing.T) {
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
 	assert.Equal(t, lp.getChargedEnergy()/1e3, lp.session.ChargedEnergy)
-	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err := db.Sessions()
 	require.NoError(t, err)

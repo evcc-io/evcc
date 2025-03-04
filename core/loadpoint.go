@@ -460,11 +460,6 @@ func (lp *Loadpoint) evChargeStopHandler() {
 		lp.resetPVTimer()
 	}
 
-	// set finished when last charging session segment ends
-	lp.updateSession(func(session *session.Session) {
-		session.Finished = lp.clock.Now()
-	})
-
 	lp.stopSession()
 }
 
