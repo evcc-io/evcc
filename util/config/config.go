@@ -31,6 +31,7 @@ func (d *Config) Named() Named {
 	res := Named{
 		Name:  NameForID(d.ID),
 		Type:  d.Type,
+		Title: d.Title,
 		Other: d.detailsAsMap(),
 	}
 	return res
