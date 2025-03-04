@@ -15,6 +15,7 @@ type Config struct {
 	ID    int `gorm:"primarykey"`
 	Class templates.Class
 	Type  string
+	Title string
 	Value string
 }
 
