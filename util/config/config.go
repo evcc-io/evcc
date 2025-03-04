@@ -18,13 +18,6 @@ type Config struct {
 	Value string
 }
 
-// TODO remove- migration only
-type ConfigDetails struct {
-	ConfigID int    `gorm:"index:idx_unique"`
-	Key      string `gorm:"index:idx_unique"`
-	Value    string
-}
-
 // Named converts device details to named config
 func (d *Config) Named() Named {
 	res := Named{
@@ -110,66 +103,7 @@ var db *gorm.DB
 func Init(instance *gorm.DB) error {
 	db = instance
 	m := db.Migrator()
-
-	for old, new := range map[string]string{
-		"devices":        "configs",
-		"device_details": "config_details",
-	} {
-		if m.HasTable(old) {
-			if err := m.RenameTable(old, new); err != nil {
-				return err
-			}
-		}
-	}
-
-	err := m.AutoMigrate(new(Config))
-
-	if err == nil && m.HasTable("config_details") {
-		err = m.AutoMigrate(new(ConfigDetails))
-
-		if err == nil && m.HasConstraint(new(ConfigDetails), "fk_devices_details") {
-			err = m.DropConstraint(new(ConfigDetails), "fk_devices_details")
-		}
-		if err == nil && m.HasColumn(new(ConfigDetails), "device_id") {
-			err = m.DropColumn(new(ConfigDetails), "device_id")
-		}
-	}
-
-	if err == nil && m.HasTable("config_details") {
-		var devices []Config
-		if err := db.Where(&Config{}).Find(&devices).Error; err != nil {
-			return err
-		}
-
-		// migrate ConfigDetails into Config.Value
-		for _, dev := range devices {
-			var details []ConfigDetails
-			if err := db.Where(&ConfigDetails{ConfigID: dev.ID}).Find(&details).Error; err != nil {
-				return err
-			}
-
-			res := make(map[string]any)
-			for _, detail := range details {
-				res[detail.Key] = detail.Value
-			}
-
-			if len(res) > 0 {
-				val, err := detailsFromMap(res)
-				if err != nil {
-					return err
-				}
-				dev.Value = val
-
-				if err := db.Save(&dev).Error; err != nil {
-					return err
-				}
-			}
-		}
-
-		err = m.DropTable("config_details")
-	}
-
-	return err
+	return m.AutoMigrate(new(Config))
 }
 
 // NameForID returns a unique config name for the given id
