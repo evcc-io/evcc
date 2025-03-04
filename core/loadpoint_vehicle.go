@@ -161,12 +161,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
-		var title string
 		if v != nil {
-			title = v.Title()
+			lp.session.Vehicle = v.Title()
 		}
-
-		lp.session.Vehicle = title
 	})
 }
 

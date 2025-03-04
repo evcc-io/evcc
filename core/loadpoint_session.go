@@ -59,7 +59,11 @@ func (lp *Loadpoint) stopSession() {
 	if s.Created.IsZero() {
 		return
 	}
-	s.Finished = lp.clock.Now()
+
+	// only set if last segment end has not been set yet
+	if s.Finished.IsZero() {
+		s.Finished = lp.clock.Now()
+	}
 
 	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
 		s.MeterStop = &meterStop

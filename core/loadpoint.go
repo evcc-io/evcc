@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/samber/lo"
 )
 
 const (
@@ -438,6 +439,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
+		if session.SocStart == nil {
+			session.SocStart = lo.ToPtr(lp.vehicleSoc)
+		}
 	})
 }
 
@@ -455,6 +459,11 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	if !lp.pvTimer.Equal(elapsed) {
 		lp.resetPVTimer()
 	}
+
+	// set finished when last charging session segment ends
+	lp.updateSession(func(session *session.Session) {
+		session.Finished = lp.clock.Now()
+	})
 
 	lp.stopSession()
 }
