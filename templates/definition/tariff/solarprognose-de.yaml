@@ -18,13 +18,11 @@ params:
       en: either provide location, plant or inverter as item
       de: Entweder location, plant oder inverter als Element angeben
     required: true  
-    advanced: false  
   - name: token
     description:
       en: unique token for selected item
       de: Eindeutiger Schlüssel für das angegebene Element 
     required: true  
-    advanced: false      
   - name: algorithm
     description:
       en: forecasting algorithm
