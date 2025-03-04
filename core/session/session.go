@@ -26,11 +26,13 @@ type Session struct {
 	Loadpoint       string         `json:"loadpoint"`
 	Identifier      string         `json:"identifier"`
 	Vehicle         string         `json:"vehicle"`
-	Odometer        *float64       `json:"odometer" format:"int"`
+	Odometer        *float64       `json:"odometer" csv:"Odometer (km)" format:"int"`
 	MeterStart      *float64       `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
 	MeterStop       *float64       `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
 	ChargedEnergy   float64        `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
 	ChargeDuration  *time.Duration `json:"chargeDuration" csv:"Charge Duration" gorm:"column:charge_duration"`
+	SocStart        *float64       `json:"socStart" csv:"Soc Start (%)" gorm:"column:soc_start_percentage"`
+	SocStop         *float64       `json:"socStop" csv:"Soc Stop (%)" gorm:"column:soc_end_percentage"`
 	SolarPercentage *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
 	Price           *float64       `json:"price" csv:"Price" gorm:"column:price"`
 	PricePerKWh     *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`

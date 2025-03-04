@@ -47,14 +47,11 @@ func (lp *Loadpoint) setVehicleIdentifier(id string) {
 
 // identifyVehicle reads vehicle identification from charger
 func (lp *Loadpoint) identifyVehicle() {
-	identifier, ok := lp.charger.(api.Identifier)
-	if !ok {
-		return
-	}
-
-	id, err := identifier.Identify()
+	id, err := lp.chargerId()
 	if err != nil {
-		lp.log.ERROR.Println("charger vehicle id:", err)
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Println("charger vehicle id:", err)
+		}
 		return
 	}
 
