@@ -134,7 +134,7 @@ type Loadpoint struct {
 	circuit        api.Circuit // Circuit
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
-	defaultVehicle api.Vehicle // Default vehicle (disables detection)
+	defaultVehicle api.Vehicle // Default vehicle (eventually after detection)
 	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 
@@ -482,7 +482,11 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
-		lp.vehicleDefaultOrDetect()
+		if len(lp.coordinatedVehicles()) > 1 {
+			lp.startVehicleDetection()
+		} else if lp.defaultVehicle != nil {
+			lp.setActiveVehicle(lp.defaultVehicle)
+		}
 	}
 
 	// immediately allow pv mode activity
@@ -520,8 +524,12 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// set default mode on disconnect
 	lp.defaultMode()
 
-	// set default vehicle (may be nil)
-	lp.setActiveVehicle(lp.defaultVehicle)
+	// set default vehicle if poll always is selected
+	if lp.GetSocConfig().Poll.Mode == loadpoint.PollAlways {
+		lp.setActiveVehicle(lp.defaultVehicle)
+	} else {
+		lp.setActiveVehicle(nil)
+	}
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -643,11 +651,6 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// vehicle
 	lp.publish(keys.VehicleName, "")
 	lp.publish(keys.VehicleOdometer, 0.0)
-
-	// assign and publish default vehicle
-	if lp.defaultVehicle != nil {
-		lp.setActiveVehicle(lp.defaultVehicle)
-	}
 
 	// reset detection state
 	lp.publish(keys.VehicleDetectionActive, false)
