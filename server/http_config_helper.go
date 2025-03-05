@@ -138,12 +138,14 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 		return nil, zero, nil, err
 	}
 
-	merged, err := mergeMasked(class, req.Other, dev.Config().Other)
+	conf := dev.Config()
+
+	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(ctx, req.Type, merged)
+	instance, err := newFromConf(ctx, conf.Type, merged)
 
 	return dev, instance, merged, err
 }
