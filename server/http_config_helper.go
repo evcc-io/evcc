@@ -112,7 +112,7 @@ func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	return ctx, cancel, done
 }
 
-func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -120,12 +120,12 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 		return nil, zero, nil, err
 	}
 
-	merged, err := mergeMasked(class, conf, dev.Config().Other)
+	merged, err := mergeMasked(class, req.Other, dev.Config().Other)
 	if err != nil {
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(ctx, typeTemplate, merged)
+	instance, err := newFromConf(ctx, req.Type, merged)
 
 	return dev, instance, merged, err
 }

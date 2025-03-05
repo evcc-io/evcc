@@ -230,8 +230,6 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO add application/yaml content type, reject type==template
-
 	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -279,8 +277,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -309,14 +307,11 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO add application/yaml content type, reject type==template
-
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	ctx, cancel, done := startDeviceTimeout()
 
@@ -422,12 +417,12 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
+func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(ctx, typeTemplate, conf)
+		return newFromConf(ctx, req.Type, req.Other)
 	}
 
-	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
+	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 
 	return instance, err
 }
@@ -452,12 +447,11 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	var instance any
 	ctx, cancel, done := startDeviceTimeout()
