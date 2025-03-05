@@ -28,8 +28,8 @@ func yamlQuote(value string) string {
 		return quote(value)
 	}
 
-	// fix 0815, but not 0
-	if strings.HasPrefix(value, "0") && len(value) > 1 {
+	// fix 0815, but not 0; allow float values containing .
+	if strings.HasPrefix(value, "0") && len(value) > 1 && !strings.Contains(value, ".") {
 		return quote(value)
 	}
 
