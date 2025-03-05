@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand/v2"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +21,10 @@ type RCT struct {
 	usage string          // grid, pv, battery
 }
 
-var rctMu sync.Mutex
+var (
+	rctMu    sync.Mutex
+	rctCache = make(map[string]*rct.Connection)
+)
 
 func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
@@ -56,19 +58,24 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
-	// prevent concurrent connections
+	// re-use connections
 	rctMu.Lock()
-	time.Sleep(time.Duration(rand.Uint64N(uint64(time.Second))))
-	rctMu.Unlock()
-
-	conn, err := rct.NewConnection(ctx, uri, rct.WithErrorCallback(func(err error) {
+	conn, ok := rctCache[uri]
+	if !ok {
+		var err error
+		conn, err = rct.NewConnection(ctx, uri, rct.WithErrorCallback(func(err error) {
+			if err != nil {
+				log.ERROR.Println(err)
+			}
+		}), rct.WithLogger(log.TRACE.Printf), rct.WithTimeout(cache))
 		if err != nil {
-			log.ERROR.Println(err)
+			rctMu.Unlock()
+			return nil, err
 		}
-	}), rct.WithLogger(log.TRACE.Printf), rct.WithTimeout(cache))
-	if err != nil {
-		return nil, err
+
+		rctCache[uri] = conn
 	}
+	rctMu.Unlock()
 
 	m := &RCT{
 		usage: strings.ToLower(usage),
