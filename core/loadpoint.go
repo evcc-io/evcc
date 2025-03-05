@@ -521,11 +521,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.defaultMode()
 
 	// set default vehicle if poll always is selected
+	var v api.Vehicle
 	if lp.GetSocConfig().Poll.Mode == loadpoint.PollAlways {
-		lp.setActiveVehicle(lp.defaultVehicle)
-	} else {
-		lp.setActiveVehicle(nil)
+		v = lp.defaultVehicle
 	}
+	lp.setActiveVehicle(v)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}

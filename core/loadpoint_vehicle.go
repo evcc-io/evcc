@@ -248,7 +248,8 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
 func (lp *Loadpoint) vehicleDefaultOrDetect() {
-	if len(lp.coordinatedVehicles()) > 0 {
+	// start detection if there are multiple vehicles or only one but no default vehicle
+	if cv := len(lp.coordinatedVehicles()); cv > 1 || cv == 1 && lp.defaultVehicle == nil {
 		lp.setActiveVehicle(nil)
 		lp.startVehicleDetection()
 	} else {
