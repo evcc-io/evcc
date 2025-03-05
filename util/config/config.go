@@ -30,6 +30,11 @@ type Properties struct {
 	Model string `json:"deviceModel,omitempty" mapstructure:"deviceModel"`
 }
 
+func (p *Properties) Merge(pp Properties) {
+	p.Title = pp.Title
+	p.Icon = pp.Icon
+}
+
 // TODO remove- migration only
 type ConfigDetails struct {
 	ConfigID int    `gorm:"index:idx_unique"`
