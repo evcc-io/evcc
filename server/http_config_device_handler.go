@@ -206,13 +206,13 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, testInstance(instance))
 }
 
-func newDevice[T any](ctx context.Context, class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
-	instance, err := newFromConf(ctx, typeTemplate, req)
+func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(ctx, req.Type, req.Other)
 	if err != nil {
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, typeTemplate, req)
+	conf, err := config.AddConfig(class, req.Commons, req.Other)
 	if err != nil {
 		return nil, err
 	}
@@ -232,12 +232,11 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO add application/yaml content type, reject type==template
 
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	var conf *config.Config
 	ctx, cancel, done := startDeviceTimeout()

@@ -20,6 +20,11 @@ const (
 	masked = "***"
 )
 
+type configReq struct {
+	config.Commons `json:",inline"`
+	Other          map[string]any `json:",inline"`
+}
+
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 var (

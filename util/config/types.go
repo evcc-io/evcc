@@ -12,7 +12,6 @@ type Typed struct {
 type Named struct {
 	Name  string         `json:"name"`
 	Type  string         `json:"type"`
-	Title string         `json:"title"`
 	Other map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 

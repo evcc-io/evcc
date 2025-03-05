@@ -11,12 +11,23 @@ import (
 	"gorm.io/gorm"
 )
 
+// Config is the database mapping for device configurations
+// The device prefix ensures unique namespace
+//
+// TODO migrate vehicle and loadpoints to this schema
 type Config struct {
-	ID    int `gorm:"primarykey"`
-	Class templates.Class
+	ID      int `gorm:"primarykey"`
+	Class   templates.Class
+	Commons `gorm:"embedded" json:",inline"`
+	Data    map[string]any `gorm:"column:value;type:string;serializer:json"`
+}
+
+type Commons struct {
 	Type  string
-	Title string
-	Data  map[string]any `gorm:"column:value;type:string;serializer:json"`
+	Title string `json:"deviceTitle,omitempty"`
+	Icon  string `json:"deviceIcon,omitempty"`
+	Brand string `json:"deviceBrand,omitempty"`
+	Model string `json:"deviceModel,omitempty"`
 }
 
 // TODO remove- migration only
@@ -31,7 +42,6 @@ func (d *Config) Named() Named {
 	res := Named{
 		Name:  NameForID(d.ID),
 		Type:  d.Type,
-		Title: d.Title,
 		Other: maps.Clone(d.Data),
 	}
 	return res
@@ -178,11 +188,11 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
+func AddConfig(class templates.Class, comms Commons, conf map[string]any) (Config, error) {
 	config := Config{
-		Class: class,
-		Type:  typ,
-		Data:  conf,
+		Class:   class,
+		Commons: comms,
+		Data:    conf,
 	}
 
 	if err := db.Create(&config).Error; err != nil {

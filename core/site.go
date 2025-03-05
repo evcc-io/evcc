@@ -44,15 +44,15 @@ type updater interface {
 
 // measurement is used as slice element for publishing structured data
 type measurement struct {
-	Title         string    `json:"title,omitempty"`
-	Power         float64   `json:"power"`
-	Energy        float64   `json:"energy,omitempty"`
-	Powers        []float64 `json:"powers,omitempty"`
-	Currents      []float64 `json:"currents,omitempty"`
-	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
-	Capacity      *float64  `json:"capacity,omitempty"`
-	Soc           *float64  `json:"soc,omitempty"`
-	Controllable  *bool     `json:"controllable,omitempty"`
+	config.Commons `json:",inline,omitempty"`
+	Power          float64   `json:"power"`
+	Energy         float64   `json:"energy,omitempty"`
+	Powers         []float64 `json:"powers,omitempty"`
+	Currents       []float64 `json:"currents,omitempty"`
+	ExcessDCPower  float64   `json:"excessdcpower,omitempty"`
+	Capacity       *float64  `json:"capacity,omitempty"`
+	Soc            *float64  `json:"soc,omitempty"`
+	Controllable   *bool     `json:"controllable,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -77,12 +77,12 @@ type Site struct {
 	MaxGridSupplyWhileBatteryCharging_ float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
-	circuit       api.Circuit // Circuit
-	gridMeter     api.Meter   // Grid usage meter
-	pvMeters      []api.Meter // PV generation meters
-	batteryMeters []api.Meter // Battery charging meters
-	extMeters     []api.Meter // External meters - for monitoring only
-	auxMeters     []api.Meter // Auxiliary meters
+	circuit       api.Circuit                // Circuit
+	gridMeter     api.Meter                  // Grid usage meter
+	pvMeters      []config.Device[api.Meter] // PV generation meters
+	batteryMeters []config.Device[api.Meter] // Battery charging meters
+	extMeters     []config.Device[api.Meter] // External meters - for monitoring only
+	auxMeters     []config.Device[api.Meter] // Auxiliary meters
 
 	// battery settings
 	prioritySoc             float64  // prefer battery up to this Soc
@@ -194,7 +194,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.pvMeters = append(site.pvMeters, dev.Instance())
+		site.pvMeters = append(site.pvMeters, dev)
 	}
 
 	// multiple batteries
@@ -203,7 +203,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.batteryMeters = append(site.batteryMeters, dev.Instance())
+		site.batteryMeters = append(site.batteryMeters, dev)
 	}
 
 	// meters used only for monitoring
@@ -212,7 +212,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.extMeters = append(site.extMeters, dev.Instance())
+		site.extMeters = append(site.extMeters, dev)
 	}
 
 	// auxiliary meters
@@ -221,7 +221,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.auxMeters = append(site.auxMeters, dev.Instance())
+		site.auxMeters = append(site.auxMeters, dev)
 	}
 
 	if site.MaxGridSupplyWhileBatteryCharging_ != 0 {
@@ -430,20 +430,13 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-func (site *Site) withTitles(mm []measurement, refs []string) []measurement {
-	for i := range mm {
-		dev, _ := config.Meters().ByName(refs[i])
-		mm[i].Title = dev.Config().Title
-	}
-
-	return mm
-}
-
-func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
+func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
 	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
 
-	fun := func(i int, meter api.Meter) {
+	fun := func(i int, dev config.Device[api.Meter]) {
+		meter := dev.Instance()
+
 		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
@@ -462,8 +455,9 @@ func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 		}
 
 		mm[i] = measurement{
-			Power:  power,
-			Energy: energy,
+			Commons: deviceCommons(dev),
+			Power:   power,
+			Energy:  energy,
 		}
 
 		wg.Done()
@@ -522,7 +516,7 @@ func (site *Site) updatePvMeters() {
 
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
-	site.publish(keys.Pv, site.withTitles(mm, site.Meters.PVMetersRef))
+	site.publish(keys.Pv, mm)
 }
 
 // updateBatteryMeters updates battery meters
@@ -592,7 +586,7 @@ func (site *Site) updateBatteryMeters() {
 
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
-	site.publish(keys.Battery, site.withTitles(mm, site.Meters.BatteryMetersRef))
+	site.publish(keys.Battery, mm)
 }
 
 // updateAuxMeters updates aux meters
@@ -611,7 +605,7 @@ func (site *Site) updateAuxMeters() {
 	}
 
 	site.publish(keys.AuxPower, site.auxPower)
-	site.publish(keys.Aux, site.withTitles(mm, site.Meters.AuxMetersRef))
+	site.publish(keys.Aux, mm)
 }
 
 // updateExtMeters updates ext meters
@@ -621,7 +615,7 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
-	site.publish(keys.Ext, site.withTitles(mm, site.Meters.ExtMetersRef))
+	site.publish(keys.Ext, mm)
 }
 
 // updateGridMeter updates grid meter

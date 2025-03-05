@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 var (
@@ -50,4 +51,12 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 	}
 
 	return a == nil && b == nil || (*a) == (*b)
+}
+
+// deviceCommons returns the common device data for the given reference
+func deviceCommons[T any](dev config.Device[T]) config.Commons {
+	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
+		return d.Commons()
+	}
+	return config.Commons{}
 }

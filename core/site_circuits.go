@@ -7,11 +7,11 @@ import (
 )
 
 type circuitStruct struct {
-	Title      string   `json:"title,omitempty"`
-	Power      float64  `json:"power"`
-	Current    *float64 `json:"current,omitempty"`
-	MaxPower   float64  `json:"maxPower,omitempty"`
-	MaxCurrent float64  `json:"maxCurrent,omitempty"`
+	config.Commons `json:",inline,omitempty"`
+	Power          float64  `json:"power"`
+	Current        *float64 `json:"current,omitempty"`
+	MaxPower       float64  `json:"maxPower,omitempty"`
+	MaxCurrent     float64  `json:"maxCurrent,omitempty"`
 }
 
 // publishCircuits returns a list of circuit titles
@@ -23,7 +23,7 @@ func (site *Site) publishCircuits() {
 		instance := c.Instance()
 
 		data := circuitStruct{
-			Title:      c.Config().Title,
+			Commons:    deviceCommons(c),
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),

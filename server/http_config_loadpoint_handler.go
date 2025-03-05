@@ -136,7 +136,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		name := "lp-" + strconv.Itoa(id+1)
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		conf, err := config.AddConfig(templates.Loadpoint, "", static)
+		conf, err := config.AddConfig(templates.Loadpoint, config.Commons{}, static)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
