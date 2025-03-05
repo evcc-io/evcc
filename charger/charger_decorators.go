@@ -8,10 +8,10 @@ import (
 
 func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), socLimiter func() (int64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return base
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -22,7 +22,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -33,7 +33,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -48,7 +48,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -59,7 +59,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -74,7 +74,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -89,7 +89,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -108,7 +108,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Resurrector
@@ -119,7 +119,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -134,7 +134,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -149,7 +149,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -168,7 +168,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.PhaseSwitcher
@@ -183,7 +183,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -202,7 +202,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -221,7 +221,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -545,310 +545,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.SocLimiter
-		}{
-			Charger: base,
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -1220,7 +916,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -1231,7 +927,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1246,7 +942,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -1261,7 +957,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1280,7 +976,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -1295,7 +991,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1314,7 +1010,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -1333,7 +1029,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1356,7 +1052,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -1371,7 +1067,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1390,7 +1086,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -1409,7 +1105,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1432,7 +1128,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -1451,7 +1147,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1474,7 +1170,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -1497,7 +1193,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -1889,374 +1585,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -2692,7 +2020,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2707,7 +2035,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2726,7 +2054,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2745,7 +2073,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2768,7 +2096,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2787,7 +2115,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2810,7 +2138,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2833,7 +2161,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2860,7 +2188,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2879,7 +2207,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2902,7 +2230,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -2925,7 +2253,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -2952,7 +2280,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -2975,7 +2303,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3002,7 +2330,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -3029,7 +2357,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -3489,438 +2817,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -4420,7 +3316,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -4435,7 +3331,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4454,7 +3350,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -4473,7 +3369,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4496,7 +3392,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -4515,7 +3411,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4538,7 +3434,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -4561,7 +3457,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4588,7 +3484,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -4607,7 +3503,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4630,7 +3526,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -4653,7 +3549,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4680,7 +3576,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -4703,7 +3599,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -4730,7 +3626,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -4757,7 +3653,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -5217,438 +4113,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -6148,7 +4612,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -6167,7 +4631,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6190,7 +4654,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -6213,7 +4677,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6240,7 +4704,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -6263,7 +4727,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6290,7 +4754,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -6317,7 +4781,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6348,7 +4812,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -6371,7 +4835,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6398,7 +4862,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -6425,7 +4889,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6456,7 +4920,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -6483,7 +4947,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -6514,7 +4978,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -6545,7 +5009,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -7073,502 +5537,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages == nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -8132,7 +6100,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -8147,7 +6115,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8166,7 +6134,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -8185,7 +6153,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8208,7 +6176,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -8227,7 +6195,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8250,7 +6218,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -8273,7 +6241,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8300,7 +6268,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -8319,7 +6287,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8342,7 +6310,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -8365,7 +6333,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8392,7 +6360,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -8415,7 +6383,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8442,7 +6410,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -8469,7 +6437,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -8929,438 +6897,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -9860,7 +7396,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -9879,7 +7415,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -9902,7 +7438,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -9925,7 +7461,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -9952,7 +7488,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -9975,7 +7511,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10002,7 +7538,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -10029,7 +7565,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10060,7 +7596,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -10083,7 +7619,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10110,7 +7646,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -10137,7 +7673,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10168,7 +7704,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -10195,7 +7731,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10226,7 +7762,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -10257,7 +7793,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -10785,502 +8321,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -11844,7 +8884,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -11863,7 +8903,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -11886,7 +8926,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -11909,7 +8949,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -11936,7 +8976,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -11959,7 +8999,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -11986,7 +9026,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -12013,7 +9053,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -12044,7 +9084,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -12067,7 +9107,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -12094,7 +9134,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -12121,7 +9161,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -12152,7 +9192,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -12179,7 +9219,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -12210,7 +9250,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -12241,7 +9281,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -12769,502 +9809,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
@@ -13828,7 +10372,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -13851,7 +10395,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -13878,7 +10422,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -13905,7 +10449,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -13936,7 +10480,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -13963,7 +10507,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -13994,7 +10538,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -14025,7 +10569,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -14060,7 +10604,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -14087,7 +10631,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -14118,7 +10662,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -14149,7 +10693,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -14184,7 +10728,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Meter
@@ -14215,7 +10759,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -14250,7 +10794,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.Identifier
@@ -14285,7 +10829,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 		}
 
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter == nil:
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil:
 		return &struct {
 			*Charger
 			api.ChargerEx
@@ -14881,566 +11425,6 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 			},
 			Resurrector: &decorateCustomResurrectorImpl{
 				resurrector: resurrector,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector == nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil && phaseVoltages != nil && resurrector != nil && socLimiter != nil:
-		return &struct {
-			*Charger
-			api.ChargerEx
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseSwitcher
-			api.PhaseVoltages
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Charger: base,
-			ChargerEx: &decorateCustomChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Identifier: &decorateCustomIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateCustomMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateCustomMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateCustomPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseSwitcher: &decorateCustomPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-			PhaseVoltages: &decorateCustomPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-			Resurrector: &decorateCustomResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateCustomSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 
