@@ -44,15 +44,15 @@ type updater interface {
 
 // measurement is used as slice element for publishing structured data
 type measurement struct {
-	config.Commons `json:",inline,omitempty"`
-	Power          float64   `json:"power"`
-	Energy         float64   `json:"energy,omitempty"`
-	Powers         []float64 `json:"powers,omitempty"`
-	Currents       []float64 `json:"currents,omitempty"`
-	ExcessDCPower  float64   `json:"excessdcpower,omitempty"`
-	Capacity       *float64  `json:"capacity,omitempty"`
-	Soc            *float64  `json:"soc,omitempty"`
-	Controllable   *bool     `json:"controllable,omitempty"`
+	config.Properties `json:",inline,omitempty"`
+	Power             float64   `json:"power"`
+	Energy            float64   `json:"energy,omitempty"`
+	Powers            []float64 `json:"powers,omitempty"`
+	Currents          []float64 `json:"currents,omitempty"`
+	ExcessDCPower     float64   `json:"excessdcpower,omitempty"`
+	Capacity          *float64  `json:"capacity,omitempty"`
+	Soc               *float64  `json:"soc,omitempty"`
+	Controllable      *bool     `json:"controllable,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -455,9 +455,9 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		mm[i] = measurement{
-			Commons: deviceCommons(dev),
-			Power:   power,
-			Energy:  energy,
+			Properties: deviceProperties(dev),
+			Power:      power,
+			Energy:     energy,
 		}
 
 		wg.Done()

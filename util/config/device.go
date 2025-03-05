@@ -7,7 +7,7 @@ type Device[T any] interface {
 type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
-	Commons() Commons
+	Properties() Properties
 	Update(map[string]any, T) error
 	PartialUpdate(map[string]any, T) error
 	Delete() error
@@ -37,8 +37,8 @@ func (d *configurableDevice[T]) ID() int {
 	return d.config.ID
 }
 
-func (d *configurableDevice[T]) Commons() Commons {
-	return d.config.Commons
+func (d *configurableDevice[T]) Properties() Properties {
+	return d.config.Properties
 }
 
 // func (d *configurableDevice[T]) Assign(instance T) {

@@ -212,7 +212,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Commons, req.Other)
+	conf, err := config.AddConfig(class, req.Properties, req.Other)
 	if err != nil {
 		return nil, err
 	}

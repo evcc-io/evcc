@@ -53,10 +53,10 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 	return a == nil && b == nil || (*a) == (*b)
 }
 
-// deviceCommons returns the common device data for the given reference
-func deviceCommons[T any](dev config.Device[T]) config.Commons {
+// deviceProperties returns the common device data for the given reference
+func deviceProperties[T any](dev config.Device[T]) config.Properties {
 	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
-		return d.Commons()
+		return d.Properties()
 	}
-	return config.Commons{}
+	return config.Properties{}
 }

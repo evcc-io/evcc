@@ -16,13 +16,13 @@ import (
 //
 // TODO migrate vehicle and loadpoints to this schema
 type Config struct {
-	ID      int `gorm:"primarykey"`
-	Class   templates.Class
-	Commons `gorm:"embedded" json:",inline"`
-	Data    map[string]any `gorm:"column:value;type:string;serializer:json"`
+	ID         int `gorm:"primarykey"`
+	Class      templates.Class
+	Properties `gorm:"embedded" json:",inline"`
+	Data       map[string]any `gorm:"column:value;type:string;serializer:json"`
 }
 
-type Commons struct {
+type Properties struct {
 	Type  string
 	Title string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
 	Icon  string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
@@ -188,11 +188,11 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class templates.Class, comms Commons, conf map[string]any) (Config, error) {
+func AddConfig(class templates.Class, props Properties, conf map[string]any) (Config, error) {
 	config := Config{
-		Class:   class,
-		Commons: comms,
-		Data:    conf,
+		Class:      class,
+		Properties: props,
+		Data:       conf,
 	}
 
 	if err := db.Create(&config).Error; err != nil {

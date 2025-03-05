@@ -23,8 +23,8 @@ const (
 )
 
 type configReq struct {
-	config.Commons `json:",inline" mapstructure:",squash"`
-	Other          map[string]any `json:",inline" mapstructure:",remain"`
+	config.Properties `json:",inline" mapstructure:",squash"`
+	Other             map[string]any `json:",inline" mapstructure:",remain"`
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
