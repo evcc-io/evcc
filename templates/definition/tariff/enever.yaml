@@ -69,4 +69,4 @@ render: |
                 "price": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
-  interval: 3h
+    interval: 3h
