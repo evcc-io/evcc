@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"maps"
 	"net"
 	"os"
 	"regexp"
@@ -64,15 +64,20 @@ func redact(src string) string {
 		ReplaceAllString(src, "$1: *****")
 }
 
-func redactMap(src map[string]any) map[string]any {
-	res := maps.Clone(src)
-	for k := range res {
+func redactJson(src string) string {
+	var j map[string]any
+	if err := json.Unmarshal([]byte(src), &j); err != nil {
+		panic(err)
+	}
+
+	for k := range j {
 		if slices.Contains(redactSecrets, k) {
-			res[k] = "*****"
+			j[k] = "*****"
 		}
 	}
 
-	return res
+	res, _ := json.Marshal(j)
+	return string(res)
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
