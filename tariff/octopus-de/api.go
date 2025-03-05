@@ -34,8 +34,10 @@ type OctopusDEGraphQLClient struct {
 
 	// token is the GraphQL token used for communication with kraken (we get this ourselves with the email and password)
 	token *string
+
 	// tokenExpiration tracks the expiry of the acquired token. A new Token should be obtained if this time is passed.
 	tokenExpiration time.Time
+
 	// tokenMtx should be held when requesting a new token.
 	tokenMtx sync.Mutex
 

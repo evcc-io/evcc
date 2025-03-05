@@ -1,6 +1,6 @@
 package octopusde
 
-// krakenDETokenAuthentication is a representation of a GraphQL query for obtaining a Kraken API token.
+// krakenDETokenAuthentication is a representation of a GraphQL query for obtaining a Kraken DE API token.
 type krakenDETokenAuthentication struct {
 	ObtainKrakenToken struct {
 		Token string
