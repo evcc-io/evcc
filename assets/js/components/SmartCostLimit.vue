@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div v-if="possible">
 		<h6 v-if="isLoadpoint" class="mt-0">{{ title }}</h6>
 		<p>
 			{{ description }}
@@ -72,6 +72,14 @@
 			@slot-selected="slotSelected"
 		/>
 	</div>
+	<div v-else-if="smartCostLimit !== null">
+		<div class="alert alert-warning">
+			{{ $t("smartCost.resetWarning", { limit: fmtSmartCostLimit(smartCostLimit) }) }}
+			<a href="#" class="text-warning" @click.prevent="saveSmartCostLimit('null')">
+				{{ $t("smartCost.resetAction") }}
+			</a>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -91,6 +99,7 @@ export default {
 		currency: String,
 		loadpointId: Number,
 		multipleLoadpoints: Boolean,
+		possible: Boolean,
 	},
 	data: function () {
 		return {
@@ -121,14 +130,7 @@ export default {
 				values.push(selected);
 			}
 			values.sort((a, b) => a - b);
-			return values.map((value) => {
-				const name = `≤ ${
-					this.isCo2
-						? this.fmtCo2Medium(value)
-						: this.fmtPricePerKWh(value, this.currency)
-				}`;
-				return { value, name };
-			});
+			return values.map((value) => ({ value, name: this.fmtSmartCostLimit(value) }));
 		},
 		optionStartValue() {
 			if (!this.tariff) {
@@ -245,6 +247,14 @@ export default {
 	methods: {
 		roundLimit(limit) {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
+		},
+		fmtSmartCostLimit(limit) {
+			if (limit === null) {
+				return this.$t("smartCost.none");
+			}
+			return `≤ ${
+				this.isCo2 ? this.fmtCo2Medium(limit) : this.fmtPricePerKWh(limit, this.currency)
+			}`;
 		},
 		updateTariff: async function () {
 			try {

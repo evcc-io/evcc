@@ -39,7 +39,7 @@ type Circuit struct {
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -71,12 +71,12 @@ func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit,
 		return nil, err
 	}
 
-	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(context.TODO())
+	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(context.TODO())
+	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
 	if err != nil {
 		return nil, err
 	}

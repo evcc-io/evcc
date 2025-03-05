@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,6 +20,11 @@ type RCT struct {
 	conn  *rct.Connection // connection with the RCT device
 	usage string          // grid, pv, battery
 }
+
+var (
+	rctMu    sync.Mutex
+	rctCache = make(map[string]*rct.Connection)
+)
 
 func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
@@ -52,14 +58,24 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
-	conn, err := rct.NewConnection(ctx, uri, rct.WithErrorCallback(func(err error) {
+	// re-use connections
+	rctMu.Lock()
+	conn, ok := rctCache[uri]
+	if !ok {
+		var err error
+		conn, err = rct.NewConnection(ctx, uri, rct.WithErrorCallback(func(err error) {
+			if err != nil {
+				log.ERROR.Println(err)
+			}
+		}), rct.WithLogger(log.TRACE.Printf), rct.WithTimeout(cache))
 		if err != nil {
-			log.ERROR.Println(err)
+			rctMu.Unlock()
+			return nil, err
 		}
-	}), rct.WithTimeout(cache))
-	if err != nil {
-		return nil, err
+
+		rctCache[uri] = conn
 	}
+	rctMu.Unlock()
 
 	m := &RCT{
 		usage: strings.ToLower(usage),
