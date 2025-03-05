@@ -171,7 +171,7 @@ type API interface {
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
-	GetChargePowerFlexibility() float64
+	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current
 	GetMaxPhaseCurrent() float64
 

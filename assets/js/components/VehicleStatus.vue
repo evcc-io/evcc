@@ -33,68 +33,82 @@
 				<div class="tabular">{{ fmtDuration(phaseRemainingInterpolated) }}</div>
 			</div>
 
-			<!-- vehicle -->
-			<button
-				v-if="minSocVisible"
-				ref="minSoc"
-				type="button"
-				class="entry text-danger text-decoration-underline"
-				data-testid="vehicle-status-minsoc"
-				data-bs-toggle="tooltip"
-				@click="openMinSocSettings"
-			>
-				<VehicleMinSocIcon />
-				{{ fmtPercentage(minSoc) }}
-			</button>
-			<div
-				v-else-if="vehicleLimitVisible"
-				ref="vehicleLimit"
-				class="entry"
-				:class="vehicleLimitClass"
-				data-bs-toggle="tooltip"
-				data-testid="vehicle-status-limit"
-				:role="vehicleLimitWarning ? 'button' : null"
-				@click="vehicleLimitClicked"
-			>
-				<component :is="vehicleLimitIconComponent" />
-				{{ fmtPercentage(vehicleLimitSoc) }}
-			</div>
-			<div
-				v-if="vehicleClimaterActive"
-				ref="vehicleClimater"
-				data-bs-toggle="tooltip"
-				class="entry"
-				data-testid="vehicle-status-climater"
-			>
-				<ClimaterIcon />
-			</div>
-			<div
-				v-if="vehicleWelcomeActive"
-				ref="vehicleWelcome"
-				data-bs-toggle="tooltip"
-				class="entry"
-				data-testid="vehicle-status-welcome"
-			>
-				<WelcomeIcon />
-			</div>
-			<div
-				v-if="awaitingAuthorizationVisible"
-				ref="awaitingAuthorization"
-				data-bs-toggle="tooltip"
-				class="entry"
-				data-testid="vehicle-status-awaiting-authorization"
-			>
-				<RfidWaitIcon />
-			</div>
-			<div
-				v-if="disconnectRequiredVisible"
-				ref="disconnectRequired"
-				class="entry text-warning"
-				data-bs-toggle="tooltip"
-				data-testid="vehicle-status-disconnect-required"
-			>
-				<ReconnectIcon />
-			</div>
+			<template v-if="heating">
+				<div
+					v-if="tempLimitVisible"
+					ref="tempLimit"
+					class="entry"
+					data-bs-toggle="tooltip"
+					data-testid="vehicle-status-limit"
+				>
+					<TempLimitIcon />
+					{{ fmtTemperature(vehicleLimitSoc) }}
+				</div>
+			</template>
+			<template v-else>
+				<!-- vehicle -->
+				<button
+					v-if="minSocVisible"
+					ref="minSoc"
+					type="button"
+					class="entry text-danger text-decoration-underline"
+					data-testid="vehicle-status-minsoc"
+					data-bs-toggle="tooltip"
+					@click="openMinSocSettings"
+				>
+					<VehicleMinSocIcon />
+					{{ fmtPercentage(minSoc) }}
+				</button>
+				<div
+					v-else-if="vehicleLimitVisible"
+					ref="vehicleLimit"
+					class="entry"
+					:class="vehicleLimitClass"
+					data-bs-toggle="tooltip"
+					data-testid="vehicle-status-limit"
+					:role="vehicleLimitWarning ? 'button' : null"
+					@click="vehicleLimitClicked"
+				>
+					<component :is="vehicleLimitIconComponent" />
+					{{ fmtPercentage(vehicleLimitSoc) }}
+				</div>
+				<div
+					v-if="vehicleClimaterActive"
+					ref="vehicleClimater"
+					data-bs-toggle="tooltip"
+					class="entry"
+					data-testid="vehicle-status-climater"
+				>
+					<ClimaterIcon />
+				</div>
+				<div
+					v-if="vehicleWelcomeActive"
+					ref="vehicleWelcome"
+					data-bs-toggle="tooltip"
+					class="entry"
+					data-testid="vehicle-status-welcome"
+				>
+					<WelcomeIcon />
+				</div>
+				<div
+					v-if="awaitingAuthorizationVisible"
+					ref="awaitingAuthorization"
+					data-bs-toggle="tooltip"
+					class="entry"
+					data-testid="vehicle-status-awaiting-authorization"
+				>
+					<RfidWaitIcon />
+				</div>
+				<div
+					v-if="disconnectRequiredVisible"
+					ref="disconnectRequired"
+					class="entry text-warning"
+					data-bs-toggle="tooltip"
+					data-testid="vehicle-status-disconnect-required"
+				>
+					<ReconnectIcon />
+				</div>
+			</template>
 
 			<!-- smart cost -->
 			<button
@@ -179,6 +193,7 @@ import ReconnectIcon from "./MaterialIcon/Reconnect.vue";
 import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
+import TempLimitIcon from "./MaterialIcon/TempLimit.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
 import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
@@ -203,6 +218,7 @@ export default {
 		VehicleLimitIcon,
 		VehicleMinSocIcon,
 		WelcomeIcon,
+		TempLimitIcon,
 		BatteryBoostIcon,
 	},
 	mixins: [formatter],
@@ -252,6 +268,7 @@ export default {
 			vehicleWelcomeTooltip: null,
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
+			tempLimitTooltip: null,
 			awaitingAuthorizationTooltip: null,
 			disconnectRequiredTooltip: null,
 			batteryBoostTooltip: null,
@@ -329,6 +346,12 @@ export default {
 			}
 			return this.$t("main.vehicleStatus.vehicleLimit");
 		},
+		tempLimitTooltipContent() {
+			if (!this.tempLimitVisible) {
+				return "";
+			}
+			return this.$t("main.heatingStatus.vehicleLimit");
+		},
 		minSocVisible() {
 			return this.connected && this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
@@ -356,6 +379,9 @@ export default {
 				return "text-warning";
 			}
 			return "";
+		},
+		tempLimitVisible() {
+			return this.heating && this.vehicleLimitSoc > 0;
 		},
 		vehicleLimitIconComponent() {
 			if (this.vehicleLimitReached) {
@@ -523,6 +549,9 @@ export default {
 		vehicleLimitTooltipContent() {
 			this.$nextTick(this.updateVehicleLimitTooltip);
 		},
+		tempLimitTooltipContent() {
+			this.$nextTick(this.updateTempLimitTooltip);
+		},
 		awaitingAuthorizationTooltipContent() {
 			this.$nextTick(this.updateAwaitingAuthorizationTooltip);
 		},
@@ -552,6 +581,7 @@ export default {
 		this.updateVehicleWelcomeTooltip();
 		this.updateSmartCostTooltip();
 		this.updateVehicleLimitTooltip();
+		this.updateTempLimitTooltip();
 		this.updateAwaitingAuthorizationTooltip();
 		this.updateDisconnectRequiredTooltip();
 		this.updateDurations();
@@ -682,6 +712,13 @@ export default {
 				this.vehicleLimitTooltipContent,
 				this.$refs.vehicleLimit,
 				true
+			);
+		},
+		updateTempLimitTooltip() {
+			this.tempLimitTooltip = this.updateTooltip(
+				this.tempLimitTooltip,
+				this.tempLimitTooltipContent,
+				this.$refs.tempLimit
 			);
 		},
 		updateAwaitingAuthorizationTooltip() {
