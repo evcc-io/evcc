@@ -1,15 +1,12 @@
 package octopusde
 
-// WIP Dispatching times
-// krakenDETokenAuthentication is a representation of a GraphQL query for obtaining a Kraken DE API token.
+// GraphQL query types
 type krakenDETokenAuthentication struct {
 	ObtainKrakenToken struct {
 		Token string
 	} `graphql:"obtainKrakenToken(input: {email: $email, password: $password})"`
 }
 
-// krakenDEAccountLookup is a representation of a GraphQL query for obtaining the Account Number associated with the
-// credentials used to authorize the request.
 type krakenDEAccountLookup struct {
 	Viewer struct {
 		Accounts []struct {
@@ -18,7 +15,6 @@ type krakenDEAccountLookup struct {
 	}
 }
 
-// krakenDEAccountGrossRate is a representation of a GraphQL query for obtaining the gross rates for the given account number.
 type krakenDEAccountGrossRate struct {
 	Account struct {
 		AllProperties []struct {
@@ -33,13 +29,12 @@ type krakenDEAccountGrossRate struct {
 	} `graphql:"account(accountNumber: $accountNumber)"`
 }
 
-// TimeSlotActivationRule represents when a specific rate is active
+// Rate info structures
 type TimeSlotActivationRule struct {
 	ActiveFromTime string `json:"activeFromTime"`
 	ActiveToTime   string `json:"activeToTime"`
 }
 
-// RateInformation contains details about a specific rate
 type RateInformation struct {
 	GrossRateInformation []struct {
 		Date            string `json:"date"`
@@ -53,7 +48,6 @@ type RateInformation struct {
 	TimeslotName                   string                   `json:"timeslotName"`
 }
 
-// SimpleProductUnitRateInformation represents a simple product with a single rate
 type SimpleProductUnitRateInformation struct {
 	TypeName             string `json:"__typename"`
 	GrossRateInformation []struct {
@@ -66,28 +60,7 @@ type SimpleProductUnitRateInformation struct {
 	NetUnitRateCentsPerKwh         string `json:"netUnitRateCentsPerKwh"`
 }
 
-// TimeOfUseProductUnitRateInformation represents a time-of-use product with multiple rates
 type TimeOfUseProductUnitRateInformation struct {
 	TypeName string            `json:"__typename"`
 	Rates    []RateInformation `json:"rates"`
-}
-
-// krakenDEAccountRates is a representation of a GraphQL query for obtaining detailed rate information
-type krakenDEAccountRates struct {
-	Account struct {
-		AllProperties []struct {
-			ElectricityMalos []struct {
-				Agreements []struct {
-					UnitRateGrossRateInformation []struct {
-						GrossRate string `json:"grossRate"`
-					} `json:"unitRateGrossRateInformation"`
-					UnitRateInformation struct {
-						TypeName                     string                               `json:"__typename"`
-						SimpleProductUnitRateInfo    *SimpleProductUnitRateInformation    `json:"... on SimpleProductUnitRateInformation"`
-						TimeOfUseProductUnitRateInfo *TimeOfUseProductUnitRateInformation `json:"... on TimeOfUseProductUnitRateInformation"`
-					} `json:"unitRateInformation"`
-				} `json:"agreements"`
-			} `json:"electricityMalos"`
-		} `json:"allProperties"`
-	} `graphql:"account(accountNumber: $accountNumber)"`
 }

@@ -23,8 +23,7 @@ func init() {
 	registry.Add("octopus-de", NewOctopusDEFromConfig)
 }
 
-// WIP Dispatching times
-// NewOctopusDEFromConfig creates a new OctopusDE instance from the given configuration.
+// NewOctopusDEFromConfig creates an OctopusDE tariff provider
 func NewOctopusDEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Email    string
@@ -62,6 +61,7 @@ func NewOctopusDEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
+// run starts the rate updater
 func (t *OctopusDE) run(done chan error) {
 	var once sync.Once
 
@@ -73,9 +73,10 @@ func (t *OctopusDE) run(done chan error) {
 	}
 	once.Do(func() { close(done) })
 
-	// Ticker to update rates every 15 minutes
+	// Update every 15 minutes
 	ticker := time.NewTicker(15 * time.Minute)
 	defer ticker.Stop()
+
 	for ; true; <-ticker.C {
 		if err := t.updateRates(); err != nil {
 			t.log.ERROR.Println(err)
@@ -83,81 +84,77 @@ func (t *OctopusDE) run(done chan error) {
 	}
 }
 
+// updateRates fetches and processes rate information
 func (t *OctopusDE) updateRates() error {
-	// Refresh the token
-	if err := t.RefreshToken(); err != nil {
-		t.log.ERROR.Printf("Failed to refresh token: %v. Using cached rates.", err)
-		return nil // Don't fail completely, just use cached rates
+	// Default rate as fallback
+	defaultRate := octopusde.Rate{
+		Price:     0.2827,
+		StartTime: "00:00:00",
+		EndTime:   "00:00:00",
+		Name:      "DEFAULT",
 	}
 
-	// Fetch the account number
+	// Refresh token
+	if err := t.RefreshToken(); err != nil {
+		t.log.ERROR.Printf("Failed to refresh token: %v. Using cached rates.", err)
+		return nil
+	}
+
+	// Get account number
 	accountNumber, err := t.AccountNumber()
 	if err != nil {
 		t.log.ERROR.Printf("Failed to fetch account number: %v. Using cached rates.", err)
-		return nil // Don't fail completely, just use cached rates
+		return nil
 	}
 
-	// Fetch detailed rates
+	// Fetch rates
 	rates, err := t.FetchRates(accountNumber)
 	if err != nil {
 		t.log.ERROR.Printf("Failed to fetch rates: %v. Using default rate.", err)
-		rates = []octopusde.Rate{
-			{
-				Price:     0.2827, // Default fallback rate
-				StartTime: "00:00:00",
-				EndTime:   "00:00:00",
-				Name:      "DEFAULT",
-			},
-		}
+		rates = []octopusde.Rate{defaultRate}
 	}
 
-	// Generate hourly rates for the next 72 hours
+	// Generate hourly rates for 72 hours
 	data := make(api.Rates, 0, 72)
 	now := time.Now()
-
-	// Round to the nearest hour
 	startHour := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, now.Location())
 
 	for i := 0; i < 72; i++ {
 		hour := startHour.Add(time.Duration(i) * time.Hour)
 		nextHour := hour.Add(time.Hour)
-
 		hourStr := hour.Format("15:04:05")
 
-		// Find applicable rate for this hour
-		var price float64 = 0.2827 // Default price
-		var rateName string = "DEFAULT"
+		// Find applicable rate
+		price, name := defaultRate.Price, defaultRate.Name
+		found := false
 
-		foundRate := false
 		for _, r := range rates {
 			// Skip invalid rates
 			if r.StartTime == "" {
 				continue
 			}
 
-			// Handle special case for rates spanning midnight
+			// Handle time slots including overnight
 			if r.EndTime == "00:00:00" {
 				if hourStr >= r.StartTime || hourStr < r.EndTime {
-					price = r.Price
-					rateName = r.Name
-					foundRate = true
+					price, name = r.Price, r.Name
+					found = true
 					break
 				}
 			} else if hourStr >= r.StartTime && hourStr < r.EndTime {
-				price = r.Price
-				rateName = r.Name
-				foundRate = true
+				price, name = r.Price, r.Name
+				found = true
 				break
 			}
 		}
 
-		if !foundRate && len(rates) > 0 {
-			// If no specific time slot matches, use the first rate as default
+		// If no match found, use first rate as default
+		if !found && len(rates) > 0 {
 			price = rates[0].Price
-			rateName = rates[0].Name
+			name = rates[0].Name
 		}
 
-		t.log.TRACE.Printf("Hour %s: %.4f €/kWh (%s)", hourStr, price, rateName)
+		t.log.TRACE.Printf("Hour %s: %.4f €/kWh (%s)", hourStr, price, name)
 
 		data = append(data, api.Rate{
 			Start: hour,
@@ -166,10 +163,11 @@ func (t *OctopusDE) updateRates() error {
 		})
 	}
 
-	// Only update if we have valid data
+	// Update stored rates
 	if len(data) > 0 {
 		mergeRates(t.data, data)
 	}
+
 	return nil
 }
 
