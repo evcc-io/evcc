@@ -15,12 +15,12 @@ params:
     type: string
     required: true
     help:
-      generic: "Octopus Energy account email."
+      generic: "Octopus Energy account email"
   - name: password
     type: string
     required: true
     help:
-      generic: "Octopus Energy account password."
+      generic: "Octopus Energy account password"
 render: |
   type: octopus-de
   email: {{ .email }}

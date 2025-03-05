@@ -18,6 +18,7 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
+// WIP Dispatching times
 // krakenGraphQLURL_DE is the GraphQL query endpoint for Octopus Energy Germany.
 const (
 	krakenGraphQLURL_DE = "https://api.oeg-kraken.energy/v1/graphql/"
