@@ -47,10 +47,10 @@ func (d *Config) Typed() Typed {
 // Update updates a config's details to the database
 func (d *Config) Update(conf map[string]any) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		// var config Config
-		// if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-		// 	return err
-		// }
+		var config Config
+		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
+			return err
+		}
 
 		d.Data = conf
 
@@ -61,10 +61,10 @@ func (d *Config) Update(conf map[string]any) error {
 // PartialUpdate partially updates a config's details to the database
 func (d *Config) PartialUpdate(conf map[string]any) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		// var config Config
-		// if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-		// 	return err
-		// }
+		var config Config
+		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
+			return err
+		}
 
 		if err := mergo.Merge(&d.Data, conf, mergo.WithOverride); err != nil {
 			return err
