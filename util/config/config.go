@@ -15,7 +15,7 @@ type Config struct {
 	ID    int `gorm:"primarykey"`
 	Class templates.Class
 	Type  string
-	Data  map[string]any `gorm:"value,type:string,serializer:json"`
+	Data  map[string]any `gorm:"value;type:string;serializer:json"`
 }
 
 // TODO remove- migration only
