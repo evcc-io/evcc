@@ -7,6 +7,8 @@ type Device[T any] interface {
 type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
+	// Assign(T)
+	// Update1(map[string]any) error
 	Update(map[string]any, T) error
 	PartialUpdate(map[string]any, T) error
 	Delete() error
