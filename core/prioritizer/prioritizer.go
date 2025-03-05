@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
@@ -21,8 +22,8 @@ func New(log *util.Logger) *Prioritizer {
 	}
 }
 
-func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API) {
-	if power := lp.GetChargePowerFlexibility(); power >= 0 {
+func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API, rates api.Rates) {
+	if power := lp.GetChargePowerFlexibility(rates); power >= 0 {
 		p.mu.Lock()
 		p.demand[lp] = power
 		p.mu.Unlock()
