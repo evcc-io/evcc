@@ -1,0 +1,120 @@
+template: api.akkudoktor.net
+products:
+  - brand: Akkudoktor API
+requirements:
+  description:
+    en: "[Akkudoktor API](https://api.akkudoktor.net/) provides free solar production forecasts based on system specifications and location."
+    de: "[Akkudoktor API](https://api.akkudoktor.net/) bietet kostenlos Solarproduktionsprognosen basierend auf Systemparametern und Standort."
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: lat
+    description:
+      en: Latitude
+      de: Breitengrad
+    example: 50.65
+    required: true
+  - name: lon
+    description:
+      en: Longitude
+      de: Längengrad
+    example: 11.37
+    required: true
+  - name: power
+    description:
+      en: peak power of the pv modules in watts [Wp]
+      de: Spitzenleistung der pv modules in watts [Wp]
+    example: 7800
+    required: true
+  - name: azimuth
+    description:
+      en: Azimuth tilt in degrees.
+      de: Azimutwinkel in Grad.
+    help:
+      en: "Orientation of PV modules in azimuth in degree. -90 = east,-45 = south-east, 0 = south, 45 = south-west, 90 = west"
+      de: "Ausrichtung der PV-Module im Azimut in Grad. -90 = Osten, -45 = Süd-Osten, 0 = Süden, 45 = Süd-Westen, 90 = Westen"
+    example: 180
+    required: true
+  - name: tilt
+    description:
+      en: Inclination angle of the PV modules in degrees.
+      de: Neigungswinkel der PV-Module in Grad.
+    example: 30
+    required: true
+  - name: cellCoEff
+    description:
+      en: "cell temperature coefficient of your pv modules. [%]"
+      de: "Zelltemperaturkoeffizient Ihrer PV-Module. [%]"
+    help:
+      en: "The cellcoefficient is used for calculate losses with the temperature of the modules. default: -0.4"
+      de: "Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet. standard: -0.4"
+    example: -0.4
+    advanced: true
+  - name: albedo
+    description:
+      en: albedo
+      de: Albedo
+    example: 0.2
+    advanced: true
+  - name: powerInverter
+    description:
+      en: max power of the inverter in watts.
+      de: maximale Leistung des Wechselrichters in Watt.
+    help:
+      en: "This setting will used, if the power of the inverter is lower than the power generation of the modules. default: no limit"
+      de: "Diese Einstellung wird verwendet, wenn die Leistung des Wechselrichters geringer ist als die Peak-Leistungserzeugung der Module. standard: kein limit"
+    example: 7000
+    advanced: true
+  - name: inverterEfficiency
+    description:
+      en: Inverter efficiency [%]
+      de: Wechselrichterwirkungsgrad [%]
+    help:
+      en: "The inverter efficiency is specified as percentage between 0-1. default: 1 (=100%)"
+      de: "Der Wirkungsgrad des Wechselrichters wird als Prozentsatz zwischen 0-1 angegeben. standard: 1 (=100%)"
+    example: 0.96
+    advanced: true
+  - name: range
+    description:
+      en: returns max- and min- generation from different weathermodels.
+      de: liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen.
+    example: 0
+    advanced: true
+  - name: horizont
+    description:
+      en: simulate terrain shadows.
+      de: Simuliert Verschattung durch Umgebung.
+    help:
+      en: each number representing the horizont height in degrees in a certain compass direction around the point of interest. The horizont height cannot be higher than 90 degrees. For this, you use can a comma separated string with obsticals hight in angle (-180 = north, -90 = east, 0 = south, 90 = west). Also transparency is optional supported with a "t" after angle , see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizont
+      de: Jede Zahl steht für die horizontthöhe in Grad in einer bestimmten Himmelsrichtung um den betreffenden Punkt. Die Höhe des Horizonts kann nicht höher als 90 Grad sein. Hierfür können Sie eine durch Komma getrennte Zeichenkette mit der Höhe der Hindernisse im Winkel verwenden (-180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen). Auch Transparenz wird optional mit einem „t“ nach dem Winkel unterstützt , siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizont
+    example: "10,0,10,15"
+    advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    uri: "https://api.akkudoktor.net/forecast?lat={{ unquote .lat }}\
+      &lon={{ unquote .lon }}\
+      &power={{ unquote .power }}\
+      &azimuth={{ unquote .azimuth }}\
+      &tilt={{ unquote .tilt }}\
+      &past_days=0\
+      &timecycle=hourly\
+      &timezone=UTC\
+      {{ if .cellCoEff }}&cellCoEff={{ unquote .cellCoEff }}{{ end }}\
+      {{ if .albedo }}&albedo={{ unquote .albedo }}{{ end }}\
+      {{ if .powerInverter }}&powerInverter={{ unquote .powerInverter }}{{ end }}\
+      {{ if .inverterEfficiency }}&inverterEfficiency={{ unquote .inverterEfficiency }}{{ end }}\
+      {{ if .horizont }}&horizont={{ unquote .horizont | urlEncode }}{{ end }}\
+      {{ if .range }}&range={{ unquote .range }}{{ end }}"
+    jq: |
+      [ .values[][] | {
+        start: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | strftime("%FT%TZ")),
+        end: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | mktime + 3600 | strftime("%FT%TZ")),
+        price: .power
+      } ] | tostring
+  interval: {{ .interval }}
