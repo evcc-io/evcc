@@ -8,7 +8,13 @@
 #  type: fixed
 #  price: 0.08 # EUR/kWh
 
-#co2: # carbon intensity forecast data
+#co2: # carbon intensity forecast
 #  type: template
 #  template: grünstromindex
 #  zip: <zip>
+
+#solar: # list of pv generation forecast (additive)
+#- type: template
+#  template: solcast
+#  site: <site>
+#  token: <token>
