@@ -2,12 +2,14 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 )
@@ -21,8 +23,24 @@ const (
 )
 
 type configReq struct {
-	config.Commons `json:",inline"`
-	Other          map[string]any `json:",inline"`
+	config.Commons `json:",inline" mapstructure:",squash"`
+	Other          map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+// TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
+func (c *configReq) UnmarshalJSON(data []byte) error {
+	var res map[string]any
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+
+	var cr configReq
+	if err := util.DecodeOther(res, &cr); err != nil {
+		return err
+	}
+
+	*c = cr
+	return nil
 }
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)

@@ -24,10 +24,10 @@ type Config struct {
 
 type Commons struct {
 	Type  string
-	Title string `json:"deviceTitle,omitempty"`
-	Icon  string `json:"deviceIcon,omitempty"`
-	Brand string `json:"deviceBrand,omitempty"`
-	Model string `json:"deviceModel,omitempty"`
+	Title string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon  string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Brand string `json:"deviceBrand,omitempty" mapstructure:"deviceBrand"`
+	Model string `json:"deviceModel,omitempty" mapstructure:"deviceModel"`
 }
 
 // TODO remove- migration only
