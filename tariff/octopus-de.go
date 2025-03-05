@@ -23,7 +23,7 @@ func init() {
 	registry.Add("octopus-de", NewOctopusDEFromConfig)
 }
 
-// Implementation of intelligent dispatch times is WIP
+// Implementation of intelligent dispatch times is WIP //
 // NewOctopusDEFromConfig creates a new OctopusDE instance from the given configuration.
 func NewOctopusDEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {

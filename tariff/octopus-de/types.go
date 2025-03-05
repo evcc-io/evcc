@@ -1,5 +1,6 @@
 package octopusde
 
+// Implementation of intelligent dispatch times is WIP //
 // krakenDETokenAuthentication is a representation of a GraphQL query for obtaining a Kraken DE API token.
 type krakenDETokenAuthentication struct {
 	ObtainKrakenToken struct {

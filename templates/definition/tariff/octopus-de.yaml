@@ -5,7 +5,7 @@ products:
       generic: Germany
 requirements:
   description:
-    de: "Nutze deine octopusenergy.de Zugangsdaten (E-Mail und Passwort). Es werden die Standard und [Intelligent Octopus Go](https://iogo.octopusenergy.de/) Raten unterstützt."
+    de: "Nutze deine octopusenergy.de Zugangsdaten (E-Mail und Passwort). Standard und [Intelligent Octopus Go](https://iogo.octopusenergy.de/) Raten werden unterstützt."
     en: "Use your octopusenergy.de access data (email and password). Standard and [Intelligent Octopus Go](https://iogo.octopusenergy.de/) rates are supported."
   evcc: ["skiptest"]
 countries: ["DE"]
