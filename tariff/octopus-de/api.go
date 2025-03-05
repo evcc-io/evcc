@@ -43,18 +43,6 @@ type OctopusDEGraphQLClient struct {
 	log             *util.Logger
 }
 
-type headerRoundTripper struct {
-	Transport http.RoundTripper
-	headers   map[string]string
-}
-
-func (h headerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	for key, value := range h.headers {
-		req.Header.Add(key, value)
-	}
-	return h.Transport.RoundTrip(req)
-}
-
 // NewClient creates a new client for communicating with Octopus Energy
 func NewClient(log *util.Logger, email, password string) (*OctopusDEGraphQLClient, error) {
 	cli := request.NewClient(log)
@@ -422,7 +410,6 @@ func (c *OctopusDEGraphQLClient) fetchSimpleRates(accountNumber string) ([]Rate,
 		len(query.Account.AllProperties[0].ElectricityMalos) > 0 &&
 		len(query.Account.AllProperties[0].ElectricityMalos[0].Agreements) > 0 &&
 		len(query.Account.AllProperties[0].ElectricityMalos[0].Agreements[0].UnitRateGrossRateInformation) > 0 {
-
 		rateStr := query.Account.AllProperties[0].ElectricityMalos[0].Agreements[0].UnitRateGrossRateInformation[0].GrossRate
 		if rateStr != "" {
 			rate, err := strconv.ParseFloat(rateStr, 64)
