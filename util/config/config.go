@@ -220,7 +220,9 @@ func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, 
 		Value: val,
 	}
 
-	err = db.Create(&config).Error
+	if err := db.Create(&config).Error; err != nil {
+		return Config{}, err
+	}
 
-	return config, err
+	return config, nil
 }
