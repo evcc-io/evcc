@@ -101,8 +101,8 @@ render: |
           | $h.time[$i] as $time
           | ($i / 24 | floor) as $day
           | {
-              start: ($time | todateiso8601),
-              end: (($time + 3600) | todateiso8601),
+              start: (($time - 3600) | todateiso8601),
+              end: ($time | todateiso8601),
               price: (
                 kwp
                 * ($h.global_tilted_irradiance[$i] / 1000)
