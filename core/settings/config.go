@@ -32,7 +32,7 @@ func (s *ConfigSettings) get(key string) (any, error) {
 func (s *ConfigSettings) set(key string, val any) {
 	data := s.conf.Named().Other
 	data[key] = val
-	if err := s.conf.PartialUpdate(data); err != nil {
+	if err := s.conf.Update(data); err != nil {
 		s.log.ERROR.Println(err)
 	}
 }
