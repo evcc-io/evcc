@@ -3,7 +3,6 @@ package vwidentity
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -81,20 +80,17 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 }
 
 func parseCredentials(body string) (CredentialParams, error) {
-	var res CredentialParams
-
+	// find js block
 	match := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`).FindAllStringSubmatch(body, -1)
 
 	// clean quotes
-	quotes := strings.ReplaceAll(match[0][1], `'`, `"`)
+	quotes1 := strings.ReplaceAll(match[0][1], `'`, `"`)
+	quotes2 := regexp.MustCompile(`\s(\w+)(?s)*:`).ReplaceAllString(quotes1, `" $1":`)
 
 	// strip , }
-	tmpl := regexp.MustCompile(`(?s),\s+}`).ReplaceAllString(quotes, "}")
+	tmpl := regexp.MustCompile(`(?s),\s+}`).ReplaceAllString(quotes2, "}")
 
-	for _, v := range []string{"cancelContractUrl", "templateModel", "disabledFeatures", "isFooterEnabled", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence", "baseUrl", "consentBaseUrl", "isRTLEnabled"} {
-		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
-	}
-
+	var res CredentialParams
 	err := json.Unmarshal([]byte(tmpl), &res)
 
 	return res, err
