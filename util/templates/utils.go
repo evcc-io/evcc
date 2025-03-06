@@ -17,7 +17,11 @@ func quote(value string) string {
 }
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
-func yamlQuote(value string) string {
+func yamlQuote(typ ParamType, value string) string {
+	if typ != TypeString {
+		return value
+	}
+
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {
@@ -28,8 +32,8 @@ func yamlQuote(value string) string {
 		return quote(value)
 	}
 
-	// fix 0815, but not 0; allow float values containing .
-	if strings.HasPrefix(value, "0") && len(value) > 1 && !strings.Contains(value, ".") {
+	// fix 0815
+	if strings.HasPrefix(value, "0") {
 		return quote(value)
 	}
 
