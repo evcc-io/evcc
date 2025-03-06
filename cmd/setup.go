@@ -533,7 +533,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = config.Init(db.Instance)
 	}
 
-	return
+	return err
 }
 
 // configureDatabase configures session database
