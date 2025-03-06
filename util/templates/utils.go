@@ -32,8 +32,8 @@ func yamlQuote(typ ParamType, value string) string {
 		return quote(value)
 	}
 
-	// fix 0815
-	if strings.HasPrefix(value, "0") {
+	// fix 0815, but not 0
+	if strings.HasPrefix(value, "0") && len(value) > 1 {
 		return quote(value)
 	}
 
