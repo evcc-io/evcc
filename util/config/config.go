@@ -23,16 +23,18 @@ type Config struct {
 }
 
 type Properties struct {
-	Type  string
-	Title string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
-	Icon  string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
-	Brand string `json:"deviceBrand,omitempty" mapstructure:"deviceBrand"`
-	Model string `json:"deviceModel,omitempty" mapstructure:"deviceModel"`
+	Type        string
+	Title       string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon        string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Brand       string `json:"deviceBrand,omitempty" mapstructure:"deviceBrand"`
+	Description string `json:"deviceDescription,omitempty" mapstructure:"deviceDescription"`
 }
 
 func (p *Properties) Merge(pp Properties) {
 	p.Title = pp.Title
 	p.Icon = pp.Icon
+	p.Brand = pp.Brand
+	p.Description = pp.Description
 }
 
 // TODO remove- migration only
