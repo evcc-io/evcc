@@ -203,7 +203,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		// static
 
-		// TODO clarify overwriting empty values
+		// merge here to maintain dynamic part of the config
 		other := configurable.Config().Other
 		if err := mergo.Merge(&other, static); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
