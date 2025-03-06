@@ -44,6 +44,12 @@ params:
       de: Maximale Generatorleistung [kWp]
     example: 9.8
     required: true
+  - name: inverter
+    description:
+      en: Maximum inverter power [kW]
+      de: Maximale Wechselrichterleistung [kW]
+    example: 8.5
+    required: true
   - name: horizon
     description:
       en: Horizon
@@ -66,7 +72,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}
+    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ if .inverter }}&inverter={{ unquote .inverter }}{{ end }}
     jq: |
       [ .result.watts | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
