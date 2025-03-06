@@ -195,8 +195,6 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		instance := dev.Instance()
-
 		dynamic, static, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -211,6 +209,8 @@ func updateLoadpointHandler() http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+
+		instance := dev.Instance()
 
 		if err := configurable.Update(other, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
