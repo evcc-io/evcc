@@ -10,9 +10,10 @@ import (
 )
 
 func TestYamlDecode(t *testing.T) {
+	p := Param{Type: TypeString}
 	for _, value := range []string{`value`, `!value`, `@value`, `"value"`, `"va"lue"`, `va'lue`, `@va'lue`, `0815`, `"0815"`, `4711`, `#pwd`, ``} {
 		t.Run(value, func(t *testing.T) {
-			quoted := yamlQuote(TypeString, value)
+			quoted := p.yamlQuote(value)
 			input := fmt.Sprintf("key: %s", quoted)
 
 			var res struct {
@@ -27,9 +28,6 @@ func TestYamlDecode(t *testing.T) {
 }
 
 func TestYamlDecodeLeadingZero(t *testing.T) {
-	exp := "'0815'"
-
-	if res := yamlQuote(TypeString, "0815"); res != exp {
-		t.Fatalf("expected %s, got %s", exp, res)
-	}
+	p := Param{Type: TypeString}
+	assert.Equal(t, "'0815'", p.yamlQuote("0815"))
 }
