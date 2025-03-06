@@ -319,15 +319,15 @@ func (site *Site) restoreSettings() error {
 	}
 
 	// restore accumulated energy
-	pvEnergy := make(map[string]meterEnergy)
+	pvEnergy := make(map[string]float64)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		site.fcstEnergy.Accumulated = fcstEnergy
 
 		for _, name := range site.Meters.PVMetersRef {
-			if me, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Accumulated = me.Accumulated
+			if fcst, ok := pvEnergy[name]; ok {
+				site.pvEnergy[name].Accumulated = fcst
 			} else {
 				// TODO decide auto-reset?
 				site.log.WARN.Printf("cannot restore accumulated solar yield for: %s (may need to reset solar statistics)", name)
