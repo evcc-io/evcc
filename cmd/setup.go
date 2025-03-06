@@ -367,7 +367,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	eg, ctx := errgroup.WithContext(context.TODO())
 
 	// stable-sort vehicles by name
-	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
+	devs1 := make([]config.Device[api.Vehicle], len(static))
 
 	for i, cc := range static {
 		if cc.Name == "" {
