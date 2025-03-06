@@ -69,6 +69,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
+	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
+	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")

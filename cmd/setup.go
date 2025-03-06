@@ -476,6 +476,20 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	// setup persistence
 	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
+	// setup additional templates
+	if err == nil {
+		if cmd.PersistentFlags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+			if err != nil {
+				return err
+			}
+
+			if err := templates.Register(class, cmd.Flag(flagTemplate).Value.String()); err != nil {
+				return err
+			}
+		}
+	}
+
 	// setup translations
 	if err == nil {
 		// TODO decide wrapping
