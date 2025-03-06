@@ -196,9 +196,6 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			Complete: !last.Before(eot.AddDate(0, 0, 1)),
 		}
 
-		// scale factor yield/forecasted today
-		const minEnergy = 0.1
-
 		// accumulate forecasted energy since last update
 		site.fcstEnergy.AddEnergy(accumulatedEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
 		settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
@@ -207,11 +204,14 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			return v.AccumulatedEnergy()
 		})
 
-		// TODO trace
-		site.log.DEBUG.Printf("solar forecast accumulated: %.1fkWh, produced %.1fkWh, scale %.1f", site.fcstEnergy.Accumulated, produced, produced/site.fcstEnergy.Accumulated)
+		if fcst := site.fcstEnergy.AccumulatedEnergy(); fcst > 0 {
+			scale := produced / fcst
+			site.log.DEBUG.Printf("solar forecast: accumulated %.1fkWh, produced %.1fkWh, scale %.1f", fcst, produced, scale)
 
-		if produced > minEnergy /*kWh*/ && site.fcstEnergy.Accumulated > minEnergy /*kWh*/ {
-			fc.Solar.Scale = lo.ToPtr(produced / site.fcstEnergy.Accumulated)
+			const minEnergy = 0.1
+			if produced > minEnergy && fcst > minEnergy { /*kWh*/
+				fc.Solar.Scale = lo.ToPtr(scale)
+			}
 		}
 	}
 
