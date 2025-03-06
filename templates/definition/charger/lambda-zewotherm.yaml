@@ -1,0 +1,36 @@
+template: lambda-zewotherm
+products:
+  - brand: Lambda
+    description:
+      de: EU-L Serie
+      en: EU-L Series
+  - brand: Zewotherm
+    description:
+      de: EU-L Serie
+      en: EU-L Series
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: phases
+    type: int
+    advanced: true
+render: |
+  type: heatpump
+  phases: {{ .phases }}
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 102 # PV Überschussleistung
+      type: holding
+      decode: int16
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103 # aktuelle Aufnahmeleistung der WP
+      type: holding
+      decode: int16

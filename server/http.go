@@ -301,6 +301,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		routes := map[string]route{
 			"log":      {"GET", "/log", logHandler},
 			"logareas": {"GET", "/log/areas", logAreasHandler},
+			"reset":    {"POST", "/reset", resetHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)

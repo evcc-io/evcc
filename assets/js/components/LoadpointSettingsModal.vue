@@ -26,8 +26,9 @@
 					<div class="modal-body">
 						<div class="container">
 							<SmartCostLimit
-								v-if="isModalVisible && smartCostAvailable"
+								v-if="isModalVisible"
 								v-bind="smartCostLimitProps"
+								:possible="smartCostAvailable"
 								class="mt-2"
 							/>
 							<LoadpointSettingsBatteryBoost

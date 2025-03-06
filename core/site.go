@@ -381,6 +381,18 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
+	site.log.INFO.Println("  tariffs:")
+	trf := func(u api.TariffUsage) string {
+		if t := site.GetTariff(u); t != nil {
+			return t.Type().String()
+		}
+		return presence[false]
+	}
+	site.log.INFO.Printf("    grid:      %s", trf(api.TariffUsageGrid))
+	site.log.INFO.Printf("    feed-in:   %s", trf(api.TariffUsageFeedIn))
+	site.log.INFO.Printf("    co2:       %s", trf(api.TariffUsageCo2))
+	site.log.INFO.Printf("    solar:     %s", trf(api.TariffUsageSolar))
+
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
@@ -471,10 +483,10 @@ func (site *Site) updatePvMeters() {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
 
-		if m, ok := meter.(api.MaxACPower); ok {
-			if dc := m.MaxACPower() - power; dc < 0 && power > 0 {
-				mm[i].ExcessDCPower = -dc
-				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, -dc)
+		if m, ok := meter.(api.MaxACPowerGetter); ok {
+			if dc := power - m.MaxACPower(); dc > 0 && power > 0 {
+				mm[i].ExcessDCPower = dc
+				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
 			}
 		}
 	}
@@ -491,8 +503,8 @@ func (site *Site) updatePvMeters() {
 
 	if len(site.pvMeters) > 1 {
 		var excessStr string
-		if site.excessDCPower < 0 {
-			excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", -site.excessDCPower)
+		if site.excessDCPower > 0 {
+			excessStr = fmt.Sprintf(" (includes %.0fW excess DC)", site.excessDCPower)
 		}
 
 		site.log.DEBUG.Printf("pv power: %.0fW"+excessStr, site.pvPower)
@@ -721,7 +733,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := site.gridPower + batteryPower - excessDCPower + residualPower - site.auxPower - flexiblePower
+	sitePower := site.gridPower + batteryPower + excessDCPower + residualPower - site.auxPower - flexiblePower
 
 	// handle priority
 	var flexStr string
@@ -821,7 +833,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 }
 
 // updateLoadpoints updates all loadpoints' charge power
-func (site *Site) updateLoadpoints() float64 {
+func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	var (
 		wg  sync.WaitGroup
 		mu  sync.Mutex
@@ -832,7 +844,7 @@ func (site *Site) updateLoadpoints() float64 {
 	for _, lp := range site.loadpoints {
 		go func() {
 			power := lp.UpdateChargePowerAndCurrents()
-			site.prioritizer.UpdateChargePowerFlexibility(lp)
+			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			mu.Lock()
 			sum += power
@@ -849,8 +861,14 @@ func (site *Site) updateLoadpoints() float64 {
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
+	// smart cost and battery mode handling
+	rates, err := site.plannerRates()
+	if err != nil {
+		site.log.WARN.Println("planner:", err)
+	}
+
 	// update loadpoints
-	totalChargePower := site.updateLoadpoints()
+	totalChargePower := site.updateLoadpoints(rates)
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
@@ -865,12 +883,6 @@ func (site *Site) update(lp updater) {
 	var flexiblePower float64
 	if lp.GetMode() == api.ModePV {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
-	}
-
-	// battery mode handling
-	rates, err := site.plannerRates()
-	if err != nil {
-		site.log.WARN.Println("planner:", err)
 	}
 
 	rate, err := rates.At(time.Now())

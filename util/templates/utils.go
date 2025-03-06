@@ -28,8 +28,8 @@ func yamlQuote(value string) string {
 		return quote(value)
 	}
 
-	// fix 0815, but not 0
-	if strings.HasPrefix(value, "0") && len(value) > 1 {
+	// fix 0815, but not 0; allow float values containing .
+	if strings.HasPrefix(value, "0") && len(value) > 1 && !strings.Contains(value, ".") {
 		return quote(value)
 	}
 
@@ -42,6 +42,10 @@ func trimLines(s string) string {
 		lines[i] = strings.TrimRight(line, "\r\t ")
 	}
 	return strings.Join(lines, "\n")
+}
+
+func unquote(s string) string {
+	return strings.Trim(s, `"'`)
 }
 
 // FuncMap returns a sprig template.FuncMap with additional include function
@@ -57,6 +61,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 			return buf.String(), nil
 		},
 		"urlEncode": url.QueryEscape,
+		"unquote":   unquote,
 	}
 
 	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)

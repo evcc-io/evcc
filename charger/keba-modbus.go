@@ -139,7 +139,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 
 // NewKeba creates a new charger
 func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

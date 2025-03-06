@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/charger/measurement"
+	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -24,7 +25,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -35,13 +36,10 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		Identify, Phases1p3p                *plugin.Config
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
+		LimitSoc                            *plugin.Config
 		Tos                                 bool
-
-		// optional measurements
-		Power  *plugin.Config
-		Energy *plugin.Config
-
-		Currents, Voltages []plugin.Config
+		measurement.Energy                  `mapstructure:",squash"` // optional
+		meter.Phases                        `mapstructure:",squash"` // optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -122,18 +120,24 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, fmt.Errorf("soc: %w", err)
 	}
 
+	// decorate limitsoc
+	limitsoc, err := cc.LimitSoc.IntGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("limitsoc: %w", err)
+	}
+
 	// decorate measurements
-	powerG, energyG, err := meter.BuildMeasurements(ctx, cc.Power, cc.Energy)
+	powerG, energyG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	currentsG, voltagesG, _, err := meter.BuildPhaseMeasurements(ctx, cc.Currents, cc.Voltages, nil)
+	currentsG, voltagesG, _, err := cc.Phases.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, energyG, currentsG, voltagesG), nil
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, limitsoc, powerG, energyG, currentsG, voltagesG), nil
 }
 
 // NewConfigurable creates a new charger

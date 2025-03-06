@@ -76,7 +76,7 @@ func NewHeidelbergECFromConfig(ctx context.Context, other map[string]interface{}
 
 // NewHeidelbergEC creates HeidelbergEC charger
 func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
