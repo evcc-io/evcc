@@ -17,6 +17,12 @@ params:
     advanced: true
   - name: timeout
     advanced: true
+  - name: maxchargepower
+    advanced: true
+    description:
+      en: Rated Charge / Discharge Power [watt]
+      de: Nennleistung zum Laden/Entladen [watt]
+    default: 3680  # minimal value   maybe 30034 or 30035
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -148,6 +154,48 @@ render: |
       decode: uint16
     scale: 1
   capacity: {{ .capacity }} # kWh
+  batterymode:
+    source: switch
+    switch:
+    - case: 3
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # Positive values indicate discharge
+              type: writesingle
+              decode: INT16
+            scale: 0.1
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # Battery charge and discharge regulation
+              type: writesingle
+              decode: INT16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # negative values indicate charging.
+              type: writesingle
+              decode: INT16
+            scale: -0.1
   {{- end }}
-
-
