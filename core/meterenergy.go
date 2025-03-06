@@ -15,13 +15,6 @@ type meterEnergy struct {
 	Accumulated float64  `json:"accumulated"` // kWh
 }
 
-// reset resets data
-func (m *meterEnergy) reset() {
-	m.updated = time.Time{}
-	m.meter = nil
-	m.Accumulated = 0
-}
-
 func (m *meterEnergy) AccumulatedEnergy() float64 {
 	return m.Accumulated
 }
