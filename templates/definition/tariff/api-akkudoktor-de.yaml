@@ -12,81 +12,101 @@ params:
     description:
       en: Latitude
       de: Breitengrad
+    type: float
     example: 50.65
     required: true
   - name: lon
     description:
       en: Longitude
       de: Längengrad
+    type: float
     example: 11.37
     required: true
-  - name: power
+  - name: dec
     description:
-      en: peak power of the pv modules in watts [Wp]
-      de: Spitzenleistung der pv modules in watts [Wp]
-    example: 7800
-    required: true
-  - name: azimuth
-    description:
-      en: Azimuth tilt in degrees.
-      de: Azimutwinkel in Grad.
+      en: Decline
+      de: Neigung
     help:
-      en: "Orientation of PV modules in azimuth in degree. -90 = east,-45 = south-east, 0 = south, 45 = south-west, 90 = west"
-      de: "Ausrichtung der PV-Module im Azimut in Grad. -90 = Osten, -45 = Süd-Osten, 0 = Süden, 45 = Süd-Westen, 90 = Westen"
-    example: 180
+      en: Inclination angle of the PV modules in degrees. 0 = horizontal, 90 = vertical
+      de: Neigungswinkel der PV-Module in Grad. 0 = horizontal, 90 = vertikal
+    type: int
+    example: 25
     required: true
-  - name: tilt
+  - name: az
     description:
-      en: Inclination angle of the PV modules in degrees.
-      de: Neigungswinkel der PV-Module in Grad.
-    example: 30
-    required: true
-  - name: cellCoEff
-    description:
-      en: "cell temperature coefficient of your pv modules. [%]"
-      de: "Zelltemperaturkoeffizient Ihrer PV-Module. [%]"
+      en: Azimuth
+      de: Azimut
     help:
-      en: "The cellcoefficient is used for calculate losses with the temperature of the modules. default: -0.4"
-      de: "Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet. standard: -0.4"
-    example: -0.4
+      en: Orientation of PV modules in azimuth in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+      de: Ausrichtung der PV-Module im Azimut in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+    type: int
+    example: 0
+    required: true
+  - name: kwp
+    description:
+      en: Maximum generator power [kWp]
+      de: Maximale Generatorleistung [kWp]
+    type: float
+    example: 9.8
+    required: true
+  - name: ac
+    description:
+      en: AC Power [kW]
+      de: AC Leistung [kW]
+    help:
+      en: "max power of the inverter in kW. default: no limit"
+      de: "maximale Leistung des Wechselrichters in kW. standard: kein limit"
+    type: float
+    example: 9.8
+    advanced: true
+  - name: efficiency
+    description:
+      en: Inverter efficiency [%]
+      de: Wechselrichterwirkungsgrad [%]
+    help:
+      en: "The inverter efficiency. default: 100 (%)"
+      de: "Der Wirkungsgrad des Wechselrichters standard: 100 (%)"
+    type: int
+    example: 96
+    advanced: true
+  - name: alphatemp
+    description:
+      en: Temperature coefficient
+      de: Temperaturkoeffizient
+    help:
+      en: "The Temperatur coefficient is used for calculate losses with the temperature of the modules. default: -0.004"
+      de: "Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet. standard: -0.004"
+    type: float
+    example: -0.004
     advanced: true
   - name: albedo
     description:
       en: albedo
       de: Albedo
+    help:
+      en: "albedo value of the modules. default: 0.2"
+      de: "Albedowert der Module. standard: 0.2"
+    type: float
     example: 0.2
-    advanced: true
-  - name: powerInverter
-    description:
-      en: max power of the inverter in watts.
-      de: maximale Leistung des Wechselrichters in Watt.
-    help:
-      en: "This setting will used, if the power of the inverter is lower than the power generation of the modules. default: no limit"
-      de: "Diese Einstellung wird verwendet, wenn die Leistung des Wechselrichters geringer ist als die Peak-Leistungserzeugung der Module. standard: kein limit"
-    example: 7000
-    advanced: true
-  - name: inverterEfficiency
-    description:
-      en: Inverter efficiency [%]
-      de: Wechselrichterwirkungsgrad [%]
-    help:
-      en: "The inverter efficiency is specified as percentage between 0-1. default: 1 (=100%)"
-      de: "Der Wirkungsgrad des Wechselrichters wird als Prozentsatz zwischen 0-1 angegeben. standard: 1 (=100%)"
-    example: 0.96
     advanced: true
   - name: range
     description:
-      en: returns max- and min- generation from different weathermodels.
-      de: liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen.
+      en: weathermodel variation
+      de: Wettermodellvariation
+    help:
+      en: "returns max- and min- generation from different weathermodels. default: 0"
+      de: "liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen. standard: 0"
+    type: int
     example: 0
     advanced: true
-  - name: horizont
+  - name: horizon
     description:
-      en: simulate terrain shadows.
-      de: Simuliert Verschattung durch Umgebung.
+      en: simulate terrain shadows
+      de: Simuliert Verschattung durch Umgebung
     help:
-      en: each number representing the horizont height in degrees in a certain compass direction around the point of interest. The horizont height cannot be higher than 90 degrees. For this, you use can a comma separated string with obsticals hight in angle (-180 = north, -90 = east, 0 = south, 90 = west). Also transparency is optional supported with a "t" after angle , see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizont
-      de: Jede Zahl steht für die horizontthöhe in Grad in einer bestimmten Himmelsrichtung um den betreffenden Punkt. Die Höhe des Horizonts kann nicht höher als 90 Grad sein. Hierfür können Sie eine durch Komma getrennte Zeichenkette mit der Höhe der Hindernisse im Winkel verwenden (-180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen). Auch Transparenz wird optional mit einem „t“ nach dem Winkel unterstützt , siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizont
+      en: Each number representing the horizon height in degrees. see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizon
+      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizon
+    type: string
     example: "10,0,10,15"
     advanced: true
   - name: interval
@@ -97,20 +117,20 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: "https://api.akkudoktor.net/forecast?lat={{ unquote .lat }}\
-      &lon={{ unquote .lon }}\
-      &power={{ unquote .power }}\
-      &azimuth={{ unquote .azimuth }}\
-      &tilt={{ unquote .tilt }}\
+    uri: "https://api.akkudoktor.net/forecast?lat={{ .lat }}\
+      &lon={{ .lon }}\
+      &power={{ mulf .kwp 1000 }}\
+      &azimuth={{ .az }}\
+      &tilt={{ .dec }}\
       &past_days=0\
       &timecycle=hourly\
       &timezone=UTC\
-      {{ if .cellCoEff }}&cellCoEff={{ unquote .cellCoEff }}{{ end }}\
-      {{ if .albedo }}&albedo={{ unquote .albedo }}{{ end }}\
-      {{ if .powerInverter }}&powerInverter={{ unquote .powerInverter }}{{ end }}\
-      {{ if .inverterEfficiency }}&inverterEfficiency={{ unquote .inverterEfficiency }}{{ end }}\
-      {{ if .horizont }}&horizont={{ unquote .horizont | urlEncode }}{{ end }}\
-      {{ if .range }}&range={{ unquote .range }}{{ end }}"
+      {{ if .alphatemp }}&cellCoEff={{ mulf .alphatemp 100 }}{{ end }}\
+      {{ if .albedo }}&albedo={{ .albedo }}{{ end }}\
+      {{ if .ac }}&powerInverter={{ mulf .ac 1000 }}{{ end }}\
+      {{ if .efficiency }}&inverterEfficiency={{ divf .efficiency 100 }}{{ end }}\
+      {{ if .horizon }}&horizont={{ .horizon | urlEncode }}{{ end }}\
+      {{ if .range }}&range={{ .range | ceil }}{{ end }}"
     jq: |
       [ .values[][] | {
         start: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | strftime("%FT%TZ")),
