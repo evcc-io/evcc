@@ -39,8 +39,8 @@ github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrR
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
-github.com/andig/rct v0.1.2-0.20250302110530-e1b03e640f26 h1:Kqq17bxhK6TsBs54gf2Bk4pghBAAeJw1WN/RU0pgV1M=
-github.com/andig/rct v0.1.2-0.20250302110530-e1b03e640f26/go.mod h1:KRjBDV8kuvGd2kJfN8/F0kjH8JjkFVpBpn7MhW+ACL8=
+github.com/andig/rct v0.1.2-0.20250304151343-a31971ce3e06 h1:2tTH5epAWlGfdnHmQRnrBthL36F2MuNhBFEUn5i3q10=
+github.com/andig/rct v0.1.2-0.20250304151343-a31971ce3e06/go.mod h1:LIyCLUydqQXBiCipA0/cURUNPzO/33//LS0UqiAY8qc=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=

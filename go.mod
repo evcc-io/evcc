@@ -222,4 +222,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
-replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20250302110530-e1b03e640f26
+replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20250304151343-a31971ce3e06

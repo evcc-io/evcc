@@ -96,7 +96,8 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, v
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		return c, err
+		eebus.Instance.UnregisterDevice(ski, c)
+		return nil, err
 	}
 
 	if hasMeter {

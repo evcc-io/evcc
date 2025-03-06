@@ -53,7 +53,7 @@
 						rows="5"
 						spellcheck="false"
 						class="form-control"
-						@paste="handlePaste"
+						@paste="(event) => handlePaste(event, values)"
 					/>
 				</FormRow>
 			</div>
@@ -97,11 +97,11 @@ export default {
 		transformReadValues() {
 			return { token: "" };
 		},
-		handlePaste(event) {
+		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
 			const cleaned = cleanYaml(text, "sponsortoken");
-			event.target.value = cleaned;
+			values.token = cleaned;
 		},
 	},
 };

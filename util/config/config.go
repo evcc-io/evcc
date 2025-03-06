@@ -1,8 +1,8 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 	"strings"
 
@@ -15,7 +15,7 @@ type Config struct {
 	ID    int `gorm:"primarykey"`
 	Class templates.Class
 	Type  string
-	Value string
+	Data  map[string]any `gorm:"column:value;type:string;serializer:json"`
 }
 
 // TODO remove- migration only
@@ -30,7 +30,7 @@ func (d *Config) Named() Named {
 	res := Named{
 		Name:  NameForID(d.ID),
 		Type:  d.Type,
-		Other: d.detailsAsMap(),
+		Other: maps.Clone(d.Data),
 	}
 	return res
 }
@@ -39,24 +39,9 @@ func (d *Config) Named() Named {
 func (d *Config) Typed() Typed {
 	res := Typed{
 		Type:  d.Type,
-		Other: d.detailsAsMap(),
+		Other: maps.Clone(d.Data),
 	}
 	return res
-}
-
-// detailsAsMap converts device details to map
-func (d *Config) detailsAsMap() map[string]any {
-	res := make(map[string]any)
-	if err := json.Unmarshal([]byte(d.Value), &res); err != nil {
-		panic(err)
-	}
-	return res
-}
-
-// detailsFromMap converts map to device details
-func detailsFromMap(config map[string]any) (string, error) {
-	b, err := json.Marshal(config)
-	return string(b), err
 }
 
 // Update updates a config's details to the database
@@ -67,11 +52,7 @@ func (d *Config) Update(conf map[string]any) error {
 			return err
 		}
 
-		val, err := detailsFromMap(conf)
-		if err != nil {
-			return err
-		}
-		d.Value = val
+		d.Data = conf
 
 		return tx.Save(&d).Error
 	})
@@ -85,16 +66,9 @@ func (d *Config) PartialUpdate(conf map[string]any) error {
 			return err
 		}
 
-		actual := d.detailsAsMap()
-		if err := mergo.Merge(&actual, conf, mergo.WithOverride); err != nil {
+		if err := mergo.Merge(&d.Data, conf, mergo.WithOverride); err != nil {
 			return err
 		}
-
-		val, err := detailsFromMap(actual)
-		if err != nil {
-			return err
-		}
-		d.Value = val
 
 		return tx.Save(&d).Error
 	})
@@ -154,11 +128,7 @@ func Init(instance *gorm.DB) error {
 			}
 
 			if len(res) > 0 {
-				val, err := detailsFromMap(res)
-				if err != nil {
-					return err
-				}
-				dev.Value = val
+				dev.Data = res
 
 				if err := db.Save(&dev).Error; err != nil {
 					return err
@@ -190,7 +160,7 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	// remove devices without details
 	res := make([]Config, 0, len(devices))
 	for _, dev := range devices {
-		if len(dev.Value) > 0 {
+		if len(dev.Data) > 0 {
 			res = append(res, dev)
 		}
 	}
@@ -207,18 +177,15 @@ func ConfigByID(id int) (Config, error) {
 
 // AddConfig adds a new config to the database
 func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
-	val, err := detailsFromMap(conf)
-	if err != nil {
-		return Config{}, err
-	}
-
 	config := Config{
 		Class: class,
 		Type:  typ,
-		Value: val,
+		Data:  conf,
 	}
 
-	err = db.Create(&config).Error
+	if err := db.Create(&config).Error; err != nil {
+		return Config{}, err
+	}
 
-	return config, err
+	return config, nil
 }
