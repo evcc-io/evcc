@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -195,24 +194,16 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		instance := dev.Instance()
-
 		dynamic, static, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
+		instance := dev.Instance()
+
 		// static
-
-		// TODO clarify overwriting empty values
-		other := configurable.Config().Other
-		if err := mergo.Merge(&other, static); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		if err := configurable.Update(other, instance); err != nil {
+		if err := configurable.Update(static, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
