@@ -8,30 +8,7 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: lat
-    description:
-      en: Latitude
-      de: Breitengrad
-    type: float
-    example: 50.65
-    required: true
-  - name: lon
-    description:
-      en: Longitude
-      de: Längengrad
-    type: float
-    example: 11.37
-    required: true
-  - name: dec
-    description:
-      en: Decline
-      de: Neigung
-    help:
-      en: Inclination angle of the PV modules in degrees. 0 = horizontal, 90 = vertical
-      de: Neigungswinkel der PV-Module in Grad. 0 = horizontal, 90 = vertikal
-    type: int
-    example: 25
-    required: true
+  - preset: forecast-base
   - name: az
     description:
       en: Azimuth
@@ -41,13 +18,6 @@ params:
       de: Ausrichtung der PV-Module im Azimut in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
     type: int
     example: 0
-    required: true
-  - name: kwp
-    description:
-      en: Maximum generator power [kWp]
-      de: Maximale Generatorleistung [kWp]
-    type: float
-    example: 9.8
     required: true
   - name: ac
     description:
