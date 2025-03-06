@@ -367,7 +367,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	eg, ctx := errgroup.WithContext(context.TODO())
 
 	// stable-sort vehicles by name
-	devs1 := make([]config.Device[api.Vehicle], len(static))
+	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -388,7 +388,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			devs1[i] = config.NewStaticDevice(cc, instance)
+			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
 
 			return nil
 		})
@@ -401,9 +401,9 @@ func configureVehicles(static []config.Named, names ...string) error {
 	}
 
 	// stable-sort vehicles by id
-	devs2 := make([]config.ConfigurableDevice[api.Vehicle], len(configurable))
+	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
-	for i, conf := range configurable {
+	for _, conf := range configurable {
 		eg.Go(func() error {
 			cc := conf.Named()
 
@@ -416,7 +416,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			devs2[i] = config.NewConfigurableDevice(&conf, instance)
+			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
 
 			return nil
 		})
