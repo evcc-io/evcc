@@ -62,8 +62,15 @@ func (lp *Loadpoint) identifyVehicle() {
 		return
 	}
 
+	// vehicle has changed- stop session
+	lp.stopSession()
+	lp.clearSession()
+
 	// vehicle found or removed
 	lp.setVehicleIdentifier(id)
+
+	// create new charging session
+	lp.createSession()
 
 	if id != "" {
 		lp.log.DEBUG.Println("charger vehicle id:", id)
