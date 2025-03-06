@@ -1,9 +1,11 @@
 <template>
-	<div v-if="isSolar && solarEnergy" class="row">
+	<div v-if="isSolar && solar" class="row">
 		<div class="col-6 col-sm-4 mb-3 d-flex flex-column">
 			<div class="label">{{ label("today") }}</div>
 			<div class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-lg-baseline">
-				<div class="text-primary text-nowrap">{{ solarEnergy.today.energy }}</div>
+				<div class="text-primary text-nowrap">
+					<AnimatedNumber :to="solar.today?.energy" :format="fmtEnergy" />
+				</div>
 				<div class="extraValue text-nowrap">{{ label("remaining") }}</div>
 			</div>
 		</div>
@@ -12,8 +14,10 @@
 			<div
 				class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-end align-items-sm-center align-items-lg-baseline"
 			>
-				<div class="text-primary text-nowrap">{{ solarEnergy.tomorrow.energy }}</div>
-				<div v-if="solarEnergy.tomorrow.incomplete" class="extraValue text-nowrap">
+				<div class="text-primary text-nowrap">
+					<AnimatedNumber :to="solar.tomorrow?.energy" :format="fmtEnergy" />
+				</div>
+				<div v-if="!solar.tomorrow?.complete" class="extraValue text-nowrap">
 					{{ label("partly") }}
 				</div>
 			</div>
@@ -24,9 +28,9 @@
 				class="value d-flex flex-column flex-lg-row gap-lg-2 align-items-start align-items-sm-end align-items-lg-baseline"
 			>
 				<div class="text-primary text-nowrap">
-					{{ solarEnergy.dayAfterTomorrow.energy }}
+					<AnimatedNumber :to="solar.dayAfterTomorrow?.energy" :format="fmtEnergy" />
 				</div>
-				<div v-if="solarEnergy.dayAfterTomorrow.incomplete" class="extraValue text-nowrap">
+				<div v-if="!solar.dayAfterTomorrow?.complete" class="extraValue text-nowrap">
 					{{ label("partly") }}
 				</div>
 			</div>
@@ -59,16 +63,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import {
-	energyByDay,
-	dayStringByOffset,
-	filterSlotsByDate,
-	ForecastType,
-	type PriceSlot,
-} from "../utils/forecast";
+import { defineComponent, type PropType } from "vue";
+import { ForecastType, type PriceSlot, type SolarDetails } from "../utils/forecast";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
-
+import AnimatedNumber from "./AnimatedNumber.vue";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
 export interface Energy {
@@ -84,39 +82,34 @@ export interface EnergyByDay {
 
 export default defineComponent({
 	name: "ForecastDetails",
+	components: {
+		AnimatedNumber,
+	},
 	mixins: [formatter],
 	props: {
 		type: { type: String as () => ForecastType, required: true },
-		slots: { type: Array as () => PriceSlot[], default: () => [] },
+		grid: { type: Array as PropType<PriceSlot[]> },
+		co2: { type: Array as PropType<PriceSlot[]> },
+		solar: { type: Object as PropType<SolarDetails> },
 		currency: { type: String },
+	},
+	data: function () {
+		return {
+			now: new Date(),
+			interval: null as ReturnType<typeof setInterval> | null,
+		};
 	},
 	computed: {
 		isSolar() {
 			return this.type === ForecastType.Solar;
 		},
-		upcomingSlots() {
-			const now = new Date();
-			return this.slots.filter((slot) => new Date(slot.end) > now).slice(0, 48);
+		isPrice() {
+			return this.type === ForecastType.Price;
 		},
-		solarEnergy(): EnergyByDay | undefined {
-			if (!this.isSolar) return;
-
-			const days = ["today", "tomorrow", "dayAfterTomorrow"];
-			return days.reduce((acc, day, index) => {
-				const energy = energyByDay(this.slots, index);
-				const date = new Date();
-				date.setDate(date.getDate() + index);
-				const dayString = dayStringByOffset(index);
-				const count = filterSlotsByDate(this.slots, dayString).length;
-				const empty = count === 0;
-				const complete = count === 24;
-				const energyFmt = empty ? "-" : this.fmtWh(energy, POWER_UNIT.AUTO);
-				acc[day] = {
-					energy: energyFmt,
-					incomplete: energy && !complete && !empty,
-				};
-				return acc;
-			}, {} as EnergyByDay);
+		upcomingSlots(): PriceSlot[] {
+			const now = this.now;
+			const slots = this.isPrice ? this.grid || [] : this.co2 || [];
+			return slots.filter((slot) => new Date(slot.end) > now).slice(0, 48);
 		},
 		averagePrice() {
 			if (this.isSolar) return "";
@@ -149,6 +142,17 @@ export default defineComponent({
 			return colors[this.type];
 		},
 	},
+	mounted() {
+		this.now = new Date();
+		this.interval = setInterval(() => {
+			this.now = new Date();
+		}, 1000 * 60);
+	},
+	beforeUnmount() {
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
+	},
 	methods: {
 		label(key: string) {
 			// special case "day after tomorrow"
@@ -168,6 +172,9 @@ export default defineComponent({
 				return this.fmtPricePerKWh(value, this.currency, false, withUnit);
 			}
 			return withUnit ? this.fmtCo2Medium(value) : this.fmtNumber(value, 0);
+		},
+		fmtEnergy(energy: number | undefined) {
+			return !energy ? "-" : this.fmtWh(energy, POWER_UNIT.AUTO);
 		},
 	},
 });
