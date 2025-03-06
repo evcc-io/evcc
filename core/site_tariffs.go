@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/samber/lo"
 )
@@ -58,6 +59,7 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 
 // accumulatedEnergy calculates the energy consumption between from and to,
 // assuming the rates containing the power at given timestamp.
+// Result is in Wh
 func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
 	var energy float64
 	var last tsValue
@@ -177,14 +179,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		eod := bod.AddDate(0, 0, 1)
 		eot := eod.AddDate(0, 0, 1)
 
-		forecastedToday := accumulatedEnergy(solar, bod, time.Now())
 		remainingToday := accumulatedEnergy(solar, time.Now(), eod)
 		tomorrow := accumulatedEnergy(solar, eod, eot)
 		dayAfterTomorrow := accumulatedEnergy(solar, eot, eot.AddDate(0, 0, 1))
-
-		yieldToday := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
-			return v.AccumulatedEnergy()
-		})
 
 		fc.Solar.Today = dailyDetails{
 			Yield:    remainingToday,
@@ -199,11 +196,22 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 			Complete: !last.Before(eot.AddDate(0, 0, 1)),
 		}
 
-		// TODO && !solar[0].Timestamp.After(bod)
+		// scale factor yield/forecasted today
+		const minEnergy = 0.1
 
-		const minEnergy = 0.4
-		if yieldToday > minEnergy /*kWh*/ && forecastedToday > minEnergy /*kWh*/ {
-			fc.Solar.Scale = lo.ToPtr(yieldToday / forecastedToday)
+		// accumulate forecasted energy since last update
+		site.fcstEnergy.AddEnergy(accumulatedEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
+		settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
+
+		produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
+			return v.AccumulatedEnergy()
+		})
+
+		// TODO trace
+		site.log.DEBUG.Printf("solar forecast accumulated: %.1fkWh, produced %.1fkWh, scale %.1f", site.fcstEnergy.Accumulated, produced, produced/site.fcstEnergy.Accumulated)
+
+		if produced > minEnergy /*kWh*/ && site.fcstEnergy.Accumulated > minEnergy /*kWh*/ {
+			fc.Solar.Scale = lo.ToPtr(produced / site.fcstEnergy.Accumulated)
 		}
 	}
 

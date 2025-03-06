@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"dario.cat/mergo"
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
@@ -97,6 +96,7 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
+	fcstEnergy  *meterEnergy
 	pvEnergy    map[string]*meterEnergy
 
 	// cached state
@@ -200,10 +200,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev.Instance())
 
 		// accumulator
-		site.pvEnergy[ref] = &meterEnergy{
-			clock:     clock.New(),
-			startFunc: beginningOfDay,
-		}
+		site.pvEnergy[ref] = &meterEnergy{clock: clock.New()}
 	}
 
 	// multiple batteries
@@ -252,9 +249,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:      util.NewLogger("site"),
-		Voltage:  230, // V
-		pvEnergy: make(map[string]*meterEnergy),
+		log:        util.NewLogger("site"),
+		Voltage:    230, // V
+		pvEnergy:   make(map[string]*meterEnergy),
+		fcstEnergy: &meterEnergy{clock: clock.New()},
 	}
 
 	return site
@@ -320,14 +318,19 @@ func (site *Site) restoreSettings() error {
 		site.SetBatteryGridChargeLimit(&v)
 	}
 
-	// restore accumulated energy if not older than 15 minutes
+	// restore accumulated energy
 	pvEnergy := make(map[string]meterEnergy)
-	if settings.Json(keys.SolarYieldToday, &pvEnergy) == nil {
+	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
+
+	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
+		site.fcstEnergy.Accumulated = fcstEnergy
+
 		for _, name := range site.Meters.PVMetersRef {
-			if me, ok := pvEnergy[name]; ok && time.Since(me.Updated) <= 15*time.Minute {
-				if err := mergo.Merge(site.pvEnergy[name], me, mergo.WithOverride); err != nil {
-					panic(err)
-				}
+			if me, ok := pvEnergy[name]; ok {
+				site.pvEnergy[name].Accumulated = me.Accumulated
+			} else {
+				// TODO decide auto-reset?
+				site.log.WARN.Printf("cannot restore accumulated solar yield for: %s (may need to reset solar statistics)", name)
 			}
 		}
 	}
@@ -547,8 +550,8 @@ func (site *Site) updatePvMeters() {
 	}
 
 	// store
-	if err := settings.SetJson(keys.SolarYieldToday, site.pvEnergy); err != nil {
-		site.log.ERROR.Println("solar yield today:", err)
+	if err := settings.SetJson(keys.SolarAccYield, site.pvEnergy); err != nil {
+		site.log.ERROR.Println("accumulated solar yield:", err)
 	}
 }
 
