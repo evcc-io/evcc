@@ -467,14 +467,14 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
-func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
 	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
 	// setup persistence
-	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// setup additional templates
 	if err == nil {
