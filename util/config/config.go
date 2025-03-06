@@ -18,7 +18,7 @@ import (
 type Config struct {
 	ID         int `gorm:"primarykey"`
 	Class      templates.Class
-	Properties `gorm:"embedded" json:",inline"`
+	Properties `gorm:"embedded"`
 	Data       map[string]any `gorm:"column:value;type:string;serializer:json"`
 }
 

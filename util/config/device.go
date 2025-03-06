@@ -1,5 +1,7 @@
 package config
 
+import "sync"
+
 type Device[T any] interface {
 	Config() Named
 	Instance() T
@@ -13,7 +15,10 @@ type ConfigurableDevice[T any] interface {
 	Delete() error
 }
 
+var _ ConfigurableDevice[any] = (*configurableDevice[any])(nil)
+
 type configurableDevice[T any] struct {
+	mu       sync.Mutex
 	config   *Config
 	instance T
 }
@@ -26,30 +31,32 @@ func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice
 }
 
 func (d *configurableDevice[T]) Config() Named {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	return d.config.Named()
 }
 
 func (d *configurableDevice[T]) Instance() T {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	return d.instance
 }
 
 func (d *configurableDevice[T]) ID() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	return d.config.ID
 }
 
 func (d *configurableDevice[T]) Properties() Properties {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	return d.config.Properties
 }
 
-// func (d *configurableDevice[T]) Assign(instance T) {
-// 	d.instance = instance
-// }
-
-//	func (d *configurableDevice[T]) Update(config map[string]any) error {
-//		return d.config.Update(config)
-//	}
-
 func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	if err := d.config.Update(config); err != nil {
 		return err
 	}
@@ -58,6 +65,8 @@ func (d *configurableDevice[T]) Update(config map[string]any, instance T) error 
 }
 
 func (d *configurableDevice[T]) PartialUpdate(config map[string]any, instance T) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	if err := d.config.PartialUpdate(config); err != nil {
 		return err
 	}
@@ -66,8 +75,12 @@ func (d *configurableDevice[T]) PartialUpdate(config map[string]any, instance T)
 }
 
 func (d *configurableDevice[T]) Delete() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	return d.config.Delete()
 }
+
+var _ Device[any] = (*staticDevice[any])(nil)
 
 type staticDevice[T any] struct {
 	config   Named
@@ -79,10 +92,6 @@ func NewStaticDevice[T any](config Named, instance T) Device[T] {
 		config:   config,
 		instance: instance,
 	}
-}
-
-func (d *staticDevice[T]) Configurable() bool {
-	return true
 }
 
 func (d *staticDevice[T]) Config() Named {
