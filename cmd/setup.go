@@ -401,7 +401,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	}
 
 	// stable-sort vehicles by id
-	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
+	devs2 := make([]config.ConfigurableDevice[api.Vehicle], len(configurable))
 
 	for i, conf := range configurable {
 		eg.Go(func() error {
