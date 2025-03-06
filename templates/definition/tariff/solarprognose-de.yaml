@@ -3,8 +3,8 @@ products:
   - brand: solarprognose.de
 requirements:
   description:
-    en: "[solarprognose.de](https://www.solarprognose.de) can be used for free (but donations are welcome). Plans can also be used by specifying an API key."
-    de: "[solarprognose.de](https://www.solarprognose.de) kann kostenlos verwendet werden (Spenden sind allerdings willkommen). Pläne können ebenfalls verwendet werden, indem ein API-Key angegeben wird."
+    en: "[solarprognose.de](https://www.solarprognose.de) can be used for free (but donations are welcome). An user account is required."
+    de: "[solarprognose.de](https://www.solarprognose.de) kann kostenlos verwendet werden (Spenden sind allerdings willkommen). Ein Benutzer-Account ist notwendig."
   evcc: ["skiptest"]
 group: solar
 params:
