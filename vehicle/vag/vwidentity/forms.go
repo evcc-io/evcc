@@ -85,7 +85,7 @@ func parseCredentials(body string) (CredentialParams, error) {
 
 	// clean quotes
 	quotes1 := strings.ReplaceAll(match[0][1], `'`, `"`)
-	quotes2 := regexp.MustCompile(`\s(\w+)(?s)*:`).ReplaceAllString(quotes1, `" $1":`)
+	quotes2 := regexp.MustCompile(`\s(\w+)(?s)*:`).ReplaceAllString(quotes1, ` "$1":`)
 
 	// strip , }
 	tmpl := regexp.MustCompile(`(?s),\s+}`).ReplaceAllString(quotes2, "}")

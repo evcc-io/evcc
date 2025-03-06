@@ -26,6 +26,8 @@ func TestParse(t *testing.T) {
         }
     </script>`
 
-	_, err := parseCredentials(b)
+	res, err := parseCredentials(b)
 	require.NoError(t, err)
+	require.Equal(t, "16563a265369fbc1ef1ba126411349a430b1d8b5c1592b6284216dc634169ca3", res.TemplateModel.Hmac)
+	require.Equal(t, "pwAX6CTKoSQWsej-9sROQ5LPw8Qy0gCT9oSdFxFxo9VkyNeYxjMg2kevkhY70Iyawul6e_D27qYK5za-leCoJXMSxu1R8eep", res.CsrfToken)
 }
