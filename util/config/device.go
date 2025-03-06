@@ -6,6 +6,7 @@ type Device[T any] interface {
 	Config() Named
 	Instance() T
 }
+
 type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
@@ -13,6 +14,28 @@ type ConfigurableDevice[T any] interface {
 	Update(map[string]any, T) error
 	PartialUpdate(map[string]any, T) error
 	Delete() error
+}
+
+var _ Device[any] = (*staticDevice[any])(nil)
+
+type staticDevice[T any] struct {
+	config   Named
+	instance T
+}
+
+func NewStaticDevice[T any](config Named, instance T) Device[T] {
+	return &staticDevice[T]{
+		config:   config,
+		instance: instance,
+	}
+}
+
+func (d *staticDevice[T]) Config() Named {
+	return d.config
+}
+
+func (d *staticDevice[T]) Instance() T {
+	return d.instance
 }
 
 var _ ConfigurableDevice[any] = (*configurableDevice[any])(nil)
@@ -78,26 +101,4 @@ func (d *configurableDevice[T]) Delete() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.config.Delete()
-}
-
-var _ Device[any] = (*staticDevice[any])(nil)
-
-type staticDevice[T any] struct {
-	config   Named
-	instance T
-}
-
-func NewStaticDevice[T any](config Named, instance T) Device[T] {
-	return &staticDevice[T]{
-		config:   config,
-		instance: instance,
-	}
-}
-
-func (d *staticDevice[T]) Config() Named {
-	return d.config
-}
-
-func (d *staticDevice[T]) Instance() T {
-	return d.instance
 }
