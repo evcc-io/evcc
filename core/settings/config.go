@@ -29,6 +29,7 @@ func (s *ConfigSettings) get(key string) (any, error) {
 	return val, nil
 }
 
+// TODO remove broken error handling when settings api is retired
 func (s *ConfigSettings) set(key string, val any) {
 	data := s.conf.Named().Other
 	data[key] = val
