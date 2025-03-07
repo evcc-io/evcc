@@ -11,10 +11,7 @@ import (
 // chargerHasFeature checks availability of charger feature
 func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
 	c, ok := lp.charger.(api.FeatureDescriber)
-	if ok {
-		ok = slices.Contains(c.Features(), f)
-	}
-	return ok
+	return ok && slices.Contains(c.Features(), f)
 }
 
 // publishChargerFeature publishes availability of charger features
