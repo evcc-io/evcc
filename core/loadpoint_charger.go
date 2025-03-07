@@ -33,3 +33,11 @@ func (lp *Loadpoint) chargerSoc() (float64, error) {
 	}
 	return 0, api.ErrNotAvailable
 }
+
+// chargerSocLimit returns charger soc limit if available
+func (lp *Loadpoint) chargerSocLimit() (int64, error) {
+	if c, ok := lp.charger.(api.SocLimiter); ok {
+		return c.GetLimitSoc()
+	}
+	return 0, api.ErrNotAvailable
+}
