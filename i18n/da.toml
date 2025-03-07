@@ -447,6 +447,31 @@ modalUpdateNow = "Installer nu"
 modalUpdateStarted = "Starter den nye version af evcc..."
 modalUpdateStatusStart = "Installation startede:"
 
+[forecast]
+modalTitle = "Prognose"
+
+[forecast.co2]
+average = "Gennemsnit"
+lowestHour = "Reneste time"
+range = "spændvidde"
+
+[forecast.price]
+average = "Gennemsnit"
+lowestHour = "Billigste time"
+range = "Spændvidde"
+
+[forecast.solar]
+dayAfterTomorrow = "I overmorgen"
+partly = "delvis"
+remaining = "resterende"
+today = "I dag"
+tomorrow = "I morgen"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
+
 [header]
 about = "Om"
 blog = "Blog"
@@ -538,6 +563,7 @@ batteryGridChargeActive = "Oplader fra elnettet"
 batteryGridChargeLimit = "Oplader fra elnettet når"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
+forecastTooltip = "prognose: resterende solenergi produktion i dag"
 gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
@@ -674,13 +700,6 @@ temp = "Temp"
 tempLimit = "Temp. grænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplader"
-
-[main.vehicleSoc]
-charging = "opladning"
-connected = "forbundet"
-disconnected = "afbrudt"
-ready = "parat"
-vehicleLimit = "Køretøjsgrænse: {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Venter på godkendelse."

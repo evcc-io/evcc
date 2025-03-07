@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -89,7 +90,24 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
+	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-time.After(10 * time.Second):
+			// timeout - cancel context
+			cancel()
+		case <-done:
+			// success
+		}
+	}()
+
+	return ctx, cancel, done
+}
+
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -102,7 +120,7 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(context.TODO(), typeTemplate, merged)
+	instance, err := newFromConf(ctx, typeTemplate, merged)
 
 	return dev, instance, merged, err
 }
@@ -110,6 +128,11 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 type testResult = struct {
 	Value any    `json:"value"`
 	Error string `json:"error"`
+}
+
+func hasFeature(instance any, f api.Feature) bool {
+	fd, ok := instance.(api.FeatureDescriber)
+	return ok && slices.Contains(fd.Features(), f)
 }
 
 // testInstance tests the given instance similar to dump
@@ -141,7 +164,7 @@ func testInstance(instance any) map[string]testResult {
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
 		key := "soc"
-		if fd, ok := instance.(api.FeatureDescriber); ok && slices.Contains(fd.Features(), api.Heating) {
+		if hasFeature(instance, api.Heating) {
 			key = "temp"
 		}
 		makeResult(key, val, err)
@@ -206,7 +229,11 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
-		makeResult("vehicleLimitSoc", val, err)
+		key := "vehicleLimitSoc"
+		if hasFeature(instance, api.Heating) {
+			key = "heaterTempLimit"
+		}
+		makeResult(key, val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {

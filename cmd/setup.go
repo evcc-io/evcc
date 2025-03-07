@@ -145,7 +145,7 @@ func isWritable(filePath string) bool {
 func configureCircuits(conf *[]config.Named) error {
 	// migrate settings
 	if settings.Exists(keys.Circuits) {
-		conf = &[]config.Named{}
+		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
@@ -171,7 +171,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(context.TODO(), log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -467,14 +467,28 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
-func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
 	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
 	// setup persistence
-	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// setup additional templates
+	if err == nil {
+		if cmd.PersistentFlags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+			if err != nil {
+				return err
+			}
+
+			if err := templates.Register(class, cmd.Flag(flagTemplate).Value.String()); err != nil {
+				return err
+			}
+		}
+	}
 
 	// setup translations
 	if err == nil {
@@ -519,7 +533,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		err = config.Init(db.Instance)
 	}
 
-	return
+	return err
 }
 
 // configureDatabase configures session database
@@ -642,7 +656,7 @@ func configureGo(conf []globalconfig.Go) error {
 func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
-		conf = new(globalconfig.Hems)
+		*conf = globalconfig.Hems{}
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -689,7 +703,7 @@ func configureMDNS(conf globalconfig.Network) error {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		conf = new(eebus.Config)
+		*conf = eebus.Config{}
 		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -714,7 +728,7 @@ func configureEEBus(conf *eebus.Config) error {
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		conf = new(globalconfig.Messaging)
+		*conf = globalconfig.Messaging{}
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -804,7 +818,7 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
-		conf = new(globalconfig.Tariffs)
+		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -861,7 +875,7 @@ func configureDevices(conf globalconfig.All) error {
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		conf = &[]globalconfig.ModbusProxy{}
+		*conf = []globalconfig.ModbusProxy{}
 		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
 			return err
 		}

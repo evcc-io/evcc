@@ -1222,8 +1222,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	availablePower := lp.chargePower - sitePower
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.phasesConfigured < 3
 
-	lp.log.DEBUG.Printf("!! pvScalePhases DOWN activePhases: %d, available power: %.0fW, scalable: %t", activePhases, availablePower, scalable)
-
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
@@ -1252,8 +1250,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
-
-	lp.log.DEBUG.Printf("!! pvScalePhases UP maxPhases: %d, available power: %.0fW, scalable: %t", maxPhases, availablePower, scalable)
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
@@ -1284,8 +1280,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	if !waiting && !lp.phaseTimer.IsZero() {
 		lp.resetPhaseTimer()
 	}
-
-	lp.log.DEBUG.Println("!! pvScalePhases EXIT")
 
 	return 0
 }
@@ -1355,7 +1349,6 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	} else if lp.GetBatteryBoost() != boostDisabled {
-		lp.log.DEBUG.Printf("!! pvScalePhases phasesSwitched: %v, %v", lp.phasesSwitched, time.Since(lp.phasesSwitched))
 	}
 
 	// calculate target charge current from delta power and actual current
@@ -1605,23 +1598,34 @@ func (lp *Loadpoint) publishChargeProgress() {
 // publish state of charge, remaining charge duration and range
 func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
+	if err == nil {
+		lp.vehicleSoc = soc
+		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
-	// guard for socEstimator removed by api
-	// also keep a local copy in order to avoid race conditions
-	// https://github.com/evcc-io/evcc/issues/16180
-	socEstimator := lp.socEstimator
-	if socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
-		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
-		// We need to check if the charger can provide soc and use it if available.
-		if err == nil {
-			lp.vehicleSoc = soc
-			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+		if limit, err := lp.chargerSocLimit(); err == nil {
+			lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
+			// https://github.com/evcc-io/evcc/issues/13349
+			lp.publish(keys.VehicleLimitSoc, float64(limit))
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charger soc limit: %v", err)
 		}
 
 		return
+	} else if !errors.Is(err, api.ErrNotAvailable) {
+		lp.log.ERROR.Printf("charger soc: %v", err)
 	}
 
-	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
+	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
+	// https://github.com/evcc-io/evcc/issues/16180
+	socEstimator := lp.socEstimator
+
+	// soc not available
+	if socEstimator == nil || !lp.vehicleHasSoc() {
+		return
+	}
+
+	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())
@@ -1642,6 +1646,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// vehicle target soc
 		// TODO take vehicle api limits into account
 		apiLimitSoc := 100
+
+		// vehicle limit
 		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
@@ -1669,7 +1675,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(keys.VehicleRange, rng)
-			} else {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle range: %v", err)
 			}
 		}

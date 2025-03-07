@@ -128,6 +128,7 @@ save = "Shrani"
 showAdvancedSettings = "Prikaži napredne nastavitve"
 telemetry = "Telemetrija"
 title = "Naslov"
+validateSave = "Preveri in shrani"
 
 [config.grid]
 title = "Omrežni meter"
@@ -153,6 +154,13 @@ labelUser = "Uporabniško ime"
 title = "InfluxDB"
 v1Support = "Potrebujete podporo za InfluxDB 1.x?"
 v2Support = "Nazaj na InfluxDB 2.x"
+
+[config.loadpoint]
+addCharger = "Dodaj polnilnik"
+cancel = "Prekliči"
+chargerPower11kw = "11 kW"
+chargerPower22kw = "22 kW"
+chargingTitle = "Polnjenje"
 
 [config.main]
 addLoadpoint = "Dodaj polnilno mesto"
@@ -582,13 +590,6 @@ tempLimit = "Temp. limit"
 unknown = "Neznano vozilo"
 vehicleSoc = "Napolnjeno"
 
-[main.vehicleSoc]
-charging = "polnjenje"
-connected = "povezan"
-disconnected = "odklopljen"
-ready = "pripravljen"
-vehicleLimit = "Omejitev vozila: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Čakanje na avtorizacijo."
 batteryBoost = "Pospeševanje z baterijo aktivno"
@@ -614,7 +615,7 @@ targetChargeActive = "Ciljno polnjenje je aktivno, predviden konec {duration}."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
 unknown = ""
-vehicleLimit = "Omejitev vozila."
+vehicleLimit = "Omejitev vozila"
 vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 welcome = "Kratko začetno polnjenje za potrditev povezave."

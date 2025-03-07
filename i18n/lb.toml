@@ -440,6 +440,31 @@ modalUpdateNow = "Elo installéieren"
 modalUpdateStarted = "Déi nei Versioun vun evcc starten ..."
 modalUpdateStatusStart = "Installatioun ugefaang:"
 
+[forecast]
+modalTitle = "Prognose"
+
+[forecast.co2]
+average = "Moyenne"
+lowestHour = "Déi properst Stonn"
+range = "Beräich"
+
+[forecast.price]
+average = "Duerchschnitt"
+lowestHour = "Bëllegst Stonn"
+range = "Beräich"
+
+[forecast.solar]
+dayAfterTomorrow = "Iwwermuer"
+partly = "deelweis"
+remaining = "verbleiwend"
+today = "Haut"
+tomorrow = "Muer"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Präis"
+solar = "Solar"
+
 [header]
 about = "Iwwer"
 blog = "Blog"
@@ -536,6 +561,7 @@ batteryGridChargeActive = "Netzlueden aktiv"
 batteryGridChargeLimit = "Netzluede wann"
 batteryHold = "Batterie (gespäert)"
 batteryTooltip = "{energy} vun {total} ({soc})"
+forecastTooltip = "Prognose: Rescht Solarproduktioun fir haut"
 gridImport = "Verbrauch vum Stroumnetz"
 homePower = "Verbrauch"
 loadpoints = "Wallbox | Wallbox | {count} Wallboxen"
@@ -668,13 +694,6 @@ tempLimit = "Temp. Limitt"
 unknown = "Gaascht Gefier"
 vehicleSoc = "Gelueden"
 
-[main.vehicleSoc]
-charging = "oplueden"
-connected = "verbonne"
-disconnected = "deconnectéiert"
-ready = "bereet"
-vehicleLimit = "Limitt vum Gefier: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waarden op d'Autorisatioun."
 batteryBoost = "Batterie Boost ass aktiv."
@@ -699,7 +718,7 @@ targetChargeActive = "Luedplanung aktiv. Ageschate Schluss an {duration}."
 targetChargePlanned = "Luedpladung fänkt un an {time} un."
 targetChargeWaitForVehicle = "Luedplang ass prett. Waarden op d'Gefier..."
 unknown = ""
-vehicleLimit = "Limitt vum Gefier."
+vehicleLimit = "Limitt vum Gefier"
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."

@@ -54,8 +54,8 @@ type Go struct {
 
 type ModbusProxy struct {
 	Port            int
-	ReadOnly        string
-	modbus.Settings `mapstructure:",squash"`
+	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
+	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:",omitempty"`
 }
 
 var _ api.Redactor = (*Hems)(nil)
@@ -135,7 +135,7 @@ type Messaging struct {
 }
 
 func (c Messaging) Configured() bool {
-	return len(c.Services) > 0
+	return len(c.Services) > 0 || len(c.Events) > 0
 }
 
 type Tariffs struct {

@@ -447,6 +447,31 @@ modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
 
+[forecast]
+modalTitle = "Prévisions"
+
+[forecast.co2]
+average = "Moyenne"
+lowestHour = "Heure la plus propre"
+range = "Amplitude"
+
+[forecast.price]
+average = "Moyenne"
+lowestHour = "Heure la moins chère"
+range = "Amplitude"
+
+[forecast.solar]
+dayAfterTomorrow = "Après demain"
+partly = "Partiellement"
+remaining = "Restant"
+today = "Aujourd'hui"
+tomorrow = "Demain"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Prix"
+solar = "Solaire"
+
 [header]
 about = "À propos"
 blog = "Blog"
@@ -543,6 +568,7 @@ batteryGridChargeActive = "charge réseau active"
 batteryGridChargeLimit = "charge réseau quand"
 batteryHold = "Batterie (verrouillée)"
 batteryTooltip = "{energy} sur {total} ({soc})"
+forecastTooltip = "prévision : production solaire restante aujourd’hui"
 gridImport = "Utilisation du réseau"
 homePower = "Consommation"
 loadpoints = "Recharge| Recharge | {count} chargeurs"
@@ -672,17 +698,10 @@ moreActions = "Plus d'actions"
 none = "Pas de véhicule"
 notReachable = "Impossible d’atteindre le véhicule. Essayez de redémarrer evcc."
 targetSoc = "Limite"
-temp = "Temp."
+temp = "Température"
 tempLimit = "Temp. limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
-
-[main.vehicleSoc]
-charging = "en charge"
-connected = "connecté"
-disconnected = "déconnecté"
-ready = "prêt"
-vehicleLimit = "Limite du véhicule : {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "En attente d’autorisation."
@@ -708,7 +727,7 @@ targetChargeActive = "Plan de charge actif. Fin estimée dans {duration}."
 targetChargePlanned = "Le plan de charge démarre dans {duration}."
 targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
 unknown = "-"
-vehicleLimit = "Limit du véhicule."
+vehicleLimit = "Limit du véhicule"
 vehicleLimitReached = "Limite du véhicule atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 welcome = "Courte charge initiale pour confirmer la connexion."

@@ -448,6 +448,31 @@ modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
 
+[forecast]
+modalTitle = "Прогноз"
+
+[forecast.co2]
+average = "Середній"
+lowestHour = "Найчистіша година"
+range = "Діапазон"
+
+[forecast.price]
+average = "Середній"
+lowestHour = "Найдешевша година"
+range = "Діапазон"
+
+[forecast.solar]
+dayAfterTomorrow = "Післязавтра"
+partly = "частково"
+remaining = "залишилося"
+today = "Сьогодні"
+tomorrow = "Завтра"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ціна"
+solar = "Сонячна"
+
 [header]
 about = "Про evcc"
 blog = "Блог"
@@ -539,6 +564,7 @@ batteryGridChargeActive = "активна зарядка мережі"
 batteryGridChargeLimit = "зарядка мережі коли"
 batteryHold = "Акумулятор (locked)"
 batteryTooltip = "{energy} із {total} ({soc})"
+forecastTooltip = "Прогноз: залишкове виробництво сонячної енергії сьогодні"
 gridImport = "Використання мережі"
 homePower = "Споживання"
 loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
@@ -672,13 +698,6 @@ tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
 
-[main.vehicleSoc]
-charging = "зарядка"
-connected = "підключено"
-disconnected = "відключено"
-ready = "готовий"
-vehicleLimit = "Ліміт транспортного засобу: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Очікування авторизації."
 batteryBoost = "Підвищення заряду батареї активне."
@@ -703,7 +722,7 @@ targetChargeActive = "Запланований заряд активний. Ор
 targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
 unknown = ""
-vehicleLimit = "Ліміт транспортного засобу."
+vehicleLimit = "Ліміт транспортного засобу"
 vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 welcome = "Короткий початковий заряд для підтвердження підключення."
