@@ -24,7 +24,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 74 # PV Überschussleistung
-      type: holding
+      type: writeholdings
       decode: float32s
     scale: 0.001
   power:

@@ -436,6 +436,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
+solarAdjust = "Adjust solar forecast based on real production data."
 
 [forecast.co2]
 average = "Average"
@@ -560,6 +561,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
@@ -887,6 +889,8 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+resetAction = "Remove limit"
+resetWarning = "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?"
 saved = "Saved."
 
 [startupError]

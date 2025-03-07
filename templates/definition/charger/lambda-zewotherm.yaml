@@ -24,7 +24,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 103 # PV Überschussleistung
+      address: 102 # PV Überschussleistung
       type: holding
       decode: int16
   power:
