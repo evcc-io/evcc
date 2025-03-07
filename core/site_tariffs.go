@@ -72,17 +72,21 @@ func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
 			continue
 		}
 
-		start := last.Timestamp
-		if start.Before(from) {
-			start = from
+		x1 := last.Timestamp
+		y1 := last.Value
+		if x1.Before(from) {
+			x1 = from
+			y1 += float64(from.Sub(last.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
 		}
 
-		end := r.Timestamp
-		if end.After(to) {
-			end = to
+		x2 := r.Timestamp
+		y2 := r.Value
+		if x2.After(to) {
+			x2 = to
+			y2 += float64(to.Sub(r.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
 		}
 
-		energy += (r.Value + last.Value) / 2 * end.Sub(start).Hours()
+		energy += (y1 + y2) / 2 * x2.Sub(x1).Hours()
 
 		if !r.Timestamp.Before(to) {
 			break
