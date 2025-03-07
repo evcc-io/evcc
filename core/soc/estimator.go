@@ -144,7 +144,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 		}
 	}
 
-	// update successful
+	s.vehicleSoc = s.prevSoc
 	if fetchedSoc != nil {
 		s.vehicleSoc = *fetchedSoc
 	}
