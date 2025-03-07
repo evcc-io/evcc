@@ -107,6 +107,8 @@ func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
 func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 	var fetchedSoc *float64
 
+	// TODO why do we return on prevSoc == 0 only in the error case?
+
 	if charger, ok := s.charger.(api.Battery); ok {
 		if f, err := Guard(charger.Soc()); err == nil {
 			fetchedSoc = &f
@@ -146,7 +148,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 		s.vehicleSoc = *fetchedSoc
 	}
 
-	// TODO if fetchedSoc==nil this may panic below
+	// TODO if fetchedSoc==nil this may still panic below
 
 	if s.estimate && s.virtualCapacity > 0 {
 		socDelta := s.vehicleSoc - s.prevSoc
