@@ -340,7 +340,11 @@ func (site *Site) restoreSettings() error {
 	return nil
 }
 
-func meterCapabilities(name string, meter interface{}) string {
+func meterCapabilities(name string, meter any) string {
+	if _, ok := meter.(api.Meter); !ok {
+		panic("not a meter: " + name)
+	}
+
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)
 	_, currents := meter.(api.PhaseCurrents)
@@ -378,12 +382,13 @@ func (site *Site) DumpConfig() {
 
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv))
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv.Instance()))
 		}
 	}
 
 	if len(site.batteryMeters) > 0 {
-		for i, battery := range site.batteryMeters {
+		for i, dev := range site.batteryMeters {
+			battery := dev.Instance()
 			_, ok := battery.(api.Battery)
 			_, hasCapacity := battery.(api.BatteryCapacity)
 
@@ -509,9 +514,13 @@ func (site *Site) updatePvMeters() {
 
 	mm := site.collectMeters("pv", site.pvMeters)
 
-	for i, meter := range site.pvMeters {
-		power := mm[i].Power
+	for i, dev := range site.pvMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: pv")
+		}
 
+		power := mm[i].Power
 		if power < -500 {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
@@ -570,7 +579,12 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
-	for i, meter := range site.batteryMeters {
+	for i, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: battery")
+		}
+
 		// battery soc and capacity
 		var batSoc, capacity float64
 		var err error
