@@ -19,18 +19,17 @@ type timeseriesTestSuite struct {
 	rr    timeseries
 }
 
+func (t *timeseriesTestSuite) rate(start int, val float64) tsval {
+	return tsval{
+		Timestamp: t.clock.Now().Add(time.Duration(start) * time.Hour),
+		Value:     val,
+	}
+}
+
 func (t *timeseriesTestSuite) SetupSuite() {
 	t.clock = clock.NewMock()
 	t.clock.Set(now.BeginningOfDay())
-
-	rate := func(start int, val float64) tsval {
-		return tsval{
-			Timestamp: t.clock.Now().Add(time.Duration(start) * time.Hour),
-			Value:     val,
-		}
-	}
-
-	t.rr = timeseries{rate(0, 0), rate(1, 1), rate(2, 2), rate(3, 3), rate(4, 4)}
+	t.rr = timeseries{t.rate(0, 0), t.rate(1, 1), t.rate(2, 2), t.rate(3, 3), t.rate(4, 4)}
 }
 
 func (t *timeseriesTestSuite) TestIndex() {
@@ -75,6 +74,7 @@ func (t *timeseriesTestSuite) TestEnergy() {
 		expected float64
 	}{
 		{-1, 0, 0},
+		// {-1, 1, 0.5},
 		{0, 0, 0},
 		{0, 0.5, 0.125},
 		{0, 1, 0.5},
@@ -91,5 +91,29 @@ func (t *timeseriesTestSuite) TestEnergy() {
 
 		res := t.rr.energy(from, to)
 		t.Equal(tc.expected, res, "%d. %+v", i+1, tc)
+	}
+}
+
+func (t *timeseriesTestSuite) TestShort() {
+	t.clock.Set(now.BeginningOfDay())
+	rr := timeseries{t.rate(0, 0), t.rate(1, 1)}
+
+	for i, tc := range []struct {
+		from, to, energy, value float64
+	}{
+		{-1, 0, 0, 0},
+		// {-1, 0.5, 0.125, 0.5},
+		// {-1, 2, 0.5, 0},
+		{0, 0, 0, 0},
+		{0, 0.5, 0.125, 0.5},
+		{0, 1, 0.5, 1},
+		{0, 1.5, 0.5, 0},
+		{1.5, 2, 0, 0},
+	} {
+		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
+		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
+
+		t.Equal(tc.energy, rr.energy(from, to), "%d. energy %+v", i+1, tc)
+		t.Equal(tc.value, rr.value(to), "%d. value %+v", i+1, tc)
 	}
 }
