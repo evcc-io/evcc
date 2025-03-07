@@ -25,15 +25,8 @@ type Properties struct {
 	Type        string
 	Title       string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
 	Icon        string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
-	Brand       string `json:"deviceBrand,omitempty" mapstructure:"deviceBrand"`
-	Description string `json:"deviceDescription,omitempty" mapstructure:"deviceDescription"`
-}
-
-func (p *Properties) Merge(pp Properties) {
-	p.Title = pp.Title
-	p.Icon = pp.Icon
-	p.Brand = pp.Brand
-	p.Description = pp.Description
+	Brand       string `json:"productBrand,omitempty" mapstructure:"productBrand"`
+	Description string `json:"productDescription,omitempty" mapstructure:"productDescription"`
 }
 
 // TODO remove- migration only
@@ -62,8 +55,14 @@ func (d *Config) Typed() Typed {
 	return res
 }
 
+func WithProperties(p Properties) func(*Config) {
+	return func(d *Config) {
+		d.Properties = p
+	}
+}
+
 // Update updates a config's details to the database
-func (d *Config) Update(conf map[string]any) error {
+func (d *Config) Update(conf map[string]any, opt ...func(*Config)) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
@@ -71,6 +70,9 @@ func (d *Config) Update(conf map[string]any) error {
 		}
 
 		d.Data = conf
+		for _, o := range opt {
+			o(d)
+		}
 
 		return tx.Save(&d).Error
 	})
@@ -178,11 +180,14 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class templates.Class, props Properties, conf map[string]any) (Config, error) {
+func AddConfig(class templates.Class, conf map[string]any, opt ...func(*Config)) (Config, error) {
 	config := Config{
-		Class:      class,
-		Properties: props,
-		Data:       conf,
+		Class: class,
+		Data:  conf,
+	}
+
+	for _, o := range opt {
+		o(&config)
 	}
 
 	if err := db.Create(&config).Error; err != nil {

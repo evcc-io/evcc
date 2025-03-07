@@ -15,11 +15,13 @@ func TestConfigReqUnmarshal(t *testing.T) {
 		"type": "template",
 		"deviceTitle": "bar",
 		"template": "foo",
+		"productbrand": "baz",
 		"property": 1}
 	`), &req))
 	assert.Equal(t, config.Properties{
 		Type:  "template",
 		Title: "bar",
+		Brand: "baz",
 	}, req.Properties)
 	assert.Equal(t, map[string]any{
 		"template": "foo",

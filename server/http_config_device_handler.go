@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -86,12 +87,16 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 
 	if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {
 		// from database
+		dc["id"] = configurable.ID()
+
+		if err := mergo.Merge(&dc, configurable.Properties()); err != nil {
+			return nil, err
+		}
+
 		params, err := sanitizeMasked(class, conf.Other)
 		if err != nil {
 			return nil, err
 		}
-
-		dc["id"] = configurable.ID()
 		dc["config"] = params
 	} else if title := conf.Other["title"]; title != nil {
 		// from yaml
@@ -212,7 +217,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Properties, req.Other)
+	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
