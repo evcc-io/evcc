@@ -108,6 +108,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 	var fetchedSoc *float64
 
 	// TODO why do we return on prevSoc == 0 only in the error case?
+	// TODO why do we return on acceptable errors, but not in the general error case?
 
 	if charger, ok := s.charger.(api.Battery); ok {
 		if f, err := Guard(charger.Soc()); err == nil {
