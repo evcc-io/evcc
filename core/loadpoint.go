@@ -1597,30 +1597,27 @@ func (lp *Loadpoint) publishChargeProgress() {
 
 // publish state of charge, remaining charge duration and range
 func (lp *Loadpoint) publishSocAndRange() {
-	soc, err := lp.chargerSoc()
-	if err == nil {
-		lp.vehicleSoc = soc
-		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
-
-		if limit, err := lp.chargerSocLimit(); err == nil {
-			lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
-			// https://github.com/evcc-io/evcc/issues/13349
-			lp.publish(keys.VehicleLimitSoc, float64(limit))
-		} else if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("charger soc limit: %v", err)
-		}
-
-		return
-	} else if !errors.Is(err, api.ErrNotAvailable) {
-		lp.log.ERROR.Printf("charger soc: %v", err)
-	}
-
 	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	// soc not available
+	// capacity not available
 	if socEstimator == nil || !lp.vehicleHasSoc() {
+		if soc, err := lp.chargerSoc(); err == nil {
+			lp.vehicleSoc = soc
+			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+
+			if limit, err := lp.chargerSocLimit(); err == nil {
+				lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
+				// https://github.com/evcc-io/evcc/issues/13349
+				lp.publish(keys.VehicleLimitSoc, float64(limit))
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				lp.log.ERROR.Printf("charger soc limit: %v", err)
+			}
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charger soc: %v", err)
+		}
+
 		return
 	}
 
