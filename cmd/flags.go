@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"strings"
+
+	"github.com/evcc-io/evcc/util/templates"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +14,10 @@ const (
 
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
+
+	flagTemplate            = "template"
+	flagTemplateDescription = "Add custom template (useful for debugging)"
+	flagTemplateType        = "template-type"
 
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
@@ -53,6 +61,11 @@ const (
 	flagDelay  = "delay"
 	flagForce  = "force"
 )
+
+var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
+	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
+		return t.String()
+	}), ", ") + ")"
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {
 	name := key

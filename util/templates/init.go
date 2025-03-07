@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"slices"
 	"sync"
 	"text/template"
@@ -37,7 +38,27 @@ func init() {
 	}
 }
 
-func FromBytes(b []byte) (Template, error) {
+func Register(class Class, filepath string) error {
+	b, err := os.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := fromBytes(b)
+	if err != nil {
+		return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
+	}
+
+	if slices.ContainsFunc(templates[class], func(t Template) bool { return t.Template == tmpl.Template }) {
+		return fmt.Errorf("duplicate template name '%s' found in file '%s'", tmpl.Template, filepath)
+	}
+
+	templates[class] = append(templates[class], tmpl)
+
+	return nil
+}
+
+func fromBytes(b []byte) (Template, error) {
 	// panic if template definition contains unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -79,7 +100,7 @@ func load(class Class) (res []Template) {
 			return err
 		}
 
-		tmpl, err := FromBytes(b)
+		tmpl, err := fromBytes(b)
 		if err != nil {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
