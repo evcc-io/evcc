@@ -1,7 +1,6 @@
 package core
 
 import (
-	"encoding/json"
 	"maps"
 	"math"
 	"slices"
@@ -55,68 +54,6 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 		return &effCo2
 	}
 	return nil
-}
-
-// accumulatedEnergy calculates the energy consumption between from and to,
-// assuming the rates containing the power at given timestamp.
-// Result is in Wh
-func accumulatedEnergy(rr timeseries, from, to time.Time) float64 {
-	var energy float64
-	var last tsValue
-
-	for _, r := range rr {
-		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
-
-		if !r.Timestamp.After(from) {
-			last = r
-			continue
-		}
-
-		x1 := last.Timestamp
-		y1 := last.Value
-		if x1.Before(from) {
-			x1 = from
-			y1 += float64(from.Sub(last.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
-		}
-
-		x2 := r.Timestamp
-		y2 := r.Value
-		if x2.After(to) {
-			x2 = to
-			y2 += float64(to.Sub(r.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
-		}
-
-		energy += (y1 + y2) / 2 * x2.Sub(x1).Hours()
-
-		if !r.Timestamp.Before(to) {
-			break
-		}
-
-		last = r
-	}
-
-	return energy
-}
-
-type (
-	timeseries []tsValue
-	tsValue    struct {
-		Timestamp time.Time `json:"ts"`
-		Value     float64   `json:"val"`
-	}
-)
-
-func (rr *timeseries) MarshalJSON() ([]byte, error) {
-	return json.Marshal(rr)
-}
-
-func timestampSeries(rr api.Rates) timeseries {
-	return lo.Map(rr, func(r api.Rate, _ int) tsValue {
-		return tsValue{
-			Timestamp: r.Start,
-			Value:     r.Price,
-		}
-	})
 }
 
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
@@ -183,9 +120,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		eod := bod.AddDate(0, 0, 1)
 		eot := eod.AddDate(0, 0, 1)
 
-		remainingToday := accumulatedEnergy(solar, time.Now(), eod)
-		tomorrow := accumulatedEnergy(solar, eod, eot)
-		dayAfterTomorrow := accumulatedEnergy(solar, eot, eot.AddDate(0, 0, 1))
+		remainingToday := solar.energy(time.Now(), eod)
+		tomorrow := solar.energy(eod, eot)
+		dayAfterTomorrow := solar.energy(eot, eot.AddDate(0, 0, 1))
 
 		fc.Solar.Today = dailyDetails{
 			Yield:    remainingToday,
@@ -201,7 +138,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		}
 
 		// accumulate forecasted energy since last update
-		site.fcstEnergy.AddEnergy(accumulatedEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
+		site.fcstEnergy.AddEnergy(solar.energy(site.fcstEnergy.updated, time.Now()) / 1e3)
 		settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
 		produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
