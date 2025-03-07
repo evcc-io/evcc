@@ -224,7 +224,11 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
-		makeResult("vehicleLimitSoc", val, err)
+		key := "vehicleLimitSoc"
+		if fd, ok := instance.(api.FeatureDescriber); ok && slices.Contains(fd.Features(), api.Heating) {
+			key = "heaterTempLimit"
+		}
+		makeResult(key, val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {

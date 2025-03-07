@@ -706,13 +706,6 @@ tempLimit = "Temp. limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
 
-[main.vehicleSoc]
-charging = "vyksta įkrovimas"
-connected = "automobilis prijungtas"
-disconnected = "neprijungtas"
-ready = "leidžiama įkrauti"
-vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Laukiama autorizacijos."
 batteryBoost = "Veikia paspartinimas kaupikliu."
@@ -737,7 +730,7 @@ targetChargeActive = "Įkrovimo planas aktyvuotas. Numatoma pabaiga už {duratio
 targetChargePlanned = "Suplanuotas įkrovimas prasidės už {duration}."
 targetChargeWaitForVehicle = "Įkrovimas pagal planą leidžiamas. Laukiama automobilio..."
 unknown = ""
-vehicleLimit = "Automobilyje nustatytas limitas."
+vehicleLimit = "Automobilyje nustatytas limitas"
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
