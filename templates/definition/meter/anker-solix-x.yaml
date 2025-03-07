@@ -22,7 +22,7 @@ params:
     description:
       en: Rated Charge / Discharge Power [watt]
       de: Nennleistung zum Laden/Entladen [watt]
-    default: 3680  # minimal value   maybe 30034 or 30035
+    default: 3680
 render: |
   type: custom
   {{- if eq .usage "grid" }}
