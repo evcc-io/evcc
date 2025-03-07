@@ -1,6 +1,6 @@
 template: open-meteo
 products:
-  - brand: OpenMeteo
+  - brand: Open-Meteo
 requirements:
   description:
     en: Free Weather API [open-meteo.com](https://open-meteo.com) Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
