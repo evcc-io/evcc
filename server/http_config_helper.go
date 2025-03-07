@@ -52,7 +52,7 @@ func propsToMap(props config.Properties) (map[string]any, error) {
 	}
 
 	return lo.PickBy(res, func(k string, v any) bool {
-		if v.(string) == "" {
+		if k == "Type" || v.(string) == "" {
 			return false
 		}
 		return true

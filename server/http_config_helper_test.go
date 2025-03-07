@@ -31,6 +31,7 @@ func TestConfigReqUnmarshal(t *testing.T) {
 
 func TestConfigReqMarshalToMap(t *testing.T) {
 	props := config.Properties{
+		Type:  "type",
 		Title: "title",
 		Brand: "brand",
 	}
