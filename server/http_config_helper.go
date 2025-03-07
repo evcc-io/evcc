@@ -12,6 +12,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -41,6 +43,20 @@ func (c *configReq) UnmarshalJSON(data []byte) error {
 
 	*c = cr
 	return nil
+}
+
+func propsToMap(props config.Properties) (map[string]any, error) {
+	res := make(map[string]any)
+	if err := mapstructure.Decode(props, &res); err != nil {
+		return nil, err
+	}
+
+	return lo.PickBy(res, func(k string, v any) bool {
+		if v.(string) == "" {
+			return false
+		}
+		return true
+	}), nil
 }
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)

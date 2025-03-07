@@ -89,7 +89,12 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		// from database
 		dc["id"] = configurable.ID()
 
-		if err := mergo.Merge(&dc, configurable.Properties()); err != nil {
+		props, err := propsToMap(configurable.Properties())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := mergo.Merge(&dc, props); err != nil {
 			return nil, err
 		}
 
@@ -98,17 +103,19 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 		dc["config"] = params
-	} else if title := conf.Other["title"]; title != nil {
-		// from yaml
+	} else {
+		// add title if available
 		config := make(map[string]any)
-		if s, ok := title.(string); ok {
-			config["title"] = s
+		if title, ok := conf.Other["title"].(string); ok {
+			config["title"] = title
 		}
 		// add icon if available
 		if icon, ok := conf.Other["icon"].(string); ok {
 			config["icon"] = icon
 		}
-		dc["config"] = config
+		if len(config) > 0 {
+			dc["config"] = config
+		}
 	}
 
 	return dc, nil

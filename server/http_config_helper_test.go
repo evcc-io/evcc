@@ -28,3 +28,18 @@ func TestConfigReqUnmarshal(t *testing.T) {
 		"property": 1.0,
 	}, req.Other)
 }
+
+func TestConfigReqMarshalToMap(t *testing.T) {
+	props := config.Properties{
+		Title: "title",
+		Brand: "brand",
+	}
+
+	res, err := propsToMap(props)
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]any{
+		"deviceTitle":  "title",
+		"productBrand": "brand",
+	}, res)
+}
