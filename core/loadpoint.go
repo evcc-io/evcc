@@ -1661,7 +1661,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
 				// https://github.com/evcc-io/evcc/issues/13349
 				lp.publish(keys.VehicleLimitSoc, float64(limit))
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
 		}
