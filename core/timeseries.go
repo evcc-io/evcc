@@ -23,10 +23,6 @@ func (rr timeseries) index(ts time.Time) (int, bool) {
 }
 
 func (rr timeseries) interpolate(i int, ts time.Time) float64 {
-	if i == 0 || i >= len(rr) {
-		panic("invalid index")
-	}
-
 	return float64(ts.Sub(rr[i-1].Timestamp)) * (rr[i].Value - rr[i-1].Value) / float64(rr[i].Timestamp.Sub(rr[i-1].Timestamp))
 }
 
@@ -57,7 +53,9 @@ func (rr timeseries) energy(from, to time.Time) float64 {
 
 	last := rr[idx]
 
-	for _, r := range rr[idx+1:] {
+	// for _, r := range rr[idx+1:] {
+	for idx++; idx < len(rr); idx++ {
+		r := rr[idx]
 		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
 
 		x1 := last.Timestamp
