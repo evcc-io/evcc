@@ -701,13 +701,6 @@ tempLimit = "Temp. grænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplader"
 
-[main.vehicleSoc]
-charging = "opladning"
-connected = "forbundet"
-disconnected = "afbrudt"
-ready = "parat"
-vehicleLimit = "Køretøjsgrænse: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Venter på godkendelse."
 batteryBoost = "Boost fra batteri er aktiv"

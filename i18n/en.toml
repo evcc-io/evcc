@@ -93,6 +93,7 @@ temp = "Temperature"
 topic = "Topic"
 url = "URL"
 vehicleLimitSoc = "Vehicle limit"
+heaterTempLimit = "Heater limit"
 yes = "yes"
 
 [config.deviceValueChargeStatus]
@@ -682,13 +683,6 @@ tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 
-[main.vehicleSoc]
-charging = "charging"
-connected = "connected"
-disconnected = "disconnected"
-ready = "ready"
-vehicleLimit = "Vehicle limit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
 batteryBoost = "Battery boost active."
@@ -713,7 +707,7 @@ targetChargeActive = "Charging plan active. Estimated finish in {duration}."
 targetChargePlanned = "Charging plan starts in {duration}."
 targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleLimit = "Vehicle limit."
+vehicleLimit = "Vehicle limit"
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 welcome = "Short initial charge to confirm connection."

@@ -694,13 +694,6 @@ tempLimit = "Lämpötila raja-arvo"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
 
-[main.vehicleSoc]
-charging = "lataa"
-connected = "yhdistetty"
-disconnected = "irroitettu"
-ready = "valmis"
-vehicleLimit = "Ajoneuvon raja {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Odotetaan valtuutusta."
 batteryBoost = "Akun tehostus aktiivinen."

@@ -93,6 +93,7 @@ temp = "Temperatur"
 topic = "Thema"
 url = "URL"
 vehicleLimitSoc = "Fahrzeuglimit"
+heaterTempLimit = "Heizungslimit"
 yes = "Ja"
 
 [config.deviceValueChargeStatus]
@@ -682,13 +683,6 @@ tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
 
-[main.vehicleSoc]
-charging = "lädt"
-connected = "verbunden"
-disconnected = "getrennt"
-ready = "bereit"
-vehicleLimit = "Fahrzeuglimit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Warte auf Autorisierung."
 batteryBoost = "Batterie Boost aktiv."
@@ -712,9 +706,8 @@ scale3p = "Erhöhe gleich auf dreiphasiges Laden."
 targetChargeActive = "Ladeplan aktiv. Geplantes Ende in {duration}."
 targetChargePlanned = "Ladeplan startet in {duration}."
 targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
-tempLimit = "Heizungslimit."
 unknown = ""
-vehicleLimit = "Fahrzeuglimit."
+vehicleLimit = "Fahrzeuglimit"
 vehicleLimitReached = "Fahrzeuglimit erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
 welcome = "Kurze initiale Ladung zur Bestätigung der Verbindung."
