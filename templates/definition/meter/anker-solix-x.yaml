@@ -1,0 +1,201 @@
+template: anker-solix-x
+covers: ["anker-solix-x-inverter"]
+products:
+  - description:
+      de: Anker Solix X
+      en: Anker Solix X
+group: generic
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: capacity
+    advanced: true
+  - name: maxacpower
+    advanced: true
+  - name: timeout
+    advanced: true
+  - name: maxchargepower
+    advanced: true
+    description:
+      en: Rated Charge / Discharge Power [watt]
+      de: Nennleistung zum Laden/Entladen [watt]
+    default: 3680
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power: # Watt
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10007 # Grid-connected power      [10007]
+      type: input
+      decode: uint16
+    scale: 0.1 # /1000
+  energy: # KWH
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10025 # Total purchased power     [10025]
+      type: input
+      decode: uint16
+    scale: 0.1
+  currents: # A
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32015 # A-phase current         [32015]
+        type: input
+        decode: int16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32019 # B-phase current         [32019]
+        type: input
+        decode: int16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32020 # C-phase current         [32020]
+        type: input
+        decode: int16
+      scale: 1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32012 # A-phase voltage         [32012]
+        type: input
+        decode: uint16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32013 # B-phase voltage         [32013]
+        type: input
+        decode: uint16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32014 # C-phase voltage         [32014]
+        type: input
+        decode: uint16
+      scale: 1
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32021 # Phase A active power Watt? [32021]
+        type: input
+        decode: uint16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32022 # Phase B active power Watt? [32022]
+        type: input
+        decode: uint16
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 32023 # Phase C active power Watt? [32023]
+        type: input
+        decode: uint16
+      scale: 1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10002 # PV power     [10002]
+      type: input
+      decode: uint16
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10013 # Total PV power generation [10013]
+      type: input
+      decode: uint16
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10005 # Battery power             [10005]
+      type: input
+      decode: uint16
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10017 # Total battery charge      [10017]
+      type: input
+      decode: uint16
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10008 # Battery SOC               [10008]
+      type: input
+      decode: uint16
+    scale: 1
+  capacity: {{ .capacity }} # kWh
+  batterymode:
+    source: switch
+    switch:
+    - case: 3
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # Positive values indicate discharge
+              type: writesingle
+              decode: INT16
+            scale: 0.1
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # Battery charge and discharge regulation
+              type: writesingle
+              decode: INT16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10061 # negative values indicate charging.
+              type: writesingle
+              decode: INT16
+            scale: -0.1
+  {{- end }}
