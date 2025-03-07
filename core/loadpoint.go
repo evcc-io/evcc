@@ -1598,34 +1598,23 @@ func (lp *Loadpoint) publishChargeProgress() {
 // publish state of charge, remaining charge duration and range
 func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
-	if err == nil {
-		lp.vehicleSoc = soc
-		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
-		if limit, err := lp.chargerSocLimit(); err == nil {
-			lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
-			// https://github.com/evcc-io/evcc/issues/13349
-			lp.publish(keys.VehicleLimitSoc, float64(limit))
-		} else if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("charger soc limit: %v", err)
+	// guard for socEstimator removed by api
+	// also keep a local copy in order to avoid race conditions
+	// https://github.com/evcc-io/evcc/issues/16180
+	socEstimator := lp.socEstimator
+	if socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
+		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
+		// We need to check if the charger can provide soc and use it if available.
+		if err == nil {
+			lp.vehicleSoc = soc
+			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 		}
 
 		return
-	} else if !errors.Is(err, api.ErrNotAvailable) {
-		lp.log.ERROR.Printf("charger soc: %v", err)
 	}
 
-	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
-	// https://github.com/evcc-io/evcc/issues/16180
-	socEstimator := lp.socEstimator
-
-	// soc not available
-	if socEstimator == nil || !lp.vehicleHasSoc() {
-		return
-	}
-
-	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
+	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())
@@ -1647,8 +1636,13 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// TODO take vehicle api limits into account
 		apiLimitSoc := 100
 
-		// vehicle limit
-		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
+		// integrated device with charger limit
+		vs, ok := lp.charger.(api.SocLimiter)
+		if !ok {
+			// vehicle limit
+			vs, ok = lp.GetVehicle().(api.SocLimiter)
+		}
+		if ok {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
