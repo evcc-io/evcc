@@ -54,6 +54,11 @@ func (rr timeseries) energy(from, to time.Time) float64 {
 	last := rr[idx]
 
 	// for _, r := range rr[idx+1:] {
+	// 	if !r.Timestamp.After(from) {
+	// 		last = r
+	// 		continue
+	// 	}
+
 	for idx++; idx < len(rr); idx++ {
 		r := rr[idx]
 		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
