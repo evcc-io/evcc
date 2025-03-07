@@ -47,16 +47,34 @@ func (t *timeseriesTestSuite) TestIndex() {
 	} {
 		ts := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
 		res, ok := t.rr.index(ts)
-		t.Equal(tc.idx, res, "%d. %+v idx", i+1, tc)
-		t.Equal(tc.ok, ok, "%d. %+v ok", i+1, tc)
+		t.Equal(tc.idx, res, "%d. idx %+v", i+1, tc)
+		t.Equal(tc.ok, ok, "%d. ok %+v", i+1, tc)
 	}
 }
 
-func (t *timeseriesTestSuite) TestAccumulatedEnergy() {
+func (t *timeseriesTestSuite) TestValue() {
+	for i, tc := range []struct {
+		ts, val float64
+	}{
+		{-1, 0},
+		{0, 0},
+		{0.5, 0.5},
+		{1, 1},
+		{4, 4},
+		{99, 0},
+	} {
+		ts := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
+		res := t.rr.value(ts)
+		t.Equal(tc.val, res, "%d. %+v", i+1, tc)
+	}
+}
+
+func (t *timeseriesTestSuite) TestEnergy() {
 	for i, tc := range []struct {
 		from, to float64
 		expected float64
 	}{
+		{-1, 0, 0},
 		{0, 0, 0},
 		{0, 0.5, 0.125},
 		{0, 1, 0.5},
@@ -66,13 +84,12 @@ func (t *timeseriesTestSuite) TestAccumulatedEnergy() {
 		{0.25, 0.75, 0.25},
 		{0.5, 1, 0.375},
 		{0.5, 3.5, 6},
+		{80, 90, 0},
 	} {
-		t.T().Logf("%d. %+v", i+1, tc)
-
 		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
 		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
 
 		res := t.rr.energy(from, to)
-		t.Equal(tc.expected, res, "test case %d", i+1)
+		t.Equal(tc.expected, res, "%d. %+v", i+1, tc)
 	}
 }

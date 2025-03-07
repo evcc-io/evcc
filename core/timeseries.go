@@ -22,12 +22,23 @@ func (rr timeseries) index(ts time.Time) (int, bool) {
 	})
 }
 
+func (rr timeseries) interpolate(i int, ts time.Time) float64 {
+	if i == 0 || i >= len(rr) {
+		panic("invalid index")
+	}
+
+	return float64(ts.Sub(rr[i-1].Timestamp)) * (rr[i].Value - rr[i-1].Value) / float64(rr[i].Timestamp.Sub(rr[i-1].Timestamp))
+}
+
 func (rr timeseries) value(ts time.Time) float64 {
 	index, ok := rr.index(ts)
 	if ok {
 		return rr[index].Value
 	}
-	return rr[index].Value
+	if index == 0 || index >= len(rr) {
+		return 0
+	}
+	return rr.interpolate(index, ts)
 }
 
 // energy calculates the energy consumption between from and to,
@@ -35,15 +46,19 @@ func (rr timeseries) value(ts time.Time) float64 {
 // Result is in Wh
 func (rr timeseries) energy(from, to time.Time) float64 {
 	var energy float64
-	var last tsval
 
-	for _, r := range rr {
-		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
-
-		if !r.Timestamp.After(from) {
-			last = r
-			continue
+	idx, ok := rr.index(from)
+	if !ok {
+		if idx == 0 || idx >= len(rr) {
+			return 0
 		}
+		idx--
+	}
+
+	last := rr[idx]
+
+	for _, r := range rr[idx+1:] {
+		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
 
 		x1 := last.Timestamp
 		y1 := last.Value
