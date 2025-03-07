@@ -1654,6 +1654,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// TODO take vehicle api limits into account
 		apiLimitSoc := 100
 
+		// vehicle limit
 		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
