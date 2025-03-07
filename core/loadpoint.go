@@ -1615,12 +1615,12 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.log.ERROR.Printf("charger soc: %v", err)
 	}
 
-	// guard for socEstimator removed by api
-	// also keep a local copy in order to avoid race conditions
+	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
+
+	// soc not available
 	if socEstimator == nil || !lp.vehicleHasSoc() {
-		// soc not available
 		return
 	}
 
