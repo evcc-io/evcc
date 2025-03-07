@@ -560,6 +560,7 @@ selfConsumption = "Eigenverbrauch"
 
 [main.heatingStatus]
 charging = "Heize …"
+vehicleLimit = "Heizungslimit"
 waitForVehicle = "Bereit. Warte auf Heizung …"
 
 [main.loadpoint]
@@ -711,6 +712,7 @@ scale3p = "Erhöhe gleich auf dreiphasiges Laden."
 targetChargeActive = "Ladeplan aktiv. Geplantes Ende in {duration}."
 targetChargePlanned = "Ladeplan startet in {duration}."
 targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
+tempLimit = "Heizungslimit."
 unknown = ""
 vehicleLimit = "Fahrzeuglimit."
 vehicleLimitReached = "Fahrzeuglimit erreicht."

@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
@@ -72,22 +71,6 @@ func (d *Config) Update(conf map[string]any) error {
 		}
 
 		d.Data = conf
-
-		return tx.Save(&d).Error
-	})
-}
-
-// PartialUpdate partially updates a config's details to the database
-func (d *Config) PartialUpdate(conf map[string]any) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var config Config
-		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-			return err
-		}
-
-		if err := mergo.Merge(&d.Data, conf, mergo.WithOverride); err != nil {
-			return err
-		}
 
 		return tx.Save(&d).Error
 	})

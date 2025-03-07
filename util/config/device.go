@@ -12,11 +12,44 @@ type ConfigurableDevice[T any] interface {
 	ID() int
 	Properties() Properties
 	Update(map[string]any, T) error
-	PartialUpdate(map[string]any, T) error
 	Delete() error
 }
 
-var _ Device[any] = (*staticDevice[any])(nil)
+type configurableDevice[T any] struct {
+	config   *Config
+	instance T
+}
+
+func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
+	return &configurableDevice[T]{
+		config:   config,
+		instance: instance,
+	}
+}
+
+func (d *configurableDevice[T]) Config() Named {
+	return d.config.Named()
+}
+
+func (d *configurableDevice[T]) Instance() T {
+	return d.instance
+}
+
+func (d *configurableDevice[T]) ID() int {
+	return d.config.ID
+}
+
+func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
+	if err := d.config.Update(config); err != nil {
+		return err
+	}
+	d.instance = instance
+	return nil
+}
+
+func (d *configurableDevice[T]) Delete() error {
+	return d.config.Delete()
+}
 
 type staticDevice[T any] struct {
 	config   Named

@@ -435,6 +435,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
+solarAdjust = "Adjust solar forecast based on real production data."
 
 [forecast.co2]
 average = "Average"
@@ -559,6 +560,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
