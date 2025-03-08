@@ -45,7 +45,7 @@ func (t *timeseriesTestSuite) TestIndex() {
 		{99, len(t.rr), false},
 	} {
 		ts := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
-		res, ok := t.rr.index(ts)
+		res, ok := t.rr.search(ts)
 		t.Equal(tc.idx, res, "%d. idx %+v", i+1, tc)
 		t.Equal(tc.ok, ok, "%d. ok %+v", i+1, tc)
 	}
@@ -74,7 +74,8 @@ func (t *timeseriesTestSuite) TestEnergy() {
 		expected float64
 	}{
 		{-1, 0, 0},
-		// {-1, 1, 0.5},
+		{-1, 1, 0.5},
+		{-1, 90, 8},
 		{0, 0, 0},
 		{0, 0.5, 0.125},
 		{0, 1, 0.5},

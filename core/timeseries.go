@@ -8,33 +8,37 @@ import (
 	"github.com/samber/lo"
 )
 
-type (
-	timeseries []tsval
-	tsval      struct {
-		Timestamp time.Time `json:"ts"`
-		Value     float64   `json:"val"`
-	}
-)
+// timeseries is a sorted list of timestamped values
+// methods are optimized for fast searching and interpolation
+type timeseries []tsval
 
-func (rr timeseries) index(ts time.Time) (int, bool) {
+type tsval struct {
+	Timestamp time.Time `json:"ts"`
+	Value     float64   `json:"val"`
+}
+
+func (rr timeseries) search(ts time.Time) (int, bool) {
 	return slices.BinarySearchFunc(rr, ts, func(v tsval, ts time.Time) int {
 		return v.Timestamp.Compare(ts)
 	})
 }
 
+// interpolate returns the interpolated value where ts is between two entries and i is the index of the rate after ts
 func (rr timeseries) interpolate(i int, ts time.Time) float64 {
-	return float64(ts.Sub(rr[i-1].Timestamp)) * (rr[i].Value - rr[i-1].Value) / float64(rr[i].Timestamp.Sub(rr[i-1].Timestamp))
+	rp := &rr[i-1]
+	r := &rr[i]
+	return rp.Value + float64(ts.Sub(rp.Timestamp))*(r.Value-rp.Value)/float64(r.Timestamp.Sub(rp.Timestamp))
 }
 
 func (rr timeseries) value(ts time.Time) float64 {
-	index, ok := rr.index(ts)
+	idx, ok := rr.search(ts)
 	if ok {
-		return rr[index].Value
+		return rr[idx].Value
 	}
-	if index == 0 || index >= len(rr) {
+	if idx == 0 || idx >= len(rr) {
 		return 0
 	}
-	return rr.interpolate(index, ts)
+	return rr.interpolate(idx, ts)
 }
 
 // energy calculates the energy consumption between from and to,
@@ -43,47 +47,39 @@ func (rr timeseries) value(ts time.Time) float64 {
 func (rr timeseries) energy(from, to time.Time) float64 {
 	var energy float64
 
-	idx, ok := rr.index(from)
+	idx, ok := rr.search(from)
 	if !ok {
-		if idx == 0 || idx >= len(rr) {
+		switch {
+		case idx >= len(rr):
+			// from is just before or after last entry
 			return 0
+		case idx == 0:
+			// from is before first entry
+			// do nothing- we ignore anything before the first entry
+		default:
+			// from is between two entries
+			r := &rr[idx]
+			vp := rr.interpolate(idx, from)
+
+			// to is before same entry as from
+			if r.Timestamp.After(to) {
+				return (vp + rr.interpolate(idx, to)) / 2 * to.Sub(from).Hours()
+			}
+
+			energy += (vp + r.Value) / 2 * r.Timestamp.Sub(from).Hours()
 		}
-		idx--
 	}
 
-	last := rr[idx]
+	for ; idx < len(rr)-1; idx++ {
+		r := &rr[idx]
+		rn := &rr[idx+1]
 
-	// for _, r := range rr[idx+1:] {
-	// 	if !r.Timestamp.After(from) {
-	// 		last = r
-	// 		continue
-	// 	}
-
-	for idx++; idx < len(rr); idx++ {
-		r := rr[idx]
-		// fmt.Println(r.Start.Local().Format(time.RFC3339), r.End.Local().Format(time.RFC3339), r.Price)
-
-		x1 := last.Timestamp
-		y1 := last.Value
-		if x1.Before(from) {
-			x1 = from
-			y1 += float64(from.Sub(last.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
-		}
-
-		x2 := r.Timestamp
-		y2 := r.Value
-		if x2.After(to) {
-			x2 = to
-			y2 += float64(to.Sub(r.Timestamp)) * (r.Value - last.Value) / float64(r.Timestamp.Sub(last.Timestamp))
-		}
-
-		energy += (y1 + y2) / 2 * x2.Sub(x1).Hours()
-
-		if !r.Timestamp.Before(to) {
+		if rn.Timestamp.After(to) {
+			energy += (r.Value + rr.interpolate(idx+1, to)) / 2 * to.Sub(r.Timestamp).Hours()
 			break
 		}
 
-		last = r
+		energy += (r.Value + rn.Value) / 2 * rn.Timestamp.Sub(r.Timestamp).Hours()
 	}
 
 	return energy
