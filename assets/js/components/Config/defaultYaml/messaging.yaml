@@ -33,3 +33,6 @@
 #  uri: https://<host>/<topics>
 #  priority: <priority>
 #  tags: <tags>
+#- type: gotify
+#  uri: https://<host>
+#  token: <token>
