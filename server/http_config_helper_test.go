@@ -15,13 +15,13 @@ func TestConfigReqUnmarshal(t *testing.T) {
 		"type": "template",
 		"deviceTitle": "bar",
 		"template": "foo",
-		"productbrand": "baz",
+		"deviceProduct": "baz",
 		"property": 1}
 	`), &req))
 	assert.Equal(t, config.Properties{
-		Type:  "template",
-		Title: "bar",
-		Brand: "baz",
+		Type:    "template",
+		Title:   "bar",
+		Product: "baz",
 	}, req.Properties)
 	assert.Equal(t, map[string]any{
 		"template": "foo",
@@ -31,16 +31,16 @@ func TestConfigReqUnmarshal(t *testing.T) {
 
 func TestConfigReqMarshalToMap(t *testing.T) {
 	props := config.Properties{
-		Type:  "type",
-		Title: "title",
-		Brand: "brand",
+		Type:    "type",
+		Title:   "title",
+		Product: "product",
 	}
 
 	res, err := propsToMap(props)
 	require.NoError(t, err)
 
 	assert.Equal(t, map[string]any{
-		"deviceTitle":  "title",
-		"productBrand": "brand",
+		"deviceTitle":   "title",
+		"deviceProduct": "product",
 	}, res)
 }

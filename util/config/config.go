@@ -22,11 +22,10 @@ type Config struct {
 }
 
 type Properties struct {
-	Type        string
-	Title       string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
-	Icon        string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
-	Brand       string `json:"productBrand,omitempty" mapstructure:"productBrand"`
-	Description string `json:"productDescription,omitempty" mapstructure:"productDescription"`
+	Type    string
+	Title   string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon    string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Product string `json:"deviceProduct,omitempty" mapstructure:"deviceProduct"`
 }
 
 // TODO remove- migration only
