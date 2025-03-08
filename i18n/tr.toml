@@ -635,14 +635,6 @@ tempLimit = "Hedeflenen sıcaklık"
 unknown = "Misafir araç"
 vehicleSoc = "Doluluk seviyesi"
 
-[main.vehicleSoc]
-charging = "doluyor"
-connected = "bağlı"
-disconnected = "bağlantı kesildi"
-ready = "hazır"
-vehicleLimit = "Araç sınırı: {soc}"
-vehicleTarget = "Araç sınırı: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "“İzin bekliyorum.”"
 batteryBoost = "Batarya takviyesi etkin."
@@ -667,7 +659,7 @@ targetChargeActive = "Doldurma planı yürürlükte. Tahmini bitiş süresi {dur
 targetChargePlanned = "Doldurma planı {duration} içerisinde başlayacak."
 targetChargeWaitForVehicle = "Doldurma planı hazır. Araç bekleniyor…"
 unknown = ""
-vehicleLimit = "Araç sınırı."
+vehicleLimit = "Araç sınırı"
 vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"

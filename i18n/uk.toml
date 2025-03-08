@@ -698,13 +698,6 @@ tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
 
-[main.vehicleSoc]
-charging = "зарядка"
-connected = "підключено"
-disconnected = "відключено"
-ready = "готовий"
-vehicleLimit = "Ліміт транспортного засобу: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Очікування авторизації."
 batteryBoost = "Підвищення заряду батареї активне."
@@ -729,7 +722,7 @@ targetChargeActive = "Запланований заряд активний. Ор
 targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
 unknown = ""
-vehicleLimit = "Ліміт транспортного засобу."
+vehicleLimit = "Ліміт транспортного засобу"
 vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 welcome = "Короткий початковий заряд для підтвердження підключення."

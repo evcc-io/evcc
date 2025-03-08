@@ -416,8 +416,8 @@ func (site *Site) DumpConfig() {
 	}
 	site.log.INFO.Printf("    grid:      %s", trf(api.TariffUsageGrid))
 	site.log.INFO.Printf("    feed-in:   %s", trf(api.TariffUsageFeedIn))
-	site.log.INFO.Printf("    co2:       %s", trf(api.TariffUsageCo2))
-	site.log.INFO.Printf("    solar:     %s", trf(api.TariffUsageSolar))
+	site.log.INFO.Printf("    co2:       %s", presence[site.GetTariff(api.TariffUsageCo2) != nil])
+	site.log.INFO.Printf("    solar:     %s", presence[site.GetTariff(api.TariffUsageSolar) != nil])
 
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
@@ -990,7 +990,9 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	loadpointChan := make(chan updater)
-	go site.loopLoadpoints(loadpointChan)
+	if len(site.loadpoints) > 0 {
+		go site.loopLoadpoints(loadpointChan)
+	}
 
 	site.update(<-loadpointChan) // start immediately
 
