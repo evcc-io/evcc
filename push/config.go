@@ -15,8 +15,18 @@ type Messenger interface {
 
 var registry = reg.New[Messenger]("messenger")
 
+// Register ist the public api for registering a type
+func Register(typ string, newFun func(context.Context, map[string]any) (Messenger, error)) {
+	registry.AddCtx(typ, newFun)
+}
+
+// Types returns the list of types
+func Types() []string {
+	return registry.Types()
+}
+
 // NewFromConfig creates messenger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (Messenger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (Messenger, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
