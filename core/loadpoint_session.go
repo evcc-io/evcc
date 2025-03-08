@@ -63,10 +63,6 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	if chargedEnergy := lp.GetChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
-		lp.energyMetrics.Update(chargedEnergy)
-	}
-
 	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
