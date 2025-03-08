@@ -19,20 +19,11 @@ type solarDetails struct {
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
 	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
-	Events           events       `json:"events,omitempty"`           // forecast-based events (experimental)
 }
 
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
-}
-
-type events []event
-
-type event struct {
-	Timestamp time.Time `json:"ts"`
-	Value     *float64  `json:"val,omitempty"`
-	Event     string    `json:"ev,omitempty"`
 }
 
 // greenShare returns
