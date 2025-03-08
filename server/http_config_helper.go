@@ -2,14 +2,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -19,6 +23,41 @@ const (
 	// masked indicates a masked config parameter value
 	masked = "***"
 )
+
+type configReq struct {
+	config.Properties `json:",inline" mapstructure:",squash"`
+	Other             map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+// TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
+func (c *configReq) UnmarshalJSON(data []byte) error {
+	var res map[string]any
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+
+	var cr configReq
+	if err := util.DecodeOther(res, &cr); err != nil {
+		return err
+	}
+
+	*c = cr
+	return nil
+}
+
+func propsToMap(props config.Properties) (map[string]any, error) {
+	res := make(map[string]any)
+	if err := mapstructure.Decode(props, &res); err != nil {
+		return nil, err
+	}
+
+	return lo.PickBy(res, func(k string, v any) bool {
+		if k == "Type" || v.(string) == "" {
+			return false
+		}
+		return true
+	}), nil
+}
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
@@ -107,7 +146,7 @@ func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	return ctx, cancel, done
 }
 
-func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -115,12 +154,14 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 		return nil, zero, nil, err
 	}
 
-	merged, err := mergeMasked(class, conf, dev.Config().Other)
+	conf := dev.Config()
+
+	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(ctx, typeTemplate, merged)
+	instance, err := newFromConf(ctx, conf.Type, merged)
 
 	return dev, instance, merged, err
 }

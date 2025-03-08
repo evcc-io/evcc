@@ -22,9 +22,9 @@
 		<form v-else ref="form" class="container mx-0 px-0">
 			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 				<select
+					v-if="isNew"
 					id="meterTemplate"
 					v-model="templateName"
-					:disabled="!isNew"
 					class="form-select w-100"
 					@change="templateChanged"
 				>
@@ -44,6 +44,13 @@
 						{{ option.name }}
 					</option>
 				</select>
+				<input
+					v-else
+					type="text"
+					:value="productName"
+					disabled
+					class="form-control w-100"
+				/>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
 			<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -242,6 +249,9 @@ export default {
 		description() {
 			return this.template?.Requirements?.Description;
 		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
+		},
 		apiData() {
 			return {
 				template: this.templateName,
@@ -291,6 +301,12 @@ export default {
 			try {
 				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
 				this.values = meter.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = meter.type;
+				this.values.deviceTitle = meter.deviceTitle;
+				this.values.deviceIcon = meter.deviceIcon;
+				this.values.deviceProduct = meter.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -407,8 +423,11 @@ export default {
 		selectType(type) {
 			this.selectedType = type;
 		},
-		templateChanged() {
+		templateChanged(event) {
 			this.reset();
+			const select = event.target;
+			const name = select.options[select.selectedIndex].text;
+			this.values.deviceProduct = name;
 		},
 	},
 };
