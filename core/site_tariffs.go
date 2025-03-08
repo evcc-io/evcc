@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/samber/lo"
@@ -19,11 +20,20 @@ type solarDetails struct {
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
 	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Events           events       `json:"events,omitempty"`           // forecast-based events (experimental)
 }
 
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+type events []event
+
+type event struct {
+	Timestamp time.Time `json:"ts"`
+	Value     *float64  `json:"val,omitempty"`
+	Event     string    `json:"ev,omitempty"`
 }
 
 // greenShare returns
@@ -162,6 +172,49 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 			res.Scale = lo.ToPtr(scale)
 		}
 	}
+
+	if events := site.events(solar); len(events) > 0 {
+		res.Events = events
+	}
+
+	return res
+}
+
+func (site *Site) events(solar timeseries) events {
+	if site.batteryCapacity == 0 {
+		return nil
+	}
+
+	const baseload = 300 // W
+
+	// offset series by base load
+	remainder := make(timeseries, 0, len(solar))
+	for _, v := range solar {
+		v.Value = min(baseload, v.Value)
+		remainder = append(remainder, v)
+	}
+
+	var res events
+
+	// TODO if all batteries have capacity and soc
+
+	efficiency := soc.ChargeEfficiency
+	batRemaining := site.batteryCapacity * (1 - site.batterySoc/100) / efficiency
+
+	batCharged, batMissing := solar.time(time.Now(), 1e3*batRemaining)
+	ev := event{
+		Timestamp: batCharged,
+		Event:     "battery-soc",
+		Value:     lo.ToPtr(100.0),
+	}
+
+	if batMissing > 0 {
+		ev.Value = lo.ToPtr(100.0 - (efficiency * batMissing / site.batteryCapacity))
+	}
+
+	site.log.DEBUG.Printf("battery forecast: %+v", ev)
+
+	res = append(res, ev)
 
 	return res
 }

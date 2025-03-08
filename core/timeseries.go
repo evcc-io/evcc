@@ -17,6 +17,17 @@ type tsval struct {
 	Value     float64   `json:"val"`
 }
 
+// timestampSeries converts rates to a timeseries
+func timestampSeries(rr api.Rates) timeseries {
+	return lo.Map(rr, func(r api.Rate, _ int) tsval {
+		return tsval{
+			Timestamp: r.Start,
+			Value:     r.Price,
+		}
+	})
+}
+
+// search returns the index of the rate containing ts according to [slices.BinarySearch]
 func (rr timeseries) search(ts time.Time) (int, bool) {
 	return slices.BinarySearchFunc(rr, ts, func(v tsval, ts time.Time) int {
 		return v.Timestamp.Compare(ts)
@@ -41,9 +52,7 @@ func (rr timeseries) value(ts time.Time) float64 {
 	return rr.interpolate(idx, ts)
 }
 
-// energy calculates the energy consumption between from and to,
-// assuming the rates containing the power at given timestamp.
-// Result is in Wh
+// energy calculates the energy consumption between from and to in Wh
 func (rr timeseries) energy(from, to time.Time) float64 {
 	var energy float64
 
@@ -85,11 +94,36 @@ func (rr timeseries) energy(from, to time.Time) float64 {
 	return energy
 }
 
-func timestampSeries(rr api.Rates) timeseries {
-	return lo.Map(rr, func(r api.Rate, _ int) tsval {
-		return tsval{
-			Timestamp: r.Start,
-			Value:     r.Price,
+// time calculates the time to accumulate the given energy in Wh
+func (rr timeseries) time(from time.Time, energy float64) (time.Time, float64) {
+	var zero time.Time
+
+	idx, ok := rr.search(from)
+	if !ok {
+		switch {
+		case idx >= len(rr):
+			// from is just before or after last entry
+			return zero, energy
+		case idx == 0:
+			// from is before first entry
+			// do nothing- we ignore anything before the first entry
+		default:
+			// from is between two entries
+			r := &rr[idx]
+			vp := rr.interpolate(idx, from)
+
+			energy -= (vp + r.Value) / 2 * r.Timestamp.Sub(from).Hours()
 		}
-	})
+	}
+
+	for ; energy > 0 && idx < len(rr)-1; idx++ {
+		r := &rr[idx]
+		rn := &rr[idx+1]
+
+		delta := (r.Value + rn.Value) / 2 * rn.Timestamp.Sub(r.Timestamp).Hours()
+
+		energy -= delta
+	}
+
+	return rr[idx].Timestamp, energy
 }
