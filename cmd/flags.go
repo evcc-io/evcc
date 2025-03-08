@@ -16,7 +16,7 @@ const (
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
 	flagTemplate            = "template"
-	flagTemplateDescription = "Add custom template (useful for debugging)"
+	flagTemplateDescription = "Add custom template file (debug only)"
 	flagTemplateType        = "template-type"
 
 	flagDisableAuth            = "disable-auth"
@@ -65,7 +65,7 @@ const (
 var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
 	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
 		return t.String()
-	}), ", ") + ")"
+	}), ", ") + " (debug only)"
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {
 	name := key
