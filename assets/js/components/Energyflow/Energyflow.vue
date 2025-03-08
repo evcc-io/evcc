@@ -390,7 +390,7 @@ export default {
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
 		solarForecastExists() {
-			return !!this.forecast?.solar?.today;
+			return !!this.forecast?.solar;
 		},
 		solarForecastRemainingToday() {
 			return this.forecast?.solar?.today?.energy || 0;
