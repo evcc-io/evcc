@@ -98,6 +98,11 @@ func (rr timeseries) energy(from, to time.Time) float64 {
 func (rr timeseries) time(from time.Time, energy float64) (time.Time, float64) {
 	var zero time.Time
 
+	scale := 1.0
+	if energy < 0 {
+		scale = -1
+	}
+
 	idx, ok := rr.search(from)
 	if !ok {
 		switch {
@@ -116,7 +121,7 @@ func (rr timeseries) time(from time.Time, energy float64) (time.Time, float64) {
 		}
 	}
 
-	for ; energy > 0 && idx < len(rr)-1; idx++ {
+	for ; scale*energy > 0 && idx < len(rr)-1; idx++ {
 		r := &rr[idx]
 		rn := &rr[idx+1]
 
