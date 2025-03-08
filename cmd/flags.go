@@ -16,7 +16,7 @@ const (
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
 	flagTemplate            = "template"
-	flagTemplateDescription = "Add custom template (useful for debugging)"
+	flagTemplateDescription = "Add custom template file (debug only)"
 	flagTemplateType        = "template-type"
 
 	flagDisableAuth            = "disable-auth"
@@ -62,7 +62,7 @@ const (
 	flagForce  = "force"
 )
 
-var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
+var flagTemplateTypeDescription = "Custom template type (debug only: " + strings.Join(
 	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
 		return t.String()
 	}), ", ") + ")"
