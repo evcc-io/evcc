@@ -157,7 +157,7 @@ v2Support = "InfluxDB 2.x'e geri dön"
 addCharger = "“Doldurma cihazı ekle”"
 addMeter = "“Ek doldurma sayacı ekle”"
 cancel = "“İptal”"
-chargerLabel = "“Doldurma Cihazı”"
+chargerLabel = "“Doldurma cihazı”"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "“6 ila 16 A akım aralığını kullanır.”"
 chargerPower22kw = "22 kW"
@@ -217,6 +217,14 @@ thresholdEnableHelpNegative = "“{delay} için {surplus} fazlalık varsa doldur
 thresholdEnableHelpZero = "“{delay} için asgari doldurma gücü fazlası mevcut olduğunda başlat.”"
 thresholdEnableLabel = "“Şebeke gücünü aç”"
 titleAdd = "“ Doldurma Noktası Ekle”"
+titleEdit = “Doldurma Noktasını Düzenle“
+titleExample = “Garaj, Otopark, vs.”
+titleLabel = “Başlık”
+vehicleAutoDetection = “otomatik algılama”
+vehicleHelpAutoDetection = “Otomatik olarak en makul aracı seçer. Elden değiştirme mümkündür.”
+vehicleHelpDefault = “Her zaman bu aracın burada doldurduğunu varsayar. Otomatik algılama devre dışı. Elden değiştirme mümkün.”
+vehicleLabel = “Varsayılan araç”
+vehiclesTitle = “Araçlar”
 
 [config.main]
 addLoadpoint = "Doldurma noktası ekle"
@@ -227,7 +235,10 @@ edit = "düzenle"
 title = "Yapılandırma"
 unconfigured = "yapılandırılmadı"
 vehicles = "Araçlarım"
-yaml = "evcc.yaml içerisinde yapılandırıldı. Kullanıcı arayüzünde düzenlenemez."
+yaml = “evcc.yaml dosyasındaki cihazlar düzenlenemez.”
+addGrid = “Elektrik sayacı ekle”
+addTariffs = “Tarife ekle”
+name = “İsim”
 
 [config.messaging]
 description = "Dolum oturumları hakkında bildirimler al."
@@ -300,13 +311,16 @@ system = "Sistem"
 vehicles = "Araçlar"
 
 [config.sponsor]
-addToken = "Destekçi jetonunu gir"
-changeToken = "Destekçi jetonunu değiştir"
+addToken = "Jetonu gir"
+changeToken = "Jetonu değiştir"
 description = "Destek modeli, projeyi sürdürmemize ve sürdürülebilir bir şekilde yeni ve heyecan verici özellikler geliştirmemize yardımcı oluyor. Destekçi olarak tüm doldurma cihazı uygulamalarına erişimin oluyor."
 descriptionToken = "Jetonu {url} adresinden alabilirsiniz. Denemek için bir deneme jetonu da sunuyoruz."
 error = "Destekçi jetonu geçerli değil."
 labelToken = "Destekçi jetonu"
 title = "Destekçilik"
+tokenRequired = “Bu cihazı oluşturabilmen için önce bir destekçi jetonu yapılandırmalısın.”
+tokenRequiredLearnMore = “Daha fazla bilgi edin.”
+trialToken = "Deneme jetonu"
 
 [config.system]
 logs = "Loglar"
@@ -473,6 +487,8 @@ title = "Kimlik Doğrulama"
 
 [main]
 vehicles = "Park"
+startConfiguration = “Yapılandırmaya başlayalım”
+welcome = “Hoş geldin!”
 
 [main.chargingPlan]
 active = "Aktif"
@@ -509,12 +525,16 @@ noEnergy = "Ölçüm verisi yok"
 pvExport = "Şebekeye ihracat"
 pvProduction = "Üretim"
 selfConsumption = "Öz tüketim"
+batteryGridChargeActive = “şebekeden doldurma etkin”
+batteryGridChargeLimit = “şebekeden doldur şayet”
+forecastTooltip = “öngörü: bugün kalan güneşden üreti̇m”
 
 [main.heatingStatus]
 charging = "Isıtılıyor…"
 cheapEnergyCharging = "Ucuz enerji ile ısıtılıyor: {price} (sınır {limit})"
 cleanEnergyCharging = "Temiz enerji ile ısıtılıyor: {co2} (sınır {limit})"
 waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
+vehicleLimit = “Isıtıcı sınırlaması”
 
 [main.loadpoint]
 avgPrice = "⌀ Fiyat"
@@ -837,6 +857,8 @@ none = "hiçbiri"
 priceLabel = "Enerji fiyatı"
 priceLimit = "Fiyat sınırı"
 saved = "Kaydedildi."
+resetAction = “Sınırlamayı kaldır“
+resetWarning = “Dinamik şebeke fiyatı veya yapılandırılmış CO₂ kaynağı yok. Ancak, hala {limit} sınırlaması var. Yapılandırmayı toparlayayım mı?”
 
 [startupError]
 configFile = "Kullanılan yapılandırma dosyası:"
@@ -849,3 +871,35 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[config.options.status]
+A = “A (bağlı değil)”
+B = “B (bağlı)”
+C = “C (dolduruyor)”
+
+[forecast.co2]
+range = “Aralık”
+lowestHour = “En temiz saat”
+average = “Ortalama”
+
+[forecast.solar]
+tomorrow = “Yarın”
+dayAfterTomorrow = “Yarından sonra”
+partly = “kısmen”
+remaining = “kalan”
+today = “Bugün”
+
+[forecast]
+modalTitle = “Öngörü”
+solarAdjust = "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla."
+
+[forecast.price]
+average = “Ortalama”
+lowestHour = “En ucuz saat”
+range = “Aralık”
+
+[forecast.type]
+co2 = "CO₂"
+price = “Fiyat”
+solar = “Güneş”

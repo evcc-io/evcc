@@ -98,6 +98,7 @@ topic = "Tema"
 url = "URL"
 vehicleLimitSoc = "Automobilio limitas"
 yes = "taip"
+heaterTempLimit = "Šildymo limitas"
 
 [config.deviceValueChargeStatus]
 A = "A (neprijungtas)"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
 [forecast]
 modalTitle = "Prognozė"
+solarAdjust = "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis."
 
 [forecast.co2]
 average = "Vidurkis"
@@ -582,6 +584,7 @@ charging = "Šildoma…"
 cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
 cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
 waitForVehicle = "Paruošta. Laukiame šildytuvo…"
+vehicleLimit = "Šildymo limitas"
 
 [main.loadpoint]
 avgPrice = "⌀ Kaina"
@@ -929,6 +932,8 @@ none = "nėra"
 priceLabel = "Energijos kaina"
 priceLimit = "Kainos limitas"
 saved = "Išsaugota."
+resetAction = "Pašalinti limitą"
+resetWarning = "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?"
 
 [startupError]
 configFile = "Naudojamas konfiguracijos failas:"

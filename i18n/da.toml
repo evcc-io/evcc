@@ -902,6 +902,8 @@ none = "ingen"
 priceLabel = "Energi pris"
 priceLimit = "Pris grænse"
 saved = "Gemt"
+resetWarning = "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?"
+resetAction = "Fjern begrænsning"
 
 [startupError]
 configFile = "Konfigurationsfil brugt:"

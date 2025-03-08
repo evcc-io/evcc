@@ -98,6 +98,7 @@ topic = "Тема"
 url = "URL"
 vehicleLimitSoc = "Ліміт транспортного засобу"
 yes = "так"
+heaterTempLimit = "Обмеження нагрівача"
 
 [config.deviceValueChargeStatus]
 A = "A (не підключено)"
@@ -450,6 +451,7 @@ modalUpdateStatusStart = "Встановлення розпочато:"
 
 [forecast]
 modalTitle = "Прогноз"
+solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва."
 
 [forecast.co2]
 average = "Середній"
@@ -576,6 +578,7 @@ selfConsumption = "Власне споживання"
 [main.heatingStatus]
 charging = "Опалення…"
 waitForVehicle = "Готовий. Очікування обігрівача…"
+vehicleLimit = "Обмеження нагрівача"
 
 [main.loadpoint]
 avgPrice = "⌀ Ціна"
@@ -905,6 +908,8 @@ none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
 saved = "Збережено."
+resetAction = "Зняти обмеження"
+resetWarning = «Динамічна ціна мережі або джерело CO₂ не налаштовано. Проте обмеження в {limit} усе ще є. Очистити конфігурацію?»
 
 [startupError]
 configFile = "Використаний файл конфігурації:"
