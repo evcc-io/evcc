@@ -885,6 +885,7 @@ none = "nincs"
 priceLabel = "Energia ár"
 priceLimit = "Ár limit"
 saved = "Elmentve."
+resetAction = "Limit eltávolítása"
 
 [startupError]
 configFile = "Konfigurációs fájl használatban:"
