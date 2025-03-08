@@ -9,6 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
@@ -192,6 +193,9 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
 	assert.Equal(t, 6.0, lp.effectiveMinCurrent(), "current")
 
+	// disconnect sets default vehicle only if poll mode: always
+	lp.Soc.Poll.Mode = loadpoint.PollAlways
+
 	// non-default vehicle disconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
@@ -202,6 +206,8 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
 	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
+
+	lp.Soc.Poll.Mode = loadpoint.PollConnected
 
 	// set non-default vehicle during disconnect - should be default on connect
 	lp.tasks.Clear()
