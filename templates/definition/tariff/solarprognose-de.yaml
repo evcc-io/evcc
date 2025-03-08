@@ -1,0 +1,45 @@
+template: solarprognose.de
+products:
+  - brand: solarprognose.de
+requirements:
+  description:
+    en: "[solarprognose.de](https://www.solarprognose.de) can be used for free (but donations are welcome). An user account is required."
+    de: "[solarprognose.de](https://www.solarprognose.de) kann kostenlos verwendet werden (Spenden sind allerdings willkommen). Ein Benutzer-Account ist notwendig."
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: accesstoken
+    description:
+      en: access token from user profile
+      de: Zugriffs-Schlüssel aus Benutzer-Profil
+    required: true  
+  - name: item
+    choice: ["location", "plant", "inverter"]
+    required: true  
+  - name: token
+    description:
+      en: unique token for selected item
+      de: Eindeutiger Schlüssel für das angegebene Element 
+    required: true  
+  - name: algorithm
+    description:
+      en: forecasting algorithm
+      de: Prognosealgorithmus
+    default: mosmix  
+    advanced: true          
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token={{ .accesstoken }}&item={{ .item }}&token={{ unquote .token }}&algorithm={{ .algorithm }}&type=hourly
+    jq: |
+      [ .data | to_entries.[] | {
+        "start": (.key | tonumber | strftime("%FT%TZ") ),
+        "end": (.key | tonumber + 3600 | strftime("%FT%TZ")  ) ,
+        "price": (.value.[0]*1000)
+      } ] | tostring
+  interval: {{ .interval }}
