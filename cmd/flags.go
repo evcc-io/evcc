@@ -62,10 +62,10 @@ const (
 	flagForce  = "force"
 )
 
-var flagTemplateTypeDescription = "Custom template type (debug only: " + strings.Join(
+var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
 	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
 		return t.String()
-	}), ", ") + ")"
+	}), ", ") + " (debug only)"
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {
 	name := key
