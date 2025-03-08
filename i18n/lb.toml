@@ -95,6 +95,7 @@ topic = "Sujet"
 url = "URL"
 vehicleLimitSoc = "Limitt vum Gefier"
 yes = "jo"
+heaterTempLimit = "Limitt vun der Heizung"
 
 [config.deviceValueChargeStatus]
 A = "A (net verbonnen)"
@@ -442,6 +443,7 @@ modalUpdateStatusStart = "Installatioun ugefaang:"
 
 [forecast]
 modalTitle = "Prognose"
+solarAdjust = "Solarprognose unhand vun de reale Produktionsdaten upassen."
 
 [forecast.co2]
 average = "Moyenne"
@@ -573,6 +575,7 @@ selfConsumption = "eegene Verbrauch"
 [main.heatingStatus]
 charging = "Wiermen…"
 waitForVehicle = "Prett. Waarden op d'Heizung..."
+vehicleLimit = "Limitt vun der Heizung"
 
 [main.loadpoint]
 avgPrice = "⌀ Präis"
@@ -911,6 +914,8 @@ none = "keng"
 priceLabel = "Energiepräis"
 priceLimit = "Präisgrenz"
 saved = "Gepäichert."
+resetAction = "Limitt läschen"
+resetWarning = "Et ass keen dynamischen Netzpräis a keng CO₂-Quelle konfiguréiert. Trotzdem ass eng Limitt vu {limit} ageriicht. Konfiguratioun opraumen?"
 
 [startupError]
 configFile = "Konfiguratiounsdatei benotzt:"

@@ -98,6 +98,7 @@ topic = "Tema"
 url = "URL"
 vehicleLimitSoc = "Limite do veículo"
 yes = "sim"
+heaterTempLimit = "Limite do aquecedor"
 
 [config.deviceValueChargeStatus]
 A = "A (não ligado)"
@@ -445,6 +446,7 @@ modalUpdateStatusStart = "Instalação iniciada:"
 
 [forecast]
 modalTitle = "Previsões"
+solarAdjust = "Ajustar a previsão solar com base em dados reais de produção."
 
 [forecast.co2]
 average = "Média"
@@ -578,6 +580,7 @@ charging = "Aquecendo..."
 cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
 cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
 waitForVehicle = "Pronto. Esperando pelo aquecedor..."
+vehicleLimit = "Limite do aquecedor"
 
 [main.loadpoint]
 avgPrice = "Preço ⌀"
@@ -925,6 +928,8 @@ none = "sem"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
 saved = "Salvo."
+resetAction = "Remover limite"
+resetWarning = "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limite}. Limpar a sua configuração?"
 
 [startupError]
 configFile = "Ficheiro de configuração em uso:"
