@@ -272,6 +272,8 @@ func (site *Site) events(solar timeseries) events {
 			}
 		}
 
+		currentSoc = math.Round(currentSoc)
+
 		res = append(res, event{
 			Timestamp: ts,
 			Event:     "battery-soc",
