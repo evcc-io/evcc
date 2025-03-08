@@ -324,7 +324,7 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	// fallback for missing total energy
 	for _, suffix := range []types.Measurand{"", "-N"} {
 		if res, found, err := conn.phaseMeasurements(types.MeasurandEnergyActiveImportRegister, suffix); found {
-			return res[0] + res[1] + res[2], err
+			return (res[0] + res[1] + res[2]) / 1e3, err
 		}
 	}
 
