@@ -557,7 +557,14 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 
 	// update solar yield
-	for i, name := range site.Meters.PVMetersRef {
+	for i, dev := range site.pvMeters {
+		// use stored devices, not ui-updated instances!
+		if _, ok := dev.(config.Device[api.Meter]); !ok {
+			panic(fmt.Sprintf("not a device: pv %d", i+1))
+		}
+
+		name := dev.Config().Name
+
 		if mm[i].Energy > 0 {
 			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
 		} else {
