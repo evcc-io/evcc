@@ -299,8 +299,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 	if !ok {
 		return errors.New("not configurable")
 	}
-
-	return configurable.Update(merged, instance)
+	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
 // updateDeviceHandler updates database device's configuration by class

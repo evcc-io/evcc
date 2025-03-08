@@ -11,7 +11,7 @@ type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
 	Properties() Properties
-	Update(map[string]any, T) error
+	Update(map[string]any, T, ...func(*Config)) error
 	Delete() error
 }
 
@@ -76,10 +76,10 @@ func (d *configurableDevice[T]) Properties() Properties {
 	return d.config.Properties
 }
 
-func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
+func (d *configurableDevice[T]) Update(config map[string]any, instance T, opt ...func(*Config)) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	if err := d.config.Update(config); err != nil {
+	if err := d.config.Update(config, opt...); err != nil {
 		return err
 	}
 	d.instance = instance
