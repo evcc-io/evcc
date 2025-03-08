@@ -449,6 +449,7 @@ modalUpdateStatusStart = "L'installation a commencé:"
 
 [forecast]
 modalTitle = "Prévisions"
+solarAdjust = "Ajuster la prévision solaire basé sur la production réelle."
 
 [forecast.co2]
 average = "Moyenne"
@@ -582,6 +583,7 @@ charging = "Chauffage… "
 cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
 waitForVehicle = "Prêt. En attente du chauffage… "
+vehicleLimit = "Limite de chauffage"
 
 [main.loadpoint]
 avgPrice = "Prix ⌀"
@@ -920,6 +922,8 @@ none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
 saved = "Enregistré."
+resetAction = "Supprimer la limite"
+resetWarning = "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration?"
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"
