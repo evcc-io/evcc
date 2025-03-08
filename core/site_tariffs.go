@@ -1,9 +1,11 @@
 package core
 
 import (
+	"encoding/json"
 	"maps"
 	"math"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,11 +21,20 @@ type solarDetails struct {
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
 	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Events           events       `json:"events,omitempty"`           // forecast-based events (experimental)
 }
 
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+type events []event
+
+type event struct {
+	Timestamp time.Time `json:"ts"`
+	Value     *float64  `json:"val,omitempty"`
+	Event     string    `json:"ev,omitempty"`
 }
 
 // greenShare returns
@@ -112,6 +123,12 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	// calculate adjusted solar forecast
 	if solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar))); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
+	} else {
+		// TODO test only
+		var solar timeseries
+		if err := json.Unmarshal([]byte(data), &solar); err == nil {
+			fc.Solar = lo.ToPtr(site.solarDetails(solar))
+		}
 	}
 
 	site.publish(keys.Forecast, fc)
@@ -162,6 +179,113 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 			res.Scale = lo.ToPtr(scale)
 		}
 	}
+
+	if events := site.events(solar); len(events) > 0 {
+		res.Events = events
+	}
+
+	return res
+}
+
+func (site *Site) events(solar timeseries) events {
+	if site.batteryCapacity == 0 {
+		return nil
+	}
+
+	const baseload = 300 // W
+
+	var res events
+	var surplus *bool
+
+	// offset series by base load
+	remainder := make(timeseries, 0, len(solar))
+	for _, v := range solar {
+		if v.Timestamp.Before(time.Now().Add(-time.Hour)) {
+			continue
+		}
+
+		v.Value -= baseload
+		remainder = append(remainder, v)
+
+		if surplus == nil || *surplus != (v.Value > 0) {
+			ev := "battery-charge"
+			if v.Value <= 0 {
+				ev = "battery-discharge"
+			}
+
+			res = append(res, event{
+				Timestamp: v.Timestamp,
+				Event:     ev,
+			})
+		}
+
+		surplus = lo.ToPtr(v.Value > 0)
+	}
+
+	// TODO check if all batteries have capacity and soc
+
+	// efficiency := soc.ChargeEfficiency
+	currentSoc := site.batterySoc
+
+	for i, ev := range res {
+		prevSoc := currentSoc
+
+		if ev.Event == "battery-soc" {
+			continue
+		}
+
+		ev.Value = lo.ToPtr(currentSoc)
+		if time.Now().After(ev.Timestamp) {
+			ev.Timestamp = time.Now().Round(15 * time.Minute)
+		}
+		res[i] = ev
+
+		batRemaining := currentSoc / 100 // kWh
+		if ev.Event == "battery-charge" {
+			batRemaining = (1 - batRemaining)
+		}
+		batRemaining *= site.batteryCapacity
+		if ev.Event == "battery-discharge" {
+			batRemaining = -batRemaining
+		}
+
+		ts, delta := remainder.time(ev.Timestamp, 1e3*batRemaining)
+		if i < len(res)-1 {
+			if next := res[i+1]; next.Timestamp.Before(ts) && next.Event != "battery-soc" {
+				ts = next.Timestamp
+				delta = remainder.energy(ev.Timestamp, ts)
+			}
+		}
+		ts = ts.Round(15 * time.Minute)
+
+		if ev.Event == "battery-charge" {
+			if delta > 0 {
+				currentSoc -= delta / 1e3 / site.batteryCapacity * 100
+			} else {
+				currentSoc = 100
+			}
+		} else {
+			if delta < 0 {
+				currentSoc += delta / 1e3 / site.batteryCapacity * 100
+			} else {
+				currentSoc = 0
+			}
+		}
+
+		currentSoc = math.Round(currentSoc)
+
+		res = append(res, event{
+			Timestamp: ts,
+			Event:     "battery-soc",
+			Value:     lo.ToPtr(currentSoc),
+		})
+
+		site.log.DEBUG.Printf("battery forecast: %s\t%.0f%% @ %v -> %.0f%% @ %v", strings.TrimPrefix(ev.Event, "battery-"), prevSoc, ev.Timestamp, currentSoc, ts)
+	}
+
+	slices.SortStableFunc(res, func(i, j event) int {
+		return i.Timestamp.Compare(j.Timestamp)
+	})
 
 	return res
 }
