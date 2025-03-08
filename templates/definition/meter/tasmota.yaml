@@ -1,11 +1,12 @@
 template: tasmota
 products:
-  - description:
-      generic: Tasmota (1 Phase Meter)
+  - brand: Tasmota
+    description:
+      generic: Tasmota (1 Phase + SML Meter)
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv", "battery", "charge"]
+    choice: ["grid", "pv", "battery", "charge"]
   - name: host
   - name: user
     required: false
