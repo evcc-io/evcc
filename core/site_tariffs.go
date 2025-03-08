@@ -111,8 +111,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// calculate adjusted solar forecast
 	if solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar))); len(solar) > 0 {
-		solarDetails := site.solarDetails(solar)
-		fc.Solar = &solarDetails
+		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, fc)
