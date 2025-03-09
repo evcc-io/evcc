@@ -61,6 +61,7 @@ export default {
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
+				case "heaterTempLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":

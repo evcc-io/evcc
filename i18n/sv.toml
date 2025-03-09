@@ -701,13 +701,6 @@ tempLimit = "Temp-gräns"
 unknown = "Gästfordon"
 vehicleSoc = "Laddning"
 
-[main.vehicleSoc]
-charging = "laddar"
-connected = "ansluten"
-disconnected = "frånkopplad"
-ready = "redo"
-vehicleLimit = "Fordonsgräns: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Väntar på godkännande."
 batteryBoost = "Batteriboost är aktiv."
@@ -732,7 +725,7 @@ targetChargeActive = "Laddplan aktiv. Beräknas vara klar om {duration}."
 targetChargePlanned = "Laddplan startar om {duration}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
-vehicleLimit = "Fordonsgräns."
+vehicleLimit = "Fordonsgräns"
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."

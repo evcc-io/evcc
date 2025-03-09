@@ -83,12 +83,12 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
-							:details="solarForecast"
+							:details="solarForecastRemainingToday"
 							:detailsFmt="forecastFmt"
-							:detailsTooltip="forecastTooltip(solarForecast)"
-							:detailsInactive="solarForecast === 0"
-							:detailsIcon="solarForecast !== undefined ? 'forecast' : undefined"
-							:detailsClickable="solarForecast !== undefined"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
 							@details-clicked="openForecastModal"
@@ -236,7 +236,7 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import { energyByDay } from "../../utils/forecast";
+
 export default {
 	name: "Energyflow",
 	components: {
@@ -389,10 +389,20 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
-		solarForecast() {
-			const slots = this.forecast.solar || [];
-			if (slots.length === 0) return undefined;
-			return energyByDay(slots, 0);
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
+			return this.forecast?.solar?.today?.energy || 0;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
 		},
 	},
 	watch: {
@@ -430,12 +440,6 @@ export default {
 				result.push(`${this.fmtPricePerKWh(price, this.currency)}`);
 			}
 			return result;
-		},
-		forecastTooltip(value) {
-			if (value !== null) {
-				return [this.$t("main.energyflow.forecastTooltip")];
-			}
-			return [];
 		},
 		detailsValue(price, co2) {
 			if (this.co2Available) {

@@ -8,7 +8,6 @@ type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
 	Update(map[string]any, T) error
-	PartialUpdate(map[string]any, T) error
 	Delete() error
 }
 
@@ -36,24 +35,8 @@ func (d *configurableDevice[T]) ID() int {
 	return d.config.ID
 }
 
-// func (d *configurableDevice[T]) Assign(instance T) {
-// 	d.instance = instance
-// }
-
-//	func (d *configurableDevice[T]) Update(config map[string]any) error {
-//		return d.config.Update(config)
-//	}
-
 func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
 	if err := d.config.Update(config); err != nil {
-		return err
-	}
-	d.instance = instance
-	return nil
-}
-
-func (d *configurableDevice[T]) PartialUpdate(config map[string]any, instance T) error {
-	if err := d.config.PartialUpdate(config); err != nil {
 		return err
 	}
 	d.instance = instance

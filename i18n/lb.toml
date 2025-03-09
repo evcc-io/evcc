@@ -694,13 +694,6 @@ tempLimit = "Temp. Limitt"
 unknown = "Gaascht Gefier"
 vehicleSoc = "Gelueden"
 
-[main.vehicleSoc]
-charging = "oplueden"
-connected = "verbonne"
-disconnected = "deconnectéiert"
-ready = "bereet"
-vehicleLimit = "Limitt vum Gefier: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waarden op d'Autorisatioun."
 batteryBoost = "Batterie Boost ass aktiv."
@@ -725,7 +718,7 @@ targetChargeActive = "Luedplanung aktiv. Ageschate Schluss an {duration}."
 targetChargePlanned = "Luedpladung fänkt un an {time} un."
 targetChargeWaitForVehicle = "Luedplang ass prett. Waarden op d'Gefier..."
 unknown = ""
-vehicleLimit = "Limitt vum Gefier."
+vehicleLimit = "Limitt vum Gefier"
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."

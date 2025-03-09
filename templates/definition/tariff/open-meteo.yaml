@@ -1,6 +1,6 @@
 template: open-meteo
 products:
-  - brand: OpenMeteo
+  - brand: Open-Meteo
 requirements:
   description:
     en: Free Weather API [open-meteo.com](https://open-meteo.com) Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
@@ -8,30 +8,7 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: lat
-    description:
-      en: Latitude
-      de: Breitengrad
-    type: float
-    example: 55.7351
-    required: true
-  - name: lon
-    description:
-      en: Longitude
-      de: Längengrad
-    type: float
-    example: 9.1275
-    required: true
-  - name: dec
-    description:
-      en: Decline
-      de: Neigung
-    help:
-      en: 0 = horizontal, 90 = vertical
-      de: 0 = horizontal, 90 = vertikal
-    type: int
-    example: 25
-    required: true
+  - preset: forecast-base
   - name: az
     description:
       en: Azimuth
@@ -41,13 +18,6 @@ params:
       de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
     type: int
     example: 0
-    required: true
-  - name: kwp
-    description:
-      en: Maximum generator power [kWp]
-      de: Maximale Generatorleistung [kWp]
-    type: float
-    example: 9.8
     required: true
   - name: ac
     description:
@@ -131,8 +101,8 @@ render: |
           | $h.time[$i] as $time
           | ($i / 24 | floor) as $day
           | {
-              start: ($time | todateiso8601),
-              end: (($time + 3600) | todateiso8601),
+              start: (($time - 3600) | todateiso8601),
+              end: ($time | todateiso8601),
               price: (
                 kwp
                 * ($h.global_tilted_irradiance[$i] / 1000)
