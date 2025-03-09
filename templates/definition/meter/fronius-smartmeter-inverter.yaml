@@ -1,4 +1,4 @@
-template: fronius-meter
+template: fronius-smartmeter-inverter
 products:
   - brand: Fronius
     description:
