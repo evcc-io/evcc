@@ -74,7 +74,7 @@ render: |
         # Variant 1
         (.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)
         //
-        # Variant 1
+        # Variant 2
         (.[] | select(.name | test(".*_batteryChannelGroup_batteryStateOfCharge$")).state | tonumber)
       )
       // 0
