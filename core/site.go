@@ -329,13 +329,13 @@ func (site *Site) restoreSettings() error {
 				site.pvEnergy[name].Accumulated = fcst
 			} else {
 				nok = true
-				site.log.WARN.Printf("cannot restore accumulated solar yield for: %s", name)
+				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
 			}
 		}
 
 		if !nok {
 			site.fcstEnergy.Accumulated = fcstEnergy
-			site.log.DEBUG.Printf("restored accumulated solar yield: %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
+			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
 		} else {
 			// reset metrics
 			site.log.WARN.Printf("accumulated solar yield: metrics reset")
