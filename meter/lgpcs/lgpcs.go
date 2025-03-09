@@ -21,11 +21,13 @@ import (
 
 type Com struct {
 	*request.Helper
-	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
-	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
-	authKey  string // auth_key returned during login and renewed with new login after expiration
-	essType  Model  // currently the LG Ess Home 8/10 and Home 15 are supported
-	dataG    func() (EssData, error)
+	uri          string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
+	password     string // user password, usually MAC address of the LG ESS in lowercase without colons
+	registration string // registration number of the LG ESS Inverter - e.g. "DE2001..."
+	authKey      string // auth_key returned during login and renewed with new login after expiration
+	essType      Model  // currently the LG Ess Home 8/10 and Home 15 are supported
+	dataG        func() (EssData, error)
+	log          *util.Logger
 }
 
 var (
@@ -41,14 +43,12 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 	once.Do(func() {
 		log := util.NewLogger("lgess")
 		instance = &Com{
-			Helper:   request.NewHelper(log),
-			uri:      uri,
-			password: password,
-			essType:  essType,
-		}
-
-		if registration != "" {
-			instance.password = registration
+			Helper:       request.NewHelper(log),
+			uri:          uri,
+			registration: registration,
+			password:     password,
+			essType:      essType,
+			log:          log,
 		}
 
 		// ignore the self signed certificate
@@ -59,19 +59,19 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 		instance.dataG = util.Cached(instance.essInfo, cache)
 
 		// do first login if no authKey exists and uri and password exist
-		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
+		if instance.authKey == "" && instance.uri != "" && (instance.password != "" || instance.registration != "") {
 			err = instance.Login()
 		}
 	})
 
-	// check if both password and registration are provided
-	if password != "" && registration != "" {
-		return nil, errors.New("cannot have registration and password")
-	}
-
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {
 		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
+	}
+
+	// check if different registrations are provided
+	if registration != "" && instance.registration != registration {
+		return nil, errors.New("registration mismatch")
 	}
 
 	// check if different passwords are provided
@@ -84,11 +84,26 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 
 // Login calls login and stores the returned authorization key
 func (m *Com) Login() error {
+	// check if at least one of password and registration is provided
+	if m.password == "" && m.registration == "" {
+		return errors.New("neither registration nor password provided - at least one needed")
+	}
+
 	data := map[string]interface{}{
 		"password": m.password,
 	}
-
 	uri := fmt.Sprintf("%s/v1/user/setting/login", m.uri)
+
+	if m.password == "" { // use installer login
+		m.log.DEBUG.Println("installer login")
+		uri = fmt.Sprintf("%s/v1/login", m.uri)
+		data["password"] = m.registration
+	}
+
+	if m.authKey != "" {
+		m.log.DEBUG.Println("re-login")
+	}
+
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
@@ -102,34 +117,6 @@ func (m *Com) Login() error {
 
 	if err := m.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
-	}
-
-	// try to login as ESS installer if user login failed
-	if res.Status == "password mismatched" {
-		uri := fmt.Sprintf("%s/v1/login", m.uri)
-		req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err != nil {
-			return err
-		}
-
-		// read auth_key from response body
-		var res struct {
-			Status  string `json:"status,omitempty"`
-			AuthKey string `json:"auth_key"`
-		}
-
-		if err := m.DoJSON(req, &res); err != nil {
-			return fmt.Errorf("login failed: %w", err)
-		}
-
-		if res.Status != "success" {
-			return fmt.Errorf("login failed: %s", res.Status)
-		}
-
-		// read auth_key from response
-		m.authKey = res.AuthKey
-
-		return nil
 	}
 
 	// check login response status
