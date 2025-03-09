@@ -3,7 +3,7 @@ products:
   - brand: Fronius
     description:
       de: Smartmeter (über Wechselrichter)
-	    en: Smartmeter (via Inverter)
+      en: Smartmeter (via Inverter)
 params:
   - name: usage
     choice: ["grid", "pv", "aux"]
@@ -27,7 +27,7 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-	    - 201:W
+      - 201:W
       - 211:W
       - 203:W
       - 213:W
@@ -111,7 +111,7 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-	    - 201:W
+      - 201:W
       - 211:W
       - 203:W
       - 213:W
