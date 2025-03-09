@@ -48,6 +48,16 @@
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
+			<li v-if="forecastAvailable">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-forecast"
+					@click="openForecastModal"
+				>
+					{{ $t("forecast.modalTitle") }}
+				</button>
+			</li>
 			<li>
 				<router-link class="dropdown-item" to="/config" active-class="active">
 					<span
@@ -142,6 +152,7 @@ export default {
 				return {};
 			},
 		},
+		forecast: Object,
 		battery: Array,
 		fatal: Object,
 	},
@@ -181,6 +192,10 @@ export default {
 		batteryModalAvailable() {
 			return this.batteryConfigured;
 		},
+		forecastAvailable() {
+			const { grid, solar, co2 } = this.forecast || {};
+			return grid || solar || co2;
+		},
 		showLogout() {
 			return isLoggedIn();
 		},
@@ -217,6 +232,10 @@ export default {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
 			);
+			modal.show();
+		},
+		openForecastModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
 			modal.show();
 		},
 		openNativeSettings() {

@@ -7,6 +7,7 @@ requirements:
   description:
     de: "Den API-Key bekommst du im Octopus Portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
     en: "You can get the API key in the Octopus portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+countries: ["GB"]
 group: price
 params:
   - name: apiKey

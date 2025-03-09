@@ -20,21 +20,19 @@ package charger
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
 // SgReady charger implementation
 type SgReady struct {
 	*embed
-	_mode    int64
-	phases   int
-	get      func() (int64, error)
-	set      func(int64) error
-	maxPower func(int64) error
+	mode  int64
+	modeS func(int64) error
+	modeG func() (int64, error)
 }
 
 func init() {
@@ -48,20 +46,17 @@ const (
 	Stop
 )
 
-//go:generate decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
+//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
 
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed     `mapstructure:",squash"`
-		SetMode   provider.Config
-		GetMode   *provider.Config // optional
-		MaxPower  *provider.Config // optional
-		Power     *provider.Config // optional
-		Energy    *provider.Config // optional
-		Temp      *provider.Config // optional
-		LimitTemp *provider.Config // optional
-		Phases    int
+		embed                   `mapstructure:",squash"`
+		SetMode                 plugin.Config
+		GetMode                 *plugin.Config // optional
+		measurement.Temperature `mapstructure:",squash"`
+		measurement.Energy      `mapstructure:",squash"`
+		Phases                  int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -74,94 +69,56 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	set, err := provider.NewIntSetterFromConfig(ctx, "mode", cc.SetMode)
+	modeS, err := cc.SetMode.IntSetter(ctx, "mode")
 	if err != nil {
 		return nil, err
 	}
 
-	var get func() (int64, error)
-	if cc.GetMode != nil {
-		get, err = provider.NewIntGetterFromConfig(ctx, *cc.GetMode)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var maxPower func(int64) error
-	if cc.MaxPower != nil {
-		maxPower, err = provider.NewIntSetterFromConfig(ctx, "maxpower", *cc.MaxPower)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	res, err := NewSgReady(ctx, &cc.embed, set, get, maxPower, cc.Phases)
+	modeG, err := cc.GetMode.IntGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// decorate power
-	var powerG func() (float64, error)
-	if cc.Power != nil {
-		powerG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Power)
-		if err != nil {
-			return nil, fmt.Errorf("power: %w", err)
-		}
+	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG)
+	if err != nil {
+		return nil, err
 	}
 
-	// decorate energy
-	var energyG func() (float64, error)
-	if cc.Energy != nil {
-		energyG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
-		if err != nil {
-			return nil, fmt.Errorf("energy: %w", err)
-		}
+	powerG, energyG, err := cc.Energy.Configure(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	// decorate temp
-	var tempG func() (float64, error)
-	if cc.Temp != nil {
-		tempG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Temp)
-		if err != nil {
-			return nil, fmt.Errorf("temp: %w", err)
-		}
-	}
-
-	var limitTempG func() (int64, error)
-	if cc.LimitTemp != nil {
-		limitTempG, err = provider.NewIntGetterFromConfig(ctx, *cc.LimitTemp)
-		if err != nil {
-			return nil, fmt.Errorf("limit temp: %w", err)
-		}
+	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, set func(int64) error, get func() (int64, error), maxPower func(int64) error, phases int) (*SgReady, error) {
+func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error)) (*SgReady, error) {
 	res := &SgReady{
-		embed:    embed,
-		_mode:    Normal,
-		set:      set,
-		get:      get,
-		maxPower: maxPower,
-		phases:   phases,
+		embed: embed,
+		mode:  Normal,
+		modeS: modeS,
+		modeG: modeG,
 	}
 
 	return res, nil
 }
 
-func (wb *SgReady) mode() (int64, error) {
-	if wb.get == nil {
-		return wb._mode, nil
+func (wb *SgReady) getMode() (int64, error) {
+	if wb.modeG == nil {
+		return wb.mode, nil
 	}
-	return wb.get()
+	return wb.modeG()
 }
 
 // Status implements the api.Charger interface
 func (wb *SgReady) Status() (api.ChargeStatus, error) {
-	mode, err := wb.mode()
+	mode, err := wb.getMode()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -170,36 +127,27 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, errors.New("stop mode")
 	}
 
-	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}[mode]
-	return status, nil
+	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
+	return status[mode], nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *SgReady) Enabled() (bool, error) {
-	mode, err := wb.mode()
+	mode, err := wb.getMode()
 	return mode == Boost, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *SgReady) Enable(enable bool) error {
 	mode := map[bool]int64{false: Normal, true: Boost}[enable]
-	err := wb.set(mode)
+	err := wb.modeS(mode)
 	if err == nil {
-		wb._mode = mode
+		wb.mode = mode
 	}
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *SgReady) MaxCurrent(current int64) error {
-	return wb.MaxCurrentEx(float64(current))
-}
-
-// MaxCurrent implements the api.Charger interface
-func (wb *SgReady) MaxCurrentEx(current float64) error {
-	if wb.maxPower == nil {
-		return nil
-	}
-
-	return wb.maxPower(int64(230 * current * float64(wb.phases)))
+	return nil
 }

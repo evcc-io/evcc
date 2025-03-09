@@ -1,13 +1,14 @@
 package renault
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
 )
@@ -25,13 +26,13 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup bool, cache time.Duration) *Provider {
 	impl := &Provider{
-		batteryG: provider.Cached(func() (kamereon.Response, error) {
+		batteryG: util.Cached(func() (kamereon.Response, error) {
 			return api.Battery(accountID, vin)
 		}, cache),
-		cockpitG: provider.Cached(func() (kamereon.Response, error) {
+		cockpitG: util.Cached(func() (kamereon.Response, error) {
 			return api.Cockpit(accountID, vin)
 		}, cache),
-		hvacG: provider.Cached(func() (kamereon.Response, error) {
+		hvacG: util.Cached(func() (kamereon.Response, error) {
 			return api.Hvac(accountID, vin)
 		}, cache),
 		wakeup: func() (kamereon.Response, error) {
@@ -140,7 +141,7 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 

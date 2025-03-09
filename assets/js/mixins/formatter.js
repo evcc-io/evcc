@@ -187,6 +187,14 @@ export default {
         minute: "numeric",
       }).format(date);
     },
+    hourShort: function (date) {
+      const locale = this.$i18n?.locale;
+      // special: use shorter german format
+      if (locale === "de") return date.getHours();
+      return new Intl.DateTimeFormat(locale, {
+        hour: "numeric",
+      }).format(date);
+    },
     weekdayShort: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
@@ -253,22 +261,24 @@ export default {
         day: "numeric",
       }).format(date);
     },
-    fmtSecondUnit: function (seconds) {
+    fmtDurationUnit: function (value, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style: "unit",
-        unit: "second",
+        unit,
         unitDisplay: "long",
       })
-        .formatToParts(seconds)
+        .formatToParts(value)
         .find((part) => part.type === "unit").value;
     },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
+      const digits = decimals ? undefined : 0;
       const result = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
         currencyDisplay,
-        maximumFractionDigits: decimals ? undefined : 0,
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
       }).format(amout);
 
       return withSymbol ? result : result.replace(currency, "").trim();

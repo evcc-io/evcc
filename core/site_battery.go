@@ -78,7 +78,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 }
 
 func (site *Site) plannerRates() (api.Rates, error) {
-	tariff := site.GetTariff(PlannerTariff)
+	tariff := site.GetTariff(api.TariffUsagePlanner)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}
@@ -88,12 +88,12 @@ func (site *Site) plannerRates() (api.Rates, error) {
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Price <= *limit
 }
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Price <= *limit
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {

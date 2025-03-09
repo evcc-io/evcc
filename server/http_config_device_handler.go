@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -33,11 +34,17 @@ func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[str
 	return res, nil
 }
 
-// devicesHandler returns a device configurations by class
-func devicesHandler(w http.ResponseWriter, r *http.Request) {
+// devicesConfigHandler returns a device configurations by class
+func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	class, err := templates.ClassString(vars["class"])
+
+	// TODO exclude loadpoints here
+	if err == nil && class == templates.Loadpoint {
+		err = fmt.Errorf("invalid class %s", class)
+	}
+
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -87,10 +94,16 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		dc["id"] = configurable.ID()
 		dc["config"] = params
 	} else if title := conf.Other["title"]; title != nil {
-		// from yaml- add title only
+		// from yaml
+		config := make(map[string]any)
 		if s, ok := title.(string); ok {
-			dc["config"] = map[string]any{"title": s}
+			config["title"] = s
 		}
+		// add icon if available
+		if icon, ok := conf.Other["icon"].(string); ok {
+			config["icon"] = icon
+		}
+		dc["config"] = config
 	}
 
 	return dc, nil
@@ -142,6 +155,8 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO return application/yaml content type if type != template
+
 	jsonResult(w, res)
 }
 
@@ -191,8 +206,8 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, testInstance(instance))
 }
 
-func newDevice[T any](class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
-	instance, err := newFromConf(context.TODO(), typeTemplate, req)
+func newDevice[T any](ctx context.Context, class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(ctx, typeTemplate, req)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +217,7 @@ func newDevice[T any](class templates.Class, req map[string]any, newFromConf new
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice[T](conf, instance))
+	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
 }
 
 // newDeviceHandler creates a new device by class
@@ -215,6 +230,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO add application/yaml content type, reject type==template
+
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -223,27 +240,32 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	delete(req, "type")
 
 	var conf *config.Config
+	ctx, cancel, done := startDeviceTimeout()
 
 	switch class {
 	case templates.Charger:
-		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
+		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
+		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		conf, err = newDevice(class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
-			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
+		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	setConfigDirty()
 
@@ -258,8 +280,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	dev, instance, merged, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -288,6 +310,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO add application/yaml content type, reject type==template
+
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -295,28 +319,34 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(req, "type")
 
+	ctx, cancel, done := startDeviceTimeout()
+
 	switch class {
 	case templates.Charger:
-		err = updateDevice(id, class, req, charger.NewFromConfig, config.Chargers())
+		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		err = updateDevice(id, class, req, meter.NewFromConfig, config.Meters())
+		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = updateDevice(id, class, req, func(_ context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
-			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
+		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
 	setConfigDirty()
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	res := struct {
 		ID int `json:"id"`
@@ -393,12 +423,12 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
+func testConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(context.TODO(), typeTemplate, conf)
+		return newFromConf(ctx, typeTemplate, conf)
 	}
 
-	_, instance, _, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 
 	return instance, err
 }
@@ -431,25 +461,30 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	delete(req, "type")
 
 	var instance any
+	ctx, cancel, done := startDeviceTimeout()
 
 	switch class {
 	case templates.Charger:
-		instance, err = testConfig(id, class, req, charger.NewFromConfig, config.Chargers())
+		instance, err = testConfig(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		instance, err = testConfig(id, class, req, meter.NewFromConfig, config.Meters())
+		instance, err = testConfig(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
 	}
 
 	if err != nil {
+		cancel()
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// prevent context from being cancelled
+	close(done)
 
 	jsonResult(w, testInstance(instance))
 }

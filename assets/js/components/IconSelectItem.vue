@@ -3,12 +3,16 @@
 		<button
 			type="button"
 			class="btn gap-2 btn-sm"
-			:class="{ active, withLabel: !!label }"
+			:class="{ active, withLabel: !!label, hideLabelOnMobile }"
 			:disabled="disabled"
 			@click="$emit('click', value)"
 		>
 			<slot></slot>
-			<span v-if="label" class="text-nowrap text-truncate">
+			<span
+				v-if="label"
+				class="text-nowrap text-truncate"
+				:class="{ 'd-none d-md-inline': hideLabelOnMobile }"
+			>
 				{{ label }}
 			</span>
 		</button>
@@ -23,6 +27,7 @@ export default {
 		active: Boolean,
 		label: String,
 		disabled: Boolean,
+		hideLabelOnMobile: Boolean,
 	},
 	emits: ["click"],
 };
@@ -50,5 +55,11 @@ export default {
 .btn.withLabel {
 	width: auto;
 	padding: 0 1rem;
+}
+@media (max-width: 768px) {
+	.btn.hideLabelOnMobile {
+		width: 32px;
+		padding: 0;
+	}
 }
 </style>

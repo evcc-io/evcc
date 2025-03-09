@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -38,7 +38,7 @@ type All struct {
 	Vehicles     []config.Named
 	Tariffs      Tariffs
 	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
 
@@ -54,8 +54,8 @@ type Go struct {
 
 type ModbusProxy struct {
 	Port            int
-	ReadOnly        string
-	modbus.Settings `mapstructure:",squash"`
+	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
+	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:",omitempty"`
 }
 
 var _ api.Redactor = (*Hems)(nil)
@@ -134,12 +134,17 @@ type Messaging struct {
 	Services []config.Typed
 }
 
+func (c Messaging) Configured() bool {
+	return len(c.Services) > 0 || len(c.Events) > 0
+}
+
 type Tariffs struct {
 	Currency string
 	Grid     config.Typed
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
+	Solar    []config.Typed
 }
 
 type Network struct {

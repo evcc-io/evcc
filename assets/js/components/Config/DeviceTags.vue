@@ -58,9 +58,10 @@ export default {
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
 				case "soc":
-				case "socLimit":
+				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
+				case "heaterTempLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
@@ -83,6 +84,9 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "phases1p3p":
+				case "singlePhase":
+				case "enabled":
 				case "configured":
 					return value
 						? this.$t("config.deviceValue.yes")

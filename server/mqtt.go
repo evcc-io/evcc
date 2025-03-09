@@ -12,9 +12,15 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/vehicle"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
+
+// MQTTMarshaler is the interface implemented by types that
+// can marshal themselves into valid an MQTT string representation.
+type MQTTMarshaler interface {
+	MarshalMQTT() ([]byte, error)
+}
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
@@ -76,6 +82,15 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		return
 	}
 
+	if mm, ok := payload.(MQTTMarshaler); ok {
+		if b, err := mm.MarshalMQTT(); err == nil {
+			m.publishSingleValue(topic, retained, string(b))
+		} else {
+			m.log.ERROR.Printf("marshal mqtt: %v", err)
+		}
+		return
+	}
+
 	switch typ := reflect.TypeOf(payload); typ.Kind() {
 	case reflect.Slice:
 		// publish count
@@ -83,7 +98,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		m.publishSingleValue(topic, retained, val.Len())
 
 		// loop slice
-		for i := 0; i < val.Len(); i++ {
+		for i := range val.Len() {
 			m.publishComplex(fmt.Sprintf("%s/%d", topic, i+1), retained, val.Index(i).Interface())
 		}
 
@@ -99,16 +114,21 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		typ := val.Type()
 
 		// loop struct
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
-				n := f.Name
-				m.publishComplex(fmt.Sprintf("%s/%s", topic, strings.ToLower(n[:1])+n[1:]), retained, val.Field(i).Interface())
+				topic := fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
+
+				if val.Field(i).IsZero() && omitEmpty(f) {
+					m.publishSingleValue(topic, retained, nil)
+				} else {
+					m.publishComplex(topic, retained, val.Field(i).Interface())
+				}
 			}
 		}
 
 	case reflect.Pointer:
-		if !reflect.ValueOf(payload).IsNil() {
-			m.publishComplex(topic, retained, reflect.Indirect(reflect.ValueOf(payload)).Interface())
+		if val := reflect.ValueOf(payload); !val.IsNil() {
+			m.publishComplex(topic, retained, reflect.Indirect(val).Interface())
 			return
 		}
 
@@ -196,8 +216,9 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
-		{"phases", intSetter(lp.SetPhases)},
+		{"phases", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
+		{"priority", intSetter(pass(lp.SetPriority))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"maxCurrent", floatSetter(lp.SetMaxCurrent)},
 		{"limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},
@@ -273,7 +294,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	topic = fmt.Sprintf("%s/vehicles", m.root)
 	m.publish(topic, true, len(site.Vehicles().Settings()))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		m.publish(fmt.Sprintf("%s/site/pv/%d", m.root, i), true, nil)
 		m.publish(fmt.Sprintf("%s/site/battery/%d", m.root, i), true, nil)
 		m.publish(fmt.Sprintf("%s/site/vehicles/%d", m.root, i), true, nil)

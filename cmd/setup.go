@@ -22,11 +22,13 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider/golang"
-	"github.com/evcc-io/evcc/provider/javascript"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/golang"
+	"github.com/evcc-io/evcc/plugin/javascript"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -46,6 +48,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -68,7 +71,7 @@ var conf = globalconfig.All{
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
-		Dsn:  "~/.evcc/evcc.db",
+		Dsn:  "",
 	},
 }
 
@@ -79,22 +82,6 @@ func nameValid(name string) error {
 		return fmt.Errorf("name must not contain special characters or spaces: %s", name)
 	}
 	return nil
-}
-
-func tokenDanger(conf []config.Named) bool {
-	problematic := []string{"tesla", "psa", "opel", "citroen", "ds", "peugeot"}
-
-	for _, cc := range conf {
-		if slices.Contains(problematic, cc.Type) {
-			return true
-		}
-		template, ok := cc.Other["template"].(string)
-		if ok && cc.Type == "template" && slices.Contains(problematic, template) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
@@ -112,17 +99,30 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 		}
 	}
 
-	// check service database
-	if _, err := os.Stat(serviceDB); err == nil && checkDB && conf.Database.Dsn != serviceDB && tokenDanger(conf.Vehicles) {
-		log.FATAL.Fatal(`
+	// user did not specify a database path
+	if conf.Database.Dsn == "" && checkDB {
+		// check if service database exists
+		if _, err := os.Stat(serviceDB); err == nil {
+			// service database found, ask user what to do
+			sudo := ""
+			if !isWritable(serviceDB) {
+				sudo = "sudo "
+			}
+			log.FATAL.Fatal(`
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with no explicit database path.
+Running the same config with multiple databases can lead to expiring vehicle tokens.
 
-Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
-Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
-This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
-If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
+If you want to use the existing service database run the following command:
 
-If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
-`)
+` + sudo + `evcc --database ` + serviceDB + `
+
+If you want to create a new user-space database run the following command:
+
+evcc --database ~/.evcc/evcc.db
+
+If you know what you're doing, you can skip the database check with the --ignore-db flag.
+			`)
+		}
 	}
 
 	// parse log levels after reading config
@@ -133,15 +133,25 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	return err
 }
 
-func configureCircuits(conf []config.Named) error {
+func isWritable(filePath string) bool {
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0o666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
+}
+
+func configureCircuits(conf *[]config.Named) error {
 	// migrate settings
 	if settings.Exists(keys.Circuits) {
+		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 	}
 
-	children := slices.Clone(conf)
+	children := slices.Clone(*conf)
 
 	// TODO: check for circular references
 NEXT:
@@ -161,7 +171,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(context.TODO(), log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -256,7 +266,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
 
-			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -320,7 +330,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
 
-			if err := config.Chargers().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			if err := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
 
@@ -336,8 +346,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
@@ -413,7 +422,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			mu.Lock()
 			defer mu.Unlock()
-			devs2 = append(devs2, config.NewConfigurableDevice(conf, instance))
+			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
 
 			return nil
 		})
@@ -458,14 +467,28 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
-func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
-	if cmd.Flags().Lookup(flagHeaders).Changed {
+	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
 	// setup persistence
-	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// setup additional templates
+	if err == nil {
+		if cmd.PersistentFlags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+			if err != nil {
+				return err
+			}
+
+			if err := templates.Register(class, cmd.Flag(flagTemplate).Value.String()); err != nil {
+				return err
+			}
+		}
+	}
 
 	// setup translations
 	if err == nil {
@@ -491,7 +514,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 	// setup EEBus server
 	if err == nil {
-		err = wrapErrorWithClass(ClassEEBus, configureEEBus(conf.EEBus))
+		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
 	// setup javascript VMs
@@ -510,13 +533,13 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		err = config.Init(db.Instance)
 	}
 
-	return
+	return err
 }
 
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
 	if conf.Dsn == "" {
-		return errors.New("database dsn not configured")
+		conf.Dsn = userDB
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
@@ -559,14 +582,6 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 		return nil, nil
 	}
 
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.Influx) {
-	// 	if err := settings.SetJson(keys.Influx, conf); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -587,13 +602,6 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {
 			return err
 		}
-
-		// TODO remove yaml file
-		// } else {
-		// 	// migrate settings & write defaults
-		// 	if err := settings.SetJson(keys.Mqtt, conf); err != nil {
-		// 		return err
-		// 	}
 	}
 
 	if conf.Broker == "" {
@@ -645,9 +653,10 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
+		*conf = globalconfig.Hems{}
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -656,14 +665,6 @@ func configureHEMS(conf globalconfig.Hems, site *core.Site, httpd *server.HTTPd)
 	if conf.Type == "" {
 		return nil
 	}
-
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.Hems) {
-	// 	if err := settings.SetYaml(keys.Hems, conf); err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, conf.Other, site, httpd)
 	if err != nil {
@@ -680,10 +681,6 @@ func networkSettings(conf *globalconfig.Network) error {
 	if settings.Exists(keys.Network) {
 		return settings.Json(keys.Network, &conf)
 	}
-
-	// TODO remove yaml file
-	// // migrate settings
-	// return settings.SetJson(keys.Network, conf)
 
 	return nil
 }
@@ -703,9 +700,10 @@ func configureMDNS(conf globalconfig.Network) error {
 }
 
 // setup EEBus
-func configureEEBus(conf eebus.Config) error {
+func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
+		*conf = eebus.Config{}
 		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -715,16 +713,8 @@ func configureEEBus(conf eebus.Config) error {
 		return nil
 	}
 
-	// TODO remove yaml file
-	// // migrate settings
-	// if !settings.Exists(keys.EEBus) {
-	// 	if err := settings.SetYaml(keys.EEBus, conf); err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	var err error
-	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
+	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
@@ -735,18 +725,13 @@ func configureEEBus(conf eebus.Config) error {
 }
 
 // setup messaging
-func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
+		*conf = globalconfig.Messaging{}
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
-
-		// TODO remove yaml file
-		// } else if len(conf.Services)+len(conf.Events) > 0 {
-		// 	if err := settings.SetYaml(keys.Messaging, conf); err != nil {
-		// 		return nil, err
-		// 	}
 	}
 
 	messageChan := make(chan push.Event, 1)
@@ -774,8 +759,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
@@ -787,11 +771,12 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
+func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
+	name := u.String()
 	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
@@ -801,18 +786,42 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 	return nil
 }
 
-func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
+func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
+	var eg errgroup.Group
+	tt := make([]api.Tariff, len(conf))
+
+	for i, conf := range conf {
+		eg.Go(func() error {
+			if conf.Type == "" {
+				return errors.New("missing type")
+			}
+
+			name := fmt.Sprintf("%s-%s-%d", api.TariffUsageSolar, tariff.Name(conf), i)
+			res, err := tariffInstance(name, conf)
+			if err != nil {
+				return &DeviceError{name, err}
+			}
+
+			tt[i] = res
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	*t = tariff.NewCombined(tt)
+	return nil
+}
+
+func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
+		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
-
-		// TODO remove yaml file
-		// } else if conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" {
-		// 	if err := settings.SetYaml(keys.Tariffs, conf); err != nil {
-		// 		return nil, err
-		// 	}
 	}
 
 	tariffs := tariff.Tariffs{
@@ -824,10 +833,15 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	if len(conf.Solar) == 1 {
+		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
+	} else {
+		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	}
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
@@ -837,37 +851,37 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalconfig.All) error {
+	// collect references for filtering used devices
+	if err := collectRefs(conf); err != nil {
+		return err
+	}
+
 	// TODO: add name/identifier to error for better highlighting in UI
-	if err := configureMeters(conf.Meters); err != nil {
+	if err := configureMeters(conf.Meters, references.meter...); err != nil {
 		return &ClassError{ClassMeter, err}
 	}
-	if err := configureChargers(conf.Chargers); err != nil {
+	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
 		return &ClassError{ClassCharger, err}
 	}
 	if err := configureVehicles(conf.Vehicles); err != nil {
 		return &ClassError{ClassVehicle, err}
 	}
-	if err := configureCircuits(conf.Circuits); err != nil {
+	if err := configureCircuits(&conf.Circuits); err != nil {
 		return &ClassError{ClassCircuit, err}
 	}
 	return nil
 }
 
-func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
+func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
+		*conf = []globalconfig.ModbusProxy{}
 		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
 			return err
 		}
-
-		// TODO remove yaml file
-		// } else if len(conf) > 0 {
-		// 	if err := settings.SetYaml(keys.ModbusProxy, conf); err != nil {
-		// 		return err
-		// 	}
 	}
 
-	for _, cfg := range conf {
+	for _, cfg := range *conf {
 		var mode modbus.ReadOnlyMode
 		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
 		if err != nil {
@@ -900,15 +914,19 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(*conf)
-	if err != nil {
-		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
+	if err := configureLoadpoints(*conf); err != nil {
+		return nil, &ClassError{ClassLoadpoint, err}
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
+
+	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
+		lp := dev.Instance()
+		return lp.(*core.Loadpoint)
+	})
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -971,26 +989,59 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	return site, nil
 }
 
-func configureLoadpoints(conf globalconfig.All) ([]*core.Loadpoint, error) {
-	if len(conf.Loadpoints) == 0 {
-		return nil, errors.New("missing loadpoints")
-	}
+func configureLoadpoints(conf globalconfig.All) error {
+	for id, cc := range conf.Loadpoints {
+		cc.Name = "lp-" + strconv.Itoa(id+1)
 
-	var loadpoints []*core.Loadpoint
+		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
+		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
 
-	for id, cfg := range conf.Loadpoints {
-		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
-		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
-
-		lp, err := core.NewLoadpointFromConfig(log, settings, cfg)
+		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {
-			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
+			return &DeviceError{cc.Name, err}
 		}
 
-		loadpoints = append(loadpoints, lp)
+		if err := config.Loadpoints().Add(config.NewStaticDevice(cc, loadpoint.API(instance))); err != nil {
+			return &DeviceError{cc.Name, err}
+		}
 	}
 
-	return loadpoints, nil
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Loadpoint)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		cc := conf.Named()
+
+		id := len(config.Loadpoints().Devices())
+		name := "lp-" + strconv.Itoa(id+1)
+		log := util.NewLoggerWithLoadpoint(name, id+1)
+
+		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+
+		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
+		if err != nil {
+			return &DeviceError{cc.Name, err}
+		}
+
+		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		if err != nil {
+			return &DeviceError{cc.Name, err}
+		}
+
+		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		if err := config.Loadpoints().Add(dev); err != nil {
+			return &DeviceError{cc.Name, err}
+		}
+
+		if err := dynamic.Apply(instance); err != nil {
+			return &DeviceError{cc.Name, err}
+		}
+	}
+
+	return nil
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes

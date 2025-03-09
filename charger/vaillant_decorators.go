@@ -6,12 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateVaillant(base *Vaillant, battery func() (float64, error)) api.Charger {
+func decorateVaillant(base *Vaillant, meter func() (float64, error), battery func() (float64, error)) api.Charger {
 	switch {
-	case battery == nil:
+	case battery == nil && meter == nil:
 		return base
 
-	case battery != nil:
+	case battery == nil && meter != nil:
+		return &struct {
+			*Vaillant
+			api.Meter
+		}{
+			Vaillant: base,
+			Meter: &decorateVaillantMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case battery != nil && meter == nil:
 		return &struct {
 			*Vaillant
 			api.Battery
@@ -19,6 +30,21 @@ func decorateVaillant(base *Vaillant, battery func() (float64, error)) api.Charg
 			Vaillant: base,
 			Battery: &decorateVaillantBatteryImpl{
 				battery: battery,
+			},
+		}
+
+	case battery != nil && meter != nil:
+		return &struct {
+			*Vaillant
+			api.Battery
+			api.Meter
+		}{
+			Vaillant: base,
+			Battery: &decorateVaillantBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateVaillantMeterImpl{
+				meter: meter,
 			},
 		}
 	}
@@ -32,4 +58,12 @@ type decorateVaillantBatteryImpl struct {
 
 func (impl *decorateVaillantBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
+}
+
+type decorateVaillantMeterImpl struct {
+	meter func() (float64, error)
+}
+
+func (impl *decorateVaillantMeterImpl) CurrentPower() (float64, error) {
+	return impl.meter()
 }

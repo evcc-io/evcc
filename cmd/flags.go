@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"strings"
+
+	"github.com/evcc-io/evcc/util/templates"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +14,10 @@ const (
 
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
+
+	flagTemplate            = "template"
+	flagTemplateDescription = "Add custom template file (debug only)"
+	flagTemplateType        = "template-type"
 
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
@@ -54,12 +62,17 @@ const (
 	flagForce  = "force"
 )
 
+var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
+	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
+		return t.String()
+	}), ", ") + " (debug only)"
+
 func bind(cmd *cobra.Command, key string, flagName ...string) {
 	name := key
 	if len(flagName) == 1 {
 		name = flagName[0]
 	}
-	if err := viper.BindPFlag(key, cmd.Flags().Lookup(name)); err != nil {
+	if err := viper.BindPFlag(key, cmd.Flag(name)); err != nil {
 		panic(err)
 	}
 }

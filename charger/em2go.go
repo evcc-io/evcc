@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -62,14 +63,14 @@ const (
 )
 
 func init() {
-	registry.Add("em2go", NewEm2GoFromConfig)
-	registry.Add("em2go-home", NewEm2GoFromConfig)
+	registry.AddCtx("em2go", NewEm2GoFromConfig)
+	registry.AddCtx("em2go-home", NewEm2GoFromConfig)
 }
 
-//go:generate decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
-func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -78,14 +79,14 @@ func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEm2Go(cc.URI, cc.ID)
+	return NewEm2Go(ctx, cc.URI, cc.ID)
 }
 
 // NewEm2Go creates Em2Go charger
-func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
+func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

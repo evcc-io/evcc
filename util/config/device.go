@@ -12,11 +12,11 @@ type ConfigurableDevice[T any] interface {
 }
 
 type configurableDevice[T any] struct {
-	config   Config
+	config   *Config
 	instance T
 }
 
-func NewConfigurableDevice[T any](config Config, instance T) ConfigurableDevice[T] {
+func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
 	return &configurableDevice[T]{
 		config:   config,
 		instance: instance,

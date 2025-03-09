@@ -58,7 +58,7 @@ func init() {
 	registry.AddCtx("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -80,7 +80,7 @@ func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (
 
 // NewAmperfied creates Amperfied charger
 func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

@@ -131,6 +131,7 @@ chargers:
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
 
   - name: charger_2
+    features: [heating]
     type: custom
     enable:
       source: js
@@ -262,7 +263,6 @@ tariffs:
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  co2:
-    type: template
-    template: grünstromindex
-    zip: 12349
+  #co2:
+  #  type: grünstromindex
+  #  zip: 12349

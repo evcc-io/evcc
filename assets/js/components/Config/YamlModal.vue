@@ -9,7 +9,12 @@
 		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
 			<div class="editor-container" :style="{ height }">
-				<YamlEditor v-model="yaml" class="editor" :errorLine="errorLine" />
+				<YamlEditor
+					v-model="yaml"
+					class="editor"
+					:errorLine="errorLine"
+					:removeKey="removeKey"
+				/>
 			</div>
 
 			<div class="mt-4 d-flex justify-content-between">
@@ -54,6 +59,7 @@ export default {
 		docs: String,
 		endpoint: String,
 		defaultYaml: String,
+		removeKey: String,
 		size: { type: String, default: "xl" },
 	},
 	emits: ["changed"],
@@ -137,9 +143,5 @@ export default {
 	.editor-container {
 		margin: 0;
 	}
-}
-
-.btn-cancel {
-	margin-left: -0.75rem;
 }
 </style>

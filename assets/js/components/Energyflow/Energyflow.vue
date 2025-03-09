@@ -83,14 +83,22 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
+							:details="solarForecastRemainingToday"
+							:detailsFmt="forecastFmt"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
+							@details-clicked="openForecastModal"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
 							:name="batteryDischargeLabel"
 							icon="battery"
 							:power="batteryDischarge"
+							:powerTooltip="batteryDischargeTooltip"
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
@@ -166,6 +174,7 @@
 							:name="batteryChargeLabel"
 							icon="battery"
 							:power="batteryCharge"
+							:powerTooltip="batteryChargeTooltip"
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
@@ -264,6 +273,7 @@ export default {
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
+		forecast: { type: Object, default: () => ({}) },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
@@ -276,10 +286,10 @@ export default {
 			return Math.abs(this.pvPower);
 		},
 		batteryDischarge: function () {
-			return Math.abs(Math.max(0, this.batteryPower));
+			return this.dischargePower(this.batteryPower);
 		},
 		batteryCharge: function () {
-			return Math.abs(Math.min(0, this.batteryPower) * -1);
+			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel: function () {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
@@ -344,6 +354,12 @@ export default {
 			}
 			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
 		},
+		batteryDischargeTooltip() {
+			return this.batteryTooltip(true);
+		},
+		batteryChargeTooltip() {
+			return this.batteryTooltip(false);
+		},
 		batteryFmt() {
 			return (soc) => this.fmtPercentage(soc, 0);
 		},
@@ -360,7 +376,9 @@ export default {
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
 		batteryGridChargeLimitSet() {
-			return this.batteryGridChargeLimit !== null;
+			return (
+				this.batteryGridChargeLimit !== null && this.batteryGridChargeLimit !== undefined
+			);
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {
@@ -370,6 +388,21 @@ export default {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
+		},
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
+			return this.forecast?.solar?.today?.energy || 0;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
 		},
 	},
 	watch: {
@@ -420,6 +453,12 @@ export default {
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
+		forecastFmt(value) {
+			if (value === null) {
+				return "";
+			}
+			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
+		},
 		kw: function (watt) {
 			return this.fmtW(watt, this.powerUnit);
 		},
@@ -436,6 +475,27 @@ export default {
 				document.getElementById("batterySettingsModal")
 			);
 			modal.show();
+		},
+		openForecastModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
+			modal.show();
+		},
+		dischargePower(power) {
+			return Math.abs(Math.max(0, power));
+		},
+		chargePower(power) {
+			return Math.abs(Math.min(0, power) * -1);
+		},
+		batteryTooltip(discharge = false) {
+			if (!Array.isArray(this.battery) || this.battery.length <= 1) {
+				return;
+			}
+			return this.battery.map(({ power, soc }) => {
+				const value = discharge ? this.dischargePower(power) : this.chargePower(power);
+				const powerFmt = this.fmtW(value, this.powerUnit);
+				const socFmt = this.fmtPercentage(soc, 0);
+				return `${powerFmt} (${socFmt})`;
+			});
 		},
 	},
 };

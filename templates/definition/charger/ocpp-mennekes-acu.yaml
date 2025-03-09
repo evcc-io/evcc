@@ -1,0 +1,25 @@
+template: ocpp-mennekes-acu
+products:
+  - brand: Mennekes
+    description:
+      generic: eMobility Gateway (ACU)
+  - brand: Mennekes
+    description:
+      generic: Smart, Smart T (ACU)
+capabilities: ["rfid"]
+requirements:
+  description:
+    de: |
+      Zur Konfiguration die Weboberfläche der ACU aufrufen. 
+      Setup, Backend, Übertragungsprotokoll: Open Charge Point Protocol v1.6J
+      Setup, Backend, Backend-Server: Hier muss die evcc URL `ws://<evcc-address>:8887/` eingetragen sein. Basic Authentication: deaktivieren. OCPP 1.6 Einstellungen: alle Optionen aktivieren.
+    en: |
+      To configure, open the web interface of the ACU.
+      Setup, Backend, Communication Protocol: Open Charge Point Protocol v1.6J
+      Setup, Backend, Backend Server: The evcc URL `ws://<evcc-address>:8887/` must be entered here. Basic Authentication: Disabled. OCPP 1.6 Settings: Enable all options.
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  meterinterval: 60s

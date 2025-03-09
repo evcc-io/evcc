@@ -1,11 +1,8 @@
 template: awattar
 products:
   - brand: Awattar
-requirements:
-  description:
-    de: "Nur für Deutschland und Österreich verfügbar."
-    en: "Only available for Germany and Austria."
 group: price
+countries: ["DE", "AT"]
 params:
   - name: region
     example: AT

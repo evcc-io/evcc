@@ -31,7 +31,16 @@ export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      { path: "/", component: () => import("./views/Main.vue"), props: true },
+      {
+        path: "/",
+        component: () => import("./views/Main.vue"),
+        props: (route) => {
+          const { lp } = route.query;
+          return {
+            selectedLoadpointIndex: lp ? parseInt(lp, 10) - 1 : undefined,
+          };
+        },
+      },
       {
         path: "/config",
         component: () => import("./views/Config.vue"),
@@ -51,6 +60,11 @@ export default function setupRouter(i18n) {
             vehicleFilter: vehicle,
           };
         },
+      },
+      {
+        path: "/energy",
+        component: () => import("./views/Energy.vue"),
+        props: true,
       },
       {
         path: "/log",

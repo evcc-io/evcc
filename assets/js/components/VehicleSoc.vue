@@ -248,10 +248,11 @@ export default {
 			if (!this.tooltip) {
 				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
 			}
-			const soc = this.vehicleLimitSoc;
-			const content = this.$t("main.vehicleSoc.vehicleLimit", {
-				soc: this.fmtPercentage(soc),
-			});
+			const value = this.heating
+				? this.fmtTemperature(this.vehicleLimitSoc)
+				: this.fmtPercentage(this.vehicleLimitSoc);
+			const key = this.heating ? "heatingStatus" : "vehicleStatus";
+			const content = `${this.$t(`main.${key}.vehicleLimit`)}: ${value}`;
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},

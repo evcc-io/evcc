@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -63,7 +62,7 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.dataG = provider.Cached(instance.refreshData, cache)
+		instance.dataG = util.Cached(instance.refreshData, cache)
 
 		// do first login if no authKey exists and uri and password exist
 		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
@@ -151,8 +150,7 @@ func (m *Com) update(meterData any) error {
 
 	if err := m.DoJSON(req, meterData); err != nil {
 		// re-login if request returns 405-error
-		var se request.StatusError
-		if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
+		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
 			if err := m.Login(); err != nil {
 				return err
 			}

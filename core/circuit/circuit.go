@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -39,16 +39,16 @@ type Circuit struct {
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
-		Title         string           // title
-		ParentRef     string           `mapstructure:"parent"` // parent circuit reference
-		MeterRef      string           `mapstructure:"meter"`  // meter reference
-		MaxCurrent    float64          // the max allowed current
-		MaxPower      float64          // the max allowed power
-		GetMaxCurrent *provider.Config // dynamic max allowed current
-		GetMaxPower   *provider.Config // dynamic max allowed power
-		Timeout       time.Duration    // timeout between meter updates
+		Title         string         // title
+		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
+		MeterRef      string         `mapstructure:"meter"`  // meter reference
+		MaxCurrent    float64        // the max allowed current
+		MaxPower      float64        // the max allowed power
+		GetMaxCurrent *plugin.Config // dynamic max allowed current
+		GetMaxPower   *plugin.Config // dynamic max allowed power
+		Timeout       time.Duration  // timeout between meter updates
 	}{
 		Timeout: time.Minute,
 	}
@@ -71,20 +71,14 @@ func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit,
 		return nil, err
 	}
 
-	if cc.GetMaxPower != nil {
-		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxPower)
-		if err != nil {
-			return nil, err
-		}
-		circuit.getMaxPower = res
+	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if cc.GetMaxCurrent != nil {
-		res, err := provider.NewFloatGetterFromConfig(context.TODO(), *cc.GetMaxCurrent)
-		if err != nil {
-			return nil, err
-		}
-		circuit.getMaxCurrent = res
+	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	if cc.ParentRef != "" {
@@ -321,10 +315,10 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	delta := max(0, new-old)
-
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
+		delta := max(0, new-old)
 		potential := maxPower - c.power
+
 		if delta > potential {
 			capped := max(0, old+potential)
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
@@ -343,10 +337,10 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 
 // ValidateCurrent validates current request
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
-	delta := max(0, new-old)
-
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		delta := max(0, new-old)
 		potential := maxCurrent - c.current
+
 		if delta > potential {
 			capped := max(0, old+potential)
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)

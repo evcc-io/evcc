@@ -26,7 +26,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/smaevcharger"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -41,8 +40,8 @@ type Smaevcharger struct {
 	uri          string // 192.168.XXX.XXX
 	cache        time.Duration
 	oldstate     float64
-	measurementG provider.Cacheable[[]smaevcharger.Measurements]
-	parameterG   provider.Cacheable[[]smaevcharger.Parameters]
+	measurementG util.Cacheable[[]smaevcharger.Measurements]
+	parameterG   util.Cacheable[[]smaevcharger.Parameters]
 }
 
 func init() {
@@ -95,8 +94,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.measurementG = provider.ResettableCached(wb._measurementData, wb.cache)
-	wb.parameterG = provider.ResettableCached(wb._parameterData, wb.cache)
+	wb.measurementG = util.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterG = util.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
@@ -237,15 +236,22 @@ var _ api.MeterEnergy = (*Smaevcharger)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Smaevcharger) TotalEnergy() (float64, error) {
-	val, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
-	return val / 1e3, err
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
+	}
+	return res / 1e3, err
 }
 
 var _ api.Meter = (*Smaevcharger)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Smaevcharger) CurrentPower() (float64, error) {
-	return wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
+	}
+	return res, err
 }
 
 var _ api.ChargeRater = (*Smaevcharger)(nil)
@@ -253,6 +259,9 @@ var _ api.ChargeRater = (*Smaevcharger)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	res, err := wb.getMeasurement("Measurement.ChaSess.WhIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
+	}
 	return res / 1e3, err
 }
 
@@ -318,7 +327,7 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("unknown measurement: %s", id)
+	return 0, &smaevcharger.ErrUnknownMeasurement{Measurement: id}
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {

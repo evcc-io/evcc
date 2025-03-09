@@ -42,8 +42,8 @@ import Energyflow from "./Energyflow.vue";
 				currency="EUR"
 				siteTitle="Home"
 				:battery="[
-					{ soc: 44.999, capacity: 13.3 },
-					{ soc: 82.3331, capacity: 21 },
+					{ soc: 44.999, capacity: 13.3, power: 350 },
+					{ soc: 82.3331, capacity: 21, power: 450 },
 				]"
 			/>
 		</Variant>

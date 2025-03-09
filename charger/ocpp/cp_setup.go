@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -125,11 +126,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err == nil || meterValues == "disable" {
-			cp.meterValuesSample = meterValues
-		} else {
+		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err != nil {
 			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValuesSampledData, err)
 		}
+		cp.meterValuesSample = meterValues
 	}
 
 	// trigger initial meter values
@@ -137,6 +137,8 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		if err := cp.TriggerMessageRequest(0, core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			case <-time.After(Timeout):
 				cp.log.WARN.Println("meter timeout")
 			case <-cp.meterC:
@@ -154,13 +156,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	// configure websocket ping interval
 	if err := cp.ChangeConfigurationRequest(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
-	}
-
-	// trigger status for all connectors
-	if cp.HasRemoteTriggerFeature {
-		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
-		}
 	}
 
 	return nil
