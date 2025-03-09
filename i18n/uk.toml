@@ -78,6 +78,7 @@ enabled = "Ввімкнено"
 energy = "Енергія"
 feedinPrice = "Збірна ціна"
 gridPrice = "Ціна сітки"
+heaterTempLimit = "Обмеження нагрівача"
 hemsType = "Система"
 identifier = "RFID-ідентифікатор"
 no = "ні"
@@ -98,7 +99,6 @@ topic = "Тема"
 url = "URL"
 vehicleLimitSoc = "Ліміт транспортного засобу"
 yes = "так"
-heaterTempLimit = "Обмеження нагрівача"
 
 [config.deviceValueChargeStatus]
 A = "A (не підключено)"
@@ -577,8 +577,8 @@ selfConsumption = "Власне споживання"
 
 [main.heatingStatus]
 charging = "Опалення…"
-waitForVehicle = "Готовий. Очікування обігрівача…"
 vehicleLimit = "Обмеження нагрівача"
+waitForVehicle = "Готовий. Очікування обігрівача…"
 
 [main.loadpoint]
 avgPrice = "⌀ Ціна"
@@ -907,9 +907,9 @@ modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
-saved = "Збережено."
 resetAction = "Зняти обмеження"
-resetWarning = «Динамічна ціна мережі або джерело CO₂ не налаштовано. Проте обмеження в {limit} усе ще є. Очистити конфігурацію?»
+resetWarning = "«Динамічна ціна мережі або джерело CO₂ не налаштовано. Проте обмеження в {limit} усе ще є. Очистити конфігурацію?»"
+saved = "Збережено."
 
 [startupError]
 configFile = "Використаний файл конфігурації:"

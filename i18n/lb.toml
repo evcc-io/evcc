@@ -75,6 +75,7 @@ enabled = "Ageschalt"
 energy = "Energie"
 feedinPrice = "Präis fir anzespeisen"
 gridPrice = "Netz Präis"
+heaterTempLimit = "Limitt vun der Heizung"
 hemsType = "System"
 identifier = "RFID-Identifikatioun"
 no = "nee"
@@ -95,7 +96,6 @@ topic = "Sujet"
 url = "URL"
 vehicleLimitSoc = "Limitt vum Gefier"
 yes = "jo"
-heaterTempLimit = "Limitt vun der Heizung"
 
 [config.deviceValueChargeStatus]
 A = "A (net verbonnen)"
@@ -574,8 +574,8 @@ selfConsumption = "eegene Verbrauch"
 
 [main.heatingStatus]
 charging = "Wiermen…"
-waitForVehicle = "Prett. Waarden op d'Heizung..."
 vehicleLimit = "Limitt vun der Heizung"
+waitForVehicle = "Prett. Waarden op d'Heizung..."
 
 [main.loadpoint]
 avgPrice = "⌀ Präis"
@@ -913,9 +913,9 @@ modalTitle = "Smart Opluede vum Netz"
 none = "keng"
 priceLabel = "Energiepräis"
 priceLimit = "Präisgrenz"
-saved = "Gepäichert."
 resetAction = "Limitt läschen"
 resetWarning = "Et ass keen dynamischen Netzpräis a keng CO₂-Quelle konfiguréiert. Trotzdem ass eng Limitt vu {limit} ageriicht. Konfiguratioun opraumen?"
+saved = "Gepäichert."
 
 [startupError]
 configFile = "Konfiguratiounsdatei benotzt:"

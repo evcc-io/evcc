@@ -884,8 +884,8 @@ modalTitle = "Okos Hálózati Töltés"
 none = "nincs"
 priceLabel = "Energia ár"
 priceLimit = "Ár limit"
-saved = "Elmentve."
 resetAction = "Limit eltávolítása"
+saved = "Elmentve."
 
 [startupError]
 configFile = "Konfigurációs fájl használatban:"

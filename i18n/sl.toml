@@ -157,15 +157,17 @@ v2Support = "Nazaj na InfluxDB 2.x"
 
 [config.loadpoint]
 addCharger = "Dodaj polnilnik"
-cancel = "Prekliči"
-chargerPower11kw = "11 kW"
-chargerPower22kw = "22 kW"
-chargingTitle = "Polnjenje"
-energyMeterLabel = "Energijski števec"
-maxCurrentHelp = "Mora biti večji od minimalnega toka."
 addMeter = "Dodaj namenski merilnik za polnilnico"
-chargerTypeLabel = "Vrsta polnilnice"
+cancel = "Prekliči"
+chargerLabel = "Polnilnica"
+chargerPower11kw = "11 kW"
+chargerPower11kwHelp = "Uporabilo se bo tokovno območje od 6 do 16 A."
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = "Uporabilo se bo tokovno območje od 6 do 32 A."
+chargerPowerCustom = "drugo"
 chargerPowerCustomHelp = "Določite drug obseg toka."
+chargerTypeLabel = "Vrsta polnilnice"
+chargingTitle = "Polnjenje"
 circuitLabel = "Krog"
 circuitUnassigned = "nedodeljeno"
 defaultModeHelp = "Način polnjenja pri priklopu vozila."
@@ -175,7 +177,9 @@ delete = "Izbriši"
 electricalSubtitle = "Če ste v dvomih, vprašajte svojega električarja."
 electricalTitle = "Elektrika"
 energyMeterHelp = "Dodatni števec, če polnilec nima vgrajenega."
+energyMeterLabel = "Energijski števec"
 estimateLabel = "Interpoliraj raven zaračunavanja med posodobitvami API-ja"
+maxCurrentHelp = "Mora biti večji od minimalnega toka."
 maxCurrentLabel = "Maksimalni tok"
 minCurrentHelp = "Pod 6 A pojdi samo, če veš, kaj delaš."
 minCurrentLabel = "Minimalni tok"
@@ -190,6 +194,12 @@ pollIntervalHelp = "Čas med posodobitvami API-ja vozila. Kratki intervali lahko
 pollIntervalLabel = "Interval posodabljanja"
 pollModeAlways = "vedno"
 pollModeAlwaysHelp = "Vedno zahtevajte posodobitve stanja v rednih intervalih."
+pollModeCharging = "polnjenje"
+pollModeChargingHelp = "Zahtevaj posodobitve statusa vozila samo med polnjenjem."
+pollModeConnected = "povezan"
+pollModeConnectedHelp = "Ko je vzpostavljena povezava redno posodobi stanje vozila."
+pollModeLabel = "Vedenje posodobitev"
+priorityHelp = "Prioritetne polnilnice imajo prednostni dostop do sončnega presežka."
 priorityLabel = "Prioriteta"
 save = "Shrani"
 showAllSettings = "Prikaži vse nastavitve"
@@ -207,16 +217,6 @@ thresholdEnableDelayLabel = "Omogoči zakasnitev"
 thresholdEnableHelpInvalid = "Prosimo, uporabite negativno vrednost."
 thresholdEnableHelpNegative = "Začnite polniti, ko bo {surplus} presežek na voljo za {delay}."
 thresholdEnableHelpZero = "Začni, ko je na voljo minimalni presežek polnilne moči za {delay}."
-chargerLabel = "Polnilnica"
-chargerPower11kwHelp = "Uporabilo se bo tokovno območje od 6 do 16 A."
-chargerPower22kwHelp = "Uporabilo se bo tokovno območje od 6 do 32 A."
-chargerPowerCustom = "drugo"
-pollModeCharging = "polnjenje"
-pollModeChargingHelp = "Zahtevaj posodobitve statusa vozila samo med polnjenjem."
-pollModeConnected = "povezan"
-pollModeConnectedHelp = "Ko je vzpostavljena povezava redno posodobi stanje vozila."
-pollModeLabel = "Vedenje posodobitev"
-priorityHelp = "Prioritetne polnilnice imajo prednostni dostop do sončnega presežka."
 thresholdEnableLabel = "Omogoči polnjenje iz omrežja"
 titleAdd = "Dodaj polnilno mesto"
 titleEdit = "Uredi polnilno mesto"
@@ -229,18 +229,18 @@ vehicleLabel = "Privzeto vozilo"
 vehiclesTitle = "Vozila"
 
 [config.main]
+addGrid = "Dodaj števec električnega omrežja"
 addLoadpoint = "Dodaj polnilno mesto"
 addPvBattery = "Dodaj sončne celice ali baterijo"
+addTariffs = "Dodaj tarife"
 addVehicle = "Dodaj vozilo"
 configured = "konfigurirano"
 edit = "uredi"
+name = "Ime"
 title = "Konfiguracija"
 unconfigured = "ni konfigurirano"
 vehicles = "Moja vozila"
 yaml = "Naprav iz evcc.yaml ni mogoče urejati."
-name = "Ime"
-addGrid = "Dodaj števec električnega omrežja"
-addTariffs = "Dodaj tarife"
 
 [config.messaging]
 description = "Prejemanje sporočil o vaših sejah polnjenja."
@@ -298,6 +298,11 @@ little = "little-endian"
 [config.options.schema]
 http = "HTTP (nešifrirano)"
 https = "HTTPS (šifrirano)"
+
+[config.options.status]
+A = "A (brez povezave)"
+B = "B (povezan)"
+C = "C (polnjenje)"
 
 [config.pv]
 titleAdd = "Dodaj merilnik sončne energije"
@@ -442,6 +447,31 @@ modalUpdateNow = "Namesti zdaj"
 modalUpdateStarted = "Zagon nove različice evcc…"
 modalUpdateStatusStart = "Namestitev se je začela:"
 
+[forecast]
+modalTitle = "Napoved"
+
+[forecast.co2]
+average = "Povprečje"
+lowestHour = "Najčistejša ura"
+range = "Doseg"
+
+[forecast.price]
+average = "Povprečje"
+lowestHour = "Najcenejša ura"
+range = "Doseg"
+
+[forecast.solar]
+dayAfterTomorrow = "Pojutrišnjem"
+partly = "delno"
+remaining = "preostalo"
+today = "Danes"
+tomorrow = "Jutri"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Cena"
+solar = "Sončna energija"
+
 [header]
 about = "Informacije"
 blog = "Blog"
@@ -499,9 +529,9 @@ reset = "Ponastavi geslo?"
 title = "Avtentikacija"
 
 [main]
+startConfiguration = "Začnimo s konfiguracijo"
 vehicles = "Parkiranje"
 welcome = "Pozdravljeni na krovu!"
-startConfiguration = "Začnimo s konfiguracijo"
 
 [main.chargingPlan]
 active = "Aktivno"
@@ -529,8 +559,11 @@ weekdays = "Dnevi"
 battery = "Baterija"
 batteryCharge = "Polnjenje baterije"
 batteryDischarge = "Praznjenje baterije"
+batteryGridChargeActive = "polnjenje iz omrežja aktivno"
+batteryGridChargeLimit = "polnjenje iz omrežja ko"
 batteryHold = "Baterija (zaklenjena)"
 batteryTooltip = "{energy} od {total} ({soc})"
+forecastTooltip = "napoved: preostala sončna proizvodnja danes"
 gridImport = "Uvoz iz omrežja"
 homePower = "Poraba objekta"
 loadpoints = "Polnilnica | Polnilnici | {count} polnilnih mest"
@@ -538,9 +571,6 @@ noEnergy = "Ni podatkov o merilniku"
 pvExport = "Izvoz v omrežje"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
-batteryGridChargeLimit = "polnjenje iz omrežja ko"
-forecastTooltip = "napoved: preostala sončna proizvodnja danes"
-batteryGridChargeActive = "polnjenje iz omrežja aktivno"
 
 [main.heatingStatus]
 charging = "Gretje…"
@@ -621,6 +651,7 @@ descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?"
 inactiveLabel = "Ciljni čas"
 modalTitle = "Nastavite ciljni čas"
+nextPlan = "Naslednji načrt"
 notReachableInTime = "Cilj bo dosežen {overrun} pozneje."
 onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 planDuration = "Čas polnjenja"
@@ -641,7 +672,6 @@ tomorrow = "jutri"
 update = "Posodobitev"
 vehicleCapacityDocs = "Naučite se konfigurirati."
 vehicleCapacityRequired = "Za oceno časa polnjenja je potrebna kapaciteta baterije vozila."
-nextPlan = "Naslednji načrt"
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"
@@ -875,9 +905,9 @@ modalTitle = "Smart Grid Polnjenje"
 none = "brez"
 priceLabel = "Cena energije"
 priceLimit = "Omejitev cene"
-saved = "Shranjeno."
-resetWarning = "Dinamična cena omrežja ali vir CO₂ ni konfiguriran. Še vedno pa obstaja omejitev {limit}. Ali želite počistiti konfiguracijo?"
 resetAction = "Odstrani omejitev"
+resetWarning = "Dinamična cena omrežja ali vir CO₂ ni konfiguriran. Še vedno pa obstaja omejitev {limit}. Ali želite počistiti konfiguracijo?"
+saved = "Shranjeno."
 
 [startupError]
 configFile = "Uporabljena konfiguracijska datoteka:"
@@ -895,34 +925,3 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
-
-
-[config.options.status]
-A = "A (brez povezave)"
-B = "B (povezan)"
-C = "C (polnjenje)"
-
-[forecast.type]
-co2 = "CO₂"
-price = "Cena"
-solar = "Sončna energija"
-
-[forecast]
-modalTitle = "Napoved"
-
-[forecast.co2]
-average = "Povprečje"
-lowestHour = "Najčistejša ura"
-range = "Doseg"
-
-[forecast.price]
-average = "Povprečje"
-lowestHour = "Najcenejša ura"
-range = "Doseg"
-
-[forecast.solar]
-dayAfterTomorrow = "Pojutrišnjem"
-partly = "delno"
-remaining = "preostalo"
-today = "Danes"
-tomorrow = "Jutri"

@@ -900,9 +900,9 @@ modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"
 priceLimit = "Hintaraja"
-saved = "Tallenettu"
+resetAction = "Poista rajoitus"
 resetWarning = "Dynaamista sähköverkonhintaa tai sähkötuotannon CO₂-päästöjä ei ole määritetty, vaikka rajoitus {limit} on asetettu. Siistitäänkö asetuksiasi?"
-resetAction = Poista rajoitus
+saved = "Tallenettu"
 
 [startupError]
 configFile = "Käytetty määritystiedostoa:"
