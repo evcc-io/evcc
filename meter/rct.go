@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/mlnoga/rct"
@@ -17,6 +18,7 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
+	bo    *backoff.ExponentialBackOff
 	conn  *rct.Connection // connection with the RCT device
 	usage string          // grid, pv, battery
 }
@@ -80,6 +82,9 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache ti
 	m := &RCT{
 		usage: strings.ToLower(usage),
 		conn:  conn,
+		bo: backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(100*time.Millisecond),
+			backoff.WithMaxElapsedTime(10*time.Second)),
 	}
 
 	// decorate api.MeterEnergy
@@ -214,11 +219,18 @@ func (m *RCT) batterySoc() (float64, error) {
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
-	res, err := m.conn.QueryFloat32(id)
+	m.bo.Reset()
+	res, err := backoff.RetryWithData(func() (float32, error) {
+		return m.conn.QueryFloat32(id)
+	}, m.bo)
 	return float64(res), err
 }
 
 // queryInt32 adds retry logic of recoverable errors to QueryInt32
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
-	return m.conn.QueryInt32(id)
+	m.bo.Reset()
+	res, err := backoff.RetryWithData(func() (int32, error) {
+		return m.conn.QueryInt32(id)
+	}, m.bo)
+	return res, err
 }
