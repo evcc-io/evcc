@@ -83,10 +83,10 @@
 </template>
 
 <script>
-import formatter from "../mixins/formatter";
-import TariffChart from "./TariffChart.vue";
-import { CO2_TYPE } from "../units";
-import api from "../api";
+import formatter from "../mixins/formatter.js";
+import TariffChart from "./Helper/TariffChart.vue";
+import { CO2_TYPE } from "../units.js";
+import api from "../api.js";
 
 export default {
 	name: "SmartCostLimit",

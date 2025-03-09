@@ -46,7 +46,7 @@ import "@h2d2/shopicons/es/regular/home";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
-import AnimatedNumber from "../AnimatedNumber.vue";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import ForecastIcon from "../MaterialIcon/Forecast.vue";
 

@@ -42,10 +42,10 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import TopHeader from "../components/TopHeader.vue";
-import ForecastChart from "../components/ForecastChart.vue";
-import IconSelectItem from "../components/IconSelectItem.vue";
-import IconSelectGroup from "../components/IconSelectGroup.vue";
+import TopHeader from "../components/Top/TopHeader.vue";
+import ForecastChart from "../components/Modals/Forecast/ForecastChart.vue";
+import IconSelectItem from "../components/Helper/IconSelectItem.vue";
+import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { type PriceSlot } from "../utils/forecast";
 import formatter from "../mixins/formatter";
