@@ -207,10 +207,15 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	// TODO check if all batteries have capacity and soc
 
+	// defaults
 	efficiency := soc.ChargeEfficiency
+	minSoc := 20.0
+	maxSoc := 95.0
+
 	currentSoc := site.batterySoc
 	prevSoc := site.batterySoc
 
+	// initial entry
 	prev := event{
 		Timestamp: time.Now(),
 		Event:     batCharge,
@@ -230,37 +235,33 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	res := events{prev}
 
+	// create 15m slots
 	for ts.Before(remainder[len(remainder)-1].Timestamp) {
 		end := ts.Add(slot)
 		energy := remainder.energy(ts, end)
 		ts = end
 
-		// apply efficiency
-		if energy > 0 {
-			energy *= efficiency
-		} else {
-			energy /= efficiency
-		}
-
-		currentSoc = min(max(currentSoc+energy/1e3/site.batteryCapacity*100, 0), 100)
-
 		// add event
 		ev := event{
 			Timestamp: ts,
 			Event:     batSoc,
-			Value:     lo.ToPtr(math.Round(currentSoc)),
 		}
 
 		switch {
 		case energy > 0:
+			energy *= efficiency
 			if prev.Event != batCharge {
 				ev.Event = batCharge
 			}
 		case energy < 0:
+			energy /= efficiency
 			if prev.Event != batDischarge {
 				ev.Event = batDischarge
 			}
 		}
+
+		currentSoc = min(max(currentSoc+energy/1e3/site.batteryCapacity*100, minSoc), maxSoc)
+		ev.Value = lo.ToPtr(math.Round(currentSoc))
 
 		if ev.Event != batSoc || currentSoc != prevSoc {
 			res = append(res, ev)
