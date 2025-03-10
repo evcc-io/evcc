@@ -98,6 +98,7 @@ topic = "Emne"
 url = "URL"
 vehicleLimitSoc = "Køretøjets begrænsning"
 yes = "ja"
+heaterTempLimit = "Opvarmning begrænsning"
 
 [config.deviceValueChargeStatus]
 A = "A (ikke forbundet)"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "Installation startede:"
 
 [forecast]
 modalTitle = "Prognose"
+solarAdjust = "Juster solprognosen på baggrund af produktions data."
 
 [forecast.co2]
 average = "Gennemsnit"
@@ -577,6 +579,7 @@ charging = "Opvarmer..."
 cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
 waitForVehicle = "Klar. Venter på varmelegeme..."
+vehicleLimit = "Opvarmning begrænsning"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
