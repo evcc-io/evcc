@@ -1,6 +1,6 @@
 template: solarprognose.de
 products:
-  - brand: solarprognose.de
+  - brand: Solarprognose
 requirements:
   description:
     en: "[solarprognose.de](https://www.solarprognose.de) can be used for free (but donations are welcome). An user account is required."
