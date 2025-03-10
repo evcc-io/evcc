@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/samber/lo"
@@ -19,11 +20,20 @@ type solarDetails struct {
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
 	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Events           events       `json:"events,omitempty"`           // forecast-based events (experimental)
 }
 
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+type events []event
+
+type event struct {
+	Timestamp time.Time `json:"ts"`
+	Value     *float64  `json:"val,omitempty"`
+	Event     string    `json:"ev,omitempty"`
 }
 
 // greenShare returns
@@ -160,6 +170,109 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 		const minEnergy = 0.5 // kWh
 		if produced+fcst > minEnergy {
 			res.Scale = lo.ToPtr(scale)
+		}
+	}
+
+	if events := site.batteryForecast(solar); len(events) > 0 {
+		res.Events = events
+	}
+
+	return res
+}
+
+const (
+	batCharge    = "battery-charge"
+	batDischarge = "battery-discharge"
+	batSoc       = "battery-soc"
+)
+
+// batteryForecast projects the battery soc based on the solar forecast
+func (site *Site) batteryForecast(solar timeseries) events {
+	if site.batteryCapacity == 0 {
+		return nil
+	}
+
+	const baseload = 300 // W
+
+	// offset series by base load
+	remainder := make(timeseries, 0, len(solar))
+	for _, v := range solar {
+		if v.Timestamp.Before(time.Now().Add(-time.Hour)) {
+			continue
+		}
+
+		v.Value -= baseload
+		remainder = append(remainder, v)
+	}
+
+	// TODO check if all batteries have capacity and soc
+
+	// defaults
+	efficiency := soc.ChargeEfficiency
+	minSoc := 20.0
+	maxSoc := 95.0
+
+	currentSoc := site.batterySoc
+	prevSoc := site.batterySoc
+
+	// initial entry
+	prev := event{
+		Timestamp: time.Now(),
+		Event:     batCharge,
+		Value:     lo.ToPtr(site.batterySoc),
+	}
+
+	const slot = 15 * time.Minute
+
+	ts := time.Now().Round(slot)
+	if ts.Before(time.Now()) {
+		prev.Timestamp = time.Now()
+	}
+
+	if delta := remainder.energy(prev.Timestamp, ts.Add(slot)); delta < 0 {
+		prev.Event = batDischarge
+	}
+
+	res := events{prev}
+
+	// create 15m slots
+	for ts.Before(remainder[len(remainder)-1].Timestamp) {
+		end := ts.Add(slot)
+		energy := remainder.energy(ts, end)
+		ts = end
+
+		// add event
+		ev := event{
+			Timestamp: ts,
+			Event:     batSoc,
+		}
+
+		switch {
+		case energy > 0:
+			energy *= efficiency
+			if prev.Event != batCharge {
+				ev.Event = batCharge
+			}
+		case energy < 0:
+			energy /= efficiency
+			if prev.Event != batDischarge {
+				ev.Event = batDischarge
+			}
+		}
+
+		currentSoc = min(max(currentSoc+energy/1e3/site.batteryCapacity*100, minSoc), maxSoc)
+		ev.Value = lo.ToPtr(math.Round(currentSoc))
+
+		if ev.Event != batSoc || currentSoc != prevSoc {
+			res = append(res, ev)
+		}
+
+		// store previous soc
+		prevSoc = currentSoc
+
+		// store last charge/discharge
+		if ev.Event != batSoc {
+			prev = ev
 		}
 	}
 
