@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -86,24 +87,35 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 
 	if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {
 		// from database
-		params, err := sanitizeMasked(class, conf.Other)
+		dc["id"] = configurable.ID()
+
+		props, err := propsToMap(configurable.Properties())
 		if err != nil {
 			return nil, err
 		}
 
-		dc["id"] = configurable.ID()
+		if err := mergo.Merge(&dc, props); err != nil {
+			return nil, err
+		}
+
+		params, err := sanitizeMasked(class, conf.Other)
+		if err != nil {
+			return nil, err
+		}
 		dc["config"] = params
-	} else if title := conf.Other["title"]; title != nil {
-		// from yaml
+	} else {
+		// add title if available
 		config := make(map[string]any)
-		if s, ok := title.(string); ok {
-			config["title"] = s
+		if title, ok := conf.Other["title"].(string); ok {
+			config["title"] = title
 		}
 		// add icon if available
 		if icon, ok := conf.Other["icon"].(string); ok {
 			config["icon"] = icon
 		}
-		dc["config"] = config
+		if len(config) > 0 {
+			dc["config"] = config
+		}
 	}
 
 	return dc, nil
@@ -206,13 +218,13 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, testInstance(instance))
 }
 
-func newDevice[T any](ctx context.Context, class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
-	instance, err := newFromConf(ctx, typeTemplate, req)
+func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(ctx, req.Type, req.Other)
 	if err != nil {
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, typeTemplate, req)
+	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
@@ -230,14 +242,11 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO add application/yaml content type, reject type==template
-
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	var conf *config.Config
 	ctx, cancel, done := startDeviceTimeout()
@@ -280,8 +289,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -290,8 +299,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, con
 	if !ok {
 		return errors.New("not configurable")
 	}
-
-	return configurable.Update(merged, instance)
+	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
 // updateDeviceHandler updates database device's configuration by class
@@ -310,14 +318,11 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO add application/yaml content type, reject type==template
-
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	ctx, cancel, done := startDeviceTimeout()
 
@@ -423,12 +428,12 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
+func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(ctx, typeTemplate, conf)
+		return newFromConf(ctx, req.Type, req.Other)
 	}
 
-	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
+	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 
 	return instance, err
 }
@@ -453,12 +458,11 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req map[string]any
+	var req configReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	delete(req, "type")
 
 	var instance any
 	ctx, cancel, done := startDeviceTimeout()
