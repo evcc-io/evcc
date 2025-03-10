@@ -1,0 +1,48 @@
+template: kermi
+products:
+  - brand: Bösch
+    description:
+      generic: x-change
+  - brand: Kermi
+    description:
+      generic: x-change
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    # id TWE 50, HK 51
+  # - name: tempsource
+  #   type: choice
+  #   choice: ["", "warmwater", "buffer"]
+  #   description:
+  #     de: "Temperaturquelle"
+  #     en: "Temperature source"
+render: |
+  type: heatpump
+  phases: {{ .phases }}
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 301 # PV Überschussleistung
+      type: holding
+      decode: int16
+  # power:
+  #   source: modbus
+  #   ##- include "modbus" . | indent 2 ##
+  #   register:
+  #     address: 108 # aktuelle Aufnahmeleistung der WP (kWp)
+  #     type: holding
+  #     decode: int16
+  # ##- if .tempsource ##
+  # temp:
+  #   source: modbus
+  #   ##- include "modbus" . | indent 2 ##
+  #   register:
+  #     address: # if eq .tempsource "warmwater" -## 100 # else ## 1 ##- end ##
+  #     type: holding
+  #     encoding: int16
+  #   scale: 0.1
+  # ##- end ##
