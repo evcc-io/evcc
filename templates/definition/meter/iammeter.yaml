@@ -18,8 +18,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "charge"]
   - name: host
-  - name: timeout
-    default: 10s
 render: |
   type: custom
   # net metered power/saldierte Leistung (W)
@@ -27,69 +25,58 @@ render: |
     source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[3][2] else .Data[2] end
-    timeout: {{ .timeout }}
     cache: 2s
   # net metered forward active energy/saldierter Energieverbrauch (kWh)
   energy:
     source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[3][3] else .Data[3] end
-    timeout: {{ .timeout }}
     cache: 2s
   powers:
   # L1 power (W)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[0][2] else .Data[2] end
-    timeout: {{ .timeout }}
     cache: 2s
   # L2 power (W)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[1][2] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s
   # L3 power (W)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[2][2] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s  
   currents:
   # L1 current (A)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[0][1] else .Data[1] end
-    timeout: {{ .timeout }}
     cache: 2s
   # L2 current (A)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[1][1] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s
   # L3 current (A)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[2][1] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s
   voltages:
   # L1 voltage (V)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[0][0] else .Data[0] end
-    timeout: {{ .timeout }}
     cache: 2s
   # L2 voltage (V)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[1][0] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s
   # L3 voltage (V)
   - source: http
     uri: http://{{ .host }}/api/monitorjson
     jq: if .Datas then .Datas[2][0] else 0 end
-    timeout: {{ .timeout }}
     cache: 2s
