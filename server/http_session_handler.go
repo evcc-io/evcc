@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"strings"
+	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
@@ -35,31 +36,28 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		res  session.Sessions
-		cond []string
-		args []any
-	)
-
-	push := func(field, val string) {
-		cond = append(cond, field)
-		args = append(args, val)
-	}
+	var res session.Sessions
 
 	filename := "session"
-	if year := r.URL.Query().Get("year"); year != "" {
-		filename += "-" + year
-		push("STRFTIME('%Y', created) LIKE ?", year)
+	year, _ := strconv.Atoi(r.URL.Query().Get("year"))
+	month, _ := strconv.Atoi(r.URL.Query().Get("month"))
+	query := db.Instance.Where("charged_kwh >= ?", 0.05).Order("created DESC")
 
-		if month := fmt.Sprintf("%02s", r.URL.Query().Get("month")); month != "00" {
-			filename += "-" + month
-			push("STRFTIME('%m', created) LIKE ?", month)
-		}
+	if year > 0 && month > 0 {
+		filename += fmt.Sprintf("-%04d-%02d", year, month)
+		l, _ := time.LoadLocation("Local")
+		first := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, l)
+		last := first.AddDate(0, 1, 0).Add(-1)
+		query = query.Where("created BETWEEN ? AND ?", first, last)
+	} else if year > 0 {
+		filename += fmt.Sprintf("%04d", year, month)
+		l, _ := time.LoadLocation("Local")
+		first := time.Date(year, time.January, 1, 0, 0, 0, 0, l)
+		last := first.AddDate(1, 0, 0).Add(-1)
+		query = query.Where("created BETWEEN ? AND ?", first, last)
 	}
 
-	// TODO support other databases than Sqlite
-	query := strings.Join(append([]string{"charged_kwh>=0.05"}, cond...), " AND ")
-	if txn := db.Instance.Where(query, args...).Order("created DESC").Find(&res); txn.Error != nil {
+	if txn := query.Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}
