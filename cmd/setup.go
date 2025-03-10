@@ -1028,16 +1028,20 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
-			return &DeviceError{cc.Name, err}
+			err = &DeviceError{cc.Name, err}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
-		if err := config.Loadpoints().Add(dev); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
 		}
 
-		if err := dynamic.Apply(instance); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := dynamic.Apply(instance); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 
