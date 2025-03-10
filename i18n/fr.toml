@@ -78,6 +78,7 @@ enabled = "Activé"
 energy = "Énergie"
 feedinPrice = "Prix de revente"
 gridPrice = "Prix du réseau"
+heaterTempLimit = "Limite du chauffage"
 hemsType = "Système"
 identifier = "Identifiant RFID"
 no = "non"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "L'installation a commencé:"
 
 [forecast]
 modalTitle = "Prévisions"
+solarAdjust = "Ajuster la prévision solaire basé sur la production réelle."
 
 [forecast.co2]
 average = "Moyenne"
@@ -581,6 +583,7 @@ selfConsumption = "Consommation propre"
 charging = "Chauffage… "
 cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+vehicleLimit = "Limite de chauffage"
 waitForVehicle = "Prêt. En attente du chauffage… "
 
 [main.loadpoint]
@@ -919,6 +922,8 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
+resetAction = "Supprimer la limite"
+resetWarning = "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration?"
 saved = "Enregistré."
 
 [startupError]
