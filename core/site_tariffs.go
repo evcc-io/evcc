@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/samber/lo"
@@ -172,22 +173,26 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 		}
 	}
 
-	if events := site.events(solar); len(events) > 0 {
+	if events := site.batteryForecast(solar); len(events) > 0 {
 		res.Events = events
 	}
 
 	return res
 }
 
-func (site *Site) events(solar timeseries) events {
+const (
+	batCharge    = "battery-charge"
+	batDischarge = "battery-discharge"
+	batSoc       = "battery-soc"
+)
+
+// batteryForecast projects the battery soc based on the solar forecast
+func (site *Site) batteryForecast(solar timeseries) events {
 	if site.batteryCapacity == 0 {
 		return nil
 	}
 
 	const baseload = 300 // W
-
-	// var res events
-	// var surplus *bool
 
 	// offset series by base load
 	remainder := make(timeseries, 0, len(solar))
@@ -198,30 +203,17 @@ func (site *Site) events(solar timeseries) events {
 
 		v.Value -= baseload
 		remainder = append(remainder, v)
-
-		// if surplus == nil || *surplus != (v.Value > 0) {
-		// 	ev := "battery-charge"
-		// 	if v.Value <= 0 {
-		// 		ev = "battery-discharge"
-		// 	}
-
-		// 	res = append(res, event{
-		// 		Timestamp: v.Timestamp,
-		// 		Event:     ev,
-		// 	})
-		// }
-
-		// surplus = lo.ToPtr(v.Value > 0)
 	}
 
 	// TODO check if all batteries have capacity and soc
 
-	// efficiency := soc.ChargeEfficiency
+	efficiency := soc.ChargeEfficiency
 	currentSoc := site.batterySoc
+	prevSoc := site.batterySoc
 
 	prev := event{
 		Timestamp: time.Now(),
-		Event:     "battery-charge",
+		Event:     batCharge,
 		Value:     lo.ToPtr(site.batterySoc),
 	}
 
@@ -233,41 +225,50 @@ func (site *Site) events(solar timeseries) events {
 	}
 
 	if delta := remainder.energy(prev.Timestamp, ts.Add(slot)); delta < 0 {
-		prev.Event = "battery-discharge"
+		prev.Event = batDischarge
 	}
 
 	res := events{prev}
 
 	for ts.Before(remainder[len(remainder)-1].Timestamp) {
 		end := ts.Add(slot)
+
 		energy := remainder.energy(ts, end)
+		if energy > 0 {
+			energy *= efficiency
+		} else {
+			energy /= efficiency
+		}
+
+		currentSoc += energy / 1e3 / site.batteryCapacity * 100
 		ts = end
 
 		ev := event{
-			Event:     "battery-soc",
+			Event:     batSoc,
 			Timestamp: ts,
 		}
 
 		switch {
 		case energy > 0:
-			currentSoc += energy / 1e3 / site.batteryCapacity * 100
-			if prev.Event != "battery-charge" {
-				ev.Event = "battery-charge"
+			if prev.Event != batCharge {
+				ev.Event = batCharge
 			}
 		case energy < 0:
-			currentSoc -= energy / 1e3 / site.batteryCapacity * 100
-			if prev.Event != "battery-discharge" {
-				ev.Event = "battery-discharge"
+			if prev.Event != batDischarge {
+				ev.Event = batDischarge
 			}
 		}
 
 		currentSoc = min(max(currentSoc, 0), 100)
-		ev.Value = lo.ToPtr(currentSoc)
+		ev.Value = lo.ToPtr(math.Round(currentSoc))
 
-		res = append(res, ev)
+		if ev.Event != batSoc || currentSoc != prevSoc {
+			res = append(res, ev)
+		}
+		prevSoc = currentSoc
 
 		// store last charge/discharge
-		if ev.Event != "battery-soc" {
+		if ev.Event != batSoc {
 			prev = ev
 		}
 	}

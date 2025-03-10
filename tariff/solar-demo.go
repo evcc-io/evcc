@@ -3,6 +3,7 @@ package tariff
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"strings"
 	"time"
 
@@ -33,7 +34,7 @@ func NewDemoFromConfig(ctx context.Context, other map[string]interface{}) (api.T
 
 		for i := 2; i >= 0; i-- {
 			date := time.Date(now.Year(), now.Month(), now.Day()+i, 0, 0, 0, 0, time.Local)
-			s = strings.ReplaceAll(s, `2025-03-10`, date.Format("2006-01-02"))
+			s = strings.ReplaceAll(s, fmt.Sprintf(`2025-03-%02d`, 8+i), date.Format("2006-01-02"))
 		}
 
 		return s, nil
