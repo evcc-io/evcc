@@ -98,6 +98,7 @@ topic = "Topic"
 url = "URL"
 vehicleLimitSoc = "Omejitev vozila"
 yes = "da"
+heaterTempLimit = "Omejitev ogrevanja"
 
 [config.deviceValueChargeStatus]
 A = "A (brez povezave)"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "Namestitev se je začela:"
 
 [forecast]
 modalTitle = "Napoved"
+solarAdjust = "Prilagodite sončno napoved na podlagi dejanskih podatkov o proizvodnji."
 
 [forecast.co2]
 average = "Povprečje"
@@ -577,6 +579,7 @@ charging = "Gretje…"
 cheapEnergyCharging = "Gretje s poceni energijo: {price} (limit {limit})"
 cleanEnergyCharging = "Gretje s čisto energijo: {co2} (limit {limit})"
 waitForVehicle = "Pripravljen. Čakam na grelec…"
+vehicleLimit = "Omejitev ogrevanja"
 
 [main.loadpoint]
 avgPrice = "⌀ Cena"
