@@ -232,20 +232,23 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	for ts.Before(remainder[len(remainder)-1].Timestamp) {
 		end := ts.Add(slot)
-
 		energy := remainder.energy(ts, end)
+		ts = end
+
+		// apply efficiency
 		if energy > 0 {
 			energy *= efficiency
 		} else {
 			energy /= efficiency
 		}
 
-		currentSoc += energy / 1e3 / site.batteryCapacity * 100
-		ts = end
+		currentSoc = min(max(currentSoc+energy/1e3/site.batteryCapacity*100, 0), 100)
 
+		// add event
 		ev := event{
-			Event:     batSoc,
 			Timestamp: ts,
+			Event:     batSoc,
+			Value:     lo.ToPtr(math.Round(currentSoc)),
 		}
 
 		switch {
@@ -259,12 +262,11 @@ func (site *Site) batteryForecast(solar timeseries) events {
 			}
 		}
 
-		currentSoc = min(max(currentSoc, 0), 100)
-		ev.Value = lo.ToPtr(math.Round(currentSoc))
-
 		if ev.Event != batSoc || currentSoc != prevSoc {
 			res = append(res, ev)
 		}
+
+		// store previous soc
 		prevSoc = currentSoc
 
 		// store last charge/discharge
