@@ -20,7 +20,7 @@ params:
     help:
       en: "Meter address of primary or secondary meters. On the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201)."
       de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
-    usage: grid
+    usages: ["grid"]
   - name: integer
     deprecated: true
   - name: maxacpower
