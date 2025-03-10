@@ -884,6 +884,7 @@ modalTitle = "Okos Hálózati Töltés"
 none = "nincs"
 priceLabel = "Energia ár"
 priceLimit = "Ár limit"
+resetAction = "Limit eltávolítása"
 saved = "Elmentve."
 
 [startupError]
