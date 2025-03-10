@@ -1,8 +1,9 @@
 template: cupra
+covers: ["seat"]
 products:
   - brand: Seat
     description:
-      generic: CupraConnect Gen4 (Born, Formentor, Tavascan)
+      generic: CupraConnect (Born, Formentor, Tavascan, Ateca, Leon, Tarraco)
 params:
   - preset: vehicle-base
   - preset: vehicle-features
