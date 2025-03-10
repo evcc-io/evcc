@@ -110,7 +110,7 @@
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
-import AnimatedNumber from "../AnimatedNumber.vue";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";

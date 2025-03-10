@@ -547,9 +547,9 @@
 <script>
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "../../api";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Modals/GenericModal.vue";
 import deepClone from "../../utils/deepClone";
 import deepEqual from "../../utils/deepEqual";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";

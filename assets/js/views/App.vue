@@ -14,13 +14,13 @@
 
 <script>
 import store from "../store";
-import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
-import BatterySettingsModal from "../components/BatterySettingsModal.vue";
-import ForecastModal from "../components/ForecastModal.vue";
-import OfflineIndicator from "../components/OfflineIndicator.vue";
-import PasswordModal from "../components/PasswordModal.vue";
-import LoginModal from "../components/LoginModal.vue";
-import HelpModal from "../components/HelpModal.vue";
+import GlobalSettingsModal from "../components/Modals/GlobalSettings/GlobalSettingsModal.vue";
+import BatterySettingsModal from "../components/Modals/BatterySettingsModal.vue";
+import ForecastModal from "../components/Modals/Forecast/ForecastModal.vue";
+import OfflineIndicator from "../components/Modals/OfflineIndicator.vue";
+import PasswordModal from "../components/Modals/PasswordModal.vue";
+import LoginModal from "../components/Modals/LoginModal.vue";
+import HelpModal from "../components/Modals/HelpModal.vue";
 import collector from "../mixins/collector";
 
 // assume offline if not data received for 5 minutes

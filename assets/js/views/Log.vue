@@ -107,10 +107,10 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/download";
-import TopHeader from "../components/TopHeader.vue";
+import TopHeader from "../components/Top/TopHeader.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
-import MultiSelect from "../components/MultiSelect.vue";
+import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 

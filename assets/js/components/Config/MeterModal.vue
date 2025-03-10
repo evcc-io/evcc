@@ -143,7 +143,7 @@ import api from "../../api";
 import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Modals/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 
 const initialValues = { type: "template" };

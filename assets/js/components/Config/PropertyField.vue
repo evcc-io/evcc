@@ -92,7 +92,7 @@
 <script>
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import formatter from "../../mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;

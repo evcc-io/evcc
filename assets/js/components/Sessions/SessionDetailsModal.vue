@@ -198,8 +198,8 @@
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
-import VehicleOptions from "../VehicleOptions.vue";
-import CustomSelect from "../CustomSelect.vue";
+import VehicleOptions from "../Vehicles/VehicleOptions.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 

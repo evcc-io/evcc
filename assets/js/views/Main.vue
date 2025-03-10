@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import Site from "../components/Site.vue";
+import Site from "../components/Site/Site.vue";
 import store from "../store";
 
 export default {
