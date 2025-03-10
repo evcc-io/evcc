@@ -10,7 +10,7 @@ group: solar
 params:
   - name: accesstoken
     description:
-      en: access token from user profile
+      en: Access Token from User Profile
       de: Zugriffs-Schlüssel aus Benutzer-Profil
     required: true  
   - name: item
@@ -18,12 +18,12 @@ params:
     required: true  
   - name: token
     description:
-      en: unique token for selected item
+      en: Unique Token for selected Item
       de: Eindeutiger Schlüssel für das angegebene Element 
     required: true  
   - name: algorithm
     description:
-      en: forecasting algorithm
+      en: Forecasting Algorithm
       de: Prognosealgorithmus
     default: mosmix  
     advanced: true          
