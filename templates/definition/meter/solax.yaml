@@ -103,8 +103,7 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 28 # 0x001C Battery 1 Capacity
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else }}
       address: 301 # 0x012D Battery 2 Capacity
       {{- end }}
       type: input
