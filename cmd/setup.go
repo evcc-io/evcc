@@ -76,6 +76,7 @@ var conf = globalconfig.All{
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
+var envVarRE = regexp.MustCompile(`\${([^}]+)}`)
 
 func nameValid(name string) error {
 	if !nameRE.MatchString(name) {
@@ -84,6 +85,36 @@ func nameValid(name string) error {
 	return nil
 }
 
+// Recursively replace environment variables in a map or slice
+func replaceEnvVars(input interface{}) interface{} {
+	switch v := input.(type) {
+	case string:
+		return replaceEnvInString(v)
+	case map[string]interface{}:
+		for key, value := range v {
+			v[key] = replaceEnvVars(value)
+		}
+		return v
+	case []interface{}:
+		for i, value := range v {
+			v[i] = replaceEnvVars(value)
+		}
+		return v
+	default:
+		return input
+	}
+}
+
+// Replace environment variable placeholders in a string
+func replaceEnvInString(s string) string {
+	return envVarRE.ReplaceAllStringFunc(s, func(match string) string {
+		envVar := match[2 : len(match)-1]
+		if envValue := os.Getenv(envVar); envValue != "" {
+			return envValue
+		}
+		return match // Keep original if no environment variable is set
+	})
+}
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	err := viper.ReadInConfig()
 
@@ -94,6 +125,13 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	log.INFO.Println("using config file:", cfgFile)
 
 	if err == nil {
+		allSettings := viper.AllSettings()
+		
+		// Replace environment variables in the entire configuration
+		replacedSettings := replaceEnvVars(allSettings).(map[string]interface{})
+		
+		viper.MergeConfigMap(replacedSettings)
+		
 		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
