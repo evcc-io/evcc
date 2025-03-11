@@ -136,9 +136,9 @@ func (m *Com) Data() (EssData, error) {
 
 // essInfo reads essinfo/home
 func (m *Com) essInfo() (EssData, error) {
-	f := func(_ any) (*http.Request, error) {
+	f := func(payload any) (*http.Request, error) {
 		uri := fmt.Sprintf("%s/v1/user/essinfo/home", m.uri)
-		return request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
 	}
 
 	if m.essType == LgEss8 {
@@ -176,7 +176,8 @@ func (m *Com) request(f func(any) (*http.Request, error), payload map[string]str
 		return err
 	}
 
-	if err := m.DoJSON(req, &res); err == nil {
+	err = m.DoJSON(req, &res)
+	if err == nil {
 		return nil
 	}
 
