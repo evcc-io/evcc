@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { enableExperimental } from "./utils";
 
-const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
+const CONFIG_GRID_ONLY = "config-empty.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
@@ -25,6 +25,7 @@ test.describe("pv meter", async () => {
 
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
+    await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power (W)").fill("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -33,7 +34,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expect(meterModal).not.toBeVisible();
     await expect(page.getByTestId("pv")).toBeVisible(1);
-    await expect(page.getByTestId("pv")).toContainText("demo");
+    await expect(page.getByTestId("pv")).toContainText("PV North");
 
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
@@ -44,7 +45,7 @@ test.describe("pv meter", async () => {
 
     const pv = page.getByTestId("pv");
     await expect(pv).toBeVisible(1);
-    await expect(pv).toContainText("demo");
+    await expect(pv).toContainText("PV North");
     await expect(pv.getByTestId("device-tag-power")).toContainText("6.0 kW");
 
     // restart and check in main ui
