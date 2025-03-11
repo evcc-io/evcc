@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -1351,7 +1352,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
+func (lp *Loadpoint) boostPower(site site.API, batteryBoostPower float64) float64 {
 	boost := lp.getBatteryBoost()
 	if boost == boostDisabled {
 		return 0
@@ -1361,7 +1362,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	delta := lp.effectiveStepPower()
 	if !lp.coarseCurrent() {
 		// for >1p this will allow finer adjustments down to 100W
-		delta = max(100, delta/10)
+		delta = max(math.Abs(site.GetResidualPower()), delta/10)
 	}
 
 	// start boosting by setting maximum power
@@ -1384,13 +1385,13 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(site site.API, mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower)
+	sitePower -= lp.boostPower(site, batteryBoostPower)
 
 	// switch phases up/down
 	var scaledTo int
@@ -1771,7 +1772,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(site site.API, sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
