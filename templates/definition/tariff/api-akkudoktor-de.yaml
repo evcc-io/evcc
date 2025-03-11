@@ -24,54 +24,54 @@ params:
       en: AC Power [kW]
       de: AC Leistung [kW]
     help:
-      en: "max power of the inverter in kW. default: no limit"
-      de: "maximale Leistung des Wechselrichters in kW. standard: kein limit"
+      en: Max power of the inverter in kW.
+      de: Maximale Leistung des Wechselrichters in kW.
     type: float
-    example: 9.8
+    default: 0
     advanced: true
   - name: efficiency
     description:
       en: Inverter efficiency [%]
       de: Wechselrichterwirkungsgrad [%]
     help:
-      en: "The inverter efficiency. default: 100 (%)"
-      de: "Der Wirkungsgrad des Wechselrichters standard: 100 (%)"
+      en: The inverter efficiency.
+      de: Der Wirkungsgrad des Wechselrichters.
     type: int
-    example: 96
+    default: 100
     advanced: true
   - name: alphatemp
     description:
       en: Temperature coefficient
       de: Temperaturkoeffizient
     help:
-      en: "The Temperatur coefficient is used for calculate losses with the temperature of the modules. default: -0.004"
-      de: "Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet. standard: -0.004"
+      en: The Temperatur coefficient is used for calculate losses with the temperature of the modules.
+      de: Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet.
     type: float
-    example: -0.004
+    default: -0.004
     advanced: true
   - name: albedo
     description:
-      en: albedo
+      en: Albedo
       de: Albedo
     help:
-      en: "albedo value of the modules. default: 0.2"
-      de: "Albedowert der Module. standard: 0.2"
+      en: Albedo value of the modules.
+      de: Albedowert der Module.
     type: float
-    example: 0.2
+    default: 0.2
     advanced: true
   - name: range
     description:
-      en: weathermodel variation
+      en: Weathermodel variation
       de: Wettermodellvariation
     help:
-      en: "returns max- and min- generation from different weathermodels. default: 0"
-      de: "liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen. standard: 0"
+      en: Returns max- and min- generation from different weathermodels.
+      de: Liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen.
     type: int
-    example: 0
+    default: 0
     advanced: true
   - name: horizon
     description:
-      en: simulate terrain shadows
+      en: Simulate terrain shadows
       de: Simuliert Verschattung durch Umgebung
     help:
       en: Each number representing the horizon height in degrees. see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizon
@@ -87,20 +87,21 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: "https://api.akkudoktor.net/forecast?lat={{ .lat }}\
+    uri: "https://api.akkudoktor.net/forecast?\
+      lat={{ .lat }}\
       &lon={{ .lon }}\
+      &tilt={{ .dec }}\
       &power={{ mulf .kwp 1000 }}\
       &azimuth={{ .az }}\
-      &tilt={{ .dec }}\
+      &powerInverter={{ mulf .ac 1000 }}\
+      &inverterEfficiency={{ divf .efficiency 100 }}\
+      &cellCoEff={{ mulf .alphatemp 100 }}\
+      &albedo={{ .albedo }}\
+      &range={{ .range }}\
+      {{ if .horizon }}&horizont={{ .horizon | urlEncode }}{{ end }}\
       &past_days=0\
       &timecycle=hourly\
-      &timezone=UTC\
-      {{ if .alphatemp }}&cellCoEff={{ mulf .alphatemp 100 }}{{ end }}\
-      {{ if .albedo }}&albedo={{ .albedo }}{{ end }}\
-      {{ if .ac }}&powerInverter={{ mulf .ac 1000 }}{{ end }}\
-      {{ if .efficiency }}&inverterEfficiency={{ divf .efficiency 100 }}{{ end }}\
-      {{ if .horizon }}&horizont={{ .horizon | urlEncode }}{{ end }}\
-      {{ if .range }}&range={{ .range | ceil }}{{ end }}"
+      &timezone=UTC"
     jq: |
       [ .values[][] | {
         start: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | strftime("%FT%TZ")),
