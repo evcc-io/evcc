@@ -352,7 +352,10 @@ export default {
 			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
 				return;
 			}
-			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
+			return this.pv.map(
+				({ power, title }) =>
+					`${title ? `${title}: ` : ""}${this.fmtW(power, this.powerUnit)}`
+			);
 		},
 		batteryDischargeTooltip() {
 			return this.batteryTooltip(true);
@@ -490,11 +493,12 @@ export default {
 			if (!Array.isArray(this.battery) || this.battery.length <= 1) {
 				return;
 			}
-			return this.battery.map(({ power, soc }) => {
+			return this.battery.map(({ power, soc, title }) => {
 				const value = discharge ? this.dischargePower(power) : this.chargePower(power);
+
 				const powerFmt = this.fmtW(value, this.powerUnit);
 				const socFmt = this.fmtPercentage(soc, 0);
-				return `${powerFmt} (${socFmt})`;
+				return `${title ? `${title}: ` : ""}${powerFmt} (${socFmt})`;
 			});
 		},
 	},
