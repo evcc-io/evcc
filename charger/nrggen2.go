@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -45,13 +46,13 @@ const (
 )
 
 func init() {
-	registry.Add("nrggen2", NewNRGKickGen2FromConfig)
+	registry.AddCtx("nrggen2", NewNRGKickGen2FromConfig)
 }
 
 //go:generate go tool decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
-func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Phases1p3p         bool
@@ -66,7 +67,7 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	nrg, err := NewNRGKickGen2(cc.URI, cc.ID)
+	nrg, err := NewNRGKickGen2(ctx, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +86,8 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
-func NewNRGKickGen2(uri string, slaveID uint8) (*NRGKickGen2, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen2, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

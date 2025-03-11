@@ -436,7 +436,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {

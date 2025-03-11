@@ -69,6 +69,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
+	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
+	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -205,9 +207,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 		if err == nil && influx != nil {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
-				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
-				keys.TariffCo2, keys.TariffFeedIn, keys.TariffGrid,
-				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
+				keys.VehicleSoc,
+				keys.VehicleRange,
+				keys.VehicleOdometer,
+				keys.TariffCo2,
+				keys.TariffCo2Home,
+				keys.TariffCo2Loadpoints,
+				keys.TariffFeedIn,
+				keys.TariffGrid,
+				keys.TariffPriceHome,
+				keys.TariffPriceLoadpoints,
+				keys.ChargedEnergy,
+				keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
 				pipe.NewDropper(append(ignoreLogs, ignoreEmpty, keys.Forecast)...).Pipe(tee.Attach()),
 			))
@@ -248,7 +259,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: pushChan != nil}
+	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}

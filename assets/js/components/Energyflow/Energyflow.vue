@@ -83,8 +83,15 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
+							:details="solarForecastRemainingToday"
+							:detailsFmt="forecastFmt"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
+							@details-clicked="openForecastModal"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -266,6 +273,7 @@ export default {
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
+		forecast: { type: Object, default: () => ({}) },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
@@ -381,6 +389,21 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
+			return this.forecast?.solar?.today?.energy || undefined;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
+		},
 	},
 	watch: {
 		pvConfigured() {
@@ -430,6 +453,12 @@ export default {
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
+		forecastFmt(value) {
+			if (value === null) {
+				return "";
+			}
+			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
+		},
 		kw: function (watt) {
 			return this.fmtW(watt, this.powerUnit);
 		},
@@ -445,6 +474,10 @@ export default {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
 			);
+			modal.show();
+		},
+		openForecastModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
 			modal.show();
 		},
 		dischargePower(power) {

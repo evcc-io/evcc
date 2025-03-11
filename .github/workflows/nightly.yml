@@ -59,7 +59,7 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker meta
+      - name: Define tags
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -75,6 +75,14 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Delete old nightly.* tags
+        run: |
+          old_tags=$(curl -s "https://hub.docker.com/v2/repositories/evcc/evcc/tags/?page_size=100" | jq -r '.results | map(select(.name | startswith("nightly."))) | sort_by(.last_updated) | reverse | .[1:] | .[].name')
+          for tag in $old_tags; do
+            echo "Deleting tag: $tag"
+            curl -s -H "Authorization: Bearer ${{ secrets.DOCKER_PASS }}" -X DELETE "https://hub.docker.com/v2/repositories/evcc/evcc/tags/$tag/"
+          done
 
   hassio:
     name: Hassio Addon :nightly

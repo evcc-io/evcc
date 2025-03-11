@@ -31,7 +31,7 @@ titleAdd = "Ajouter une batterie domestique"
 titleEdit = "Modifier batterie"
 
 [config.charge]
-titleAdd = "Ajouter mesure de charge"
+titleAdd = "Ajouter un compteur de charge"
 titleEdit = "Modifier le compteur de charge"
 
 [config.charger]
@@ -41,7 +41,7 @@ ocppHelp = "Copier cette adresse dans votre configuration de chargeurs."
 ocppLabel = "URL du serveur OCPP"
 switchsockets = "Prises commutables"
 template = "Fabricant"
-titleAdd = "Ajouter chargeur"
+titleAdd = "Ajouter un chargeur"
 titleEdit = "Modifier chargeur"
 
 [config.circuits]
@@ -50,7 +50,7 @@ title = "Gestion de la charge"
 
 [config.control]
 description = "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites."
-descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
+descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des compteurs, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
 descriptionResidualPower = "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau."
 labelInterval = "Intervalle de mise à jour"
 labelResidualPower = "Puissance résiduelle"
@@ -78,6 +78,7 @@ enabled = "Activé"
 energy = "Énergie"
 feedinPrice = "Prix de revente"
 gridPrice = "Prix du réseau"
+heaterTempLimit = "Limite du chauffage"
 hemsType = "Système"
 identifier = "Identifiant RFID"
 no = "non"
@@ -132,8 +133,8 @@ validateSave = "Valider & enregistrer"
 
 [config.grid]
 title = "Compteur du réseau"
-titleAdd = "Ajouter compteur pour réseau"
-titleEdit = "Modifier compteur pour réseau"
+titleAdd = "Ajouter un compteur pour réseau"
+titleEdit = "Modifier le compteur pour réseau"
 
 [config.hems]
 description = "Connecter evcc à un autre Système de Gestion d’Energie Domestique."
@@ -157,7 +158,7 @@ v2Support = "Revenir à InfluxDB 2.x"
 
 [config.loadpoint]
 addCharger = "Ajouter un chargeur"
-addMeter = "Ajouter une mesure dédiée pour le chargeur"
+addMeter = "Ajouter un compteur dédié pour le chargeur"
 cancel = "Annuler"
 chargerLabel = "Chargeur"
 chargerPower11kw = "11 kW"
@@ -176,8 +177,8 @@ defaultModeLabel = "Mode par défaut"
 delete = "Supprimer"
 electricalSubtitle = "En cas de doute, demandez à votre électricien."
 electricalTitle = "Électricité"
-energyMeterHelp = "Appareil de mesure supplémentaire si le chargeur n’en a pas un intégré."
-energyMeterLabel = "Mesure de l’énergie"
+energyMeterHelp = "Compteur supplémentaire si le chargeur n’en a pas un intégré."
+energyMeterLabel = "Compteur d’énergie"
 estimateLabel = "Interpoler le niveau de charge entre deux mises à jour via l’API"
 maxCurrentHelp = "Doit être supérieur au courant minimum."
 maxCurrentLabel = "Courant maximum"
@@ -305,8 +306,8 @@ B = "B (connecté)"
 C = "C (en charge)"
 
 [config.pv]
-titleAdd = "Ajouter un compteur pour le solaire"
-titleEdit = "Modifier le compteur pour le solaire"
+titleAdd = "Ajouter un compteur de production solaire"
+titleEdit = "Modifier le compteur de production solaire"
 
 [config.section]
 general = "Général"
@@ -367,7 +368,7 @@ online = "Véhicules avec API en ligne"
 save = "Enregistrer"
 scooter = "Trottinette"
 template = "Fabricant"
-titleAdd = "Ajouter le véhicule"
+titleAdd = "Ajouter un véhicule"
 titleEdit = "Modifier le véhicule"
 validateSave = "Valider & enregistrer"
 
@@ -446,6 +447,32 @@ modalUpdate = "Installer"
 modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
+
+[forecast]
+modalTitle = "Prévisions"
+solarAdjust = "Ajuster la prévision solaire basé sur la production réelle."
+
+[forecast.co2]
+average = "Moyenne"
+lowestHour = "Heure la plus propre"
+range = "Amplitude"
+
+[forecast.price]
+average = "Moyenne"
+lowestHour = "Heure la moins chère"
+range = "Amplitude"
+
+[forecast.solar]
+dayAfterTomorrow = "Après demain"
+partly = "Partiellement"
+remaining = "Restant"
+today = "Aujourd'hui"
+tomorrow = "Demain"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Prix"
+solar = "Solaire"
 
 [header]
 about = "À propos"
@@ -543,6 +570,7 @@ batteryGridChargeActive = "charge réseau active"
 batteryGridChargeLimit = "charge réseau quand"
 batteryHold = "Batterie (verrouillée)"
 batteryTooltip = "{energy} sur {total} ({soc})"
+forecastTooltip = "prévision : production solaire restante aujourd’hui"
 gridImport = "Utilisation du réseau"
 homePower = "Consommation"
 loadpoints = "Recharge| Recharge | {count} chargeurs"
@@ -555,6 +583,7 @@ selfConsumption = "Consommation propre"
 charging = "Chauffage… "
 cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+vehicleLimit = "Limite de chauffage"
 waitForVehicle = "Prêt. En attente du chauffage… "
 
 [main.loadpoint]
@@ -672,17 +701,10 @@ moreActions = "Plus d'actions"
 none = "Pas de véhicule"
 notReachable = "Impossible d’atteindre le véhicule. Essayez de redémarrer evcc."
 targetSoc = "Limite"
-temp = "Temp."
+temp = "Température"
 tempLimit = "Temp. limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
-
-[main.vehicleSoc]
-charging = "en charge"
-connected = "connecté"
-disconnected = "déconnecté"
-ready = "prêt"
-vehicleLimit = "Limite du véhicule : {soc}"
 
 [main.vehicleStatus]
 awaitingAuthorization = "En attente d’autorisation."
@@ -708,7 +730,7 @@ targetChargeActive = "Plan de charge actif. Fin estimée dans {duration}."
 targetChargePlanned = "Le plan de charge démarre dans {duration}."
 targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
 unknown = "-"
-vehicleLimit = "Limit du véhicule."
+vehicleLimit = "Limit du véhicule"
 vehicleLimitReached = "Limite du véhicule atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 welcome = "Courte charge initiale pour confirmer la connexion."
@@ -900,6 +922,8 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
+resetAction = "Supprimer la limite"
+resetWarning = "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration?"
 saved = "Enregistré."
 
 [startupError]

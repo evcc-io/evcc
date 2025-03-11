@@ -78,6 +78,7 @@ enabled = "Aktiverad"
 energy = "Energi"
 feedinPrice = "Inmatningspris"
 gridPrice = "Nätpris"
+heaterTempLimit = "Värmarbegränsning"
 hemsType = "System"
 identifier = "RFID-identifierare"
 no = "nej"
@@ -447,6 +448,32 @@ modalUpdateNow = "Installera nu"
 modalUpdateStarted = "Starta den nya versionen av evcc..."
 modalUpdateStatusStart = "Installationen har börjat:"
 
+[forecast]
+modalTitle = "Prognos"
+solarAdjust = "Justera solprognosen baserat på verkliga produktionsvärden."
+
+[forecast.co2]
+average = "Genomsnitt"
+lowestHour = "Timme med lägst CO₂"
+range = "Intervall"
+
+[forecast.price]
+average = "Genomsnitt"
+lowestHour = "Billigaste timmen"
+range = "Intervall"
+
+[forecast.solar]
+dayAfterTomorrow = "I övermorgon"
+partly = "delvis"
+remaining = "återstående"
+today = "Idag"
+tomorrow = "I morgon"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Pris"
+solar = "Sol"
+
 [header]
 about = "Om"
 blog = "Blogg"
@@ -538,6 +565,7 @@ batteryGridChargeActive = "nätladdning aktiv"
 batteryGridChargeLimit = "nätladdning när"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energy} av {total} ({soc})"
+forecastTooltip = "Prognos: återstående solproduktion idag"
 gridImport = "Import från elnät"
 homePower = "Konsumtion"
 loadpoints = "Laddare | Laddare | {count} laddare"
@@ -550,13 +578,14 @@ selfConsumption = "Egenförbrukning"
 charging = "Värmer..."
 cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+vehicleLimit = "Värmarbegränsning"
 waitForVehicle = "Redo, väntar på värmare..."
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
 charged = "Laddat"
 co2 = "⌀ CO₂"
-duration = "Varaktighet"
+duration = "Laddtid"
 fallbackName = "Laddplats"
 power = "Effekt"
 price = "Kostnad"
@@ -675,13 +704,6 @@ tempLimit = "Temp-gräns"
 unknown = "Gästfordon"
 vehicleSoc = "Laddning"
 
-[main.vehicleSoc]
-charging = "laddar"
-connected = "ansluten"
-disconnected = "frånkopplad"
-ready = "redo"
-vehicleLimit = "Fordonsgräns: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Väntar på godkännande."
 batteryBoost = "Batteriboost är aktiv."
@@ -706,7 +728,7 @@ targetChargeActive = "Laddplan aktiv. Beräknas vara klar om {duration}."
 targetChargePlanned = "Laddplan startar om {duration}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
-vehicleLimit = "Fordonsgräns."
+vehicleLimit = "Fordonsgräns"
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."
@@ -754,7 +776,7 @@ title = "Laddning"
 [sessions]
 avgPower = "⌀-effekt"
 avgPrice = "⌀-pris"
-chargeDuration = "Varaktighet"
+chargeDuration = "Laddtid"
 co2 = "⌀ CO₂"
 csvMonth = "Ladda hem {month} CSV"
 csvTotal = "Ladda hem total CSV"
@@ -793,7 +815,7 @@ solarByGroup = "Solandel {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
-chargeduration = "Varaktighet"
+chargeduration = "Laddtid"
 co2perkwh = "CO₂/kWh"
 created = "Starttid"
 finished = "Sluttid"
@@ -802,7 +824,7 @@ loadpoint = "Laddplats"
 meterstart = "Mätare start (kWh)"
 meterstop = "Mätare slut (kWh)"
 odometer = "Mätarställning (km)"
-price = "Pris"
+price = "Kostnad"
 priceperkwh = "Pris/kWh"
 solarpercentage = "Sol (%)"
 vehicle = "Fordon"
@@ -815,7 +837,7 @@ filter = "Filter"
 [sessions.group]
 co2 = "Emissioner"
 grid = "Nät"
-price = "Pris"
+price = "Kostnad"
 self = "Sol"
 
 [sessions.groupBy]
@@ -830,7 +852,7 @@ year = "År"
 
 [sessions.type]
 co2 = "CO₂"
-price = "Pris"
+price = "Kostnad"
 solar = "Sol"
 
 [settings]
@@ -888,6 +910,8 @@ modalTitle = "Smartladdning elnät"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgräns"
+resetAction = "Ta bort begränsning"
+resetWarning = "Varken dynamiskt elpris eller CO₂-avtryck är konfigurerat. Emellertid finns fortfarande en begränsning på {limit}. Din konfiguration kanske behöver kontrolleras?"
 saved = "Sparad."
 
 [startupError]

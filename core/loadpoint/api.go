@@ -116,7 +116,7 @@ type API interface {
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
+	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -171,7 +171,7 @@ type API interface {
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
-	GetChargePowerFlexibility() float64
+	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current
 	GetMaxPhaseCurrent() float64
 

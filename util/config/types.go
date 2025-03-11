@@ -6,13 +6,13 @@ import (
 
 type Typed struct {
 	Type  string         `json:"type"`
-	Other map[string]any `mapstructure:",remain" yaml:",inline"`
+	Other map[string]any `mapstructure:",remain" yaml:",inline"` // TODO JSON serialization
 }
 
 type Named struct {
 	Name  string         `json:"name"`
 	Type  string         `json:"type"`
-	Other map[string]any `mapstructure:",remain" yaml:",inline"`
+	Other map[string]any `mapstructure:",remain" yaml:",inline"` // TODO JSON serialization
 }
 
 // Property returns the value of the named property

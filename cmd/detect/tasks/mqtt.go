@@ -62,7 +62,7 @@ func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 		for {
 			select {
 			case <-recv:
-				out := in.Clone()
+				out := in
 				out.Topic = h.Topic
 				return []ResultDetails{out}
 			case <-timer.C:

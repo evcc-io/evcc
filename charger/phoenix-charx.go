@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -42,13 +43,13 @@ type PhoenixCharx struct {
 }
 
 func init() {
-	registry.Add("phoenix-charx", NewPhoenixCharxFromConfig)
+	registry.AddCtx("phoenix-charx", NewPhoenixCharxFromConfig)
 }
 
 //go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
-func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -63,7 +64,7 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	wb, err := NewPhoenixCharx(cc.URI, cc.ID, cc.Connector)
+	wb, err := NewPhoenixCharx(ctx, cc.URI, cc.ID, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +82,8 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 }
 
 // NewPhoenixCharx creates a Phoenix charger
-func NewPhoenixCharx(uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

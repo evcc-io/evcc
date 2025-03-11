@@ -15,6 +15,9 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200
+  - name: storageunit
+    type: int
+    deprecated: true
   - name: capacity
     advanced: true
   - name: maxacpower

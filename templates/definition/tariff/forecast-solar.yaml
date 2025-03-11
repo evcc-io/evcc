@@ -8,56 +8,43 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: lat
-    description:
-      en: latitude
-      de: Breitengrad
-    example: "55.7351"
-    required: true
-  - name: lon
-    description:
-      en: longitude
-      de: Längengrad
-    example: "9.1275"
-    required: true
-  - name: dec
-    description:
-      en: decline
-      de: Winkel
-    help:
-      en: 0 = horizontal, 90 = vertical
-      de: 0 = horizontal, 90 = vertikal
-    example: 25
-    required: true
+  - preset: forecast-base
   - name: az
     description:
-      en: azimuth
+      en: Azimuth
       de: Azimut
     help:
       en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
       de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
     example: 180
     required: true
-  - name: kwp
+  - name: horizon
     description:
-      en: Maximum power (kWp)
-      de: Maximalleistung (kWp)
-    example: 9.8
-    required: true
+      en: Horizon
+      de: Horizont
+    help:
+      en: Simulates terrain shadows, [more information](https://doc.forecast.solar/horizon)
+      de: Simuliert Verschattung durch Gelände, [mehr Informationen](https://doc.forecast.solar/horizon)
+    example: 0,0,15,30,45,60,60,60,45,30,15,0
+    advanced: true
   - name: apikey
     description:
       en: API key
       de: API-Key
+    advanced: true
+  - name: interval
+    default: 1h
     advanced: true
 render: |
   type: custom
   tariff: solar
   forecast:
     source: http
-    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60
+    uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}
     jq: |
-      [ .result.watt_hours_period | to_entries.[] | {
+      [ .result.watts | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
         "end":   (.key | strptime("%FT%T%z") | mktime+3600 | strftime("%FT%TZ")),
         "price": .value
       } ] | tostring
+  interval: {{ .interval }}

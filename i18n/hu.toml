@@ -89,11 +89,12 @@ power = "Teljesítmény"
 powerRange = "Teljesítmény"
 range = "Hatótáv"
 singlePhase = "Egyfázisú"
-soc = "SoC"
+soc = "Töltöttség"
 socLimit = "Limit"
 temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
+vehicleLimitSoc = "Jármű limit"
 yes = "igen"
 
 [config.deviceValueChargeStatus]
@@ -106,6 +107,7 @@ description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon 
 title = "EEBus"
 
 [config.form]
+deprecated = "elavult"
 example = "Példa"
 optional = "opcionális"
 
@@ -232,10 +234,11 @@ addTariffs = "Tarifa hozzáadása"
 addVehicle = "Jármű hozzáadása"
 configured = "konfigurálva"
 edit = "szerkesztés"
+name = "Név"
 title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
-yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
+yaml = "Eszköz az evcc.yaml fájlból nem szerkeszthető."
 
 [config.messaging]
 description = "Értesítési üzenetek beállítása a töltési folyamatokról."
@@ -432,6 +435,31 @@ modalUpdateNow = "Telepítés most"
 modalUpdateStarted = "Az új evcc verzió indítása…"
 modalUpdateStatusStart = "A telepítés elkezdődött:"
 
+[forecast]
+modalTitle = "Előrejelzés"
+
+[forecast.co2]
+average = "Átlag"
+lowestHour = "Legtisztább óra"
+range = "Tartomány"
+
+[forecast.price]
+average = "Átlag"
+lowestHour = "Legolcsóbb óra"
+range = "Tartomány"
+
+[forecast.solar]
+dayAfterTomorrow = "Holnap után"
+partly = "részlegesen"
+remaining = "hátralévő"
+today = "Ma"
+tomorrow = "Holnap"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ár"
+solar = "Szolár"
+
 [header]
 about = "Névjegy"
 blog = "Blog"
@@ -522,6 +550,7 @@ batteryGridChargeActive = "hálózatból töltés aktív"
 batteryGridChargeLimit = "hálózatból töltés ha"
 batteryHold = "Energiatároló (lezárva)"
 batteryTooltip = "{energy} / {total} ({soc})"
+forecastTooltip = "előrejelzés: ma fennmaradó napenergia-termelés"
 gridImport = "Hálózatból import"
 homePower = "Fogyasztás"
 loadpoints = "Töltő| Töltő | {count} töltő"
@@ -653,14 +682,7 @@ targetSoc = "Limit"
 temp = "Hőm."
 tempLimit = "Hőm. limit"
 unknown = "Vendég jármű"
-vehicleSoc = "Töltés"
-
-[main.vehicleSoc]
-charging = "tölt"
-connected = "csatlakoztatva"
-disconnected = "lecsatlakoztatva"
-ready = "üzemkész"
-vehicleLimit = "Jármű limit: {soc}"
+vehicleSoc = "Töltöttség"
 
 [main.vehicleStatus]
 awaitingAuthorization = "Hitelesítésre várakozás."
@@ -686,7 +708,7 @@ targetChargeActive = "Töltési terv aktív. Becsült befejezés {duration}."
 targetChargePlanned = "A töltési tervezet ekkor keződik: {duration}."
 targetChargeWaitForVehicle = "Töltési terv üzemkész. Járműre várakozás…"
 unknown = ""
-vehicleLimit = "Jármű limit."
+vehicleLimit = "Jármű limi."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
@@ -862,6 +884,7 @@ modalTitle = "Okos Hálózati Töltés"
 none = "nincs"
 priceLabel = "Energia ár"
 priceLimit = "Ár limit"
+resetAction = "Limit eltávolítása"
 saved = "Elmentve."
 
 [startupError]

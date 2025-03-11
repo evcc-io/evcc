@@ -154,17 +154,17 @@ func (mr *MockAPIMockRecorder) GetChargePower() *gomock.Call {
 }
 
 // GetChargePowerFlexibility mocks base method.
-func (m *MockAPI) GetChargePowerFlexibility() float64 {
+func (m *MockAPI) GetChargePowerFlexibility(rates api.Rates) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChargePowerFlexibility")
+	ret := m.ctrl.Call(m, "GetChargePowerFlexibility", rates)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // GetChargePowerFlexibility indicates an expected call of GetChargePowerFlexibility.
-func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
+func (mr *MockAPIMockRecorder) GetChargePowerFlexibility(rates any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility), rates)
 }
 
 // GetChargerName mocks base method.
@@ -420,12 +420,11 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 }
 
 // GetPlan mocks base method.
-func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
+func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlan", targetTime, requiredDuration)
 	ret0, _ := ret[0].(api.Rates)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // GetPlan indicates an expected call of GetPlan.
