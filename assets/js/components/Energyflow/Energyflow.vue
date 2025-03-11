@@ -393,7 +393,7 @@ export default {
 			return !!this.forecast?.solar;
 		},
 		solarForecastRemainingToday() {
-			return this.forecast?.solar?.today?.energy || 0;
+			return this.forecast?.solar?.today?.energy || undefined;
 		},
 		solarForecastIcon() {
 			return this.solarForecastExists ? "forecast" : undefined;
