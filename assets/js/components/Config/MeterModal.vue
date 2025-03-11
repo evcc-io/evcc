@@ -20,6 +20,21 @@
 			/>
 		</div>
 		<form v-else ref="form" class="container mx-0 px-0">
+			<FormRow
+				v-if="hasDeviceTitle"
+				id="meterParamDeviceTitle"
+				label="Title"
+				help="Will be displayed in the user interface"
+			>
+				<PropertyField
+					id="meterParamDeviceTitle"
+					v-model.trim="values.deviceTitle"
+					type="String"
+					size="w-100"
+					class="me-2"
+					required
+				/>
+			</FormRow>
 			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 				<select
 					v-if="isNew"
@@ -152,8 +167,8 @@ import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../GenericModal.vue";
 import Markdown from "./Markdown.vue";
-
-const initialValues = { type: "template" };
+import PropertyField from "./PropertyField.vue";
+const initialValues = { type: "template", deviceTitle: "", deviceIcon: "" };
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -166,6 +181,7 @@ export default {
 	components: {
 		FormRow,
 		PropertyEntry,
+		PropertyField,
 		GenericModal,
 		Modbus,
 		TestResult,
@@ -207,6 +223,9 @@ export default {
 		},
 		meterType() {
 			return this.type || this.selectedType;
+		},
+		hasDeviceTitle() {
+			return ["pv", "battery"].includes(this.meterType);
 		},
 		templateOptions() {
 			return this.products.filter((p) => p.group !== "generic");
@@ -293,8 +312,9 @@ export default {
 		},
 	},
 	methods: {
-		reset() {
-			this.values = { ...initialValues };
+		reset(keepTitle = false) {
+			const keep = keepTitle ? { deviceTitle: this.values.deviceTitle } : {};
+			this.values = { ...initialValues, ...keep };
 			this.resetTest();
 		},
 		async loadConfiguration() {
@@ -330,8 +350,8 @@ export default {
 			}
 		},
 		async loadTemplate() {
-			if (!this.templateName) return;
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -424,7 +444,7 @@ export default {
 			this.selectedType = type;
 		},
 		templateChanged(event) {
-			this.reset();
+			this.reset(true);
 			const select = event.target;
 			const name = select.options[select.selectedIndex].text;
 			this.values.deviceProduct = name;
