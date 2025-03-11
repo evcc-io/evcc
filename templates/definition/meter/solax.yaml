@@ -90,8 +90,7 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 22 # 0x0016 Batpower_Charge1
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else }}
       address: 297 # 0x0129 Batpower_Charge2
       {{- end }}
       type: input
