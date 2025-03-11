@@ -230,7 +230,7 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
-import EnergyflowEntry from "./EnergyflowEntry.vue";
+import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "../../settings";
@@ -241,7 +241,7 @@ export default {
 	name: "Energyflow",
 	components: {
 		Visualization,
-		EnergyflowEntry,
+		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
 	mixins: [formatter, collector],
