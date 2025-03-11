@@ -13,7 +13,7 @@
 import "@h2d2/shopicons/es/filled/testtube";
 
 import Version from "./Version.vue";
-import Savings from "./Savings.vue";
+import Savings from "../Community/Savings.vue";
 
 export default {
 	name: "Footer",

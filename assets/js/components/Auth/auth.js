@@ -1,8 +1,8 @@
 import { reactive, watch } from "vue";
-import api from "./api";
-import store from "./store";
+import api from "../../api.js";
+import store from "../../store.js";
 import Modal from "bootstrap/js/dist/modal";
-import { isSystemError } from "./utils/fatal";
+import { isSystemError } from "../../utils/fatal.js";
 
 const auth = reactive({
   configured: true,

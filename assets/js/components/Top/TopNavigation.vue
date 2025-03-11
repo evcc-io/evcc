@@ -131,7 +131,7 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../../mixins/collector.js";
-import { logout, isLoggedIn, openLoginModal } from "../../auth.js";
+import { logout, isLoggedIn, openLoginModal } from "../Auth/auth.js";
 import baseAPI from "../../baseapi.js";
 import { isApp, sendToApp } from "../../utils/native.js";
 import { isUserConfigError } from "../../utils/fatal.js";

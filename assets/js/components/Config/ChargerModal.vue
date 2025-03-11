@@ -152,7 +152,7 @@ import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../Modals/GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 const initialValues = { type: "template" };

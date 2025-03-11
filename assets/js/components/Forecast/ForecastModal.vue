@@ -53,7 +53,7 @@ import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import ForecastChart from "./ForecastChart.vue";
 import ForecastTypeSelect from "./ForecastTypeSelect.vue";
 import ForecastDetails from "./ForecastDetails.vue";
@@ -64,9 +64,9 @@ import {
 	type Forecast,
 	ForecastType,
 	adjustedSolar,
-} from "../../../utils/forecast.ts";
-import formatter from "../../../mixins/formatter";
-import settings from "../../../settings";
+} from "../../utils/forecast.ts";
+import formatter from "../../mixins/formatter";
+import settings from "../../settings";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {

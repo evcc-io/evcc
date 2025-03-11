@@ -37,7 +37,7 @@
 <script>
 import formatter from "../../mixins/formatter.js";
 import { CO2_TYPE } from "../../units.js";
-import TariffChart from "../Helper/TariffChart.vue";
+import TariffChart from "../Tariff/TariffChart.vue";
 
 export default {
 	name: "ChargingPlanPreview",

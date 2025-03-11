@@ -77,19 +77,19 @@
 </template>
 
 <script>
-import TelemetrySettings from "../../TelemetrySettings.vue";
-import FormRow from "../../Helper/FormRow.vue";
-import SelectGroup from "../../Helper/SelectGroup.vue";
+import TelemetrySettings from "../TelemetrySettings.vue";
+import FormRow from "../Helper/FormRow.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import {
 	getLocalePreference,
 	setLocalePreference,
 	LOCALES,
 	removeLocalePreference,
-} from "../../../i18n.js";
-import { getThemePreference, setThemePreference, THEMES } from "../../../theme.js";
-import { getUnits, setUnits, UNITS } from "../../../units.js";
-import { getHiddenFeatures, setHiddenFeatures } from "../../../featureflags.js";
-import { isApp } from "../../../utils/native.js";
+} from "../../i18n.js";
+import { getThemePreference, setThemePreference, THEMES } from "../../theme.js";
+import { getUnits, setUnits, UNITS } from "../../units.js";
+import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags.js";
+import { isApp } from "../../utils/native.js";
 
 export default {
 	name: "UserInterfaceSettings",

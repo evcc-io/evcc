@@ -204,9 +204,9 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter.js";
-import Sponsor from "../Community/Sponsor.vue";
-import SavingsTile from "../Community/SavingsTile.vue";
-import LiveCommunity from "../Community/LiveCommunity.vue";
+import Sponsor from "./Sponsor.vue";
+import SavingsTile from "./SavingsTile.vue";
+import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import co2Reference from "../../co2Reference.js";

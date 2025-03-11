@@ -11,8 +11,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
-import { type PriceSlot, type TimeseriesEntry } from "../../../utils/forecast.ts";
-import formatter from "../../../mixins/formatter";
+import { type PriceSlot, type TimeseriesEntry } from "../../utils/forecast.ts";
+import formatter from "../../mixins/formatter";
 
 export default defineComponent({
 	name: "ForecastActiveSlot",

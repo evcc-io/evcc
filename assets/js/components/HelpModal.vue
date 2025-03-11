@@ -138,9 +138,9 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import { docsPrefix } from "../../i18n.js";
-import { performRestart } from "../../restart.js";
-import { isLoggedIn, openLoginModal } from "../../auth.js";
+import { docsPrefix } from "../i18n.js";
+import { performRestart } from "../restart.js";
+import { isLoggedIn, openLoginModal } from "./Auth/auth.js";
 
 export default {
 	name: "HelpModal",

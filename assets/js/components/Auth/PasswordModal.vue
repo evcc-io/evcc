@@ -86,10 +86,10 @@
 </template>
 
 <script>
-import GenericModal from "./GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "../Helper/FormRow.vue";
 import api from "../../api.js";
-import { updateAuthStatus, isConfigured } from "../../auth.js";
+import { updateAuthStatus, isConfigured } from "./auth.js";
 
 export default {
 	name: "PasswordModal",

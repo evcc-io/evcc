@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import GenericModal from "../Modals/GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import api from "../../api";
 import { docsPrefix } from "../../i18n";
 import store from "../../store";

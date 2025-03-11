@@ -158,7 +158,7 @@
 <script>
 import collector from "../../mixins/collector.js";
 import formatter from "../../mixins/formatter.js";
-import SmartCostLimit from "../SmartCostLimit.vue";
+import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import smartCostAvailable from "../../utils/smartCostAvailable.js";
 import LoadpointSettingsBatteryBoost from "./LoadpointSettingsBatteryBoost.vue";
 

@@ -254,9 +254,9 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
-import SmartCostLimit from "../SmartCostLimit.vue";
+import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import GenericModal from "./GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
 import api from "../../api.js";

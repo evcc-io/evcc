@@ -28,16 +28,16 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
-import { registerChartComponents, commonOptions } from "../../Sessions/chartConfig";
-import formatter, { POWER_UNIT } from "../../../mixins/formatter";
-import colors, { lighterColor } from "../../../colors";
+import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import colors, { lighterColor } from "../../colors";
 import {
 	highestSlotIndexByDay,
 	ForecastType,
 	type PriceSlot,
 	type SolarDetails,
 	type TimeseriesEntry,
-} from "../../../utils/forecast.ts";
+} from "../../utils/forecast.ts";
 
 registerChartComponents([
 	BarController,

@@ -18,10 +18,10 @@
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
 import { defineComponent } from "vue";
-import IconSelectItem from "../../Helper/IconSelectItem.vue";
-import IconSelectGroup from "../../Helper/IconSelectGroup.vue";
-import DynamicPriceIcon from "../../MaterialIcon/DynamicPrice.vue";
-import { ForecastType } from "../../../utils/forecast.ts";
+import IconSelectItem from "../Helper/IconSelectItem.vue";
+import IconSelectGroup from "../Helper/IconSelectGroup.vue";
+import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
+import { ForecastType } from "../../utils/forecast.ts";
 
 export default defineComponent({
 	name: "ForecastTypeSelect",
