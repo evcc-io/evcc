@@ -117,7 +117,11 @@ const ONE_MINUTE = 60 * 1000;
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, ChargingPlansSettings: PlansSettings, ChargingPlanArrival: Arrival },
+	components: {
+		LabelAndValue,
+		ChargingPlansSettings: PlansSettings,
+		ChargingPlanArrival: Arrival,
+	},
 	mixins: [formatter, collector],
 	props: {
 		currency: String,
