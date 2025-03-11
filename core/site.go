@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -242,6 +243,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			}
 		}
 	})
+
+	if len(site.loadpoints) == 0 {
+		return errors.New("missing loadpoints")
+	}
 
 	return nil
 }
