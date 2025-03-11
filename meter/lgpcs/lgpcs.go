@@ -5,7 +5,7 @@ package lgpcs
 import (
 	"errors"
 	"fmt"
-	"io"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/cast"
 )
 
@@ -137,9 +136,9 @@ func (m *Com) Data() (EssData, error) {
 
 // essInfo reads essinfo/home
 func (m *Com) essInfo() (EssData, error) {
-	f := func(body io.ReadSeeker) (*http.Request, error) {
+	f := func(_ any) (*http.Request, error) {
 		uri := fmt.Sprintf("%s/v1/user/essinfo/home", m.uri)
-		return request.New(http.MethodPost, uri, body, request.JSONEncoding)
+		return request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	}
 
 	if m.essType == LgEss8 {
@@ -156,9 +155,9 @@ func (m *Com) essInfo() (EssData, error) {
 // BatteryMode sets the battery mode
 func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	var res struct{}
-	return m.request(func(body io.ReadSeeker) (*http.Request, error) {
+	return m.request(func(payload any) (*http.Request, error) {
 		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
-		return request.New(http.MethodPut, uri, body, request.JSONEncoding)
+		return request.New(http.MethodPut, uri, request.MarshalJSON(payload), request.JSONEncoding)
 	}, map[string]string{
 		"backupmode": mode,
 		"backup_soc": strconv.Itoa(soc),
@@ -166,38 +165,35 @@ func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	}, &res)
 }
 
-func (m *Com) request(f func(io.ReadSeeker) (*http.Request, error), payload any, meterData any) error {
+func (m *Com) request(f func(any) (*http.Request, error), payload map[string]string, res any) error {
 	data := map[string]string{
 		"auth_key": m.authKey,
 	}
+	maps.Copy(data, payload)
 
-	if err := mapstructure.Decode(payload, &data); err != nil {
-		return err
-	}
-
-	req, err := f(request.MarshalJSON(data))
+	req, err := f(data)
 	if err != nil {
 		return err
 	}
 
-	if err := m.DoJSON(req, &meterData); err != nil {
-		// re-login if request returns 405-error
-		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
-			return err
-		}
-
-		if err := m.Login(); err != nil {
-			return err
-		}
-
-		data["auth_key"] = m.authKey
-		req, err := f(request.MarshalJSON(data))
-		if err != nil {
-			return err
-		}
-
-		return m.DoJSON(req, &meterData)
+	if err := m.DoJSON(req, &res); err == nil {
+		return nil
 	}
 
-	return nil
+	// re-login if request returns 405-error
+	if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
+		return err
+	}
+
+	if err := m.Login(); err != nil {
+		return err
+	}
+
+	data["auth_key"] = m.authKey
+	req, err = f(data)
+	if err != nil {
+		return err
+	}
+
+	return m.DoJSON(req, &res)
 }

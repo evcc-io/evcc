@@ -11,38 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-/*
-This meter supports the LGESS HOME 8, LGESS HOME 10 and LGESS HOME 15 systems from LG with / without battery.
-
-
-** Usages **
-The following usages are supported:
-- grid    ... for reading the power imported or exported to the grid
-- pv      ... for reading the power produced by the pv
-- battery ... for reading the power imported or exported to the battery
-
-** Example configuration **
-meters:
-- name: GridMeter
-  type: template
-  template: lg-ess-home-15
-  usage: grid
-  uri: https://192.168.1.23
-  password: "DE200....."
-- name: PvMeter
-  type: template
-  template: lg-ess-home-15
-  usage: pv
-- name: BatteryMeter
-  type: template
-  template: lg-ess-home-15
-  usage: battery
-
-** Limitations **
-It is not allowed to provide different URIs or passwords for different lgess meters since always the
-same hardware instance is accessed with the different usages.
-*/
-
 // LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string     // grid, pv, battery
