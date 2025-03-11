@@ -118,7 +118,8 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, err error) {
 	res, err := v.climateG()
-	return res.State == "HEATING", err
+	active := res.State == "COOLING" || res.State == "HEATING" || res.State == "HEATING_AUXILIARY" || res.State == "VENTILATION" || res.State == "ON"
+	return active, err
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
