@@ -37,20 +37,10 @@ const planProjectedEnd = getFutureTime(5, 43);
 			<Status connected charging pvAction="disable" :pvRemainingInterpolated="90" />
 		</Variant>
 		<Variant title="solar: pv reduce phases">
-			<Status
-				connected
-				charging
-				phaseAction="scale1p"
-				:phaseRemainingInterpolated="181"
-			/>
+			<Status connected charging phaseAction="scale1p" :phaseRemainingInterpolated="181" />
 		</Variant>
 		<Variant title="solar: pv increase phases">
-			<Status
-				connected
-				charging
-				phaseAction="scale3p"
-				:phaseRemainingInterpolated="44"
-			/>
+			<Status connected charging phaseAction="scale3p" :phaseRemainingInterpolated="44" />
 		</Variant>
 		<Variant title="min soc">
 			<Status connected charging :minSoc="20" :vehicleSoc="10" />
