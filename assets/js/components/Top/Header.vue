@@ -24,14 +24,14 @@
 <script>
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
-import TopNavigation from "./TopNavigation.vue";
+import Navigation from "./Navigation.vue";
 import collector from "../../mixins/collector.js";
 import store from "../../store.js";
 
 export default {
 	name: "TopHeader",
 	components: {
-		TopNavigation,
+		TopNavigation: Navigation,
 	},
 	mixins: [collector],
 	props: {
@@ -41,7 +41,7 @@ export default {
 	computed: {
 		topNavigation: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
 		},
 	},
 };

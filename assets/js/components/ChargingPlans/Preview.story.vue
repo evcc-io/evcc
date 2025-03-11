@@ -1,5 +1,5 @@
 <script setup>
-import ChargingPlanPreview from "./ChargingPlanPreview.vue";
+import Preview from "./Preview.vue";
 
 const now = new Date();
 
@@ -82,19 +82,19 @@ const dynamic = {
 <template>
 	<Story title="ChargingPlanPreview">
 		<Variant title="co2">
-			<ChargingPlanPreview v-bind="co2" />
+			<Preview v-bind="co2" />
 		</Variant>
 		<Variant title="fixed">
-			<ChargingPlanPreview v-bind="fixed" />
+			<Preview v-bind="fixed" />
 		</Variant>
 		<Variant title="zoned">
-			<ChargingPlanPreview v-bind="zoned" />
+			<Preview v-bind="zoned" />
 		</Variant>
 		<Variant title="unknown">
-			<ChargingPlanPreview v-bind="unknown" />
+			<Preview v-bind="unknown" />
 		</Variant>
 		<Variant title="dynamic">
-			<ChargingPlanPreview v-bind="dynamic" />
+			<Preview v-bind="dynamic" />
 		</Variant>
 	</Story>
 </template>

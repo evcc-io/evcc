@@ -63,10 +63,10 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/plus";
-import ChargingPlanPreview from "./ChargingPlanPreview.vue";
-import ChargingPlanStaticSettings from "./ChargingPlanStaticSettings.vue";
-import ChargingPlansRepeatingSettings from "./ChargingPlansRepeatingSettings.vue";
-import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
+import Preview from "./Preview.vue";
+import PlanStaticSettings from "./PlanStaticSettings.vue";
+import RepeatingSettings from "./PlansRepeatingSettings.vue";
+import Warnings from "./Warnings.vue";
 import formatter from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
 import api from "../../api.js";
@@ -78,10 +78,10 @@ const TARIFF_CACHE_TIME = 300000; // 5 minutes
 export default {
 	name: "ChargingPlansSettings",
 	components: {
-		ChargingPlanPreview,
-		ChargingPlanStaticSettings,
-		ChargingPlansRepeatingSettings,
-		ChargingPlanWarnings,
+		ChargingPlanPreview: Preview,
+		ChargingPlanStaticSettings: PlanStaticSettings,
+		ChargingPlansRepeatingSettings: RepeatingSettings,
+		ChargingPlanWarnings: Warnings,
 		CustomSelect,
 	},
 	mixins: [formatter, collector],
@@ -128,7 +128,7 @@ export default {
 			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name;
 		},
 		chargingPlanWarningsProps: function () {
-			return this.collectProps(ChargingPlanWarnings);
+			return this.collectProps(Warnings);
 		},
 		chargingPlanPreviewProps: function () {
 			const { rates } = this.tariff;

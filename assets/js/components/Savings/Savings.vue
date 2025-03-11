@@ -205,7 +205,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter.js";
 import Sponsor from "./Sponsor.vue";
-import SavingsTile from "./SavingsTile.vue";
+import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
@@ -216,7 +216,7 @@ import { docsPrefix } from "../../i18n.js";
 
 export default {
 	name: "Savings",
-	components: { Sponsor, SavingsTile, LiveCommunity, TelemetrySettings, CustomSelect },
+	components: { Sponsor, SavingsTile: Tile, LiveCommunity, TelemetrySettings, CustomSelect },
 	mixins: [formatter],
 	props: {
 		statistics: { type: Object, default: () => ({}) },

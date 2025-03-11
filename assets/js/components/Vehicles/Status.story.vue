@@ -1,5 +1,5 @@
 <script setup>
-import VehicleStatus from "./VehicleStatus.vue";
+import Status from "./Status.vue";
 
 function getFutureTime(hours, minutes) {
 	const now = new Date();
@@ -16,28 +16,28 @@ const planProjectedEnd = getFutureTime(5, 43);
 <template>
 	<Story title="VehicleStatus" :layout="{ type: 'grid', iframe: false, width: 320 }">
 		<Variant title="status: disconnected">
-			<VehicleStatus />
+			<Status />
 		</Variant>
 		<Variant title="status: connected">
-			<VehicleStatus connected />
+			<Status connected />
 		</Variant>
 		<Variant title="status: enabled">
-			<VehicleStatus connected enabled />
+			<Status connected enabled />
 		</Variant>
 		<Variant title="status: charging">
-			<VehicleStatus connected charging />
+			<Status connected charging />
 		</Variant>
 		<Variant title="solar: pv enable">
-			<VehicleStatus connected pvAction="enable" :pvRemainingInterpolated="90" />
+			<Status connected pvAction="enable" :pvRemainingInterpolated="90" />
 		</Variant>
 		<Variant title="solar: charging">
-			<VehicleStatus connected enabled charging :sessionSolarPercentage="94" />
+			<Status connected enabled charging :sessionSolarPercentage="94" />
 		</Variant>
 		<Variant title="solar: pv disable">
-			<VehicleStatus connected charging pvAction="disable" :pvRemainingInterpolated="90" />
+			<Status connected charging pvAction="disable" :pvRemainingInterpolated="90" />
 		</Variant>
 		<Variant title="solar: pv reduce phases">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				phaseAction="scale1p"
@@ -45,7 +45,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="solar: pv increase phases">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				phaseAction="scale3p"
@@ -53,17 +53,17 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="min soc">
-			<VehicleStatus connected charging :minSoc="20" :vehicleSoc="10" />
+			<Status connected charging :minSoc="20" :vehicleSoc="10" />
 		</Variant>
 		<Variant title="plan: start soon">
-			<VehicleStatus
+			<Status
 				connected
 				:effectivePlanTime="effectivePlanTime"
 				:planProjectedStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="plan: start soon, charging">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				:effectivePlanTime="effectivePlanTime"
@@ -71,7 +71,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="plan: active">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				planActive
@@ -81,7 +81,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="plan: active, not reachable">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				planActive
@@ -93,16 +93,16 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="vehicle: climating">
-			<VehicleStatus connected enabled vehicleClimaterActive />
+			<Status connected enabled vehicleClimaterActive />
 		</Variant>
 		<Variant title="vehicle: limit">
-			<VehicleStatus connected enabled :vehicleSoc="33" :vehicleLimitSoc="70" />
+			<Status connected enabled :vehicleSoc="33" :vehicleLimitSoc="70" />
 		</Variant>
 		<Variant title="vehicle: limit reached">
-			<VehicleStatus connected enabled :vehicleSoc="70" :vehicleLimitSoc="70" />
+			<Status connected enabled :vehicleSoc="70" :vehicleLimitSoc="70" />
 		</Variant>
 		<Variant title="vehicle: limit unreachable">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				:vehicleSoc="40"
@@ -111,7 +111,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: clean energy set">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -121,7 +121,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: clean energy next start">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				:smartCostLimit="500"
@@ -130,7 +130,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: clean energy active">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -141,7 +141,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: cheap energy set">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -152,7 +152,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: cheap but not connected">
-			<VehicleStatus
+			<Status
 				currency="EUR"
 				:tariffGrid="0.091"
 				:smartCostLimit="0.12"
@@ -160,7 +160,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: cheap energy next start">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -171,7 +171,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="smart cost: cheap energy active">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -183,7 +183,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="combination: minsoc, cheap">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				charging
@@ -195,7 +195,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="combination: pv disable, plan">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				pvAction="disable"
@@ -205,7 +205,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="combination: vehicle limit, plan">
-			<VehicleStatus
+			<Status
 				connected
 				charging
 				:sessionSolarPercentage="94"
@@ -216,7 +216,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="combination: maximal">
-			<VehicleStatus
+			<Status
 				connected
 				enabled
 				:sessionSolarPercentage="94"
@@ -232,7 +232,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 			/>
 		</Variant>
 		<Variant title="welcome charge">
-			<VehicleStatus connected charging vehicleWelcomeActive />
+			<Status connected charging vehicleWelcomeActive />
 		</Variant>
 	</Story>
 </template>

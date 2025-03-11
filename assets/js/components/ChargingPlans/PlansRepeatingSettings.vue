@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import ChargingPlanRepeatingSettings from "./ChargingPlanRepeatingSettings.vue";
+import PlanRepeatingSettings from "./PlanRepeatingSettings.vue";
 import deepEqual from "../../utils/deepEqual.js";
 import formatter from "../../mixins/formatter.js";
 
@@ -40,7 +40,7 @@ const DEFAULT_TARGET_SOC = 80;
 export default {
 	name: "ChargingPlansRepeatingSettings",
 	components: {
-		ChargingPlanRepeatingSettings,
+		ChargingPlanRepeatingSettings: PlanRepeatingSettings,
 	},
 	mixins: [formatter],
 	props: {

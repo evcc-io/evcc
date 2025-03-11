@@ -105,8 +105,8 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import ChargingPlansSettings from "./ChargingPlansSettings.vue";
-import ChargingPlanArrival from "./ChargingPlanArrival.vue";
+import PlansSettings from "./PlansSettings.vue";
+import Arrival from "./Arrival.vue";
 
 import formatter from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
@@ -117,7 +117,7 @@ const ONE_MINUTE = 60 * 1000;
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, ChargingPlansSettings, ChargingPlanArrival },
+	components: { LabelAndValue, ChargingPlansSettings: PlansSettings, ChargingPlanArrival: Arrival },
 	mixins: [formatter, collector],
 	props: {
 		currency: String,
@@ -196,10 +196,10 @@ export default {
 			return this.activeTab === "arrival";
 		},
 		chargingPlansSettingsProps: function () {
-			return this.collectProps(ChargingPlansSettings);
+			return this.collectProps(PlansSettings);
 		},
 		chargingPlanArrival: function () {
-			return this.collectProps(ChargingPlanArrival);
+			return this.collectProps(Arrival);
 		},
 		targetSocLabel: function () {
 			if (this.socBasedPlanning) {

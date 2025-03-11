@@ -1,14 +1,14 @@
 <script setup>
-import TopNavigation from "./TopNavigation.vue";
+import Navigation from "./Navigation.vue";
 </script>
 
 <template>
 	<Story title="Top Navigation">
 		<Variant title="standard">
-			<TopNavigation />
+			<Navigation />
 		</Variant>
 		<Variant title="vehicle logins">
-			<TopNavigation
+			<Navigation
 				:vehicleLogins="{
 					['Mercedes EQS']: {
 						authenticated: true,
@@ -22,7 +22,7 @@ import TopNavigation from "./TopNavigation.vue";
 			/>
 		</Variant>
 		<Variant title="pending vehicle logins">
-			<TopNavigation
+			<Navigation
 				:vehicleLogins="{
 					['Mercedes EQS']: {
 						authenticated: true,
@@ -36,7 +36,7 @@ import TopNavigation from "./TopNavigation.vue";
 			/>
 		</Variant>
 		<Variant title="token expires">
-			<TopNavigation :sponsor="{ expiresSoon: true }" />
+			<Navigation :sponsor="{ expiresSoon: true }" />
 		</Variant>
 	</Story>
 </template>

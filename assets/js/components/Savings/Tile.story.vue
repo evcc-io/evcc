@@ -1,10 +1,10 @@
 <script setup>
-import SavingsTile from "./SavingsTile.vue";
+import Tile from "./Tile.vue";
 </script>
 
 <template>
 	<Story>
-		<SavingsTile
+		<Tile
 			icon="coinjar"
 			title="Ersparnis"
 			value="14,2"

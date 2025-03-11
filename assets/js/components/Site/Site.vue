@@ -64,7 +64,7 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/arrowup";
-import TopNavigation from "../Top/TopNavigation.vue";
+import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -80,7 +80,7 @@ export default {
 		Energyflow,
 		Footer,
 		Notifications,
-		TopNavigation,
+		TopNavigation: Navigation,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -164,7 +164,7 @@ export default {
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(TopNavigation) };
+			return { vehicleLogins, ...this.collectProps(Navigation) };
 		},
 		showParkingLot: function () {
 			// work in progess

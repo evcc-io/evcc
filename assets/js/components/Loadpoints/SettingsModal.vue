@@ -160,7 +160,7 @@ import collector from "../../mixins/collector.js";
 import formatter from "../../mixins/formatter.js";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import smartCostAvailable from "../../utils/smartCostAvailable.js";
-import LoadpointSettingsBatteryBoost from "./LoadpointSettingsBatteryBoost.vue";
+import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 
 const V = 230;
 
@@ -179,7 +179,7 @@ const insertSorted = (arr, num) => {
 
 export default {
 	name: "LoadpointSettingsModal",
-	components: { SmartCostLimit, LoadpointSettingsBatteryBoost },
+	components: { SmartCostLimit, LoadpointSettingsBatteryBoost: SettingsBatteryBoost },
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
@@ -226,7 +226,7 @@ export default {
 			return [PHASES_3, PHASES_1];
 		},
 		batteryBoostProps() {
-			return this.collectProps(LoadpointSettingsBatteryBoost);
+			return this.collectProps(SettingsBatteryBoost);
 		},
 		maxPower() {
 			if (this.chargerPhases1p3p) {

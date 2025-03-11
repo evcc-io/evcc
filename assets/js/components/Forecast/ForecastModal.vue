@@ -54,10 +54,10 @@ import "@h2d2/shopicons/es/regular/sun";
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import ForecastChart from "./ForecastChart.vue";
-import ForecastTypeSelect from "./ForecastTypeSelect.vue";
-import ForecastDetails from "./ForecastDetails.vue";
-import ForecastActiveSlot from "./ForecastActiveSlot.vue";
+import Chart from "./Chart.vue";
+import TypeSelect from "./TypeSelect.vue";
+import Details from "./Details.vue";
+import ActiveSlot from "./ActiveSlot.vue";
 import {
 	type PriceSlot,
 	type TimeseriesEntry,
@@ -71,10 +71,10 @@ export default defineComponent({
 	name: "ForecastModal",
 	components: {
 		GenericModal,
-		ForecastChart,
-		ForecastTypeSelect,
-		ForecastDetails,
-		ForecastActiveSlot,
+		ForecastChart: Chart,
+		ForecastTypeSelect: TypeSelect,
+		ForecastDetails: Details,
+		ForecastActiveSlot: ActiveSlot,
 	},
 	mixins: [formatter],
 	props: {

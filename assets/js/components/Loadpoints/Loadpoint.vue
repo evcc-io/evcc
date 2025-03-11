@@ -100,10 +100,10 @@ import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
-import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
-import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
+import SettingsButton from "./SettingsButton.vue";
+import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon/index.js";
-import LoadpointSessionInfo from "./LoadpointSessionInfo.vue";
+import SessionInfo from "./SessionInfo.vue";
 import smartCostAvailable from "../../utils/smartCostAvailable.js";
 import Modal from "bootstrap/js/dist/modal";
 
@@ -114,9 +114,9 @@ export default {
 		Vehicle,
 		Phases,
 		LabelAndValue,
-		LoadpointSettingsButton,
-		LoadpointSettingsModal,
-		LoadpointSessionInfo,
+		LoadpointSettingsButton: SettingsButton,
+		LoadpointSettingsModal: SettingsModal,
+		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
 	},
 	mixins: [formatter, collector],
@@ -237,10 +237,10 @@ export default {
 			return this.collectProps(Mode);
 		},
 		sessionInfoProps: function () {
-			return this.collectProps(LoadpointSessionInfo);
+			return this.collectProps(SessionInfo);
 		},
 		settingsModal: function () {
-			return this.collectProps(LoadpointSettingsModal);
+			return this.collectProps(SettingsModal);
 		},
 		vehicleProps: function () {
 			return this.collectProps(Vehicle);

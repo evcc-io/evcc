@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import SavingsTile from "./SavingsTile.vue";
+import Tile from "./Tile.vue";
 
 import formatter from "../../mixins/formatter.js";
 import communityApi from "../../communityApi.js";
@@ -45,7 +45,7 @@ const UPDATE_INTERVAL_SECONDS = 10;
 
 export default {
 	name: "LiveCommunity",
-	components: { SavingsTile },
+	components: { SavingsTile: Tile },
 	mixins: [formatter],
 	props: {},
 	data() {

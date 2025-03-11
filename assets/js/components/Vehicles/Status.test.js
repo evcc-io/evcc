@@ -1,6 +1,6 @@
 import { mount, config } from "@vue/test-utils";
 import { describe, expect, test } from "vitest";
-import VehicleStatus from "./VehicleStatus.vue";
+import Status from "./Status.vue";
 
 const serializeData = (data) => (data ? `:${JSON.stringify(data)}` : "");
 config.global.mocks["$t"] = (key, data) => `${key}${serializeData(data)}`;
@@ -21,7 +21,7 @@ const allEntries = {
 const expectEntries = (props, entries) => {
   const expectedEntries = { ...allEntries, ...entries };
 
-  const wrapper = mount(VehicleStatus, { props });
+  const wrapper = mount(Status, { props });
 
   Object.entries(expectedEntries).forEach(([key, value]) => {
     const selector = `[data-testid=vehicle-status-${key}]`;

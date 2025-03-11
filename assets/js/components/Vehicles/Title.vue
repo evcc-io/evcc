@@ -56,14 +56,14 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import Modal from "bootstrap/js/dist/modal";
 import VehicleIcon from "../VehicleIcon/index.js";
-import VehicleOptions from "./VehicleOptions.vue";
+import Options from "./Options.vue";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
 import collector from "../../mixins/collector.js";
 
 export default {
 	name: "VehicleTitle",
-	components: { VehicleOptions, VehicleIcon, Sync, CloudOffline },
+	components: { VehicleOptions: Options, VehicleIcon, Sync, CloudOffline },
 	mixins: [collector],
 	props: {
 		connected: Boolean,
@@ -108,7 +108,7 @@ export default {
 			return this.vehicleKnown || this.vehicles.length;
 		},
 		vehicleOptionsProps: function () {
-			return this.collectProps(VehicleOptions);
+			return this.collectProps(Options);
 		},
 	},
 	watch: {

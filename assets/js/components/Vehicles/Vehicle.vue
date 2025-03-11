@@ -71,9 +71,9 @@
 import collector from "../../mixins/collector.js";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import VehicleTitle from "./VehicleTitle.vue";
-import VehicleSoc from "./VehicleSoc.vue";
-import VehicleStatus from "./VehicleStatus.vue";
+import Title from "./Title.vue";
+import Soc from "./Soc.vue";
+import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
@@ -82,9 +82,9 @@ import { distanceUnit, distanceValue } from "../../units.js";
 export default {
 	name: "Vehicle",
 	components: {
-		VehicleTitle,
-		VehicleSoc,
-		VehicleStatus,
+		VehicleTitle: Title,
+		VehicleSoc: Soc,
+		VehicleStatus: Status,
 		LabelAndValue,
 		ChargingPlan,
 		LimitSocSelect,
@@ -164,13 +164,13 @@ export default {
 			return this.vehicle?.minSoc || 0;
 		},
 		vehicleSocProps: function () {
-			return this.collectProps(VehicleSoc);
+			return this.collectProps(Soc);
 		},
 		vehicleStatus: function () {
-			return this.collectProps(VehicleStatus);
+			return this.collectProps(Status);
 		},
 		vehicleTitleProps: function () {
-			return this.collectProps(VehicleTitle);
+			return this.collectProps(Title);
 		},
 		chargingPlan: function () {
 			return this.collectProps(ChargingPlan);
