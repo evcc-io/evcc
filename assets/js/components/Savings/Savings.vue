@@ -209,7 +209,7 @@ import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import co2Reference from "../../co2Reference.js";
+import co2Reference from "./co2Reference.js";
 import settings from "../../settings.js";
 import api from "../../api.js";
 import { docsPrefix } from "../../i18n.js";
