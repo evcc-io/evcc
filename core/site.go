@@ -325,14 +325,28 @@ func (site *Site) restoreSettings() error {
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
-		site.fcstEnergy.Accumulated = fcstEnergy
-
+		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
 				site.pvEnergy[name].Accumulated = fcst
 			} else {
-				// TODO decide auto-reset?
-				site.log.WARN.Printf("cannot restore accumulated solar yield for: %s (may need to reset solar statistics)", name)
+				nok = true
+				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
+			}
+		}
+
+		if !nok {
+			site.fcstEnergy.Accumulated = fcstEnergy
+			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
+		} else {
+			// reset metrics
+			site.log.WARN.Printf("accumulated solar yield: metrics reset")
+
+			settings.Delete(keys.SolarAccForecast)
+			settings.Delete(keys.SolarAccYield)
+
+			for _, pe := range site.pvEnergy {
+				pe.Accumulated = 0
 			}
 		}
 	}
@@ -423,8 +437,8 @@ func (site *Site) DumpConfig() {
 	}
 	site.log.INFO.Printf("    grid:      %s", trf(api.TariffUsageGrid))
 	site.log.INFO.Printf("    feed-in:   %s", trf(api.TariffUsageFeedIn))
-	site.log.INFO.Printf("    co2:       %s", trf(api.TariffUsageCo2))
-	site.log.INFO.Printf("    solar:     %s", trf(api.TariffUsageSolar))
+	site.log.INFO.Printf("    co2:       %s", presence[site.GetTariff(api.TariffUsageCo2) != nil])
+	site.log.INFO.Printf("    solar:     %s", presence[site.GetTariff(api.TariffUsageSolar) != nil])
 
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
@@ -1018,7 +1032,9 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	loadpointChan := make(chan updater)
-	go site.loopLoadpoints(loadpointChan)
+	if len(site.loadpoints) > 0 {
+		go site.loopLoadpoints(loadpointChan)
+	}
 
 	site.update(<-loadpointChan) // start immediately
 

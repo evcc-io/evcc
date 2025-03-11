@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/mlnoga/rct"
@@ -212,13 +213,24 @@ func (m *RCT) batterySoc() (float64, error) {
 	return res * 100, err
 }
 
+func (m *RCT) bo() *backoff.ExponentialBackOff {
+	return backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(100*time.Millisecond),
+		backoff.WithMaxElapsedTime(10*time.Second))
+}
+
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
-	res, err := m.conn.QueryFloat32(id)
+	res, err := backoff.RetryWithData(func() (float32, error) {
+		return m.conn.QueryFloat32(id)
+	}, m.bo())
 	return float64(res), err
 }
 
 // queryInt32 adds retry logic of recoverable errors to QueryInt32
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
-	return m.conn.QueryInt32(id)
+	res, err := backoff.RetryWithData(func() (int32, error) {
+		return m.conn.QueryInt32(id)
+	}, m.bo())
+	return res, err
 }

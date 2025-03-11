@@ -171,6 +171,11 @@ type testResult = struct {
 	Error string `json:"error"`
 }
 
+func hasFeature(instance any, f api.Feature) bool {
+	fd, ok := instance.(api.FeatureDescriber)
+	return ok && slices.Contains(fd.Features(), f)
+}
+
 // testInstance tests the given instance similar to dump
 // TODO refactor together with dump
 func testInstance(instance any) map[string]testResult {
@@ -200,7 +205,7 @@ func testInstance(instance any) map[string]testResult {
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
 		key := "soc"
-		if fd, ok := instance.(api.FeatureDescriber); ok && slices.Contains(fd.Features(), api.Heating) {
+		if hasFeature(instance, api.Heating) {
 			key = "temp"
 		}
 		makeResult(key, val, err)
@@ -265,7 +270,11 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
-		makeResult("vehicleLimitSoc", val, err)
+		key := "vehicleLimitSoc"
+		if hasFeature(instance, api.Heating) {
+			key = "heaterTempLimit"
+		}
+		makeResult(key, val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {

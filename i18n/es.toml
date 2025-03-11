@@ -565,13 +565,6 @@ tempLimit = "Temperatura límite"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
 
-[main.vehicleSoc]
-charging = "cargando"
-connected = "conectado"
-disconnected = "desconectado"
-ready = "preparado"
-vehicleLimit = "límite de vehículo: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Esperando autorización"
 batteryBoost = "Refuerzo de batería activo"
@@ -595,7 +588,7 @@ scale3p = "Pronto pasaremos a carga trifásica"
 targetChargeActive = "Plan de carga activo. Finalización estimada en {duration}"
 targetChargePlanned = "El plan de carga comienza en {duration}"
 targetChargeWaitForVehicle = "Plan de carga listo. Esperando vehículo..."
-vehicleLimit = "Límite de vehículos."
+vehicleLimit = "Límite de vehículos"
 vehicleLimitReached = "Límite del vehículos alcanzado"
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 welcome = "Breve carga inicial para confirmar la conexión."
