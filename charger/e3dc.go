@@ -95,23 +95,42 @@ func (wb *E3dc) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *E3dc) Enable(enable bool) error {
+	return wb.maxCurrent(wb.current, enable)
+}
+
+// Status implements the api.Charger interface
+func (wb *E3dc) Status() (api.ChargeStatus, error) {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALL, nil))
+	if err != nil {
+		return api.StatusNone, err
+	}
+	_ = res
+
+	return api.StatusNone, api.ErrNotAvailable
+}
+
+func (wb *E3dc) maxCurrent(current byte, enable bool) error {
 	data := []rscp.Message{
-		*rscp.NewMessage(rscp.WB_EXTERN_DATA, []byte{0x02, wb.current, 0, 0, cast.ToUint8(!enable), 0}),
+		*rscp.NewMessage(rscp.WB_EXTERN_DATA, []byte{0x02, current, 0, 0, cast.ToUint8(!enable), 0}),
 	}
 
 	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_SET_EXTERN, data))
 	return err
 }
 
-// Status implements the api.Charger interface
-func (wb *E3dc) Status() (api.ChargeStatus, error) {
-	return api.StatusNone, api.ErrNotAvailable
-}
-
 // MaxCurrent implements the api.Charger interface
 func (wb *E3dc) MaxCurrent(current int64) error {
-	wb.current = byte(current)
-	return api.ErrNotAvailable
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	err = wb.maxCurrent(byte(current), enabled)
+	if err == nil {
+		wb.current = byte(current)
+	}
+
+	return err
 }
 
 // var _ api.Meter = (*E3dc)(nil)
