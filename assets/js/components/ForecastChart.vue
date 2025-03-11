@@ -34,6 +34,7 @@ import colors, { lighterColor } from "../colors";
 import {
 	highestSlotIndexByDay,
 	ForecastType,
+	type EventEntry,
 	type PriceSlot,
 	type SolarDetails,
 	type TimeseriesEntry,
@@ -95,7 +96,7 @@ export default defineComponent({
 			return this.filterSlots(this.grid);
 		},
 		co2Slots() {
-			return this.filterSlots(this.co2);
+			return this.filterEvents(this.solar?.events || []);
 		},
 		maxPriceIndex() {
 			return this.maxIndex(this.gridSlots);
@@ -104,10 +105,10 @@ export default defineComponent({
 			return this.minIndex(this.gridSlots);
 		},
 		maxCo2Index() {
-			return this.maxIndex(this.co2Slots);
+			return this.maxEventIndex(this.co2Slots);
 		},
 		minCo2Index() {
-			return this.minIndex(this.co2Slots);
+			return this.minEventIndex(this.co2Slots);
 		},
 		maxSolarIndex() {
 			return this.maxEntryIndex(this.solarEntries);
@@ -197,8 +198,8 @@ export default defineComponent({
 								? this.selectedIndex === index
 								: index === this.maxCo2Index || index === this.minCo2Index);
 						return {
-							y: slot.price,
-							x: new Date(slot.start),
+							y: slot.value,
+							x: new Date(slot.ts),
 							highlight: dataActive,
 							active: dataActive,
 						};
@@ -369,7 +370,7 @@ export default defineComponent({
 						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
 						beginAtZero: true,
 					},
-					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
+					yCo2: { display: false, min: 0, max: this.yEventMax(this.co2Slots) },
 					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
 				},
 			};
@@ -428,6 +429,17 @@ export default defineComponent({
 				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
 			);
 		},
+		filterEvents(entries: EventEntry[] = []) {
+			// include 1 hour before and after
+			const start = new Date(this.startDate);
+			start.setHours(start.getHours() - 1);
+			const end = new Date(this.endDate);
+			end.setHours(end.getHours() + 1);
+
+			return entries.filter(
+				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+			);
+		},
 		onMouseLeave() {
 			this.selectIndex(null, true);
 		},
@@ -455,6 +467,10 @@ export default defineComponent({
 			const value = this.maxValue(slots);
 			return value ? value * 1.15 : undefined;
 		},
+		yEventMax(slots: EventEntry[] = []): number | undefined {
+			const value = this.maxEventValue(slots);
+			return value ? value * 1.15 : undefined;
+		},
 		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
 			const maxValue = this.maxEntryValue(entries);
 			if (!maxValue) return undefined;
@@ -473,6 +489,19 @@ export default defineComponent({
 		},
 		maxValue(slots: PriceSlot[] = []) {
 			return slots[this.maxIndex(slots)]?.price || null;
+		},
+		maxEventIndex(slots: EventEntry[] = []) {
+			return slots.reduce((max, slot, index) => {
+				return slot.value > slots[max].value ? index : max;
+			}, 0);
+		},
+		minEventIndex(slots: EventEntry[] = []) {
+			return slots.reduce((min, slot, index) => {
+				return slot.value < slots[min].value ? index : min;
+			}, 0);
+		},
+		maxEventValue(slots: EventEntry[] = []) {
+			return slots[this.maxEventIndex(slots)]?.value || null;
 		},
 		maxEntryValue(entries: TimeseriesEntry[] = []) {
 			return entries[this.maxEntryIndex(entries)]?.val || null;

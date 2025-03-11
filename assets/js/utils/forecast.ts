@@ -22,6 +22,13 @@ export interface SolarDetails {
 	tomorrow?: EnergyByDay;
 	dayAfterTomorrow?: EnergyByDay;
 	timeseries?: TimeseriesEntry[];
+	events?: EventEntry[];
+}
+
+export interface EventEntry {
+	ts: string;
+	event: string;
+	value: number;
 }
 
 export interface Forecast {

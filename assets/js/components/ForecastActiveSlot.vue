@@ -11,14 +11,14 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
-import { type PriceSlot, type TimeseriesEntry } from "../utils/forecast";
+import { type PriceSlot, type TimeseriesEntry, type EventEntry } from "../utils/forecast";
 import formatter from "../mixins/formatter";
 
 export default defineComponent({
 	name: "ForecastActiveSlot",
 	mixins: [formatter],
 	props: {
-		activeSlot: { type: Object as PropType<PriceSlot | TimeseriesEntry | null> },
+		activeSlot: { type: Object as PropType<PriceSlot | TimeseriesEntry | EventEntry | null> },
 	},
 	computed: {
 		isSlot() {
