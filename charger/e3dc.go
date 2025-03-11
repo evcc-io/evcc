@@ -175,17 +175,17 @@ func rscpValue[T any](msg rscp.Message, fun func(any) (T, error)) (T, error) {
 	return fun(msg.Value)
 }
 
-func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error) {
-	res := make([]T, 0, len(msg))
+// func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error) {
+// 	res := make([]T, 0, len(msg))
 
-	for _, m := range msg {
-		v, err := rscpValue(m, fun)
-		if err != nil {
-			return nil, err
-		}
+// 	for _, m := range msg {
+// 		v, err := rscpValue(m, fun)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		res = append(res, v)
-	}
+// 		res = append(res, v)
+// 	}
 
-	return res, nil
-}
+// 	return res, nil
+// }
