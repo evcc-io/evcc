@@ -41,15 +41,15 @@ const store = {
   },
   reset: function () {
     console.log("resetting state");
-    // remove additional properties
-    Object.keys(state).forEach(function (k) {
-      if (!initialState[k]) {
-        delete state[k];
-      }
-    });
     // reset to initial state
     Object.keys(initialState).forEach(function (k) {
-      state[k] = initialState[k];
+      if (k === "offline") return;
+
+      if (Array.isArray(initialState[k])) {
+        state[k] = [];
+      } else {
+        state[k] = undefined;
+      }
     });
   },
 };
