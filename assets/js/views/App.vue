@@ -166,6 +166,9 @@ export default {
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
+					if (msg.startup) {
+						store.reset();
+					}
 					store.update(msg);
 					lastDataReceived = new Date();
 				} catch (error) {

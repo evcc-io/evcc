@@ -18,10 +18,12 @@ function setProperty(obj, props, value) {
   setProperty(obj[prop], props, value);
 }
 
-const state = reactive({
+const initialState = {
   offline: false,
   loadpoints: [], // ensure array type
-});
+};
+
+const state = reactive(initialState);
 
 const store = {
   state,
@@ -35,6 +37,19 @@ const store = {
       } else {
         setProperty(state, k.split("."), msg[k]);
       }
+    });
+  },
+  reset: function () {
+    console.log("resetting state");
+    // remove additional properties
+    Object.keys(state).forEach(function (k) {
+      if (!initialState[k]) {
+        delete state[k];
+      }
+    });
+    // reset to initial state
+    Object.keys(initialState).forEach(function (k) {
+      state[k] = initialState[k];
     });
   },
 };
