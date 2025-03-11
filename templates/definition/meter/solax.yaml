@@ -107,7 +107,6 @@ render: |
       {{- if eq .storageunit "2" }}
       address: 301 # 0x012D Battery 2 Capacity
       {{- end }}
-      # address: 302 # 0x012E Battery Total Capacity
       type: input
       decode: uint16
   # energy:
