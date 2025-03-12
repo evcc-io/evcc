@@ -15,4 +15,5 @@ const (
 	Tariffs            = "tariffs"
 	Version            = "version"
 	Fatal              = "fatal"
+	Startup            = "startup"
 )

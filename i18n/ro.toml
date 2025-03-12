@@ -387,13 +387,6 @@ tempLimit = "Temp. limit"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
 
-[main.vehicleSoc]
-charging = "încarcă"
-connected = "conectat"
-disconnected = "deconectat"
-ready = "pregătit"
-vehicleLimit = "Limită vehicul: {soc}"
-
 [main.vehicleStatus]
 charging = "Încarcă…"
 cheapEnergyCharging = "Energie ieftina disponibila. {price} (limit {limit})"

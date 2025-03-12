@@ -6,16 +6,26 @@ import (
 	"strconv"
 	"strings"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
 
+// Config is the database mapping for device configurations
+// The device prefix ensures unique namespace
+//
+// TODO migrate vehicle and loadpoints to this schema
 type Config struct {
-	ID    int `gorm:"primarykey"`
-	Class templates.Class
-	Type  string
-	Data  map[string]any `gorm:"column:value;type:string;serializer:json"`
+	ID         int `gorm:"primarykey"`
+	Class      templates.Class
+	Properties `gorm:"embedded"`
+	Data       map[string]any `gorm:"column:value;type:string;serializer:json"`
+}
+
+type Properties struct {
+	Type    string
+	Title   string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon    string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Product string `json:"deviceProduct,omitempty" mapstructure:"deviceProduct"`
 }
 
 // Named converts device details to named config
@@ -37,8 +47,14 @@ func (d *Config) Typed() Typed {
 	return res
 }
 
+func WithProperties(p Properties) func(*Config) {
+	return func(d *Config) {
+		d.Properties = p
+	}
+}
+
 // Update updates a config's details to the database
-func (d *Config) Update(conf map[string]any) error {
+func (d *Config) Update(conf map[string]any, opt ...func(*Config)) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
@@ -46,21 +62,8 @@ func (d *Config) Update(conf map[string]any) error {
 		}
 
 		d.Data = conf
-
-		return tx.Save(&d).Error
-	})
-}
-
-// PartialUpdate partially updates a config's details to the database
-func (d *Config) PartialUpdate(conf map[string]any) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var config Config
-		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-			return err
-		}
-
-		if err := mergo.Merge(&d.Data, conf, mergo.WithOverride); err != nil {
-			return err
+		for _, o := range opt {
+			o(d)
 		}
 
 		return tx.Save(&d).Error
@@ -114,11 +117,14 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
+func AddConfig(class templates.Class, conf map[string]any, opt ...func(*Config)) (Config, error) {
 	config := Config{
 		Class: class,
-		Type:  typ,
 		Data:  conf,
+	}
+
+	for _, o := range opt {
+		o(&config)
 	}
 
 	if err := db.Create(&config).Error; err != nil {
