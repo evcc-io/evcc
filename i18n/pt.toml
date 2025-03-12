@@ -78,6 +78,7 @@ enabled = "Ativado"
 energy = "Energia"
 feedinPrice = "Preço de alimentação"
 gridPrice = "Preço da rede"
+heaterTempLimit = "Limite do aquecedor"
 hemsType = "Sistema"
 identifier = "Identificador RFID"
 no = "não"
@@ -445,6 +446,7 @@ modalUpdateStatusStart = "Instalação iniciada:"
 
 [forecast]
 modalTitle = "Previsões"
+solarAdjust = "Ajustar a previsão solar com base em dados reais de produção."
 
 [forecast.co2]
 average = "Média"
@@ -577,6 +579,7 @@ selfConsumption = "Consumo próprio"
 charging = "Aquecendo..."
 cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
 cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
+vehicleLimit = "Limite do aquecedor"
 waitForVehicle = "Pronto. Esperando pelo aquecedor..."
 
 [main.loadpoint]
@@ -701,13 +704,6 @@ tempLimit = "Temperatura alvo"
 unknown = "Veículo convidado"
 vehicleSoc = "Cobrar"
 
-[main.vehicleSoc]
-charging = "carregando"
-connected = "ligado"
-disconnected = "separado"
-ready = "esperando"
-vehicleLimit = "Limite de veículo: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "À espera de autorização."
 batteryBoost = "Boost da bateria ativo."
@@ -732,7 +728,7 @@ targetChargeActive = "Plano de carregamento ativo. Fim estimado em {duration}."
 targetChargePlanned = "O plano de carregamento começa em {duration}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
 unknown = ""
-vehicleLimit = "“Limite dos veículos.”"
+vehicleLimit = "Limite dos veículos"
 vehicleLimitReached = "Limite de veículo atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 welcome = "Recarga inicial curta para confirmar a ligação."
@@ -931,6 +927,8 @@ modalTitle = "Carregamento de Rede Inteligente"
 none = "sem"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
+resetAction = "Remover limite"
+resetWarning = "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limite}. Limpar a sua configuração?"
 saved = "Salvo."
 
 [startupError]

@@ -83,12 +83,12 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
-							:details="solarForecast"
+							:details="solarForecastRemainingToday"
 							:detailsFmt="forecastFmt"
-							:detailsTooltip="forecastTooltip(solarForecast)"
-							:detailsInactive="solarForecast === 0"
-							:detailsIcon="solarForecast !== undefined ? 'forecast' : undefined"
-							:detailsClickable="solarForecast !== undefined"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
 							@details-clicked="openForecastModal"
@@ -230,9 +230,9 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
-import EnergyflowEntry from "./EnergyflowEntry.vue";
+import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import AnimatedNumber from "../AnimatedNumber.vue";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
@@ -241,7 +241,7 @@ export default {
 	name: "Energyflow",
 	components: {
 		Visualization,
-		EnergyflowEntry,
+		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
 	mixins: [formatter, collector],
@@ -352,7 +352,10 @@ export default {
 			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
 				return;
 			}
-			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
+			return this.pv.map(
+				({ power, title }) =>
+					`${title ? `${title}: ` : ""}${this.fmtW(power, this.powerUnit)}`
+			);
 		},
 		batteryDischargeTooltip() {
 			return this.batteryTooltip(true);
@@ -389,8 +392,20 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
-		solarForecast() {
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
 			return this.forecast?.solar?.today?.energy || undefined;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
 		},
 	},
 	watch: {
@@ -428,12 +443,6 @@ export default {
 				result.push(`${this.fmtPricePerKWh(price, this.currency)}`);
 			}
 			return result;
-		},
-		forecastTooltip(value) {
-			if (value !== null) {
-				return [this.$t("main.energyflow.forecastTooltip")];
-			}
-			return [];
 		},
 		detailsValue(price, co2) {
 			if (this.co2Available) {
@@ -484,11 +493,12 @@ export default {
 			if (!Array.isArray(this.battery) || this.battery.length <= 1) {
 				return;
 			}
-			return this.battery.map(({ power, soc }) => {
+			return this.battery.map(({ power, soc, title }) => {
 				const value = discharge ? this.dischargePower(power) : this.chargePower(power);
+
 				const powerFmt = this.fmtW(value, this.powerUnit);
 				const socFmt = this.fmtPercentage(soc, 0);
-				return `${powerFmt} (${socFmt})`;
+				return `${title ? `${title}: ` : ""}${powerFmt} (${socFmt})`;
 			});
 		},
 	},

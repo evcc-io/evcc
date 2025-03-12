@@ -1602,25 +1602,43 @@ func (lp *Loadpoint) publishChargeProgress() {
 }
 
 // publish state of charge, remaining charge duration and range
+//
+// - online vehicle connected: this allows estimating remaining energy/duration
+//   - either charger or vehicle provides soc
+//   - estimator is responsible for querying both
+//
+// - offline or no vehicle connected (e.g. integrated device): missing capacity, hence no estimate
+//   - charger may still provide soc
+//   - no estimator
 func (lp *Loadpoint) publishSocAndRange() {
-	soc, err := lp.chargerSoc()
-
-	// guard for socEstimator removed by api
-	// also keep a local copy in order to avoid race conditions
+	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
-	if socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
-		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
-		// We need to check if the charger can provide soc and use it if available.
-		if err == nil {
+
+	// capacity not available
+	if socEstimator == nil || !lp.vehicleHasSoc() {
+		if soc, err := lp.chargerSoc(); err == nil {
 			lp.vehicleSoc = soc
 			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+
+			if vs, ok := lp.charger.(api.SocLimiter); ok {
+				if limit, err := vs.GetLimitSoc(); err == nil {
+					lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
+					// https://github.com/evcc-io/evcc/issues/13349
+					lp.publish(keys.VehicleLimitSoc, float64(limit))
+				} else if !errors.Is(err, api.ErrNotAvailable) {
+					lp.log.ERROR.Printf("charger soc limit: %v", err)
+				}
+			}
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charger soc: %v", err)
 		}
 
 		return
 	}
 
-	if err == nil || lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
+	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())
@@ -1642,19 +1660,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// TODO take vehicle api limits into account
 		apiLimitSoc := 100
 
-		// integrated device with charger limit
-		vs, ok := lp.charger.(api.SocLimiter)
-		if !ok {
-			// vehicle limit
-			vs, ok = lp.GetVehicle().(api.SocLimiter)
-		}
-		if ok {
+		// vehicle limit
+		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
 				// https://github.com/evcc-io/evcc/issues/13349
 				lp.publish(keys.VehicleLimitSoc, float64(limit))
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
 		}
@@ -1675,7 +1688,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(keys.VehicleRange, rng)
-			} else {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle range: %v", err)
 			}
 		}

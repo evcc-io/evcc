@@ -3,12 +3,15 @@ products:
   - brand: M-TEC
     description:
       generic: Energy Butler GEN3
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485"]
-    id: 247
+    choice: ["rs485", "tcpip"]
+    id: 255
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -46,4 +49,41 @@ render: |
       type: holding
       decode: uint16
     scale: 0.01
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 257
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+    - case: 2 # eco mode (hold)
+      set:
+        source: const
+        value: 258
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+    - case: 3 # usp mode (charge)
+      set:
+        source: const
+        value: 259
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+  capacity: {{ .capacity }} # kWh
   {{- end }}

@@ -701,13 +701,6 @@ tempLimit = "Temp. grænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplader"
 
-[main.vehicleSoc]
-charging = "opladning"
-connected = "forbundet"
-disconnected = "afbrudt"
-ready = "parat"
-vehicleLimit = "Køretøjsgrænse: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Venter på godkendelse."
 batteryBoost = "Boost fra batteri er aktiv"
@@ -908,6 +901,8 @@ modalTitle = "Smart opladning fra elnettet"
 none = "ingen"
 priceLabel = "Energi pris"
 priceLimit = "Pris grænse"
+resetAction = "Fjern begrænsning"
+resetWarning = "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?"
 saved = "Gemt"
 
 [startupError]
