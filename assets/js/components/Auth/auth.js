@@ -82,6 +82,7 @@ export function openLoginModal(nextUrl = null, nextModal = null) {
 watch(
   () => auth.configured,
   (configured) => {
+    console.log("configured", configured);
     const modal = Modal.getOrCreateInstance(document.getElementById("passwordModal"));
     if (configured) {
       modal.hide();
@@ -99,7 +100,8 @@ function debounedUpdateAuthStatus() {
   }, 500);
 }
 
+// update auth status on reconnect or server restart
 watch(() => store.state.offline, debounedUpdateAuthStatus);
-watch(() => store.state.fatal, debounedUpdateAuthStatus);
+watch(() => store.state.startup, debounedUpdateAuthStatus);
 
 export default auth;

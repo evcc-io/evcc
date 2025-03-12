@@ -225,8 +225,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// remove previous fatal startup errors
-	valueChan <- util.Param{Key: keys.Fatal, Val: nil}
+	// signal restart
+	valueChan <- util.Param{Key: keys.Startup, Val: true}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {

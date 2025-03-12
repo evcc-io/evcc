@@ -143,7 +143,7 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Solar system'"
+							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -160,7 +160,9 @@
 						<DeviceCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Battery storage'"
+							:title="
+								meter.deviceTitle || meter.config?.template || 'Battery storage'
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
