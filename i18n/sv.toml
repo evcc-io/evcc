@@ -78,6 +78,7 @@ enabled = "Aktiverad"
 energy = "Energi"
 feedinPrice = "Inmatningspris"
 gridPrice = "Nätpris"
+heaterTempLimit = "Värmarbegränsning"
 hemsType = "System"
 identifier = "RFID-identifierare"
 no = "nej"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "Installationen har börjat:"
 
 [forecast]
 modalTitle = "Prognos"
+solarAdjust = "Justera solprognosen baserat på verkliga produktionsvärden."
 
 [forecast.co2]
 average = "Genomsnitt"
@@ -576,13 +578,14 @@ selfConsumption = "Egenförbrukning"
 charging = "Värmer..."
 cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+vehicleLimit = "Värmarbegränsning"
 waitForVehicle = "Redo, väntar på värmare..."
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
 charged = "Laddat"
 co2 = "⌀ CO₂"
-duration = "Varaktighet"
+duration = "Laddtid"
 fallbackName = "Laddplats"
 power = "Effekt"
 price = "Kostnad"
@@ -773,7 +776,7 @@ title = "Laddning"
 [sessions]
 avgPower = "⌀-effekt"
 avgPrice = "⌀-pris"
-chargeDuration = "Varaktighet"
+chargeDuration = "Laddtid"
 co2 = "⌀ CO₂"
 csvMonth = "Ladda hem {month} CSV"
 csvTotal = "Ladda hem total CSV"
@@ -812,7 +815,7 @@ solarByGroup = "Solandel {byGroup}"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
-chargeduration = "Varaktighet"
+chargeduration = "Laddtid"
 co2perkwh = "CO₂/kWh"
 created = "Starttid"
 finished = "Sluttid"
@@ -907,6 +910,8 @@ modalTitle = "Smartladdning elnät"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgräns"
+resetAction = "Ta bort begränsning"
+resetWarning = "Varken dynamiskt elpris eller CO₂-avtryck är konfigurerat. Emellertid finns fortfarande en begränsning på {limit}. Din konfiguration kanske behöver kontrolleras?"
 saved = "Sparad."
 
 [startupError]

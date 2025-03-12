@@ -66,7 +66,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 
 // applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	for _, meter := range site.batteryMeters {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: battery")
+		}
+
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err

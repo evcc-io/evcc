@@ -78,6 +78,7 @@ enabled = "Aktyvuota"
 energy = "Energija"
 feedinPrice = "Tiekimo į tinklą kaina"
 gridPrice = "Energijos pirkimo kaina"
+heaterTempLimit = "Šildymo limitas"
 hemsType = "Sistema"
 identifier = "RFID-Identifikatorius"
 no = "ne"
@@ -449,6 +450,7 @@ modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
 [forecast]
 modalTitle = "Prognozė"
+solarAdjust = "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis."
 
 [forecast.co2]
 average = "Vidurkis"
@@ -581,6 +583,7 @@ selfConsumption = "Sunaudojama iškart"
 charging = "Šildoma…"
 cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
 cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+vehicleLimit = "Šildymo limitas"
 waitForVehicle = "Paruošta. Laukiame šildytuvo…"
 
 [main.loadpoint]
@@ -928,6 +931,8 @@ modalTitle = "Išmanaus tinklo įkrovimas"
 none = "nėra"
 priceLabel = "Energijos kaina"
 priceLimit = "Kainos limitas"
+resetAction = "Pašalinti limitą"
+resetWarning = "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?"
 saved = "Išsaugota."
 
 [startupError]
