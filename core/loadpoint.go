@@ -188,47 +188,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
-	var err error
-
-	if lp.CircuitRef != "" {
-		dev, e := config.Circuits().ByName(lp.CircuitRef)
-		if e != nil && err == nil {
-			err = fmt.Errorf("circuit: %w", e)
-		} else {
-			lp.circuit = dev.Instance()
-		}
-	}
-
-	if lp.MeterRef != "" {
-		dev, e := config.Meters().ByName(lp.MeterRef)
-		if e != nil && err == nil {
-			err = fmt.Errorf("meter: %w", e)
-		} else {
-			lp.chargeMeter = dev.Instance()
-		}
-	}
-
-	// default vehicle
-	if lp.VehicleRef != "" {
-		dev, e := config.Vehicles().ByName(lp.VehicleRef)
-		if e != nil && err == nil {
-			err = fmt.Errorf("default vehicle: %w", e)
-		} else {
-			lp.defaultVehicle = dev.Instance()
-		}
-	}
-
-	if lp.ChargerRef == "" {
-		return lp, errors.New("missing charger")
-	}
-	dev, e := config.Chargers().ByName(lp.ChargerRef)
-	if e != nil && err == nil {
-		err = fmt.Errorf("charger: %w", e)
-	} else {
-		lp.charger = dev.Instance()
-		lp.configureChargerType(lp.charger)
-	}
-
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		lp.phasesConfigured = 3
@@ -255,7 +214,43 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.setPriority(lp.Priority)
 	}
 
-	return lp, err
+	if lp.CircuitRef != "" {
+		dev, err := config.Circuits().ByName(lp.CircuitRef)
+		if err != nil {
+			return lp, fmt.Errorf("circuit: %w", err)
+		}
+		lp.circuit = dev.Instance()
+	}
+
+	if lp.MeterRef != "" {
+		dev, err := config.Meters().ByName(lp.MeterRef)
+		if err != nil {
+			return lp, fmt.Errorf("meter: %w", err)
+		}
+		lp.chargeMeter = dev.Instance()
+	}
+
+	// default vehicle
+	if lp.VehicleRef != "" {
+		dev, err := config.Vehicles().ByName(lp.VehicleRef)
+		if err != nil {
+			return lp, fmt.Errorf("default vehicle: %w", err)
+		}
+		lp.defaultVehicle = dev.Instance()
+	}
+
+	if lp.ChargerRef == "" {
+		return lp, errors.New("missing charger")
+	}
+
+	dev, err := config.Chargers().ByName(lp.ChargerRef)
+	if err != nil {
+		return lp, fmt.Errorf("charger: %w", err)
+	}
+	lp.charger = dev.Instance()
+	lp.configureChargerType(lp.charger)
+
+	return lp, nil
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults
