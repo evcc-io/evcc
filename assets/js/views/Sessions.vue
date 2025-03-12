@@ -208,11 +208,11 @@ import SolarYearChart from "../components/Sessions/SolarYearChart.vue";
 import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
-import TopHeader from "../components/TopHeader.vue";
-import IconSelectGroup from "../components/IconSelectGroup.vue";
-import IconSelectItem from "../components/IconSelectItem.vue";
-import SelectGroup from "../components/SelectGroup.vue";
-import CustomSelect from "../components/CustomSelect.vue";
+import Header from "../components/Top/Header.vue";
+import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
+import IconSelectItem from "../components/Helper/IconSelectItem.vue";
+import SelectGroup from "../components/Helper/SelectGroup.vue";
+import CustomSelect from "../components/Helper/CustomSelect.vue";
 import colors from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
@@ -225,7 +225,7 @@ export default {
 	components: {
 		SessionDetailsModal,
 		SessionTable,
-		TopHeader,
+		TopHeader: Header,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,

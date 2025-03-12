@@ -389,7 +389,7 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 
@@ -422,7 +422,7 @@ export default {
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
-		TopHeader,
+		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
 	},
