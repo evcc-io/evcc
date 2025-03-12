@@ -2,9 +2,13 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"maps"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/core"
@@ -13,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 	"github.com/samber/lo"
 )
@@ -170,6 +175,25 @@ func newLoadpointHandler() http.HandlerFunc {
 	}
 }
 
+func lowerKeys(m map[string]any) map[string]any {
+	res := make(map[string]any, len(m))
+	for k, v := range m {
+		res[strings.ToLower(strings.ToLower(k[:1])+k[1:])] = v
+	}
+	return res
+}
+
+func modified(orig, mod map[string]any) bool {
+	for k, v := range orig {
+		vv, ok := mod[k]
+		if !ok || !reflect.DeepEqual(v, vv) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // updateLoadpointHandler returns a device configurations by class
 func updateLoadpointHandler() http.HandlerFunc {
 	h := config.Loadpoints()
@@ -205,17 +229,29 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		// merge here to maintain dynamic part of the config
 		other := configurable.Config().Other
-		if err := mergo.Merge(&other, static); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
 		instance := dev.Instance()
 
-		if err := configurable.Update(other, instance); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		fmt.Println(other, static)
+
+		m1 := modified(static, other)
+		_ = m1
+
+		if !maps.Equal(other, static) {
+			if err := mergo.Merge(&other, static); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			if err := configurable.Update(other, instance); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
 		}
+
+		m2 := modified(lowerKeys(structs.Map(dynamic)), other)
+		_ = m2
 
 		// dynamic
 		if err := dynamic.Apply(instance); err != nil {
