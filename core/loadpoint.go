@@ -74,8 +74,9 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock       // mockable time
-	bus      evbus.Bus         // event bus
+	clock    clock.Clock // mockable time
+	bus      evbus.Bus   // event bus
+	site     site.API
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
 	lpChan   chan<- *Loadpoint // update requests
@@ -619,7 +620,8 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -1352,7 +1354,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(site site.API, batteryBoostPower float64) float64 {
+func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	boost := lp.getBatteryBoost()
 	if boost == boostDisabled {
 		return 0
@@ -1362,7 +1364,7 @@ func (lp *Loadpoint) boostPower(site site.API, batteryBoostPower float64) float6
 	delta := lp.effectiveStepPower()
 	if !lp.coarseCurrent() {
 		// for >1p this will allow finer adjustments down to 100W
-		delta = max(math.Abs(site.GetResidualPower()), delta/10)
+		delta = max(math.Abs(lp.site.GetResidualPower()), delta/10)
 	}
 
 	// start boosting by setting maximum power
@@ -1385,13 +1387,13 @@ func (lp *Loadpoint) boostPower(site site.API, batteryBoostPower float64) float6
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(site site.API, mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(site, batteryBoostPower)
+	sitePower -= lp.boostPower(batteryBoostPower)
 
 	// switch phases up/down
 	var scaledTo int
@@ -1772,7 +1774,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(site site.API, sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1899,7 +1901,7 @@ func (lp *Loadpoint) Update(site site.API, sitePower, batteryBoostPower float64,
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(site, mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
