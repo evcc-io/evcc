@@ -160,7 +160,7 @@ func (wb *Heatpump) MaxCurrentEx(current float64) error {
 	return wb.setMaxPower(int64(230 * current * float64(phases)))
 }
 
-var _ loadpoint.Controller = (*EEBus)(nil)
+var _ loadpoint.Controller = (*Heatpump)(nil)
 
 // LoadpointControl implements loadpoint.Controller
 func (wb *Heatpump) LoadpointControl(lp loadpoint.API) {
