@@ -96,6 +96,9 @@ export default defineComponent({
 			return this.filterSlots(this.grid);
 		},
 		co2Slots() {
+			return this.filterSlots(this.co2 || []);
+		},
+		projectedSlots() {
 			return this.filterEvents(this.solar?.events || []);
 		},
 		maxPriceIndex() {
@@ -105,10 +108,16 @@ export default defineComponent({
 			return this.minIndex(this.gridSlots);
 		},
 		maxCo2Index() {
-			return this.maxEventIndex(this.co2Slots);
+			return this.maxIndex(this.co2Slots);
 		},
 		minCo2Index() {
-			return this.minEventIndex(this.co2Slots);
+			return this.minIndex(this.co2Slots);
+		},
+		maxProjectedIndex() {
+			return this.maxEventIndex(this.projectedSlots);
+		},
+		minProjectedIndex() {
+			return this.minEventIndex(this.projectedSlots);
 		},
 		maxSolarIndex() {
 			return this.maxEntryIndex(this.solarEntries);
@@ -214,6 +223,36 @@ export default defineComponent({
 					order: active ? 0 : 1,
 				});
 			}
+			if (this.projectedSlots.length > 0) {
+				const active = this.selected === ForecastType.Projected;
+				const color = active ? colors.co2 : colors.border;
+				datasets.push({
+					label: ForecastType.Projected,
+					type: "line",
+					data: this.projectedSlots.map((slot, index) => {
+						const dataActive =
+							active &&
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: index === this.maxProjectedIndex ||
+									index === this.minProjectedIndex);
+						return {
+							y: slot.val,
+							x: new Date(slot.ts),
+							highlight: dataActive,
+							active: dataActive,
+						};
+					}),
+					yAxisID: "yProjected",
+					backgroundColor: color,
+					borderColor: color,
+					tension: 0.25,
+					pointRadius: 0,
+					pointHoverRadius: active ? 4 : 0,
+					spanGaps: true,
+					order: active ? 0 : 1,
+				});
+			}
 
 			return {
 				datasets,
@@ -304,6 +343,8 @@ export default defineComponent({
 										);
 									case ForecastType.Co2:
 										return vThis.fmtGrams(data.y);
+									case ForecastType.Projected:
+										return data;
 									case ForecastType.Solar:
 										if (data.highlight === true) {
 											return vThis.fmtW(data.y, POWER_UNIT.AUTO);
@@ -371,6 +412,11 @@ export default defineComponent({
 						beginAtZero: true,
 					},
 					yCo2: { display: false, min: 0, max: this.yEventMax(this.co2Slots) },
+					yProjected: {
+						display: false,
+						min: 0,
+						max: this.yEventMax(this.projectedSlots),
+					},
 					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
 				},
 			};
@@ -382,6 +428,7 @@ export default defineComponent({
 				[ForecastType.Solar]: this.solarEntries,
 				[ForecastType.Price]: this.gridSlots,
 				[ForecastType.Co2]: this.co2Slots,
+				[ForecastType.Projected]: this.projectedSlots,
 			};
 
 			return slotMap[this.selected]?.[this.selectedIndex] ?? null;

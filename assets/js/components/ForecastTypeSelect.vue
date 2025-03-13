@@ -43,6 +43,7 @@ export default defineComponent({
 				[ForecastType.Solar]: !!this.forecast.solar,
 				[ForecastType.Price]: !!this.forecast.grid,
 				[ForecastType.Co2]: !!this.forecast.co2,
+				[ForecastType.Projected]: !!this.forecast.solar?.events,
 			};
 		},
 		typeIcons() {
@@ -50,6 +51,7 @@ export default defineComponent({
 				[ForecastType.Solar]: "shopicon-regular-sun",
 				[ForecastType.Price]: DynamicPriceIcon,
 				[ForecastType.Co2]: "shopicon-regular-eco1",
+				[ForecastType.Projected]: "shopicon-regular-eco2",
 			};
 		},
 	},
