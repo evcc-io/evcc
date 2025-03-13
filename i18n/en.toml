@@ -436,11 +436,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
-solarAdjust = "Adjust solar forecast based on real production data."
-solarAdjustHigher = "Forecast is {percent} too high."
-solarAdjustLower = "Forecast is {percent} too low."
-solarAdjustNotEnoughData = "Not enough data collected. Come back later."
-solarAdjustOk = "Forecast is pretty accurate."
+solarAdjust = "Adjust solar forecast based on real production data{percent}."
 
 [forecast.co2]
 average = "Average"

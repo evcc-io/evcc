@@ -169,3 +169,17 @@ describe("getShortenedWeekdaysLabel", () => {
     expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
   });
 });
+
+describe("fmtPercentage", () => {
+  test("should format percentage", () => {
+    expect(fmt.fmtPercentage(0)).eq("0 %");
+    expect(fmt.fmtPercentage(100)).eq("100 %");
+    expect(fmt.fmtPercentage(100, 1)).eq("100,0 %");
+  });
+  test("should force signed", () => {
+    expect(fmt.fmtPercentage(100, 0, true)).eq("+100 %");
+    expect(fmt.fmtPercentage(100, 0, false)).eq("100 %");
+    expect(fmt.fmtPercentage(-100, 0, true)).eq("-100 %");
+    expect(fmt.fmtPercentage(-100, 0, false)).eq("-100 %");
+  });
+});

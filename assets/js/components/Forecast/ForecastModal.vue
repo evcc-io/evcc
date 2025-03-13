@@ -40,7 +40,7 @@
 				/>
 				<div class="form-check-label">
 					<label for="solarForecastAdjust"
-						><small>🧪 {{ $t("forecast.solarAdjust") }} {{ adjustValue }}</small></label
+						><small>🧪 {{ solarAdjustText }}</small></label
 					>
 				</div>
 			</div>
@@ -104,22 +104,16 @@ export default defineComponent({
 				? adjustedSolar(this.forecast.solar)
 				: this.forecast.solar;
 		},
-		adjustValue() {
+		solarAdjustText() {
+			let percent = "";
+
 			const scale = this.forecast.solar?.scale;
-			if (!scale) {
-				return this.$t("forecast.solarAdjustNotEnoughData");
+			if (scale) {
+				const percentDiff = scale * 100 - 100;
+				percent = ` (${this.fmtPercentage(percentDiff, 0, true)})`;
 			}
-			const percentDiff = 100 - scale * 100;
-			if (percentDiff < -5) {
-				return this.$t("forecast.solarAdjustLower", {
-					percent: this.fmtPercentage(Math.abs(percentDiff)),
-				});
-			} else if (percentDiff > 5) {
-				return this.$t("forecast.solarAdjustHigher", {
-					percent: this.fmtPercentage(percentDiff),
-				});
-			}
-			return this.$t("forecast.solarAdjustOk");
+
+			return this.$t("forecast.solarAdjust", { percent });
 		},
 	},
 	watch: {
