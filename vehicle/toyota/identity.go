@@ -159,6 +159,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
+	res.Expiry = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
 	return oauth.RefreshTokenSource(&res, v).Token()
 }
 
