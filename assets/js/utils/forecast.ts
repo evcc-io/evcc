@@ -27,8 +27,8 @@ export interface SolarDetails {
 
 export interface EventEntry {
 	ts: string;
-	event: string;
-	value: number;
+	ev: string;
+	val: number;
 }
 
 export interface Forecast {

@@ -34,10 +34,10 @@ import colors, { lighterColor } from "../colors";
 import {
 	highestSlotIndexByDay,
 	ForecastType,
-	type EventEntry,
 	type PriceSlot,
 	type SolarDetails,
 	type TimeseriesEntry,
+	type EventEntry,
 } from "../utils/forecast";
 
 registerChartComponents([
@@ -198,7 +198,7 @@ export default defineComponent({
 								? this.selectedIndex === index
 								: index === this.maxCo2Index || index === this.minCo2Index);
 						return {
-							y: slot.value,
+							y: slot.val,
 							x: new Date(slot.ts),
 							highlight: dataActive,
 							active: dataActive,
@@ -492,16 +492,16 @@ export default defineComponent({
 		},
 		maxEventIndex(slots: EventEntry[] = []) {
 			return slots.reduce((max, slot, index) => {
-				return slot.value > slots[max].value ? index : max;
+				return slot.val > slots[max].val ? index : max;
 			}, 0);
 		},
 		minEventIndex(slots: EventEntry[] = []) {
 			return slots.reduce((min, slot, index) => {
-				return slot.value < slots[min].value ? index : min;
+				return slot.val < slots[min].val ? index : min;
 			}, 0);
 		},
 		maxEventValue(slots: EventEntry[] = []) {
-			return slots[this.maxEventIndex(slots)]?.value || null;
+			return slots[this.maxEventIndex(slots)]?.val || null;
 		},
 		maxEntryValue(entries: TimeseriesEntry[] = []) {
 			return entries[this.maxEntryIndex(entries)]?.val || null;
