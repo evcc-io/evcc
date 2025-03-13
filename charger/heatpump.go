@@ -22,6 +22,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -29,7 +30,7 @@ import (
 // Heatpump charger implementation
 type Heatpump struct {
 	*embed
-	phases    int
+	lp        loadpoint.API
 	power     int64
 	maxPowerG func() (int64, error)
 	maxPowerS func(int64) error
@@ -49,13 +50,11 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 		GetMaxPower             *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
-		Phases                  int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Phases: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -76,7 +75,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 	// 	return nil, api.ErrSponsorRequired
 	// }
 
-	res, err := NewHeatpump(ctx, &cc.embed, maxPowerS, maxPowerG, cc.Phases)
+	res, err := NewHeatpump(ctx, &cc.embed, maxPowerS, maxPowerG)
 	if err != nil {
 		return nil, err
 	}
@@ -95,12 +94,11 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (a
 }
 
 // NewHeatpump creates heatpump charger
-func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error), phases int) (*Heatpump, error) {
+func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error)) (*Heatpump, error) {
 	res := &Heatpump{
 		embed:     embed,
 		maxPowerG: maxPowerG,
 		maxPowerS: maxPowerS,
-		phases:    phases,
 	}
 
 	return res, nil
@@ -155,5 +153,16 @@ func (wb *Heatpump) MaxCurrent(current int64) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Heatpump) MaxCurrentEx(current float64) error {
-	return wb.setMaxPower(int64(230 * current * float64(wb.phases)))
+	phases := 1
+	if wb.lp != nil {
+		phases = wb.lp.GetPhases()
+	}
+	return wb.setMaxPower(int64(230 * current * float64(phases)))
+}
+
+var _ loadpoint.Controller = (*EEBus)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *Heatpump) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }

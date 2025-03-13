@@ -21,11 +21,9 @@ params:
       de: "Temperaturquelle"
       en: "Temperature source"
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
