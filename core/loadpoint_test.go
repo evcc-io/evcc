@@ -82,7 +82,7 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
-	lp.Prepare(uiChan, pushChan, lpChan)
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
 }
 
 func TestNew(t *testing.T) {
