@@ -3,6 +3,9 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (S Series)
+  - brand: Axitec
+    description:
+      generic: AXIhycon 12-15H
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

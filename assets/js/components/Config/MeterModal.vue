@@ -20,11 +20,26 @@
 			/>
 		</div>
 		<form v-else ref="form" class="container mx-0 px-0">
+			<FormRow
+				v-if="hasDeviceTitle"
+				id="meterParamDeviceTitle"
+				label="Title"
+				help="Will be displayed in the user interface"
+			>
+				<PropertyField
+					id="meterParamDeviceTitle"
+					v-model.trim="values.deviceTitle"
+					type="String"
+					size="w-100"
+					class="me-2"
+					required
+				/>
+			</FormRow>
 			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 				<select
+					v-if="isNew"
 					id="meterTemplate"
 					v-model="templateName"
-					:disabled="!isNew"
 					class="form-select w-100"
 					@change="templateChanged"
 				>
@@ -44,6 +59,13 @@
 						{{ option.name }}
 					</option>
 				</select>
+				<input
+					v-else
+					type="text"
+					:value="productName"
+					disabled
+					class="form-control w-100"
+				/>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
 			<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -143,10 +165,10 @@ import api from "../../api";
 import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-
-const initialValues = { type: "template" };
+import PropertyField from "./PropertyField.vue";
+const initialValues = { type: "template", deviceTitle: "", deviceIcon: "" };
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -159,6 +181,7 @@ export default {
 	components: {
 		FormRow,
 		PropertyEntry,
+		PropertyField,
 		GenericModal,
 		Modbus,
 		TestResult,
@@ -201,6 +224,9 @@ export default {
 		meterType() {
 			return this.type || this.selectedType;
 		},
+		hasDeviceTitle() {
+			return ["pv", "battery"].includes(this.meterType);
+		},
 		templateOptions() {
 			return this.products.filter((p) => p.group !== "generic");
 		},
@@ -241,6 +267,9 @@ export default {
 		},
 		description() {
 			return this.template?.Requirements?.Description;
+		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
 		},
 		apiData() {
 			return {
@@ -283,14 +312,21 @@ export default {
 		},
 	},
 	methods: {
-		reset() {
-			this.values = { ...initialValues };
+		reset(keepTitle = false) {
+			const keep = keepTitle ? { deviceTitle: this.values.deviceTitle } : {};
+			this.values = { ...initialValues, ...keep };
 			this.resetTest();
 		},
 		async loadConfiguration() {
 			try {
 				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
 				this.values = meter.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = meter.type;
+				this.values.deviceTitle = meter.deviceTitle;
+				this.values.deviceIcon = meter.deviceIcon;
+				this.values.deviceProduct = meter.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -314,8 +350,8 @@ export default {
 			}
 		},
 		async loadTemplate() {
-			if (!this.templateName) return;
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -367,7 +403,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {
@@ -407,8 +443,11 @@ export default {
 		selectType(type) {
 			this.selectedType = type;
 		},
-		templateChanged() {
-			this.reset();
+		templateChanged(event) {
+			this.reset(true);
+			const select = event.target;
+			const name = select.options[select.selectedIndex].text;
+			this.values.deviceProduct = name;
 		},
 	},
 };

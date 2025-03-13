@@ -23,9 +23,10 @@
 				/>
 			</FormRow>
 			<FormRow
-				v-if="values.charger"
+				v-if="charger || !isNew"
 				id="loadpointParamCharger"
 				:label="$t('config.loadpoint.chargerLabel')"
+				:error="!charger ? $t('config.loadpoint.chargerError') : null"
 			>
 				<div class="d-flex">
 					<PropertyField
@@ -35,6 +36,7 @@
 						class="me-2 flex-grow-1"
 						readonly
 						required
+						:invalid="!charger"
 						@click.prevent="editCharger"
 					/>
 					<button
@@ -56,7 +58,7 @@
 					{{ $t("config.loadpoint.addCharger") }}
 				</button>
 			</div>
-			<div v-if="values.charger || !isNew">
+			<div v-if="charger || !isNew">
 				<FormRow
 					v-if="values.meter"
 					id="loadpointParamMeter"
@@ -97,7 +99,7 @@
 				</p>
 			</div>
 
-			<div v-if="values.charger">
+			<div v-if="values.charger || !isNew">
 				<h6>{{ $t("config.loadpoint.chargingTitle") }}</h6>
 
 				<FormRow
@@ -384,7 +386,7 @@
 					>
 						<SelectGroup
 							id="loadpointParamPhases"
-							v-model="values.phases"
+							v-model="values.phasesConfigured"
 							class="w-100"
 							:options="[
 								{ value: 1, name: $t('config.loadpoint.phases1p') },
@@ -547,9 +549,9 @@
 <script>
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "../../api";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import deepClone from "../../utils/deepClone";
 import deepEqual from "../../utils/deepEqual";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
@@ -559,7 +561,7 @@ const nsPerMin = 60 * 1e9;
 
 const defaultValues = {
 	title: "",
-	phases: 3,
+	phasesConfigured: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -813,17 +815,17 @@ export default {
 			}
 		},
 		updatePhases() {
-			const { phases } = this.values;
+			const { phasesConfigured } = this.values;
 			if (this.chargerIsSinglePhase) {
-				this.values.phases = 1;
+				this.values.phasesConfigured = 1;
 				return;
 			}
 			if (this.chargerSupports1p3p && this.isNew) {
-				this.values.phases = 0; // automatic
+				this.values.phasesConfigured = 0; // automatic
 				return;
 			}
-			if (!this.chargerSupports1p3p && phases === 0) {
-				this.values.phases = 3; // no automatic switching, default to 3-phase
+			if (!this.chargerSupports1p3p && phasesConfigured === 0) {
+				this.values.phasesConfigured = 3; // no automatic switching, default to 3-phase
 				return;
 			}
 		},

@@ -17,17 +17,17 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title          string    `json:"title"`
-	DefaultMode    string    `json:"defaultMode"`
-	Priority       int       `json:"priority"`
-	Phases         int       `json:"phases"`
-	MinCurrent     float64   `json:"minCurrent"`
-	MaxCurrent     float64   `json:"maxCurrent"`
-	SmartCostLimit *float64  `json:"smartCostLimit"`
-	PlanEnergy     float64   `json:"planEnergy"`
-	PlanTime       time.Time `json:"planTime"`
-	LimitEnergy    float64   `json:"limitEnergy"`
-	LimitSoc       int       `json:"limitSoc"`
+	Title            string    `json:"title"`
+	DefaultMode      string    `json:"defaultMode"`
+	Priority         int       `json:"priority"`
+	PhasesConfigured int       `json:"phasesConfigured"`
+	MinCurrent       float64   `json:"minCurrent"`
+	MaxCurrent       float64   `json:"maxCurrent"`
+	SmartCostLimit   *float64  `json:"smartCostLimit"`
+	PlanEnergy       float64   `json:"planEnergy"`
+	PlanTime         time.Time `json:"planTime"`
+	LimitEnergy      float64   `json:"limitEnergy"`
+	LimitSoc         int       `json:"limitSoc"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
@@ -69,7 +69,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	}
 
 	if err == nil {
-		err = lp.SetPhases(payload.Phases)
+		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
 	if err == nil && payload.MinCurrent != 0 {

@@ -152,7 +152,6 @@ tariffs:
       - days: Sat,Sun
         price: 0.15 # EUR/kWh
     # see: https://docs.evcc.io/en/docs/devices/tariffs
-
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
@@ -163,7 +162,13 @@ tariffs:
     # type: template
     # template: grünstromindex # GrünStromIndex (Germany only)
     # zip: <zip>
-    # see: https://docs.evcc.io/en/docs/devices/tariffs#co-forecast
+    # see: https://docs.evcc.io/en/docs/tariffs#co-forecast
+  solar:
+    # solar "tariff" provides pv generation forecast
+    # - type: template
+    #   template: solcast
+    #   site: <site>
+    #   see: https://docs.evcc.io/en/docs/tariffs#pv-forecast
 
 # mqtt message broker
 mqtt:

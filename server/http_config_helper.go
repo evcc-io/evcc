@@ -2,13 +2,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -18,6 +23,41 @@ const (
 	// masked indicates a masked config parameter value
 	masked = "***"
 )
+
+type configReq struct {
+	config.Properties `json:",inline" mapstructure:",squash"`
+	Other             map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+// TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
+func (c *configReq) UnmarshalJSON(data []byte) error {
+	var res map[string]any
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+
+	var cr configReq
+	if err := util.DecodeOther(res, &cr); err != nil {
+		return err
+	}
+
+	*c = cr
+	return nil
+}
+
+func propsToMap(props config.Properties) (map[string]any, error) {
+	res := make(map[string]any)
+	if err := mapstructure.Decode(props, &res); err != nil {
+		return nil, err
+	}
+
+	return lo.PickBy(res, func(k string, v any) bool {
+		if k == "Type" || v.(string) == "" {
+			return false
+		}
+		return true
+	}), nil
+}
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
@@ -89,7 +129,24 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
+	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-time.After(10 * time.Second):
+			// timeout - cancel context
+			cancel()
+		case <-done:
+			// success
+		}
+	}()
+
+	return ctx, cancel, done
+}
+
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -97,12 +154,14 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 		return nil, zero, nil, err
 	}
 
-	merged, err := mergeMasked(class, conf, dev.Config().Other)
+	conf := dev.Config()
+
+	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(context.TODO(), typeTemplate, merged)
+	instance, err := newFromConf(ctx, conf.Type, merged)
 
 	return dev, instance, merged, err
 }
@@ -112,103 +171,115 @@ type testResult = struct {
 	Error string `json:"error"`
 }
 
+func hasFeature(instance any, f api.Feature) bool {
+	fd, ok := instance.(api.FeatureDescriber)
+	return ok && slices.Contains(fd.Features(), f)
+}
+
 // testInstance tests the given instance similar to dump
 // TODO refactor together with dump
 func testInstance(instance any) map[string]testResult {
 	res := make(map[string]testResult)
 
-	makeResult := func(val any, err error) testResult {
-		res := testResult{Value: val}
+	makeResult := func(key string, val any, err error) {
+		tr := testResult{Value: val}
 		if err != nil {
-			res.Error = err.Error()
+			if errors.Is(err, api.ErrNotAvailable) {
+				return
+			}
+			tr.Error = err.Error()
 		}
-		return res
+		res[key] = tr
 	}
 
 	if dev, ok := instance.(api.Meter); ok {
 		val, err := dev.CurrentPower()
-		res["power"] = makeResult(val, err)
+		makeResult("power", val, err)
 	}
 
 	if dev, ok := instance.(api.MeterEnergy); ok {
 		val, err := dev.TotalEnergy()
-		res["energy"] = makeResult(val, err)
+		makeResult("energy", val, err)
 	}
 
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
 		key := "soc"
-		if fd, ok := instance.(api.FeatureDescriber); ok && slices.Contains(fd.Features(), api.Heating) {
+		if hasFeature(instance, api.Heating) {
 			key = "temp"
 		}
-		res[key] = makeResult(val, err)
+		makeResult(key, val, err)
 	}
 
 	if _, ok := instance.(api.BatteryController); ok {
-		res["controllable"] = makeResult(true, nil)
+		makeResult("controllable", true, nil)
 	}
 
 	if dev, ok := instance.(api.VehicleOdometer); ok {
 		val, err := dev.Odometer()
-		res["odometer"] = makeResult(val, err)
+		makeResult("odometer", val, err)
 	}
 
 	if dev, ok := instance.(api.BatteryCapacity); ok {
 		val := dev.Capacity()
-		res["capacity"] = makeResult(val, nil)
+		makeResult("capacity", val, nil)
 	}
 
 	if dev, ok := instance.(api.PhaseCurrents); ok {
 		i1, i2, i3, err := dev.Currents()
-		res["phaseCurrents"] = makeResult([]float64{i1, i2, i3}, err)
+		makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
 	}
 
 	if dev, ok := instance.(api.PhaseVoltages); ok {
 		u1, u2, u3, err := dev.Voltages()
-		res["phaseVoltages"] = makeResult([]float64{u1, u2, u3}, err)
+		makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
 	}
 
 	if dev, ok := instance.(api.PhasePowers); ok {
 		p1, p2, p3, err := dev.Powers()
-		res["phasePowers"] = makeResult([]float64{p1, p2, p3}, err)
+		makeResult("phasePowers", []float64{p1, p2, p3}, err)
 	}
 
 	if dev, ok := instance.(api.ChargeState); ok {
 		val, err := dev.Status()
-		res["chargeStatus"] = makeResult(val, err)
+		makeResult("chargeStatus", val, err)
 	}
 
 	if dev, ok := instance.(api.Charger); ok {
 		val, err := dev.Enabled()
-		res["enabled"] = makeResult(val, err)
+		makeResult("enabled", val, err)
 	}
 
 	if dev, ok := instance.(api.ChargeRater); ok {
 		val, err := dev.ChargedEnergy()
-		res["chargedEnergy"] = makeResult(val, err)
+		makeResult("chargedEnergy", val, err)
 	}
 
 	if _, ok := instance.(api.PhaseSwitcher); ok {
-		res["phases1p3p"] = makeResult(true, nil)
+		makeResult("phases1p3p", true, nil)
 	}
 
 	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
-		res["singlePhase"] = makeResult(true, nil)
+		makeResult("singlePhase", true, nil)
 	}
 
 	if dev, ok := instance.(api.VehicleRange); ok {
 		val, err := dev.Range()
-		res["range"] = makeResult(val, err)
+		makeResult("range", val, err)
 	}
 
 	if dev, ok := instance.(api.SocLimiter); ok {
 		val, err := dev.GetLimitSoc()
-		res["vehicleLimitSoc"] = makeResult(val, err)
+		key := "vehicleLimitSoc"
+		if hasFeature(instance, api.Heating) {
+			key = "heaterTempLimit"
+		}
+		makeResult(key, val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {
 		val, err := dev.Identify()
-		res["identifier"] = makeResult(val, err)
+		makeResult("identifier", val, err)
 	}
 
 	return res

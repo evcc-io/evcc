@@ -235,10 +235,10 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import api from "../../api";
 import test from "./mixins/test";
@@ -436,7 +436,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {

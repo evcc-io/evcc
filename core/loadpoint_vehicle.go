@@ -209,10 +209,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 	v, ok := lp.GetVehicle().(api.FeatureDescriber)
-	if ok {
-		ok = slices.Contains(v.Features(), f)
-	}
-	return ok
+	return ok && slices.Contains(v.Features(), f)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

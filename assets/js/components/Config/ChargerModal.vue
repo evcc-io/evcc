@@ -55,12 +55,7 @@
 				:label="$t('config.charger.ocppLabel')"
 				:help="$t('config.charger.ocppHelp')"
 			>
-				<input
-					type="text"
-					class="form-control border border-success bg-transparent"
-					:value="ocppUrl"
-					readonly
-				/>
+				<input type="text" class="form-control border" :value="ocppUrl" readonly />
 			</FormRow>
 
 			<Modbus
@@ -157,7 +152,7 @@ import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 const initialValues = { type: "template" };
@@ -360,8 +355,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -373,7 +367,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {
@@ -387,8 +381,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -399,8 +392,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {

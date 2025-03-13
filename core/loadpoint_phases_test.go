@@ -82,7 +82,7 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				configuredPhases: configured, // fixed phases or default
+				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
 				measuredPhases:   tc.measuredPhases,
@@ -134,7 +134,7 @@ func TestMinActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
 
 			lp := &Loadpoint{
-				configuredPhases: configured, // fixed phases or default
+				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
 				phases:           tc.physical,
 				measuredPhases:   tc.measuredPhases,
@@ -231,7 +231,7 @@ func TestPvScalePhases(t *testing.T) {
 			minCurrent:       minA,
 			maxCurrent:       maxA,
 			vehicle:          vehicle,
-			configuredPhases: 0, // allow switching
+			phasesConfigured: 0, // allow switching
 			phases:           tc.physical,
 			status:           api.StatusC,
 		}
@@ -463,7 +463,7 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				phaseCharger,
 			},
 			minCurrent:       minA,
-			configuredPhases: tc.dflt,     // fixed phases or default
+			phasesConfigured: tc.dflt,     // fixed phases or default
 			phases:           tc.physical, // current phase status
 		}
 

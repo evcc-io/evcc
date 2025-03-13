@@ -20,7 +20,7 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go run ./decorate.go -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -40,7 +40,7 @@ var a struct {
 	api.PhaseCurrents
 	api.PhaseVoltages
 	api.PhasePowers
-	api.MaxACPower
+	api.MaxACPowerGetter
 
 	api.PhaseSwitcher
 	api.PhaseGetter
@@ -48,6 +48,7 @@ var a struct {
 	api.Battery
 	api.BatteryCapacity
 	api.BatteryController
+	api.SocLimiter
 }
 
 func typ(i any) string {
@@ -55,10 +56,10 @@ func typ(i any) string {
 }
 
 var dependents = map[string][]string{
-	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPower)},
+	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPowerGetter)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
-	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController), typ(&a.SocLimiter)},
 }
 
 // hasIntersection returns if the slices intersect

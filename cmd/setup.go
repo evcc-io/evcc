@@ -142,15 +142,16 @@ func isWritable(filePath string) bool {
 	return true
 }
 
-func configureCircuits(conf []config.Named) error {
+func configureCircuits(conf *[]config.Named) error {
 	// migrate settings
 	if settings.Exists(keys.Circuits) {
+		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 	}
 
-	children := slices.Clone(conf)
+	children := slices.Clone(*conf)
 
 	// TODO: check for circular references
 NEXT:
@@ -170,7 +171,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(context.TODO(), log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -345,8 +346,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
@@ -467,14 +467,28 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
-func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
 	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
 	// setup persistence
-	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// setup additional templates
+	if err == nil {
+		if cmd.PersistentFlags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+			if err != nil {
+				return err
+			}
+
+			if err := templates.Register(class, cmd.Flag(flagTemplate).Value.String()); err != nil {
+				return err
+			}
+		}
+	}
 
 	// setup translations
 	if err == nil {
@@ -519,7 +533,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		err = config.Init(db.Instance)
 	}
 
-	return
+	return err
 }
 
 // configureDatabase configures session database
@@ -642,6 +656,7 @@ func configureGo(conf []globalconfig.Go) error {
 func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
+		*conf = globalconfig.Hems{}
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -688,6 +703,7 @@ func configureMDNS(conf globalconfig.Network) error {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
+		*conf = eebus.Config{}
 		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
 			return err
 		}
@@ -712,6 +728,7 @@ func configureEEBus(conf *eebus.Config) error {
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
+		*conf = globalconfig.Messaging{}
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -742,8 +759,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
 	if err != nil {
-		var ce *util.ConfigError
-		if errors.As(err, &ce) {
+		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
 		}
 
@@ -755,11 +771,12 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
+func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
+	name := u.String()
 	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
@@ -769,9 +786,39 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 	return nil
 }
 
-func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
+func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
+	var eg errgroup.Group
+	tt := make([]api.Tariff, len(conf))
+
+	for i, conf := range conf {
+		eg.Go(func() error {
+			if conf.Type == "" {
+				return errors.New("missing type")
+			}
+
+			name := fmt.Sprintf("%s-%s-%d", api.TariffUsageSolar, tariff.Name(conf), i)
+			res, err := tariffInstance(name, conf)
+			if err != nil {
+				return &DeviceError{name, err}
+			}
+
+			tt[i] = res
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	*t = tariff.NewCombined(tt)
+	return nil
+}
+
+func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
+		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
@@ -786,10 +833,15 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	if len(conf.Solar) == 1 {
+		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
+	} else {
+		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	}
 
 	if err := eg.Wait(); err != nil {
 		return nil, &ClassError{ClassTariff, err}
@@ -814,7 +866,7 @@ func configureDevices(conf globalconfig.All) error {
 	if err := configureVehicles(conf.Vehicles); err != nil {
 		return &ClassError{ClassVehicle, err}
 	}
-	if err := configureCircuits(conf.Circuits); err != nil {
+	if err := configureCircuits(&conf.Circuits); err != nil {
 		return &ClassError{ClassCircuit, err}
 	}
 	return nil
@@ -823,7 +875,8 @@ func configureDevices(conf globalconfig.All) error {
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), conf); err != nil {
+		*conf = []globalconfig.ModbusProxy{}
+		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 	}
@@ -862,10 +915,10 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
+		return nil, &ClassError{ClassLoadpoint, err}
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
 		return nil, &ClassError{ClassTariff, err}
 	}
@@ -945,7 +998,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
+			return &DeviceError{cc.Name, err}
 		}
 
 		if err := config.Loadpoints().Add(config.NewStaticDevice(cc, loadpoint.API(instance))); err != nil {
@@ -970,20 +1023,24 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
+			return &DeviceError{cc.Name, err}
 		}
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
-			return fmt.Errorf("failed configuring loadpoint: %w", err)
-		}
-
-		if err := dynamic.Apply(instance); err != nil {
-			return err
+			err = &DeviceError{cc.Name, err}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
-		if err := config.Loadpoints().Add(dev); err != nil {
+		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
+		}
+
+		if e := dynamic.Apply(instance); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
+		}
+
+		if err != nil {
 			return err
 		}
 	}

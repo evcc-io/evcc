@@ -40,8 +40,10 @@
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
 							:key="loadpoint.name"
-							:name="loadpoint.title"
+							:title="loadpoint.title"
+							:name="loadpoint.name"
 							:editable="!!loadpoint.id"
+							:error="deviceError('loadpoint', loadpoint.name)"
 							data-testid="loadpoint"
 							@edit="editLoadpoint(loadpoint.id)"
 						>
@@ -69,7 +71,8 @@
 						<DeviceCard
 							v-for="vehicle in vehicles"
 							:key="vehicle.name"
-							:name="vehicle.config?.title || vehicle.name"
+							:title="vehicle.config?.title || vehicle.name"
+							:name="vehicle.name"
 							:editable="vehicle.id >= 0"
 							:error="deviceError('vehicle', vehicle.name)"
 							data-testid="vehicle"
@@ -92,9 +95,10 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
-							v-if="gridMeter?.id"
-							:name="$t('config.grid.title')"
-							editable
+							v-if="gridMeter"
+							:title="$t('config.grid.title')"
+							:name="gridMeter.name"
+							:editable="!!gridMeter.id"
 							:error="deviceError('meter', gridMeter.name)"
 							data-testid="grid"
 							@edit="editMeter(gridMeter.id, 'grid')"
@@ -114,7 +118,7 @@
 						/>
 						<DeviceCard
 							v-if="tariffTags"
-							:name="$t('config.tariffs.title')"
+							:title="$t('config.tariffs.title')"
 							editable
 							:error="fatalClass === 'tariff'"
 							data-testid="tariffs"
@@ -139,7 +143,8 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:name="meter.config?.template || 'Solar system'"
+							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
+							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
 							data-testid="pv"
@@ -155,7 +160,10 @@
 						<DeviceCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:name="meter.config?.template || 'Battery storage'"
+							:title="
+								meter.deviceTitle || meter.config?.template || 'Battery storage'
+							"
+							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
 							data-testid="battery"
@@ -178,7 +186,7 @@
 
 					<ul class="p-0 config-list">
 						<DeviceCard
-							:name="$t('config.mqtt.title')"
+							:title="$t('config.mqtt.title')"
 							editable
 							:error="fatalClass === 'mqtt'"
 							data-testid="mqtt"
@@ -190,7 +198,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:name="$t('config.messaging.title')"
+							:title="$t('config.messaging.title')"
 							editable
 							:error="fatalClass === 'messenger'"
 							data-testid="messaging"
@@ -202,7 +210,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:name="$t('config.influx.title')"
+							:title="$t('config.influx.title')"
 							editable
 							:error="fatalClass === 'influx'"
 							data-testid="influx"
@@ -214,7 +222,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:name="`${$t('config.eebus.title')} 🧪`"
+							:title="`${$t('config.eebus.title')} 🧪`"
 							editable
 							:error="fatalClass === 'eebus'"
 							data-testid="eebus"
@@ -227,7 +235,7 @@
 						</DeviceCard>
 
 						<DeviceCard
-							:name="`${$t('config.circuits.title')} 🧪`"
+							:title="`${$t('config.circuits.title')} 🧪`"
 							editable
 							:error="fatalClass === 'circuit'"
 							data-testid="circuits"
@@ -254,7 +262,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:name="$t('config.modbusproxy.title')"
+							:title="$t('config.modbusproxy.title')"
 							editable
 							:error="fatalClass === 'modbusproxy'"
 							data-testid="modbusproxy"
@@ -266,7 +274,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:name="$t('config.hems.title')"
+							:title="$t('config.hems.title')"
 							editable
 							:error="fatalClass === 'hems'"
 							data-testid="hems"
@@ -381,7 +389,7 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 
@@ -414,7 +422,7 @@ export default {
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
-		TopHeader,
+		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
 	},
@@ -439,6 +447,8 @@ export default {
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			isComponentMounted: true,
+			isPageVisible: true,
 		};
 	},
 	computed: {
@@ -540,12 +550,25 @@ export default {
 		},
 	},
 	mounted() {
+		this.isComponentMounted = true;
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
+		this.isPageVisible = document.visibilityState === "visible";
 		this.loadAll();
 	},
 	unmounted() {
+		this.isComponentMounted = false;
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 		clearTimeout(this.deviceValueTimeout);
 	},
 	methods: {
+		handleVisibilityChange() {
+			this.isPageVisible = document.visibilityState === "visible";
+			if (this.isPageVisible) {
+				this.updateValues();
+			} else {
+				clearTimeout(this.deviceValueTimeout);
+			}
+		},
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
@@ -786,14 +809,17 @@ export default {
 				};
 				for (const type in devices) {
 					for (const device of devices[type]) {
-						await this.updateDeviceValue(type, device.name);
+						if (this.isComponentMounted && this.isPageVisible) {
+							await this.updateDeviceValue(type, device.name);
+						}
 					}
 				}
 			}
-			// ensure that component is still mounted
-			if (!this.$el) return;
-			const interval = (store.state?.interval || 30) * 1000;
-			this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+
+			if (this.isComponentMounted && this.isPageVisible) {
+				const interval = (store.state?.interval || 30) * 1000;
+				this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+			}
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || {};

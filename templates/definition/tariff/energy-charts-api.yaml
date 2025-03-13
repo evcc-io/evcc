@@ -7,6 +7,7 @@ requirements:
     en: "Day-ahead forecast of energy prices (per kWh) on the exchange. No prior registration for https://api.energy-charts.info/ necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
   evcc: ["skiptest"]
 group: price
+countries: ["EU"]
 params:
   - name: bzn
     type: choice

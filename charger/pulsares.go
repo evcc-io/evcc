@@ -51,7 +51,7 @@ func init() {
 	registry.AddCtx("pulsares", NewPulsaresFromConfig)
 }
 
-//go:generate decorate -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
 func NewPulsaresFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -78,7 +78,7 @@ func NewPulsaresFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 // NewPulsares creates Pulsares charger
 func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Pulsares, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}

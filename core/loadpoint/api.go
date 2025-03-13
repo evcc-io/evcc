@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+//go:generate go tool mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
 
 // Controller gives access to loadpoint
 type Controller interface {
@@ -68,8 +68,10 @@ type API interface {
 	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the enabled phases
 	GetPhases() int
-	// SetPhases sets the enabled phases
-	SetPhases(int) error
+	// GetPhasesConfigured returns the configured phases
+	GetPhasesConfigured() int
+	// SetPhasesConfigured sets the configured phases
+	SetPhasesConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 
@@ -114,7 +116,7 @@ type API interface {
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
+	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -144,7 +146,7 @@ type API interface {
 	SetDisableDelay(delay time.Duration)
 
 	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() bool
+	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
@@ -169,7 +171,7 @@ type API interface {
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
-	GetChargePowerFlexibility() float64
+	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current
 	GetMaxPhaseCurrent() float64
 

@@ -75,6 +75,7 @@ enabled = "Enabled"
 energy = "Energy"
 feedinPrice = "Feed-in price"
 gridPrice = "Grid price"
+heaterTempLimit = "Heater limit"
 hemsType = "System"
 identifier = "RFID-Identifier"
 no = "no"
@@ -155,6 +156,7 @@ v2Support = "Back to InfluxDB 2.x"
 addCharger = "Add charger"
 addMeter = "Add dedicated charger meter"
 cancel = "Cancel"
+chargerError = "Configuring a charger is required."
 chargerLabel = "Charger"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Will use a current range of 6 to 16 A."
@@ -232,10 +234,11 @@ addTariffs = "Add tariffs"
 addVehicle = "Add vehicle"
 configured = "configured"
 edit = "edit"
+name = "Name"
 title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
-yaml = "Configured in evcc.yaml. Not editable in the UI."
+yaml = "Device from evcc.yaml are not editable."
 
 [config.messaging]
 description = "Receive messages about your charging sessions."
@@ -432,6 +435,32 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
+[forecast]
+modalTitle = "Forecast"
+solarAdjust = "Adjust solar forecast based on real production data."
+
+[forecast.co2]
+average = "Average"
+lowestHour = "Cleanest hour"
+range = "Range"
+
+[forecast.price]
+average = "Average"
+lowestHour = "Cheapest hour"
+range = "Range"
+
+[forecast.solar]
+dayAfterTomorrow = "Day after tomorrow"
+partly = "partly"
+remaining = "remaining"
+today = "Today"
+tomorrow = "Tomorrow"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Price"
+solar = "Solar"
+
 [header]
 about = "About"
 blog = "Blog"
@@ -522,6 +551,7 @@ batteryGridChargeActive = "grid charging active"
 batteryGridChargeLimit = "grid charging when"
 batteryHold = "Battery (locked)"
 batteryTooltip = "{energy} of {total} ({soc})"
+forecastTooltip = "forecast: remaining solar production today"
 gridImport = "Grid use"
 homePower = "Consumption"
 loadpoints = "Charger| Charger | {count} chargers"
@@ -532,6 +562,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
@@ -653,13 +684,6 @@ tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 
-[main.vehicleSoc]
-charging = "charging"
-connected = "connected"
-disconnected = "disconnected"
-ready = "ready"
-vehicleLimit = "Vehicle limit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
 batteryBoost = "Battery boost active."
@@ -684,7 +708,7 @@ targetChargeActive = "Charging plan active. Estimated finish in {duration}."
 targetChargePlanned = "Charging plan starts in {duration}."
 targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleLimit = "Vehicle limit."
+vehicleLimit = "Vehicle limit"
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 welcome = "Short initial charge to confirm connection."
@@ -859,6 +883,8 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+resetAction = "Remove limit"
+resetWarning = "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?"
 saved = "Saved."
 
 [startupError]

@@ -19,6 +19,9 @@ const (
 	SiteTitle             = "siteTitle"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
+	Forecast              = "forecast"
+	SolarAccYield         = "solarAccYield"
+	SolarAccForecast      = "solarAccForecast"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
@@ -26,6 +29,7 @@ const (
 	TariffGrid            = "tariffGrid"
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
+	TariffSolar           = "tariffSolar"
 	Vehicles              = "vehicles"
 
 	// meters

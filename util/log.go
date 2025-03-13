@@ -151,6 +151,9 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 // CaptureLogs appends uiWriter to relevant log levels for
 // loggers created before uiChan is initialized
 func CaptureLogs(c chan<- Param) {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
 	if uiChan != nil {
 		return
 	}

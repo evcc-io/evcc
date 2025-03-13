@@ -251,7 +251,13 @@ func healthHandler(site site.API) http.HandlerFunc {
 func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tariff := vars["tariff"]
+		val := vars["tariff"]
+
+		tariff, err := api.TariffUsageString(val)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
 
 		t := site.GetTariff(tariff)
 		if t == nil {
@@ -284,6 +290,11 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	util.ResetCached()
+	jsonResult(w, "OK")
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {

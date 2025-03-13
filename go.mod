@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.23.3
+go 1.24.0
 
 require (
 	dario.cat/mergo v1.0.1
@@ -25,7 +25,6 @@ require (
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/enbility/eebus-go v0.7.0
@@ -49,12 +48,11 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20241004123532-f6c6fb5201b3
 	github.com/hashicorp/go-version v1.7.0
-	github.com/hasura/go-graphql-client v0.13.1
+	github.com/hasura/go-graphql-client v0.13.2-0.20250219070609-5970b87363a3
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/jinzhu/copier v0.4.0
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
 	github.com/joho/godotenv v1.5.1
@@ -70,10 +68,10 @@ require (
 	github.com/mlnoga/rct v0.1.2-0.20250202175314-91abcbf32e53
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
-	github.com/nicksnyder/go-i18n/v2 v2.4.1
+	github.com/nicksnyder/go-i18n/v2 v2.5.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
-	github.com/prometheus-community/pro-bing v0.6.0
+	github.com/prometheus-community/pro-bing v0.6.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.62.0
 	github.com/robertkrimen/otto v0.5.1
@@ -88,23 +86,23 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.0-alpha.6
 	github.com/stretchr/testify v1.10.0
-	github.com/teslamotors/vehicle-command v0.3.2
+	github.com/teslamotors/vehicle-command v0.3.3
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20250105092704-29539e22899d
+	github.com/volkszaehler/mbmd v0.0.0-20250209205356-75c941941d8c
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.0
-	golang.org/x/crypto v0.32.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20250118192723-a8ea4be81f07
-	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c
-	golang.org/x/net v0.34.0
-	golang.org/x/oauth2 v0.25.0
-	golang.org/x/sync v0.10.0
-	golang.org/x/text v0.21.0
-	golang.org/x/tools v0.29.0
+	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250210163342-e47973b1c108
+	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
+	golang.org/x/net v0.35.0
+	golang.org/x/oauth2 v0.26.0
+	golang.org/x/sync v0.11.0
+	golang.org/x/text v0.22.0
+	golang.org/x/tools v0.30.0
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.12
 )
@@ -118,11 +116,15 @@ require (
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/breml/rootcerts v0.2.10 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/dmarkham/enumer v1.5.10 // indirect
+	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a // indirect
 	github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 // indirect
@@ -138,8 +140,11 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57 // indirect
+	github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
@@ -191,9 +196,9 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/term v0.29.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
@@ -204,12 +209,17 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 )
 
+tool (
+	github.com/dmarkham/enumer
+	github.com/evcc-io/evcc/cmd/decorate
+	github.com/gokrazy/tools/cmd/gok
+	go.uber.org/mock/mockgen
+)
+
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
 
-replace github.com/hasura/go-graphql-client => github.com/andig/go-graphql-client v0.0.0-20250123081454-14ac4443ffd9
-
-replace github.com/nicksnyder/go-i18n/v2 => github.com/nicksnyder/go-i18n/v2 v2.4.1
+replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20250304151343-a31971ce3e06
