@@ -11,7 +11,7 @@ export interface PriceSlot {
 	price: number;
 }
 
-export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot | null): obj is PriceSlot {
+export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot): obj is PriceSlot {
 	return (obj as PriceSlot).start !== undefined;
 }
 

@@ -22,29 +22,25 @@ export default defineComponent({
 	},
 	computed: {
 		isSlot() {
-			return isPriceSlot(this.activeSlot);
+			return this.activeSlot !== null && isPriceSlot(this.activeSlot);
 		},
 		isTimeseries() {
-			return !isPriceSlot(this.activeSlot);
+			return this.activeSlot !== null && !isPriceSlot(this.activeSlot);
 		},
 		day() {
-			// @ts-expect-error - type checked in template
-			const startDate = new Date(this.activeSlot!.start);
+			const startDate = new Date((this.activeSlot! as PriceSlot).start);
 			return this.weekdayShort(startDate);
 		},
 		start() {
-			// @ts-expect-error - type checked in template
-			const startDate = new Date(this.activeSlot!.start);
+			const startDate = new Date((this.activeSlot! as PriceSlot).start);
 			return this.hourShort(startDate);
 		},
 		end() {
-			// @ts-expect-error - type checked in template
-			const endDate = new Date(this.activeSlot!.end);
+			const endDate = new Date((this.activeSlot! as PriceSlot).end);
 			return this.hourShort(endDate);
 		},
 		time() {
-			// @ts-expect-error - type checked in template
-			const time = new Date(this.activeSlot!.ts);
+			const time = new Date((this.activeSlot! as TimeseriesEntry).ts);
 			return `${this.weekdayShort(time)} ${this.hourShort(time)}`;
 		},
 	},
