@@ -96,7 +96,7 @@ export default defineComponent({
 			return this.filterSlots(this.grid);
 		},
 		co2Slots() {
-			return this.filterSlots(this.co2 || []);
+			return this.filterSlots(this.co2);
 		},
 		projectedSlots() {
 			return this.filterEvents(this.solar?.events || []);
@@ -207,8 +207,8 @@ export default defineComponent({
 								? this.selectedIndex === index
 								: index === this.maxCo2Index || index === this.minCo2Index);
 						return {
-							y: slot.val,
-							x: new Date(slot.ts),
+							y: slot.price,
+							x: new Date(slot.start),
 							highlight: dataActive,
 							active: dataActive,
 						};
@@ -411,9 +411,9 @@ export default defineComponent({
 						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
 						beginAtZero: true,
 					},
-					yCo2: { display: false, min: 0, max: this.yEventMax(this.co2Slots) },
+					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
 					yProjected: {
-						display: false,
+						display: true,
 						min: 0,
 						max: this.yEventMax(this.projectedSlots),
 					},
