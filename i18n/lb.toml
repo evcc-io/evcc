@@ -443,7 +443,7 @@ modalUpdateStatusStart = "Installatioun ugefaang:"
 
 [forecast]
 modalTitle = "Prognose"
-solarAdjust = "Solarprognose unhand vun de reale Produktionsdaten upassen."
+solarAdjust = "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}."
 
 [forecast.co2]
 average = "Moyenne"

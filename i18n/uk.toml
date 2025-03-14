@@ -451,7 +451,7 @@ modalUpdateStatusStart = "Встановлення розпочато:"
 
 [forecast]
 modalTitle = "Прогноз"
-solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва."
+solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва{percent}."
 
 [forecast.co2]
 average = "Середній"
