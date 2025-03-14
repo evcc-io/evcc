@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import { CURRENCY } from "../types/evcc";
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
 enum ENERGY_PRICE_IN_SUBUNIT {
@@ -14,11 +15,6 @@ enum ENERGY_PRICE_IN_SUBUNIT {
 	NZD = "c", // New Zealand cent
 	PLN = "gr", // Polish grosz
 	USD = "¢", // US cent
-}
-
-export enum CURRENCY {
-	EUR = "EUR",
-	USD = "USD",
 }
 
 export enum POWER_UNIT {

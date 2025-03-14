@@ -2,6 +2,8 @@ declare global {
     interface State {
         offline: boolean;
         loadpoints: [];
+        forecast?: any
+        currency?: CURRENCY
     }
 
     interface Window {
@@ -9,4 +11,7 @@ declare global {
     }
 }
 
-export { };
+export enum CURRENCY {
+    EUR = "EUR",
+    USD = "USD",
+}
