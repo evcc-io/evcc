@@ -18,7 +18,7 @@ function setProperty(obj, props, value) {
   setProperty(obj[prop], props, value);
 }
 
-const initialState = {
+const initialState: State = {
   offline: false,
   loadpoints: [], // ensure array type
 };
@@ -27,7 +27,7 @@ const state = reactive(initialState);
 
 const store = {
   state,
-  offline: function (value) {
+  offline: function (value: boolean) {
     state.offline = value;
   },
   update: function (msg) {
