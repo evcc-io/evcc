@@ -51,7 +51,7 @@ export default defineComponent({
 				[ForecastType.Solar]: "shopicon-regular-sun",
 				[ForecastType.Price]: DynamicPriceIcon,
 				[ForecastType.Co2]: "shopicon-regular-eco1",
-				[ForecastType.Projected]: "shopicon-regular-eco2",
+				[ForecastType.Projected]: "shopicon-regular-lightbulb",
 			};
 		},
 	},
