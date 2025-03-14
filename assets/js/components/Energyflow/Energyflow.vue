@@ -396,7 +396,12 @@ export default {
 			return !!this.forecast?.solar;
 		},
 		solarForecastRemainingToday() {
-			return this.forecast?.solar?.today?.energy || undefined;
+			if (!this.forecast?.solar) {
+				return undefined;
+			}
+			const { today, scale } = this.forecast.solar || {};
+			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
+			return today.energy * factor;
 		},
 		solarForecastIcon() {
 			return this.solarForecastExists ? "forecast" : undefined;
