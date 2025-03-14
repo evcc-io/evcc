@@ -1,11 +1,11 @@
 <template>
-	<div v-if="isSlot" class="text-end">
-		<span class="text-nowrap">{{ day }} {{ start }}</span
-		>{{ " " }}<span class="text-nowrap">– {{ end }}</span>
-	</div>
-	<div v-if="isTimeseries" class="text-end">
-		<span class="text-nowrap">{{ time }}</span>
-	</div>
+  <div v-if="isSlot" class="text-end">
+    <span class="text-nowrap">{{ day }} {{ start }}</span
+    >{{ " " }}<span class="text-nowrap">– {{ end }}</span>
+  </div>
+  <div v-if="isTimeseries" class="text-end">
+    <span class="text-nowrap">{{ time }}</span>
+  </div>
 </template>
 
 <script lang="ts">
@@ -28,22 +28,22 @@ export default defineComponent({
 			return !isPriceSlot(this.activeSlot);
 		},
 		day() {
-			// @ts-ignore - type checked in template
+			// @ts-expect-error - type checked in template
 			const startDate = new Date(this.activeSlot!.start);
 			return this.weekdayShort(startDate);
 		},
 		start() {
-			// @ts-ignore - type checked in template
+			// @ts-expect-error - type checked in template
 			const startDate = new Date(this.activeSlot!.start);
 			return this.hourShort(startDate);
 		},
 		end() {
-			// @ts-ignore - type checked in template
+			// @ts-expect-error - type checked in template
 			const endDate = new Date(this.activeSlot!.end);
 			return this.hourShort(endDate);
 		},
 		time() {
-			// @ts-ignore - type checked in template
+			// @ts-expect-error - type checked in template
 			const time = new Date(this.activeSlot!.ts);
 			return `${this.weekdayShort(time)} ${this.hourShort(time)}`;
 		},
