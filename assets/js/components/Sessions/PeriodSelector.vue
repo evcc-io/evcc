@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 
 export default {
 	name: "PeriodSelector",

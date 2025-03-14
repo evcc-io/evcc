@@ -52,6 +52,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		case match(KeyChargingScheduleAllowedChargingRateUnit):
 			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
+				cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 			}
 
 		case match(KeyConnectorSwitch3to1PhaseSupported) || match(KeyChargeAmpsPhaseSwitchingSupported):

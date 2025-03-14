@@ -94,7 +94,7 @@
 </template>
 
 <script>
-import CustomSelect from "../CustomSelect.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import DateNavigatorButton from "./DateNavigatorButton.vue";
 import formatter from "../../mixins/formatter";
 
