@@ -216,7 +216,7 @@ func (m *RCT) batterySoc() (float64, error) {
 func (m *RCT) bo() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(100*time.Millisecond),
-		backoff.WithMaxElapsedTime(10*time.Second))
+		backoff.WithMaxElapsedTime(30*time.Second))
 }
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
