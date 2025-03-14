@@ -67,6 +67,7 @@ import { defineComponent, type PropType } from "vue";
 import { ForecastType, type PriceSlot, type SolarDetails } from "../../utils/forecast.ts";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import type { CURRENCY } from "assets/js/types/evcc.ts";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
 export interface Energy {
@@ -91,7 +92,7 @@ export default defineComponent({
 		grid: { type: Array as PropType<PriceSlot[]> },
 		co2: { type: Array as PropType<PriceSlot[]> },
 		solar: { type: Object as PropType<SolarDetails> },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 	},
 	data: function () {
 		return {
@@ -135,11 +136,14 @@ export default defineComponent({
 			return `${this.weekdayShort(start)} ${this.hourShort(start)} – ${this.hourShort(end)}`;
 		},
 		highlightColor() {
-			const colors = {
-				[ForecastType.Price]: "text-price",
-				[ForecastType.Co2]: "text-co2",
-			};
-			return colors[this.type];
+			switch (this.type) {
+				case ForecastType.Price:
+					return "text-price";
+				case ForecastType.Price:
+					return "text-co2";
+				default:
+					return "";
+			}
 		},
 	},
 	mounted() {
