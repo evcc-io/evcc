@@ -139,7 +139,7 @@ export default defineComponent({
 			switch (this.type) {
 				case ForecastType.Price:
 					return "text-price";
-				case ForecastType.Price:
+				case ForecastType.Co2:
 					return "text-co2";
 				default:
 					return "";
