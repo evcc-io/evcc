@@ -329,7 +329,7 @@ func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
 				new = min(new, maxPower*1.1)
 			}
 		} else {
-			new = min(new, potential)
+			new = max(0, min(0, min(new, potential)))
 		}
 	}
 
@@ -356,7 +356,7 @@ func (c *Circuit) ValidateCurrent(old, new float64, charging bool) float64 {
 				new = min(new, maxCurrent*1.1)
 			}
 		} else {
-			new = min(new, potential)
+			new = max(0, min(new, potential))
 		}
 	}
 
