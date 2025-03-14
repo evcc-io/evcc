@@ -1,20 +1,19 @@
 import deepCopy from "./deepClone";
 
 export interface TimeseriesEntry {
-	kind: "TimeseriesEntry"
 	val: number;
 	ts: string;
 }
 
 export interface PriceSlot {
-	kind: "PriceSlot"
 	start: string;
 	end: string;
 	price: number;
 }
 
 export function isPriceSlot(val?: TimeseriesEntry | PriceSlot | null) {
-	return val && val.kind === "PriceSlot";
+export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot | null): obj is PriceSlot {
+	return (obj as PriceSlot).start !== undefined;
 }
 
 export interface EnergyByDay {
