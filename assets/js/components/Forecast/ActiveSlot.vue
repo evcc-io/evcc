@@ -1,11 +1,11 @@
 <template>
-  <div v-if="isSlot" class="text-end">
-    <span class="text-nowrap">{{ day }} {{ start }}</span
-    >{{ " " }}<span class="text-nowrap">– {{ end }}</span>
-  </div>
-  <div v-if="isTimeseries" class="text-end">
-    <span class="text-nowrap">{{ time }}</span>
-  </div>
+	<div v-if="isSlot" class="text-end">
+		<span class="text-nowrap">{{ day }} {{ start }}</span
+		>{{ " " }}<span class="text-nowrap">– {{ end }}</span>
+	</div>
+	<div v-if="isTimeseries" class="text-end">
+		<span class="text-nowrap">{{ time }}</span>
+	</div>
 </template>
 
 <script lang="ts">
