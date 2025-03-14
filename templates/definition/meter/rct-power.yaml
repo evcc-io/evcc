@@ -22,7 +22,7 @@ params:
     advanced: true
   - name: cache
     advanced: true
-    default: 10s
+    default: 15s
 render: |
   type: rct
   uri: {{ .host }}
