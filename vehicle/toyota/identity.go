@@ -141,7 +141,7 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	v.uuid = uuid
-	v.TokenSource = oauth.RefreshTokenSource(&resp.Token, v)
+	v.TokenSource = oauth.RefreshTokenSource(util.TokenWithExpiry(&resp.Token), v)
 	return nil
 }
 
@@ -159,8 +159,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
-	res.Expiry = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
-	return oauth.RefreshTokenSource(&res, v).Token()
+	return util.TokenWithExpiry(&res), nil
 }
 
 func (v *Identity) Login(user, password string) error {
