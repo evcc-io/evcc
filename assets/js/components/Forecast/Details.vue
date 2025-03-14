@@ -65,7 +65,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import { ForecastType, type PriceSlot, type SolarDetails } from "../../utils/forecast.ts";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 

@@ -65,7 +65,7 @@ import {
 	ForecastType,
 	adjustedSolar,
 } from "../../utils/forecast.ts";
-import formatter from "../../mixins/formatter";
+import formatter from "../../mixins/formatter.ts";
 import settings from "../../settings";
 export default defineComponent({
 	name: "ForecastModal",
