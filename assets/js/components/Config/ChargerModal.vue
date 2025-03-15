@@ -10,9 +10,10 @@
 		<form ref="form" class="container mx-0 px-0">
 			<FormRow id="chargerTemplate" :label="$t('config.charger.template')">
 				<select
+					v-if="isNew"
 					id="chargerTemplate"
+					ref="templateSelect"
 					v-model="templateName"
-					:disabled="!isNew"
 					class="form-select w-100"
 					@change="templateChanged"
 				>
@@ -45,6 +46,13 @@
 						</option>
 					</optgroup>
 				</select>
+				<input
+					v-else
+					type="text"
+					:value="productName"
+					disabled
+					class="form-control w-100"
+				/>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
 			<SponsorTokenRequired v-if="sponsorTokenRequired" />
@@ -250,6 +258,9 @@ export default {
 		description() {
 			return this.template?.Requirements?.Description;
 		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
+		},
 		sponsorTokenRequired() {
 			const list = this.template?.Requirements?.EVCC || [];
 			return list.includes("sponsorship") && !this.isSponsor;
@@ -298,6 +309,10 @@ export default {
 			try {
 				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
 				this.values = charger.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = charger.type;
+				this.values.deviceProduct = charger.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -317,6 +332,7 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -342,6 +358,13 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testCharger);
 				if (!success) return;

@@ -39,6 +39,7 @@
 				<select
 					v-if="isNew"
 					id="meterTemplate"
+					ref="templateSelect"
 					v-model="templateName"
 					class="form-select w-100"
 					@change="templateChanged"
@@ -377,6 +378,13 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testMeter);
 				if (!success) return;
@@ -390,8 +398,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -417,8 +424,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -429,8 +435,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {
@@ -443,11 +448,8 @@ export default {
 		selectType(type) {
 			this.selectedType = type;
 		},
-		templateChanged(event) {
+		templateChanged() {
 			this.reset(true);
-			const select = event.target;
-			const name = select.options[select.selectedIndex].text;
-			this.values.deviceProduct = name;
 		},
 	},
 };
