@@ -252,6 +252,23 @@ func (suite *ocppTestSuite) TestTimeout() {
 
 	// 1st charge point- local
 	_, err := NewOCPP(context.TODO(), "test-4", 1, "", "", 0, false, false, ocppTestConnectTimeout)
-
 	suite.Require().NoError(err)
+}
+
+func (suite *ocppTestSuite) TestContext() {
+	const id = "test-5"
+
+	// 1st charge point- remote
+	cp1, _ := suite.startChargePoint(id, 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+	suite.Require().True(cp1.IsConnected())
+
+	ctx, cancel := context.WithCancel(context.TODO())
+
+	// 1st charge point- local
+	_, err := NewOCPP(ctx, id, 1, "", "", 0, false, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+
+	suite.Equal()
+	cancel()
 }

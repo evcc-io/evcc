@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,7 +147,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		s := &Site{
-			batteryMeters: []api.Meter{nil},
+			batteryMeters: []config.Device[api.Meter]{nil},
 			batteryMode:   tc.mode,
 		}
 

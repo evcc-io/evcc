@@ -450,7 +450,7 @@ modalUpdateStatusStart = "Installationen har börjat:"
 
 [forecast]
 modalTitle = "Prognos"
-solarAdjust = "Justera solprognosen baserat på verkliga produktionsvärden."
+solarAdjust = "Justera solprognosen baserat på verkliga produktionsvärden{percent}."
 
 [forecast.co2]
 average = "Genomsnitt"
