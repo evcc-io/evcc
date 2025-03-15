@@ -632,7 +632,7 @@ export default {
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
-			const title = this.charger.config?.template || "unknown";
+			const title = this.charger.deviceProduct || this.charger.config?.template || "unknown";
 			return `${title} [${this.values.charger}]`;
 		},
 		chargerStatus() {
@@ -651,7 +651,7 @@ export default {
 			const name = this.values.meter;
 			if (!name) return "";
 			const meter = this.meters.find((m) => m.name === name);
-			const title = meter?.config?.template || "unknown";
+			const title = meter?.deviceProduct || meter?.config?.template || "unknown";
 			return `${title} [${name}]`;
 		},
 		isDeletable() {
