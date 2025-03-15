@@ -390,8 +390,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -417,8 +416,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -429,8 +427,7 @@ export default {
 				this.$emit("updated");
 				this.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {
