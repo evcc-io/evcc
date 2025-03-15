@@ -232,3 +232,10 @@ func (v *Ovms) Position() (float64, float64, error) {
 	res, err := v.locationG()
 	return res.Latitude, res.Longitude, err
 }
+
+var _ api.VehicleClimater = (*Ovms)(nil)
+
+func (v *Ovms) Climater() (bool, error) {
+	res, err := v.chargeG()
+	return res.Climater > 0, err
+}
