@@ -215,7 +215,7 @@ func (m *RCT) batterySoc() (float64, error) {
 
 func (m *RCT) bo() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(100*time.Millisecond),
+		backoff.WithInitialInterval(time.Second),
 		backoff.WithMaxElapsedTime(10*time.Second))
 }
 
