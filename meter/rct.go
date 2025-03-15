@@ -13,7 +13,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/mlnoga/rct"
+	"github.com/evcc-io/rct"
 )
 
 // RCT implements the api.Meter interface
