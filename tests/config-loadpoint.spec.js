@@ -104,6 +104,16 @@ test.describe("loadpoint", async () => {
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expect(lpModal).toBeVisible();
     await lpModal.getByTestId("chargerPower-22kw").click();
+
+    // update charger mode
+    await expect(lpModal.getByRole("textbox", { name: "Charger" })).toHaveValue(
+      "Demo charger [db:1]"
+    );
+    await lpModal.getByRole("textbox", { name: "Charger" }).click();
+    await chargerModal.getByLabel("Charge status").selectOption("A");
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expect(chargerModal).not.toBeVisible();
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
 
@@ -111,6 +121,8 @@ test.describe("loadpoint", async () => {
     await restart(CONFIG_EMPTY);
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    await expect(page.getByTestId("loadpoint")).toContainText("not connected");
+
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expect(lpModal).toBeVisible();
     await expect(lpModal.getByTestId("chargerPower-22kw")).toHaveClass(/active/);
