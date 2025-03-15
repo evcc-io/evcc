@@ -37,6 +37,7 @@ import {
 	type PriceSlot,
 	type SolarDetails,
 	type TimeseriesEntry,
+	type EventEntry,
 } from "../../utils/forecast.ts";
 
 registerChartComponents([
@@ -97,6 +98,9 @@ export default defineComponent({
 		co2Slots() {
 			return this.filterSlots(this.co2);
 		},
+		projectedSlots() {
+			return this.filterEvents(this.solar?.events || []);
+		},
 		maxPriceIndex() {
 			return this.maxIndex(this.gridSlots);
 		},
@@ -108,6 +112,12 @@ export default defineComponent({
 		},
 		minCo2Index() {
 			return this.minIndex(this.co2Slots);
+		},
+		maxProjectedIndex() {
+			return this.maxEventIndex(this.projectedSlots);
+		},
+		minProjectedIndex() {
+			return this.minEventIndex(this.projectedSlots);
 		},
 		maxSolarIndex() {
 			return this.maxEntryIndex(this.solarEntries);
@@ -213,6 +223,36 @@ export default defineComponent({
 					order: active ? 0 : 1,
 				});
 			}
+			if (this.projectedSlots.length > 0) {
+				const active = this.selected === ForecastType.Projected;
+				const color = active ? colors.co2 : colors.border;
+				datasets.push({
+					label: ForecastType.Projected,
+					type: "line",
+					data: this.projectedSlots.map((slot, index) => {
+						const dataActive =
+							active &&
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: index === this.maxProjectedIndex ||
+									index === this.minProjectedIndex);
+						return {
+							y: slot.val,
+							x: new Date(slot.ts),
+							highlight: dataActive,
+							active: dataActive,
+						};
+					}),
+					yAxisID: "yProjected",
+					backgroundColor: color,
+					borderColor: color,
+					tension: 0.25,
+					pointRadius: 0,
+					pointHoverRadius: active ? 4 : 0,
+					spanGaps: true,
+					order: active ? 0 : 1,
+				});
+			}
 
 			return {
 				datasets,
@@ -303,6 +343,8 @@ export default defineComponent({
 										);
 									case ForecastType.Co2:
 										return vThis.fmtGrams(data.y);
+									case ForecastType.Projected:
+										return data.y + "%";
 									case ForecastType.Solar:
 										if (data.highlight === true) {
 											return vThis.fmtW(data.y, POWER_UNIT.AUTO);
@@ -370,6 +412,11 @@ export default defineComponent({
 						beginAtZero: true,
 					},
 					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
+					yProjected: {
+						display: true,
+						min: 0,
+						max: this.yEventMax(this.projectedSlots),
+					},
 					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
 				},
 			};
@@ -381,6 +428,7 @@ export default defineComponent({
 				[ForecastType.Solar]: this.solarEntries,
 				[ForecastType.Price]: this.gridSlots,
 				[ForecastType.Co2]: this.co2Slots,
+				[ForecastType.Projected]: this.projectedSlots,
 			};
 
 			return slotMap[this.selected]?.[this.selectedIndex] ?? null;
@@ -428,6 +476,17 @@ export default defineComponent({
 				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
 			);
 		},
+		filterEvents(entries: EventEntry[] = []) {
+			// include 1 hour before and after
+			const start = new Date(this.startDate);
+			start.setHours(start.getHours() - 1);
+			const end = new Date(this.endDate);
+			end.setHours(end.getHours() + 1);
+
+			return entries.filter(
+				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+			);
+		},
 		onMouseLeave() {
 			this.selectIndex(null, true);
 		},
@@ -455,6 +514,10 @@ export default defineComponent({
 			const value = this.maxValue(slots);
 			return value ? value * 1.15 : undefined;
 		},
+		yEventMax(slots: EventEntry[] = []): number | undefined {
+			const value = this.maxEventValue(slots);
+			return value ? value * 1.15 : undefined;
+		},
 		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
 			const maxValue = this.maxEntryValue(entries);
 			if (!maxValue) return undefined;
@@ -473,6 +536,19 @@ export default defineComponent({
 		},
 		maxValue(slots: PriceSlot[] = []) {
 			return slots[this.maxIndex(slots)]?.price || null;
+		},
+		maxEventIndex(slots: EventEntry[] = []) {
+			return slots.reduce((max, slot, index) => {
+				return slot.val > slots[max].val ? index : max;
+			}, 0);
+		},
+		minEventIndex(slots: EventEntry[] = []) {
+			return slots.reduce((min, slot, index) => {
+				return slot.val < slots[min].val ? index : min;
+			}, 0);
+		},
+		maxEventValue(slots: EventEntry[] = []) {
+			return slots[this.maxEventIndex(slots)]?.val || null;
 		},
 		maxEntryValue(entries: TimeseriesEntry[] = []) {
 			return entries[this.maxEntryIndex(entries)]?.val || null;

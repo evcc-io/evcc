@@ -22,6 +22,13 @@ export interface SolarDetails {
 	tomorrow?: EnergyByDay;
 	dayAfterTomorrow?: EnergyByDay;
 	timeseries?: TimeseriesEntry[];
+	events?: EventEntry[];
+}
+
+export interface EventEntry {
+	ts: string;
+	ev: string;
+	val: number;
 }
 
 export interface Forecast {
@@ -34,6 +41,7 @@ export enum ForecastType {
 	Solar = "solar",
 	Price = "price",
 	Co2 = "co2",
+	Projected = "projected",
 }
 
 // return the date in local YYYY-MM-DD format
