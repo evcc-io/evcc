@@ -377,6 +377,13 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testMeter);
 				if (!success) return;
@@ -440,11 +447,8 @@ export default {
 		selectType(type) {
 			this.selectedType = type;
 		},
-		templateChanged(event) {
+		templateChanged() {
 			this.reset(true);
-			const select = event.target;
-			const name = select.options[select.selectedIndex].text;
-			this.values.deviceProduct = name;
 		},
 	},
 };

@@ -1,7 +1,8 @@
 template: offline
 products:
   - description:
-      generic: Offline
+      en: Generic vehicle
+      de: Generisches Fahrzeug
 group: generic
 params:
   - preset: vehicle-common

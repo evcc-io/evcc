@@ -417,11 +417,8 @@ export default {
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		templateChanged(event) {
+		templateChanged() {
 			this.reset();
-			const select = event.target;
-			const name = select.options[select.selectedIndex].text;
-			this.values.deviceProduct = name;
 		},
 	},
 };
