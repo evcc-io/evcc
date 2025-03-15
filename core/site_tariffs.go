@@ -37,9 +37,10 @@ type event struct {
 }
 
 type loadpointStatus struct {
-	Fixed           float64 `json:"fixed,omitempty"`
-	Flexible        float64 `json:"flexible,omitempty"`
-	RemainingEnergy float64 `json:"remainingEnergy,omitempty"`
+	Fixed           float64          `json:"fixed,omitempty"`
+	Flexible        float64          `json:"flexible,omitempty"`
+	RemainingEnergy float64          `json:"remainingEnergy,omitempty"`
+	Status          api.ChargeStatus `json:"status,omitempty"`
 }
 
 // greenShare returns
@@ -235,10 +236,11 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	res := events{prev}
 
-	lps := make([]loadpointStatus, 0, len(site.loadpoints))
+	lps := make([]*loadpointStatus, 0, len(site.loadpoints))
 	for _, lp := range site.loadpoints {
 		status := loadpointStatus{
 			RemainingEnergy: lp.GetRemainingEnergy() / 1e3, // kWh
+			Status:          lp.GetStatus(),
 		}
 
 		switch lp.GetMode() {
@@ -248,7 +250,7 @@ func (site *Site) batteryForecast(solar timeseries) events {
 			status.Fixed = lp.GetMinPower()
 		}
 
-		lps = append(lps, status)
+		lps = append(lps, &status)
 	}
 
 	// create 15m slots
@@ -257,21 +259,21 @@ func (site *Site) batteryForecast(solar timeseries) events {
 		fcst := forecastAvailable[idx]
 		_ = fcst
 
-		for i, lp := range lps {
-			if lp.RemainingEnergy <= 0 {
+		for _, lp := range lps {
+			if lp.RemainingEnergy <= 0 && lp.Status != api.StatusC {
 				continue
 			}
 
 			// fixed
 			forecastAvailable[idx].Value -= lp.Fixed
-			lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-lp.Fixed*slot.Hours()/1e3) // kWh
+			lp.RemainingEnergy = max(0, lp.RemainingEnergy-lp.Fixed*slot.Hours()/1e3) // kWh
 
 			// flexible
 			if forecastAvailable[idx].Value > 0 {
 				flexible := min(forecastAvailable[idx].Value, lp.Flexible)
 
 				forecastAvailable[idx].Value -= flexible
-				lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-flexible*slot.Hours()/1e3) // kWh
+				lp.RemainingEnergy = max(0, lp.RemainingEnergy-flexible*slot.Hours()/1e3) // kWh
 			}
 		}
 
