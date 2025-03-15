@@ -41,7 +41,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		MinSoc, MaxSoc int
 		Cache          time.Duration
 	}{
-		Cache: time.Second,
+		Cache: 30 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
