@@ -118,9 +118,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			}
 
 			rate := api.Rate{
-				Price: zone.Price,
 				Start: ts,
 				End:   end,
+				Value: zone.Price,
 			}
 
 			res = append(res, rate)

@@ -44,7 +44,7 @@ func AverageCost(plan api.Rates) float64 {
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
 		duration += slotDuration
-		cost += float64(slotDuration) * slot.Price
+		cost += float64(slotDuration) * slot.Value
 	}
 	return cost / float64(duration)
 }

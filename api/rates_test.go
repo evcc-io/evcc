@@ -14,7 +14,7 @@ func TestRates(t *testing.T) {
 		return Rate{
 			Start: clock.Now().Add(time.Duration(start) * time.Hour),
 			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
-			Price: val,
+			Value: val,
 		}
 	}
 
@@ -26,11 +26,11 @@ func TestRates(t *testing.T) {
 	for i := 1; i <= 4; i++ {
 		r, err := rr.At(clock.Now().Add(time.Duration(i) * time.Hour))
 		assert.NoError(t, err)
-		assert.Equal(t, float64(i), r.Price)
+		assert.Equal(t, float64(i), r.Value)
 
 		r, err = rr.At(clock.Now().Add(time.Duration(i)*time.Hour + 30*time.Minute))
 		assert.NoError(t, err)
-		assert.Equal(t, float64(i), r.Price)
+		assert.Equal(t, float64(i), r.Value)
 	}
 
 	_, err = rr.At(clock.Now().Add(5 * time.Hour))
