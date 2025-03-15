@@ -214,7 +214,8 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
 // It will also reset the api cache at regular intervals.
-// Detection is stopped after maximum duration and the "guest vehicle" message dispatched.
+// Detection is stopped after maximum duration. A this time the default vehicle is assigned
+// or the "guest vehicle" message dispatched.
 func (lp *Loadpoint) vehicleUnidentified() bool {
 	if lp.vehicle != nil || lp.vehicleDetect.IsZero() || len(lp.coordinatedVehicles()) == 0 {
 		return false
@@ -223,7 +224,11 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	// stop detection
 	if lp.clock.Since(lp.vehicleDetect) > vehicleDetectDuration {
 		lp.stopVehicleDetection()
-		lp.pushEvent(evVehicleUnidentified)
+		if lp.defaultVehicle != nil {
+			lp.setActiveVehicle(lp.defaultVehicle)
+		} else {
+			lp.pushEvent(evVehicleUnidentified)
+		}
 		return false
 	}
 
@@ -240,16 +245,12 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
 func (lp *Loadpoint) vehicleDefaultOrDetect() {
-	if lp.defaultVehicle != nil {
-		if lp.vehicle != lp.defaultVehicle {
-			lp.setActiveVehicle(lp.defaultVehicle)
-		} else {
-			// default vehicle is already active, update odometer anyway
-			// need to do this here since setActiveVehicle would short-circuit
-			lp.addTask(lp.vehicleOdometer)
-		}
-	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
+	// start detection if there are multiple vehicles or only one but no default vehicle
+	if cv := len(lp.coordinatedVehicles()); cv > 1 || cv == 1 && lp.defaultVehicle == nil {
+		lp.setActiveVehicle(nil)
 		lp.startVehicleDetection()
+	} else {
+		lp.setActiveVehicle(lp.defaultVehicle) // maybe nil
 	}
 }
 
