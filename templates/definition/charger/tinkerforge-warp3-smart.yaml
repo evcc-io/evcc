@@ -3,7 +3,7 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP3 Charger Smart
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   evcc: ["skiptest"]
 params:
