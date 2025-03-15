@@ -999,7 +999,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	}
 
 	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
-	return minEnergy > 0 && lp.GetChargedEnergy() < minEnergy
+	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
 // disableUnlessClimater disables the charger unless climate is active
