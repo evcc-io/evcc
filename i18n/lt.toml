@@ -31,7 +31,7 @@ titleAdd = "Pridėti kaupiklį"
 titleEdit = "Redaguoti kaupiklį"
 
 [config.charge]
-titleAdd = "Pridėti įkrovimo skaitiklį"
+titleAdd = "Pridėti įkroviklio skaitiklį"
 titleEdit = "Redaguoti įkrovimo skaitiklį"
 
 [config.charger]
@@ -74,7 +74,7 @@ controllable = "Valdomas"
 currency = "Valiuta"
 current = "Srovė"
 currentRange = "Srovė"
-enabled = "Aktyvuota"
+enabled = "Aktyvuotas"
 energy = "Energija"
 feedinPrice = "Tiekimo į tinklą kaina"
 gridPrice = "Energijos pirkimo kaina"
@@ -228,11 +228,12 @@ vehicleHelpAutoDetection = "Automatiškai parenka labiausiai tikėtiną automobi
 vehicleHelpDefault = "Visada manyti, kad čia įkraunamas šis automobilis. Automatinis aptikimas išjungtas. Galimas rankinis koregavimas."
 vehicleLabel = "Numatytasis automobilis"
 vehiclesTitle = "Automobiliai"
+chargerError = "Reikia sukonfigūruoti įkroviklį."
 
 [config.main]
 addGrid = "Pridėti tinklo skaitiklį"
 addLoadpoint = "Pridėti įkroviklį"
-addPvBattery = "Pridėti saulės ar kaupiklio skaitiklį"
+addPvBattery = "Pridėti saulės elektrinę arba kaupiklį"
 addTariffs = "Pridėti tarifus"
 addVehicle = "Pridėti automobilį"
 configured = "sukonfigūruota"
