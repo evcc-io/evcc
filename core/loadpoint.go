@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -73,8 +74,9 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock       // mockable time
-	bus      evbus.Bus         // event bus
+	clock    clock.Clock // mockable time
+	bus      evbus.Bus   // event bus
+	site     site.API
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
 	lpChan   chan<- *Loadpoint // update requests
@@ -585,7 +587,8 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -1316,6 +1319,10 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 
 	// push demand to drain battery
 	delta := lp.EffectiveStepPower()
+	if !lp.coarseCurrent() {
+		// for >1p this will allow finer adjustments down to 100W
+		delta = max(math.Abs(lp.site.GetResidualPower()), delta/10)
+	}
 
 	// start boosting by setting maximum power
 	if boost == boostStart {
