@@ -66,7 +66,7 @@ func UpdateChargeProgress(log *util.Logger, power, greenShare float64) {
 	}
 
 	if err := upload(log, power, power*greenShare); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
@@ -90,7 +90,7 @@ func Persist(log *util.Logger) {
 	}
 
 	if err := upload(log, 0, 0); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
