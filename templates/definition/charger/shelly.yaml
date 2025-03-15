@@ -8,6 +8,9 @@ params:
   - name: password
     mask: true
   - name: channel
+    description:
+      en: Measure channel id (default 0, Pro 3EM Switch Add-on 100)
+      de: Mess-Sensor Channel Id (Standard 0, Pro 3EM Switch Add-on 100)
     default: 0
   - name: invert
     default: false
