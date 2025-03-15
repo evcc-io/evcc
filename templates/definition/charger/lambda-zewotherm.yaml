@@ -21,11 +21,9 @@ params:
       de: "Temperaturquelle"
       en: "Temperature source"
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -44,7 +42,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1022 # Accumulated thermal energy output [Q] since last reset
+      address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
       type: holding
       decode: int32
     scale: 0.001

@@ -437,7 +437,7 @@ modalUpdateStatusStart = "Kurulum başladı:"
 
 [forecast]
 modalTitle = "“Öngörü”"
-solarAdjust = "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla."
+solarAdjust = "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla{percent}."
 
 [forecast.co2]
 average = "“Ortalama”"

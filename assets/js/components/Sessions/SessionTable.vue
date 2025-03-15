@@ -157,7 +157,7 @@
 </template>
 
 <script>
-import CustomSelect from "../CustomSelect.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import breakpoint from "../../mixins/breakpoint";
 import settings from "../../settings";
