@@ -132,3 +132,29 @@ func (rr timeseries) time(from time.Time, energy float64) (time.Time, float64) {
 
 	return rr[idx].Timestamp, energy
 }
+
+func (rr timeseries) from(ts time.Time) timeseries {
+	idx, _ := rr.search(ts)
+	return rr[idx:]
+}
+
+func (rr timeseries) addSeries(ts timeseries) timeseries {
+	res := make(timeseries, len(rr))
+	for i, v := range rr {
+		if i >= len(ts) {
+			break
+		}
+		v.Value += ts[i].Value
+		res[i] = v
+	}
+	return res
+}
+
+func (rr timeseries) addConst(value float64) timeseries {
+	res := make(timeseries, len(rr))
+	for i, v := range rr {
+		v.Value += value
+		res[i] = v
+	}
+	return res
+}

@@ -31,9 +31,15 @@ type dailyDetails struct {
 type events []event
 
 type event struct {
-	Timestamp time.Time `json:"ts"`
-	Value     *float64  `json:"val,omitempty"`
-	Event     string    `json:"ev,omitempty"`
+	Timestamp  time.Time `json:"ts"`
+	BatterySoc float64   `json:"batterySoc,omitempty"`
+	Event      string    `json:"ev,omitempty"`
+}
+
+type loadpointStatus struct {
+	Fixed           float64 `json:"fixed,omitempty"`
+	Flexible        float64 `json:"flexible,omitempty"`
+	RemainingEnergy float64 `json:"remainingEnergy,omitempty"`
 }
 
 // greenShare returns
@@ -194,15 +200,9 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	const baseload = 300 // W
 
-	// offset series by base load
-	remainder := make(timeseries, 0, len(solar))
-	for _, v := range solar {
-		if v.Timestamp.Before(time.Now().Add(-time.Hour)) {
-			continue
-		}
-
-		v.Value -= baseload
-		remainder = append(remainder, v)
+	forecastAvailable := solar.from(time.Now().Add(-time.Hour)).addConst(-baseload)
+	if len(forecastAvailable) > 8 {
+		forecastAvailable = forecastAvailable[:8]
 	}
 
 	// TODO check if all batteries have capacity and soc
@@ -217,9 +217,9 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	// initial entry
 	prev := event{
-		Timestamp: time.Now(),
-		Event:     batCharge,
-		Value:     lo.ToPtr(site.batterySoc),
+		Timestamp:  time.Now(),
+		Event:      batCharge,
+		BatterySoc: site.batterySoc,
 	}
 
 	const slot = 15 * time.Minute
@@ -229,16 +229,77 @@ func (site *Site) batteryForecast(solar timeseries) events {
 		prev.Timestamp = time.Now()
 	}
 
-	if delta := remainder.energy(prev.Timestamp, ts.Add(slot)); delta < 0 {
+	if delta := forecastAvailable.energy(prev.Timestamp, ts.Add(slot)); delta < 0 {
 		prev.Event = batDischarge
 	}
 
 	res := events{prev}
 
+	lps := make([]loadpointStatus, 0, len(site.loadpoints))
+	for _, lp := range site.loadpoints {
+		status := loadpointStatus{
+			RemainingEnergy: lp.GetRemainingEnergy() / 1e3, // kWh
+		}
+
+		switch lp.GetMode() {
+		case api.ModeNow:
+			status.Fixed = lp.GetMaxPower()
+		case api.ModeMinPV:
+			status.Fixed = lp.GetMinPower()
+		}
+
+		lps = append(lps, status)
+	}
+
 	// create 15m slots
-	for ts.Before(remainder[len(remainder)-1].Timestamp) {
+	for ts.Before(forecastAvailable[len(forecastAvailable)-1].Timestamp) {
+		// fixed := lo.SumBy(lps, func(lp loadpointStatus) float64 {
+		// 	if lp.RemainingEnergy > 0 {
+		// 		return lp.Fixed
+		// 	}
+		// 	return 0
+		// })
+		// flexible := lo.SumBy(lps, func(lp loadpointStatus) float64 {
+		// 	if lp.RemainingEnergy > 0 {
+		// 		return lp.Flexible
+		// 	}
+		// 	return 0
+		// })
+
+		idx, _ := forecastAvailable.search(ts)
+		fcst := forecastAvailable[idx]
+		_ = fcst
+
+		// forecastAvailable[idx].Value -= fixed
+		// if forecastAvailable[idx].Value > 0 {
+		// 	forecastAvailable[idx].Value -= min(forecastAvailable[idx].Value, flexible)
+		// }
+
+		for i, lp := range lps {
+			if lp.RemainingEnergy <= 0 {
+				continue
+			}
+
+			// fixed
+			forecastAvailable[idx].Value -= lp.Fixed
+			lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-lp.Fixed*slot.Hours())
+
+			// flexible
+			if forecastAvailable[idx].Value > 0 {
+				flexible := min(forecastAvailable[idx].Value, lp.Flexible)
+
+				forecastAvailable[idx].Value -= flexible
+				lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-flexible*slot.Hours())
+			}
+		}
+
+		// battery discharge control
+		if forecastAvailable[idx].Value < 0 {
+			forecastAvailable[idx].Value = 0
+		}
+
 		end := ts.Add(slot)
-		energy := remainder.energy(ts, end)
+		energy := forecastAvailable.energy(ts, end)
 		ts = end
 
 		// add event
@@ -261,11 +322,13 @@ func (site *Site) batteryForecast(solar timeseries) events {
 		}
 
 		currentSoc = min(max(currentSoc+energy/1e3/site.batteryCapacity*100, minSoc), maxSoc)
-		ev.Value = lo.ToPtr(math.Round(currentSoc))
+		ev.BatterySoc = math.Round(currentSoc)
 
 		if ev.Event != batSoc || currentSoc != prevSoc {
 			res = append(res, ev)
 		}
+
+		site.log.DEBUG.Printf("%+v %+v\n", ev, lps[0])
 
 		// store previous soc
 		prevSoc = currentSoc

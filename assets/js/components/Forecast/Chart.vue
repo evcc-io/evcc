@@ -344,7 +344,7 @@ export default defineComponent({
 									case ForecastType.Co2:
 										return vThis.fmtGrams(data.y);
 									case ForecastType.Projected:
-										return data;
+										return data.y + "%";
 									case ForecastType.Solar:
 										if (data.highlight === true) {
 											return vThis.fmtW(data.y, POWER_UNIT.AUTO);
