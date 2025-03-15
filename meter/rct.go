@@ -13,7 +13,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/mlnoga/rct"
+	"github.com/evcc-io/rct"
 )
 
 // RCT implements the api.Meter interface
@@ -41,7 +41,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		MinSoc, MaxSoc int
 		Cache          time.Duration
 	}{
-		Cache: time.Second,
+		Cache: 30 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -215,7 +215,7 @@ func (m *RCT) batterySoc() (float64, error) {
 
 func (m *RCT) bo() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(100*time.Millisecond),
+		backoff.WithInitialInterval(time.Second),
 		backoff.WithMaxElapsedTime(10*time.Second))
 }
 
