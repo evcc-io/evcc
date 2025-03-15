@@ -253,27 +253,9 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 	// create 15m slots
 	for ts.Before(forecastAvailable[len(forecastAvailable)-1].Timestamp) {
-		// fixed := lo.SumBy(lps, func(lp loadpointStatus) float64 {
-		// 	if lp.RemainingEnergy > 0 {
-		// 		return lp.Fixed
-		// 	}
-		// 	return 0
-		// })
-		// flexible := lo.SumBy(lps, func(lp loadpointStatus) float64 {
-		// 	if lp.RemainingEnergy > 0 {
-		// 		return lp.Flexible
-		// 	}
-		// 	return 0
-		// })
-
 		idx, _ := forecastAvailable.search(ts)
 		fcst := forecastAvailable[idx]
 		_ = fcst
-
-		// forecastAvailable[idx].Value -= fixed
-		// if forecastAvailable[idx].Value > 0 {
-		// 	forecastAvailable[idx].Value -= min(forecastAvailable[idx].Value, flexible)
-		// }
 
 		for i, lp := range lps {
 			if lp.RemainingEnergy <= 0 {
@@ -282,14 +264,14 @@ func (site *Site) batteryForecast(solar timeseries) events {
 
 			// fixed
 			forecastAvailable[idx].Value -= lp.Fixed
-			lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-lp.Fixed*slot.Hours())
+			lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-lp.Fixed*slot.Hours()/1e3) // kWh
 
 			// flexible
 			if forecastAvailable[idx].Value > 0 {
 				flexible := min(forecastAvailable[idx].Value, lp.Flexible)
 
 				forecastAvailable[idx].Value -= flexible
-				lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-flexible*slot.Hours())
+				lps[i].RemainingEnergy = max(0, lps[i].RemainingEnergy-flexible*slot.Hours()/1e3) // kWh
 			}
 		}
 
