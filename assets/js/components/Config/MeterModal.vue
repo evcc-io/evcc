@@ -39,6 +39,7 @@
 				<select
 					v-if="isNew"
 					id="meterTemplate"
+					ref="templateSelect"
 					v-model="templateName"
 					class="form-select w-100"
 					@change="templateChanged"

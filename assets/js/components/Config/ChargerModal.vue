@@ -12,6 +12,7 @@
 				<select
 					v-if="isNew"
 					id="chargerTemplate"
+					ref="templateSelect"
 					v-model="templateName"
 					class="form-select w-100"
 					@change="templateChanged"
