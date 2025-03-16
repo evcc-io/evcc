@@ -1,6 +1,7 @@
 package skoda
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -113,26 +114,13 @@ func (v *Provider) Odometer() (odo float64, err error) {
 	return res.MileageInKm, err
 }
 
-// var _ api.VehicleClimater = (*Provider)(nil)
+var _ api.VehicleClimater = (*Provider)(nil)
 
-// // Climater implements the api.VehicleClimater interface
-// func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-// 	res, err := v.climateG()
-// err == nil {
-// 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
-// 		active := state != "off" && state != "invalid" && state != "error"
-
-// 		targetTemp = res.Climater.Settings.TargetTemperature.Content
-// 		outsideTemp = res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content
-// 		if math.IsNaN(outsideTemp) {
-// 			outsideTemp = targetTemp // cover "invalid"
-// 		}
-
-// 		return active, outsideTemp, targetTemp, nil
-// 	}
-
-// 	return active, outsideTemp, targetTemp, err
-// }
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.climateG()
+	return slices.Contains([]string{"COOLING", "HEATING", "HEATING_AUXILIARY", "VENTILATION", "ON"}, res.State), err
+}
 
 var _ api.SocLimiter = (*Provider)(nil)
 

@@ -538,10 +538,9 @@ func (lp *Loadpoint) GetChargePower() float64 {
 }
 
 // GetChargePowerFlexibility returns the flexible amount of current charging power
-func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
-	// no locking
+func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.smartCostActive(rates) {
 		return 0
 	}
 
@@ -567,6 +566,11 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getMinCurrent()
+}
+
+// getMinCurrent returns the max loadpoint current
+func (lp *Loadpoint) getMinCurrent() float64 {
 	return lp.minCurrent
 }
 
@@ -632,15 +636,15 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 
 // GetMinPower returns the min loadpoint power for a single phase
 func (lp *Loadpoint) GetMinPower() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return Voltage * lp.effectiveMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 

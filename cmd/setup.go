@@ -171,7 +171,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(context.TODO(), log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -467,14 +467,28 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
-func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
 	if cmd.Flag(flagHeaders).Changed {
 		request.LogHeaders = true
 	}
 
 	// setup persistence
-	err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// setup additional templates
+	if err == nil {
+		if cmd.PersistentFlags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+			if err != nil {
+				return err
+			}
+
+			if err := templates.Register(class, cmd.Flag(flagTemplate).Value.String()); err != nil {
+				return err
+			}
+		}
+	}
 
 	// setup translations
 	if err == nil {
@@ -519,7 +533,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		err = config.Init(db.Instance)
 	}
 
-	return
+	return err
 }
 
 // configureDatabase configures session database
@@ -1014,16 +1028,20 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, static)
 		if err != nil {
-			return &DeviceError{cc.Name, err}
+			err = &DeviceError{cc.Name, err}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
-		if err := config.Loadpoints().Add(dev); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
 		}
 
-		if err := dynamic.Apply(instance); err != nil {
-			return &DeviceError{cc.Name, err}
+		if e := dynamic.Apply(instance); e != nil && err == nil {
+			err = &DeviceError{cc.Name, e}
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 

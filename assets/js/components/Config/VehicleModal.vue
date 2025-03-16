@@ -9,14 +9,15 @@
 		<form ref="form" class="container mx-0 px-0">
 			<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
 				<select
+					v-if="isNew"
 					id="vehicleTemplate"
+					ref="templateSelect"
 					v-model="templateName"
-					:disabled="!isNew"
 					class="form-select w-100"
 					@change="templateChanged"
 				>
-					<option value="offline">
-						{{ $t("config.vehicle.offline") }}
+					<option :value="templateOptions.offline.template">
+						{{ templateOptions.offline.name }}
 					</option>
 					<option disabled>----------</option>
 					<optgroup :label="$t('config.vehicle.online')">
@@ -47,6 +48,13 @@
 						</option>
 					</optgroup>
 				</select>
+				<input
+					v-else
+					type="text"
+					:value="productName"
+					disabled
+					class="form-control w-100"
+				/>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
 			<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -235,10 +243,10 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import api from "../../api";
 import test from "./mixins/test";
@@ -273,11 +281,11 @@ export default {
 			isModalVisible: false,
 			templates: [],
 			products: [],
-			saving: false,
 			templateName: null,
 			template: null,
-			values: { ...initialValues },
+			saving: false,
 			loadingTemplate: false,
+			values: { ...initialValues },
 		};
 	},
 	computed: {
@@ -286,6 +294,7 @@ export default {
 				online: this.products.filter((p) => !p.group && p.template !== "offline"),
 				generic: this.products.filter((p) => p.group === "generic"),
 				scooter: this.products.filter((p) => p.group === "scooter"),
+				offline: this.products.find((p) => p.template === "offline") || {},
 			};
 		},
 		templateParams() {
@@ -315,6 +324,9 @@ export default {
 		},
 		description() {
 			return this.template?.Requirements?.Description;
+		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
 		},
 		apiData() {
 			const data = {
@@ -372,6 +384,10 @@ export default {
 			try {
 				const vehicle = (await api.get(`config/devices/vehicle/${this.id}`)).data.result;
 				this.values = vehicle.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = vehicle.type;
+				this.values.deviceProduct = vehicle.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -379,6 +395,9 @@ export default {
 			}
 		},
 		async loadProducts() {
+			if (!this.isModalVisible) {
+				return;
+			}
 			try {
 				const opts = { params: { lang: this.$i18n?.locale } };
 				this.products = (await api.get("config/products/vehicle", opts)).data.result;
@@ -388,6 +407,7 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -396,7 +416,8 @@ export default {
 						name: this.templateName,
 					},
 				};
-				this.template = (await api.get("config/templates/vehicle", opts)).data.result;
+				const result = await api.get("config/templates/vehicle", opts);
+				this.template = result.data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
 				console.error(e);
@@ -412,10 +433,17 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testVehicle);
 				if (!success) return;
-				await sleep(250);
+				await sleep(100);
 			}
 			this.saving = true;
 			try {
@@ -423,8 +451,7 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -436,7 +463,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {
@@ -450,8 +477,7 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -461,8 +487,7 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {

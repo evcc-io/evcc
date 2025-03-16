@@ -75,6 +75,7 @@ enabled = "Enabled"
 energy = "Energy"
 feedinPrice = "Feed-in price"
 gridPrice = "Grid price"
+heaterTempLimit = "Heater limit"
 hemsType = "System"
 identifier = "RFID-Identifier"
 no = "no"
@@ -155,6 +156,7 @@ v2Support = "Back to InfluxDB 2.x"
 addCharger = "Add charger"
 addMeter = "Add dedicated charger meter"
 cancel = "Cancel"
+chargerError = "Configuring a charger is required."
 chargerLabel = "Charger"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Will use a current range of 6 to 16 A."
@@ -354,7 +356,6 @@ validate = "validate"
 cancel = "Cancel"
 delete = "Delete"
 generic = "Other integrations"
-offline = "Generic vehicle"
 online = "Vehicles with online API"
 save = "Save"
 scooter = "Scooter"
@@ -435,6 +436,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
+solarAdjust = "Adjust solar forecast based on real production data{percent}."
 
 [forecast.co2]
 average = "Average"
@@ -559,6 +561,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
@@ -680,13 +683,6 @@ tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 
-[main.vehicleSoc]
-charging = "charging"
-connected = "connected"
-disconnected = "disconnected"
-ready = "ready"
-vehicleLimit = "Vehicle limit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
 batteryBoost = "Battery boost active."
@@ -711,7 +707,7 @@ targetChargeActive = "Charging plan active. Estimated finish in {duration}."
 targetChargePlanned = "Charging plan starts in {duration}."
 targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleLimit = "Vehicle limit."
+vehicleLimit = "Vehicle limit"
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 welcome = "Short initial charge to confirm connection."
@@ -886,6 +882,8 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+resetAction = "Remove limit"
+resetWarning = "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?"
 saved = "Saved."
 
 [startupError]

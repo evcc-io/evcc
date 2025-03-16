@@ -286,13 +286,6 @@ targetSoc = "Objectiu de càrrega"
 unknown = "Vehicle convidat"
 vehicleSoc = "Nivell de càrrega"
 
-[main.vehicleSoc]
-charging = "carregant"
-connected = "connectat"
-disconnected = "desconnectat"
-ready = "preparat"
-vehicleLimit = "límit de vehicle: {soc}"
-
 [main.vehicleStatus]
 charging = "Carregant..."
 cheapEnergyCharging = "Energia barata disponible. Carregant..."

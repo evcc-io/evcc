@@ -14,17 +14,15 @@ params:
       de: "Temperaturquelle"
       en: "Temperature source"
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 74 # PV Überschussleistung
-      type: writeholding
+      type: writeholdings
       decode: float32s
     scale: 0.001
   power:

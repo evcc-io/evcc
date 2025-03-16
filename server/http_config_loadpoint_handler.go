@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -136,7 +137,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		name := "lp-" + strconv.Itoa(id+1)
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		conf, err := config.AddConfig(templates.Loadpoint, "", static)
+		conf, err := config.AddConfig(templates.Loadpoint, static)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -194,8 +195,6 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		instance := dev.Instance()
-
 		dynamic, static, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -203,7 +202,17 @@ func updateLoadpointHandler() http.HandlerFunc {
 		}
 
 		// static
-		if err := configurable.PartialUpdate(static, instance); err != nil {
+
+		// merge here to maintain dynamic part of the config
+		other := configurable.Config().Other
+		if err := mergo.Merge(&other, static); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		instance := dev.Instance()
+
+		if err := configurable.Update(other, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

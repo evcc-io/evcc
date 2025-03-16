@@ -148,8 +148,6 @@ func NewOCPP(ctx context.Context,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	log.DEBUG.Printf("!! registering %s:%d", id, connector)
-
 	cp, err := ocpp.Instance().RegisterChargepoint(id,
 		func() *ocpp.CP {
 			return ocpp.NewChargePoint(log, id)
@@ -172,8 +170,6 @@ func NewOCPP(ctx context.Context,
 		return nil, err
 	}
 
-	log.DEBUG.Printf("!! connected %s:%d", id, connector)
-
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
@@ -182,7 +178,7 @@ func NewOCPP(ctx context.Context,
 		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, idTag)
+	conn, err := ocpp.NewConnector(log, connector, cp, idTag, meterInterval)
 	if err != nil {
 		return nil, err
 	}
@@ -321,12 +317,12 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
 		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
-		phases = 0
-	}
-
-	// OCPP assumes phases == 3 if not set
-	if phases != 0 {
-		period.NumberPhases = &phases
+	} else {
+		// OCPP assumes phases == 3 if not set
+		if phases != 0 {
+			// set explicit phase configuration
+			period.NumberPhases = &phases
+		}
 	}
 
 	res := &types.ChargingProfile{
