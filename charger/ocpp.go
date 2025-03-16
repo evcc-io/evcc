@@ -71,7 +71,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
-		ForceWattCtrl  bool
+		ForcePowerCtrl bool
 		StackLevelZero *bool
 		RemoteStart    bool
 	}{
@@ -89,7 +89,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		cc.ForceWattCtrl, stackLevelZero, cc.RemoteStart,
+		cc.ForcePowerCtrl, stackLevelZero, cc.RemoteStart,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -143,7 +143,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	forceWattCtrl bool, stackLevelZero, remoteStart bool,
+	forcePowerCtrl bool, stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
@@ -163,7 +163,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval, forceWattCtrl)
+			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 		},
 	)
 	if err != nil {

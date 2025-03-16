@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forceWattCtrl bool) error {
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -159,7 +159,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
-	if forceWattCtrl {
+	if forcePowerCtrl {
 		cp.ChargingRateUnit = types.ChargingRateUnitWatts
 		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
