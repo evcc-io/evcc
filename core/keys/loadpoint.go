@@ -5,6 +5,9 @@ const (
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
 	DefaultMode      = "defaultMode" // default charge mode
+	DefaultCharger   = "charger"     // default charger
+	DefaultMeter     = "meter"       // default meter
+	DefaultVehicle   = "vehicle"     // default vehicle
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
 	MaxCurrent       = "maxCurrent"  // max current

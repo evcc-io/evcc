@@ -8,29 +8,79 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/wrapper"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// GetCharger returns the loadpoint charger
-func (lp *Loadpoint) GetChargerName() string {
+func (lp *Loadpoint) isConfigurable() bool {
+	_, ok := lp.settings.(*settings.ConfigSettings)
+	return ok
+}
+
+// GetChargerRef returns the loadpoint charger
+func (lp *Loadpoint) GetChargerRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.ChargerRef
 }
 
+// SetChargerRef sets the loadpoint charger
+func (lp *Loadpoint) SetChargerRef(ref string) {
+	if !lp.isConfigurable() {
+		return
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.ChargerRef = ref
+	lp.settings.SetString(keys.DefaultCharger, ref)
+}
+
 // GetMeter returns the loadpoint meter
-func (lp *Loadpoint) GetMeterName() string {
+func (lp *Loadpoint) GetMeterRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.MeterRef
 }
 
+// SetMeter sets the loadpoint meter
+func (lp *Loadpoint) SetMeterRef(ref string) {
+	if !lp.isConfigurable() {
+		return
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.MeterRef = ref
+	lp.settings.SetString(keys.DefaultMeter, ref)
+}
+
 // GetCircuitName returns the loadpoint circuit
-func (lp *Loadpoint) GetCircuitName() string {
+func (lp *Loadpoint) GetCircuitRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.CircuitRef
 }
 
-// GetDefaultVehicle returns the loadpoint default vehicle
-func (lp *Loadpoint) GetDefaultVehicle() string {
+// GetDefaultVehicleRef returns the loadpoint default vehicle
+func (lp *Loadpoint) GetDefaultVehicleRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.VehicleRef
+}
+
+// SetDefaultVehicleRef returns the loadpoint default vehicle
+func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
+	if !lp.isConfigurable() {
+		return
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.VehicleRef = ref
+	lp.settings.SetString(keys.DefaultVehicle, ref)
 }
 
 // GetTitle returns the loadpoint title

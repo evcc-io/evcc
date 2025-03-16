@@ -19,10 +19,10 @@ import (
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 	return loadpoint.StaticConfig{
-		Charger: lp.GetChargerName(),
-		Meter:   lp.GetMeterName(),
-		Circuit: lp.GetCircuitName(),
-		Vehicle: lp.GetDefaultVehicle(),
+		Charger: lp.GetChargerRef(),
+		Meter:   lp.GetMeterRef(),
+		Circuit: lp.GetCircuitRef(),
+		Vehicle: lp.GetDefaultVehicleRef(),
 	}
 }
 
@@ -243,6 +243,8 @@ func deleteLoadpointHandler() http.HandlerFunc {
 		}
 
 		setConfigDirty()
+
+		// TODO delete charger + meter
 
 		if err := deleteDevice(id, h); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
