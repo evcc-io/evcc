@@ -29,6 +29,7 @@ func (lp *Loadpoint) GetChargerRef() string {
 // SetChargerRef sets the loadpoint charger
 func (lp *Loadpoint) SetChargerRef(ref string) {
 	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set charger ref: not configurable")
 		return
 	}
 
@@ -48,6 +49,7 @@ func (lp *Loadpoint) GetMeterRef() string {
 // SetMeter sets the loadpoint meter
 func (lp *Loadpoint) SetMeterRef(ref string) {
 	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set meter ref: not configurable")
 		return
 	}
 
@@ -74,6 +76,7 @@ func (lp *Loadpoint) GetDefaultVehicleRef() string {
 // SetDefaultVehicleRef returns the loadpoint default vehicle
 func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
 	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set default vehicle ref: not configurable")
 		return
 	}
 
