@@ -242,9 +242,34 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		setConfigDirty()
+		// cleanup references
+		lp, err := configurableDevice(config.NameForID(id), h)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 
-		// TODO delete charger + meter
+		instance := lp.Instance()
+
+		if dev, err := configurableDevice(instance.GetChargerRef(), config.Chargers()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Chargers()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
+		if dev, err := configurableDevice(instance.GetMeterRef(), config.Meters()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Meters()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
+		setConfigDirty()
 
 		if err := deleteDevice(id, h); err != nil {
 			jsonError(w, http.StatusBadRequest, err)

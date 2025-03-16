@@ -363,17 +363,26 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func deleteDevice[T any](id int, h config.Handler[T]) error {
-	name := config.NameForID(id)
-
+func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
 	dev, err := h.ByName(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
 	if !ok {
-		return errors.New("not configurable")
+		return nil, errors.New("not configurable")
+	}
+
+	return configurable, nil
+}
+
+func deleteDevice[T any](id int, h config.Handler[T]) error {
+	name := config.NameForID(id)
+
+	configurable, err := configurableDevice(name, h)
+	if err != nil {
+		return err
 	}
 
 	if err := configurable.Delete(); err != nil {
