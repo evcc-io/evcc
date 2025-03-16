@@ -300,7 +300,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		auth.Disable()
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, auth, func() {
+	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end

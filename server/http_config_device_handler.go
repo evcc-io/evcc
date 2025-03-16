@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -393,72 +392,75 @@ func deleteDevice[T any](id int, h config.Handler[T]) error {
 }
 
 // deleteDeviceHandler deletes a device from database by class
-func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	h := config.Loadpoints()
 
-		class, err := templates.ClassString(vars["class"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
+	vars := mux.Vars(r)
 
-		id, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		switch class {
-		case templates.Charger:
-			err = deleteDevice(id, config.Chargers())
-
-			// cleanup references
-			for _, lp := range site.Loadpoints() {
-				if lp.GetChargerRef() == config.NameForID(id) {
-					lp.SetChargerRef("")
-				}
-			}
-
-		case templates.Meter:
-			err = deleteDevice(id, config.Meters())
-
-			// cleanup references
-			for _, lp := range site.Loadpoints() {
-				if lp.GetMeterRef() == config.NameForID(id) {
-					lp.SetMeterRef("")
-				}
-			}
-
-		case templates.Vehicle:
-			err = deleteDevice(id, config.Vehicles())
-
-			// cleanup references
-			for _, lp := range site.Loadpoints() {
-				if lp.GetDefaultVehicleRef() == config.NameForID(id) {
-					lp.SetDefaultVehicleRef("")
-				}
-			}
-
-		case templates.Circuit:
-			err = deleteDevice(id, config.Circuits())
-		}
-
-		setConfigDirty()
-
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		res := struct {
-			ID int `json:"id"`
-		}{
-			ID: id,
-		}
-
-		jsonResult(w, res)
+	class, err := templates.ClassString(vars["class"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
 	}
+
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	switch class {
+	case templates.Charger:
+		err = deleteDevice(id, config.Chargers())
+
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetChargerRef() == config.NameForID(id) {
+				lp.SetChargerRef("")
+			}
+		}
+
+	case templates.Meter:
+		err = deleteDevice(id, config.Meters())
+
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetMeterRef() == config.NameForID(id) {
+				lp.SetMeterRef("")
+			}
+		}
+
+	case templates.Vehicle:
+		err = deleteDevice(id, config.Vehicles())
+
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetDefaultVehicleRef() == config.NameForID(id) {
+				lp.SetDefaultVehicleRef("")
+			}
+		}
+
+	case templates.Circuit:
+		err = deleteDevice(id, config.Circuits())
+	}
+
+	setConfigDirty()
+
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res := struct {
+		ID int `json:"id"`
+	}{
+		ID: id,
+	}
+
+	jsonResult(w, res)
 }
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
