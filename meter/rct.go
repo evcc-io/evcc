@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/rct"
+	"golang.org/x/sync/errgroup"
 )
 
 // RCT implements the api.Meter interface
@@ -160,15 +161,28 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return m.queryFloat(rct.TotalGridPowerW)
 
 	case "pv":
-		a, err := m.queryFloat(rct.SolarGenAPowerW)
-		if err != nil {
-			return 0, err
-		}
-		b, err := m.queryFloat(rct.SolarGenBPowerW)
-		if err != nil {
-			return 0, err
-		}
-		c, err := m.queryFloat(rct.S0ExternalPowerW)
+		var eg errgroup.Group
+		var a, b, c float64
+
+		eg.Go(func() error {
+			var err error
+			a, err = m.queryFloat(rct.SolarGenAPowerW)
+			return err
+		})
+
+		eg.Go(func() error {
+			var err error
+			b, err = m.queryFloat(rct.SolarGenBPowerW)
+			return err
+		})
+
+		eg.Go(func() error {
+			var err error
+			c, err = m.queryFloat(rct.S0ExternalPowerW)
+			return err
+		})
+
+		err := eg.Wait()
 		return a + b + c, err
 
 	case "battery":
@@ -187,19 +201,41 @@ func (m *RCT) totalEnergy() (float64, error) {
 		return res / 1000, err
 
 	case "pv":
-		a, err := m.queryFloat(rct.TotalEnergySolarGenAWh)
-		if err != nil {
-			return 0, err
-		}
-		b, err := m.queryFloat(rct.TotalEnergySolarGenBWh)
+		var eg errgroup.Group
+		var a, b float64
+
+		eg.Go(func() error {
+			var err error
+			a, err = m.queryFloat(rct.TotalEnergySolarGenAWh)
+			return err
+		})
+
+		eg.Go(func() error {
+			var err error
+			b, err = m.queryFloat(rct.TotalEnergySolarGenBWh)
+			return err
+		})
+
+		err := eg.Wait()
 		return (a + b) / 1000, err
 
 	case "battery":
-		in, err := m.queryFloat(rct.TotalEnergyBattInWh)
-		if err != nil {
-			return 0, err
-		}
-		out, err := m.queryFloat(rct.TotalEnergyBattOutWh)
+		var eg errgroup.Group
+		var in, out float64
+
+		eg.Go(func() error {
+			var err error
+			in, err = m.queryFloat(rct.TotalEnergyBattInWh)
+			return err
+		})
+
+		eg.Go(func() error {
+			var err error
+			out, err = m.queryFloat(rct.TotalEnergyBattOutWh)
+			return err
+		})
+
+		err := eg.Wait()
 		return (in - out) / 1000, err
 
 	default:
