@@ -1318,10 +1318,10 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	}
 
 	// push demand to drain battery
-	delta := lp.EffectiveStepPower()
-	if !lp.coarseCurrent() {
-		// for >1p this will allow finer adjustments down to 100W
-		delta = max(math.Abs(lp.site.GetResidualPower()), delta/10)
+	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
+
+	if lp.coarseCurrent() {
+		delta = math.Max(delta, lp.EffectiveStepPower())
 	}
 
 	// start boosting by setting maximum power
@@ -1337,7 +1337,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	res := batteryBoostPower + delta
+	res := batteryBoostPower + delta + lp.site.GetResidualPower()
 	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
 
 	return res
