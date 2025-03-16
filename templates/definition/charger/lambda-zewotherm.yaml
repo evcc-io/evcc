@@ -4,7 +4,7 @@ products:
     description:
       de: |
         EU-L Serie
-        * Einstellungen des Energie Magagement der der Lambda Steuerung:
+        * Einstellungen des Energie Magagement der Lambda Steuerung:
         * E-Meter Kommunikationsart: "ModBus Client"
         * E-Meter Messpunkt: "Pos. E-Überschuss"
       en: |
@@ -16,7 +16,7 @@ products:
     description:
       de: |
         EU-L Serie
-        * Einstellungen des Energie Magagement der der Zewotherm Steuerung:
+        * Einstellungen des Energie Magagement der Zewotherm Steuerung:
         * E-Meter Kommunikationsart: "ModBus Client"
         * E-Meter Messpunkt: "Pos. E-Überschuss"
       en: |
@@ -40,7 +40,7 @@ params:
     deprecated: true
   - name: watchdog
     type: duration
-    default: 30s
+    default: 60s
     description:
       de: "Übertragungsinterval"
       en: "Transmission interval"
@@ -49,7 +49,7 @@ render: |
   type: heatpump
   setmaxpower:
     source: watchdog
-    timeout: {{ .watchdog }} # re-write at timeout
+    timeout: {{ .watchdog }} # re-write at timeout/2
     set:
       source: modbus
       {{- include "modbus" . | indent 4 }}
