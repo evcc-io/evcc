@@ -2,12 +2,28 @@ template: lambda-zewotherm
 products:
   - brand: Lambda
     description:
-      de: EU-L Serie
-      en: EU-L Series
+      de: |
+        EU-L Serie
+        * Einstellungen des Energie Magagement der Lambda Steuerung:
+        * E-Meter Kommunikationsart: "ModBus Client"
+        * E-Meter Messpunkt: "Pos. E-Überschuss"
+      en: |
+        EU-L Series
+        * Energy management settings of the Lambda control:
+        * E-Meter communication type: "ModBus Client"
+        * E-Meter measuring point: "Pos. E-Überschuss"
   - brand: Zewotherm
     description:
-      de: EU-L Serie
-      en: EU-L Series
+      de: |
+        EU-L Serie
+        * Einstellungen des Energie Magagement der Zewotherm Steuerung:
+        * E-Meter Kommunikationsart: "ModBus Client"
+        * E-Meter Messpunkt: "Pos. E-Überschuss"
+      en: |
+        EU-L Series
+        * Energy management settings of the Zewotherm control:
+        * E-Meter communication type: "ModBus Client"
+        * E-Meter measuring point: "Pos. E-Überschuss"
 group: heating
 requirements:
   # evcc: ["sponsorship"]
@@ -22,15 +38,22 @@ params:
       en: "Temperature source"
   - name: phases
     deprecated: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: heatpump
   setmaxpower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 102 # PV Überschussleistung
-      type: writemultiple # λ erwartet single value als FC16
-      decode: int16
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 102 # PV Überschussleistung
+        type: writemultiple # λ erwartet single value als FC16
+        decode: int16
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
