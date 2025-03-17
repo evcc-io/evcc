@@ -3,6 +3,7 @@ package charger
 import (
         "fmt"
         "net/http"
+	    "encoding/json"
 
         "github.com/evcc-io/evcc/api"
         "github.com/evcc-io/evcc/util"
