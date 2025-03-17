@@ -228,6 +228,7 @@ vehicleHelpAutoDetection = "Sélectionner automatiquement le véhicule le plus p
 vehicleHelpDefault = "Toujours considérer que ce véhicule charge ici. Auto-détection désactivée. Un changement manuel reste possible."
 vehicleLabel = "Véhicule par défaut"
 vehiclesTitle = "Véhicules"
+chargerError = "Il est nécessaire de configurer un chargeur."
 
 [config.main]
 addGrid = "Ajouter un compteur pour le réseau"
