@@ -29,6 +29,18 @@ async function addDemoCharger(page) {
   await expect(modal).not.toBeVisible();
 }
 
+async function addDemoMeter(page, power = "0") {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByRole("button", { name: "Add dedicated charger meter" }).click();
+
+  const modal = page.getByTestId("meter-modal");
+  await expect(modal).toBeVisible();
+  await modal.getByLabel("Manufacturer").selectOption("Demo meter");
+  await modal.getByLabel("Power").fill(power);
+  await modal.getByRole("button", { name: "Save" }).click();
+  await expect(modal).not.toBeVisible();
+}
+
 async function addVehicle(page, title) {
   await page.getByRole("button", { name: "Add vehicle" }).click();
   const modal = page.getByTestId("vehicle-modal");
@@ -343,5 +355,41 @@ test.describe("loadpoint", async () => {
     await expect(lpModal).toBeVisible();
     await expect(lpModal.getByRole("textbox", { name: "Title" })).toHaveValue("Garage");
     await expect(lpModal).toContainText("Configuring a charger is required.");
+  });
+
+  test("delete meter references", async ({ page }) => {
+    await start(CONFIG_EMPTY);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // add loadpoint, add charger
+    await newLoadpoint(page, "Garage");
+    await addDemoCharger(page);
+    await addDemoMeter(page, "11000");
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expect(lpModal).not.toBeVisible();
+    await expect(page.getByTestId("loadpoint")).toContainText("11.0 kW");
+
+    // delete charger
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await lpModal.getByRole("textbox", { name: "Meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expect(meterModal).not.toBeVisible();
+
+    // restart without saving loadpoint
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+
+    // check loadpoint default vehicle
+    await expect(page.getByTestId("loadpoint")).not.toContainText("11.0 kW");
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expect(lpModal).toBeVisible();
+    await expect(lpModal.getByRole("textbox", { name: "Title" })).toHaveValue("Garage");
+    await expect(
+      lpModal.getByRole("button", { name: "Add dedicated charger meter" })
+    ).toBeVisible();
   });
 });
