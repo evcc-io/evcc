@@ -96,6 +96,7 @@ topic = "Konu"
 url = "URL"
 vehicleLimitSoc = "“Araç sınırı”"
 yes = "evet"
+heaterTempLimit = “Isıtıcı sınırlaması”
 
 [config.deviceValueChargeStatus]
 A = "“A (bağlı değil)”"
