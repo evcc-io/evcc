@@ -41,9 +41,6 @@ params:
   - name: watchdog
     type: duration
     default: 60s
-    description:
-      de: "Übertragungsinterval"
-      en: "Transmission interval"
     advanced: true
 render: |
   type: heatpump
