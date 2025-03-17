@@ -2,8 +2,9 @@ package charger
 
 import (
         "encoding/json"
-	    "net/http"
 	    "fmt"
+	    "net/http"
+	    
 
         "github.com/evcc-io/evcc/api"
         "github.com/evcc-io/evcc/util"
