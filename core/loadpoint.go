@@ -1317,7 +1317,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		return 0
 	}
 
-	// push demand to drain battery
+	// push demand to drain battery (at least 100W)
 	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
 
 	if lp.coarseCurrent() {
