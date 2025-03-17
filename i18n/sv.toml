@@ -228,6 +228,7 @@ vehicleHelpAutoDetection = "Väljer automatiskt det mest troliga fordonet. Manue
 vehicleHelpDefault = "Anta att detta fordon alltid laddar här. Automatisk detektering är avstängt. Manuell inställning är möjlig."
 vehicleLabel = "Standard fordon"
 vehiclesTitle = "Fordon"
+chargerError = "Konfigurering av laddare krävs."
 
 [config.main]
 addGrid = "Lägg till elmätare"
