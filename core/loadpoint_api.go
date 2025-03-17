@@ -36,7 +36,7 @@ func (lp *Loadpoint) SetChargerRef(ref string) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.ChargerRef = ref
-	lp.settings.SetString(keys.DefaultCharger, ref)
+	lp.settings.SetString(keys.Charger, ref)
 }
 
 // GetMeter returns the loadpoint meter
@@ -56,7 +56,7 @@ func (lp *Loadpoint) SetMeterRef(ref string) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.MeterRef = ref
-	lp.settings.SetString(keys.DefaultMeter, ref)
+	lp.settings.SetString(keys.Meter, ref)
 }
 
 // GetCircuitName returns the loadpoint circuit
