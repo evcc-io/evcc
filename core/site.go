@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"math/rand/v2"
 	"strings"
 	"sync"
 	"testing"
@@ -45,6 +46,8 @@ type updater interface {
 
 // measurement is used as slice element for publishing structured data
 type measurement struct {
+	Title         string    `json:"title,omitempty"`
+	Icon          string    `json:"icon,omitempty"`
 	Power         float64   `json:"power"`
 	Energy        float64   `json:"energy,omitempty"`
 	Powers        []float64 `json:"powers,omitempty"`
@@ -77,12 +80,12 @@ type Site struct {
 	MaxGridSupplyWhileBatteryCharging_ float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
-	circuit       api.Circuit // Circuit
-	gridMeter     api.Meter   // Grid usage meter
-	pvMeters      []api.Meter // PV generation meters
-	batteryMeters []api.Meter // Battery charging meters
-	extMeters     []api.Meter // External meters - for monitoring only
-	auxMeters     []api.Meter // Auxiliary meters
+	circuit       api.Circuit                // Circuit
+	gridMeter     api.Meter                  // Grid usage meter
+	pvMeters      []config.Device[api.Meter] // PV generation meters
+	batteryMeters []config.Device[api.Meter] // Battery charging meters
+	extMeters     []config.Device[api.Meter] // External meters - for monitoring only
+	auxMeters     []config.Device[api.Meter] // Auxiliary meters
 
 	// battery settings
 	prioritySoc             float64  // prefer battery up to this Soc
@@ -197,7 +200,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.pvMeters = append(site.pvMeters, dev.Instance())
+		site.pvMeters = append(site.pvMeters, dev)
 
 		// accumulator
 		site.pvEnergy[ref] = &meterEnergy{clock: clock.New()}
@@ -209,7 +212,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.batteryMeters = append(site.batteryMeters, dev.Instance())
+		site.batteryMeters = append(site.batteryMeters, dev)
 	}
 
 	// meters used only for monitoring
@@ -218,7 +221,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.extMeters = append(site.extMeters, dev.Instance())
+		site.extMeters = append(site.extMeters, dev)
 	}
 
 	// auxiliary meters
@@ -227,7 +230,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.auxMeters = append(site.auxMeters, dev.Instance())
+		site.auxMeters = append(site.auxMeters, dev)
 	}
 
 	if site.MaxGridSupplyWhileBatteryCharging_ != 0 {
@@ -352,7 +355,11 @@ func (site *Site) restoreSettings() error {
 	return nil
 }
 
-func meterCapabilities(name string, meter interface{}) string {
+func meterCapabilities(name string, meter any) string {
+	if _, ok := meter.(api.Meter); !ok {
+		panic("not a meter: " + name)
+	}
+
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)
 	_, currents := meter.(api.PhaseCurrents)
@@ -390,12 +397,13 @@ func (site *Site) DumpConfig() {
 
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv))
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i+1), pv.Instance()))
 		}
 	}
 
 	if len(site.batteryMeters) > 0 {
-		for i, battery := range site.batteryMeters {
+		for i, dev := range site.batteryMeters {
+			battery := dev.Instance()
 			_, ok := battery.(api.Battery)
 			_, hasCapacity := battery.(api.BatteryCapacity)
 
@@ -469,11 +477,16 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
+func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
 	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
 
-	fun := func(i int, meter api.Meter) {
+	fun := func(i int, dev config.Device[api.Meter]) {
+		// decouple potential double-connects on modbus
+		time.Sleep(time.Duration(rand.Uint64N(uint64(100 * time.Millisecond))))
+
+		meter := dev.Instance()
+
 		// power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err == nil {
@@ -491,7 +504,10 @@ func (site *Site) collectMeters(key string, meters []api.Meter) []measurement {
 			}
 		}
 
+		props := deviceProperties(dev)
 		mm[i] = measurement{
+			Title:  props.Title,
+			Icon:   props.Icon,
 			Power:  power,
 			Energy: energy,
 		}
@@ -516,9 +532,13 @@ func (site *Site) updatePvMeters() {
 
 	mm := site.collectMeters("pv", site.pvMeters)
 
-	for i, meter := range site.pvMeters {
-		power := mm[i].Power
+	for i, dev := range site.pvMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: pv")
+		}
 
+		power := mm[i].Power
 		if power < -500 {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
@@ -555,7 +575,14 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 
 	// update solar yield
-	for i, name := range site.Meters.PVMetersRef {
+	for i, dev := range site.pvMeters {
+		// use stored devices, not ui-updated instances!
+		if _, ok := dev.(config.Device[api.Meter]); !ok {
+			panic(fmt.Sprintf("not a device: pv %d", i+1))
+		}
+
+		name := dev.Config().Name
+
 		if mm[i].Energy > 0 {
 			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
 		} else {
@@ -577,7 +604,12 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
-	for i, meter := range site.batteryMeters {
+	for i, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: battery")
+		}
+
 		// battery soc and capacity
 		var batSoc, capacity float64
 		var err error
@@ -919,10 +951,10 @@ func (site *Site) prepare() {
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
-	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
-	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
-	site.publish(keys.Aux, make([]api.Meter, len(site.auxMeters)))
-	site.publish(keys.Ext, make([]api.Meter, len(site.extMeters)))
+	site.publish(keys.Pv, []api.Meter{})
+	site.publish(keys.Battery, []api.Meter{})
+	site.publish(keys.Aux, []api.Meter{})
+	site.publish(keys.Ext, []api.Meter{})
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)

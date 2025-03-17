@@ -42,10 +42,10 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import TopHeader from "../components/TopHeader.vue";
-import ForecastChart from "../components/ForecastChart.vue";
-import IconSelectItem from "../components/IconSelectItem.vue";
-import IconSelectGroup from "../components/IconSelectGroup.vue";
+import Header from "../components/Top/Header.vue";
+import Chart from "../components/Forecast/Chart.vue";
+import IconSelectItem from "../components/Helper/IconSelectItem.vue";
+import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { type PriceSlot } from "../utils/forecast";
 import formatter from "../mixins/formatter";
@@ -66,10 +66,10 @@ export const TYPES = {
 export default defineComponent({
 	name: "Energy",
 	components: {
-		TopHeader,
+		TopHeader: Header,
 		IconSelectGroup,
 		IconSelectItem,
-		ForecastChart,
+		ForecastChart: Chart,
 	},
 	mixins: [formatter],
 	data() {

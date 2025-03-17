@@ -36,7 +36,6 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User           string
 		Password       string
 		Key            string
-		_              uint16 `mapstructure:"battery"` // deprecated
 		DischargeLimit uint32
 		Timeout        time.Duration
 	}{
