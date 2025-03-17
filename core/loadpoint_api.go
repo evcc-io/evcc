@@ -748,13 +748,8 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
-		if val == nil {
-			lp.settings.SetString(keys.SmartCostLimit, "")
-			lp.publish(keys.SmartCostLimit, nil)
-		} else {
-			lp.settings.SetFloat(keys.SmartCostLimit, *val)
-			lp.publish(keys.SmartCostLimit, *val)
-		}
+		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
+		lp.publish(keys.SmartCostLimit, val)
 	}
 }
 
