@@ -13,7 +13,7 @@ legendMiddleSubline = "Når husbatteriet er over {soc}."
 legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "Starter automatisk"
 legendTopName = "Batteri-understøttet opladning af køretøj"
-legendTopSubline = "når husbatteriet er over uden {soc}."
+legendTopSubline = "når husbatteriet er over {soc}."
 modalTitle = "Hus batteri"
 usageTab = "Batteri anvendelse"
 
@@ -98,6 +98,7 @@ topic = "Emne"
 url = "URL"
 vehicleLimitSoc = "Køretøjets begrænsning"
 yes = "ja"
+heaterTempLimit = "Opvarmning begrænsning"
 
 [config.deviceValueChargeStatus]
 A = "A (ikke forbundet)"
@@ -227,6 +228,7 @@ vehicleHelpAutoDetection = "Vælg automatisk det mest sandsynlige køretøj. Det
 vehicleHelpDefault = "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig."
 vehicleLabel = "Standard køretøj"
 vehiclesTitle = "Køretøjer"
+chargerError = "Konfiguration af en oplader er påkrævet."
 
 [config.main]
 addGrid = "Tilføj måler til elnet"
@@ -449,6 +451,7 @@ modalUpdateStatusStart = "Installation startede:"
 
 [forecast]
 modalTitle = "Prognose"
+solarAdjust = "Juster solprognosen på baggrund af produktions data{percent}."
 
 [forecast.co2]
 average = "Gennemsnit"
@@ -577,6 +580,7 @@ charging = "Opvarmer..."
 cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
 waitForVehicle = "Klar. Venter på varmelegeme..."
+vehicleLimit = "Opvarmning begrænsning"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
