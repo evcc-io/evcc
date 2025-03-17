@@ -283,3 +283,34 @@ test.describe("loadpoint", async () => {
     await expect(page.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
   });
 });
+
+test("delete references", async ({ page }) => {
+  await start(CONFIG_EMPTY);
+  await page.goto("/#/config");
+  await enableExperimental(page);
+
+  // add vehicle, add loadpoint, add charger
+  await addVehicle(page, "Porsche");
+  await addVehicle(page, "Tesla");
+  await newLoadpoint(page, "Garage");
+  await addDemoCharger(page);
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByLabel("Default vehicle").selectOption("Porsche");
+  await lpModal.getByRole("button", { name: "Save" }).click();
+  await expect(lpModal).not.toBeVisible();
+
+  // delete vehicle
+  await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+  const vehicleModal = page.getByTestId("vehicle-modal");
+  await vehicleModal.getByRole("button", { name: "Delete" }).click();
+  await expect(vehicleModal).not.toBeVisible();
+
+  // restart
+  await restart(CONFIG_EMPTY);
+  await page.reload();
+
+  // check loadpoint default vehicle
+  await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+  await expect(lpModal).toBeVisible();
+  await expect(lpModal.getByLabel("Default vehicle")).toHaveValue("");
+});
