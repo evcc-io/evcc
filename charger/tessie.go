@@ -25,15 +25,24 @@ func init() {
 }
 
 func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
-        // ... (your existing code)
+        cc := struct {
+                Vin        string
+                Token      string
+                Location   string
+                Maxcurrent int64
+        }{}
+
+        if err := util.DecodeOther(other, &cc); err != nil {
+                return nil, err
+        }
 
         log := util.NewLogger("tessie")
 
         tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cc.Token})
         oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 
-        client := request.NewHelper(log) // Use request.NewHelper
-        client.Client = oauthClient // Set the Client field
+        client := request.NewHelper(log)
+        client.Client = oauthClient
 
         t := &Tessie{
                 log:        log,
