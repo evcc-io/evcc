@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -150,6 +151,37 @@ func (m *Com) essInfo() (EssData, error) {
 	var res MeterResponse15
 	err := m.request(f, nil, &res)
 	return res, err
+}
+
+func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
+	f := func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/setting/systeminfo", m.uri)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}
+	var systemInfo SystemInfoResponse
+	err := m.request(f, nil, &systemInfo)
+	return systemInfo, err
+}
+
+func (m *Com) GetFirmwareVersion() (int, error) {
+	var firmwareVersion = 0
+	systemInfo, err := m.GetSystemInfo()
+	if err == nil {
+		re := regexp.MustCompile(`R(\d+)`)
+		match := re.FindStringSubmatch(systemInfo.Version.PMSBuildDate)
+		if len(match) > 1 {
+			firmwareVersion, err = strconv.Atoi(match[1])
+			if err != nil {
+				err = fmt.Errorf("parsing the firmware version failed")
+			}
+		} else {
+			err = fmt.Errorf("couldn't find the firmware version within the string")
+		}
+	} else {
+		err = fmt.Errorf("couldn't retrieve the system information")
+	}
+
+	return firmwareVersion, err
 }
 
 // BatteryMode sets the battery mode
