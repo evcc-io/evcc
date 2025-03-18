@@ -1,23 +1,23 @@
 package charger
 
 import (
-        "encoding/json"
-	    "fmt"
-	    "net/http"
-	    
+        "context"
+        "fmt"
+        "net/http"
 
         "github.com/evcc-io/evcc/api"
         "github.com/evcc-io/evcc/util"
         "github.com/evcc-io/evcc/util/request"
+        "golang.org/x/oauth2"
 )
 
 type Tessie struct {
-        log        *util.Logger
-        client     *request.Helper
-        vin        string
-        token      string
-        location   string
-        maxcurrent int64
+        log                                 *util.Logger
+        client                              *request.Helper
+        Vin                                 string
+        Location                            string
+        Maxcurrent                          int64
+        chargingStartedAfterLeavingGeofence bool
 }
 
 func init() {
@@ -29,23 +29,25 @@ func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
                 Vin        string
                 Token      string
                 Location   string
-                maxcurrent int64
+                Maxcurrent int64
         }{}
 
         if err := util.DecodeOther(other, &cc); err != nil {
                 return nil, err
         }
+
         log := util.NewLogger("tessie")
 
-        client := request.NewHelper(log)
+        tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cc.Token})
+        oauthClient := oauth2.NewClient(context.Background(), tokenSource)
+        client := request.NewHelperWithClient(log, oauthClient)
 
         t := &Tessie{
                 log:        log,
                 client:     client,
-                vin:        cc.Vin,
-                token:      cc.Token,
-                location:   cc.Location,
-                maxcurrent: cc.maxcurrent,
+                Vin:        cc.Vin,
+                Location:   cc.Location,
+                Maxcurrent: cc.Maxcurrent,
         }
 
         return t, nil
@@ -56,16 +58,14 @@ func (t *Tessie) Enabled() (bool, error) {
         if err != nil {
                 return false, err
         }
-        locationMatch := t.location == locationName || t.location == "always"
+        locationMatch := t.Location == locationName || t.Location == "always"
 
         if !locationMatch {
                 return false, nil
         }
 
-        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.vin)
-        req, err := request.New(http.MethodGet, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.Vin)
+        req, err := request.New(http.MethodGet, url, nil, nil)
         if err != nil {
                 return false, err
         }
@@ -89,10 +89,8 @@ func (t *Tessie) Enable(enable bool) error {
                 command = "start_charging"
         }
 
-        url := fmt.Sprintf("https://api.tessie.com/%s/command/%s?retry_duration=40&wait_for_completion=true", t.vin, command)
-        req, err := request.New(http.MethodPost, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/command/%s?retry_duration=40&wait_for_completion=true", t.Vin, command)
+        req, err := request.New(http.MethodPost, url, nil, nil)
         if err != nil {
                 return err
         }
@@ -116,15 +114,13 @@ func (t *Tessie) MaxCurrent(current int64) error {
         if err != nil {
                 return err
         }
-        locationMatch := t.location == locationName || t.location == "always"
+        locationMatch := t.Location == locationName || t.Location == "always"
 
         if !locationMatch {
                 return nil
         }
-        url := fmt.Sprintf("https://api.tessie.com/%s/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=%d", t.vin, current)
-        req, err := request.New(http.MethodPost, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/command/set_charging_amps?retry_duration=40&wait_for_completion=true&amps=%d", t.Vin, current)
+        req, err := request.New(http.MethodPost, url, nil, nil)
         if err != nil {
                 return err
         }
@@ -138,10 +134,8 @@ func (t *Tessie) Status() (api.ChargeStatus, error) {
                 return api.StatusNone, err
         }
 
-        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.vin)
-        req, err := request.New(http.MethodGet, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.Vin)
+        req, err := request.New(http.MethodGet, url, nil, nil)
         if err != nil {
                 return api.StatusNone, err
         }
@@ -157,10 +151,19 @@ func (t *Tessie) Status() (api.ChargeStatus, error) {
                 return api.StatusNone, err
         }
 
-        locationMatch := t.location == locationName || t.location == "always"
+        locationMatch := t.Location == locationName || t.Location == "always"
 
         if !locationMatch {
+                if !t.chargingStartedAfterLeavingGeofence {
+                        if err := t.startCharging(); err != nil {
+                                t.log.ERROR.Printf("Failed to start charging after leaving geofence: %v", err)
+                        } else {
+                                t.chargingStartedAfterLeavingGeofence = true
+                        }
+                }
                 return api.StatusA, nil
+        } else {
+                t.chargingStartedAfterLeavingGeofence = false
         }
 
         switch res.ChargeState.ChargingState {
@@ -181,16 +184,14 @@ func (t *Tessie) CurrentPower() (float64, error) {
         if err != nil {
                 return 0, err
         }
-        locationMatch := t.location == locationName || t.location == "always"
+        locationMatch := t.Location == locationName || t.Location == "always"
 
         if !locationMatch {
                 return 0, nil
         }
 
-        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.vin)
-        req, err := request.New(http.MethodGet, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.Vin)
+        req, err := request.New(http.MethodGet, url, nil, nil)
         if err != nil {
                 return 0, err
         }
@@ -213,16 +214,14 @@ func (t *Tessie) ChargedEnergy() (float64, error) {
         if err != nil {
                 return 0, err
         }
-        locationMatch := t.location == locationName || t.location == "always"
+        locationMatch := t.Location == locationName || t.Location == "always"
 
         if !locationMatch {
                 return 0, nil
         }
 
-        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.vin)
-        req, err := request.New(http.MethodGet, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/state?values=charge_state", t.Vin)
+        req, err := request.New(http.MethodGet, url, nil, nil)
         if err != nil {
                 return 0, err
         }
