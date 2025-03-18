@@ -24,8 +24,6 @@ func init() {
         registry.Add("tessie", NewTessieFromConfig)
 }
 
-var _ = json.Marshal
-
 func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
         cc := struct {
                 Vin        string
