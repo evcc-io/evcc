@@ -33,5 +33,3 @@ render: |
   vin: {{ .vin }}
   token: {{ .token }}
   location: {{ .location }}
-
-
