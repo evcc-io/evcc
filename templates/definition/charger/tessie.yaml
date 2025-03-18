@@ -9,9 +9,6 @@ requirements:
     de: Ladegerät, das über die Tessie-API verbunden ist. Ermöglicht die Steuerung des Ladezustands und die Konfiguration des maximalen Stroms.
 params:
   - name: vin
-    description:
-      de: Fahrzeug-VIN
-      en: Vehicle VIN
     required: true
   - name: token
     description:
