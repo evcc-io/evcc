@@ -1,0 +1,261 @@
+<template>
+	<div class="vehicle pt-4">
+		<VehicleTitle
+			v-if="!integratedDevice"
+			v-bind="vehicleTitleProps"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
+		/>
+		<VehicleStatus
+			v-bind="vehicleStatus"
+			class="mb-2"
+			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
+			@open-minsoc-settings="openMinSocSettings"
+			@open-plan-modal="openPlanModal"
+		/>
+		<VehicleSoc
+			v-bind="vehicleSocProps"
+			class="mt-2 mb-4"
+			@limit-soc-updated="limitSocUpdated"
+			@limit-soc-drag="limitSocDrag"
+			@plan-clicked="openPlanModal"
+		/>
+		<div class="details d-flex flex-wrap justify-content-between">
+			<LabelAndValue
+				v-if="socBasedCharging"
+				class="flex-grow-1"
+				:label="vehicleSocTitle"
+				:value="formattedSoc"
+				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : ''"
+				data-testid="current-soc"
+				align="start"
+			/>
+			<LabelAndValue
+				v-else
+				class="flex-grow-1"
+				:label="$t('main.loadpoint.charged')"
+				:value="fmtEnergy(chargedEnergy)"
+				:extraValue="chargedSoc || ''"
+				data-testid="current-energy"
+				align="start"
+			/>
+			<ChargingPlan
+				ref="chargingPlan"
+				class="flex-grow-1 target-charge"
+				v-bind="chargingPlan"
+				:disabled="chargingPlanDisabled"
+			/>
+			<LimitSocSelect
+				v-if="socBasedCharging"
+				class="flex-grow-1 text-end"
+				:limit-soc="displayLimitSoc"
+				:range-per-soc="rangePerSoc"
+				:heating="heating"
+				@limit-soc-updated="limitSocUpdated"
+			/>
+			<LimitEnergySelect
+				v-else
+				class="flex-grow-1 text-end"
+				:limit-energy="limitEnergy"
+				:soc-per-kwh="socPerKwh"
+				:charged-energy="chargedEnergy"
+				:capacity="capacity"
+				@limit-energy-updated="limitEnergyUpdated"
+			/>
+		</div>
+	</div>
+</template>
+
+<script>
+import collector from "../../mixins/collector.js";
+import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
+import LabelAndValue from "../Helper/LabelAndValue.vue";
+import Title from "./Title.vue";
+import Soc from "./Soc.vue";
+import Status from "./Status.vue";
+import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
+import LimitSocSelect from "./LimitSocSelect.vue";
+import LimitEnergySelect from "./LimitEnergySelect.vue";
+import { distanceUnit, distanceValue } from "../../units.js";
+
+export default {
+	name: "Vehicle",
+	components: {
+		VehicleTitle: Title,
+		VehicleSoc: Soc,
+		VehicleStatus: Status,
+		LabelAndValue,
+		ChargingPlan,
+		LimitSocSelect,
+		LimitEnergySelect,
+	},
+	mixins: [collector, formatter],
+	props: {
+		chargedEnergy: Number,
+		charging: Boolean,
+		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
+		connected: Boolean,
+		currency: String,
+		effectiveLimitSoc: Number,
+		effectivePlanSoc: Number,
+		effectivePlanTime: String,
+		batteryBoostActive: Boolean,
+		enabled: Boolean,
+		heating: Boolean,
+		id: [String, Number],
+		integratedDevice: Boolean,
+		limitEnergy: Number,
+		mode: String,
+		chargerStatusReason: String,
+		phaseAction: String,
+		phaseRemainingInterpolated: Number,
+		planActive: Boolean,
+		planEnergy: Number,
+		planProjectedStart: String,
+		planProjectedEnd: String,
+		planTime: String,
+		planTimeUnreachable: Boolean,
+		planOverrun: Number,
+		pvAction: String,
+		pvRemainingInterpolated: Number,
+		sessionSolarPercentage: Number,
+		smartCostActive: Boolean,
+		smartCostNextStart: String,
+		smartCostLimit: Number,
+		smartCostType: String,
+		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
+		tariffCo2: Number,
+		tariffGrid: Number,
+		vehicle: Object,
+		vehicleDetectionActive: Boolean,
+		vehicleName: String,
+		vehicleRange: Number,
+		vehicles: Array,
+		vehicleSoc: Number,
+		vehicleLimitSoc: Number,
+		vehicleNotReachable: Boolean,
+	},
+	emits: [
+		"limit-soc-updated",
+		"limit-energy-updated",
+		"change-vehicle",
+		"remove-vehicle",
+		"open-loadpoint-settings",
+	],
+	data() {
+		return {
+			displayLimitSoc: this.effectiveLimitSoc,
+		};
+	},
+	computed: {
+		title: function () {
+			return this.vehicle?.title || "";
+		},
+		capacity: function () {
+			return this.vehicle?.capacity || 0;
+		},
+		icon: function () {
+			return this.vehicle?.icon || "";
+		},
+		minSoc: function () {
+			return this.vehicle?.minSoc || 0;
+		},
+		vehicleSocProps: function () {
+			return this.collectProps(Soc);
+		},
+		vehicleStatus: function () {
+			return this.collectProps(Status);
+		},
+		vehicleTitleProps: function () {
+			return this.collectProps(Title);
+		},
+		chargingPlan: function () {
+			return this.collectProps(ChargingPlan);
+		},
+		formattedSoc: function () {
+			if (!this.vehicleSoc) {
+				return "--";
+			}
+			if (this.heating) {
+				return this.fmtTemperature(this.vehicleSoc);
+			}
+			return this.fmtPercentage(this.vehicleSoc);
+		},
+		vehicleSocTitle: function () {
+			if (this.heating) {
+				return this.$t("main.vehicle.temp");
+			}
+			return this.$t("main.vehicle.vehicleSoc");
+		},
+		range: function () {
+			return distanceValue(this.vehicleRange);
+		},
+		rangeUnit: function () {
+			return distanceUnit();
+		},
+		rangePerSoc: function () {
+			if (this.vehicleSoc > 10 && this.range) {
+				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
+			}
+			return null;
+		},
+		socPerKwh: function () {
+			if (this.capacity > 0) {
+				return 100 / this.capacity;
+			}
+			return null;
+		},
+		chargedSoc: function () {
+			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
+			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
+		},
+		chargingPlanDisabled: function () {
+			return ["off", "now"].includes(this.mode);
+		},
+		smartCostDisabled: function () {
+			return ["off", "now"].includes(this.mode);
+		},
+	},
+	watch: {
+		effectiveLimitSoc: function () {
+			this.displayLimitSoc = this.effectiveLimitSoc;
+		},
+	},
+	methods: {
+		limitSocDrag: function (limitSoc) {
+			this.displayLimitSoc = limitSoc;
+		},
+		limitSocUpdated: function (limitSoc) {
+			this.displayLimitSoc = limitSoc;
+			this.$emit("limit-soc-updated", limitSoc);
+		},
+		limitEnergyUpdated: function (limitEnergy) {
+			this.$emit("limit-energy-updated", limitEnergy);
+		},
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
+		},
+		removeVehicle() {
+			this.$emit("remove-vehicle");
+		},
+		fmtEnergy(value) {
+			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
+		},
+		openPlanModal() {
+			this.$refs.chargingPlan.openPlanModal();
+		},
+		openMinSocSettings() {
+			this.$refs.chargingPlan.openPlanModal(true);
+		},
+	},
+};
+</script>
+
+<style scoped>
+.details > div {
+	flex-grow: 1;
+	flex-basis: 0;
+}
+</style>

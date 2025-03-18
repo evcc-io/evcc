@@ -450,7 +450,7 @@ modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
 [forecast]
 modalTitle = "Prognozė"
-solarAdjust = "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis."
+solarAdjust = "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis{percent}."
 
 [forecast.co2]
 average = "Vidurkis"
