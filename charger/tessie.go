@@ -25,22 +25,15 @@ func init() {
 }
 
 func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
-        cc := struct {
-                Vin        string
-                Token      string
-                Location   string
-                Maxcurrent int64
-        }{}
-
-        if err := util.DecodeOther(other, &cc); err != nil {
-                return nil, err
-        }
+        // ... (your existing code)
 
         log := util.NewLogger("tessie")
 
         tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cc.Token})
         oauthClient := oauth2.NewClient(context.Background(), tokenSource)
-        client := request.NewHelperWithClient(log, oauthClient)
+
+        client := request.NewHelper(log) // Use request.NewHelper
+        client.Client = oauthClient // Set the Client field
 
         t := &Tessie{
                 log:        log,
@@ -239,11 +232,19 @@ func (t *Tessie) ChargedEnergy() (float64, error) {
         return res.ChargeState.ChargeEnergyAdded, nil
 }
 
+func (t *Tessie) startCharging() error {
+        url := fmt.Sprintf("https://api.tessie.com/%s/command/start_charging?retry_duration=40&wait_for_completion=true", t.Vin)
+        req, err := request.New(http.MethodPost, url, nil, nil)
+        if err != nil {
+                return err
+        }
+        _, err = t.client.Do(req)
+        return err
+}
+
 func (t *Tessie) getLocationName() (string, error) {
-        url := fmt.Sprintf("https://api.tessie.com/%s/location", t.vin)
-        req, err := request.New(http.MethodGet, url, nil, map[string]string{
-                "Authorization": fmt.Sprintf("Bearer %s", t.token),
-        })
+        url := fmt.Sprintf("https://api.tessie.com/%s/location", t.Vin)
+        req, err := request.New(http.MethodGet, url, nil, nil)
         if err != nil {
                 return "", err
         }
