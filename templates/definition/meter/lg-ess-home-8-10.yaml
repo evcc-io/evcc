@@ -4,6 +4,12 @@ products:
     description:
       generic: ESS Home 8/10
 capabilities: ["battery-control"]
+requirements:
+  description:
+      en: >
+        To use the battery control, a firmware version greater than or equal to 10.05.7437 / R2173 is required
+      de: >
+        Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7437 / R2173 benötigt
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
