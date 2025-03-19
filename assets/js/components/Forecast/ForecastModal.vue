@@ -40,7 +40,7 @@
 				/>
 				<div class="form-check-label">
 					<label for="solarForecastAdjust"
-						><small>🧪 {{ $t("forecast.solarAdjust") }}</small></label
+						><small>🧪 {{ solarAdjustText }}</small></label
 					>
 				</div>
 			</div>
@@ -104,6 +104,17 @@ export default defineComponent({
 			return this.showSolarAdjust && this.solarAdjusted
 				? adjustedSolar(this.forecast.solar)
 				: this.forecast.solar;
+		},
+		solarAdjustText() {
+			let percent = "";
+
+			const scale = this.forecast.solar?.scale;
+			if (scale) {
+				const percentDiff = scale * 100 - 100;
+				percent = ` (${this.fmtPercentage(percentDiff, 0, true)})`;
+			}
+
+			return this.$t("forecast.solarAdjust", { percent });
 		},
 	},
 	watch: {

@@ -362,17 +362,26 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func deleteDevice[T any](id int, h config.Handler[T]) error {
-	name := config.NameForID(id)
-
+func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
 	dev, err := h.ByName(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
 	if !ok {
-		return errors.New("not configurable")
+		return nil, errors.New("not configurable")
+	}
+
+	return configurable, nil
+}
+
+func deleteDevice[T any](id int, h config.Handler[T]) error {
+	name := config.NameForID(id)
+
+	configurable, err := configurableDevice(name, h)
+	if err != nil {
+		return err
 	}
 
 	if err := configurable.Delete(); err != nil {
@@ -384,6 +393,8 @@ func deleteDevice[T any](id int, h config.Handler[T]) error {
 
 // deleteDeviceHandler deletes a device from database by class
 func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
+	h := config.Loadpoints()
+
 	vars := mux.Vars(r)
 
 	class, err := templates.ClassString(vars["class"])
@@ -402,11 +413,35 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Charger:
 		err = deleteDevice(id, config.Chargers())
 
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetChargerRef() == config.NameForID(id) {
+				lp.SetChargerRef("")
+			}
+		}
+
 	case templates.Meter:
 		err = deleteDevice(id, config.Meters())
 
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetMeterRef() == config.NameForID(id) {
+				lp.SetMeterRef("")
+			}
+		}
+
 	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
+
+		// cleanup references
+		for _, dev := range h.Devices() {
+			lp := dev.Instance()
+			if lp.GetDefaultVehicleRef() == config.NameForID(id) {
+				lp.SetDefaultVehicleRef("")
+			}
+		}
 
 	case templates.Circuit:
 		err = deleteDevice(id, config.Circuits())

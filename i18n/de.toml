@@ -357,7 +357,6 @@ validate = "prüfen"
 cancel = "Abbrechen"
 delete = "Fahrzeug löschen"
 generic = "Weitere Integrationen"
-offline = "Generisches Fahrzeug"
 online = "Fahrzeuge mit Schnittstelle"
 save = "Speichern"
 scooter = "Elektroroller"
@@ -438,7 +437,7 @@ modalUpdateStatusStart = "Installation gestartet:"
 
 [forecast]
 modalTitle = "Vorhersage"
-solarAdjust = "Solarprognose anhand der realen Produktionsdaten anpassen."
+solarAdjust = "Solarprognose anhand der realen Produktionsdaten anpassen{percent}."
 
 [forecast.co2]
 average = "Durchschnitt"

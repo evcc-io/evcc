@@ -356,7 +356,6 @@ validate = "validate"
 cancel = "Cancel"
 delete = "Delete"
 generic = "Other integrations"
-offline = "Generic vehicle"
 online = "Vehicles with online API"
 save = "Save"
 scooter = "Scooter"
@@ -437,7 +436,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
-solarAdjust = "Adjust solar forecast based on real production data."
+solarAdjust = "Adjust solar forecast based on real production data{percent}."
 
 [forecast.co2]
 average = "Average"

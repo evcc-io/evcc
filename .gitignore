@@ -44,3 +44,4 @@ asset-stats.html
 .gitpod.yml
 /evcc.db
 /tsconfig.tsbuildinfo
+*storybook.log
