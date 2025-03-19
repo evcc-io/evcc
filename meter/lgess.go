@@ -84,7 +84,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		batterySoc = m.batterySoc
 		currentVersion, err := conn.GetFirmwareVersion()
 		if err == nil {
-			if currentVersion >= 7435 {
+			if currentVersion >= 7433 {
 				setBatteryMode = m.batteryMode(battery)
 			}
 		}
