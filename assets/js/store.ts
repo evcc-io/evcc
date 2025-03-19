@@ -1,20 +1,25 @@
 import { reactive } from "vue";
 
-function setProperty(obj, props, value) {
+function setProperty(obj: object, props: string[], value: any) {
 	const prop = props.shift();
+	// @ts-expect-error no-explicit-any
 	if (!obj[prop]) {
+		// @ts-expect-error no-explicit-any
 		obj[prop] = {};
 	}
 
 	if (!props.length) {
 		if (value && typeof value === "object" && !Array.isArray(value)) {
+			// @ts-expect-error no-explicit-any
 			obj[prop] = { ...obj[prop], ...value };
 		} else {
+			// @ts-expect-error no-explicit-any
 			obj[prop] = value;
 		}
 		return;
 	}
 
+	// @ts-expect-error no-explicit-any
 	setProperty(obj[prop], props, value);
 }
 
@@ -30,6 +35,7 @@ const store = {
 	offline: function (value: boolean) {
 		state.offline = value;
 	},
+	// @ts-expect-error no-explicit-any
 	update: function (msg) {
 		Object.keys(msg).forEach(function (k) {
 			if (k === "log") {
@@ -45,9 +51,12 @@ const store = {
 		Object.keys(initialState).forEach(function (k) {
 			if (k === "offline") return;
 
+			// @ts-expect-error no-explicit-any
 			if (Array.isArray(initialState[k])) {
+				// @ts-expect-error no-explicit-any
 				state[k] = [];
 			} else {
+				// @ts-expect-error no-explicit-any
 				state[k] = undefined;
 			}
 		});

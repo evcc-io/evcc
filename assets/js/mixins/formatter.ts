@@ -2,20 +2,20 @@ import { defineComponent } from "vue";
 import { CURRENCY } from "../types/evcc";
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
-enum ENERGY_PRICE_IN_SUBUNIT {
-	AUD = "c", // Australian cent
-	BGN = "st", // Bulgarian stotinka
-	BRL = "¢", // Brazilian centavo
-	CAD = "¢", // Canadian cent
-	CHF = "rp", // Swiss Rappen
-	CNY = "f", // Chinese fen
-	EUR = "ct", // Euro cent
-	GBP = "p", // GB pence
-	ILS = "ag", // Israeli agora
-	NZD = "c", // New Zealand cent
-	PLN = "gr", // Polish grosz
-	USD = "¢", // US cent
-}
+const ENERGY_PRICE_IN_SUBUNIT = {
+	AUD: "c", // Australian cent
+	BGN: "st", // Bulgarian stotinka
+	BRL: "¢", // Brazilian centavo
+	CAD: "¢", // Canadian cent
+	CHF: "rp", // Swiss Rappen
+	CNY: "f", // Chinese fen
+	EUR: "ct", // Euro cent
+	GBP: "p", // GB pence
+	ILS: "ag", // Israeli agora
+	NZD: "c", // New Zealand cent
+	PLN: "gr", // Polish grosz
+	USD: "¢", // US cent
+};
 
 export enum POWER_UNIT {
 	W = "W",
@@ -34,7 +34,7 @@ export default defineComponent({
 	},
 	methods: {
 		round: function (num: number, precision: number) {
-			var base = 10 ** precision;
+			const base = 10 ** precision;
 			return (Math.round(num * base) / base).toFixed(precision);
 		},
 		fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
@@ -113,11 +113,11 @@ export default defineComponent({
 			if (duration <= 0) {
 				return "—";
 			}
-			let roundedDuration = Math.round(duration);
-			var seconds = roundedDuration % 60;
-			var minutes = Math.floor(roundedDuration / 60) % 60;
-			var hours = Math.floor(roundedDuration / 3600);
-			var result = "";
+			const roundedDuration = Math.round(duration);
+			const seconds = roundedDuration % 60;
+			const minutes = Math.floor(roundedDuration / 60) % 60;
+			const hours = Math.floor(roundedDuration / 3600);
+			let result = "";
 			let unit = "";
 			if (hours >= 1 || minUnit === "h") {
 				result = `${this.fmtNumberToLocale(hours)}:${this.fmtNumberToLocale(minutes, 2)}`;
@@ -300,8 +300,8 @@ export default defineComponent({
 			};
 
 			// "Math.abs" accounts for both "past" & "future" scenarios
-			for (var u in units) {
-				var unitKey = u as keyof typeof units;
+			for (const u in units) {
+				const unitKey = u as keyof typeof units;
 				if (Math.abs(elapsed) > units[unitKey] || u == "second") {
 					try {
 						const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
@@ -374,7 +374,7 @@ export default defineComponent({
 				return weekdays.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex))?.name;
 			}
 
-			let maxWeekday = Math.max(...selectedWeekdaysTransformed);
+			const maxWeekday = Math.max(...selectedWeekdaysTransformed);
 
 			for (let weekdayRangeStart = 1; weekdayRangeStart < 8; weekdayRangeStart++) {
 				if (selectedWeekdaysTransformed.includes(weekdayRangeStart)) {

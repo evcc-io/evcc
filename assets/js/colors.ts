@@ -50,16 +50,16 @@ const colors: {
 	],
 });
 
-export const dimColor = (color: string) => {
-	return color.toLowerCase().replace(/ff$/, "20");
+export const dimColor = (color: string | null) => {
+	return color?.toLowerCase().replace(/ff$/, "20");
 };
 
-export const lighterColor = (color: string) => {
-	return color.toLowerCase().replace(/ff$/, "aa");
+export const lighterColor = (color: string | null) => {
+	return color?.toLowerCase().replace(/ff$/, "aa");
 };
 
-export const fullColor = (color: string) => {
-	return color.toLowerCase().replace(/20$/, "ff");
+export const fullColor = (color: string | null) => {
+	return color?.toLowerCase().replace(/20$/, "ff");
 };
 
 function updateCssColors() {

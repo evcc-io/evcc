@@ -33,7 +33,7 @@ import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
-import colors, { lighterColor } from "../../colors";
+import colors, { lighterColor } from "../../colors.ts";
 import {
 	highestSlotIndexByDay,
 	ForecastType,
@@ -262,6 +262,7 @@ export default defineComponent({
 						},
 						align: function ({ chart, dataset, dataIndex }: Context) {
 							const { min, max } = chart.scales["x"];
+							// @ts-expect-error no-explicit-any
 							const time = new Date(dataset.data[dataIndex]?.x).getTime();
 
 							// percent along the x axis (0: start, 1: end)
@@ -286,6 +287,7 @@ export default defineComponent({
 						offset: 8,
 						padding: function (context: Context) {
 							const data = context.dataset.data[context.dataIndex];
+							// @ts-expect-error no-explicit-any
 							const x = typeof data.highlight === "number" ? 32 : 8;
 							return {
 								x,
@@ -295,6 +297,7 @@ export default defineComponent({
 						borderRadius: 4,
 						color: colors.background,
 						font: { weight: "bold" },
+						// @ts-expect-error no-explicit-any
 						formatter: function (value, context: Context) {
 							if (value.highlight) {
 								switch (context.dataset.label) {
@@ -332,9 +335,8 @@ export default defineComponent({
 							display: true,
 							color: colors.border,
 							offset: false,
+							// @ts-expect-error no-explicit-any
 							lineWidth: function (context) {
-								// console.log(typeof context);
-
 								if (context.type !== "tick") {
 									return 0;
 								}
