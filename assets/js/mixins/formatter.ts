@@ -330,12 +330,13 @@ export default defineComponent({
 			}
 			return result;
 		},
-		fmtPercentage: function (value: number, digits = 0) {
-			return new Intl.NumberFormat(this.$i18n?.locale, {
+		fmtPercentage: function (value: number, digits = 0, forceSign = false) {
+			const sign = forceSign && value > 0 ? "+" : "";
+			return `${sign}${new Intl.NumberFormat(this.$i18n?.locale, {
 				style: "percent",
 				minimumFractionDigits: digits,
 				maximumFractionDigits: digits,
-			}).format(value / 100);
+			}).format(value / 100)}`;
 		},
 		hasLeadingPercentageSign: function () {
 			return ["tr", "ar"].includes(this.$i18n?.locale);
