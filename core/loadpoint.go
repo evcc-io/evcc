@@ -134,7 +134,7 @@ type Loadpoint struct {
 	circuit        api.Circuit // Circuit
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
-	defaultVehicle api.Vehicle // Default vehicle (disables detection)
+	defaultVehicle api.Vehicle // Default vehicle (eventually after detection)
 	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 
@@ -521,8 +521,12 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// set default mode on disconnect
 	lp.defaultMode()
 
-	// set default vehicle (may be nil)
-	lp.setActiveVehicle(lp.defaultVehicle)
+	// set default vehicle if poll always is selected
+	var v api.Vehicle
+	if lp.GetSocConfig().Poll.Mode == loadpoint.PollAlways {
+		v = lp.defaultVehicle
+	}
+	lp.setActiveVehicle(v)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -644,11 +648,6 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// vehicle
 	lp.publish(keys.VehicleName, "")
 	lp.publish(keys.VehicleOdometer, 0.0)
-
-	// assign and publish default vehicle
-	if lp.defaultVehicle != nil {
-		lp.setActiveVehicle(lp.defaultVehicle)
-	}
 
 	// reset detection state
 	lp.publish(keys.VehicleDetectionActive, false)
@@ -1064,7 +1063,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 		for _, ev := range statusEvents(prevStatus, status) {
 			lp.bus.Publish(ev)
 
-			// send connect/disconnect events except during startup
+			// don't send connect/disconnect events during startup
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
