@@ -166,20 +166,19 @@ func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
 func (m *Com) GetFirmwareVersion() (int, error) {
 	var firmwareVersion = 0
 	systemInfo, err := m.GetSystemInfo()
-	if err == nil {
-		// extract the patch number behind a dot that is always followed by at least 4 digits
-		re := regexp.MustCompile(`\.(\d{4,})`)
-		match := re.FindStringSubmatch(systemInfo.Version.PMSVersion)
-		if len(match) > 1 {
-			firmwareVersion, err = strconv.Atoi(match[1])
-			if err != nil {
-				err = fmt.Errorf("parsing the firmware version failed")
-			}
-		} else {
-			err = fmt.Errorf("couldn't find the firmware version within the string")
+	if err != nil {
+		return firmwareVersion, err
+	}
+	// extract the patch number behind a dot that is always followed by at least 4 digits
+	re := regexp.MustCompile(`.(\d{4})`)
+	match := re.FindStringSubmatch(systemInfo.Version.PMSVersion)
+	if len(match) > 1 {
+		firmwareVersion, err = strconv.Atoi(match[1])
+		if err != nil {
+			return firmwareVersion, err
 		}
 	} else {
-		err = fmt.Errorf("couldn't retrieve the system information")
+		err = fmt.Errorf("couldn't find the firmware version within the string")
 	}
 
 	return firmwareVersion, err
