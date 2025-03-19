@@ -19,10 +19,10 @@ import (
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 	return loadpoint.StaticConfig{
-		Charger: lp.GetChargerName(),
-		Meter:   lp.GetMeterName(),
-		Circuit: lp.GetCircuitName(),
-		Vehicle: lp.GetDefaultVehicle(),
+		Charger: lp.GetChargerRef(),
+		Meter:   lp.GetMeterRef(),
+		Circuit: lp.GetCircuitRef(),
+		Vehicle: lp.GetDefaultVehicleRef(),
 	}
 }
 
@@ -240,6 +240,33 @@ func deleteLoadpointHandler() http.HandlerFunc {
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
+		}
+
+		// cleanup references
+		lp, err := configurableDevice(config.NameForID(id), h)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		instance := lp.Instance()
+
+		if dev, err := configurableDevice(instance.GetChargerRef(), config.Chargers()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Chargers()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
+		if dev, err := configurableDevice(instance.GetMeterRef(), config.Meters()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Meters()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
 		}
 
 		setConfigDirty()
