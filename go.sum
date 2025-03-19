@@ -39,8 +39,6 @@ github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrR
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
-github.com/andig/rct v0.1.2-0.20250304111436-8752b2b47d09 h1:hSE8fKSDCklqfp2XT4giYkHEJL+Inp/mXX7Cqo88VNM=
-github.com/andig/rct v0.1.2-0.20250304111436-8752b2b47d09/go.mod h1:KRjBDV8kuvGd2kJfN8/F0kjH8JjkFVpBpn7MhW+ACL8=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
@@ -159,6 +157,8 @@ github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529 h1:18rLAN7zm3AmY2OP
 github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3 h1:W086rzYedGdIQhYSW63M8GyZIx5qMxXEV+qZEzG3Eno=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3/go.mod h1:PDT3uxaVPtcFQv0qdwO0v/zdVbrUZiSbLYifBVdrIEA=
+github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785 h1:OWCBVMcPsVTffdiZN3VYaq9p4fsWlzd490J6pekaKLA=
+github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=

@@ -11,7 +11,7 @@ const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
-
+const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 function read(key) {
   return window.localStorage[key];
 }
@@ -64,6 +64,7 @@ const settings = reactive({
   savingsRegion: read(SAVINGS_REGION),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
+  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -77,4 +78,5 @@ watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
+watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 export default settings;

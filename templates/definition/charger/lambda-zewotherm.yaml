@@ -2,35 +2,80 @@ template: lambda-zewotherm
 products:
   - brand: Lambda
     description:
-      de: EU-L Serie
-      en: EU-L Series
+      de: |
+        EU-L Serie
+        * Einstellungen des Energie Magagement der Lambda Steuerung:
+        * E-Meter Kommunikationsart: "ModBus Client"
+        * E-Meter Messpunkt: "Pos. E-Überschuss"
+      en: |
+        EU-L Series
+        * Energy management settings of the Lambda control:
+        * E-Meter communication type: "ModBus Client"
+        * E-Meter measuring point: "Pos. E-Überschuss"
   - brand: Zewotherm
     description:
-      de: EU-L Serie
-      en: EU-L Series
+      de: |
+        EU-L Serie
+        * Einstellungen des Energie Magagement der Zewotherm Steuerung:
+        * E-Meter Kommunikationsart: "ModBus Client"
+        * E-Meter Messpunkt: "Pos. E-Überschuss"
+      en: |
+        EU-L Series
+        * Energy management settings of the Zewotherm control:
+        * E-Meter communication type: "ModBus Client"
+        * E-Meter measuring point: "Pos. E-Überschuss"
 group: heating
 requirements:
   # evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
   - name: phases
-    type: int
+    deprecated: true
+  - name: watchdog
+    type: duration
+    default: 60s
     advanced: true
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 102 # PV Überschussleistung
-      type: holding
-      decode: int16
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 102 # PV Überschussleistung
+        type: writemultiple # λ erwartet single value als FC16
+        decode: int16
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 103 # aktuelle Aufnahmeleistung der WP
+      address: 103 # aktuelle Aufnahmeleistung [E] der WP
       type: holding
       decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
+      type: holding
+      decode: int32
+    scale: 0.001
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten
+      type: holding
+      decode: int16
+    scale: 0.1
+  {{- end }}

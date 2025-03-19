@@ -18,10 +18,12 @@ function setProperty(obj, props, value) {
   setProperty(obj[prop], props, value);
 }
 
-const state = reactive({
+const initialState = {
   offline: false,
   loadpoints: [], // ensure array type
-});
+};
+
+const state = reactive(initialState);
 
 const store = {
   state,
@@ -34,6 +36,19 @@ const store = {
         window.app.raise(msg[k]);
       } else {
         setProperty(state, k.split("."), msg[k]);
+      }
+    });
+  },
+  reset: function () {
+    console.log("resetting state");
+    // reset to initial state
+    Object.keys(initialState).forEach(function (k) {
+      if (k === "offline") return;
+
+      if (Array.isArray(initialState[k])) {
+        state[k] = [];
+      } else {
+        state[k] = undefined;
       }
     });
   },

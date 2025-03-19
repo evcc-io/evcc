@@ -23,12 +23,10 @@ params:
       de: Boost Temperatur
       en: Boost temperature setpoint
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
-  phases: {{ .phases }}

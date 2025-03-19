@@ -7,9 +7,9 @@
     "test": "TZ=Europe/Berlin vitest",
     "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0",
     "dev": "vite",
-    "histoire": "histoire dev",
     "playwright": "playwright test --ui",
-    "simulator": "vite tests/simulator"
+    "simulator": "vite tests/simulator",
+    "storybook": "storybook dev -p 6006"
   },
   "type": "module",
   "main": "index.js",
@@ -18,7 +18,6 @@
     "@eslint/js": "^9.13.0",
     "@guolao/vue-monaco-editor": "^1.5.1",
     "@h2d2/shopicons": "^1.2.0",
-    "@histoire/plugin-vue": "^1.0.0-alpha.1",
     "@playwright/test": "^1.46.1",
     "@popperjs/core": "^2.11.5",
     "@unhead/vue": "^1.8.9",
@@ -45,9 +44,8 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^7.1.0",
     "eslint-plugin-vue": "^9.3.0",
-    "globals": "^15.11.0",
-    "happy-dom": "^16.8.1",
-    "histoire": "^1.0.0-alpha.1",
+    "globals": "^16.0.0",
+    "happy-dom": "^17.4.4",
     "markty-toml": "^0.1.1",
     "prettier": "^3.0.0",
     "prettier-plugin-sh": "^0.14.0",
@@ -72,5 +70,21 @@
     "node": ">=22.0.0"
   },
   "license": "MIT",
-  "repository": "github:evcc-io/evcc"
+  "repository": "github:evcc-io/evcc",
+  "eslintConfig": {
+    "extends": [
+      "plugin:storybook/recommended"
+    ]
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.5",
+    "@storybook/addon-essentials": "^8.6.4",
+    "@storybook/addon-interactions": "^8.6.4",
+    "@storybook/blocks": "^8.6.4",
+    "@storybook/test": "^8.6.4",
+    "@storybook/vue3": "^8.6.4",
+    "@storybook/vue3-vite": "^8.6.4",
+    "eslint-plugin-storybook": "^0.11.4",
+    "storybook": "^8.6.4"
+  }
 }

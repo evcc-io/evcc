@@ -1,28 +1,31 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 	"strings"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
 
+// Config is the database mapping for device configurations
+// The device prefix ensures unique namespace
+//
+// TODO migrate vehicle and loadpoints to this schema
 type Config struct {
-	ID    int `gorm:"primarykey"`
-	Class templates.Class
-	Type  string
-	Value string
+	ID         int `gorm:"primarykey"`
+	Class      templates.Class
+	Properties `gorm:"embedded"`
+	Data       map[string]any `gorm:"column:value;type:string;serializer:json"`
 }
 
-// TODO remove- migration only
-type ConfigDetails struct {
-	ConfigID int    `gorm:"index:idx_unique"`
-	Key      string `gorm:"index:idx_unique"`
-	Value    string
+type Properties struct {
+	Type    string
+	Title   string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon    string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Product string `json:"deviceProduct,omitempty" mapstructure:"deviceProduct"`
 }
 
 // Named converts device details to named config
@@ -30,7 +33,7 @@ func (d *Config) Named() Named {
 	res := Named{
 		Name:  NameForID(d.ID),
 		Type:  d.Type,
-		Other: d.detailsAsMap(),
+		Other: maps.Clone(d.Data),
 	}
 	return res
 }
@@ -39,62 +42,29 @@ func (d *Config) Named() Named {
 func (d *Config) Typed() Typed {
 	res := Typed{
 		Type:  d.Type,
-		Other: d.detailsAsMap(),
+		Other: maps.Clone(d.Data),
 	}
 	return res
 }
 
-// detailsAsMap converts device details to map
-func (d *Config) detailsAsMap() map[string]any {
-	res := make(map[string]any)
-	if err := json.Unmarshal([]byte(d.Value), &res); err != nil {
-		panic(err)
+func WithProperties(p Properties) func(*Config) {
+	return func(d *Config) {
+		d.Properties = p
 	}
-	return res
-}
-
-// detailsFromMap converts map to device details
-func detailsFromMap(config map[string]any) (string, error) {
-	b, err := json.Marshal(config)
-	return string(b), err
 }
 
 // Update updates a config's details to the database
-func (d *Config) Update(conf map[string]any) error {
+func (d *Config) Update(conf map[string]any, opt ...func(*Config)) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
 			return err
 		}
 
-		val, err := detailsFromMap(conf)
-		if err != nil {
-			return err
+		d.Data = conf
+		for _, o := range opt {
+			o(d)
 		}
-		d.Value = val
-
-		return tx.Save(&d).Error
-	})
-}
-
-// PartialUpdate partially updates a config's details to the database
-func (d *Config) PartialUpdate(conf map[string]any) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var config Config
-		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
-			return err
-		}
-
-		actual := d.detailsAsMap()
-		if err := mergo.Merge(&actual, conf, mergo.WithOverride); err != nil {
-			return err
-		}
-
-		val, err := detailsFromMap(actual)
-		if err != nil {
-			return err
-		}
-		d.Value = val
 
 		return tx.Save(&d).Error
 	})
@@ -110,66 +80,7 @@ var db *gorm.DB
 func Init(instance *gorm.DB) error {
 	db = instance
 	m := db.Migrator()
-
-	for old, new := range map[string]string{
-		"devices":        "configs",
-		"device_details": "config_details",
-	} {
-		if m.HasTable(old) {
-			if err := m.RenameTable(old, new); err != nil {
-				return err
-			}
-		}
-	}
-
-	err := m.AutoMigrate(new(Config))
-
-	if err == nil && m.HasTable("config_details") {
-		err = m.AutoMigrate(new(ConfigDetails))
-
-		if err == nil && m.HasConstraint(new(ConfigDetails), "fk_devices_details") {
-			err = m.DropConstraint(new(ConfigDetails), "fk_devices_details")
-		}
-		if err == nil && m.HasColumn(new(ConfigDetails), "device_id") {
-			err = m.DropColumn(new(ConfigDetails), "device_id")
-		}
-	}
-
-	if err == nil && m.HasTable("config_details") {
-		var devices []Config
-		if err := db.Where(&Config{}).Find(&devices).Error; err != nil {
-			return err
-		}
-
-		// migrate ConfigDetails into Config.Value
-		for _, dev := range devices {
-			var details []ConfigDetails
-			if err := db.Where(&ConfigDetails{ConfigID: dev.ID}).Find(&details).Error; err != nil {
-				return err
-			}
-
-			res := make(map[string]any)
-			for _, detail := range details {
-				res[detail.Key] = detail.Value
-			}
-
-			if len(res) > 0 {
-				val, err := detailsFromMap(res)
-				if err != nil {
-					return err
-				}
-				dev.Value = val
-
-				if err := db.Save(&dev).Error; err != nil {
-					return err
-				}
-			}
-		}
-
-		err = m.DropTable("config_details")
-	}
-
-	return err
+	return m.AutoMigrate(new(Config))
 }
 
 // NameForID returns a unique config name for the given id
@@ -190,7 +101,7 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	// remove devices without details
 	res := make([]Config, 0, len(devices))
 	for _, dev := range devices {
-		if len(dev.Value) > 0 {
+		if len(dev.Data) > 0 {
 			res = append(res, dev)
 		}
 	}
@@ -206,19 +117,19 @@ func ConfigByID(id int) (Config, error) {
 }
 
 // AddConfig adds a new config to the database
-func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
-	val, err := detailsFromMap(conf)
-	if err != nil {
+func AddConfig(class templates.Class, conf map[string]any, opt ...func(*Config)) (Config, error) {
+	config := Config{
+		Class: class,
+		Data:  conf,
+	}
+
+	for _, o := range opt {
+		o(&config)
+	}
+
+	if err := db.Create(&config).Error; err != nil {
 		return Config{}, err
 	}
 
-	config := Config{
-		Class: class,
-		Type:  typ,
-		Value: val,
-	}
-
-	err = db.Create(&config).Error
-
-	return config, err
+	return config, nil
 }

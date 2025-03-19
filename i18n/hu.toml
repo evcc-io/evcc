@@ -684,13 +684,6 @@ tempLimit = "Hőm. limit"
 unknown = "Vendég jármű"
 vehicleSoc = "Töltöttség"
 
-[main.vehicleSoc]
-charging = "tölt"
-connected = "csatlakoztatva"
-disconnected = "lecsatlakoztatva"
-ready = "üzemkész"
-vehicleLimit = "Jármű limit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Hitelesítésre várakozás."
 batteryBoost = "Akkumulátoros rásegítés aktív."
@@ -715,7 +708,7 @@ targetChargeActive = "Töltési terv aktív. Becsült befejezés {duration}."
 targetChargePlanned = "A töltési tervezet ekkor keződik: {duration}."
 targetChargeWaitForVehicle = "Töltési terv üzemkész. Járműre várakozás…"
 unknown = ""
-vehicleLimit = "Jármű limit."
+vehicleLimit = "Jármű limi."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
@@ -891,6 +884,7 @@ modalTitle = "Okos Hálózati Töltés"
 none = "nincs"
 priceLabel = "Energia ár"
 priceLimit = "Ár limit"
+resetAction = "Limit eltávolítása"
 saved = "Elmentve."
 
 [startupError]

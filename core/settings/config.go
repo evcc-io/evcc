@@ -3,6 +3,7 @@ package settings
 import (
 	"encoding/json"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -13,15 +14,18 @@ import (
 var _ Settings = (*ConfigSettings)(nil)
 
 type ConfigSettings struct {
+	mu   sync.Mutex
 	log  *util.Logger
 	conf *config.Config
 }
 
 func NewConfigSettingsAdapter(log *util.Logger, conf *config.Config) *ConfigSettings {
-	return &ConfigSettings{log, conf}
+	return &ConfigSettings{log: log, conf: conf}
 }
 
 func (s *ConfigSettings) get(key string) (any, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	val := s.conf.Named().Other[key]
 	if val == nil {
 		return nil, errors.New("not found")
@@ -29,10 +33,13 @@ func (s *ConfigSettings) get(key string) (any, error) {
 	return val, nil
 }
 
+// TODO remove broken error handling when settings api is retired
 func (s *ConfigSettings) set(key string, val any) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	data := s.conf.Named().Other
 	data[key] = val
-	if err := s.conf.PartialUpdate(data); err != nil {
+	if err := s.conf.Update(data); err != nil {
 		s.log.ERROR.Println(err)
 	}
 }
@@ -46,6 +53,10 @@ func (s *ConfigSettings) SetInt(key string, val int64) {
 }
 
 func (s *ConfigSettings) SetFloat(key string, val float64) {
+	s.set(key, val)
+}
+
+func (s *ConfigSettings) SetFloatPtr(key string, val *float64) {
 	s.set(key, val)
 }
 
