@@ -66,7 +66,6 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import api from "../../api";
 import { docsPrefix } from "../../i18n";
-import store from "../../store";
 
 export default {
 	name: "JsonModal",
@@ -115,11 +114,11 @@ export default {
 			await this.load();
 		},
 		async load() {
-			this.serverValues = this.stateKey ? store.state[this.stateKey] : store.state;
+            let serverValues = (await api.get(this.endpoint)).data.result
 			if (this.transformReadValues) {
-				this.serverValues = this.transformReadValues(this.serverValues);
+                serverValues = this.transformReadValues(serverValues);
 			}
-			this.values = { ...this.serverValues };
+			this.values = { ...serverValues };
 		},
 		async save() {
 			this.saving = true;

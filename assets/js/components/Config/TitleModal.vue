@@ -31,8 +31,8 @@ export default {
 	components: { FormRow, JsonModal },
 	emits: ["changed"],
 	methods: {
-		transformReadValues(siteTitle) {
-			return { title: siteTitle };
+		transformReadValues(site) {
+			return { title: site.title };
 		},
 	},
 };
