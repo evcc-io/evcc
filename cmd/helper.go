@@ -54,7 +54,8 @@ var redactSecrets = []string{
 	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 	"app", "chats", "recipients", // push messaging
-	"vin", // vehicles
+	"vin",               // vehicles
+	"lat", "lon", "zip", // solar forecast
 }
 
 // redact redacts a configuration string
