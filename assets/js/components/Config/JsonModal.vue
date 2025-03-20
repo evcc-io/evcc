@@ -114,9 +114,9 @@ export default {
 			await this.load();
 		},
 		async load() {
-            let serverValues = (await api.get(this.endpoint)).data.result
+			let serverValues = (await api.get(this.endpoint)).data.result;
 			if (this.transformReadValues) {
-                serverValues = this.transformReadValues(serverValues);
+				serverValues = this.transformReadValues(serverValues);
 			}
 			this.values = { ...serverValues };
 		},
