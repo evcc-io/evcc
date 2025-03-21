@@ -278,7 +278,7 @@ export default {
 		tariffGrid: Number,
 		currency: String,
 	},
-	data: function () {
+	data() {
 		return {
 			isModalVisible: false,
 			selectedBufferSoc: 100,
@@ -429,10 +429,10 @@ export default {
 				this.gridTabActive = false;
 			}
 		},
-		modalVisible: function () {
+		modalVisible() {
 			this.isModalVisible = true;
 		},
-		modalInvisible: function () {
+		modalInvisible() {
 			this.isModalVisible = false;
 		},
 		changeBufferStart($event) {

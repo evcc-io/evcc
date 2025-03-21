@@ -95,16 +95,16 @@ export default {
 		size: { type: String, default: "s" },
 	},
 	computed: {
-		uniqueNames: function () {
+		uniqueNames() {
 			return [...new Set(this.names || [this.name])];
 		},
-		count: function () {
+		count() {
 			return this.names?.length || 0;
 		},
-		single: function () {
+		single() {
 			return this.uniqueNames.length == 1;
 		},
-		singleIcon: function () {
+		singleIcon() {
 			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
 		},
 	},

@@ -93,7 +93,7 @@ export default {
 		},
 	},
 	methods: {
-		surprise: function () {
+		surprise() {
 			const $el = this.$refs.confetti;
 			const angle = 45 + Math.random() * 90;
 			const drift = 0;

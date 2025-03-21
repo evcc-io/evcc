@@ -173,7 +173,7 @@ export default {
 		multiplePlans: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
-	data: function () {
+	data() {
 		return {
 			selectedDay: null,
 			selectedTime: null,
@@ -183,16 +183,16 @@ export default {
 		};
 	},
 	computed: {
-		selectedDate: function () {
+		selectedDate() {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
-		socOptions: function () {
+		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		energyOptions: function () {
+		energyOptions() {
 			const options = energyOptions(
 				0,
 				this.capacity || 100,
@@ -204,7 +204,7 @@ export default {
 			// remove the first entry (0)
 			return options.slice(1);
 		},
-		originalData: function () {
+		originalData() {
 			if (this.isNew) {
 				return {};
 			}
@@ -215,7 +215,7 @@ export default {
 				time: this.fmtTimeString(new Date(this.time)),
 			};
 		},
-		dataChanged: function () {
+		dataChanged() {
 			const dateChanged =
 				this.originalData.day != this.selectedDay ||
 				this.originalData.time != this.selectedTime;
@@ -224,10 +224,10 @@ export default {
 				: this.originalData.energy != this.selectedEnergy;
 			return dateChanged || goalChanged;
 		},
-		isNew: function () {
+		isNew() {
 			return !this.time && (!this.soc || !this.energy);
 		},
-		timeInThePast: function () {
+		timeInThePast() {
 			const now = new Date();
 			return now >= this.selectedDate;
 		},
@@ -255,14 +255,14 @@ export default {
 		this.preview();
 	},
 	methods: {
-		formId: function (name) {
+		formId(name) {
 			return `chargingplan-${this.id}-${name}`;
 		},
-		socOption: function (value) {
+		socOption(value) {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		initInputFields: function () {
+		initInputFields() {
 			if (!this.selectedSoc) {
 				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
 			}
@@ -283,7 +283,7 @@ export default {
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
 		},
-		dayOptions: function () {
+		dayOptions() {
 			const options = [];
 			const date = new Date();
 			const labels = [
@@ -305,7 +305,7 @@ export default {
 			}
 			return options;
 		},
-		update: function () {
+		update() {
 			try {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
@@ -325,7 +325,7 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		preview: function (force = false) {
+		preview(force = false) {
 			if (!this.isNew && !force) {
 				return false;
 			}
@@ -335,7 +335,7 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		toggle: function (e) {
+		toggle(e) {
 			const { checked } = e.target;
 			if (checked) {
 				this.update();
@@ -345,7 +345,7 @@ export default {
 			}
 			this.active = checked;
 		},
-		defaultTime: function () {
+		defaultTime() {
 			const [hours, minutes] = (
 				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
 			).split(":");

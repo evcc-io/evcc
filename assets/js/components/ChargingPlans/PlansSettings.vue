@@ -106,7 +106,7 @@ export default {
 		planOverrun: Number,
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
-	data: function () {
+	data() {
 		return {
 			staticPlanPreview: {},
 			tariff: {},
@@ -118,19 +118,19 @@ export default {
 		};
 	},
 	computed: {
-		noActivePlan: function () {
+		noActivePlan() {
 			return !this.staticPlan && this.repeatingPlans.every((plan) => !plan.active);
 		},
-		multiplePlans: function () {
+		multiplePlans() {
 			return this.repeatingPlans.length !== 0;
 		},
-		selectedPreviewPlanTitle: function () {
+		selectedPreviewPlanTitle() {
 			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name;
 		},
-		chargingPlanWarningsProps: function () {
+		chargingPlanWarningsProps() {
 			return this.collectProps(Warnings);
 		},
-		chargingPlanPreviewProps: function () {
+		chargingPlanPreviewProps() {
 			const { rates } = this.tariff;
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
@@ -139,7 +139,7 @@ export default {
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
-		previewPlanOptions: function () {
+		previewPlanOptions() {
 			const name = (number) => `${this.$t("main.targetCharge.preview")} #${number}`;
 
 			// static plan
@@ -157,7 +157,7 @@ export default {
 
 			return options;
 		},
-		nextPlanTitle: function () {
+		nextPlanTitle() {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
 		},
 	},
@@ -169,7 +169,7 @@ export default {
 		},
 		staticPlan: {
 			deep: true,
-			handler: function (vNew, vOld) {
+			handler(vNew, vOld) {
 				if (!deepEqual(vNew, vOld)) {
 					this.fetchPlanDebounced();
 				}
@@ -177,7 +177,7 @@ export default {
 		},
 		repeatingPlans: {
 			deep: true,
-			handler: function (vNew, vOld) {
+			handler(vNew, vOld) {
 				if (!deepEqual(vNew, vOld)) {
 					this.adjustPreviewId();
 					this.fetchPlanDebounced();
@@ -189,23 +189,23 @@ export default {
 		this.fetchPlanDebounced();
 	},
 	methods: {
-		selectPreviewPlan: function (id) {
+		selectPreviewPlan(id) {
 			this.selectedPreviewId = id;
 			this.fetchPlanPreviewDebounced();
 		},
-		fetchPlanDebounced: async function () {
+		async fetchPlanDebounced() {
 			if (this.noActivePlan) {
 				await this.fetchPlanPreviewDebounced();
 			} else {
 				await this.fetchActivePlanDebounced();
 			}
 		},
-		adjustPreviewId: function () {
+		adjustPreviewId() {
 			if (this.selectedPreviewId > this.previewPlanOptions.length) {
 				this.selectedPreviewId = this.previewPlanOptions.length;
 			}
 		},
-		fetchActivePlan: async function () {
+		async fetchActivePlan() {
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res.data.result;
@@ -215,24 +215,24 @@ export default {
 			}
 			await this.updateTariff();
 		},
-		fetchStaticPreviewSoc: async function (soc, time) {
+		async fetchStaticPreviewSoc(soc, time) {
 			const timeISO = time.toISOString();
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${soc}/${timeISO}`
 			);
 		},
-		fetchRepeatingPreview: async function (weekdays, soc, time, tz) {
+		async fetchRepeatingPreview(weekdays, soc, time, tz) {
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/repeating/preview/${soc}/${weekdays}/${time}/${encodeURIComponent(tz)}`
 			);
 		},
-		fetchStaticPreviewEnergy: async function (energy, time) {
+		async fetchStaticPreviewEnergy(energy, time) {
 			const timeISO = time.toISOString();
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${energy}/${timeISO}`
 			);
 		},
-		apiFetchPlan: async function (url) {
+		async apiFetchPlan(url) {
 			try {
 				const res = await api.get(url, {
 					validateStatus: (code) => [200, 404].includes(code),
@@ -245,7 +245,7 @@ export default {
 				console.error(e);
 			}
 		},
-		fetchPreviewPlan: async function () {
+		async fetchPreviewPlan() {
 			// only show preview of no plan is active
 			if (!this.noActivePlan) return;
 
@@ -278,7 +278,7 @@ export default {
 				console.error(e);
 			}
 		},
-		updateTariff: async function () {
+		async updateTariff() {
 			// cache tariff for 5 minutes
 			if (
 				this.tariff?.lastUpdate &&
@@ -288,7 +288,7 @@ export default {
 			}
 
 			const tariffRes = await api.get(`tariff/planner`, {
-				validateStatus: function (status) {
+				validateStatus(status) {
 					return status >= 200 && status < 500;
 				},
 			});
@@ -299,7 +299,7 @@ export default {
 				this.tariff.lastUpdate = new Date();
 			}
 		},
-		fetchPlanPreviewDebounced: async function () {
+		async fetchPlanPreviewDebounced() {
 			if (!this.debounceTimer) {
 				await this.fetchPreviewPlan();
 				return;
@@ -307,7 +307,7 @@ export default {
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchPreviewPlan(), 1000);
 		},
-		fetchActivePlanDebounced: async function () {
+		async fetchActivePlanDebounced() {
 			if (!this.debounceTimer) {
 				await this.fetchActivePlan();
 				return;
@@ -315,16 +315,16 @@ export default {
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchActivePlan(), 1000);
 		},
-		removeStaticPlan: function (index) {
+		removeStaticPlan(index) {
 			this.$emit("static-plan-removed", index);
 		},
-		updateStaticPlan: function (data) {
+		updateStaticPlan(data) {
 			this.$emit("static-plan-updated", data);
 		},
-		updateRepeatingPlans: function (plans) {
+		updateRepeatingPlans(plans) {
 			this.$emit("repeating-plans-updated", plans);
 		},
-		previewStaticPlan: function (plan) {
+		previewStaticPlan(plan) {
 			this.staticPlanPreview = plan;
 			this.fetchPlanPreviewDebounced();
 		},

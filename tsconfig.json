@@ -1,19 +1,24 @@
 {
-    "extends": "@vue/tsconfig/tsconfig.dom.json",
-    "include": [
-        "env.d.ts",
-        "assets/js/**/*",
-        "assets/js/src/**/*.vue"
-    ],
-    "compilerOptions": {
-        "composite": true,
-        "noImplicitAny": false,
-        "allowJs": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ]
-        }
-    }
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "assets/js/**/*"],
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "composite": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "plugins": [
+      {
+        "name": "typescript-eslint-language-service"
+      }
+    ]
+  }
 }
