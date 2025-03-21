@@ -118,3 +118,25 @@ func (t *timeseriesTestSuite) TestShort() {
 		t.Equal(tc.value, rr.value(to), "%d. value %+v", i+1, tc)
 	}
 }
+
+func (t *timeseriesTestSuite) TestTime() {
+	for i, tc := range []struct {
+		from, energy float64
+		ts, missing  float64
+	}{
+		{0, 0, 0, 0},
+		{0, 0.25, 1, -0.25}, // actually 0.5
+		{0, 0.5, 1, 0},
+		{0, 2, 2, 0},
+		{1, 1.5, 2, 0},
+		{0, 8, 4, 0},
+		{0, 10, 4, 2},
+	} {
+		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
+		expected := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
+
+		ts, missing := t.rr.time(from, tc.energy)
+		t.Equal(expected, ts, "%d. ts %+v", i+1, tc)
+		t.Equal(tc.missing, missing, "%d. missing %+v", i+1, tc)
+	}
+}
