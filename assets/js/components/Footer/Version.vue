@@ -144,17 +144,17 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 	},
-	data: function () {
+	data() {
 		return {
 			updateStarted: false,
 			updateStatus: "",
 		};
 	},
 	computed: {
-		githubHashUrl: function () {
+		githubHashUrl() {
 			return `https://github.com/evcc-io/evcc/commit/${this.commit}`;
 		},
-		newVersionAvailable: function () {
+		newVersionAvailable() {
 			return (
 				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
@@ -164,7 +164,7 @@ export default {
 		},
 	},
 	methods: {
-		update: async function () {
+		async update() {
 			try {
 				await api.post("update");
 				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
@@ -173,7 +173,7 @@ export default {
 				this.updateStatus = `${this.$t("footer.version.modalUpdateStatusStart")} ${e}`;
 			}
 		},
-		releaseNotesUrl: function (version) {
+		releaseNotesUrl(version) {
 			return version == "0.0.0"
 				? `https://github.com/evcc-io/evcc/releases`
 				: `https://github.com/evcc-io/evcc/releases/tag/${version}`;

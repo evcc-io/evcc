@@ -94,7 +94,7 @@ export default {
 		socBasedPlanning: Boolean,
 	},
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
-	data: function () {
+	data() {
 		return {
 			selectedLimitSoc: null,
 			interactionStartScreenY: null,
@@ -103,10 +103,10 @@ export default {
 		};
 	},
 	computed: {
-		step: function () {
+		step() {
 			return this.heating ? 1 : 5;
 		},
-		vehicleSocDisplayWidth: function () {
+		vehicleSocDisplayWidth() {
 			if (this.socBasedCharging) {
 				if (this.vehicleSoc >= 0) {
 					return this.vehicleSoc;
@@ -119,19 +119,19 @@ export default {
 				return 100;
 			}
 		},
-		transition: function () {
+		transition() {
 			if (this.dragging) {
 				return { transition: "none" };
 			}
 			return { transition: "width var(--evcc-transition-fast) linear" };
 		},
-		maxEnergy: function () {
+		maxEnergy() {
 			return Math.max(this.planEnergy, this.limitEnergy, this.chargedEnergy / 1e3);
 		},
-		vehicleLimitSocActive: function () {
+		vehicleLimitSocActive() {
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
-		planMarkerPosition: function () {
+		planMarkerPosition() {
 			if (this.socBasedPlanning) {
 				return this.effectivePlanSoc;
 			}
@@ -141,14 +141,14 @@ export default {
 			}
 			return 0;
 		},
-		planMarkerAvailable: function () {
+		planMarkerAvailable() {
 			if (this.socBasedCharging && !this.socBasedPlanning) {
 				// mixed mode (% limit and kWh plan): hide marker
 				return false;
 			}
 			return this.planMarkerPosition > 0;
 		},
-		energyLimitMarkerPosition: function () {
+		energyLimitMarkerPosition() {
 			if (this.socBasedCharging) {
 				return null;
 			}
@@ -157,7 +157,7 @@ export default {
 			}
 			return 100;
 		},
-		energyLimitMarkerActive: function () {
+		energyLimitMarkerActive() {
 			if (this.socBasedCharging) {
 				return false;
 			}
@@ -166,21 +166,21 @@ export default {
 			}
 			return true;
 		},
-		sliderActive: function () {
+		sliderActive() {
 			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleLimitSoc || 100);
 			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
 			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
-		progressColor: function () {
+		progressColor() {
 			if (this.minSocActive) {
 				return "bg-danger";
 			}
 			return "bg-primary";
 		},
-		minSocActive: function () {
+		minSocActive() {
 			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
-		remainingSocWidth: function () {
+		remainingSocWidth() {
 			if (this.socBasedCharging) {
 				if (this.vehicleSocDisplayWidth === 100) {
 					return null;
@@ -201,27 +201,27 @@ export default {
 
 			return null;
 		},
-		visibleLimitSoc: function () {
+		visibleLimitSoc() {
 			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 	},
 	watch: {
-		effectiveLimitSoc: function () {
+		effectiveLimitSoc() {
 			this.selectedLimitSoc = this.effectiveLimitSoc;
 		},
-		vehicleLimitSoc: function () {
+		vehicleLimitSoc() {
 			this.updateTooltip();
 		},
 	},
-	mounted: function () {
+	mounted() {
 		this.updateTooltip();
 	},
 	methods: {
-		changeLimitSocStart: function (e) {
+		changeLimitSocStart(e) {
 			this.dragging = true;
 			e.stopPropagation();
 		},
-		changeLimitSocEnd: function (e) {
+		changeLimitSocEnd(e) {
 			this.dragging = false;
 			const value = parseInt(e.target.value, 10);
 			// value changed
@@ -229,7 +229,7 @@ export default {
 				this.$emit("limit-soc-updated", value);
 			}
 		},
-		movedLimitSoc: function (e) {
+		movedLimitSoc(e) {
 			const value = parseInt(e.target.value, 10);
 			e.stopPropagation();
 			const minLimit = 20;
@@ -244,7 +244,7 @@ export default {
 			this.$emit("limit-soc-drag", this.selectedLimitSoc);
 			return true;
 		},
-		updateTooltip: function () {
+		updateTooltip() {
 			if (!this.tooltip) {
 				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
 			}

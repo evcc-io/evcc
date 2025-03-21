@@ -36,7 +36,7 @@ export default {
 	},
 	emits: ["limit-soc-updated"],
 	computed: {
-		options: function () {
+		options() {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += this.step) {
 				const text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
@@ -44,32 +44,32 @@ export default {
 			}
 			return result;
 		},
-		step: function () {
+		step() {
 			return this.heating ? 1 : 5;
 		},
-		title: function () {
+		title() {
 			return this.heating
 				? this.$t("main.vehicle.tempLimit")
 				: this.$t("main.vehicle.targetSoc");
 		},
-		estimatedTargetRange: function () {
+		estimatedTargetRange() {
 			return this.estimatedRange(this.limitSoc);
 		},
 	},
 	methods: {
-		change: function (e) {
+		change(e) {
 			return this.$emit("limit-soc-updated", parseInt(e.target.value, 10));
 		},
-		estimatedRange: function (soc) {
+		estimatedRange(soc) {
 			if (this.rangePerSoc) {
 				return Math.round(soc * this.rangePerSoc);
 			}
 			return null;
 		},
-		formatSoc: function (value) {
+		formatSoc(value) {
 			return this.heating ? this.fmtTemperature(value) : this.fmtPercentage(value);
 		},
-		formatKm: function (value) {
+		formatKm(value) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
 		},
 	},

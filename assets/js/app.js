@@ -22,12 +22,12 @@ const app = createApp({
     return { notifications: [], offline: false };
   },
   watch: {
-    offline: function (value) {
+    offline(value) {
       console.log(`we are ${value ? "offline" : "online"}`);
     },
   },
   methods: {
-    raise: function (msg) {
+    raise(msg) {
       if (this.offline) return;
       if (!msg.level) msg.level = "error";
       const now = new Date();
@@ -46,19 +46,19 @@ const app = createApp({
         ];
       }
     },
-    clear: function () {
+    clear() {
       this.notifications = [];
     },
-    setOnline: function () {
+    setOnline() {
       this.offline = false;
       sendToApp({ type: "online" });
     },
-    setOffline: function () {
+    setOffline() {
       this.offline = true;
       sendToApp({ type: "offline" });
     },
   },
-  render: function () {
+  render() {
     return h(App, { notifications: this.notifications, offline: this.offline });
   },
 });
