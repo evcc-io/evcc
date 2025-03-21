@@ -1,0 +1,89 @@
+template: buderus_emsesp
+products:
+  - brand: Buderus
+    description:
+      generic: Buderus (SG Ready)
+  - brand: Bosch
+    description:
+      generic: Bosch (SG Ready)
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: emsesp_ip
+    choice: ["tcpip"]
+  - name: emsesp_token
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+render: |
+  type: sgready
+getmode:
+    source: map
+    values:
+      10 : 3 # Frostschutz hpin1opt/hpin4opt
+      00 : 1 # Normal hpin1opt/hpin4opt
+      01 : 2 # Forcierter Betrieb hpin1opt/hpin4opt
+      11 : 2 # Sofortige Ansteuerung hpin1opt/hpin4opt
+    get:
+      source: http
+      uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt
+      jq: .value ^.{0,1}
+      uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt
+      jq: .value ^.{0,1}
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'
+        - source: const
+          value: 0
+          set:
+            source: http
+            uri: curl http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxxxxx" }'
+    - case: 2 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "1xxxxxxxxxxx" }'
+        - source: const
+          value: 0
+          set:
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'
+    - case: 3 # dimm
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "1xxxxxxxxxxxxxx" }'
+        - source: const
+          value: 1
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'    
+        - source: const
+          value: 0
+          set:
+            source: http
+            uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : ""0xxxxxxxxxxxxxx" }'
+  {{- if .tempsource }}
+  temp:
+    source: http
+    uri: http://{{ .emsesp_ip }}/api/boiler/dhw/curtemp
+    jq: .value 
+  {{- end }}
