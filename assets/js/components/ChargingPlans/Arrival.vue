@@ -75,7 +75,7 @@ export default {
 		rangePerSoc: Number,
 	},
 	emits: ["minsoc-updated", "limitsoc-updated"],
-	data: function () {
+	data() {
 		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
 	},
 	computed: {
@@ -93,27 +93,27 @@ export default {
 		},
 	},
 	watch: {
-		minSoc: function (value) {
+		minSoc(value) {
 			this.selectedMinSoc = value;
 		},
-		limitSoc: function (value) {
+		limitSoc(value) {
 			this.selectedLimitSoc = value;
 		},
 	},
 	methods: {
-		socOption: function (soc) {
+		socOption(soc) {
 			return {
 				value: soc,
 				name: soc === 0 ? "---" : this.fmtSocOption(soc, this.rangePerSoc, distanceUnit()),
 			};
 		},
-		formId: function (name) {
+		formId(name) {
 			return `chargingplan_${this.id}_${name}`;
 		},
-		changeMinSoc: function () {
+		changeMinSoc() {
 			this.$emit("minsoc-updated", this.selectedMinSoc);
 		},
-		changeLimitSoc: function () {
+		changeLimitSoc() {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
 		},
 	},

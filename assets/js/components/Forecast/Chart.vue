@@ -5,6 +5,7 @@
 			@mouseleave="onMouseLeave"
 		>
 			<div style="position: relative; height: 220px" class="chart user-select-none">
+				<!-- @vue-ignore -->
 				<Bar ref="chart" :data="chartData" :options="options" />
 			</div>
 		</div>
@@ -134,7 +135,7 @@ export default defineComponent({
 			];
 		},
 		chartData() {
-			const datasets: unknown[] = [];
+			const datasets = [];
 			if (this.solarEntries.length > 0) {
 				const active = this.selected === ForecastType.Solar;
 				const color = active ? colors.self : colors.border;
@@ -243,7 +244,7 @@ export default defineComponent({
 				},
 				categoryPercentage: 0.7,
 				events: ["mousemove", "click", "touchstart", "touchend"],
-				onHover: function (event: ChartEvent, active: ActiveElement[], chart: Chart) {
+				onHover(event: ChartEvent, active: ActiveElement[], chart: Chart) {
 					if (["touchend", "click"].includes(event.type)) {
 						vThis.selectIndex(null, true);
 						return;
@@ -257,10 +258,10 @@ export default defineComponent({
 				plugins: {
 					...commonOptions.plugins,
 					datalabels: {
-						backgroundColor: function (context: Context) {
+						backgroundColor(context: Context) {
 							return context.dataset.borderColor;
 						},
-						align: function ({ chart, dataset, dataIndex }: Context) {
+						align({ chart, dataset, dataIndex }: Context) {
 							const { min, max } = chart.scales["x"];
 							// @ts-expect-error no-explicit-any
 							const time = new Date(dataset.data[dataIndex]?.x).getTime();
@@ -285,7 +286,7 @@ export default defineComponent({
 						},
 						anchor: "end",
 						offset: 8,
-						padding: function (context: Context) {
+						padding(context: Context) {
 							const data = context.dataset.data[context.dataIndex];
 							// @ts-expect-error no-explicit-any
 							const x = typeof data.highlight === "number" ? 32 : 8;
@@ -298,7 +299,7 @@ export default defineComponent({
 						color: colors.background,
 						font: { weight: "bold" },
 						// @ts-expect-error no-explicit-any
-						formatter: function (value, context: Context) {
+						formatter(value, context: Context) {
 							if (value.highlight) {
 								switch (context.dataset.label) {
 									case ForecastType.Price:
@@ -336,7 +337,7 @@ export default defineComponent({
 							color: colors.border,
 							offset: false,
 							// @ts-expect-error no-explicit-any
-							lineWidth: function (context) {
+							lineWidth(context) {
 								if (context.type !== "tick") {
 									return 0;
 								}
@@ -353,7 +354,7 @@ export default defineComponent({
 							minRotation: 0,
 							source: "data",
 							align: "center",
-							callback: function (value: number) {
+							callback(value: number) {
 								const date = new Date(value);
 								const hour = date.getHours();
 								const minute = date.getMinutes();

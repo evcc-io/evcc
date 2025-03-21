@@ -32,11 +32,11 @@ const state = reactive(initialState);
 
 const store = {
 	state,
-	offline: function (value: boolean) {
+	offline(value: boolean) {
 		state.offline = value;
 	},
 	// @ts-expect-error no-explicit-any
-	update: function (msg) {
+	update(msg) {
 		Object.keys(msg).forEach(function (k) {
 			if (k === "log") {
 				window.app.raise(msg[k]);
@@ -45,7 +45,7 @@ const store = {
 			}
 		});
 	},
-	reset: function () {
+	reset() {
 		console.log("resetting state");
 		// reset to initial state
 		Object.keys(initialState).forEach(function (k) {

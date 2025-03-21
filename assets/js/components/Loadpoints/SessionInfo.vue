@@ -27,7 +27,7 @@
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter from "../../mixins/formatter.ts";
-import { getSessionInfo, setSessionInfo } from "./sessionInfo.ts";
+import { getSessionInfo, setSessionInfo } from "./session.ts";
 
 export default {
 	name: "LoadpointSessionInfo",
@@ -54,7 +54,7 @@ export default {
 		};
 	},
 	computed: {
-		options: function () {
+		options() {
 			const result = [
 				{
 					key: "remaining",

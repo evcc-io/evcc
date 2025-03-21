@@ -80,7 +80,7 @@ export default {
 		return { snapTimeout: null, scrollTimeout: null, highlightedIndex: 0 };
 	},
 	watch: {
-		selectedIndex: function (newIndex) {
+		selectedIndex(newIndex) {
 			this.scrollTo(newIndex);
 		},
 	},

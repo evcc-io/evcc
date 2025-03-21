@@ -151,31 +151,31 @@ export default {
 		};
 	},
 	computed: {
-		title: function () {
+		title() {
 			return this.vehicle?.title || "";
 		},
-		capacity: function () {
+		capacity() {
 			return this.vehicle?.capacity || 0;
 		},
-		icon: function () {
+		icon() {
 			return this.vehicle?.icon || "";
 		},
-		minSoc: function () {
+		minSoc() {
 			return this.vehicle?.minSoc || 0;
 		},
-		vehicleSocProps: function () {
+		vehicleSocProps() {
 			return this.collectProps(Soc);
 		},
-		vehicleStatus: function () {
+		vehicleStatus() {
 			return this.collectProps(Status);
 		},
-		vehicleTitleProps: function () {
+		vehicleTitleProps() {
 			return this.collectProps(Title);
 		},
-		chargingPlan: function () {
+		chargingPlan() {
 			return this.collectProps(ChargingPlan);
 		},
-		formattedSoc: function () {
+		formattedSoc() {
 			if (!this.vehicleSoc) {
 				return "--";
 			}
@@ -184,55 +184,55 @@ export default {
 			}
 			return this.fmtPercentage(this.vehicleSoc);
 		},
-		vehicleSocTitle: function () {
+		vehicleSocTitle() {
 			if (this.heating) {
 				return this.$t("main.vehicle.temp");
 			}
 			return this.$t("main.vehicle.vehicleSoc");
 		},
-		range: function () {
+		range() {
 			return distanceValue(this.vehicleRange);
 		},
-		rangeUnit: function () {
+		rangeUnit() {
 			return distanceUnit();
 		},
-		rangePerSoc: function () {
+		rangePerSoc() {
 			if (this.vehicleSoc > 10 && this.range) {
 				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
 			}
 			return null;
 		},
-		socPerKwh: function () {
+		socPerKwh() {
 			if (this.capacity > 0) {
 				return 100 / this.capacity;
 			}
 			return null;
 		},
-		chargedSoc: function () {
+		chargedSoc() {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
-		chargingPlanDisabled: function () {
+		chargingPlanDisabled() {
 			return ["off", "now"].includes(this.mode);
 		},
-		smartCostDisabled: function () {
+		smartCostDisabled() {
 			return ["off", "now"].includes(this.mode);
 		},
 	},
 	watch: {
-		effectiveLimitSoc: function () {
+		effectiveLimitSoc() {
 			this.displayLimitSoc = this.effectiveLimitSoc;
 		},
 	},
 	methods: {
-		limitSocDrag: function (limitSoc) {
+		limitSocDrag(limitSoc) {
 			this.displayLimitSoc = limitSoc;
 		},
-		limitSocUpdated: function (limitSoc) {
+		limitSocUpdated(limitSoc) {
 			this.displayLimitSoc = limitSoc;
 			this.$emit("limit-soc-updated", limitSoc);
 		},
-		limitEnergyUpdated: function (limitEnergy) {
+		limitEnergyUpdated(limitEnergy) {
 			this.$emit("limit-energy-updated", limitEnergy);
 		},
 		changeVehicle(name) {

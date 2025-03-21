@@ -82,7 +82,7 @@ export default defineComponent({
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 	},
-	data: function (): {
+	data(): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
 		selectedSlot: PriceSlot | TimeseriesEntry | null;
@@ -118,7 +118,7 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		isModalVisible: function (newVal) {
+		isModalVisible(newVal) {
 			if (newVal) {
 				this.updateSelectedType();
 			}

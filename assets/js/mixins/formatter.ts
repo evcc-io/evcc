@@ -25,7 +25,7 @@ export enum POWER_UNIT {
 }
 
 export default defineComponent({
-	data: function () {
+	data() {
 		return {
 			POWER_UNIT,
 			fmtLimit: 100,
@@ -33,11 +33,11 @@ export default defineComponent({
 		};
 	},
 	methods: {
-		round: function (num: number, precision: number) {
+		round(num: number, precision: number) {
 			const base = 10 ** precision;
 			return (Math.round(num * base) / base).toFixed(precision);
 		},
-		fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
+		fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
 			let unit = format;
 			let d = digits;
 			if (POWER_UNIT.AUTO === unit) {
@@ -64,10 +64,10 @@ export default defineComponent({
 				maximumFractionDigits: d,
 			}).format(value)}${withUnit ? ` ${unit}` : ""}`;
 		},
-		fmtWh: function (watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
+		fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
 			return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
 		},
-		fmtNumber: function (number: number, decimals: number, unit?: string) {
+		fmtNumber(number: number, decimals: number, unit?: string) {
 			const style = unit ? "unit" : "decimal";
 			return new Intl.NumberFormat(this.$i18n?.locale, {
 				style,
@@ -76,7 +76,7 @@ export default defineComponent({
 				maximumFractionDigits: decimals,
 			}).format(number);
 		},
-		fmtGrams: function (gramms: number, withUnit = true) {
+		fmtGrams(gramms: number, withUnit = true) {
 			let unit = "gram";
 			let value = gramms;
 			if (gramms >= 1000) {
@@ -90,13 +90,13 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short: function (gramms: number) {
+		fmtCo2Short(gramms: number) {
 			return `${this.fmtNumber(gramms, 0)} g`;
 		},
-		fmtCo2Medium: function (gramms: number) {
+		fmtCo2Medium(gramms: number) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
 		},
-		fmtCo2Long: function (gramms: number) {
+		fmtCo2Long(gramms: number) {
 			return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
 		},
 		fmtNumberToLocale(val: number, pad = 0) {
@@ -109,7 +109,7 @@ export default defineComponent({
 		fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
 			return this.fmtDuration(duration / 1e9, withUnit, minUnit);
 		},
-		fmtDuration: function (duration = 0, withUnit = true, minUnit = "s") {
+		fmtDuration(duration = 0, withUnit = true, minUnit = "s") {
 			if (duration <= 0) {
 				return "—";
 			}
@@ -134,27 +134,27 @@ export default defineComponent({
 			}
 			return result;
 		},
-		fmtDayString: function (date: Date) {
+		fmtDayString(date: Date) {
 			const YY = `${date.getFullYear()}`;
 			const MM = `${date.getMonth() + 1}`.padStart(2, "0");
 			const DD = `${date.getDate()}`.padStart(2, "0");
 			return `${YY}-${MM}-${DD}`;
 		},
-		fmtTimeString: function (date: Date) {
+		fmtTimeString(date: Date) {
 			const HH = `${date.getHours()}`.padStart(2, "0");
 			const mm = `${date.getMinutes()}`.padStart(2, "0");
 			return `${HH}:${mm}`;
 		},
-		isToday: function (date: Date) {
+		isToday(date: Date) {
 			const today = new Date();
 			return today.toDateString() === date.toDateString();
 		},
-		isTomorrow: function (date: Date) {
+		isTomorrow(date: Date) {
 			const tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
 			return tomorrow.toDateString() === date.toDateString();
 		},
-		weekdayPrefix: function (date: Date) {
+		weekdayPrefix(date: Date) {
 			if (this.isToday(date)) {
 				return "";
 			}
@@ -173,7 +173,7 @@ export default defineComponent({
 				weekday: "short",
 			}).format(date);
 		},
-		hourShort: function (date: Date) {
+		hourShort(date: Date) {
 			const locale = this.$i18n?.locale;
 			// special: use shorter german format
 			if (locale === "de") return date.getHours();
@@ -181,12 +181,12 @@ export default defineComponent({
 				hour: "numeric",
 			}).format(date);
 		},
-		weekdayShort: function (date: Date) {
+		weekdayShort(date: Date) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: "short",
 			}).format(date);
 		},
-		fmtAbsoluteDate: function (date: Date) {
+		fmtAbsoluteDate(date: Date) {
 			const weekday = this.weekdayPrefix(date);
 			const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
@@ -195,7 +195,7 @@ export default defineComponent({
 
 			return `${weekday} ${hour}`.trim();
 		},
-		fmtFullDateTime: function (date: Date, short: boolean) {
+		fmtFullDateTime(date: Date, short: boolean) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: short ? undefined : "short",
 				month: short ? "numeric" : "short",
@@ -204,32 +204,32 @@ export default defineComponent({
 				minute: "numeric",
 			}).format(date);
 		},
-		fmtWeekdayTime: function (date: Date) {
+		fmtWeekdayTime(date: Date) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: "short",
 				hour: "numeric",
 				minute: "numeric",
 			}).format(date);
 		},
-		fmtMonthYear: function (date: Date) {
+		fmtMonthYear(date: Date) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				month: "long",
 				year: "numeric",
 			}).format(date);
 		},
-		fmtMonth: function (date: Date, short: boolean) {
+		fmtMonth(date: Date, short: boolean) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				month: short ? "short" : "long",
 			}).format(date);
 		},
-		fmtDayMonth: function (date: Date) {
+		fmtDayMonth(date: Date) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: "short",
 				day: "numeric",
 				month: "short",
 			}).format(date);
 		},
-		fmtDurationUnit: function (value: number, unit = "second") {
+		fmtDurationUnit(value: number, unit = "second") {
 			return new Intl.NumberFormat(this.$i18n?.locale, {
 				style: "unit",
 				unit,
@@ -238,12 +238,7 @@ export default defineComponent({
 				.formatToParts(value)
 				.find((part) => part.type === "unit")?.value;
 		},
-		fmtMoney: function (
-			amout = 0,
-			currency = CURRENCY.EUR,
-			decimals = true,
-			withSymbol = false
-		) {
+		fmtMoney(amout = 0, currency = CURRENCY.EUR, decimals = true, withSymbol = false) {
 			const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
 			const digits = decimals ? undefined : 0;
 			const result = new Intl.NumberFormat(this.$i18n?.locale, {
@@ -256,16 +251,11 @@ export default defineComponent({
 
 			return withSymbol ? result : result.replace(currency, "").trim();
 		},
-		fmtCurrencySymbol: function (currency = CURRENCY.EUR) {
+		fmtCurrencySymbol(currency = CURRENCY.EUR) {
 			const symbols = { EUR: "€", USD: "$" };
 			return symbols[currency] || currency;
 		},
-		fmtPricePerKWh: function (
-			amout = 0,
-			currency = CURRENCY.EUR,
-			short = false,
-			withUnit = true
-		) {
+		fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
 			let value = amout;
 			let minimumFractionDigits = 1;
 			let maximumFractionDigits = 3;
@@ -284,14 +274,14 @@ export default defineComponent({
 			}
 			return price;
 		},
-		timezone: function () {
+		timezone() {
 			return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
 		},
-		pricePerKWhUnit: function (currency = CURRENCY.EUR, short = false) {
+		pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
 			const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
 			return `${unit}${short ? "" : "/kWh"}`;
 		},
-		fmtTimeAgo: function (elapsed: number) {
+		fmtTimeAgo(elapsed: number) {
 			const units = {
 				day: 24 * 60 * 60 * 1000,
 				hour: 60 * 60 * 1000,
@@ -317,12 +307,7 @@ export default defineComponent({
 
 			return "";
 		},
-		fmtSocOption: function (
-			soc: number,
-			rangePerSoc: number,
-			distanceUnit: string,
-			heating?: boolean
-		) {
+		fmtSocOption(soc: number, rangePerSoc: number, distanceUnit: string, heating?: boolean) {
 			let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;
 			if (rangePerSoc && distanceUnit) {
 				const range = soc * rangePerSoc;
@@ -330,7 +315,7 @@ export default defineComponent({
 			}
 			return result;
 		},
-		fmtPercentage: function (value: number, digits = 0, forceSign = false) {
+		fmtPercentage(value: number, digits = 0, forceSign = false) {
 			const sign = forceSign && value > 0 ? "+" : "";
 			return `${sign}${new Intl.NumberFormat(this.$i18n?.locale, {
 				style: "percent",
@@ -338,14 +323,14 @@ export default defineComponent({
 				maximumFractionDigits: digits,
 			}).format(value / 100)}`;
 		},
-		hasLeadingPercentageSign: function () {
+		hasLeadingPercentageSign() {
 			return ["tr", "ar"].includes(this.$i18n?.locale);
 		},
-		fmtTemperature: function (value: number) {
+		fmtTemperature(value: number) {
 			// TODO: handle fahrenheit
 			return this.fmtNumber(value, 1, "celsius");
 		},
-		getWeekdaysList: function (weekdayFormat: Intl.DateTimeFormatOptions["weekday"]) {
+		getWeekdaysList(weekdayFormat: Intl.DateTimeFormatOptions["weekday"]) {
 			const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: weekdayFormat,
 			});
@@ -355,7 +340,7 @@ export default defineComponent({
 			const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
 			return [...mondayToSaturday, sunday];
 		},
-		getShortenedWeekdaysLabel: function (selectedWeekdays: number[]) {
+		getShortenedWeekdaysLabel(selectedWeekdays: number[]) {
 			if (0 === selectedWeekdays.length) {
 				return "–";
 			}

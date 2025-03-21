@@ -94,7 +94,7 @@ export default defineComponent({
 		solar: { type: Object as PropType<SolarDetails> },
 		currency: { type: String as PropType<CURRENCY> },
 	},
-	data: function () {
+	data() {
 		return {
 			now: new Date(),
 			interval: null as ReturnType<typeof setInterval> | null,

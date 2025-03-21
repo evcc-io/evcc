@@ -162,7 +162,7 @@ export default {
 		};
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryConfigured() {
 			return this.battery?.length;
 		},
 		logoutCount() {
@@ -211,7 +211,7 @@ export default {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		handleProviderAuthorization: async function (provider) {
+		async handleProviderAuthorization(provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;

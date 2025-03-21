@@ -76,7 +76,7 @@ export default {
 		title: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
-	data: function () {
+	data() {
 		return {
 			refreshTooltip: null,
 			notReachableTooltip: null,
@@ -107,16 +107,16 @@ export default {
 		showOptions() {
 			return this.vehicleKnown || this.vehicles.length;
 		},
-		vehicleOptionsProps: function () {
+		vehicleOptionsProps() {
 			return this.collectProps(Options);
 		},
 	},
 	watch: {
-		iconType: function () {
+		iconType() {
 			this.initTooltip();
 		},
 	},
-	mounted: function () {
+	mounted() {
 		this.initTooltip();
 	},
 	methods: {
