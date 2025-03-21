@@ -147,7 +147,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
 	},
-	data: function () {
+	data() {
 		return {
 			modal: null,
 			isModalVisible: false,
@@ -157,7 +157,7 @@ export default {
 		};
 	},
 	computed: {
-		buttonColor: function () {
+		buttonColor() {
 			if (this.planTimeUnreachable) {
 				return "text-warning";
 			}
@@ -166,13 +166,13 @@ export default {
 			}
 			return "evcc-default-text";
 		},
-		minSoc: function () {
+		minSoc() {
 			return this.vehicle?.minSoc;
 		},
-		limitSoc: function () {
+		limitSoc() {
 			return this.vehicle?.limitSoc;
 		},
-		staticPlan: function () {
+		staticPlan() {
 			if (this.socBasedPlanning) {
 				return this.vehicle?.plan;
 			}
@@ -181,31 +181,31 @@ export default {
 			}
 			return null;
 		},
-		repeatingPlans: function () {
+		repeatingPlans() {
 			if (this.vehicle?.repeatingPlans.length > 0) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
 		},
-		enabled: function () {
+		enabled() {
 			return this.effectivePlanTime;
 		},
-		modalId: function () {
+		modalId() {
 			return `chargingPlanModal_${this.id}`;
 		},
-		departureTabActive: function () {
+		departureTabActive() {
 			return this.activeTab === "departure";
 		},
-		arrivalTabActive: function () {
+		arrivalTabActive() {
 			return this.activeTab === "arrival";
 		},
-		chargingPlansSettingsProps: function () {
+		chargingPlansSettingsProps() {
 			return this.collectProps(PlansSettings);
 		},
-		chargingPlanArrival: function () {
+		chargingPlanArrival() {
 			return this.collectProps(Arrival);
 		},
-		targetSocLabel: function () {
+		targetSocLabel() {
 			if (this.socBasedPlanning) {
 				return this.fmtPercentage(this.effectivePlanSoc);
 			}
@@ -216,10 +216,10 @@ export default {
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
-		apiVehicle: function () {
+		apiVehicle() {
 			return `vehicles/${this.vehicle?.name}/`;
 		},
-		apiLoadpoint: function () {
+		apiLoadpoint() {
 			return `loadpoints/${this.id}/`;
 		},
 	},
@@ -248,7 +248,7 @@ export default {
 		clearInterval(this.interval);
 	},
 	methods: {
-		checkUnsavedOnClose: function () {
+		checkUnsavedOnClose() {
 			const $applyButton = this.$refs.modal.querySelector("[data-testid=plan-apply]");
 			if ($applyButton) {
 				if (confirm(this.$t("main.chargingPlan.unsavedChanges"))) {
@@ -256,10 +256,10 @@ export default {
 				}
 			}
 		},
-		modalVisible: function () {
+		modalVisible() {
 			this.isModalVisible = true;
 		},
-		modalInvisible: function () {
+		modalInvisible() {
 			this.isModalVisible = false;
 		},
 		openModal() {
@@ -274,18 +274,18 @@ export default {
 			}
 			this.modal.show();
 		},
-		updateTargetTimeLabel: function () {
+		updateTargetTimeLabel() {
 			if (!this.effectivePlanTime) return "";
 			const targetDate = new Date(this.effectivePlanTime);
 			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},
-		showDeatureTab: function () {
+		showDeatureTab() {
 			this.activeTab = "departure";
 		},
-		showArrivalTab: function () {
+		showArrivalTab() {
 			this.activeTab = "arrival";
 		},
-		updateStaticPlan: function ({ soc, time, energy }) {
+		updateStaticPlan({ soc, time, energy }) {
 			const timeISO = time.toISOString();
 			if (this.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
@@ -293,20 +293,20 @@ export default {
 				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
 			}
 		},
-		removeStaticPlan: function () {
+		removeStaticPlan() {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
 		},
-		updateRepeatingPlans: function (plans) {
+		updateRepeatingPlans(plans) {
 			api.post(`${this.apiVehicle}plan/repeating`, { plans });
 		},
-		setMinSoc: function (soc) {
+		setMinSoc(soc) {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
 		},
-		setLimitSoc: function (soc) {
+		setLimitSoc(soc) {
 			api.post(`${this.apiVehicle}limitsoc/${soc}`);
 		},
 	},

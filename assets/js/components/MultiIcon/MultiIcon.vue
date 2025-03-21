@@ -33,7 +33,7 @@ export default {
 		size: { type: String, default: "s" },
 	},
 	computed: {
-		icon: function () {
+		icon() {
 			return this.count > 9 ? Plus : icons[`_${this.count}`];
 		},
 	},

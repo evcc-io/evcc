@@ -85,7 +85,7 @@
 	</GenericModal>
 </template>
 
-<script>
+<script type="js">
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "../Helper/FormRow.vue";
 import api from "../../api.js";
@@ -106,31 +106,31 @@ export default {
 		};
 	},
 	computed: {
-		passwordsMatch: function () {
+		passwordsMatch() {
 			return this.passwordNew === this.passwordRepeat;
 		},
-		passwordEmpty: function () {
+		passwordEmpty() {
 			return this.passwordNew.length === 0;
 		},
-		updateMode: function () {
+		updateMode() {
 			return isConfigured();
 		},
-		title: function () {
+		title() {
 			return this.updateMode
 				? this.$t("passwordModal.titleUpdate")
 				: this.$t("passwordModal.titleNew");
 		},
-		submitText: function () {
+		submitText() {
 			return this.updateMode
 				? this.$t("passwordModal.updatePassword")
 				: this.$t("passwordModal.newPassword");
 		},
 	},
 	methods: {
-		open: function () {
+		open() {
 			this.modalVisible = true;
 		},
-		closed: function () {
+		closed() {
 			this.modalVisible = false;
 			this.passwordCurrent = "";
 			this.passwordNew = "";
@@ -139,7 +139,7 @@ export default {
 			this.loading = false;
 			this.showValidation = false;
 		},
-		setPassword: async function (e) {
+		async setPassword(e) {
 			this.$refs.passwordRepeat.setCustomValidity(
 				this.passwordsMatch && !this.passwordEmpty ? "" : "invalid"
 			);
@@ -153,7 +153,7 @@ export default {
 				await updateAuthStatus();
 			}
 		},
-		savePassword: async function () {
+		async savePassword() {
 			this.loading = true;
 			this.error = null;
 			try {

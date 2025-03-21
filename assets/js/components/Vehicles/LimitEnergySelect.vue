@@ -51,7 +51,7 @@ export default {
 	},
 	emits: ["limit-energy-updated"],
 	computed: {
-		options: function () {
+		options() {
 			return energyOptions(
 				this.chargedEnergy,
 				this.capacity || 100,
@@ -64,18 +64,18 @@ export default {
 		step() {
 			return optionStep(this.capacity || 100);
 		},
-		estimated: function () {
+		estimated() {
 			return estimatedSoc(this.limitEnergy, this.socPerKwh);
 		},
 	},
 	methods: {
-		change: function (e) {
+		change(e) {
 			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
 		},
-		fmtEnergy: function (value) {
+		fmtEnergy(value) {
 			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));
 		},
-		fmtSoc: function (value) {
+		fmtSoc(value) {
 			return `+${this.fmtPercentage(value)}`;
 		},
 	},

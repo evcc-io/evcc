@@ -134,22 +134,22 @@ export default {
 		forecast: Object,
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryConfigured() {
 			return this.battery?.length > 0;
 		},
-		pvConfigured: function () {
+		pvConfigured() {
 			return this.pv?.length > 0;
 		},
-		gridPower: function () {
+		gridPower() {
 			return this.grid?.power || 0;
 		},
-		energyflow: function () {
+		energyflow() {
 			return this.collectProps(Energyflow);
 		},
-		loadpointTitles: function () {
+		loadpointTitles() {
 			return this.loadpoints.map((lp) => lp.title);
 		},
-		loadpointsCompact: function () {
+		loadpointsCompact() {
 			return this.loadpoints.map((lp) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
@@ -158,22 +158,22 @@ export default {
 				return { icon, charging, power };
 			});
 		},
-		vehicleList: function () {
+		vehicleList() {
 			const vehicles = this.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
-		topNavigation: function () {
+		topNavigation() {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(Navigation) };
 		},
-		showParkingLot: function () {
+		showParkingLot() {
 			// work in progess
 			return false;
 		},
-		isInitialSetup: function () {
+		isInitialSetup() {
 			return this.loadpoints.length === 0;
 		},
-		footer: function () {
+		footer() {
 			return {
 				version: {
 					installed: window.evcc.version,

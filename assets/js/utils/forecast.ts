@@ -11,6 +11,10 @@ export interface PriceSlot {
 	price: number;
 }
 
+export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot): obj is PriceSlot {
+	return (obj as PriceSlot).start !== undefined;
+}
+
 export interface EnergyByDay {
 	energy: number;
 	complete: boolean;
@@ -73,15 +77,22 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
 	return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 
-export function adjustedSolar(solar: SolarDetails | undefined): SolarDetails | undefined {
+export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
 	if (!solar?.scale) return solar;
 
 	const { scale } = solar;
-	const result = deepCopy(solar);
-	result.today.energy *= scale;
-	result.tomorrow.energy *= scale;
-	result.dayAfterTomorrow.energy *= scale;
-	result.timeseries?.forEach((entry) => (entry.val *= scale));
+	let result = deepCopy(solar);
+
+	if (result.today) result.today.energy *= scale;
+	if (result.tomorrow) result.tomorrow.energy *= scale;
+	if (result.dayAfterTomorrow) result.dayAfterTomorrow.energy *= scale;
+	if (result.timeseries) {
+		result.timeseries.forEach((entry) => {
+			entry.val *= scale;
+		});
+	}
+
 	result.scale = 1 / scale; // invert to allow back-adjustment
+
 	return result;
 }

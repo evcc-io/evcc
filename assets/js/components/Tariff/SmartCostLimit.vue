@@ -101,7 +101,7 @@ export default {
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
 	},
-	data: function () {
+	data() {
 		return {
 			selectedSmartCostLimit: null,
 			tariff: null,
@@ -256,7 +256,7 @@ export default {
 				this.isCo2 ? this.fmtCo2Medium(limit) : this.fmtPricePerKWh(limit, this.currency)
 			}`;
 		},
-		updateTariff: async function () {
+		async updateTariff() {
 			try {
 				this.tariff = (await api.get(`tariff/planner`)).data.result;
 				this.startTime = new Date();

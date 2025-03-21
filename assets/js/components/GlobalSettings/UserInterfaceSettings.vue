@@ -97,7 +97,7 @@ export default {
 	props: {
 		sponsor: Object,
 	},
-	data: function () {
+	data() {
 		return {
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",

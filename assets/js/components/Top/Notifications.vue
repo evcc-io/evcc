@@ -98,21 +98,21 @@ export default {
 		loadpointTitles: Array,
 	},
 	computed: {
-		iconVisible: function () {
+		iconVisible() {
 			return this.notifications.length > 0;
 		},
-		iconClass: function () {
+		iconClass() {
 			return this.notifications.find((m) => m.level === "error")
 				? "text-danger"
 				: "text-warning";
 		},
 	},
-	created: function () {
+	created() {
 		this.interval = setInterval(() => {
 			this.$forceUpdate();
 		}, 10 * 1000);
 	},
-	unmounted: function () {
+	unmounted() {
 		clearTimeout(this.interval);
 	},
 	methods: {
@@ -124,7 +124,7 @@ export default {
 			}
 			return lines;
 		},
-		clear: function () {
+		clear() {
 			window.app?.clear();
 		},
 	},
