@@ -34,6 +34,9 @@ params:
       ]
     required: true
   - preset: tariff-base
+  - name: interval
+    default: 3h
+    advanced: true
 render: |
   type: custom
   {{ include "tariff-base" . }}
@@ -69,4 +72,4 @@ render: |
                 "price": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
-  interval: 3h
+  interval: {{ .interval }}
