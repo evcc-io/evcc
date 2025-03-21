@@ -29,9 +29,9 @@ getmode:
       11 : 2 # Sofortige Ansteuerung hpin1opt/hpin4opt
     get:
       source: http
-      uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt
+      uri: http://{{ .host }}/api/boiler/hpin4opt
       jq: .value ^.{0,1}
-      uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt
+      uri: http://{{ .host }}/api/boiler/hpin1opt
       jq: .value ^.{0,1}
   setmode:
     source: switch
@@ -40,49 +40,50 @@ getmode:
       set:
         source: sequence
         set:
-        - source: const
-          value: 0
-          set:
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'
-        - source: const
-          value: 0
-          set:
-            source: http
-            uri: curl http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxxxxx" }'
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: { "value" : "0xxxxxxxxxxx" }'
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: { "value" : "0xxxxxxxxxxxxxx" }'
     - case: 2 # boost
       set:
-        source: sequence
-        set:
-        - source: const
-          value: 1
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "1xxxxxxxxxxx" }'
-        - source: const
-          value: 0
-          set:
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'
+        source: http
+        uri: http://{{ .host }}/api/boiler/hpin4opt 
+        method: POST 
+        headers:  
+          - content-type: application/json
+          - authorization: Bearer {{ .token}}
+        body: { "value" : "1xxxxxxxxxxx" }'
     - case: 3 # dimm
       set:
         source: sequence
         set:
-        - source: const
-          value: 1
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "1xxxxxxxxxxxxxx" }'
-        - source: const
-          value: 1
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin4opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : "0xxxxxxxxxxx" }'    
-        - source: const
-          value: 0
-          set:
-            source: http
-            uri: http://{{ .emsesp_ip }}/api/boiler/hpin1opt -H 'Content-Type: application/json' -H 'Authorization: Bearer {{ .emsesp_token }}' -d '{ "value" : ""0xxxxxxxxxxxxxx" }'
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: { "value" : "1xxxxxxxxxxxxxx" }'
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: { "value" : "0xxxxxxxxxxx" }'    
   {{- if .tempsource }}
   temp:
     source: http
-    uri: http://{{ .emsesp_ip }}/api/boiler/dhw/curtemp
+    uri: http://{{ .host }}/api/boiler/dhw/curtemp
     jq: .value 
   {{- end }}
