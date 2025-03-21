@@ -271,6 +271,8 @@ func (s *HTTPd) RegisterSystemHandler(site site.API, valueChan chan<- util.Param
 
 		// site
 		if site == nil {
+			// If site is nil, create a new empty site. Settings will be loaded during this process and
+			// site meter references and title can be updated using APIs.
 			var err error
 			site, err = core.NewSiteFromConfig(nil)
 			if err != nil {
