@@ -242,8 +242,8 @@ github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 h1:JS8xlGmF5UXVzZV9S
 github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8/go.mod h1:c8f1EjCxMYk5IiEkBFb5d+WiPXWgqc1yPnAl4nlKyJM=
 github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33 h1:m6NVAznErzAL9fzaIh+HeFbbImxV6ku4iaUUHhYctmg=
 github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33/go.mod h1:PYOvzGOL4nlBmuxu7IyKQTFLaxr61+WPRNRzVtuYOHw=
-github.com/golang-jwt/jwt/v5 v5.2.1 h1:OuVbFODueb089Lh128TAcimifWaLhJwVflnrgM17wHk=
-github.com/golang-jwt/jwt/v5 v5.2.1/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
+github.com/golang-jwt/jwt/v5 v5.2.2 h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8=
+github.com/golang-jwt/jwt/v5 v5.2.2/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
