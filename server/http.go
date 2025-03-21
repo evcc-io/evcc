@@ -7,6 +7,7 @@ import (
 
 	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
@@ -123,19 +124,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
-	// config ui (secured)
-	configApi := api.PathPrefix("/config").Subrouter()
-
-	// TODO clarify location of site config
-	configRoutes := map[string]route{
-		"site":       {"GET", "/site", siteHandler(site)},
-		"updatesite": {"PUT", "/site", updateSiteHandler(site)},
-	}
-
-	for _, r := range configRoutes {
-		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-
 	// vehicle api
 	vehicles := map[string]route{
 		"minsoc":         {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
@@ -193,7 +181,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(site site.API, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -278,6 +266,22 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		}
 
 		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// site
+		if site == nil {
+			var err error
+			site, err = core.NewSiteFromConfig(nil)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		for _, r := range map[string]route{
+			"site":       {"GET", "/site", siteHandler(site)},
+			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 
