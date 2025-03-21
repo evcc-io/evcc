@@ -12,7 +12,7 @@ group: heating
 params:
   - name: emsesp_ip
     choice: ["tcpip"]
-  - name: emsesp_token
+  - name: token
   - name: tempsource
     type: choice
     choice: ["", "warmwater"]
