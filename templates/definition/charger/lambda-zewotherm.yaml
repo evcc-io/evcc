@@ -10,6 +10,7 @@ products:
       en: EU-L Series
 group: heating
 requirements:
+  # evcc: ["sponsorship"]
   description:
     de: |
       Energiemanagementeinstellungen am Gerät:
