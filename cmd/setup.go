@@ -910,17 +910,18 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
+	var all error
 	if err := configureDevices(*conf); err != nil {
-		return nil, err
+		all = errors.Join(all, err)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, &ClassError{ClassLoadpoint, err}
+		all = errors.Join(all, &ClassError{ClassLoadpoint, err})
 	}
 
 	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		all = errors.Join(all, &ClassError{ClassTariff, err})
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
@@ -930,16 +931,16 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
-		return nil, err
+		all = errors.Join(all, err)
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(loadpoints); err != nil {
-			return nil, &ClassError{ClassCircuit, err}
+			all = errors.Join(all, &ClassError{ClassCircuit, err})
 		}
 	}
 
-	return site, nil
+	return site, all
 }
 
 func validateCircuits(loadpoints []*core.Loadpoint) error {
