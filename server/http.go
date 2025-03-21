@@ -192,6 +192,17 @@ func (s *HTTPd) RegisterSystemHandler(site site.API, valueChan chan<- util.Param
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
+	if site == nil {
+		// If site is nil, create a new empty site. Settings will be loaded during this process and
+		// site meter references and title can be updated using APIs.
+		var err error
+		site, err = core.NewSiteFromConfig(nil)
+		if err != nil {
+			// should not happen
+			panic(err)
+		}
+	}
+
 	{ // /api
 		routes := map[string]route{
 			"state": {"GET", "/state", stateHandler(cache)},
@@ -231,7 +242,7 @@ func (s *HTTPd) RegisterSystemHandler(site site.API, valueChan chan<- util.Param
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
@@ -270,16 +281,6 @@ func (s *HTTPd) RegisterSystemHandler(site site.API, valueChan chan<- util.Param
 		}
 
 		// site
-		if site == nil {
-			// If site is nil, create a new empty site. Settings will be loaded during this process and
-			// site meter references and title can be updated using APIs.
-			var err error
-			site, err = core.NewSiteFromConfig(nil)
-			if err != nil {
-				panic(err)
-			}
-		}
-
 		for _, r := range map[string]route{
 			"site":       {"GET", "/site", siteHandler(site)},
 			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
