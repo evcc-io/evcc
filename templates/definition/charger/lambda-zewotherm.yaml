@@ -2,31 +2,26 @@ template: lambda-zewotherm
 products:
   - brand: Lambda
     description:
-      de: |
-        EU-L Serie
-        * Einstellungen des Energie Magagement der Lambda Steuerung:
-        * E-Meter Kommunikationsart: "ModBus Client"
-        * E-Meter Messpunkt: "Pos. E-Überschuss"
-      en: |
-        EU-L Series
-        * Energy management settings of the Lambda control:
-        * E-Meter communication type: "ModBus Client"
-        * E-Meter measuring point: "Pos. E-Überschuss"
+      de: EU-L Serie
+      en: EU-L Series
   - brand: Zewotherm
     description:
-      de: |
-        EU-L Serie
-        * Einstellungen des Energie Magagement der Zewotherm Steuerung:
-        * E-Meter Kommunikationsart: "ModBus Client"
-        * E-Meter Messpunkt: "Pos. E-Überschuss"
-      en: |
-        EU-L Series
-        * Energy management settings of the Zewotherm control:
-        * E-Meter communication type: "ModBus Client"
-        * E-Meter measuring point: "Pos. E-Überschuss"
+      de: EU-L Serie
+      en: EU-L Series
 group: heating
 requirements:
   # evcc: ["sponsorship"]
+  description:
+    de: |
+      Energiemanagementeinstellungen am Gerät:
+
+      - E-Meter Kommunikationsart: "ModBus Client"
+      - E-Meter Messpunkt: "Pos. E-Überschuss"
+    en: |
+      Energy management settings of the device:
+
+      - E-Meter communication type: "ModBus Client"
+      - E-Meter measuring point: "Pos. E-Überschuss"
 params:
   - name: modbus
     choice: ["tcpip"]
