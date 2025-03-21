@@ -10,8 +10,7 @@ group: heating
 # requirements:
 #   evcc: ["sponsorship"]
 params:
-  - name: emsesp_ip
-    choice: ["tcpip"]
+  - name: host
   - name: token
   - name: tempsource
     type: choice
