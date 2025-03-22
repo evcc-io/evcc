@@ -372,7 +372,9 @@ export default {
 
 .details > div {
 	flex-grow: 1;
+	flex-shrink: 1;
 	flex-basis: 0;
+	min-width: 0;
 }
 .details > div:nth-child(2) {
 	text-align: center;
