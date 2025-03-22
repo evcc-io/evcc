@@ -1,0 +1,94 @@
+template: emsesp
+products:
+  - brand: Buderus
+    description:
+      generic: Buderus (SG Ready)
+  - brand: Bosch
+    description:
+      generic: Bosch (SG Ready)
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: host
+  - name: token
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+render: |
+  type: sgready
+  # getmode:
+  #   source: map
+  #   values:
+  #     10 : 3 # Frostschutz hpin1opt/hpin4opt
+  #     00 : 1 # Normal hpin1opt/hpin4opt
+  #     01 : 2 # Forcierter Betrieb hpin1opt/hpin4opt
+  #     11 : 2 # Sofortige Ansteuerung hpin1opt/hpin4opt
+  #   get:
+  #     source: http
+  #     uri: http://{{ .host }}/api/boiler/hpin4opt
+  #     jq: .value ^.{0,1}
+  #     uri: http://{{ .host }}/api/boiler/hpin1opt
+  #     jq: .value ^.{0,1}
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "0xxxxxxxxxxx" }
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "0xxxxxxxxxxxxxx" }
+    - case: 2 # boost
+      set:
+        source: http
+        uri: http://{{ .host }}/api/boiler/hpin4opt 
+        method: POST 
+        headers:  
+          - content-type: application/json
+          - authorization: Bearer {{ .token}}
+        body: >
+          { "value" : "1xxxxxxxxxxx" }
+    - case: 3 # dimm
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "1xxxxxxxxxxxxxx" }
+        - source: http
+          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "0xxxxxxxxxxx" }    
+  {{- if .tempsource }}
+  temp:
+    source: http
+    uri: http://{{ .host }}/api/boiler/dhw/curtemp
+    jq: .value 
+  {{- end }}
