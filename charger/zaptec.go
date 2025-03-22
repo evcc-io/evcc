@@ -300,6 +300,18 @@ func (c *Zaptec) Phases1p3p(phases int) error {
 	return err
 }
 
+var _ api.Identifier = (*Zaptec)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *Zaptec) Identify() (string, error) {
+	res, err := c.statusG.Get()
+	if err != nil {
+		return "", err
+	}
+
+	return res.ObservationByID(zaptec.ChargerCurrentUserUuid).ValueAsString, nil
+}
+
 var _ api.Diagnosis = (*Zaptec)(nil)
 
 // Diagnosis implements the api.ChargePhases interface
