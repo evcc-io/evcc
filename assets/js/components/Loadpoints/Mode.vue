@@ -71,6 +71,12 @@ export default {
 	color: var(--evcc-default-text);
 	border: none;
 }
+@media (max-width: 576px) {
+	.btn {
+		padding: 0.1em 0.2em;
+	}
+}
+
 .btn:hover {
 	color: var(--evcc-gray);
 }

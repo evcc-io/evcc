@@ -54,7 +54,7 @@
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
 						:valueFmt="fmtPower"
-						class="mb-2 text-nowrap"
+						class="mb-2 text-nowrap text-truncate-xs-only"
 						align="start"
 					/>
 					<shopicon-regular-lightning
