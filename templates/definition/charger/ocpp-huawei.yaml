@@ -1,0 +1,12 @@
+template: ocpp-huawei
+products:
+  - brand: Huawei
+    description:
+      generic: SCharger-7KS-S0 / 22KT-S0
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  forcepowerctrl: true
