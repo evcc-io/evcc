@@ -46,14 +46,16 @@ render: |
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
-          body: { "value" : "0xxxxxxxxxxx" }
+          body: >
+            { "value" : "0xxxxxxxxxxx" }
         - source: http
           uri: http://{{ .host }}/api/boiler/hpin1opt 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
-          body: { "value" : "0xxxxxxxxxxxxxx" }
+          body: >
+            { "value" : "0xxxxxxxxxxxxxx" }
     - case: 2 # boost
       set:
         source: http
@@ -62,7 +64,8 @@ render: |
         headers:  
           - content-type: application/json
           - authorization: Bearer {{ .token}}
-        body: { "value" : "1xxxxxxxxxxx" }
+        body: >
+          { "value" : "1xxxxxxxxxxx" }
     - case: 3 # dimm
       set:
         source: sequence
@@ -73,14 +76,16 @@ render: |
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
-          body: { "value" : "1xxxxxxxxxxxxxx" }
+          body: >
+            { "value" : "1xxxxxxxxxxxxxx" }
         - source: http
           uri: http://{{ .host }}/api/boiler/hpin4opt 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
-          body: { "value" : "0xxxxxxxxxxx" }    
+          body: >
+            { "value" : "0xxxxxxxxxxx" }    
   {{- if .tempsource }}
   temp:
     source: http
