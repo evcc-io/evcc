@@ -10,6 +10,11 @@ let state = {
   vehicles: [{ soc: 0, range: 0 }],
 };
 
+const loggingMiddleware = (req, res, next) => {
+  console.log(`[simulator] ${req.method} ${req.originalUrl}`);
+  next();
+};
+
 const stateApiMiddleware = (req, res, next) => {
   if (req.method === "POST" && req.originalUrl === "/api/state") {
     console.log("[simulator] POST /api/state");
@@ -66,16 +71,33 @@ const teslaloggerMiddleware = (req, res, next) => {
   }
 };
 
+const shellyMiddleware = (req, res, next) => {
+  // simulate a shelly gen1 device api. implement power and energy
+  if (req.method === "GET" && req.originalUrl === "/shelly") {
+    res.end(JSON.stringify({ gen: 2 }));
+  } else if (req.originalUrl === "/rpc/Shelly.GetStatus") {
+    res.end(
+      JSON.stringify({
+        "switch:0": { apower: state.site.pv.power, aenergy: { total: state.site.pv.energy } },
+      })
+    );
+  } else {
+    next();
+  }
+};
+
 export default () => ({
   name: "api",
   enforce: "pre",
   configureServer(server) {
     console.log("[simulator] configured");
     return () => {
+      server.middlewares.use(loggingMiddleware);
       server.middlewares.use(bodyParser.json());
       server.middlewares.use(stateApiMiddleware);
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
+      server.middlewares.use(shellyMiddleware);
     };
   },
 });
