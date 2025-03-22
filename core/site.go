@@ -1016,7 +1016,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 			}
 		}(id)
 
-		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
 
