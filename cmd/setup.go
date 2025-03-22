@@ -263,14 +263,14 @@ func configureMeters(static []config.Named, names ...string) error {
 
 			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
 
 			if err := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
+				err = &DeviceError{cc.Name, err}
 			}
 
-			return nil
+			return err
 		})
 	}
 
