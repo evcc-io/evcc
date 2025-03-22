@@ -37,6 +37,59 @@ type MeterResponse8 struct {
 	}
 }
 
+type SystemInfoResponse struct {
+	Battery BatteryInfo `json:"batt"`
+	PMS     PMS         `json:"pms"`
+	Version Version     `json:"version"`
+}
+
+type BatteryInfo struct {
+	Capacity          int    `json:"capacity,string"`
+	HBCAPackDates     string `json:"hbc_a_pack_dates"`
+	HBCASerials       string `json:"hbc_a_serials"`
+	HBCBPackDates     string `json:"hbc_b_pack_dates"`
+	HBCBSerials       string `json:"hbc_b_serials"`
+	HBCChgCap1        int    `json:"hbc_chg_cap_1,string"`
+	HBCChgCap2        int    `json:"hbc_chg_cap_2,string"`
+	HBCChgEnergy1     int    `json:"hbc_chg_energy_1,string"`
+	HBCChgEnergy2     int    `json:"hbc_chg_energy_2,string"`
+	HBCCycleCount1    int    `json:"hbc_cycle_count_1,string"`
+	HBCCycleCount2    int    `json:"hbc_cycle_count_2,string"`
+	HBCDeepDischgCnt1 int    `json:"hbc_deep_dischg_cnt_1,string"`
+	HBCDeepDischgCnt2 int    `json:"hbc_deep_dischg_cnt_2,string"`
+	HBCDischgCap1     int    `json:"hbc_dischg_cap_1,string"`
+	HBCDischgCap2     int    `json:"hbc_dischg_cap_2,string"`
+	HBCDischgEnergy1  int    `json:"hbc_dischg_energy_1,string"`
+	HBCDischgEnergy2  int    `json:"hbc_dischg_energy_2,string"`
+	HBCDischgRate1    int    `json:"hbc_dischg_rate_1,string"`
+	HBCDischgRate2    int    `json:"hbc_dischg_rate_2,string"`
+	HBCOVerChgCnt1    int    `json:"hbc_over_chg_cnt_1,string"`
+	HBCOVerChgCnt2    int    `json:"hbc_over_chg_cnt_2,string"`
+	HBCRemainingCap1  int    `json:"hbc_remaining_cap_1,string"`
+	HBCRemainingCap2  int    `json:"hbc_remaining_cap_2,string"`
+	InstallDate       string `json:"install_date"`
+	NameplateEnergy1  int    `json:"nameplate_energy_1,string"`
+	NameplateEnergy2  int    `json:"nameplate_energy_2,string"`
+	BatteryType       string `json:"type"`
+}
+
+type PMS struct {
+	ACInputPower  int    `json:"ac_input_power,string"`
+	ACOutputPower int    `json:"ac_output_power,string"`
+	InstallDate   string `json:"install_date"`
+	Model         string `json:"model"`
+	SerialNo      string `json:"serialno"`
+}
+
+type Version struct {
+	BMSUnit1Version string `json:"bms_unit1_version"`
+	BMSUnit2Version string `json:"bms_unit2_version"`
+	BMSVersion      string `json:"bms_version"`
+	PCSVersion      string `json:"pcs_version"`
+	PMSBuildDate    string `json:"pms_build_date"`
+	PMSVersion      string `json:"pms_version"`
+}
+
 func (m MeterResponse8) GetGridPower() float64 {
 	if m.Direction.IsGridSelling > 0 {
 		return -m.Statistics.GridPower
