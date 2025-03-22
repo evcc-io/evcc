@@ -8,9 +8,12 @@
 					data-testid="sessionInfoSelect"
 					@change="selectOption($event.target.value)"
 				>
-					<span class="text-decoration-underline" data-testid="sessionInfoLabel">
+					<div
+						class="text-decoration-underline text-truncate-xs-only"
+						data-testid="sessionInfoLabel"
+					>
 						{{ label }}
-					</span>
+					</div>
 				</CustomSelect>
 			</template>
 			<template #value>
