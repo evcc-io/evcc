@@ -9,6 +9,10 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+func getSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
+	jsonResult(w, sponsor.Status())
+}
+
 func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Token string `json:"token"`
