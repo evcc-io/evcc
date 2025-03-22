@@ -20,19 +20,19 @@ params:
       en: "Temperature source"
 render: |
   type: sgready
-getmode:
-    source: map
-    values:
-      10 : 3 # Frostschutz hpin1opt/hpin4opt
-      00 : 1 # Normal hpin1opt/hpin4opt
-      01 : 2 # Forcierter Betrieb hpin1opt/hpin4opt
-      11 : 2 # Sofortige Ansteuerung hpin1opt/hpin4opt
-    get:
-      source: http
-      uri: http://{{ .host }}/api/boiler/hpin4opt
-      jq: .value ^.{0,1}
-      uri: http://{{ .host }}/api/boiler/hpin1opt
-      jq: .value ^.{0,1}
+  # getmode:
+  #   source: map
+  #   values:
+  #     10 : 3 # Frostschutz hpin1opt/hpin4opt
+  #     00 : 1 # Normal hpin1opt/hpin4opt
+  #     01 : 2 # Forcierter Betrieb hpin1opt/hpin4opt
+  #     11 : 2 # Sofortige Ansteuerung hpin1opt/hpin4opt
+  #   get:
+  #     source: http
+  #     uri: http://{{ .host }}/api/boiler/hpin4opt
+  #     jq: .value ^.{0,1}
+  #     uri: http://{{ .host }}/api/boiler/hpin1opt
+  #     jq: .value ^.{0,1}
   setmode:
     source: switch
     switch:
