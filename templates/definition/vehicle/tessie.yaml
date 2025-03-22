@@ -86,7 +86,7 @@ render: |
     method: POST
   wakeup:
     source: http
-    uri: https://api.tessie.com/{{ .vin }}/wake
+    uri: https://api.tessie.com/{{ .vin }}/command/wake
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
