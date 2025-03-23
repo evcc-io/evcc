@@ -43,5 +43,5 @@ asset-stats.html
 /playwright/.cache/
 .gitpod.yml
 /evcc.db
-
+/tsconfig.tsbuildinfo
 *storybook.log

@@ -593,6 +593,9 @@ func (site *Site) updatePvMeters() {
 	// store
 	if err := settings.SetJson(keys.SolarAccYield, site.pvEnergy); err != nil {
 		site.log.ERROR.Println("accumulated solar yield:", err)
+		for k, v := range site.pvEnergy {
+			site.log.ERROR.Printf("!! %s: %+v", k, v)
+		}
 	}
 }
 

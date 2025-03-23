@@ -39,7 +39,7 @@ export default {
 		title: String,
 	},
 	computed: {
-		topNavigation: function () {
+		topNavigation() {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
 		},
