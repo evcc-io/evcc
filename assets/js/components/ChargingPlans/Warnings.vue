@@ -100,6 +100,15 @@ export default defineComponent({
 				return "??";
 			}
 		},
+		goalFmt() {
+			if (this.socBasedPlanning && this.effectivePlanSoc) {
+				return this.fmtSoc(this.effectivePlanSoc);
+			} else if (this.planEnergy) {
+				return this.fmtWh(this.planEnergy * 1e3);
+			} else {
+				return "??";
+			}
+		},
 	},
 	methods: {
 		fmtSoc(soc: number) {
