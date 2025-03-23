@@ -12,6 +12,7 @@ group: heating
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 40
     # id TWE 50, HK 51
   # - name: tempsource
   #   type: choice
