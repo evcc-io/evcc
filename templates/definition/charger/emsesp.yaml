@@ -6,6 +6,9 @@ products:
   - brand: Bosch
     description:
       generic: Bosch (SG Ready)
+  - brand: Junkers
+    description:
+      generic: Junkers (SG Ready)
 group: heating
 # requirements:
 #   evcc: ["sponsorship"]
