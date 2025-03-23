@@ -95,10 +95,10 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		voltages = wb.voltages
 	}
 
-	// decorate Charger with MaxCurrentEx
-	var maxCurrentEx func(float64) error
+	// decorate Charger with MaxCurrentMillis
+	var maxCurrentMillis func(float64) error
 	if wb.hires {
-		maxCurrentEx = wb.maxCurrentEx
+		maxCurrentMillis = wb.maxCurrentMillis
 		wb.current = 100 * wb.current
 	}
 
@@ -108,7 +108,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateEVSE(wb, currentPower, totalEnergy, currents, voltages, maxCurrentEx, identify), nil
+	return decorateEVSE(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -208,8 +208,8 @@ func (wb *EVSEWifi) MaxCurrent(current int64) error {
 	return err
 }
 
-// maxCurrentEx implements the api.ChargerEx interface
-func (wb *EVSEWifi) maxCurrentEx(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (wb *EVSEWifi) maxCurrentMillis(current float64) error {
 	wb.current = int64(100 * current)
 	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, wb.current)
 	return wb.get(uri)
