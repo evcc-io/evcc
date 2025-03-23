@@ -8,6 +8,7 @@ import "@h2d2/shopicons/es/regular/car3";
 import MultiIcon from "../MultiIcon";
 
 import airpurifier from "./Airpurifier.vue";
+import aux from "./Aux.vue";
 import battery from "./Battery.vue";
 import bike from "./Bike.vue";
 import bulb from "./Bulb.vue";
@@ -47,6 +48,7 @@ import waterheater from "./WaterHeater.vue";
 
 const icons = {
 	airpurifier,
+	aux,
 	battery,
 	bike,
 	bulb,
@@ -85,6 +87,8 @@ const icons = {
 	van,
 	waterheater,
 };
+
+export const ICONS = Object.keys(icons);
 
 export default {
 	name: "VehicleIcon",
