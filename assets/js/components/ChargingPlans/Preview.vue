@@ -156,7 +156,6 @@ export default defineComponent({
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
-				this.$t;
 				const isTarget =
 					this.targetTime && start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
