@@ -16,7 +16,7 @@ export interface State {
 export enum CURRENCY {
 	EUR = "EUR",
 	USD = "USD",
-	DKK = "DKK"
+	DKK = "DKK",
 }
 
 export interface Vehicle {

@@ -40,6 +40,7 @@ import formatter from "../../mixins/formatter.js";
 import { CO2_TYPE } from "../../units.js";
 import TariffChart from "../Tariff/TariffChart.vue";
 import type { CURRENCY, Rate } from "assets/js/types/evcc.js";
+import type { Slot } from "./types.js";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
@@ -137,7 +138,7 @@ export default defineComponent({
 			}
 			return this.fmtWeekdayTime(this.targetTime);
 		},
-		slots() {
+		slots(): Slot[] {
 			const result = [];
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
@@ -155,6 +156,7 @@ export default defineComponent({
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
+				this.$t;
 				const isTarget =
 					this.targetTime && start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
