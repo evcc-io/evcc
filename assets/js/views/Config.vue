@@ -746,18 +746,14 @@ export default {
 				this.saveSite(type);
 			}
 		},
-		removeMeter(type, name) {
+		removeMeter(type) {
 			if (type === "charge") {
 				// update loadpoint
 				this.$refs.loadpointModal?.setMeter(undefined);
-			} else if (type === "grid") {
-				// update site grid
-				this.site.grid = "";
-				this.saveSite(type);
 			} else {
-				// update site pv, battery, aux
-				this.site[type] = this.site[type].filter((i) => i !== name);
-				this.saveSite(type);
+				// update site grid, pv, battery, aux, ext
+				this.loadSite();
+				this.loadDirty();
 			}
 		},
 		addCharger(name) {

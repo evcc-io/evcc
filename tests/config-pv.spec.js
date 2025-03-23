@@ -103,6 +103,6 @@ test.describe("pv meter", async () => {
     await restart(CONFIG_GRID_ONLY);
     await page.reload();
     await expect(page.getByTestId("pv")).toHaveCount(0);
-    await expect(page.getByTestId("bottom-banner")).not.toBeVisible();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 });
