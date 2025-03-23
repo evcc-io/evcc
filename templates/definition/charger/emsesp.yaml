@@ -94,4 +94,8 @@ render: |
     source: http
     uri: http://{{ .host }}/api/boiler/dhw/curtemp
     jq: .value 
+  limittemp:
+    source: http
+    uri: http://{{ .host }}/api/boiler/dhw/seltemp
+    jq: .value
   {{- end }}
