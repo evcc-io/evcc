@@ -74,22 +74,6 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	}
 }
 
-func settingsGetJsonHandler(key string, newStruc func() any) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		struc := newStruc()
-		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		if redactable, ok := struc.(api.Redactor); ok {
-			struc = redactable.Redacted()
-		}
-
-		jsonResult(w, struc)
-	}
-}
-
 func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		struc := newStruc()
