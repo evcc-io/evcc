@@ -17,10 +17,8 @@
 					</p>
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
-						<li>aux meters</li>
 						<li>custom/plugin meters and vehicles</li>
-						<li>migration for vehicles, chargers, meters, loadpoints</li>
-						<li>remove mixed mode (evcc.yaml + db) for meters and vehicles</li>
+						<li>migration for loadpoints</li>
 					</ul>
 					<p>
 						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
@@ -178,7 +176,32 @@
 						</DeviceCard>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
-							@click="newMeter"
+							@click="addSolarBatteryMeter"
+						/>
+					</ul>
+
+					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="meter in auxMeters"
+							:key="meter.name"
+							:title="meter.deviceTitle || meter.config?.template || 'Aux meter'"
+							:name="meter.name"
+							:editable="!!meter.id"
+							:error="deviceError('meter', meter.name)"
+							data-testid="aux"
+							@edit="editMeter(meter.id, 'aux')"
+						>
+							<template #icon>
+								<VehicleIcon :name="meter.deviceIcon || 'aux'" />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('meter', meter.name)" />
+							</template>
+						</DeviceCard>
+						<NewDeviceButton
+							:title="$t('config.main.addAdditional')"
+							@click="newAdditionalMeter"
 						/>
 					</ul>
 
@@ -320,6 +343,7 @@
 					:id="selectedMeterId"
 					:name="selectedMeterName"
 					:type="selectedMeterType"
+					:typeChoices="selectedMeterTypeChoices"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					@added="addMeter"
 					@updated="meterChanged"
@@ -441,6 +465,7 @@ export default {
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
+			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
 			loadpointSubModalOpen: false,
@@ -468,6 +493,14 @@ export default {
 		},
 		batteryMeters() {
 			const names = this.site?.battery;
+			return this.getMetersByNames(names);
+		},
+		auxMeters() {
+			const names = this.site?.aux;
+			return this.getMetersByNames(names);
+		},
+		extMeters() {
+			const names = this.site?.ext;
 			return this.getMetersByNames(names);
 		},
 		selectedMeterName() {
@@ -673,6 +706,18 @@ export default {
 		newMeter(type) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
+			this.$nextTick(() => this.meterModal().show());
+		},
+		addSolarBatteryMeter() {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = undefined;
+			this.selectedMeterTypeChoices = ["pv", "battery"];
+			this.$nextTick(() => this.meterModal().show());
+		},
+		newAdditionalMeter() {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = undefined;
+			this.selectedMeterTypeChoices = ["aux", "ext"];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		editCharger(id) {
