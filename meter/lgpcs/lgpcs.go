@@ -158,30 +158,22 @@ func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
 		uri := fmt.Sprintf("%s/v1/user/setting/systeminfo", m.uri)
 		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
 	}
-	var systemInfo SystemInfoResponse
-	err := m.request(f, nil, &systemInfo)
-	return systemInfo, err
+	var res SystemInfoResponse
+	err := m.request(f, nil, &res)
+	return res, err
 }
 
 func (m *Com) GetFirmwareVersion() (int, error) {
-	var firmwareVersion = 0
 	systemInfo, err := m.GetSystemInfo()
 	if err != nil {
-		return firmwareVersion, err
+		return 0, err
 	}
 	// extract the patch number behind a dot that is always followed by at least 4 digits
-	re := regexp.MustCompile(`.(\d{4})`)
-	match := re.FindStringSubmatch(systemInfo.Version.PMSVersion)
-	if len(match) > 1 {
-		firmwareVersion, err = strconv.Atoi(match[1])
-		if err != nil {
-			return firmwareVersion, err
-		}
-	} else {
-		err = fmt.Errorf("couldn't find the firmware version within the string")
+	if match := regexp.MustCompile(`.(\d{4})`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
+		return strconv.Atoi(match[1])
 	}
 
-	return firmwareVersion, err
+	return 0, errors.New("firmware version not found")
 }
 
 // BatteryMode sets the battery mode
