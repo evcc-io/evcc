@@ -96,6 +96,6 @@ render: |
     jq: .value 
   limittemp:
     source: http
-    uri: http://{{ .host }}/api/boiler/dhw/seltemp
+    uri: http://{{ .host }}/api/boiler/dhw/settemp
     jq: .value
   {{- end }}
