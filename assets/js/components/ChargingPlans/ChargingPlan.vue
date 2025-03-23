@@ -185,7 +185,7 @@ export default defineComponent({
 			return null;
 		},
 		repeatingPlans() {
-			if (this.vehicle && this.vehicle?.repeatingPlans.length > 0) {
+			if (this.vehicle && this.vehicle.repeatingPlans.length > 0) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
