@@ -74,18 +74,20 @@ import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "../../utils/deepEqual.js";
 import { defineComponent, type PropType } from "vue";
 import type {
-	StaticPlan,
-	RepeatingPlan,
 	Vehicle,
-	StaticEnergyPlan,
 	PartialBy,
-	StaticSocPlan,
 	Timeout,
 	Tariff,
 	CustomSelectOption as SelectableOption,
-	PlanWrapper,
 	CURRENCY,
 } from "assets/js/types/evcc.js";
+import type {
+	StaticPlan,
+	RepeatingPlan,
+	PlanWrapper,
+	StaticSocPlan,
+	StaticEnergyPlan,
+} from "./types.js";
 
 const TARIFF_CACHE_TIME = 300000; // 5 minutes
 

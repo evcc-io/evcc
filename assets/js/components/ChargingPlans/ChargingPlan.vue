@@ -113,15 +113,8 @@ import collector from "../../mixins/collector.js";
 import api from "../../api.js";
 import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
 import { defineComponent, type PropType } from "vue";
-import type {
-	CURRENCY,
-	Timeout,
-	StaticPlan,
-	RepeatingPlan,
-	Vehicle,
-	StaticSocPlan,
-	StaticEnergyPlan,
-} from "assets/js/types/evcc.js";
+import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
+import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
 
 const ONE_MINUTE = 60 * 1000;
 
