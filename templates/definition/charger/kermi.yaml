@@ -24,6 +24,7 @@ params:
 render: |
   type: heatpump
   setmaxpower:
+    source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
     set:    
       source: modbus
