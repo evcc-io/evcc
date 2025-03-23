@@ -76,7 +76,7 @@ export default defineComponent({
 				const dateWanted = new Date(planTime);
 				const dateEstimated = new Date(this.endTime);
 				// 1 minute tolerance
-				return dateEstimated.getMinutes() - dateWanted.getMinutes() > 60 * 1e3;
+				return dateEstimated.getTime() - dateWanted.getTime() > 60 * 1e3;
 			}
 			return false;
 		},
@@ -97,15 +97,6 @@ export default defineComponent({
 				return this.fmtSoc(this.effectiveLimitSoc);
 			} else if (this.limitEnergy) {
 				return this.fmtWh(this.limitEnergy * 1e3);
-			} else {
-				return "??";
-			}
-		},
-		goalFmt() {
-			if (this.socBasedPlanning && this.effectivePlanSoc) {
-				return this.fmtSoc(this.effectivePlanSoc);
-			} else if (this.planEnergy) {
-				return this.fmtWh(this.planEnergy * 1e3);
 			} else {
 				return "??";
 			}

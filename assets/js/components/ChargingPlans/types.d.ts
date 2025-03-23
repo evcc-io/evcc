@@ -1,3 +1,5 @@
+import type { Rate } from "assets/js/types/evcc";
+
 export interface RepeatingPlan {
 	weekdays: number[];
 	time: string;
