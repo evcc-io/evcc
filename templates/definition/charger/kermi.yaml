@@ -17,16 +17,31 @@ params:
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: heatpump
   setmaxpower:
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:    
+      source: modbus
+      uri: {{ .host }}:502
+      id: 40 # WP
+      register:
+        address: 301 # PV Überschussleistung
+        type: holding
+        decode: int16
+  power:
     source: modbus
     uri: {{ .host }}:502
-    id: 40 # WP
+    id: 40
     register:
-      address: 301 # PV Überschussleistung
+      address: 108
       type: holding
       decode: int16
+    scale: 100
   {{- if eq .tempsource "warmwater" }}
   temp:
     source: modbus
