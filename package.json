@@ -5,7 +5,8 @@
   "scripts": {
     "build": "vite build",
     "test": "TZ=Europe/Berlin vitest",
-    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && vue-tsc --noEmit",
+    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
+    "tsc": "vue-tsc --noEmit",
     "dev": "vite",
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
