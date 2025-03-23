@@ -160,6 +160,7 @@ v2Support = "Atgal į InfluxDB 2.x"
 addCharger = "Pridėti įkroviklį"
 addMeter = "Pridėti įkroviklio skaitiklį"
 cancel = "Atšaukti"
+chargerError = "Reikia sukonfigūruoti įkroviklį."
 chargerLabel = "Įkroviklis"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Naudos įkrovimo srovę nuo 6 iki 16 A."
@@ -228,7 +229,6 @@ vehicleHelpAutoDetection = "Automatiškai parenka labiausiai tikėtiną automobi
 vehicleHelpDefault = "Visada manyti, kad čia įkraunamas šis automobilis. Automatinis aptikimas išjungtas. Galimas rankinis koregavimas."
 vehicleLabel = "Numatytasis automobilis"
 vehiclesTitle = "Automobiliai"
-chargerError = "Reikia sukonfigūruoti įkroviklį."
 
 [config.main]
 addGrid = "Pridėti tinklo skaitiklį"
