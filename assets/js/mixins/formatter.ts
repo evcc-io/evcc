@@ -307,7 +307,7 @@ export default defineComponent({
 
 			return "";
 		},
-		fmtSocOption(soc: number, rangePerSoc: number, distanceUnit: string, heating?: boolean) {
+		fmtSocOption(soc: number, rangePerSoc?: number, distanceUnit?: string, heating?: boolean) {
 			let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;
 			if (rangePerSoc && distanceUnit) {
 				const range = soc * rangePerSoc;

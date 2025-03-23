@@ -59,11 +59,12 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { distanceUnit } from "../../units.js";
 import formatter from "../../mixins/formatter.js";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanArrival",
 	mixins: [formatter],
 	props: {
@@ -101,13 +102,13 @@ export default {
 		},
 	},
 	methods: {
-		socOption(soc) {
+		socOption(soc: number) {
 			return {
 				value: soc,
 				name: soc === 0 ? "---" : this.fmtSocOption(soc, this.rangePerSoc, distanceUnit()),
 			};
 		},
-		formId(name) {
+		formId(name: string) {
 			return `chargingplan_${this.id}_${name}`;
 		},
 		changeMinSoc() {
@@ -117,5 +118,5 @@ export default {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
 		},
 	},
-};
+});
 </script>

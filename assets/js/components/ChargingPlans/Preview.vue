@@ -34,26 +34,28 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import formatter from "../../mixins/formatter.js";
 import { CO2_TYPE } from "../../units.js";
 import TariffChart from "../Tariff/TariffChart.vue";
+import type { CURRENCY, Rate } from "assets/js/types/evcc.js";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanPreview",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
 		duration: Number,
 		power: Number,
-		rates: Array,
-		plan: Array,
+		rates: Array as PropType<Rate[]>,
+		plan: Array as PropType<Rate[]>,
 		smartCostType: String,
-		targetTime: Date,
-		currency: String,
+		targetTime: [Date, null],
+		currency: String as PropType<CURRENCY>,
 	},
 	data() {
-		return { activeIndex: null, startTime: new Date() };
+		return { activeIndex: null as number | null, startTime: new Date() };
 	},
 	computed: {
 		endTime() {
@@ -73,7 +75,7 @@ export default {
 			return this.fmtDuration(this.duration);
 		},
 		fmtPower() {
-			if (this.duration > 0 && this.power > 0) {
+			if (this.duration && this.power && this.duration > 0 && this.power > 0) {
 				return `@ ${this.fmtW(this.power)}`;
 			}
 			return null;
@@ -82,7 +84,7 @@ export default {
 			return this.smartCostType === CO2_TYPE;
 		},
 		hasTariff() {
-			return this.rates?.length > 1;
+			return this.rates && this.rates?.length > 1;
 		},
 		avgPrice() {
 			let hourSum = 0;
@@ -109,7 +111,7 @@ export default {
 				: this.fmtPricePerKWh(price, this.currency);
 		},
 		activeSlot() {
-			return this.slots[this.activeIndex];
+			return this.activeIndex ? this.slots[this.activeIndex] : null;
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
@@ -153,11 +155,13 @@ export default {
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
-				const isTarget = start <= this.targetTime && end > this.targetTime;
+				const isTarget =
+					this.targetTime && start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
 				const warning =
 					charging &&
 					this.targetTime &&
+					this.endTime &&
 					end > this.targetTime &&
 					this.targetTime < this.endTime;
 				result.push({
@@ -180,7 +184,7 @@ export default {
 		},
 	},
 	methods: {
-		convertDates(list) {
+		convertDates(list: Rate[] | undefined) {
 			if (!list?.length) {
 				return [];
 			}
@@ -192,7 +196,7 @@ export default {
 				};
 			});
 		},
-		findSlotInRange(start, end, slots) {
+		findSlotInRange(start: Date, end: Date, slots: Rate[]) {
 			return slots.find((s) => {
 				if (s.start.getTime() < start.getTime()) {
 					return s.end.getTime() > start.getTime();
@@ -200,11 +204,11 @@ export default {
 				return s.start.getTime() < end.getTime();
 			});
 		},
-		slotHovered(index) {
+		slotHovered(index: number) {
 			this.activeIndex = index;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

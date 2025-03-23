@@ -3,7 +3,7 @@
 		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
-		<span v-if="['off', 'now'].includes(mode)" class="d-block evcc-gray mb-1">
+		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block evcc-gray mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mb-1">
@@ -18,10 +18,12 @@
 	</p>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import formatter from "../../mixins/formatter.js";
+import type { PlanWrapper, Tariff } from "assets/js/types/evcc.js";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanWarnings",
 	mixins: [formatter],
 	props: {
@@ -35,8 +37,8 @@ export default {
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		mode: String,
-		tariff: Object,
-		plan: Object,
+		tariff: Object as PropType<Tariff>,
+		plan: Object as PropType<PlanWrapper>,
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
 	},
@@ -73,41 +75,38 @@ export default {
 				const dateWanted = new Date(planTime);
 				const dateEstimated = new Date(this.endTime);
 				// 1 minute tolerance
-				return dateEstimated - dateWanted > 60 * 1e3;
+				return dateEstimated.getMinutes() - dateWanted.getMinutes() > 60 * 1e3;
 			}
 			return false;
 		},
 		targetIsAboveLimit() {
-			if (this.socBasedPlanning) {
+			if (this.socBasedPlanning && this.effectivePlanSoc && this.effectiveLimitSoc) {
 				return this.effectivePlanSoc > this.effectiveLimitSoc;
 			}
-			return this.limitEnergy && this.planEnergy > this.limitEnergy;
+			return this.limitEnergy && this.planEnergy && this.planEnergy > this.limitEnergy;
 		},
 		targetIsAboveVehicleLimit() {
-			if (this.socBasedPlanning) {
+			if (this.socBasedPlanning && this.effectivePlanSoc) {
 				return this.effectivePlanSoc > (this.vehicleLimitSoc || 100);
 			}
 			return false;
 		},
 		limitFmt() {
-			if (this.socBasedPlanning) {
+			if (this.socBasedPlanning && this.effectiveLimitSoc) {
 				return this.fmtSoc(this.effectiveLimitSoc);
+			} else if (this.limitEnergy) {
+				return this.fmtWh(this.limitEnergy * 1e3);
+			} else {
+				return "??";
 			}
-			return this.fmtWh(this.limitEnergy * 1e3);
-		},
-		goalFmt() {
-			if (this.socBasedPlanning) {
-				return this.fmtSoc(this.effectivePlanSoc);
-			}
-			return this.fmtWh(this.planEnergy * 1e3);
 		},
 	},
 	methods: {
-		fmtSoc(soc) {
+		fmtSoc(soc: number) {
 			return this.fmtPercentage(soc);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
