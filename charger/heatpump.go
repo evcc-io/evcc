@@ -148,11 +148,13 @@ func (wb *Heatpump) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Heatpump) MaxCurrent(current int64) error {
-	return wb.MaxCurrentEx(float64(current))
+	return wb.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*Heatpump)(nil)
+
 // MaxCurrent implements the api.Charger interface
-func (wb *Heatpump) MaxCurrentEx(current float64) error {
+func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
 		phases = wb.lp.GetPhases()

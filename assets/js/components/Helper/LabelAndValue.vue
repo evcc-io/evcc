@@ -1,6 +1,6 @@
 <template>
 	<div class="root">
-		<div class="mb-2 label" :class="labelClass">
+		<div class="mb-2 label text-truncate-xs-only" :class="labelClass">
 			<slot name="label">{{ label }}</slot>
 		</div>
 		<slot>

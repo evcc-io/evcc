@@ -47,21 +47,15 @@ import Chart from "../components/Forecast/Chart.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
-import { type PriceSlot } from "../utils/forecast";
-import formatter from "../mixins/formatter";
-import store from "../store";
+import { ForecastType, type PriceSlot, type SolarDetails } from "../utils/forecast";
+import formatter from "../mixins/formatter.ts";
+import store from "../store.ts";
 
 interface Forecast {
 	grid?: PriceSlot[];
-	solar?: PriceSlot[];
+	solar?: SolarDetails;
 	co2?: PriceSlot[];
 }
-
-export const TYPES = {
-	SOLAR: "solar",
-	PRICE: "price",
-	CO2: "co2",
-};
 
 export default defineComponent({
 	name: "Energy",
@@ -74,8 +68,8 @@ export default defineComponent({
 	mixins: [formatter],
 	data() {
 		return {
-			selectedType: TYPES.PRICE,
-			types: Object.values(TYPES),
+			selectedType: ForecastType.Price,
+			types: Object.values(ForecastType),
 		};
 	},
 	head() {
@@ -84,9 +78,9 @@ export default defineComponent({
 	computed: {
 		typeIcons() {
 			return {
-				[TYPES.SOLAR]: "shopicon-regular-sun",
-				[TYPES.PRICE]: DynamicPriceIcon,
-				[TYPES.CO2]: "shopicon-regular-eco1",
+				[ForecastType.Solar]: "shopicon-regular-sun",
+				[ForecastType.Price]: DynamicPriceIcon,
+				[ForecastType.Co2]: "shopicon-regular-eco1",
 			};
 		},
 		forecastAvailable() {
@@ -101,7 +95,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		updateType(type: string) {
+		updateType(type: ForecastType) {
 			this.selectedType = type;
 		},
 	},

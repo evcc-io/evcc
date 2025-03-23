@@ -188,12 +188,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
-	// phase switching defaults based on charger capabilities
-	if !lp.hasPhaseSwitching() {
-		lp.phasesConfigured = 3
-		lp.phases = 3
-	}
-
 	// validate thresholds
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
@@ -249,6 +243,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 	}
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
+
+	// phase switching defaults based on charger capabilities
+	if !lp.hasPhaseSwitching() {
+		lp.phasesConfigured = 3
+		lp.phases = 3
+	}
 
 	return lp, nil
 }

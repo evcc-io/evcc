@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "test": "TZ=Europe/Berlin vitest",
-    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0",
+    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && vue-tsc --noEmit",
     "dev": "vite",
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
@@ -54,6 +54,7 @@
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",
     "typescript": "^5.2.2",
+    "typescript-eslint-language-service": "^5.0.5",
     "vite": "^6.1.0",
     "vite-plugin-toml": "^0.7.0",
     "vitest": "^3.0.5",
@@ -63,6 +64,7 @@
     "vue-hot-reload-api": "^2.3.4",
     "vue-i18n": "^11.1.0",
     "vue-router": "^4.0.12",
+    "vue-tsc": "^2.2.8",
     "wait-on": "^8.0.0"
   },
   "engines": {
