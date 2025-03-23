@@ -14,7 +14,8 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 	ILS: "ag", // Israeli agora
 	NZD: "c", // New Zealand cent
 	PLN: "gr", // Polish grosz
-	USD: "¢", // US cent
+	USD: "¢", // US cent,
+	DKK: "Ø", // Danish øre
 };
 
 export enum POWER_UNIT {
@@ -252,7 +253,7 @@ export default defineComponent({
 			return withSymbol ? result : result.replace(currency, "").trim();
 		},
 		fmtCurrencySymbol(currency = CURRENCY.EUR) {
-			const symbols = { EUR: "€", USD: "$" };
+			const symbols = { EUR: "€", USD: "$", DKK: "dkr." };
 			return symbols[currency] || currency;
 		},
 		fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
