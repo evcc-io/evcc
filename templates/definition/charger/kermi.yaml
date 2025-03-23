@@ -10,39 +10,60 @@ group: heating
 # requirements:
 #   evcc: ["sponsorship"]
 params:
-  - name: modbus
-    choice: ["tcpip"]
-    id: 40
-    # id TWE 50, HK 51
-  # - name: tempsource
-  #   type: choice
-  #   choice: ["", "warmwater", "buffer"]
-  #   description:
-  #     de: "Temperaturquelle"
-  #     en: "Temperature source"
+  - name: host
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
 render: |
   type: heatpump
   setmaxpower:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:502
+    id: 40 # WP
     register:
       address: 301 # PV Überschussleistung
       type: holding
       decode: int16
-  # power:
-  #   source: modbus
-  #   ##- include "modbus" . | indent 2 ##
-  #   register:
-  #     address: 108 # aktuelle Aufnahmeleistung der WP (kWp)
-  #     type: holding
-  #     decode: int16
-  # ##- if .tempsource ##
-  # temp:
-  #   source: modbus
-  #   ##- include "modbus" . | indent 2 ##
-  #   register:
-  #     address: # if eq .tempsource "warmwater" -## 100 # else ## 1 ##- end ##
-  #     type: holding
-  #     encoding: int16
-  #   scale: 0.1
-  # ##- end ##
+  {{- if eq .tempsource "warmwater" }}
+  temp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 51 # TWE
+    register:
+      address: 100
+      type: holding
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 51 # TWE
+    register:
+      address: 101
+      type: holding
+      encoding: int16
+    scale: 0.1
+  {{- end }}
+  {{- if eq .tempsource "buffer" }}
+  temp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 50 # Speicher
+    register:
+      address: 1
+      type: holding
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 50 # Speicher
+    register:
+      address: 2
+      type: holding
+      encoding: int16
+    scale: 0.1
+  {{- end }}
