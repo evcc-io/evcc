@@ -21,7 +21,6 @@ params:
   #     en: "Temperature source"
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
