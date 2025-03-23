@@ -549,13 +549,6 @@ tempLimit = "Целева температура"
 unknown = "Гостуващо превозно средство"
 vehicleSoc = "Зареждане"
 
-[main.vehicleSoc]
-charging = "зареждане"
-connected = "свързан"
-disconnected = "разединен"
-ready = "готов"
-vehicleLimit = "Лимит на превозното средство: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Изчакване на разрешение."
 batteryBoost = "Активно ускоряване на батерията."
@@ -580,7 +573,7 @@ targetChargeActive = "Планът за зареждане е активен. О
 targetChargePlanned = "Планът за таксуване започва в {duration}"
 targetChargeWaitForVehicle = "Планът за зареждане е готов. Очаква се превозното средство…"
 unknown = ""
-vehicleLimit = "Лимит на превозното средство."
+vehicleLimit = "Лимит на превозното средство"
 vehicleLimitReached = "Достигнат е лимитът на превозното средство."
 waitForVehicle = "Готов. Очакване на превозното средство…"
 welcome = "Кратко първоначално зареждане за потвърждаване на връзката."

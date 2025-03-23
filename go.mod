@@ -30,6 +30,7 @@ require (
 	github.com/enbility/eebus-go v0.7.0
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
+	github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -53,7 +54,6 @@ require (
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/jinzhu/copier v0.4.0
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
 	github.com/joho/godotenv v1.5.1
@@ -66,7 +66,6 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mlnoga/rct v0.1.2-0.20250202175314-91abcbf32e53
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.5.1
@@ -118,6 +117,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/breml/rootcerts v0.2.10 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect

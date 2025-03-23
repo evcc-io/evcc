@@ -19,6 +19,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -73,13 +74,13 @@ var ablStatus = map[byte]string{
 }
 
 func init() {
-	registry.Add("abl", NewABLeMHFromConfig)
+	registry.AddCtx("abl", NewABLeMHFromConfig)
 }
 
 // https://www.goingelectric.de/forum/viewtopic.php?p=1550459#p1550459
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
-func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -93,14 +94,14 @@ func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
+	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
 //go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
-func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Ascii, slaveID)
+func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, modbus.Ascii, slaveID)
 	if err != nil {
 		return nil, err
 	}

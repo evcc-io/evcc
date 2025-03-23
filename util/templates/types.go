@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -243,6 +244,30 @@ func (p *Param) IsAllInOne() bool {
 	return p.AllInOne != nil && *p.AllInOne
 }
 
+// yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
+func (p *Param) yamlQuote(value string) string {
+	if p.Type != TypeString {
+		return value
+	}
+
+	input := fmt.Sprintf("key: %s", value)
+
+	var res struct {
+		Value string `yaml:"key"`
+	}
+
+	if err := yaml.Unmarshal([]byte(input), &res); err != nil || value != res.Value {
+		return quote(value)
+	}
+
+	// fix 0815, but not 0
+	if strings.HasPrefix(value, "0") && len(value) > 1 {
+		return quote(value)
+	}
+
+	return value
+}
+
 // Product contains naming information about a product a template supports
 type Product struct {
 	Brand       string       // product brand
@@ -257,7 +282,7 @@ type CountryCode string
 
 func (c CountryCode) IsValid() bool {
 	// ensure ISO 3166-1 alpha-2 format
-	var validCode = regexp.MustCompile(`^[A-Z]{2}$`)
+	validCode := regexp.MustCompile(`^[A-Z]{2}$`)
 	return validCode.MatchString(string(c))
 }
 

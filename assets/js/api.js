@@ -1,5 +1,5 @@
 import axios from "axios";
-import { openLoginModal } from "./auth";
+import { openLoginModal } from "./components/Auth/auth.js";
 
 const { protocol, hostname, port, pathname } = window.location;
 

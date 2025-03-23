@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -48,11 +49,11 @@ type AblEm4 struct {
 }
 
 func init() {
-	registry.Add("abl-em4", NewAblEm4FromConfig)
+	registry.AddCtx("abl-em4", NewAblEm4FromConfig)
 }
 
 // NewAblEm4FromConfig creates an ABL eM4 charger from generic config
-func NewAblEm4FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewAblEm4FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -67,12 +68,12 @@ func NewAblEm4FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAblEm4(cc.URI, cc.ID, cc.Connector)
+	return NewAblEm4(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewAblEm4 creates an ABL eM4 charger
-func NewAblEm4(uri string, id uint8, connector uint16) (*AblEm4, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewAblEm4(ctx context.Context, uri string, id uint8, connector uint16) (*AblEm4, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

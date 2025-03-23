@@ -78,6 +78,7 @@ enabled = "Ativado"
 energy = "Energia"
 feedinPrice = "Preço de alimentação"
 gridPrice = "Preço da rede"
+heaterTempLimit = "Limite do aquecedor"
 hemsType = "Sistema"
 identifier = "Identificador RFID"
 no = "não"
@@ -201,17 +202,46 @@ pollModeConnectedHelp = "Atualizar o estado do veículo em intervalos regulares 
 pollModeLabel = "Comportamento de atualização"
 priorityHelp = "Os pontos de carregamento com maior prioridade têm acesso prioritário ao excedente solar."
 priorityLabel = "Prioridade"
+save = "Guardar"
+showAllSettings = "Mostrar todas as definições"
+solarBehaviorCustomHelp = "Defina os seus próprios limiares e latências de ativação e desativação."
+solarBehaviorDefaultHelp = "Apenas carregar com excedente solar. Iniciar após {enableDelay} de excedente. Parar quando não houver excedente suficiente para {disableDelay}."
+solarBehaviorLabel = "Comportamento solar"
+solarModeCustom = "personalizado"
+solarModeMaximum = "máximo solar"
+thresholdDisableDelayLabel = "Diferir desativação"
+thresholdDisableHelpInvalid = "É favor utilizar um valor positivo."
+thresholdDisableHelpPositive = "Interromper o carregamento, quando for utilizada mais de {power} da rede durante {delay}."
+thresholdDisableHelpZero = "Interromper quando a potência de carga mínima não for atingida durante {delay}."
+thresholdDisableLabel = "Desativar a energia da rede"
+thresholdEnableDelayLabel = "Diferir activação"
+thresholdEnableHelpInvalid = "É favor utilizar um valor negativo."
+thresholdEnableHelpNegative = "Iniciar o carregamento, quando {surplus} excedente estiver disponível durante {delay}."
+thresholdEnableHelpZero = "Iniciar quando o excedente de energia de carga mínima estiver disponível durante {delay}."
+thresholdEnableLabel = "Ativar a energia da rede"
+titleAdd = "Adicionar ponto de carregamento"
+titleEdit = "Editar ponto de carregamento"
+titleExample = "Garagem, carport, etc."
+titleLabel = "Título"
+vehicleAutoDetection = "deteção automática"
+vehicleHelpAutoDetection = "Seleciona automaticamente o veículo mais plausível. O cancelamento manual é possível."
+vehicleHelpDefault = "Presumir sempre que este veículo está a carregar aqui. Deteção automática desactivada. A desativação manual é possível."
+vehicleLabel = "Veículo predefinido"
+vehiclesTitle = "Veículos"
 
 [config.main]
+addGrid = "Adicionar contador de rede"
 addLoadpoint = "Adicionar ponto de recarga"
 addPvBattery = "Adicionar solar ou bateria"
+addTariffs = "Adicionar tarifas"
 addVehicle = "Adicionar veículo"
 configured = "configurado"
 edit = "editar"
+name = "Nome"
 title = "Configuração"
 unconfigured = "não configurado"
 vehicles = "Meus Veículos"
-yaml = "Configurado em evcc.yaml. Não editável na UI."
+yaml = "Os dispositivos de evcc.yaml não são editáveis."
 
 [config.messaging]
 description = "Receber mensagens sobre as sessões de carregamento."
@@ -270,6 +300,11 @@ little = "little-endian"
 http = "HTTP (não criptografado)"
 https = "HTTPS (cripto)"
 
+[config.options.status]
+A = "A (não ligado)"
+B = "B (ligado)"
+C = "C (carregamento)"
+
 [config.pv]
 titleAdd = "Adicionar Contador Solar"
 titleEdit = "Editar Contador Solar"
@@ -284,13 +319,16 @@ system = "Sistema"
 vehicles = "Veículos"
 
 [config.sponsor]
-addToken = "Enter token patrocinador"
-changeToken = "Alterar token patrocinador"
+addToken = "Entanir token patrocinador"
+changeToken = "Alterar token"
 description = "O modelo patrocinador nos ajuda a manter o projeto e a construir de forma sustentável novas e emocionantes características. Como patrocinador, você tem acesso a todas as implementações do carregador."
 descriptionToken = "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste."
 error = "O token patrocinador não é válido."
 labelToken = "Token patrocinador"
 title = "Patrocínio"
+tokenRequired = "Tem de configurar um token de patrocinador antes de poder criar este dispositivo."
+tokenRequiredLearnMore = "Mais informações."
+trialToken = "Token de teste"
 
 [config.system]
 logs = "Registos"
@@ -406,6 +444,32 @@ modalUpdateNow = "Instalar agora"
 modalUpdateStarted = "Iniciando a nova versão do evcc..."
 modalUpdateStatusStart = "Instalação iniciada:"
 
+[forecast]
+modalTitle = "Previsões"
+solarAdjust = "Ajustar a previsão solar com base em dados reais de produção{percent}."
+
+[forecast.co2]
+average = "Média"
+lowestHour = "Horário mais limpo "
+range = "Intervalo"
+
+[forecast.price]
+average = "Média"
+lowestHour = "Horário mais barato"
+range = "Intervalo"
+
+[forecast.solar]
+dayAfterTomorrow = "Depois de amanhã"
+partly = "parcialmente"
+remaining = "restante"
+today = "Hoje"
+tomorrow = "Amanhã"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Preço"
+solar = "Solar"
+
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -468,7 +532,9 @@ reset = "Repor senha?"
 title = "Autenticação"
 
 [main]
+startConfiguration = "Iniciar a configuração"
 vehicles = "Estacionamento"
+welcome = "Bem-vindo a bordo!"
 
 [main.chargingPlan]
 active = "Ativo"
@@ -500,6 +566,7 @@ batteryGridChargeActive = "carga da rede ativa"
 batteryGridChargeLimit = "carga da rede quando"
 batteryHold = "Bateria (suspensa)"
 batteryTooltip = "{energy} de {total} ({soc})"
+forecastTooltip = "previsão: produção solar restante de hoje"
 gridImport = "Consumo de rede"
 homePower = "Consumo"
 loadpoints = "Carregador | Carregador | {count} Carregadores"
@@ -512,6 +579,7 @@ selfConsumption = "Consumo próprio"
 charging = "Aquecendo..."
 cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
 cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
+vehicleLimit = "Limite do aquecedor"
 waitForVehicle = "Pronto. Esperando pelo aquecedor..."
 
 [main.loadpoint]
@@ -636,13 +704,6 @@ tempLimit = "Temperatura alvo"
 unknown = "Veículo convidado"
 vehicleSoc = "Cobrar"
 
-[main.vehicleSoc]
-charging = "carregando"
-connected = "ligado"
-disconnected = "separado"
-ready = "esperando"
-vehicleLimit = "Limite de veículo: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "À espera de autorização."
 batteryBoost = "Boost da bateria ativo."
@@ -667,7 +728,7 @@ targetChargeActive = "Plano de carregamento ativo. Fim estimado em {duration}."
 targetChargePlanned = "O plano de carregamento começa em {duration}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
 unknown = ""
-vehicleLimit = "“Limite dos veículos.”"
+vehicleLimit = "Limite dos veículos"
 vehicleLimitReached = "Limite de veículo atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 welcome = "Recarga inicial curta para confirmar a ligação."
@@ -866,6 +927,8 @@ modalTitle = "Carregamento de Rede Inteligente"
 none = "sem"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
+resetAction = "Remover limite"
+resetWarning = "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limite}. Limpar a sua configuração?"
 saved = "Salvo."
 
 [startupError]

@@ -117,13 +117,36 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x05C4 # Power_PV_Total
-      type: holding
-      decode: uint16
-    scale: 100
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x586 #Power_PV1
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x589 #Power_PV2
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x58C #Power_PV3
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x58E #Power_PV4
+          type: holding
+          decode: uint16
+        scale: 10
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -140,7 +163,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       {{- if eq .storageunit "1" }}
-      address: 0x0607 # Power_Bat1
+      address: 0x0606 # Power_Bat1
       {{- else if eq .storageunit "2" }}
       address: 0x060D # Power_Bat2
       {{- else if eq .storageunit "3" }}

@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import GenericModal from "./../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import store from "../../store";
 import api from "../../api";

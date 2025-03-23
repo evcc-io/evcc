@@ -1,6 +1,9 @@
 template: vestel
 covers: ["eon-vbox"]
 products:
+  - brand: Ampure
+    description:
+      generic: Unite
   - brand: Vestel
     description:
       generic: EVC04 Home Smart, Connect Plus

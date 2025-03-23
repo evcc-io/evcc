@@ -15,6 +15,12 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200
+  - name: mppt3
+    type: bool
+    default: false
+    description:
+      de: "Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)"
+      en: "The inverter has a third PV input (MPPT3)"
   - name: storageunit
     type: int
     default: 1
@@ -60,12 +66,14 @@ render: |
         address: 11 # 0x000B Powerdc2
         type: input
         decode: uint16
+  {{- if eq .mppt3 "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 292 # 0x0124 Powerdc3
         type: input
         decode: uint16
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -82,8 +90,7 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 22 # 0x0016 Batpower_Charge1
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else }}
       address: 297 # 0x0129 Batpower_Charge2
       {{- end }}
       type: input
@@ -95,11 +102,9 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 28 # 0x001C Battery 1 Capacity
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else }}
       address: 301 # 0x012D Battery 2 Capacity
       {{- end }}
-      # address: 302 # 0x012E Battery Total Capacity
       type: input
       decode: uint16
   # energy:

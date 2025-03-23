@@ -143,7 +143,7 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Solar system'"
+							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -160,7 +160,9 @@
 						<DeviceCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Battery storage'"
+							:title="
+								meter.deviceTitle || meter.config?.template || 'Battery storage'
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -387,7 +389,7 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 
@@ -420,7 +422,7 @@ export default {
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
-		TopHeader,
+		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
 	},

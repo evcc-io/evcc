@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -37,13 +38,13 @@ type Wallbe struct {
 }
 
 func init() {
-	registry.Add("wallbe", NewWallbeFromConfig)
+	registry.AddCtx("wallbe", NewWallbeFromConfig)
 }
 
 //go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewWallbeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI    string
 		Legacy bool
@@ -58,7 +59,7 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewWallbe(cc.URI)
+	wb, err := NewWallbe(ctx, cc.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +92,8 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewWallbe creates a Wallbe charger
-func NewWallbe(uri string) (*Wallbe, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, wbSlaveID)
+func NewWallbe(ctx context.Context, uri string) (*Wallbe, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, wbSlaveID)
 	if err != nil {
 		return nil, err
 	}

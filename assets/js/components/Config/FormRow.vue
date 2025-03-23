@@ -15,6 +15,7 @@
 		<div class="w-100">
 			<slot />
 		</div>
+		<div v-if="error" class="invalid-feedback d-block">{{ error }}</div>
 		<div class="form-text evcc-gray">
 			<div v-if="example" class="hyphenate">
 				{{ $t("config.form.example") }}: {{ example }}
@@ -42,6 +43,7 @@ export default {
 		help: String,
 		optional: Boolean,
 		deprecated: Boolean,
+		error: String,
 		example: String,
 		docsLink: String,
 	},

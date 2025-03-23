@@ -8,27 +8,7 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: lat
-    description:
-      en: Latitude
-      de: Breitengrad
-    example: "55.7351"
-    required: true
-  - name: lon
-    description:
-      en: Longitude
-      de: Längengrad
-    example: "9.1275"
-    required: true
-  - name: dec
-    description:
-      en: Decline
-      de: Neigung
-    help:
-      en: 0 = horizontal, 90 = vertical
-      de: 0 = horizontal, 90 = vertikal
-    example: 25
-    required: true
+  - preset: forecast-base
   - name: az
     description:
       en: Azimuth
@@ -37,12 +17,6 @@ params:
       en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
       de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
     example: 180
-    required: true
-  - name: kwp
-    description:
-      en: Maximum generator power [kWp]
-      de: Maximale Generatorleistung [kWp]
-    example: 9.8
     required: true
   - name: horizon
     description:

@@ -20,11 +20,14 @@ params:
     type: int
     default: 97
     advanced: true
+  - name: cache
+    advanced: true
+    default: 30s
 render: |
   type: rct
   uri: {{ .host }}
   usage: {{ .usage }}
-  cache: 2s
+  cache: {{ .cache }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}

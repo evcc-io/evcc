@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -113,19 +112,17 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		return err
 	}
 
-	var resp struct {
+	var res struct {
 		oauth2.Token
 		IDToken string `json:"id_token"`
 	}
-	if err = v.DoJSON(req, &resp); err != nil {
+	if err = v.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
 
-	resp.Expiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
-
 	// Parse ID token without verification to extract UUID
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
-	token, _, err := parser.ParseUnverified(resp.IDToken, jwt.MapClaims{})
+	token, _, err := parser.ParseUnverified(res.IDToken, jwt.MapClaims{})
 	if err != nil {
 		return fmt.Errorf("failed to parse id token: %w", err)
 	}
@@ -141,7 +138,7 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	v.uuid = uuid
-	v.TokenSource = oauth.RefreshTokenSource(&resp.Token, v)
+	v.TokenSource = oauth.RefreshTokenSource(util.TokenWithExpiry(&res.Token), v)
 	return nil
 }
 
@@ -159,7 +156,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
-	return oauth.RefreshTokenSource(&res, v).Token()
+	return util.TokenWithExpiry(&res), nil
 }
 
 func (v *Identity) Login(user, password string) error {

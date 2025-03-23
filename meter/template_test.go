@@ -23,6 +23,7 @@ var acceptable = []string{
 	"connect: connection refused",
 	"connect: network is unreachable",
 	"i/o timeout",
+	"timeout",                      // RCT
 	"'sma': missing uri or serial", // SMA
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
 	"can only have either uri or device",                                   // modbus
