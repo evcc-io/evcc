@@ -143,7 +143,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	forcePowerCtrl bool, stackLevelZero, remoteStart bool,
+	forcePowerCtrl, stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
