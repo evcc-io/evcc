@@ -580,6 +580,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+connected = "Standby."
 vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
