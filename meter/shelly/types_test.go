@@ -113,7 +113,6 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 		assert.Equal(t, 48002.83, res.Em1Data.TotalActEnergy)
 		assert.Equal(t, 33241.59, res.Em1Data.TotalActRetEnergy)
 	}
-
 }
 
 // Test Shelly device info
