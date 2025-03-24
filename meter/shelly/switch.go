@@ -46,28 +46,21 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		var resem Gen2EmStatusResponse
 		var res Gen2StatusResponse
-		if d.app == "Pro3EM" && d.profile == "monophase" {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &resem); err != nil {
-				return 0, err
-			}
-		} else {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
+		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+			return 0, err
 		}
 
 		switch d.channel {
 		case 1:
 			switchpower = res.Switch1.Apower
-			meterpower = res.Pm1.Apower + resem.Em1.ActPower
+			meterpower = res.Pm1.Apower + res.Em1.ActPower
 		case 2:
 			switchpower = res.Switch2.Apower
-			meterpower = res.Pm2.Apower + resem.Em2.ActPower
+			meterpower = res.Pm2.Apower + res.Em2.ActPower
 		default:
 			switchpower = res.Switch0.Apower
-			meterpower = res.Pm0.Apower + resem.Em0.ActPower
+			meterpower = res.Pm0.Apower + res.Em0.ActPower
 		}
 	}
 
@@ -148,35 +141,28 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		var resem Gen2EmStatusResponse
 		var res Gen2StatusResponse
-		if d.app == "Pro3EM" && d.profile == "monophase" {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &resem); err != nil {
-				return 0, err
-			}
-		} else {
-			if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-				return 0, err
-			}
+		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+			return 0, err
 		}
 
 		if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
 			switch d.channel {
 			case 1:
-				energy = res.Switch1.Aenergy.Total + res.Pm1.Ret_Aenergy.Total + resem.Em1Data.TotalActRetEnergy
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Ret_Aenergy.Total + res.Em1Data.TotalActRetEnergy
 			case 2:
-				energy = res.Switch2.Aenergy.Total + res.Pm2.Ret_Aenergy.Total + resem.Em2Data.TotalActRetEnergy
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Ret_Aenergy.Total + res.Em2Data.TotalActRetEnergy
 			default:
-				energy = res.Switch0.Aenergy.Total + res.Pm0.Ret_Aenergy.Total + resem.Em0Data.TotalActRetEnergy
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Ret_Aenergy.Total + res.Em0Data.TotalActRetEnergy
 			}
 		} else {
 			switch d.channel {
 			case 1:
-				energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + resem.Em1Data.TotalActEnergy
+				energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + res.Em1Data.TotalActEnergy
 			case 2:
-				energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + resem.Em2Data.TotalActEnergy
+				energy = res.Switch2.Aenergy.Total + res.Pm2.Aenergy.Total + res.Em2Data.TotalActEnergy
 			default:
-				energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + resem.Em0Data.TotalActEnergy
+				energy = res.Switch0.Aenergy.Total + res.Pm0.Aenergy.Total + res.Em0Data.TotalActEnergy
 			}
 		}
 	}
