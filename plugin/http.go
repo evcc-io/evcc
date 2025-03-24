@@ -35,7 +35,7 @@ var mc = httpcache.NewMemoryCache()
 
 // Auth is the authorization config
 type Auth struct {
-	Type, User, Password string
+	Type, User, Password, Token string
 }
 
 // NewHTTPPluginFromConfig creates a HTTP provider
@@ -82,7 +82,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 
 	var err error
 	if cc.Auth.Type != "" {
-		_, err = p.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+		_, err = p.WithAuth(cc.Auth)
 	}
 
 	if err == nil {
@@ -128,7 +128,12 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 // WithBody adds request body
 func (p *HTTP) WithBody(body string) *HTTP {
-	p.body = body
+	if body != "" {
+		p.body = body
+		if p.method == http.MethodGet {
+			p.method = http.MethodPost
+		}
+	}
 	return p
 }
 
@@ -145,16 +150,16 @@ func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
 }
 
 // WithAuth adds authorized transport
-func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
-	switch strings.ToLower(typ) {
+func (p *HTTP) WithAuth(auth Auth) (*HTTP, error) {
+	switch strings.ToLower(auth.Type) {
 	case "basic":
-		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
+		p.Client.Transport = transport.BasicAuth(auth.User, auth.Password, p.Client.Transport)
 	case "bearer":
-		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
+		p.Client.Transport = transport.BearerAuth(auth.Token, p.Client.Transport)
 	case "digest":
-		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
+		p.Client.Transport = digest.NewTransport(auth.User, auth.Password, p.Client.Transport)
 	default:
-		return nil, fmt.Errorf("unknown auth type '%s'", typ)
+		return nil, fmt.Errorf("unknown auth type '%s'", auth.Type)
 	}
 
 	return p, nil

@@ -29,7 +29,7 @@ render: |
     {{- if .token }}
     auth:
       type: bearer
-      password: {{ .token }}
+      token: {{ .token }}
     insecure: true
     {{- end }}
     cache: {{ .cache }}
@@ -40,7 +40,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -50,7 +50,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -60,7 +60,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -73,7 +73,7 @@ render: |
     {{- if .token }}
     auth:
       type: bearer
-      password: {{ .token }}
+      token: {{ .token }}
     insecure: true
     {{- end }}
     cache: {{ .cache }}
@@ -84,7 +84,7 @@ render: |
     {{- if .token }}
     auth:
       type: bearer
-      password: {{ .token }}
+      token: {{ .token }}
     insecure: true
     {{- end }}
     cache: {{ .cache }}
@@ -96,7 +96,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -106,7 +106,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -116,7 +116,7 @@ render: |
       {{- if .token }}
       auth:
         type: bearer
-        password: {{ .token }}
+        token: {{ .token }}
       insecure: true
       {{- end }}
       cache: {{ .cache }}
@@ -129,7 +129,7 @@ render: |
     {{- if .token }}
     auth:
       type: bearer
-      password: {{ .token }}
+      token: {{ .token }}
     insecure: true
     {{- end }}
     cache: {{ .cache }}
@@ -140,7 +140,7 @@ render: |
     {{- if .token }}
     auth:
       type: bearer
-      password: {{ .token }}
+      token: {{ .token }}
     insecure: true
     {{- end }}
     cache: {{ .cache }}
