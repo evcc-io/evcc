@@ -510,8 +510,13 @@ export default {
 			return this.getChargerById(this.selectedChargerId)?.name;
 		},
 		tariffTags() {
-			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
-			if (tariffGrid === undefined && tariffFeedIn === undefined && tariffCo2 === undefined) {
+			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			if (
+				tariffGrid === undefined &&
+				tariffFeedIn === undefined &&
+				tariffCo2 === undefined &&
+				tariffSolar === undefined
+			) {
 				return null;
 			}
 			const tags = {};
@@ -526,6 +531,9 @@ export default {
 			}
 			if (tariffCo2) {
 				tags.co2 = { value: tariffCo2 };
+			}
+			if (tariffSolar) {
+				tags.solarForecast = { value: tariffSolar };
 			}
 			return tags;
 		},
