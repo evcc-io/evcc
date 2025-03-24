@@ -17,7 +17,7 @@ export default {
 		notifications: Array,
 		selectedLoadpointIndex: Number,
 	},
-	data: function () {
+	data() {
 		return store;
 	},
 };

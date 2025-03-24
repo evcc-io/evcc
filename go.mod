@@ -30,6 +30,7 @@ require (
 	github.com/enbility/eebus-go v0.7.0
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
+	github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -65,7 +66,6 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mlnoga/rct v0.1.2-0.20250202175314-91abcbf32e53
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.5.1
@@ -221,5 +221,3 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3
-
-replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20250304151343-a31971ce3e06

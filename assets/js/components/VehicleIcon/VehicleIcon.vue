@@ -8,6 +8,7 @@ import "@h2d2/shopicons/es/regular/car3";
 import MultiIcon from "../MultiIcon";
 
 import airpurifier from "./Airpurifier.vue";
+import aux from "./Aux.vue";
 import battery from "./Battery.vue";
 import bike from "./Bike.vue";
 import bulb from "./Bulb.vue";
@@ -47,6 +48,7 @@ import waterheater from "./WaterHeater.vue";
 
 const icons = {
 	airpurifier,
+	aux,
 	battery,
 	bike,
 	bulb,
@@ -86,6 +88,8 @@ const icons = {
 	waterheater,
 };
 
+export const ICONS = Object.keys(icons);
+
 export default {
 	name: "VehicleIcon",
 	components: { MultiIcon },
@@ -95,16 +99,16 @@ export default {
 		size: { type: String, default: "s" },
 	},
 	computed: {
-		uniqueNames: function () {
+		uniqueNames() {
 			return [...new Set(this.names || [this.name])];
 		},
-		count: function () {
+		count() {
 			return this.names?.length || 0;
 		},
-		single: function () {
+		single() {
 			return this.uniqueNames.length == 1;
 		},
-		singleIcon: function () {
+		singleIcon() {
 			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
 		},
 	},

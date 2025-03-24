@@ -1,12 +1,13 @@
 <template>
 	<GenericModal
 		id="loadpointModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
 		:fade="fade"
-		@open="open"
-		@opened="opened"
-		@close="close"
+		@open="onOpen"
+		@opened="onOpened"
+		@close="onClose"
 	>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
 			<FormRow
@@ -600,7 +601,7 @@ export default {
 		meters: { type: Array, default: () => [] },
 		circuits: { type: Array, default: () => [] },
 	},
-	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
+	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -632,7 +633,7 @@ export default {
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
-			const title = this.charger.config?.template || "unknown";
+			const title = this.charger.deviceProduct || this.charger.config?.template || "unknown";
 			return `${title} [${this.values.charger}]`;
 		},
 		chargerStatus() {
@@ -651,7 +652,7 @@ export default {
 			const name = this.values.meter;
 			if (!name) return "";
 			const meter = this.meters.find((m) => m.name === name);
-			const title = meter?.config?.template || "unknown";
+			const title = meter?.deviceProduct || meter?.config?.template || "unknown";
 			return `${title} [${name}]`;
 		},
 		isDeletable() {
@@ -771,16 +772,18 @@ export default {
 			}
 			this.saving = false;
 		},
-		open() {
+		onOpen() {
 			this.isModalVisible = true;
 		},
-		opened() {
+		onOpened() {
 			this.$emit("opened");
 		},
-		close() {
-			this.$emit("close");
+		onClose() {
 			this.showAllSelected = false;
 			this.isModalVisible = false;
+		},
+		close() {
+			this.$refs.modal.close();
 		},
 		editCharger() {
 			this.$emit("openChargerModal", this.values.charger);

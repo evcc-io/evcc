@@ -73,13 +73,13 @@ export default {
 		return { powerTooltipInstance: null, detailsTooltipInstance: null };
 	},
 	computed: {
-		active: function () {
+		active() {
 			return this.power > 10;
 		},
-		isBattery: function () {
+		isBattery() {
 			return this.icon === "battery";
 		},
-		isVehicle: function () {
+		isVehicle() {
 			return this.icon === "vehicle";
 		},
 	},
@@ -101,12 +101,12 @@ export default {
 			}
 		},
 	},
-	mounted: function () {
+	mounted() {
 		this.updatePowerTooltip();
 		this.updateDetailsTooltip();
 	},
 	methods: {
-		kw: function (watt) {
+		kw(watt) {
 			return this.fmtW(watt, this.powerUnit);
 		},
 		updatePowerTooltip() {
@@ -123,7 +123,7 @@ export default {
 				this.$refs.details
 			);
 		},
-		updateTooltip: function (instance, content, ref) {
+		updateTooltip(instance, content, ref) {
 			if (!Array.isArray(content) || !content.length) {
 				if (instance) {
 					instance.dispose();
@@ -138,12 +138,12 @@ export default {
 			newInstance.setContent({ ".tooltip-inner": html });
 			return newInstance;
 		},
-		powerClicked: function ($event) {
+		powerClicked($event) {
 			if (this.powerTooltip) {
 				$event.stopPropagation();
 			}
 		},
-		detailsClicked: function ($event) {
+		detailsClicked($event) {
 			if (this.detailsClickable || this.detailsTooltip) {
 				$event.stopPropagation();
 			}

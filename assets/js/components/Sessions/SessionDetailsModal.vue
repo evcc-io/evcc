@@ -215,23 +215,23 @@ export default {
 	},
 	emits: ["session-changed"],
 	computed: {
-		chargedEnergy: function () {
+		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
 		},
-		avgPower: function () {
+		avgPower() {
 			const hours = this.session.chargeDuration / 1e9 / 3600;
 			return this.chargedEnergy / hours;
 		},
-		solarEnergy: function () {
+		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions: function () {
+		vehicleOptions() {
 			return this.vehicles.map((v) => ({
 				name: v.title,
 				title: v.title,
 			}));
 		},
-		loadpointOptions: function () {
+		loadpointOptions() {
 			return this.loadpoints.map((loadpoint) => ({
 				value: loadpoint,
 				name: loadpoint,
@@ -249,7 +249,7 @@ export default {
 			);
 			modal.show();
 		},
-		formatKm: function (value) {
+		formatKm(value) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
 		async changeVehicle(title) {
