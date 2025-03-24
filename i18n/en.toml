@@ -24,7 +24,7 @@ never = "only with enough surplus."
 [config]
 
 [config.aux]
-description = "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this devices reduces its power consumption if needed."
+description = "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed."
 titleAdd = "Add Self-Regulating Consumer"
 titleEdit = "Edit Self-Regulating Consumer"
 
