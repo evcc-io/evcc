@@ -95,6 +95,7 @@ powerRange = "Leistung"
 range = "Reichweite"
 singlePhase = "Einphasig"
 soc = "Ladestand"
+solarForecast = "PV-Vorhersage"
 temp = "Temperatur"
 topic = "Thema"
 url = "URL"
@@ -579,6 +580,7 @@ selfConsumption = "Eigenverbrauch"
 
 [main.heatingStatus]
 charging = "Heize …"
+connected = "Standby."
 vehicleLimit = "Heizungslimit"
 waitForVehicle = "Bereit. Warte auf Heizung …"
 

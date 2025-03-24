@@ -95,6 +95,7 @@ powerRange = "Power"
 range = "Range"
 singlePhase = "Single phase"
 soc = "Charge"
+solarForecast = "Solar forecast"
 temp = "Temperature"
 topic = "Topic"
 url = "URL"
@@ -579,6 +580,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+connected = "Standby."
 vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
