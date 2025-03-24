@@ -319,7 +319,7 @@ export default {
 			this.selectedRegion = region;
 			settings.savingsRegion = region;
 		},
-		updateReferenceGrid: async function () {
+		async updateReferenceGrid() {
 			try {
 				const res = await api.get(`tariff/grid`, {
 					validateStatus: (status) => status >= 200 && status < 500,

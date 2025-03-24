@@ -48,7 +48,7 @@ export default {
 		size: String,
 	},
 	emits: ["open", "opened", "close", "closed"],
-	data: function () {
+	data() {
 		return {
 			isModalVisible: false,
 		};

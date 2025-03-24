@@ -735,7 +735,7 @@ export default {
 				this.$refs.disconnectRequired
 			);
 		},
-		updateTooltip: function (instance, content, ref, hoverOnly = false) {
+		updateTooltip(instance, content, ref, hoverOnly = false) {
 			if (!content || !ref) {
 				if (instance) {
 					instance.dispose();

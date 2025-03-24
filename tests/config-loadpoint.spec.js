@@ -24,6 +24,7 @@ async function addDemoCharger(page) {
   await lpModal.getByRole("button", { name: "Add charger" }).click();
 
   const modal = page.getByTestId("charger-modal");
+  await expect(modal).toBeVisible();
   await modal.getByLabel("Manufacturer").selectOption("Demo charger");
   await modal.getByRole("button", { name: "Save" }).click();
   await expect(modal).not.toBeVisible();
@@ -44,6 +45,7 @@ async function addDemoMeter(page, power = "0") {
 async function addVehicle(page, title) {
   await page.getByRole("button", { name: "Add vehicle" }).click();
   const modal = page.getByTestId("vehicle-modal");
+  await expect(modal).toBeVisible();
   await modal.getByLabel("Manufacturer").selectOption("Generic vehicle");
   await modal.getByLabel("Title").fill(title);
   await modal.getByRole("button", { name: "Validate & save" }).click();

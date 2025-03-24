@@ -279,57 +279,57 @@ export default {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
 	},
 	computed: {
-		gridImport: function () {
+		gridImport() {
 			return Math.max(0, this.gridPower);
 		},
-		pvProduction: function () {
+		pvProduction() {
 			return Math.abs(this.pvPower);
 		},
-		batteryDischarge: function () {
+		batteryDischarge() {
 			return this.dischargePower(this.batteryPower);
 		},
-		batteryCharge: function () {
+		batteryCharge() {
 			return this.chargePower(this.batteryPower);
 		},
-		batteryChargeLabel: function () {
+		batteryChargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
 		},
-		batteryDischargeLabel: function () {
+		batteryDischargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
 		},
-		batteryHold: function () {
+		batteryHold() {
 			return this.batteryMode === "hold";
 		},
-		consumption: function () {
+		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;
 		},
-		selfPv: function () {
+		selfPv() {
 			return Math.min(this.pvProduction, this.consumption);
 		},
-		selfBattery: function () {
+		selfBattery() {
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
-		activeLoadpoints: function () {
+		activeLoadpoints() {
 			return this.loadpointsCompact.filter((lp) => lp.charging);
 		},
-		activeLoadpointsCount: function () {
+		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
 		},
-		vehicleIcons: function () {
+		vehicleIcons() {
 			if (this.activeLoadpointsCount > 0) {
 				return this.activeLoadpoints.map((lp) => lp.icon);
 			}
 			return ["car"];
 		},
-		loadpointsPower: function () {
+		loadpointsPower() {
 			return this.loadpointsCompact.reduce((sum, lp) => {
 				return sum + (lp.power || 0);
 			}, 0);
 		},
-		pvExport: function () {
+		pvExport() {
 			return Math.max(0, this.gridPower * -1);
 		},
-		powerUnit: function () {
+		powerUnit() {
 			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
 			if (watt >= 1_000_000) {
 				return POWER_UNIT.MW;
@@ -339,13 +339,13 @@ export default {
 				return POWER_UNIT.W;
 			}
 		},
-		inPower: function () {
+		inPower() {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
 		},
-		outPower: function () {
+		outPower() {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
-		detailsHeight: function () {
+		detailsHeight() {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 		pvTooltip() {
@@ -467,15 +467,15 @@ export default {
 			}
 			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
-		kw: function (watt) {
+		kw(watt) {
 			return this.fmtW(watt, this.powerUnit);
 		},
-		toggleDetails: function () {
+		toggleDetails() {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
 			settings.energyflowDetails = this.detailsOpen;
 		},
-		updateHeight: function () {
+		updateHeight() {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
 		openBatterySettingsModal() {
