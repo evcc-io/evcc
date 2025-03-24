@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/rand/v2"
 	"strings"
 	"sync"
 	"testing"
@@ -482,9 +481,6 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	mm := make([]measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
-		// decouple potential double-connects on modbus
-		time.Sleep(time.Duration(rand.Uint64N(uint64(100 * time.Millisecond))))
-
 		meter := dev.Instance()
 
 		// power

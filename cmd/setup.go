@@ -263,14 +263,14 @@ func configureMeters(static []config.Named, names ...string) error {
 
 			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 			}
 
-			if err := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
+			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
 			}
 
-			return nil
+			return err
 		})
 	}
 
@@ -327,14 +327,14 @@ func configureChargers(static []config.Named, names ...string) error {
 
 			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
-				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
 			}
 
-			if err := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
+			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
 			}
 
-			return nil
+			return err
 		})
 	}
 

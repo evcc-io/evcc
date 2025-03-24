@@ -3,6 +3,7 @@ products:
   - brand: Zaptec
     description:
       generic: Go, Pro
+capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:

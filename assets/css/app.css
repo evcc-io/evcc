@@ -675,3 +675,10 @@ html.app .modal-dialog {
 input::-webkit-date-and-time-value {
 	text-align: left;
 }
+
+@media (max-width: 576px) {
+	.text-truncate-xs-only {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}

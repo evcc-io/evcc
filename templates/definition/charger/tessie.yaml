@@ -1,0 +1,28 @@
+template: tessie
+group: generic
+products:
+  - description:
+      generic: Tessie
+requirements:
+  description:
+    en: Charger connected via the Tessie API. Allows control of charging state and configuration of maximum current.
+    de: Ladegerät, das über die Tessie-API verbunden ist. Ermöglicht die Steuerung des Ladezustands und die Konfiguration des maximalen Stroms.
+params:
+  - name: vin
+    required: true
+  - name: token
+    description:
+      de: Tessie API Token
+      en: Tessie API Token
+    required: true
+  - name: location
+    description:
+      de: Definieren Sie einen Ort, an dem das Tessie-Ladegerät funktioniert (always = immer, kein Geofence) oder ein benutzerdefinierter Ort (genauer Name), wie in Tessie definiert (Case sensitive)
+      en: Define a location where the Tessie charger will work (always = always, no geofence) or a custom location (exact name) as defined in Tessie (Case sensitive)
+    example: "tessiehome"
+    required: true
+render: |
+  type: tessie
+  vin: {{ .vin }}
+  token: {{ .token }}
+  location: {{ .location }}
