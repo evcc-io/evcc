@@ -360,10 +360,10 @@ func (wb *Amperfied) getPhases() (int, error) {
 		return 0, err
 	}
 
-	phases := int(binary.BigEndian.Uint16(b))
+	phases := binary.BigEndian.Uint16(b)
 	if phases == 0 {
-		return wb.phases
+		return int(wb.phases)
 	}
 
-	return phases, nil
+	return int(phases), nil
 }
