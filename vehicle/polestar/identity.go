@@ -151,14 +151,34 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&token), nil
 }
 
-// TokenSource implements oauth.TokenSource
-func (v *Identity) TokenSource() oauth2.TokenSource {
-	return oauth2.ReuseTokenSource(v.token, v)
-}
-
 // Token implements oauth.TokenSource
 func (v *Identity) Token() (*oauth2.Token, error) {
 	if v.token == nil || !v.token.Valid() {
+		// If we have a refresh token, try to use it
+		if v.token != nil && v.token.RefreshToken != "" {
+			data := url.Values{
+				"grant_type":    {"refresh_token"},
+				"refresh_token": {v.token.RefreshToken},
+				"client_id":     {ClientID},
+			}
+
+			var newToken oauth2.Token
+			req, _ := request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
+				strings.NewReader(data.Encode()),
+				map[string]string{
+					"Content-Type": "application/x-www-form-urlencoded",
+					"Accept":       "application/json",
+				},
+			)
+
+			if err := v.DoJSON(req, &newToken); err == nil {
+				v.token = util.TokenWithExpiry(&newToken)
+				return v.token, nil
+			}
+			// If refresh fails, fall back to full login
+		}
+
+		// Full login as fallback
 		token, err := v.login()
 		if err != nil {
 			return nil, err
