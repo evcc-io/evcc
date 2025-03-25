@@ -49,14 +49,16 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	}
 	v.Client.Jar = jar
 
+	// Get initial token
 	token, err := v.login()
 	if err != nil {
 		return nil, err
 	}
 	v.token = token
 
+	// Use the Identity itself as token source for automatic refresh
 	v.Client.Transport = &oauth2.Transport{
-		Source: oauth2.StaticTokenSource(token),
+		Source: v.TokenSource(),
 		Base:   v.Client.Transport,
 	}
 
