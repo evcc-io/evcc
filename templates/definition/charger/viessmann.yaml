@@ -1,0 +1,64 @@
+template: viessmann
+products:
+  - brand: Viessmann
+    description:
+      generic: Viessmann (SG Ready)
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  # TODO mark parameters as required
+  - name: installation_id  # TODO guide user on how to get this value
+  - name: gateway_serial   # TODO guide user on how to get this value
+  - name: device_id        # TODO guide user on how to get this value
+  - name: token            # TODO get with client id via oauth2
+  - name: target_temperature
+    description:
+      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
+      en: Target temperator for onetimecharge (°C), max=60
+    default: 45
+    type: int
+render: |
+  type: sgready
+  getmode:
+    source: http
+    uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
+    headers:  
+      - content-type: application/json
+      - authorization: Bearer {{.token}}
+    jq: '.data.properties.active.value | if . == false then 1 elif . == true then 2 else . end'
+    # false -> oneTimeCharge is disabled -> normal mode -> 1
+    # true -> oneTimeCharge is enabled -> boost mode -> 2
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+        method: POST 
+        headers:  
+          - content-type: application/json
+          - authorization: Bearer {{.token}}
+        body: >
+          { }
+    - case: 2 # boost
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
+          method: POST
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{.token}}
+          body: >
+            {"temperature": {{.target_temperature}}}
+        - source: http
+          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{.token}}
+          body: >
+            { }
