@@ -89,7 +89,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.3.3
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20250209205356-75c941941d8c
+	github.com/volkszaehler/mbmd v0.0.0-20250325080405-2ca990c150aa
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.0
@@ -218,6 +218,6 @@ tool (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529
+replace github.com/grid-x/modbus => ../evcc-modbus
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3

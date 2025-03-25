@@ -153,8 +153,6 @@ github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:Bsz
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529 h1:18rLAN7zm3AmY2OPoYmMa5FxIN1RNYiiVoBEJnGISvc=
-github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3 h1:W086rzYedGdIQhYSW63M8GyZIx5qMxXEV+qZEzG3Eno=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3/go.mod h1:PDT3uxaVPtcFQv0qdwO0v/zdVbrUZiSbLYifBVdrIEA=
 github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785 h1:OWCBVMcPsVTffdiZN3VYaq9p4fsWlzd490J6pekaKLA=
@@ -691,8 +689,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20250209205356-75c941941d8c h1:pvLQX48N8rtlupEbAU15HFkFYikiKSk14jy043CG7nA=
-github.com/volkszaehler/mbmd v0.0.0-20250209205356-75c941941d8c/go.mod h1:egeAZti78O7U6QcdDPze5NHiiLdPSviw6YA7rsNYSMQ=
+github.com/volkszaehler/mbmd v0.0.0-20250325080405-2ca990c150aa h1:3fnjHZtH3TOXVCXl6dLemUb/wUG7lOMzH79UaUcfoLQ=
+github.com/volkszaehler/mbmd v0.0.0-20250325080405-2ca990c150aa/go.mod h1:egeAZti78O7U6QcdDPze5NHiiLdPSviw6YA7rsNYSMQ=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
