@@ -157,14 +157,6 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	// Configure transport for API requests
-	v.Client.Transport = &oauth2.Transport{
-		Source: oauth2.StaticTokenSource(&token),
-		Base: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-		},
-	}
-
 	return util.TokenWithExpiry(&token), nil
 }
 
