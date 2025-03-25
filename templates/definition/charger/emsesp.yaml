@@ -30,7 +30,7 @@ render: |
   getmode:
     source: go
     script: |
-      res := 1
+      res := 1 // 0/0 Normal
       switch {
       case SG1 == "1" && SG4 == "0": res = 3 // Frostschutz
       case SG1 == "0" && SG4 == "0": res = 1 // Normal
