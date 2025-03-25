@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -28,9 +29,9 @@ const (
 
 type Identity struct {
 	*request.Helper
+	oauth2.TokenSource
 	user, password string
 	log            *util.Logger
-	token          *oauth2.Token
 }
 
 // NewIdentity creates Polestar identity
@@ -55,7 +56,8 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	v.token = token
+
+	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	return v, nil
 }
@@ -152,38 +154,26 @@ func (v *Identity) login() (*oauth2.Token, error) {
 }
 
 // Token implements oauth.TokenSource
-func (v *Identity) Token() (*oauth2.Token, error) {
-	if v.token == nil || !v.token.Valid() {
-		// If we have a refresh token, try to use it
-		if v.token != nil && v.token.RefreshToken != "" {
-			data := url.Values{
-				"grant_type":    {"refresh_token"},
-				"refresh_token": {v.token.RefreshToken},
-				"client_id":     {ClientID},
-			}
-
-			var newToken oauth2.Token
-			req, _ := request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
-				strings.NewReader(data.Encode()),
-				map[string]string{
-					"Content-Type": "application/x-www-form-urlencoded",
-					"Accept":       "application/json",
-				},
-			)
-
-			if err := v.DoJSON(req, &newToken); err == nil {
-				v.token = util.TokenWithExpiry(&newToken)
-				return v.token, nil
-			}
-			// If refresh fails, fall back to full login
-		}
-
-		// Full login as fallback
-		token, err := v.login()
-		if err != nil {
-			return nil, err
-		}
-		v.token = token
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+		"client_id":     {ClientID},
 	}
-	return v.token, nil
+
+	req, _ := request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
+		strings.NewReader(data.Encode()),
+		map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Accept":       "application/json",
+		},
+	)
+
+	var res oauth2.Token
+	if err := v.DoJSON(req, &res); err == nil {
+		return util.TokenWithExpiry(&res), nil
+	}
+
+	// Full login as fallback
+	return v.login()
 }
