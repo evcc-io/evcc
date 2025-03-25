@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -91,20 +92,14 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	htmlContent := string(body)
-	resumePath := ""
-	if strings.Contains(htmlContent, "url: \"") {
-		start := strings.Index(htmlContent, "url: \"") + 6
-		end := strings.Index(htmlContent[start:], "\"")
-		if end != -1 {
-			resumePath = htmlContent[start : start+end]
-			resumePath = strings.TrimPrefix(resumePath, "/as/")
-			resumePath = strings.TrimSuffix(resumePath, "/resume/as/authorization.ping")
-		}
-	}
+	re := regexp.MustCompile(`url: "(/as/[^/]+)/resume/as/authorization\.ping"`)
+	matches := re.FindStringSubmatch(htmlContent)
 
-	if resumePath == "" {
+	if len(matches) < 2 {
 		return nil, errors.New("could not find resume path")
 	}
+
+	resumePath := strings.TrimPrefix(matches[1], "/as/")
 
 	// Submit credentials to login endpoint
 	loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
