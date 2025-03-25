@@ -21,6 +21,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
+    usages: ["battery"]
     advanced: true
 render: |
   type: custom
