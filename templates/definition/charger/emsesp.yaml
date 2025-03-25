@@ -32,7 +32,7 @@ render: |
     script: |
       res := 1 // 0/0 Normal
       switch {
-      case SG1 == "1" && SG4 == "0": res = 3 // Frostschutz
+      case SG1 == "1" && SG4 == "0": res = 3 // 1/0 Frostschutz
       case SG4 == "1": res = 2 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
       }
       res
