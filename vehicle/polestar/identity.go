@@ -56,12 +56,6 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	}
 	v.token = token
 
-	// Use the Identity itself as token source for automatic refresh
-	v.Client.Transport = &oauth2.Transport{
-		Source: v.TokenSource(),
-		Base:   v.Client.Transport,
-	}
-
 	return v, nil
 }
 
