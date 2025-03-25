@@ -23,6 +23,11 @@ never = "nur mit genug PV-Überschuss."
 
 [config]
 
+[config.aux]
+description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es benötigt wird."
+titleAdd = "Intelligenten Verbraucher hinzufügen"
+titleEdit = "Intelligenten Verbraucher bearbeiten"
+
 [config.battery]
 titleAdd = "Batterie hinzufügen"
 titleEdit = "Batterie bearbeiten"
@@ -90,6 +95,7 @@ powerRange = "Leistung"
 range = "Reichweite"
 singlePhase = "Einphasig"
 soc = "Ladestand"
+solarForecast = "PV-Vorhersage"
 temp = "Temperatur"
 topic = "Thema"
 url = "URL"
@@ -104,6 +110,11 @@ C = "C (lädt)"
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
 title = "EEBus"
+
+[config.ext]
+description = "Kann für Lastmanagement oder Statistikzwecke verwendet werden."
+titleAdd = "Zusätzlichen Zähler hinzufügen"
+titleEdit = "Zusätzlichen Zähler bearbeiten"
 
 [config.form]
 deprecated = "veraltet"
@@ -252,6 +263,12 @@ template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
 
+[config.meter.option]
+aux = "Intelligenten Verbraucher hinzufügen"
+battery = "Hausbatterie hinzufügen"
+ext = "Zusätzlichen Zähler hinzufügen"
+pv = "PV-Anlage hinzufügen"
+
 [config.modbusproxy]
 description = "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät."
 title = "Modbus-Proxy"
@@ -304,10 +321,11 @@ B = "B (verbunden)"
 C = "C (lädt)"
 
 [config.pv]
-titleAdd = "Zähler (PV) hinzufügen"
-titleEdit = "Zähler (PV) bearbeiten"
+titleAdd = "PV-Anlage hinzufügen"
+titleEdit = "PV-Anlage bearbeiten"
 
 [config.section]
+additionalMeter = "Zusätzliche Zähler"
 general = "Allgemein"
 grid = "Netzanschluss"
 integrations = "Integrationen"
@@ -562,6 +580,7 @@ selfConsumption = "Eigenverbrauch"
 
 [main.heatingStatus]
 charging = "Heize …"
+connected = "Standby."
 vehicleLimit = "Heizungslimit"
 waitForVehicle = "Bereit. Warte auf Heizung …"
 

@@ -11,6 +11,17 @@ products:
 group: heating
 requirements:
   # evcc: ["sponsorship"]
+  description:
+    de: |
+      Energiemanagementeinstellungen am Gerät:
+
+      - E-Meter Kommunikationsart: "ModBus Client"
+      - E-Meter Messpunkt: "Pos. E-Überschuss"
+    en: |
+      Energy management settings of the device:
+
+      - E-Meter communication type: "ModBus Client"
+      - E-Meter measuring point: "Pos. E-Überschuss"
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -22,15 +33,23 @@ params:
       en: "Temperature source"
   - name: phases
     deprecated: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: heatpump
   setmaxpower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 102 # PV Überschussleistung
-      type: writemultiple # λ erwartet single value als FC16
-      decode: int16
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    initial: 0
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 102 # PV Überschussleistung
+        type: writemultiple # λ erwartet single value als FC16
+        decode: int16
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}

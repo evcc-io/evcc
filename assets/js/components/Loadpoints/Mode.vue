@@ -4,7 +4,7 @@
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn flex-grow-1 flex-shrink-1"
+			class="btn flex-grow-1 flex-shrink-1 text-truncate-xs-only"
 			:class="{ active: isActive(m) }"
 			tabindex="0"
 			@click="setTargetMode(m)"
@@ -25,7 +25,7 @@ export default {
 	emits: ["updated"],
 
 	computed: {
-		modes: function () {
+		modes() {
 			if (this.pvPossible) {
 				return ["off", "pv", "minpv", "now"];
 			}
@@ -36,7 +36,7 @@ export default {
 		},
 	},
 	methods: {
-		label: function (mode) {
+		label(mode) {
 			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
 			// TODO: rollout smart name for everyting later
 			if (mode === "pv" && !this.pvPossible && this.hasSmartCost) {
@@ -44,10 +44,10 @@ export default {
 			}
 			return this.$t(`main.mode.${mode}`);
 		},
-		isActive: function (mode) {
+		isActive(mode) {
 			return this.mode === mode;
 		},
-		setTargetMode: function (mode) {
+		setTargetMode(mode) {
 			this.$emit("updated", mode);
 		},
 	},
@@ -71,6 +71,12 @@ export default {
 	color: var(--evcc-default-text);
 	border: none;
 }
+@media (max-width: 576px) {
+	.btn {
+		padding: 0.1em 0.2em;
+	}
+}
+
 .btn:hover {
 	color: var(--evcc-gray);
 }

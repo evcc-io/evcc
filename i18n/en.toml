@@ -23,6 +23,11 @@ never = "only with enough surplus."
 
 [config]
 
+[config.aux]
+description = "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed."
+titleAdd = "Add Self-Regulating Consumer"
+titleEdit = "Edit Self-Regulating Consumer"
+
 [config.battery]
 titleAdd = "Add Battery"
 titleEdit = "Edit Battery"
@@ -90,6 +95,7 @@ powerRange = "Power"
 range = "Range"
 singlePhase = "Single phase"
 soc = "Charge"
+solarForecast = "Solar forecast"
 temp = "Temperature"
 topic = "Topic"
 url = "URL"
@@ -104,6 +110,11 @@ C = "C (charging)"
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
 title = "EEBus"
+
+[config.ext]
+description = "Can be used for load management or statistics purposes."
+titleAdd = "Add External Meter"
+titleEdit = "Edit External Meter"
 
 [config.form]
 deprecated = "deprecated"
@@ -227,6 +238,7 @@ vehicleLabel = "Default vehicle"
 vehiclesTitle = "Vehicles"
 
 [config.main]
+addAdditional = "Add additional meter"
 addGrid = "Add grid meter"
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
@@ -251,6 +263,12 @@ save = "Save"
 template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
+
+[config.meter.option]
+aux = "Add self-regulating consumer"
+battery = "Add battery meter"
+ext = "Add external meter"
+pv = "Add solar meter"
 
 [config.modbusproxy]
 description = "Allow multiple clients to access a single Modbus device."
@@ -307,6 +325,7 @@ titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
 [config.section]
+additionalMeter = "Additional meters"
 general = "General"
 grid = "Grid"
 integrations = "Integrations"
@@ -561,6 +580,7 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+connected = "Standby."
 vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 

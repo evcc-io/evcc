@@ -159,7 +159,7 @@ export default {
 		formIdPrefix: String,
 	},
 	emits: ["updated", "removed"],
-	data: function () {
+	data() {
 		return {
 			selectedWeekdays: this.weekdays,
 			selectedTime: this.time,
@@ -168,7 +168,7 @@ export default {
 		};
 	},
 	computed: {
-		dataChanged: function () {
+		dataChanged() {
 			return (
 				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
@@ -176,19 +176,19 @@ export default {
 				this.active !== this.selectedActive
 			);
 		},
-		showApply: function () {
+		showApply() {
 			return this.dataChanged && this.selectedActive;
 		},
-		weekdaysLabel: function () {
+		weekdaysLabel() {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
-		socOptions: function () {
+		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		dayOptions: function () {
+		dayOptions() {
 			return this.getWeekdaysList("long");
 		},
 	},
@@ -209,18 +209,18 @@ export default {
 		},
 	},
 	methods: {
-		changeSelectedWeekdays: function (weekdays) {
+		changeSelectedWeekdays(weekdays) {
 			this.selectedWeekdays = weekdays;
 			this.update();
 		},
-		formId: function (name) {
+		formId(name) {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption: function (value) {
+		socOption(value) {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update: function (forceSave = false) {
+		update(forceSave = false) {
 			const plan = {
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,

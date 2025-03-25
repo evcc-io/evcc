@@ -28,6 +28,14 @@ func (s *dbSettings) SetFloat(key string, val float64) {
 	db.SetFloat(s.Key+key, val)
 }
 
+func (s *dbSettings) SetFloatPtr(key string, val *float64) {
+	if val == nil {
+		db.SetString(s.Key+key, "")
+	} else {
+		db.SetFloat(s.Key+key, *val)
+	}
+}
+
 func (s *dbSettings) SetTime(key string, val time.Time) {
 	db.SetTime(s.Key+key, val)
 }

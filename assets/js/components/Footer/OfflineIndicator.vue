@@ -117,7 +117,7 @@ export default {
 		},
 	},
 	watch: {
-		offline: function () {
+		offline() {
 			if (!this.offline) {
 				restartComplete();
 				this.dismissed = false;

@@ -50,13 +50,13 @@ export default {
 	},
 	emits: ["updated"],
 	computed: {
-		formIdPrefix: function () {
+		formIdPrefix() {
 			return `chargingplan-lp${this.id}`;
 		},
 	},
 	methods: {
 		deepEqual,
-		addPlan: function () {
+		addPlan() {
 			const newPlan = {
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
@@ -70,15 +70,15 @@ export default {
 			plans.push(newPlan);
 			this.updatePlans(plans);
 		},
-		updatePlan: function (index, plan) {
+		updatePlan(index, plan) {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1, plan);
 			this.updatePlans(plans);
 		},
-		updatePlans: function (plans) {
+		updatePlans(plans) {
 			this.$emit("updated", plans);
 		},
-		removePlan: function (index) {
+		removePlan(index) {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1);
 			this.updatePlans(plans);

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/rand/v2"
 	"strings"
 	"sync"
 	"testing"
@@ -482,9 +481,6 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	mm := make([]measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
-		// decouple potential double-connects on modbus
-		time.Sleep(time.Duration(rand.Uint64N(uint64(100 * time.Millisecond))))
-
 		meter := dev.Instance()
 
 		// power
@@ -593,6 +589,9 @@ func (site *Site) updatePvMeters() {
 	// store
 	if err := settings.SetJson(keys.SolarAccYield, site.pvEnergy); err != nil {
 		site.log.ERROR.Println("accumulated solar yield:", err)
+		for k, v := range site.pvEnergy {
+			site.log.ERROR.Printf("!! %s: %+v", k, v)
+		}
 	}
 }
 
@@ -970,6 +969,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publishVehicles()
+	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 }
 
