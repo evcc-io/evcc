@@ -35,7 +35,7 @@ type Amperfied struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
-	phases int
+	phases  int
 	wakeup  bool
 }
 
