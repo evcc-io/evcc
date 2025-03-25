@@ -362,7 +362,7 @@ func (wb *Amperfied) getPhases() (int, error) {
 
 	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
-		return wb.phases
+		return wb.phases, nil
 	}
 
 	return phases, nil
