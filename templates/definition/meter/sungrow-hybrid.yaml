@@ -187,9 +187,9 @@ render: |
               type: writesingle
               decode: uint16
         # Reset max battery discharge power
-        {{- if .maxchargepower }}
         - source: const
-          value: {{ .maxchargepower | int }} # W
+          value: {{- if .maxchargepower }}{{ .maxchargepower }}{{ else }} 1060 # 10.6kW, max allowed value for register
+ {{ end }} ```
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -197,18 +197,6 @@ render: |
               address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
-            scale: 0.1
-        {{- else }}
-        - source: const
-          value: 1060 # 10.6kW, max allowed value for register
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 33047 # Battery max discharge power
-              type: writesingle
-              decode: uint16
-        {{- end }}
     - case: 2 # hold
       set:
         source: sequence
