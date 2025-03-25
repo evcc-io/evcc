@@ -23,6 +23,10 @@ params:
       en: "Temperature source"
 render: |
   type: sgready
+  power:
+    source: http
+    uri: http://{{ .host }}/api/boiler/hpcurrpower
+    jq: .value
   getmode:
     source: go
     script: |
