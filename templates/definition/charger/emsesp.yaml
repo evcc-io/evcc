@@ -28,10 +28,10 @@ render: |
     script: |
       res := 1
       switch {
-      case SG1 == "1" && SG4 == "0": res = 3 # Frostschutz
-      case SG1 == "0" && SG4 == "0": res = 1 # Normal
-      case SG1 == "0" && SG4 == "1": res = 2 # Forcierter Betrieb
-      case SG1 == "1" && SG4 == "1": res = 2 # Sofortige Ansteuerung
+      case SG1 == "1" && SG4 == "0": res = 3
+      case SG1 == "0" && SG4 == "0": res = 1
+      case SG1 == "0" && SG4 == "1": res = 2
+      case SG1 == "1" && SG4 == "1": res = 2
       }
       res
     in:
