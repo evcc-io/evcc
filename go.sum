@@ -153,6 +153,8 @@ github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:Bsz
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
+github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529 h1:18rLAN7zm3AmY2OPoYmMa5FxIN1RNYiiVoBEJnGISvc=
+github.com/evcc-io/modbus v0.0.0-20241027151224-722a7a5ae529/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3 h1:W086rzYedGdIQhYSW63M8GyZIx5qMxXEV+qZEzG3Eno=
 github.com/evcc-io/ocpp-go v0.0.0-20241230132027-815870498cc3/go.mod h1:PDT3uxaVPtcFQv0qdwO0v/zdVbrUZiSbLYifBVdrIEA=
 github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785 h1:OWCBVMcPsVTffdiZN3VYaq9p4fsWlzd490J6pekaKLA=
