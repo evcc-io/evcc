@@ -126,7 +126,7 @@ func (t *Octopus) run(done chan error) {
 				Start: r.ValidityStart,
 				End:   r.ValidityEnd,
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
-				Price: r.PriceInclusiveTax / 1e2,
+				Value: r.PriceInclusiveTax / 1e2,
 			}
 			data = append(data, ar)
 		}

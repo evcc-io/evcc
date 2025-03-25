@@ -66,7 +66,7 @@ func (t *GroupeE) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: r.VarioPlus / 1e2, // Rp/kWh
+				Value: r.VarioPlus / 1e2, // Rp/kWh
 			}
 			data = append(data, ar)
 		}

@@ -103,7 +103,7 @@ func (t *ElectricityMaps) run(done chan error) {
 			ar := api.Rate{
 				Start: r.Datetime.Local(),
 				End:   r.Datetime.Add(time.Hour).Local(),
-				Price: r.CarbonIntensity,
+				Value: r.CarbonIntensity,
 			}
 			data = append(data, ar)
 		}
