@@ -35,7 +35,7 @@ type Amperfied struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
-	phases uint16
+	phases int
 	wakeup  bool
 }
 
@@ -360,10 +360,10 @@ func (wb *Amperfied) getPhases() (int, error) {
 		return 0, err
 	}
 
-	phases := binary.BigEndian.Uint16(b)
+	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
-		return int(wb.phases)
+		return wb.phases
 	}
 
-	return int(phases), nil
+	return phases, nil
 }
