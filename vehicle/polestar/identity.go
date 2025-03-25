@@ -84,14 +84,14 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	resp, err := v.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("initial request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	// Extract resume path from HTML response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, err
 	}
 
 	htmlContent := string(body)
@@ -107,7 +107,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	if resumePath == "" {
-		return nil, errors.New("could not find resume path in response")
+		return nil, errors.New("could not find resume path")
 	}
 
 	// Submit credentials to login endpoint
@@ -125,7 +125,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	resp, err = v.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("login request failed: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -153,9 +153,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		},
 	)
 
-	err = v.DoJSON(req, &token)
-	if err != nil {
-		return nil, fmt.Errorf("token exchange failed: %w", err)
+	if err := v.DoJSON(req, &token); err != nil {
+		return nil, err
 	}
 
 	// Configure transport for API requests
