@@ -93,25 +93,20 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	htmlContent := string(body)
-	re := regexp.MustCompile(`url: "(/as/[^/]+)/resume/as/authorization\.ping"`)
-	matches := re.FindStringSubmatch(htmlContent)
-
+	matches := regexp.MustCompile(`url:\s*"/as/(.*?)/resume/as/authorization\.ping"`).FindStringSubmatch(string(body))
 	if len(matches) < 2 {
 		return nil, errors.New("could not find resume path")
 	}
 
-	resumePath := strings.TrimPrefix(matches[1], "/as/")
-
 	// Submit credentials to login endpoint
-	loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
 	data = url.Values{
 		"pf.username": {v.user},
 		"pf.pass":     {v.password},
 		"client_id":   {ClientID},
 	}
 
-	req, _ = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
+	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, matches[1])
+	req, _ = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Accept":       "application/json",
 	})
