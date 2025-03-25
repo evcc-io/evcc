@@ -79,7 +79,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	// Request authorization URL with browser-like headers
 	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+		"Accept": "text/html,application/xhtml+xml,application/xml;",
 	})
 
 	resp, err := v.Do(req)
