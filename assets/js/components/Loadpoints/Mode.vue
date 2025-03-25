@@ -4,7 +4,7 @@
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn flex-grow-1 flex-shrink-1"
+			class="btn flex-grow-1 flex-shrink-1 text-truncate-xs-only"
 			:class="{ active: isActive(m) }"
 			tabindex="0"
 			@click="setTargetMode(m)"
@@ -71,6 +71,12 @@ export default {
 	color: var(--evcc-default-text);
 	border: none;
 }
+@media (max-width: 576px) {
+	.btn {
+		padding: 0.1em 0.2em;
+	}
+}
+
 .btn:hover {
 	color: var(--evcc-gray);
 }

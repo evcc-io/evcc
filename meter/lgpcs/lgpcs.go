@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -150,6 +151,29 @@ func (m *Com) essInfo() (EssData, error) {
 	var res MeterResponse15
 	err := m.request(f, nil, &res)
 	return res, err
+}
+
+func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
+	f := func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/setting/systeminfo", m.uri)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}
+	var res SystemInfoResponse
+	err := m.request(f, nil, &res)
+	return res, err
+}
+
+func (m *Com) GetFirmwareVersion() (int, error) {
+	systemInfo, err := m.GetSystemInfo()
+	if err != nil {
+		return 0, err
+	}
+	// extract the patch number behind a dot that is always followed by at least 4 digits
+	if match := regexp.MustCompile(`.(\d{4})`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
+		return strconv.Atoi(match[1])
+	}
+
+	return 0, errors.New("firmware version not found")
 }
 
 // BatteryMode sets the battery mode

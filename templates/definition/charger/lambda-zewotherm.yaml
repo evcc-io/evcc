@@ -42,6 +42,7 @@ render: |
   setmaxpower:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
+    initial: 0
     set:
       source: modbus
       {{- include "modbus" . | indent 4 }}

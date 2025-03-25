@@ -89,7 +89,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.3.3
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20250209205356-75c941941d8c
+	github.com/volkszaehler/mbmd v0.0.0-20250325080405-2ca990c150aa
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.0
