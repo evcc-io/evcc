@@ -114,13 +114,17 @@ export default {
 		},
 		open() {
 			console.log("GenericModal: open >", this.id);
-			Modal.getOrCreateInstance(this.$refs.modal).show();
-			console.log("GenericModal: open <", this.id);
+			this.$nextTick(() => {
+				Modal.getOrCreateInstance(this.$refs.modal).show();
+				console.log("GenericModal: open <", this.id);
+			});
 		},
 		close() {
 			console.log("GenericModal: close >", this.id);
-			Modal.getOrCreateInstance(this.$refs.modal).hide();
-			console.log("GenericModal: close <", this.id);
+			this.$nextTick(() => {
+				Modal.getOrCreateInstance(this.$refs.modal).hide();
+				console.log("GenericModal: close <", this.id);
+			});
 		},
 	},
 };
