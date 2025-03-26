@@ -109,14 +109,13 @@ export default {
 			this.isModalVisible = false;
 		},
 		open() {
-			this.$nextTick(() => {
-				Modal.getOrCreateInstance(this.$refs.modal).show();
-			});
+			Modal.getOrCreateInstance(this.$refs.modal).show();
 		},
 		close() {
-			this.$nextTick(() => {
-				Modal.getOrCreateInstance(this.$refs.modal).hide();
-			});
+			Modal.getOrCreateInstance(this.$refs.modal).hide();
+			// should not be needed, however, playwright in github actions sometimes does not trigger `hide[en].bs.modal` event
+			this.handleHide();
+			this.handleHidden();
 		},
 	},
 };
