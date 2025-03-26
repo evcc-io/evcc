@@ -744,7 +744,7 @@ export default {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -755,7 +755,7 @@ export default {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -769,7 +769,7 @@ export default {
 				console.log("loadpoint modal create 2");
 				this.$emit("updated");
 				console.log("loadpoint modal create 3");
-				this.close();
+				this.$refs.modal.close();
 				console.log("loadpoint modal create 4");
 				this.reset();
 				console.log("loadpoint modal create 5");
@@ -787,11 +787,10 @@ export default {
 			this.$emit("opened");
 		},
 		onClose() {
+			console.log("loadpoint modal onClose start");
 			this.showAllSelected = false;
 			this.isModalVisible = false;
-		},
-		close() {
-			this.$refs.modal.close();
+			this.$emit("loadpoint modal onClose end");
 		},
 		editCharger() {
 			this.$emit("openChargerModal", this.values.charger);
