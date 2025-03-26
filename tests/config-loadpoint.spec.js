@@ -28,6 +28,7 @@ async function addDemoCharger(page) {
   await modal.getByLabel("Manufacturer").selectOption("Demo charger");
   await modal.getByRole("button", { name: "Save" }).click();
   await expect(modal).not.toBeVisible();
+  await expect(lpModal).toBeVisible();
 }
 
 async function addDemoMeter(page, power = "0") {
@@ -40,6 +41,7 @@ async function addDemoMeter(page, power = "0") {
   await modal.getByLabel("Power").fill(power);
   await modal.getByRole("button", { name: "Save" }).click();
   await expect(modal).not.toBeVisible();
+  await expect(lpModal).toBeVisible();
 }
 
 async function addVehicle(page, title) {
