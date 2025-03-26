@@ -70,7 +70,7 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 
 	{
 		// Shelly Pro 3EM
-		var res Gen2EmStatusResponse
+		var res Gen2StatusResponse
 
 		jsonstr := `{"ble":{},"bthome":{"errors":["bluetooth_disabled"]},"cloud":{"connected":true},"em1:0":{"id":0,"current":3.705,"voltage":242.8,"act_power":598.9,"aprt_power":900.6,"pf":0.66,"freq":50.0,"calibration":"factory"},"em1:1":{"id":1,"current":0.194,"voltage":242.8,"act_power":0.0,"aprt_power":47.2,"pf":0.00,"freq":50.0,"calibration":"factory"},"em1:2":{"id":2,"current":0.027,"voltage":242.8,"act_power":0.0,"aprt_power":6.6,"pf":0.00,"freq":50.0,"calibration":"factory"},"em1data:0":{"id":0,"total_act_energy":3458.24,"total_act_ret_energy":1605.24},"em1data:1":{"id":1,"total_act_energy":2768.67,"total_act_ret_energy":25.49},"em1data:2":{"id":2,"total_act_energy":3.09,"total_act_ret_energy":0.71},"eth":{"ip":null},"modbus":{},"mqtt":{"connected":false},"sys":{"mac":"FCE8C0DBA850","restart_required":false,"time":"19:46","unixtime":1731404780,"uptime":563,"ram_size":247148,"ram_free":110596,"fs_size":524288,"fs_free":176128,"cfg_rev":21,"kvs_rev":0,"schedule_rev":3,"webhook_rev":1,"available_updates":{},"reset_reason":3},"temperature:0":{"id": 0,"tC":39.0, "tF":102.2},"wifi":{"sta_ip":"192.168.40.174","status":"got ip","ssid":"IoT","rssi":-67},"ws":{"connected":false}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))

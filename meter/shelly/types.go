@@ -40,20 +40,7 @@ type Gen2StatusResponse struct {
 	Pm0     Gen2Switch `json:"pm1:0"`
 	Pm1     Gen2Switch `json:"pm2:1"`
 	Pm2     Gen2Switch `json:"pm3:2"`
-}
-
-type Gen2Em struct {
-	Current  float64 `json:"current"`
-	Voltage  float64 `json:"voltage"`
-	ActPower float64 `json:"act_power"`
-}
-
-type Gen2EmData struct {
-	TotalActEnergy    float64 `json:"total_act_energy"`
-	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
-}
-
-type Gen2EmStatusResponse struct {
+	// additional shelly Pro EM meter JSON response
 	TotalPower float64    `json:"total_act_power"`
 	CurrentA   float64    `json:"a_current"`
 	CurrentB   float64    `json:"b_current"`
@@ -70,6 +57,17 @@ type Gen2EmStatusResponse struct {
 	Em0Data    Gen2EmData `json:"em1data:0"`
 	Em1Data    Gen2EmData `json:"em1data:1"`
 	Em2Data    Gen2EmData `json:"em1data:2"`
+}
+
+type Gen2Em struct {
+	Current  float64 `json:"current"`
+	Voltage  float64 `json:"voltage"`
+	ActPower float64 `json:"act_power"`
+}
+
+type Gen2EmData struct {
+	TotalActEnergy    float64 `json:"total_act_energy"`
+	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
 type Gen2EmDataStatusResponse struct {
