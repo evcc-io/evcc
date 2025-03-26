@@ -7,9 +7,12 @@
   {{- $choice := .Choice }}
 
   {{- if or (not .IsRequired) $help $choice }} #
-    {{- if $help }} {{ $help }}{{- end }}
+    {{- if not .IsRequired }} optional{{- end }}
+    {{- if $help }}
+      {{- if not .IsRequired }};{{- end }} {{ $help }}
+    {{- end }}
     {{- if $choice }}
-      {{- if $help }} ;{{- end }}
+      {{- if or (not .IsRequired) $help }};{{- end }}
       {{- if kindIs "string" $choice }}
         {{- if regexMatch "^[0-9]+$" $choice }} Choices: {{ $choice }} {{- else }} Choices: "{{ $choice }}" {{- end }}
       {{- else if kindIs "slice" $choice }} Choices: {{ range $index, $element := $choice }}{{ if $index }}, {{ end }}{{- if kindIs "string" $element }}
