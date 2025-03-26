@@ -4,8 +4,22 @@
   - {{ . }}
   {{- end }}
   {{- $help := localize .Help | replace "\n" " " -}}
-  {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
+  {{- $choice := .Choice }}
+
+  {{- if or (not .IsRequired) $help $choice }} #
+    {{- if $help }} {{ $help }}{{- end }}
+    {{- if $choice }}
+      {{- if $help }} ;{{- end }}
+      {{- if kindIs "string" $choice }}
+        {{- if regexMatch "^[0-9]+$" $choice }} Choices: {{ $choice }} {{- else }} Choices: "{{ $choice }}" {{- end }}
+      {{- else if kindIs "slice" $choice }} Choices: {{ range $index, $element := $choice }}{{ if $index }}, {{ end }}{{- if kindIs "string" $element }}
+          {{- if regexMatch "^[0-9]+$" $element }}{{ $element }}{{- else }}"{{ $element }}"{{ end }}
+        {{- else }}{{ $element }}{{- end }}{{ end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}
+
 
 {{- define "header" }}
   type: template
