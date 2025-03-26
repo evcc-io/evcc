@@ -23,6 +23,7 @@ render: |
   getmode:
     source: http
     uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
+    cache: 2s # to prevent making two identical requests straight after each other for "getmode"
     headers:  
       - content-type: application/json
       - authorization: Bearer {{.token}}
