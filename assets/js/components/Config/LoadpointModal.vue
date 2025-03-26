@@ -477,6 +477,7 @@
 						class="ms-3 mb-5"
 						:label="$t('config.loadpoint.pollIntervalLabel')"
 						:help="$t('config.loadpoint.pollIntervalHelp')"
+						:danger="$t('config.loadpoint.pollIntervalDanger')"
 					>
 						<PropertyField
 							id="loadpointPollInterval"
