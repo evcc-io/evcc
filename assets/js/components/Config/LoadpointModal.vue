@@ -787,10 +787,10 @@ export default {
 			this.$emit("opened");
 		},
 		onClose() {
-			console.log("loadpoint modal onClose start");
+			console.log("LoadpointModal: onClose >");
 			this.showAllSelected = false;
 			this.isModalVisible = false;
-			console.log("loadpoint modal onClose end");
+			console.log("LoadpointModal: onClose <");
 		},
 		editCharger() {
 			this.$emit("openChargerModal", this.values.charger);

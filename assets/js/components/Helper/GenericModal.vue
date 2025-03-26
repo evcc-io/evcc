@@ -102,17 +102,25 @@ export default {
 			this.isModalVisible = true;
 		},
 		handleHide() {
+			console.log("GenericModal: hide >", this.id);
 			this.$emit("close");
+			console.log("GenericModal: hide <", this.id);
 		},
 		handleHidden() {
+			console.log("GenericModal: hidden >", this.id);
 			this.$emit("closed");
 			this.isModalVisible = false;
+			console.log("GenericModal: hidden <", this.id);
 		},
 		open() {
+			console.log("GenericModal: open >", this.id);
 			Modal.getOrCreateInstance(this.$refs.modal).show();
+			console.log("GenericModal: open <", this.id);
 		},
 		close() {
+			console.log("GenericModal: close >", this.id);
 			Modal.getOrCreateInstance(this.$refs.modal).hide();
+			console.log("GenericModal: close <", this.id);
 		},
 	},
 };
