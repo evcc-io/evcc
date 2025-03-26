@@ -757,7 +757,6 @@ export default {
 		async loadpointChanged() {
 			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
-			this.loadpointModal().hide();
 			this.loadDirty();
 		},
 		editVehicle(id) {
@@ -809,9 +808,9 @@ export default {
 			}
 			this.meterChanged();
 		},
-		chargerAdded(name) {
+		async chargerAdded(name) {
+			await this.chargerChanged();
 			this.$refs.loadpointModal?.setCharger(name);
-			this.chargerChanged();
 		},
 		chargerRemoved() {
 			this.$refs.loadpointModal?.setCharger(undefined);

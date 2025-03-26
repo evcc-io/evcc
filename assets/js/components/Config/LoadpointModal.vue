@@ -763,9 +763,9 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.reset();
 				this.$emit("updated");
 				this.close();
+				this.reset();
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;
