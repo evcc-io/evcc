@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="meterModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="meter-modal"
 		:fade="fade"
@@ -430,8 +431,7 @@ export default {
 				const response = await api.post("config/devices/meter", this.apiData);
 				const { name } = response.data.result;
 				this.$emit("added", this.meterType, name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleCreateError(e);
 			}
@@ -457,7 +457,7 @@ export default {
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleUpdateError(e);
 			}
@@ -467,8 +467,7 @@ export default {
 			try {
 				await api.delete(`config/devices/meter/${this.id}`);
 				this.$emit("removed", this.meterType, this.name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleRemoveError(e);
 			}
