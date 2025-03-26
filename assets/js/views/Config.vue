@@ -651,8 +651,10 @@ export default {
 			}
 		},
 		async loadLoadpoints() {
+			console.log("loadLoadpoints: start", this.loadpoints.length);
 			const response = await api.get("/config/loadpoints");
 			this.loadpoints = response.data?.result || [];
+			console.log("loadLoadpoints: end", this.loadpoints.length);
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
@@ -755,9 +757,12 @@ export default {
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {
+			console.log("loadpointChanged: 1");
 			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
+			console.log("loadpointChanged: 2");
 			this.loadDirty();
+			console.log("loadpointChanged: 3");
 		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
@@ -809,8 +814,11 @@ export default {
 			this.meterChanged();
 		},
 		async chargerAdded(name) {
+			console.log("chargerAdded: 1");
 			await this.chargerChanged();
+			console.log("chargerAdded: 2");
 			this.$refs.loadpointModal?.setCharger(name);
+			console.log("chargerAdded: 3");
 		},
 		chargerRemoved() {
 			this.$refs.loadpointModal?.setCharger(undefined);

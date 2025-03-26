@@ -722,10 +722,12 @@ export default {
 	},
 	methods: {
 		reset() {
+			console.log("loadpoint modal reset");
 			this.values = deepClone(defaultValues);
 			this.updatePhases();
 		},
 		async loadConfiguration() {
+			console.log("loadpoint modal loadConfiguration");
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data.result);
@@ -762,10 +764,15 @@ export default {
 		async create() {
 			this.saving = true;
 			try {
+				console.log("loadpoint modal create 1");
 				await api.post("config/loadpoints", this.values);
+				console.log("loadpoint modal create 2");
 				this.$emit("updated");
+				console.log("loadpoint modal create 3");
 				this.close();
+				console.log("loadpoint modal create 4");
 				this.reset();
+				console.log("loadpoint modal create 5");
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;
