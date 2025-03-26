@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="chargerModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="charger-modal"
 		:fade="fade"
@@ -387,8 +388,7 @@ export default {
 				const response = await api.post("config/devices/charger", this.apiData);
 				const { name } = response.data.result;
 				this.$emit("added", name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleCreateError(e);
 			}
@@ -414,7 +414,7 @@ export default {
 			try {
 				await api.put(`config/devices/charger/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleUpdateError(e);
 			}
@@ -424,8 +424,7 @@ export default {
 			try {
 				await api.delete(`config/devices/charger/${this.id}`);
 				this.$emit("removed", this.name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleRemoveError(e);
 			}
