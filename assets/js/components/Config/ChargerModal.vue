@@ -36,9 +36,18 @@
 							{{ option.name }}
 						</option>
 					</optgroup>
-					<optgroup :label="$t('config.charger.switchsocket')">
+					<optgroup :label="$t('config.charger.switchsockets')">
 						<option
 							v-for="option in switchSocketOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.heatingdevices')">
+						<option
+							v-for="option in heatingdevicesOptions"
 							:key="option.name"
 							:value="option.template"
 						>
@@ -219,6 +228,9 @@ export default {
 		},
 		switchSocketOptions() {
 			return this.products.filter((p) => p.group === "switchsockets");
+		},
+		heatingdevicesOptions() {
+			return this.products.filter((p) => p.group === "heating");
 		},
 		templateParams() {
 			const params = this.template?.Params || [];

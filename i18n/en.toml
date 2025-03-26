@@ -39,6 +39,7 @@ titleEdit = "Edit Charge Meter"
 [config.charger]
 chargers = "EV chargers"
 generic = "Generic integrations"
+heatingdevices = "Heating devices"
 ocppHelp = "Copy this address into your chargers configuration."
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Switchable sockets"

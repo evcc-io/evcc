@@ -39,6 +39,7 @@ titleEdit = "Energiezähler bearbeiten"
 [config.charger]
 chargers = "Wallboxen"
 generic = "Generische Integrationen"
+heatingdevices = "Wärmeerzeuger"
 ocppHelp = "Kopiere diese Adresse in die Konfiguration der Wallbox."
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Schaltbare Steckdosen"
