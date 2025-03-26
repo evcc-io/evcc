@@ -113,9 +113,6 @@ export default {
 		},
 		close() {
 			Modal.getOrCreateInstance(this.$refs.modal).hide();
-			// should not be needed, however, playwright in github actions sometimes does not trigger `hide[en].bs.modal` event
-			this.handleHide();
-			this.handleHidden();
 		},
 	},
 };
