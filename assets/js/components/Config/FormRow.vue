@@ -26,6 +26,9 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</div>
+			<div v-if="danger" class="alert alert-danger my-2" role="alert">
+				<strong>{{ $t("config.form.danger") }}:</strong> {{ danger }}
+			</div>
 		</div>
 	</div>
 </template>
@@ -44,6 +47,7 @@ export default {
 		optional: Boolean,
 		deprecated: Boolean,
 		error: String,
+		danger: String,
 		example: String,
 		docsLink: String,
 	},
