@@ -73,17 +73,6 @@ type Gen2StatusResponse struct {
 	Em2Data    Gen2EmData `json:"em1data:2"`
 }
 
-type Gen2Em struct {
-	Current  float64 `json:"current"`
-	Voltage  float64 `json:"voltage"`
-	ActPower float64 `json:"act_power"`
-}
-
-type Gen2EmData struct {
-	TotalActEnergy    float64 `json:"total_act_energy"`
-	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
-}
-
 type Gen2EmDataStatusResponse struct {
 	TotalEnergy float64 `json:"total_act"`
 }
