@@ -1,0 +1,40 @@
+package plugin
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util/transport"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
+)
+
+// Auth is the authorization config
+type Auth struct {
+	Type, User, Password, Token string
+	Source                      string
+	Other                       map[string]any
+}
+
+func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.RoundTripper, error) {
+	switch strings.ToLower(p.Type) {
+	case "basic":
+		return transport.BasicAuth(p.User, p.Password, base), nil
+	case "bearer":
+		return transport.BearerAuth(p.Token, base), nil
+	case "digest":
+		return digest.NewTransport(p.User, p.Password, base), nil
+	default:
+		if p.Source != "" {
+			authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
+			if err != nil {
+				return nil, err
+			}
+			return authorizer.Transport(base)
+		}
+
+		return nil, fmt.Errorf("unknown auth type '%s'", p.Type)
+	}
+}
