@@ -19,7 +19,7 @@
 			"nvmVersion": "latest"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
-			"version": "latest"
+			"version": "1.23"
 		}
 	},
 	"postCreateCommand": "make install-ui && make install",
