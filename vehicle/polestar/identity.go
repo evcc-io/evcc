@@ -3,12 +3,15 @@ package polestar
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -17,6 +20,7 @@ import (
 
 // https://github.com/TA2k/ioBroker.polestar
 
+// OAuth endpoints and credentials
 const (
 	OAuthURI    = "https://polestarid.eu.polestar.com"
 	ClientID    = "l3oopkc_10"
@@ -25,6 +29,7 @@ const (
 
 type Identity struct {
 	*request.Helper
+	oauth2.TokenSource
 	user, password string
 	log            *util.Logger
 }
@@ -46,15 +51,13 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	}
 	v.Client.Jar = jar
 
+	// Get initial token
 	token, err := v.login()
 	if err != nil {
 		return nil, err
 	}
 
-	v.Client.Transport = &oauth2.Transport{
-		Source: oauth2.StaticTokenSource(token),
-		Base:   v.Client.Transport,
-	}
+	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	return v, nil
 }
@@ -72,47 +75,49 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"code_challenge_method": {"S256"},
 	}
 
-	// Get resume path with browser-like headers
+	// Request authorization URL with browser-like headers
 	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/json",
+		"Accept": "text/html,application/xhtml+xml,application/xml;",
 	})
 
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 
-	// First we get redirected to the login page
-	if strings.Contains(resp.Request.URL.Path, "/PolestarLogin/login") {
-		// Extract resumePath from the login URL
-		resumePath := resp.Request.URL.Query().Get("resumePath")
-		if resumePath == "" {
-			return nil, errors.New("missing resume path in login url")
-		}
-
-		// Submit credentials directly to the login endpoint
-		loginURL := fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, resumePath)
-		data := url.Values{
-			"pf.username": {v.user},
-			"pf.pass":     {v.password},
-			"client_id":   {ClientID},
-		}
-
-		req, _ = request.New(http.MethodPost, loginURL, strings.NewReader(data.Encode()), map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded",
-			"Accept":       "application/json",
-		})
-
-		resp, err = v.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		resp.Body.Close()
+	// Extract resume path from HTML response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
-	// After login, we should get the authorization code directly
+	matches := regexp.MustCompile(`url:\s*"/as/(.+?)/resume/as/authorization\.ping"`).FindStringSubmatch(string(body))
+	if len(matches) < 2 {
+		return nil, errors.New("could not find resume path")
+	}
+
+	// Submit credentials to login endpoint
+	data = url.Values{
+		"pf.username": {v.user},
+		"pf.pass":     {v.password},
+		"client_id":   {ClientID},
+	}
+
+	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, matches[1])
+	req, _ = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Accept":       "application/json",
+	})
+
+	resp, err = v.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Extract authorization code from response
 	code := resp.Request.URL.Query().Get("code")
 	if code == "" {
 		return nil, errors.New("missing authorization code")
@@ -136,16 +141,34 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		},
 	)
 
-	err = v.DoJSON(req, &token)
-	return util.TokenWithExpiry(&token), err
-}
+	if err := v.DoJSON(req, &token); err != nil {
+		return nil, err
+	}
 
-// TokenSource implements oauth.TokenSource
-func (v *Identity) TokenSource() oauth2.TokenSource {
-	return oauth2.ReuseTokenSource(nil, v)
+	return util.TokenWithExpiry(&token), nil
 }
 
 // Token implements oauth.TokenSource
-func (v *Identity) Token() (*oauth2.Token, error) {
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+		"client_id":     {ClientID},
+	}
+
+	req, _ := request.New(http.MethodPost, OAuthURI+"/as/token.oauth2",
+		strings.NewReader(data.Encode()),
+		map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Accept":       "application/json",
+		},
+	)
+
+	var res oauth2.Token
+	if err := v.DoJSON(req, &res); err == nil {
+		return util.TokenWithExpiry(&res), nil
+	}
+
+	// Full login as fallback
 	return v.login()
 }
