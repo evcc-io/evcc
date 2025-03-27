@@ -1,0 +1,105 @@
+template: sax
+products:
+  - brand: SAX
+    description:
+      generic: Homespeicher
+params:
+  - name: usage
+    choice: ["grid", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 3600
+    id: 64
+  - name: user
+    type: string
+    description:
+      de: "Benutzername für die SAX-API"
+      en: "Username for the SAX API"
+  - name: password
+    type: string
+    description:
+      de: "Passwort für die SAX-API"
+      en: "Password for the SAX API"
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://webserver.sax-power.net/api/auth/data/
+    auth:
+      source: sax
+      user: {{ .user }}
+      password: {{ .password }}
+    method: GET
+    headers:
+      Accept: application/json
+  soc:
+    source: http
+    uri: https://webserver.sax-power.net/api/auth/soc/
+    auth:
+      source: sax
+      user: {{ .user }}
+      password: {{ .password }}
+    method: GET
+    headers:
+      Accept: application/json
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 48 # Leistung des Smartmeters
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 47 # Leistung P vom Speicher. (Messwert)
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 46 # SOC vom Speicher (Messwert)
+      type: holding
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 4600 # W
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 43 # Leistungsgrenzwert für Entladung
+            type: writesingle
+            decode: uint16
+    - case: 2 # hold
+      set:
+        source: const
+        value: 0 # W
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 43 # Leistungsgrenzwert für Entladung
+            type: writesingle
+            decode: uint16
+  {{- end }}
