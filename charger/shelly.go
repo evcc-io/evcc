@@ -27,25 +27,24 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Password     string
 		Channel      int
 		StandbyPower float64
-		Invert       bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Invert)
+	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64, invert bool) (*Shelly, error) {
+func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
 	conn, err := shelly.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Shelly{
-		conn: shelly.NewSwitch(conn, "charge", invert),
+		conn: shelly.NewSwitch(conn, "charge"),
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)

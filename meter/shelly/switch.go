@@ -11,7 +11,7 @@ type Switch struct {
 	Usage string
 }
 
-func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
+func NewSwitch(conn *Connection, usage string) *Switch {
 	res := &Switch{
 		Connection: conn,
 		Usage:      usage,
