@@ -28,22 +28,22 @@ func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.Roun
 	case "digest":
 		return digest.NewTransport(p.User, p.Password, base), nil
 	default:
-		if p.Source != "" {
-			if p.User != "" {
-				p.Other["user"] = p.User
-			}
-			if p.Password != "" {
-				p.Other["password"] = p.Password
-			}
-
-			authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
-			if err != nil {
-				return nil, err
-			}
-
-			return authorizer.Transport(base)
+		if p.Source == "" {
+			return nil, fmt.Errorf("unknown auth type '%s'", p.Type)
 		}
 
-		return nil, fmt.Errorf("unknown auth type '%s'", p.Type)
+		if p.User != "" {
+			p.Other["user"] = p.User
+		}
+		if p.Password != "" {
+			p.Other["password"] = p.Password
+		}
+
+		authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
+		if err != nil {
+			return nil, err
+		}
+
+		return authorizer.Transport(base)
 	}
 }
