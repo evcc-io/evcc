@@ -23,15 +23,17 @@ params:
       en: "Temperature source"
 render: |
   type: sgready
+  power:
+    source: http
+    uri: http://{{ .host }}/api/boiler/hpcurrpower
+    jq: .value
   getmode:
     source: go
     script: |
-      res := 1
+      res := 1 // 0/0 Normal
       switch {
-      case SG1 == "1" && SG4 == "0": res = 3 # Frostschutz
-      case SG1 == "0" && SG4 == "0": res = 1 # Normal
-      case SG1 == "0" && SG4 == "1": res = 2 # Forcierter Betrieb
-      case SG1 == "1" && SG4 == "1": res = 2 # Sofortige Ansteuerung
+      case SG1 == "1" && SG4 == "0": res = 3 // 1/0 Frostschutz
+      case SG4 == "1": res = 2 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
       }
       res
     in:

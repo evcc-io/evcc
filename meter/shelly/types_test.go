@@ -95,7 +95,7 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 	}
 
 	{
-		// Shelly Pro EM-50
+		// Shelly Pro EM-50 channel 0 + 1
 		var res Gen2StatusResponse
 
 		jsonstr := `{"ble":{},"bthome":{"errors":["bluetooth_disabled"]},"cloud":{"connected":true},"em1:0":{"id":0,"current":1.473,"voltage":226.9,"act_power":-332.2,"aprt_power":335.0,"pf":0.99,"freq":50.0,"calibration":"factory"},"em1:1":{"id":1,"current":0.428,"voltage":227.0,"act_power":-38.5,"aprt_power":97.4,"pf":0.38,"freq":50.0,"calibration":"factory"},"em1data:0":{"id":0,"total_act_energy":1264.15,"total_act_ret_energy":144792.28},"em1data:1":{"id":1,"total_act_energy":48002.83,"total_act_ret_energy":33241.59},"eth":{"ip":null},"modbus":{},"mqtt":{"connected":false},"switch:0":{"id":0, "source":"HTTP_in", "output":false,"temperature":{"tC":46.4, "tF":115.5}},"sys":{"mac":"08F9E0E8AF2C","restart_required":false,"time":"10:42","unixtime":1742809323,"uptime":3671372,"ram_size":249680,"ram_free":107492,"fs_size":524288,"fs_free":188416,"cfg_rev":12,"kvs_rev":0,"schedule_rev":1,"webhook_rev":0,"available_updates":{"beta":{"version":"1.5.1-beta2"}},"reset_reason":3},"wifi":{"sta_ip":"192.168.1.120","status":"got ip","ssid":"Spaetzlewerk","rssi":-61},"ws":{"connected":false}}`

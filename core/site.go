@@ -969,6 +969,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publishVehicles()
+	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 }
 

@@ -54,6 +54,7 @@ test.describe("onboarding", async () => {
     await chargerModal.getByLabel("Power").fill("3000");
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expect(chargerModal).not.toBeVisible();
+    await expect(lpModal).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
 
