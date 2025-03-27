@@ -15,7 +15,7 @@ import (
 )
 
 type Viessmann struct {
-	*request.Helper
+	*http.Client
 	ts oauth2.TokenSource
 }
 
@@ -35,7 +35,7 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 	}
 
 	v := &Viessmann{
-		Helper: request.NewHelper(util.NewLogger("viessmann")),
+		Client: request.NewClient(util.NewLogger("viessmann")),
 	}
 
 	oc := oauth2.Config{
@@ -71,7 +71,11 @@ func (v *Viessmann) login(ctx context.Context, oc oauth2.Config, user, password 
 		v.Client.CheckRedirect = nil
 	}()
 
-	resp, err := v.Client.Get(uri)
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": transport.BasicAuthHeader(user, password),
+	})
+
+	resp, err := v.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
