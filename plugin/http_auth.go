@@ -21,12 +21,15 @@ type Auth struct {
 
 func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.RoundTripper, error) {
 	switch strings.ToLower(p.Type) {
-	case "basic":
-		return transport.BasicAuth(p.User, p.Password, base), nil
-	case "bearer":
-		return transport.BearerAuth(p.Token, base), nil
 	case "digest":
 		return digest.NewTransport(p.User, p.Password, base), nil
+
+	case "basic":
+		return transport.BasicAuth(p.User, p.Password, base), nil
+
+	case "bearer":
+		return transport.BearerAuth(p.Token, base), nil
+
 	default:
 		if p.Source == "" {
 			return nil, fmt.Errorf("unknown auth type '%s'", p.Type)
