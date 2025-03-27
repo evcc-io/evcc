@@ -12,15 +12,6 @@ params:
       en: Measure channel id (default 0, Pro 3EM Switch Add-on 100)
       de: Mess-Sensor Channel Id (Standard 0, Pro 3EM Switch Add-on 100)
     default: 0
-  - name: invert
-    default: false
-    advanced: true
-    description:
-      en: Invert measure logic
-      de: Invertiere die Messlogik
-    help:
-      en: Invert measure logic, e.g. in case the shelly device was not installed to correctly measure the power flow.
-      de: Invertiere die Messlogik, bspw. wenn Phase und Neutral Leiter oder der Mess-Sensor falsch herum installiert wurden.
   - preset: switchsocket
 render: |
   type: shelly
@@ -32,5 +23,4 @@ render: |
   password: {{ .password }}
   {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
-  invert: {{ .invert }}
   {{ include "switchsocket" . }}

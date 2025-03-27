@@ -8,15 +8,13 @@ import (
 
 type Switch struct {
 	*Connection
-	Usage  string
-	Invert bool
+	Usage string
 }
 
 func NewSwitch(conn *Connection, usage string, invert bool) *Switch {
 	res := &Switch{
 		Connection: conn,
 		Usage:      usage,
-		Invert:     invert,
 	}
 
 	return res
@@ -64,7 +62,7 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 	}
 
-	if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+	if sh.Usage == "pv" || sh.Usage == "battery" {
 		meterpower = -meterpower
 	}
 
@@ -123,13 +121,13 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 
 		switch {
 		case d.channel < len(res.Meters):
-			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+			if sh.Usage == "pv" || sh.Usage == "battery" {
 				energy = res.Meters[d.channel].Total_Returned
 			} else {
 				energy = res.Meters[d.channel].Total
 			}
 		case d.channel < len(res.EMeters):
-			if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+			if sh.Usage == "pv" || sh.Usage == "battery" {
 				energy = res.EMeters[d.channel].Total_Returned
 			} else {
 				energy = res.EMeters[d.channel].Total
@@ -146,7 +144,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 			return 0, err
 		}
 
-		if (sh.Usage == "pv" || sh.Usage == "battery") && !sh.Invert {
+		if sh.Usage == "pv" || sh.Usage == "battery" {
 			switch d.channel {
 			case 1:
 				energy = res.Switch1.Aenergy.Total + res.Pm1.Ret_Aenergy.Total + res.Em1Data.TotalActRetEnergy
