@@ -126,7 +126,7 @@
 					class="btn btn-sm btn-outline-secondary border-0"
 					aria-label="Remove"
 					tabindex="0"
-					@click="$emit('removed', id)"
+					@click="$emit('removed', id())"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -135,21 +135,21 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../../units.js";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "../../mixins/formatter.js";
 import deepEqual from "../../utils/deepEqual.js";
-export default {
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "ChargingPlanRepeatingSettings",
-	components: {
-		MultiSelect,
-	},
+	components: { MultiSelect },
 	mixins: [formatter],
 	props: {
 		number: Number,
-		weekdays: { type: Array, default: () => [] },
+		weekdays: { type: Array as PropType<number[]>, default: () => [] },
 		time: String,
 		tz: String,
 		soc: Number,
@@ -209,14 +209,17 @@ export default {
 		},
 	},
 	methods: {
-		changeSelectedWeekdays(weekdays) {
+		id() {
+			return this.number || 0;
+		},
+		changeSelectedWeekdays(weekdays: number[]) {
 			this.selectedWeekdays = weekdays;
 			this.update();
 		},
-		formId(name) {
+		formId(name: string) {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption(value) {
+		socOption(value: number) {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
@@ -234,7 +237,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .plan-id {

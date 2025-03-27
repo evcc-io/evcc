@@ -68,8 +68,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		slots: Array,
-		targetText: String,
-		targetOffset: Number,
+		targetText: [String, null],
+		targetOffset: [Number, null],
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
