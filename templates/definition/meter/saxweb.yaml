@@ -4,13 +4,17 @@ products:
     description:
       generic: Homespeicher
 params:
-  - name: usage
-    choice: ["grid", "battery"]
-  - name: user
+  - name: baseurl
+    type: string
+    default: "https://webserver.sax-power.net"
+    description:
+      de: "Basis-URL der SAX-API"
+      en: "Base URL of the SAX API"
+  - name: email
     type: string
     description:
-      de: "Benutzername für die SAX-API"
-      en: "Username for the SAX API"
+      de: "E-Mail-Adresse für die SAX-API"
+      en: "Email address for the SAX API"
   - name: password
     type: string
     description:
@@ -18,35 +22,18 @@ params:
       en: "Password for the SAX API"
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
+  usage: pv
   power:
     source: http
-    uri: https://webserver.sax-power.net/api/auth/data/
+    uri: {{ .baseurl }}/api/auth/data/
     auth:
       source: sax
-      user: {{ .user }}
+      user: {{ .email }}
       password: {{ .password }}
     method: GET
     headers:
       Accept: application/json
-  {{- end }}
-  {{- if eq .usage "battery" }}
-  power:
-    source: http
-    uri: https://webserver.sax-power.net/api/auth/data/
-    auth:
-      source: sax
-      user: {{ .user }}
-      password: {{ .password }}
-    method: GET
-    headers:
-      Accept: application/json
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    # register details
-    register:
-      address: 46 # SOC vom Speicher (Messwert)
-      type: holding
-      decode: uint16
-  {{- end }}
+    value: |
+      {{- /* JSON-Dekodierung und PV_power-Wert extrahieren */ -}}
+      {{- $data := .response | jsonDecode -}}
+      {{- index $data 0 "PV_power" }}
