@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +12,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/fatih/structs"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 )
@@ -121,17 +122,20 @@ func mergeSettingsOld(struc any, old any) {
 	if redacted == nil {
 		return
 	}
-	strucV := reflect.ValueOf(struc).Elem()
-	oldV := reflect.ValueOf(old).Elem()
-	redactedV := reflect.ValueOf(redacted)
 
-	for i := 0; i < strucV.NumField(); i++ {
-		fieldName := strucV.Type().Field(i).Name
-		strucF := strucV.Field(i)
-		oldF := oldV.FieldByName(fieldName)
-		redactedF := redactedV.FieldByName(fieldName)
-		if oldF.IsValid() && redactedF.IsValid() && reflect.DeepEqual(strucF.Interface(), redactedF.Interface()) {
-			strucF.Set(oldF)
+	strucMap := structs.Map(struc)
+	oldMap := structs.Map(old)
+	redactedMap := structs.Map(redacted)
+
+	for k, v := range strucMap {
+		if rv, ok := redactedMap[k]; ok && v == rv {
+			if ov, ok := oldMap[k]; ok {
+				strucMap[k] = ov
+			}
 		}
+	}
+
+	if err := mapstructure.Decode(strucMap, &struc); err != nil {
+		return
 	}
 }
