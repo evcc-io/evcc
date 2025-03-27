@@ -33,6 +33,17 @@ type Gen2Switch struct {
 	}
 }
 
+type Gen2Em struct {
+	Current  float64 `json:"current"`
+	Voltage  float64 `json:"voltage"`
+	ActPower float64 `json:"act_power"`
+}
+
+type Gen2EmData struct {
+	TotalActEnergy    float64 `json:"total_act_energy"`
+	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
+}
+
 type Gen2StatusResponse struct {
 	Switch0 Gen2Switch `json:"switch:0"`
 	Switch1 Gen2Switch `json:"switch:1"`
@@ -57,17 +68,6 @@ type Gen2StatusResponse struct {
 	Em0Data    Gen2EmData `json:"em1data:0"`
 	Em1Data    Gen2EmData `json:"em1data:1"`
 	Em2Data    Gen2EmData `json:"em1data:2"`
-}
-
-type Gen2Em struct {
-	Current  float64 `json:"current"`
-	Voltage  float64 `json:"voltage"`
-	ActPower float64 `json:"act_power"`
-}
-
-type Gen2EmData struct {
-	TotalActEnergy    float64 `json:"total_act_energy"`
-	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
 type Gen2EmDataStatusResponse struct {
