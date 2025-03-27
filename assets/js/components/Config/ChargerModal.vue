@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="chargerModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="charger-modal"
 		:fade="fade"
@@ -36,9 +37,18 @@
 							{{ option.name }}
 						</option>
 					</optgroup>
-					<optgroup :label="$t('config.charger.switchsocket')">
+					<optgroup :label="$t('config.charger.switchsockets')">
 						<option
 							v-for="option in switchSocketOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.heatingdevices')">
+						<option
+							v-for="option in heatingdevicesOptions"
 							:key="option.name"
 							:value="option.template"
 						>
@@ -220,6 +230,9 @@ export default {
 		switchSocketOptions() {
 			return this.products.filter((p) => p.group === "switchsockets");
 		},
+		heatingdevicesOptions() {
+			return this.products.filter((p) => p.group === "heating");
+		},
 		templateParams() {
 			const params = this.template?.Params || [];
 			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
@@ -375,8 +388,7 @@ export default {
 				const response = await api.post("config/devices/charger", this.apiData);
 				const { name } = response.data.result;
 				this.$emit("added", name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleCreateError(e);
 			}
@@ -402,7 +414,7 @@ export default {
 			try {
 				await api.put(`config/devices/charger/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleUpdateError(e);
 			}
@@ -412,8 +424,7 @@ export default {
 			try {
 				await api.delete(`config/devices/charger/${this.id}`);
 				this.$emit("removed", this.name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				this.handleRemoveError(e);
 			}

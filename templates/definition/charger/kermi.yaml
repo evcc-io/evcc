@@ -5,7 +5,7 @@ products:
       generic: x-change
   - brand: Kermi
     description:
-      generic: x-change
+      generic: x-center pro
 group: heating
 # requirements:
 #   evcc: ["sponsorship"]
