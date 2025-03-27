@@ -36,8 +36,8 @@ params:
     default: self-consumption
     advanced: true
     help:
-      de: Standardmodus für die aktive Batteriesteuerung (self-consumption oder time-of-use)
-      en: Default mode for active battery control (self-consumption or time-of-use)
+      de: Standardmodus für die aktive Batteriesteuerung
+      en: Default mode for active battery control
     usages: ["battery"]
   - name: chargepower
     default: 3300
