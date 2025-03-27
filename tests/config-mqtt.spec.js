@@ -36,11 +36,10 @@ test.describe("mqtt", async () => {
 
     // setup with invalid broker
     await modal.getByLabel("Broker").fill(INVALID_BROKER);
-    await modal.getByLabel("Topic").fill(VALID_TOPIC);
+    await modal.getByLabel("Topic").fill("  " + VALID_TOPIC + " "); // whitespace should be trimmed
     await modal.getByLabel("Client ID").fill(VALID_CLIENT_ID);
     await modal.getByLabel("Username").fill(VALID_USERNAME);
     await modal.getByLabel("Password").fill(VALID_PASSWORD);
-
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();
     await expect(modal).not.toBeVisible();
@@ -63,7 +62,7 @@ test.describe("mqtt", async () => {
 
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     await expect(modal.getByLabel("Broker")).toHaveValue(INVALID_BROKER);
-    await expect(modal.getByLabel("Topic")).toHaveValue(VALID_TOPIC);
+    await expect(modal.getByLabel("Topic")).toHaveValue(VALID_TOPIC); // whitespace has been trimmed
     await expect(modal.getByLabel("Client ID")).toHaveValue(VALID_CLIENT_ID);
     await expect(modal.getByLabel("Username")).toHaveValue(VALID_USERNAME);
     await expect(modal.getByLabel("Password")).toHaveValue("***");
