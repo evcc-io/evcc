@@ -52,6 +52,7 @@ export default {
 			}
 			switch (name) {
 				case "power":
+				case "solarForecast":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
@@ -61,6 +62,7 @@ export default {
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
+				case "heaterTempLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":

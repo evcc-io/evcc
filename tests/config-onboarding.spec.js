@@ -54,6 +54,7 @@ test.describe("onboarding", async () => {
     await chargerModal.getByLabel("Power").fill("3000");
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expect(chargerModal).not.toBeVisible();
+    await expect(lpModal).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expect(lpModal).not.toBeVisible();
 
@@ -71,6 +72,7 @@ test.describe("onboarding", async () => {
     const pvModal = page.getByTestId("meter-modal");
     await expect(gridModal).toBeVisible();
     await pvModal.getByRole("button", { name: "Add solar meter" }).click();
+    await pvModal.getByLabel("Title").fill("PV South");
     await pvModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await pvModal.getByLabel("Power").fill("5000");
     await pvModal.getByRole("button", { name: "Save" }).click();

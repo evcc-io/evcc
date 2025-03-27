@@ -71,6 +71,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
+		ForcePowerCtrl bool
 		StackLevelZero *bool
 		RemoteStart    bool
 	}{
@@ -88,7 +89,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		stackLevelZero, cc.RemoteStart,
+		cc.ForcePowerCtrl, stackLevelZero, cc.RemoteStart,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -142,7 +143,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	stackLevelZero, remoteStart bool,
+	forcePowerCtrl, stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
@@ -162,7 +163,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval)
+			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 		},
 	)
 	if err != nil {
@@ -313,20 +314,15 @@ func (c *OCPP) setCurrent(current float64) error {
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
-	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
-		// get (expectedly) active phases from loadpoint
-		if c.lp != nil {
-			phases = c.lp.GetPhases()
-		}
-		if phases == 0 {
-			phases = 3
-		}
-		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
-	}
 
-	// OCPP assumes phases == 3 if not set
-	if phases != 0 {
-		period.NumberPhases = &phases
+	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
+		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
+	} else {
+		// OCPP assumes phases == 3 if not set
+		if phases != 0 {
+			// set explicit phase configuration
+			period.NumberPhases = &phases
+		}
 	}
 
 	res := &types.ChargingProfile{

@@ -80,9 +80,10 @@
 	--bs-danger-rgb: var(--evcc-red-rgb);
 
 	--bs-body-font-size: 14px;
-	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-		Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-		"Segoe UI Symbol", "Noto Color Emoji";
+	--bs-font-sans-serif:
+		Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+		"Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+		"Noto Color Emoji";
 	--bs-success: var(--evcc-primary);
 	--bs-success-rgb: var(--bs-primary-rgb);
 	--bs-code-color: var(--evcc-darkest-green);
@@ -673,4 +674,11 @@ html.app .modal-dialog {
 
 input::-webkit-date-and-time-value {
 	text-align: left;
+}
+
+@media (max-width: 576px) {
+	.text-truncate-xs-only {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 }

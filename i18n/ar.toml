@@ -161,8 +161,6 @@ footerShort = "{percent} شمسي\""
 
 [main.vehicle]
 
-[main.vehicleSoc]
-
 [main.vehicleStatus]
 
 [notifications]

@@ -83,12 +83,12 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
-							:details="solarForecast"
+							:details="solarForecastRemainingToday"
 							:detailsFmt="forecastFmt"
-							:detailsTooltip="forecastTooltip(solarForecast)"
-							:detailsInactive="solarForecast === 0"
-							:detailsIcon="solarForecast !== undefined ? 'forecast' : undefined"
-							:detailsClickable="solarForecast !== undefined"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
 							data-testid="energyflow-entry-production"
 							@details-clicked="openForecastModal"
@@ -230,18 +230,18 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
-import EnergyflowEntry from "./EnergyflowEntry.vue";
+import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import AnimatedNumber from "../AnimatedNumber.vue";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import { energyByDay } from "../../utils/forecast";
+
 export default {
 	name: "Energyflow",
 	components: {
 		Visualization,
-		EnergyflowEntry,
+		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
 	mixins: [formatter, collector],
@@ -279,57 +279,57 @@ export default {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
 	},
 	computed: {
-		gridImport: function () {
+		gridImport() {
 			return Math.max(0, this.gridPower);
 		},
-		pvProduction: function () {
+		pvProduction() {
 			return Math.abs(this.pvPower);
 		},
-		batteryDischarge: function () {
+		batteryDischarge() {
 			return this.dischargePower(this.batteryPower);
 		},
-		batteryCharge: function () {
+		batteryCharge() {
 			return this.chargePower(this.batteryPower);
 		},
-		batteryChargeLabel: function () {
+		batteryChargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
 		},
-		batteryDischargeLabel: function () {
+		batteryDischargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
 		},
-		batteryHold: function () {
+		batteryHold() {
 			return this.batteryMode === "hold";
 		},
-		consumption: function () {
+		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;
 		},
-		selfPv: function () {
+		selfPv() {
 			return Math.min(this.pvProduction, this.consumption);
 		},
-		selfBattery: function () {
+		selfBattery() {
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
-		activeLoadpoints: function () {
+		activeLoadpoints() {
 			return this.loadpointsCompact.filter((lp) => lp.charging);
 		},
-		activeLoadpointsCount: function () {
+		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
 		},
-		vehicleIcons: function () {
+		vehicleIcons() {
 			if (this.activeLoadpointsCount > 0) {
 				return this.activeLoadpoints.map((lp) => lp.icon);
 			}
 			return ["car"];
 		},
-		loadpointsPower: function () {
+		loadpointsPower() {
 			return this.loadpointsCompact.reduce((sum, lp) => {
 				return sum + (lp.power || 0);
 			}, 0);
 		},
-		pvExport: function () {
+		pvExport() {
 			return Math.max(0, this.gridPower * -1);
 		},
-		powerUnit: function () {
+		powerUnit() {
 			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
 			if (watt >= 1_000_000) {
 				return POWER_UNIT.MW;
@@ -339,20 +339,23 @@ export default {
 				return POWER_UNIT.W;
 			}
 		},
-		inPower: function () {
+		inPower() {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
 		},
-		outPower: function () {
+		outPower() {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
-		detailsHeight: function () {
+		detailsHeight() {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 		pvTooltip() {
 			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
 				return;
 			}
-			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
+			return this.pv.map(
+				({ power, title }) =>
+					`${title ? `${title}: ` : ""}${this.fmtW(power, this.powerUnit)}`
+			);
 		},
 		batteryDischargeTooltip() {
 			return this.batteryTooltip(true);
@@ -389,10 +392,25 @@ export default {
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
-		solarForecast() {
-			const slots = this.forecast.solar || [];
-			if (slots.length === 0) return undefined;
-			return energyByDay(slots, 0);
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
+			if (!this.forecast?.solar) {
+				return undefined;
+			}
+			const { today, scale } = this.forecast.solar || {};
+			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
+			return today.energy * factor;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
 		},
 	},
 	watch: {
@@ -431,12 +449,6 @@ export default {
 			}
 			return result;
 		},
-		forecastTooltip(value) {
-			if (value !== null) {
-				return [this.$t("main.energyflow.forecastTooltip")];
-			}
-			return [];
-		},
 		detailsValue(price, co2) {
 			if (this.co2Available) {
 				return co2;
@@ -455,15 +467,15 @@ export default {
 			}
 			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
-		kw: function (watt) {
+		kw(watt) {
 			return this.fmtW(watt, this.powerUnit);
 		},
-		toggleDetails: function () {
+		toggleDetails() {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
 			settings.energyflowDetails = this.detailsOpen;
 		},
-		updateHeight: function () {
+		updateHeight() {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
 		openBatterySettingsModal() {
@@ -486,11 +498,12 @@ export default {
 			if (!Array.isArray(this.battery) || this.battery.length <= 1) {
 				return;
 			}
-			return this.battery.map(({ power, soc }) => {
+			return this.battery.map(({ power, soc, title }) => {
 				const value = discharge ? this.dischargePower(power) : this.chargePower(power);
+
 				const powerFmt = this.fmtW(value, this.powerUnit);
 				const socFmt = this.fmtPercentage(soc, 0);
-				return `${powerFmt} (${socFmt})`;
+				return `${title ? `${title}: ` : ""}${powerFmt} (${socFmt})`;
 			});
 		},
 	},

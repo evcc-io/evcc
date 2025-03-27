@@ -123,8 +123,6 @@ control = "Akuhaldus"
 
 [main.vehicle]
 
-[main.vehicleSoc]
-
 [main.vehicleStatus]
 
 [notifications]

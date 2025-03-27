@@ -89,6 +89,14 @@ npm install
 npm run dev
 ```
 
+#### Storybook
+
+We're using storybook to develop and visualize UI components in different states. Running the command below will open your browser at http://127.0.0.1:6006/.
+
+```sh
+npm run storybook
+```
+
 #### Integration testing
 
 We use Playwright for end-to-end integration tests. They start a local evcc instance with different configuration yamls and prefilled databases. To run them, you have to do a local build first.

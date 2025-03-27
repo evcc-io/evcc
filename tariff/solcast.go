@@ -108,7 +108,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 			data = append(data, rr)
 		}
 
-		mergeRatesAfter(t.data, data, BeginningOfDay())
+		mergeRatesAfter(t.data, data, beginningOfDay())
 		once.Do(func() { close(done) })
 	}
 }

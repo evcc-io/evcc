@@ -78,6 +78,7 @@ enabled = "Ввімкнено"
 energy = "Енергія"
 feedinPrice = "Збірна ціна"
 gridPrice = "Ціна сітки"
+heaterTempLimit = "Обмеження нагрівача"
 hemsType = "Система"
 identifier = "RFID-ідентифікатор"
 no = "ні"
@@ -159,6 +160,7 @@ v2Support = "Назад до InfluxDB 2.x"
 addCharger = "Додати зарядний пристрій"
 addMeter = "Додати спеціальний лічильник зарядного пристрою"
 cancel = "Скасувати"
+chargerError = "Необхідно налаштувати зарядний пристрій."
 chargerLabel = "Зарядний пристрій"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Використовуватиметься діапазон струму від 6 до 16 А."
@@ -450,6 +452,7 @@ modalUpdateStatusStart = "Встановлення розпочато:"
 
 [forecast]
 modalTitle = "Прогноз"
+solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва{percent}."
 
 [forecast.co2]
 average = "Середній"
@@ -575,6 +578,7 @@ selfConsumption = "Власне споживання"
 
 [main.heatingStatus]
 charging = "Опалення…"
+vehicleLimit = "Обмеження нагрівача"
 waitForVehicle = "Готовий. Очікування обігрівача…"
 
 [main.loadpoint]
@@ -698,13 +702,6 @@ tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
 
-[main.vehicleSoc]
-charging = "зарядка"
-connected = "підключено"
-disconnected = "відключено"
-ready = "готовий"
-vehicleLimit = "Ліміт транспортного засобу: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Очікування авторизації."
 batteryBoost = "Підвищення заряду батареї активне."
@@ -729,7 +726,7 @@ targetChargeActive = "Запланований заряд активний. Ор
 targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
 unknown = ""
-vehicleLimit = "Ліміт транспортного засобу."
+vehicleLimit = "Ліміт транспортного засобу"
 vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 welcome = "Короткий початковий заряд для підтвердження підключення."
@@ -911,6 +908,8 @@ modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
+resetAction = "Зняти обмеження"
+resetWarning = "«Динамічна ціна мережі або джерело CO₂ не налаштовано. Проте обмеження в {limit} усе ще є. Очистити конфігурацію?»"
 saved = "Збережено."
 
 [startupError]

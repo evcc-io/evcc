@@ -416,13 +416,6 @@ tempLimit = "Teplotní strop"
 unknown = "Vozidlo hosta"
 vehicleSoc = "Nabití"
 
-[main.vehicleSoc]
-charging = "nabíjení"
-connected = "připojeno"
-disconnected = "odpojeno"
-ready = "připraveno"
-vehicleLimit = "Limit vozidla: {soc}"
-
 [main.vehicleStatus]
 charging = "Nabíjení..."
 cheapEnergyCharging = "Nabíjení levnou energií: {price} (limit {limit})"
