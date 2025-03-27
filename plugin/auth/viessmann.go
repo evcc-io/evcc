@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 
 	"github.com/evcc-io/evcc/util"
@@ -46,6 +45,8 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 		RedirectURL: cc.RedirectURL,
 	}
 
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, v.Client)
+
 	token, err := v.login(ctx, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
@@ -64,12 +65,7 @@ func (v *Viessmann) login(ctx context.Context, oc oauth2.Config, user, password 
 		oauth2.SetAuthURLParam("user", transport.BasicAuthHeader(user, password)),
 	)
 
-	v.Client.Jar, _ = cookiejar.New(nil)
 	v.Client.CheckRedirect = request.DontFollow
-	defer func() {
-		v.Client.Jar = nil
-		v.Client.CheckRedirect = nil
-	}()
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": transport.BasicAuthHeader(user, password),
@@ -80,6 +76,8 @@ func (v *Viessmann) login(ctx context.Context, oc oauth2.Config, user, password 
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	v.Client.CheckRedirect = nil
 
 	if resp.StatusCode != http.StatusFound {
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
