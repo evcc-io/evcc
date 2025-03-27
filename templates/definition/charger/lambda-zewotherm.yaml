@@ -28,8 +28,8 @@ params:
     type: choice
     choice: ["", "warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
     description:
-      de: "Temperaturquelle [warmwater_top; warmwater_bottom; buffer_top; buffer_bottom]"
-      en: "Temperature source [warmwater_top; warmwater_bottom; buffer_top; buffer_bottom]"
+      de: "Temperaturquelle"
+      en: "Temperature source"
   - name: phases
     deprecated: true
   - name: watchdog
