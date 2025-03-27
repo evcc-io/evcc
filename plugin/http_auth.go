@@ -14,8 +14,9 @@ import (
 // Auth is the authorization config
 type Auth struct {
 	Type, User, Password, Token string
-	Source                      string
-	Other                       map[string]any
+
+	Source string
+	Other  map[string]any `mapstructure:",remain"`
 }
 
 func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.RoundTripper, error) {
@@ -28,10 +29,18 @@ func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.Roun
 		return digest.NewTransport(p.User, p.Password, base), nil
 	default:
 		if p.Source != "" {
+			if p.User != "" {
+				p.Other["user"] = p.User
+			}
+			if p.Password != "" {
+				p.Other["password"] = p.Password
+			}
+
 			authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
 			if err != nil {
 				return nil, err
 			}
+
 			return authorizer.Transport(base)
 		}
 
