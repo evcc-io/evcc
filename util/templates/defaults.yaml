@@ -269,6 +269,7 @@ params:
       - meter
       - microwave
       - pump
+      - smartconsumer
       - tool
       - waterheater
 

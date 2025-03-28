@@ -8,7 +8,6 @@ import "@h2d2/shopicons/es/regular/car3";
 import MultiIcon from "../MultiIcon";
 
 import airpurifier from "./Airpurifier.vue";
-import aux from "./Aux.vue";
 import battery from "./Battery.vue";
 import bike from "./Bike.vue";
 import bulb from "./Bulb.vue";
@@ -40,6 +39,7 @@ import rickshaw from "./Rickshaw.vue";
 import rocket from "./Rocket.vue";
 import scooter from "./Scooter.vue";
 import shuttle from "./Shuttle.vue";
+import smartconsumer from "./SmartConsumer.vue";
 import taxi from "./Taxi.vue";
 import tool from "./Tool.vue";
 import tractor from "./Tractor.vue";
@@ -48,7 +48,6 @@ import waterheater from "./WaterHeater.vue";
 
 const icons = {
 	airpurifier,
-	aux,
 	battery,
 	bike,
 	bulb,
@@ -81,6 +80,7 @@ const icons = {
 	rocket,
 	scooter,
 	shuttle,
+	smartconsumer,
 	taxi,
 	tool,
 	tractor,
