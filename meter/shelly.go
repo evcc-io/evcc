@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"strings"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
@@ -18,6 +20,7 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User     string
 		Password string
 		Channel  int
+		Usage    string // grid, pv, battery
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -29,5 +32,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewSwitch(conn), nil
+	return shelly.NewSwitch(conn, strings.ToLower(cc.Usage)), nil
 }

@@ -6,7 +6,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "pv", "charge", "battery"]
   - name: host
   - name: user
   - name: password
@@ -22,3 +22,4 @@ render: |
   password: {{ .password }}
   {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
+  usage: {{ .usage }}
