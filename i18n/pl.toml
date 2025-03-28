@@ -39,6 +39,7 @@ title = "Zarządzanie obciążeniem"
 description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
 labelInterval = "Interwał aktualizacji"
 labelResidualPower = "Moc resztkowa"
+title = "Kontrola zachowania"
 
 [config.deviceValue]
 broker = "Broker"
@@ -65,6 +66,15 @@ range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
 url = "URL"
+powerRange = "Zasilanie"
+temp = "Temperatura"
+vehicleLimitSoc = "Limit pojazdu"
+chargeStatusE = "brak zasilania"
+yes = "tak"
+no = "nie"
+amount = "Ilość"
+currentRange = "Aktualne"
+feedinPrice = "Cena sprzedaży energii do sieci"
 
 [config.eebus]
 title = "EEBus"
@@ -78,6 +88,17 @@ cancel = "Anulować"
 experimental = "Eksperymentalny"
 save = "Zapisz"
 telemetry = "Telemetria"
+delete = "Usuń"
+off = "wyłączony"
+title = "Tytuł"
+validateSave = "Zatwierdź i zapisz"
+on = "włączony"
+password = "Hasło"
+docsLink = "Zobacz dokumentacje"
+remove = "Usuń"
+readFromFile = "Przeczytaj z pliku"
+hideAdvancedSettings = "Schowaj ustawienia zaawansowane"
+showAdvancedSettings = "Pokaż ustawienia zaawansowane"
 
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
@@ -594,3 +615,25 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[config.deviceValueChargeStatus]
+A = "A (nie połączony)"
+B = "B (połączony)"
+C = "C (ładowanie)"
+
+[config.charge]
+titleAdd = "Dodaj licznik ładowania"
+titleEdit = "Edytuj licznik ładowania"
+
+[config.charger]
+ocppHelp = "Skopiuj ten adres do konfiguracji Twojej ładowarki"
+chargers = "ładowarki EV"
+generic = "Ogólne integracje"
+switchsockets = "Przełączalne gniazdka"
+template = "Producent"
+titleAdd = "Dodaj ładowarkę"
+titleEdit = "Edytuj ładowarkę"
+
+[config.loadpoint]
+addCharger = "Dodaj ładowarkę"

@@ -24,7 +24,7 @@ never = "nur mit genug PV-Überschuss."
 [config]
 
 [config.aux]
-description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es benötigt wird."
+description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist."
 titleAdd = "Intelligenten Verbraucher hinzufügen"
 titleEdit = "Intelligenten Verbraucher bearbeiten"
 
@@ -253,6 +253,7 @@ title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
 yaml = "Geräte aus evcc.yaml sind nicht editierbar."
+addAdditional = Zusätzlichen Zähler hinzufügen
 
 [config.messaging]
 description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."
