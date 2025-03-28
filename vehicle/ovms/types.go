@@ -15,6 +15,7 @@ type ChargeResponse struct {
 	EstimatedRange   int64   `json:"estimatedrange,string"`
 	MessageAgeServer int     `json:"m_msgage_s"`
 	Soc              float64 `json:"soc,string"`
+	Climater         int     `json:"staleambient,string"`
 }
 
 type LocationResponse struct {

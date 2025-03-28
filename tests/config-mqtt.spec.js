@@ -27,7 +27,7 @@ test.describe("mqtt", async () => {
     const modal = await page.getByTestId("mqtt-modal");
 
     await modal.getByLabel("Broker").fill("unknown.example.org");
-    await modal.getByLabel("Topic").fill("my-topic");
+    await modal.getByLabel("Topic").fill("  my-topic "); // whitespace should be trimmed
     await modal.getByLabel("Client ID").fill("my-client-id");
 
     await page.getByRole("button", { name: "Save" }).click();

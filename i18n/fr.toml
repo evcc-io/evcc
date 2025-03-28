@@ -78,6 +78,7 @@ enabled = "Activé"
 energy = "Énergie"
 feedinPrice = "Prix de revente"
 gridPrice = "Prix du réseau"
+heaterTempLimit = "Limite du chauffage"
 hemsType = "Système"
 identifier = "Identifiant RFID"
 no = "non"
@@ -159,6 +160,7 @@ v2Support = "Revenir à InfluxDB 2.x"
 addCharger = "Ajouter un chargeur"
 addMeter = "Ajouter un compteur dédié pour le chargeur"
 cancel = "Annuler"
+chargerError = "Il est nécessaire de configurer un chargeur."
 chargerLabel = "Chargeur"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Va utiliser des courants de 6 à 16 A."
@@ -449,6 +451,7 @@ modalUpdateStatusStart = "L'installation a commencé:"
 
 [forecast]
 modalTitle = "Prévisions"
+solarAdjust = "Ajuster la prévision solaire basé sur la production réelle{percent}."
 
 [forecast.co2]
 average = "Moyenne"
@@ -581,6 +584,7 @@ selfConsumption = "Consommation propre"
 charging = "Chauffage… "
 cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+vehicleLimit = "Limite de chauffage"
 waitForVehicle = "Prêt. En attente du chauffage… "
 
 [main.loadpoint]
@@ -919,6 +923,8 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
+resetAction = "Supprimer la limite"
+resetWarning = "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration?"
 saved = "Enregistré."
 
 [startupError]

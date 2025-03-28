@@ -157,8 +157,8 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
-		const minEnergy = 0.1
-		if produced > minEnergy && fcst > minEnergy { /*kWh*/
+		const minEnergy = 0.5 // kWh
+		if produced+fcst > minEnergy {
 			res.Scale = lo.ToPtr(scale)
 		}
 	}

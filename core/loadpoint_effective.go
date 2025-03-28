@@ -133,7 +133,7 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.GetMinCurrent()
+	lpMin := lp.getMinCurrent()
 	var vehicleMin, chargerMin float64
 
 	if v := lp.GetVehicle(); v != nil {

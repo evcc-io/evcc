@@ -10,6 +10,7 @@ params:
     example: dk1
     type: choice
     choice: ["dk1", "dk2"]
+    required: true
   - preset: tariff-base
 render: |
   type: energinet

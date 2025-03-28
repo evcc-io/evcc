@@ -14,12 +14,12 @@
 
 <script>
 import store from "../store";
-import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
-import BatterySettingsModal from "../components/BatterySettingsModal.vue";
-import ForecastModal from "../components/ForecastModal.vue";
-import OfflineIndicator from "../components/OfflineIndicator.vue";
-import PasswordModal from "../components/PasswordModal.vue";
-import LoginModal from "../components/LoginModal.vue";
+import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
+import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
+import ForecastModal from "../components/Forecast/ForecastModal.vue";
+import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
+import PasswordModal from "../components/Auth/PasswordModal.vue";
+import LoginModal from "../components/Auth/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 
@@ -57,13 +57,13 @@ export default {
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
 	computed: {
-		version: function () {
+		version() {
 			return store.state.version;
 		},
-		batteryModalAvailabe: function () {
+		batteryModalAvailabe() {
 			return store.state.battery?.length;
 		},
-		globalSettingsProps: function () {
+		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, store.state);
 		},
 		batterySettingsProps() {
@@ -77,30 +77,30 @@ export default {
 		},
 	},
 	watch: {
-		version: function (now, prev) {
+		version(now, prev) {
 			if (!!prev && !!now) {
 				console.log("new version detected. reloading browser", { now, prev });
 				this.reload();
 			}
 		},
-		offline: function (offline) {
+		offline(offline) {
 			store.offline(offline);
 			if (offline) {
 				this.reconnect();
 			}
 		},
 	},
-	mounted: function () {
+	mounted() {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
-	unmounted: function () {
+	unmounted() {
 		this.disconnect();
 		window.clearTimeout(this.reconnectTimeout);
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
 	methods: {
-		pageVisibilityChanged: function () {
+		pageVisibilityChanged() {
 			if (document.hidden) {
 				window.clearTimeout(this.reconnectTimeout);
 				this.disconnect();
@@ -108,14 +108,14 @@ export default {
 				this.connect();
 			}
 		},
-		reconnect: function () {
+		reconnect() {
 			window.clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = window.setTimeout(() => {
 				this.disconnect();
 				this.connect();
 			}, 2500);
 		},
-		disconnect: function () {
+		disconnect() {
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -125,7 +125,7 @@ export default {
 				this.ws = null;
 			}
 		},
-		connect: function () {
+		connect() {
 			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
@@ -166,6 +166,9 @@ export default {
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
+					if (msg.startup) {
+						store.reset();
+					}
 					store.update(msg);
 					lastDataReceived = new Date();
 				} catch (error) {

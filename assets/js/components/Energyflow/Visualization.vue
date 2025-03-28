@@ -110,7 +110,7 @@
 import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
-import AnimatedNumber from "../AnimatedNumber.vue";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
@@ -137,29 +137,29 @@ export default {
 		inPower: { type: Number, default: 0 },
 		outPower: { type: Number, default: 0 },
 	},
-	data: function () {
+	data() {
 		return { width: 0 };
 	},
 	computed: {
-		gridExport: function () {
+		gridExport() {
 			return this.applyThreshold(this.pvExport);
 		},
-		totalRaw: function () {
+		totalRaw() {
 			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
 		},
-		gridImportAdjusted: function () {
+		gridImportAdjusted() {
 			return this.applyThreshold(this.gridImport);
 		},
-		selfPvAdjusted: function () {
+		selfPvAdjusted() {
 			return this.applyThreshold(this.selfPv);
 		},
-		selfBatteryAdjusted: function () {
+		selfBatteryAdjusted() {
 			return this.applyThreshold(this.selfBattery);
 		},
-		pvExportAdjusted: function () {
+		pvExportAdjusted() {
 			return this.applyThreshold(this.pvExport);
 		},
-		totalAdjusted: function () {
+		totalAdjusted() {
 			return (
 				this.gridImportAdjusted +
 				this.selfPvAdjusted +
@@ -167,27 +167,27 @@ export default {
 				this.pvExportAdjusted
 			);
 		},
-		unknownImport: function () {
+		unknownImport() {
 			// input/output mismatch > 10%
 			return this.applyThreshold(Math.max(0, this.outPower - this.inPower), 10);
 		},
-		unknownOutput: function () {
+		unknownOutput() {
 			// input/output mismatch > 10%
 			return this.applyThreshold(Math.max(0, this.inPower - this.outPower), 10);
 		},
-		unknownPower: function () {
+		unknownPower() {
 			if (this.unknownImport || this.unknownOutput) {
 				const total = Math.max(this.inPower, this.outPower);
 				return Math.abs(total - this.totalAdjusted);
 			}
 			return 0;
 		},
-		visualizationReady: function () {
+		visualizationReady() {
 			return this.totalAdjusted > 0 && this.width > 0;
 		},
 	},
 
-	mounted: function () {
+	mounted() {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
 			this.updateElementWidth();
@@ -197,11 +197,11 @@ export default {
 		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	methods: {
-		widthTotal: function (power) {
+		widthTotal(power) {
 			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
-		fmtBarValue: function (watt) {
+		fmtBarValue(watt) {
 			if (!this.enoughSpaceForValue(watt)) {
 				return "";
 			}
