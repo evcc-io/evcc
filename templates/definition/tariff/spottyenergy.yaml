@@ -1,6 +1,8 @@
 template: spottyenergy
 products:
   - brand: Spotty Energie
+requirements:
+  evcc: ["skiptest"]
 group: price
 countries: ["AT"]
 params:
