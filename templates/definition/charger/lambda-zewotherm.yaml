@@ -26,7 +26,7 @@ params:
   - name: host
   - name: tempsource
     type: choice
-    choice: ["", "warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
+    choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"

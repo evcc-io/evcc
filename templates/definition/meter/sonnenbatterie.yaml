@@ -34,6 +34,7 @@ params:
     type: choice
     choice: ["self-consumption", "time-of-use"]
     default: self-consumption
+    required: true
     advanced: true
     help:
       de: Standardmodus für die aktive Batteriesteuerung
