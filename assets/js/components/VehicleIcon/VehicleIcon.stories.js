@@ -2,7 +2,6 @@ import VehicleIcon from "./VehicleIcon.vue";
 
 const icons = [
   "car",
-  "aux",
   "bike",
   "bus",
   "moped",
@@ -36,6 +35,7 @@ const icons = [
   "laundry2",
   "machine",
   "meter",
+  "smartconsumer",
   "microwave",
   "pump",
   "tool",
