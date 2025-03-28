@@ -695,10 +695,10 @@ func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
 }
 
 // syncCharger updates charger status and synchronizes it with expectations
-func (lp *Loadpoint) syncCharger() error {
+func (lp *Loadpoint) syncCharger() (bool, error) {
 	enabled, err := lp.charger.Enabled()
 	if err != nil {
-		return fmt.Errorf("charger enabled: %w", err)
+		return false, fmt.Errorf("charger enabled: %w", err)
 	}
 
 	shouldBeConsistent := lp.shouldBeConsistent()
@@ -718,11 +718,11 @@ func (lp *Loadpoint) syncCharger() error {
 
 		if shouldBeConsistent {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
-				return fmt.Errorf("charger enable: %w", err)
+				return false, fmt.Errorf("charger enable: %w", err)
 			}
 
 			lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
-			return nil
+			return false, nil
 		}
 	}
 
@@ -748,7 +748,7 @@ func (lp *Loadpoint) syncCharger() error {
 					lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 				}
 			} else if !errors.Is(err, api.ErrNotAvailable) {
-				return fmt.Errorf("charger get max current: %w", err)
+				return false, fmt.Errorf("charger get max current: %w", err)
 			}
 		}
 
@@ -782,9 +782,9 @@ func (lp *Loadpoint) syncCharger() error {
 					}
 				} else {
 					if errors.Is(err, api.ErrNotAvailable) {
-						return nil
+						return enabled, nil
 					}
-					return fmt.Errorf("charger get phases: %w", err)
+					return false, fmt.Errorf("charger get phases: %w", err)
 				}
 			}
 
@@ -804,7 +804,7 @@ func (lp *Loadpoint) syncCharger() error {
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
 		if err := lp.charger.Enable(true); err != nil {
-			return fmt.Errorf("charger enable: %w", err)
+			return false, fmt.Errorf("charger enable: %w", err)
 		}
 
 	case shouldBeConsistent && (enabled || lp.connected()):
@@ -812,7 +812,7 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 
-	return nil
+	return enabled, nil
 }
 
 // coarseCurrent returns true if charger or vehicle require full amp steps
@@ -1806,7 +1806,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	lp.publishSocAndRange()
 
 	// sync settings with charger
-	if err := lp.syncCharger(); err != nil {
+	enabled, err := lp.syncCharger()
+	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
@@ -1870,9 +1871,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 			break
 		}
 
+		keepEnabled := enabled && lp.GetStatus() == api.StatusB
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
-		if targetCurrent == 0 && lp.vehicleClimateActive() {
+		if targetCurrent == 0 && (keepEnabled || lp.vehicleClimateActive()) {
+			if keepEnabled {
+				lp.log.DEBUG.Println("keeping charger active after vehicle stopped charging")
+			}
 			targetCurrent = lp.effectiveMinCurrent()
 		}
 
