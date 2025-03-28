@@ -86,8 +86,12 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc fu
 		}
 
 		oldStruc := newStruc()
-		settings.Json(key, &oldStruc)
-		mergeSettingsOld(struc, oldStruc)
+		if err := settings.Json(key, &oldStruc); err == nil {
+			if err := mergeSettings(oldStruc, struc); err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
+		}
 
 		settings.SetJson(key, struc)
 		setConfigDirty()
@@ -109,33 +113,23 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 	}
 }
 
-func mergeSettingsOld(struc any, old any) {
-	if old == nil {
-		return
-	}
-
+func mergeSettings(old any, new any) error {
 	redactable, ok := old.(api.Redactor)
 	if !ok {
-		return
-	}
-	redacted := redactable.Redacted()
-	if redacted == nil {
-		return
+		return nil
 	}
 
-	strucMap := structs.Map(struc)
+	newMap := structs.Map(new)
 	oldMap := structs.Map(old)
-	redactedMap := structs.Map(redacted)
+	redactedMap := structs.Map(redactable.Redacted())
 
-	for k, v := range strucMap {
+	for k, v := range newMap {
 		if rv, ok := redactedMap[k]; ok && v == rv {
 			if ov, ok := oldMap[k]; ok {
-				strucMap[k] = ov
+				newMap[k] = ov
 			}
 		}
 	}
 
-	if err := mapstructure.Decode(strucMap, &struc); err != nil {
-		return
-	}
+	return mapstructure.Decode(newMap, &new)
 }
