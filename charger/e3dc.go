@@ -2,6 +2,7 @@ package charger
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -17,6 +18,7 @@ import (
 
 type E3dc struct {
 	conn    *rscp.Client
+	id      uint8
 	current byte
 }
 
@@ -30,6 +32,7 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Key      string
+		Id       uint8
 		Timeout  time.Duration
 	}{
 		Timeout: request.Timeout,
@@ -57,12 +60,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Charger, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg)
+	return NewE3dc(cfg, cc.Id)
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig) (api.Charger, error) {
+func NewE3dc(cfg rscp.ClientConfig, id uint8) (api.Charger, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -76,6 +79,7 @@ func NewE3dc(cfg rscp.ClientConfig) (api.Charger, error) {
 
 	m := &E3dc{
 		conn:    conn,
+		id:      id,
 		current: 6,
 	}
 
@@ -84,13 +88,31 @@ func NewE3dc(cfg rscp.ClientConfig) (api.Charger, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *E3dc) Enabled() (bool, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil))
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil),
+	}))
+	if err != nil {
+		return false, err
+	}
+	fmt.Printf("%+v\n", res)
+
+	wb_data, err := rscpContainer(*res, 2)
 	if err != nil {
 		return false, err
 	}
 
-	b, err := rscpValue(*res, cast.ToUint8E)
-	return b^(1<<4) == 0, err
+	wb_ext_data_alg, err := rscpContainer(wb_data[1], 2)
+	if err != nil {
+		return false, err
+	}
+
+	b, err := rscpBytes(wb_ext_data_alg[1])
+	if err != nil {
+		return false, err
+	}
+
+	return b[0]^(1<<4) == 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -100,13 +122,42 @@ func (wb *E3dc) Enable(enable bool) error {
 
 // Status implements the api.Charger interface
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALL, nil))
-	if err != nil {
-		return api.StatusNone, err
-	}
-	_ = res
+	status := api.StatusNone
 
-	return api.StatusNone, api.ErrNotAvailable
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALL, nil),
+	}))
+	if err != nil {
+		return status, err
+	}
+	fmt.Printf("%+v\n", res)
+
+	wb_data, err := rscpContainer(*res, 2)
+	if err != nil {
+		return status, err
+	}
+
+	wb_ext_data_all, err := rscpContainer(wb_data[1], 2)
+	if err != nil {
+		return status, err
+	}
+
+	b, err := rscpBytes(wb_ext_data_all[1])
+	if err != nil {
+		return status, err
+	}
+
+	switch {
+	case b[3] == 1:
+		status = api.StatusC
+	case b[4] == 1:
+		status = api.StatusB
+	default:
+		status = api.StatusA
+	}
+
+	return status, nil
 }
 
 func (wb *E3dc) maxCurrent(current byte, enable bool) error {
@@ -183,6 +234,37 @@ func rscpError(msg ...rscp.Message) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+func rscpContainer(msg rscp.Message, length int) ([]rscp.Message, error) {
+	if err := rscpError(msg); err != nil {
+		return nil, err
+	}
+
+	if msg.DataType != rscp.Container {
+		return nil, errors.New("invalid response")
+	}
+
+	res, ok := msg.Value.([]rscp.Message)
+	if !ok {
+		return nil, errors.New("invalid response")
+	}
+
+	if l := len(res); l < length {
+		return nil, fmt.Errorf("invalid length: expected %d, got %d", length, l)
+	}
+
+	return res, nil
+}
+
+func rscpBytes(msg rscp.Message) ([]byte, error) {
+	return rscpValue(msg, func(data any) ([]byte, error) {
+		b, ok := data.([]uint8)
+		if !ok {
+			return nil, errors.New("invalid response")
+		}
+		return b, nil
+	})
 }
 
 func rscpValue[T any](msg rscp.Message, fun func(any) (T, error)) (T, error) {
