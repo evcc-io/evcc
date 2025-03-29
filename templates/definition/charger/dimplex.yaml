@@ -1,0 +1,160 @@
+template: dimplex
+products:
+  - brand: Dimplex
+    description:
+      de: EU-L Serie
+      en: EU-L Series
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+  description:
+    de: |
+      ModBus aktivierung  am Gerät:
+
+      https://dimplex.atlassian.net/wiki/spaces/DW/pages/3303571457/Modbus+TCP+Anbindung
+
+    en: |
+      ModBus settings of the device:
+
+      https://dimplex.atlassian.net/wiki/spaces/DW/pages/3303571457/Modbus+TCP+Anbindung
+
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["", "warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+  - name: phases
+    deprecated: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      1: 3 # Frostschutz
+      2: 1 # Normal
+      3: 2 # Forcierter Betrieb
+      4: 2 # Sofortige Ansteuerung
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 5015
+        type: input
+        encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register:
+              address: 5015
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register::
+              address: 4002
+              type: writesingle
+              encoding: uint16
+    - case: 2 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register:
+              address: 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register:
+              address: 4002
+              type: writesingle
+              encoding: uint16
+    - case: 3 # dimm
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register:
+              address: 4001
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            uri: {{ .host }}:502
+            id: 1
+            register:
+              address: 4002
+              type: writesingle
+              encoding: uint16
+  {{- if .tempsource }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103 # aktuelle Aufnahmeleistung [E] der WP
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
+      type: holding
+      decode: int32
+    scale: 0.001
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater" -}} 3 {{ else if eq .tempsource "buffer" -}} 3 {{ else }} 3 {{- end }} # 3 Temperatur Warmwasser (R3)
+      type: holding
+      decode: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater" -}} 5048 {{ else if eq .tempsource "buffer" -}} 5048 {{ else }} 5048 {{- end }} # 5048 Trinkwasser, 5048 Wärmespeicher
+      type: holding
+      decode: uint16
+    scale: 0.1
+  {{- end }}
