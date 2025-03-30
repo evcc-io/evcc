@@ -1,8 +1,6 @@
 package charger
 
 import (
-	"fmt"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
@@ -10,7 +8,7 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn *shelly.Switch
+	conn *shelly.Connection
 	*switchSocket
 }
 
@@ -44,34 +42,43 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: shelly.NewSwitch(conn, "charge"),
+		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
 
 	return c, nil
 }
 
+var _ api.Meter = (*Shelly)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (c *Shelly) CurrentPower() (float64, error) {
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1CurrentPower()
+	default:
+		return c.conn.Gen2CurrentPower()
+	}
+}
+
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
-	return c.conn.Enabled()
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1Enabled()
+	default:
+		return c.conn.Gen2Enabled()
+	}
 }
 
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
-	if err := c.conn.Enable(enable); err != nil {
-		return err
-	}
-
-	enabled, err := c.Enabled()
-	switch {
-	case err != nil:
-		return err
-	case enable != enabled:
-		onoff := map[bool]string{true: "on", false: "off"}
-		return fmt.Errorf("switch %s failed", onoff[enable])
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1Enable(enable)
 	default:
-		return nil
+		return c.conn.Gen2Enable(enable)
 	}
 }
 
@@ -79,5 +86,20 @@ var _ api.MeterEnergy = (*Shelly)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Shelly) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+	var energy float64
+	var err error
+	switch c.conn.Gen {
+	case 0, 1:
+		energy, err = c.conn.Gen1TotalEnergy()
+		if err != nil {
+			return 0, err
+		}
+
+	default:
+		energy, _, err = c.conn.Gen2TotalEnergy()
+		if err != nil {
+			return 0, err
+		}
+	}
+	return energy / 1000, nil
 }
