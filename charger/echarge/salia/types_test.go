@@ -12,14 +12,16 @@ func TestAuthorizationRequestUnmarshalJSON(t *testing.T) {
 		expected  AuthorizationRequest
 	}{
 		{
-			name: "Aktuell nicht Authentifiziert (leerer JSON-String)",
-			// Ein JSON-String, der ein leeres Stringliteral repräsentiert.
+			name: "Leerer JSON-String",
+			// Dieser Input repräsentiert ein leeres Stringliteral.
 			jsonInput: "\"\"",
 			expected:  AuthorizationRequest{},
 		},
 		{
-			name:      "Korrekte Authentifizierungsanfrage",
-			jsonInput: `["ISO14443","9af18400"]`,
+			name: "Korrekte Authentifizierungsanfrage (als JSON-String)",
+			// Realer Input: ein JSON-String, der ein Array repräsentiert.
+			// Das Ergebnis soll durch Unquote den Inhalt ["ISO14443","9af18400"] liefern.
+			jsonInput: "\"[\\\"ISO14443\\\",\\\"9af18400\\\"]\"",
 			expected:  AuthorizationRequest{Protocol: "ISO14443", Key: "9af18400"},
 		},
 	}
