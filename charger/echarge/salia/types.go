@@ -2,7 +2,6 @@ package salia
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 const (
@@ -110,28 +109,16 @@ type AuthorizationRequest struct {
 }
 
 func (a *AuthorizationRequest) UnmarshalJSON(data []byte) error {
-	// Zunächst versuchen wir, data direkt als Array zu parsen.
 	var arr []string
 	if err := json.Unmarshal(data, &arr); err == nil {
-		if len(arr) != 2 {
-			return fmt.Errorf("unerwartete Arraylänge: %d", len(arr))
+		if len(arr) == 2 {
+			*a = AuthorizationRequest{
+				Protocol: arr[0],
+				Key:      arr[1],
+			}
+			return nil
 		}
-		a.Protocol = arr[0]
-		a.Key = arr[1]
-		return nil
 	}
-	// Falls das nicht klappt, interpretieren wir data als String und parsen ihn dann als Array.
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	if err := json.Unmarshal([]byte(s), &arr); err != nil {
-		return err
-	}
-	if len(arr) != 2 {
-		return fmt.Errorf("unerwartete Arraylänge: %d", len(arr))
-	}
-	a.Protocol = arr[0]
-	a.Key = arr[1]
+	*a = AuthorizationRequest{}
 	return nil
 }

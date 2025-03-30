@@ -266,28 +266,15 @@ func (wb *Salia) currents() (float64, float64, float64, error) {
 	return i.L1.Actual / 1e3, i.L2.Actual / 1e3, i.L3.Actual / 1e3, err
 }
 
-// var _ api.Identifier = (*Salia)(nil)
-
-// // Identify implements the api.Identifier interface
-// func (wb *Salia) Identify() (string, error) {
-// 	return "", api.ErrNotAvailable
-// }
-
 func (wb *Salia) Identify() (string, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return "", err
 	}
-	req := res.Secc.Port0.RFID.AuthorizationRequest
-	if req.Key != "" {
+	if req := res.Secc.Port0.RFID.AuthorizationRequest; req.Protocol == "ISO14443" && req.Key != "" {
 		return req.Key, nil
 	}
 	return "", api.ErrNotAvailable
-}
-
-// Authorize sendet den übergebenen Schlüssel an den Salia-Controller zur Autorisierung.
-func (wb *Salia) Authorize(key string) error {
-	return wb.post("salia/authorize", key)
 }
 
 func (wb *Salia) getPhases() (int, error) {
