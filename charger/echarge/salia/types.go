@@ -1,5 +1,10 @@
 package salia
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
@@ -87,4 +92,46 @@ type Port struct {
 	EvPresent        int     `json:"ev_present,string"`
 	Charging         int     `json:",string"`
 	GridCurrentLimit float64 `json:"grid_current_limit,string"`
+	Session          struct {
+		AuthorizationStatus string `json:"authorization_status"`
+		AuthorizationMethod string `json:"authorization_method"`
+	} `json:"session"`
+	RFID struct {
+		Type                 string               `json:"type"`
+		Available            string               `json:"available"`
+		Authorizereq         string               `json:"authorizereq"`
+		AuthorizationRequest AuthorizationRequest `json:"authorization_request"`
+	} `json:"rfid"`
+}
+
+type AuthorizationRequest struct {
+	Protocol string
+	Key      string
+}
+
+func (a *AuthorizationRequest) UnmarshalJSON(data []byte) error {
+	// Zunächst versuchen wir, data direkt als Array zu parsen.
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err == nil {
+		if len(arr) != 2 {
+			return fmt.Errorf("unerwartete Arraylänge: %d", len(arr))
+		}
+		a.Protocol = arr[0]
+		a.Key = arr[1]
+		return nil
+	}
+	// Falls das nicht klappt, interpretieren wir data als String und parsen ihn dann als Array.
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if err := json.Unmarshal([]byte(s), &arr); err != nil {
+		return err
+	}
+	if len(arr) != 2 {
+		return fmt.Errorf("unerwartete Arraylänge: %d", len(arr))
+	}
+	a.Protocol = arr[0]
+	a.Key = arr[1]
+	return nil
 }

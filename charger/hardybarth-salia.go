@@ -273,6 +273,23 @@ func (wb *Salia) currents() (float64, float64, float64, error) {
 // 	return "", api.ErrNotAvailable
 // }
 
+func (wb *Salia) Identify() (string, error) {
+	res, err := wb.apiG.Get()
+	if err != nil {
+		return "", err
+	}
+	req := res.Secc.Port0.RFID.AuthorizationRequest
+	if req.Key != "" {
+		return req.Key, nil
+	}
+	return "", api.ErrNotAvailable
+}
+
+// Authorize sendet den übergebenen Schlüssel an den Salia-Controller zur Autorisierung.
+func (wb *Salia) Authorize(key string) error {
+	return wb.post("salia/authorize", key)
+}
+
 func (wb *Salia) getPhases() (int, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
