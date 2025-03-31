@@ -37,7 +37,7 @@ const (
 )
 
 var (
-	log         = util.NewLogger("main")
+	log         *util.Logger
 	cfgFile     string
 	cfgDatabase string
 
@@ -59,6 +59,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	log = util.NewLogger("main")
+
 	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
 
 	cobra.OnInitialize(initConfig)
