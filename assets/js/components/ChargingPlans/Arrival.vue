@@ -62,6 +62,7 @@
 <script lang="ts">
 import { distanceUnit } from "../../units.js";
 import formatter from "../../mixins/formatter.js";
+import type { SelectOption } from "../../types/evcc";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -80,13 +81,13 @@ export default defineComponent({
 		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
 	},
 	computed: {
-		minSocOptions(): { value: number; name: string }[] {
+		minSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 95 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
-		limitSocOptions(): { value: number; name: string }[] {
+		limitSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 100 with a step of 5
 			return Array.from(Array(21).keys())
 				.map((i) => i * 5)
@@ -102,7 +103,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		socOption(soc: number): { value: number; name: string } {
+		socOption(soc: number): SelectOption<number> {
 			return {
 				value: soc,
 				name: soc === 0 ? "---" : this.fmtSocOption(soc, this.rangePerSoc, distanceUnit()),

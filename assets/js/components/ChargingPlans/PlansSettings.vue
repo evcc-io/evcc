@@ -73,14 +73,7 @@ import api, { allowClientError } from "../../api.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "../../utils/deepEqual.js";
 import { defineComponent, type PropType } from "vue";
-import type {
-	Vehicle,
-	PartialBy,
-	Timeout,
-	Tariff,
-	CustomSelectOption as SelectableOption,
-	CURRENCY,
-} from "assets/js/types/evcc.js";
+import type { Vehicle, PartialBy, Timeout, Tariff, SelectOption, CURRENCY } from "../../types/evcc";
 
 import type {
 	StaticPlan,
@@ -157,11 +150,11 @@ export default defineComponent({
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
-		previewPlanOptions(): SelectableOption[] {
+		previewPlanOptions(): SelectOption<number>[] {
 			const name = (n: number) => `${this.$t("main.targetCharge.preview")} #${n}`;
 
 			// static plan
-			const options = [{ value: 1, name: name(1) }] as SelectableOption[];
+			const options = [{ value: 1, name: name(1) }] as SelectOption<number>[];
 
 			// repeating plans
 			this.repeatingPlans.forEach((plan, index) => {

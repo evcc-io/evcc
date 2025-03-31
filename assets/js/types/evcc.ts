@@ -41,10 +41,9 @@ export interface Rate {
 	price: number;
 }
 
-// TODO: add comments to props
-export interface CustomSelectOption {
+export interface SelectOption<T> {
 	name: string;
-	value: string | number;
+	value: T;
 	count?: number;
 	disabled?: boolean;
 }

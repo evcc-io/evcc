@@ -15,18 +15,13 @@
 </template>
 
 <script lang="ts">
-import type { CustomSelectOption } from "assets/js/types/evcc";
+import type { SelectOption } from "../../types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	name: "CustomSelect",
 	props: {
-		options: { type: Array as PropType<CustomSelectOption[]> },
-		/**
-		 * The value of the `value` key of the selected option.
-		 *
-		 * @see {CustomSelectOption}
-		 */
+		options: { type: Array as PropType<SelectOption<number | string>[]> },
 		selected: { type: [String, Number] },
 		id: { type: String },
 	},

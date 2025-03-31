@@ -141,6 +141,7 @@ import { distanceUnit } from "../../units.js";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "../../mixins/formatter.js";
 import deepEqual from "../../utils/deepEqual.js";
+import type { SelectOption } from "../../types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
@@ -182,13 +183,13 @@ export default defineComponent({
 		weekdaysLabel(): string {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
-		socOptions(): { value: number; name: string }[] {
+		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		dayOptions(): { name: string; value: number }[] {
+		dayOptions(): SelectOption<number>[] {
 			return this.getWeekdaysList("long");
 		},
 	},
@@ -219,7 +220,7 @@ export default defineComponent({
 		formId(name: string): string {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption(value: number): { value: number; name: string } {
+		socOption(value: number): SelectOption<number> {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
