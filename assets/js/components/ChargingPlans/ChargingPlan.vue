@@ -103,7 +103,7 @@
 </template>
 
 <script lang="ts">
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import PlansSettings from "./PlansSettings.vue";
 import Arrival from "./Arrival.vue";
