@@ -19,17 +19,14 @@ func (c *Connection) Gen2CurrentPower() (float64, error) {
 		return res.Apower, err
 	}
 	// Endpoint EM1.GetStatus
-	if em1EndpointModel(c.model) && c.profile == "monophase" {
+	if emEndpointModel(c.model) && c.profile == "monophase" {
 		res, err := c.gen2EM1Status.Get()
 		return res.ActPower, err
 	}
 	// Endpoint EM.GetStatus
-	var emResponse Gen2EMStatus
-	if em1EndpointModel(c.model) && c.profile == "triphase" {
-		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
-			return 0, err
-		}
-		return emResponse.TotalActPower, nil
+	if emEndpointModel(c.model) && c.profile == "triphase" {
+		res, err := c.gen2EMStatus.Get()
+		return res.TotalActPower, err
 	}
 	return 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -71,7 +68,7 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 	}
 	// Endpoint EM1Data.GetStatus (monophase profile)
 	var em1DataResponse Gen2EM1Data
-	if em1EndpointModel(c.model) && c.profile == "monophase" {
+	if emEndpointModel(c.model) && c.profile == "monophase" {
 		if err := c.gen2ExecCmd("EM1Data.GetStatus?id="+strconv.Itoa(c.channel), false, &em1DataResponse); err != nil {
 			return 0, 0, err
 		}
@@ -81,7 +78,7 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 	}
 	// Endpoint EMData.GetStatus (triphase profile)
 	var emDataResponse Gen2EMData
-	if em1EndpointModel(c.model) && c.profile == "triphase" {
+	if emEndpointModel(c.model) && c.profile == "triphase" {
 		if err := c.gen2ExecCmd("EMData.GetStatus?id="+strconv.Itoa(c.channel), false, &emDataResponse); err != nil {
 			return 0, 0, err
 		}
@@ -103,17 +100,14 @@ func (c *Connection) Gen2Currents() (float64, float64, float64, error) {
 		return res.Current, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
-	if em1EndpointModel(c.model) && c.profile == "monophase" {
+	if emEndpointModel(c.model) && c.profile == "monophase" {
 		res, err := c.gen2EM1Status.Get()
 		return res.Current, 0, 0, err
 	}
 	// Endpoint EM.GetStatus
-	var emResponse Gen2EMStatus
-	if em1EndpointModel(c.model) && c.profile == "triphase" {
-		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
-			return 0, 0, 0, err
-		}
-		return emResponse.ACurrent, emResponse.BCurrent, emResponse.CCurrent, nil
+	if emEndpointModel(c.model) && c.profile == "triphase" {
+		res, err := c.gen2EMStatus.Get()
+		return res.ACurrent, res.BCurrent, res.CCurrent, err
 	}
 	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -129,17 +123,14 @@ func (c *Connection) Gen2Voltages() (float64, float64, float64, error) {
 		return res.Voltage, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
-	if em1EndpointModel(c.model) && c.profile == "monophase" {
+	if emEndpointModel(c.model) && c.profile == "monophase" {
 		res, err := c.gen2EM1Status.Get()
 		return res.Voltage, 0, 0, err
 	}
 	// Endpoint EM.GetStatus
-	var emResponse Gen2EMStatus
-	if em1EndpointModel(c.model) && c.profile == "triphase" {
-		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
-			return 0, 0, 0, err
-		}
-		return emResponse.AVoltage, emResponse.BVoltage, emResponse.CVoltage, nil
+	if emEndpointModel(c.model) && c.profile == "triphase" {
+		res, err := c.gen2EMStatus.Get()
+		return res.AVoltage, res.BVoltage, res.CVoltage, err
 	}
 	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -155,17 +146,14 @@ func (c *Connection) Gen2Powers() (float64, float64, float64, error) {
 		return res.Apower, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
-	if em1EndpointModel(c.model) && c.profile == "monophase" {
+	if emEndpointModel(c.model) && c.profile == "monophase" {
 		res, err := c.gen2EM1Status.Get()
 		return res.ActPower, 0, 0, err
 	}
 	// Endpoint EM.GetStatus
-	var emResponse Gen2EMStatus
-	if em1EndpointModel(c.model) && c.profile == "triphase" {
-		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
-			return 0, 0, 0, err
-		}
-		return emResponse.AActPower, emResponse.BActPower, emResponse.CActPower, nil
+	if emEndpointModel(c.model) && c.profile == "triphase" {
+		res, err := c.gen2EMStatus.Get()
+		return res.AActPower, res.BActPower, res.CActPower, err
 	}
 	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -191,6 +179,7 @@ func (c *Connection) gen2ExecCmd(method string, enable bool, res interface{}) er
 	return c.DoJSON(req, &res)
 }
 
+// gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
 func (c *Connection) gen2InitApi(uri, user, password string) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
@@ -215,6 +204,15 @@ func (c *Connection) gen2InitApi(uri, user, password string) {
 			return Gen2EM1Status{}, err
 		}
 		return gen2EM1StatusResponse, nil
+	}, c.Cache)
+	// Cached gen2EMStatus
+	c.gen2EMStatus = util.ResettableCached(func() (Gen2EMStatus, error) {
+		var gen2EMStatusResponse Gen2EMStatus
+		err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatusResponse)
+		if err != nil {
+			return Gen2EMStatus{}, err
+		}
+		return gen2EMStatusResponse, nil
 	}, c.Cache)
 }
 
@@ -249,7 +247,7 @@ func switchEndpointModel(model string) bool {
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1#em1getstatus-example
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1Data#em1datagetstatus-example
-func em1EndpointModel(model string) bool {
+func emEndpointModel(model string) bool {
 	// Generation 2 Devices (Pro Series - Hutschiene):
 	// - SPEM-002CEBEU50: Shelly Pro EM 50 with 1x relay + 2x energy meter
 	// - SPEM-003CEBEU120: Shelly Pro 3EM with 3x energy meter

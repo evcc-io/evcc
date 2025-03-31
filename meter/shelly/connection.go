@@ -23,6 +23,7 @@ type Connection struct {
 	Cache            time.Duration
 	gen2SwitchStatus util.Cacheable[Gen2SwitchStatus]
 	gen2EM1Status    util.Cacheable[Gen2EM1Status]
+	gen2EMStatus     util.Cacheable[Gen2EMStatus]
 }
 
 // NewConnection creates a new Shelly device connection.
