@@ -35,6 +35,7 @@ const icons = [
   "laundry2",
   "machine",
   "meter",
+  "smartconsumer",
   "microwave",
   "pump",
   "tool",

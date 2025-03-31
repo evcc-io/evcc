@@ -69,7 +69,7 @@ import RepeatingSettings from "./PlansRepeatingSettings.vue";
 import Warnings from "./Warnings.vue";
 import formatter from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
-import api from "../../api.js";
+import api, { allowClientError } from "../../api.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "../../utils/deepEqual.js";
 import { defineComponent, type PropType } from "vue";
@@ -316,11 +316,7 @@ export default defineComponent({
 				return;
 			}
 
-			const tariffRes = await api.get(`tariff/planner`, {
-				validateStatus(status) {
-					return status >= 200 && status < 500;
-				},
-			});
+			const tariffRes = await api.get(`tariff/planner`, allowClientError);
 
 			this.tariff = {
 				rates: tariffRes.status === 404 ? [] : tariffRes.data.result,

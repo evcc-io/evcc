@@ -54,7 +54,7 @@
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
 						:valueFmt="fmtPower"
-						class="mb-2 text-nowrap"
+						class="mb-2 text-nowrap text-truncate-xs-only"
 						align="start"
 					/>
 					<shopicon-regular-lightning
@@ -372,7 +372,9 @@ export default {
 
 .details > div {
 	flex-grow: 1;
+	flex-shrink: 1;
 	flex-basis: 0;
+	min-width: 0;
 }
 .details > div:nth-child(2) {
 	text-align: center;

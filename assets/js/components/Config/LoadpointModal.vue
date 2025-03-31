@@ -1,12 +1,13 @@
 <template>
 	<GenericModal
 		id="loadpointModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
 		:fade="fade"
-		@open="open"
-		@opened="opened"
-		@close="close"
+		@open="onOpen"
+		@opened="onOpened"
+		@close="onClose"
 	>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
 			<FormRow
@@ -476,6 +477,7 @@
 						class="ms-3 mb-5"
 						:label="$t('config.loadpoint.pollIntervalLabel')"
 						:help="$t('config.loadpoint.pollIntervalHelp')"
+						:danger="$t('config.loadpoint.pollIntervalDanger')"
 					>
 						<PropertyField
 							id="loadpointPollInterval"
@@ -600,7 +602,7 @@ export default {
 		meters: { type: Array, default: () => [] },
 		circuits: { type: Array, default: () => [] },
 	},
-	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
+	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -724,6 +726,7 @@ export default {
 			this.updatePhases();
 		},
 		async loadConfiguration() {
+			console.log("loadpoint modal loadConfiguration");
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data.result);
@@ -740,7 +743,7 @@ export default {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -751,7 +754,7 @@ export default {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -761,9 +764,9 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.reset();
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
+				this.reset();
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;
@@ -771,14 +774,13 @@ export default {
 			}
 			this.saving = false;
 		},
-		open() {
+		onOpen() {
 			this.isModalVisible = true;
 		},
-		opened() {
+		onOpened() {
 			this.$emit("opened");
 		},
-		close() {
-			this.$emit("close");
+		onClose() {
 			this.showAllSelected = false;
 			this.isModalVisible = false;
 		},

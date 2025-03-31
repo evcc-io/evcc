@@ -86,7 +86,7 @@
 import formatter from "../../mixins/formatter.js";
 import TariffChart from "./TariffChart.vue";
 import { CO2_TYPE } from "../../units.js";
-import api from "../../api.js";
+import api, { allowClientError } from "../../api.js";
 
 export default {
 	name: "SmartCostLimit",
@@ -258,8 +258,11 @@ export default {
 		},
 		async updateTariff() {
 			try {
-				this.tariff = (await api.get(`tariff/planner`)).data.result;
-				this.startTime = new Date();
+				const tariffRes = await api.get(`tariff/planner`, allowClientError);
+				if (tariffRes.status === 200) {
+					this.tariff = tariffRes.data.result;
+					this.startTime = new Date();
+				}
 			} catch (e) {
 				console.error(e);
 			}
