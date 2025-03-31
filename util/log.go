@@ -2,13 +2,15 @@ package util
 
 import (
 	"io"
-	"log"
+	golog "log"
+	"log/slog"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/log"
 	"github.com/evcc-io/evcc/util/logstash"
 	jww "github.com/spf13/jwalterweatherman"
 )
@@ -61,7 +63,14 @@ func newLogger(area string, lp int) *Logger {
 	notepad := jww.NewNotepad(
 		level, jww.LevelTrace,
 		&redactWriter{os.Stdout, redactor}, &redactWriter{logstash.DefaultHandler, redactor},
-		padded, log.Ldate|log.Ltime)
+		padded, golog.Ldate|golog.Ltime)
+
+	notepad.TRACE = slog.NewLogLogger(log.DefaultHandler(), log.LevelTrace)
+	notepad.DEBUG = slog.NewLogLogger(log.DefaultHandler(), slog.LevelDebug)
+	notepad.INFO = slog.NewLogLogger(log.DefaultHandler(), slog.LevelInfo)
+	notepad.WARN = slog.NewLogLogger(log.DefaultHandler(), slog.LevelWarn)
+	notepad.ERROR = slog.NewLogLogger(log.DefaultHandler(), slog.LevelError)
+	notepad.FATAL = slog.NewLogLogger(log.DefaultHandler(), log.LevelFatal)
 
 	logger := &Logger{
 		Notepad:  notepad,
@@ -171,7 +180,7 @@ func captureLogger(l *Logger) {
 	captureLogLevel("error", l.lp, l.Notepad.FATAL)
 }
 
-func captureLogLevel(level string, lp int, l *log.Logger) {
+func captureLogLevel(level string, lp int, l *golog.Logger) {
 	re := regexp.MustCompile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
 
 	ui := uiWriter{

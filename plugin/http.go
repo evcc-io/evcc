@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/log"
 	"github.com/evcc-io/evcc/plugin/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -59,7 +61,9 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, errors.New("missing uri")
 	}
 
+	_ = log.AppendCtx(ctx, slog.String(log.Plugin, "http"))
 	log := contextLogger(ctx, util.NewLogger("http"))
+
 	p := NewHTTP(
 		log,
 		strings.ToUpper(cc.Method),
