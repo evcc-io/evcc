@@ -2,6 +2,7 @@ package meter
 
 import (
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/shelly"
@@ -20,19 +21,22 @@ func init() {
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		URI      string
 		User     string
 		Password string
 		Channel  int
 		Usage    string // grid, pv, battery
+		Cache    time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	conn, err := shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel)
+	conn, err := shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.Cache)
 	if err != nil {
 		return nil, err
 	}

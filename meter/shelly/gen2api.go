@@ -6,18 +6,17 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // Gen2CurrentPower implements the Gen2 api.Meter interface
 func (c *Connection) Gen2CurrentPower() (float64, error) {
 	// Endpoint Switch.GetStatus
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
-			return 0, err
-		}
-		return switchResponse.Apower, nil
+		res, err := c.gen2SwitchStatus.Get()
+		return res.Apower, err
 	}
 	// Endpoint EM1.GetStatus
 	var em1Response Gen2EM1Status
@@ -40,12 +39,9 @@ func (c *Connection) Gen2CurrentPower() (float64, error) {
 
 // Gen2Enabled implements the Gen2 api.Charger interface
 func (c *Connection) Gen2Enabled() (bool, error) {
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
-			return false, err
-		}
-		return switchResponse.Output, nil
+		res, err := c.gen2SwitchStatus.Get()
+		return res.Output, err
 	}
 	return false, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -61,18 +57,18 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 	var energyConsumed float64
 	var energyFeedIn float64
 	// Endpoint Switch.GetStatus
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+		res, err := c.gen2SwitchStatus.Get()
+		if err != nil {
 			return 0, 0, err
 		}
-		energyConsumed = switchResponse.Aenergy.Total
+		energyConsumed = res.Aenergy.Total
 		// Some devices are not providing the Ret_Aenergy information
 		// in this case it depends on the installation an we are setting both energy values to the Aenergy total
-		if switchResponse.Ret_Aenergy.Total == nil {
-			energyFeedIn = switchResponse.Aenergy.Total
+		if res.Ret_Aenergy.Total == nil {
+			energyFeedIn = res.Aenergy.Total
 		} else {
-			energyFeedIn = *switchResponse.Ret_Aenergy.Total
+			energyFeedIn = *res.Ret_Aenergy.Total
 		}
 		return energyConsumed / 1000, energyFeedIn / 1000, nil
 	}
@@ -102,12 +98,12 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 // Gen2Currents implements the api.PhaseCurrents interface
 func (c *Connection) Gen2Currents() (float64, float64, float64, error) {
 	// Endpoint Switch.GetStatus
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+		res, err := c.gen2SwitchStatus.Get()
+		if err != nil {
 			return 0, 0, 0, err
 		}
-		return switchResponse.Current, 0, 0, nil
+		return res.Current, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
 	var em1Response Gen2EM1Status
@@ -131,12 +127,12 @@ func (c *Connection) Gen2Currents() (float64, float64, float64, error) {
 // Gen2Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Gen2Voltages() (float64, float64, float64, error) {
 	// Endpoint Switch.GetStatus
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+		res, err := c.gen2SwitchStatus.Get()
+		if err != nil {
 			return 0, 0, 0, err
 		}
-		return switchResponse.Voltage, 0, 0, nil
+		return res.Voltage, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
 	var em1Response Gen2EM1Status
@@ -160,12 +156,12 @@ func (c *Connection) Gen2Voltages() (float64, float64, float64, error) {
 // Gen2Powers implements the api.PhasePowers interface
 func (c *Connection) Gen2Powers() (float64, float64, float64, error) {
 	// Endpoint Switch.GetStatus
-	var switchResponse Gen2SwitchStatus
 	if switchEndpointModel(c.model) {
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+		res, err := c.gen2SwitchStatus.Get()
+		if err != nil {
 			return 0, 0, 0, err
 		}
-		return switchResponse.Apower, 0, 0, nil
+		return res.Apower, 0, 0, nil
 	}
 	// Endpoint EM1.GetStatus
 	var em1Response Gen2EM1Status
@@ -187,24 +183,64 @@ func (c *Connection) Gen2Powers() (float64, float64, float64, error) {
 }
 
 // gen2ExecCmd executes a shelly api gen2+ command and provides the response
-func (d *Connection) gen2ExecCmd(method string, enable bool, res interface{}) error {
+func (c *Connection) gen2ExecCmd(method string, enable bool, res interface{}) error {
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
 
 	data := &Gen2RpcPost{
-		Id:     d.channel,
+		Id:     c.channel,
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", d.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	return d.DoJSON(req, &res)
+	return c.DoJSON(req, &res)
+}
+
+// gen2ExecCmd executes a shelly api gen2+ command and provides the response
+func (c *Connection) gen2PostEndpoint(method string, enable bool, res interface{}) error {
+	// Shelly gen 2 rfc7616 authentication
+	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
+	// https://datatracker.ietf.org/doc/html/rfc7616
+
+	data := &Gen2RpcPost{
+		Id:     c.channel,
+		On:     enable,
+		Src:    "evcc",
+		Method: method,
+	}
+
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	return c.DoJSON(req, &res)
+}
+
+func (c *Connection) gen2InitApi(uri, user, password string) {
+	// Shelly GEN 2+ API
+	// https://shelly-api-docs.shelly.cloud/gen2/
+	c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+	if user != "" {
+		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+	}
+	// Cached gen2SwitchStatus
+	c.gen2SwitchStatus = util.ResettableCached(func() (Gen2SwitchStatus, error) {
+		var gen2Response Gen2SwitchStatus
+		err := c.gen2PostEndpoint("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2Response)
+		if err != nil {
+			return gen2Response, err
+		}
+		return gen2Response, nil
+	}, c.Cache)
+
 }
 
 // Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
