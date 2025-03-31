@@ -87,4 +87,10 @@ type Port struct {
 	EvPresent        int     `json:"ev_present,string"`
 	Charging         int     `json:",string"`
 	GridCurrentLimit float64 `json:"grid_current_limit,string"`
+	RFID struct {
+		Type                 string   `json:"type"`
+		Available            string   `json:"available"`
+		Authorizereq         string   `json:"authorizereq"`
+		AuthorizationRequest []string `json:"authorization_request,string"`
+	} `json:"rfid"`
 }
