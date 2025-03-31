@@ -198,7 +198,7 @@ function sleep(ms) {
 const CUSTOM_FIELDS = ["usage", "modbus"];
 
 const defaultIcons = {
-	aux: "aux",
+	aux: "smartconsumer",
 	ext: "meter",
 };
 

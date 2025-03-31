@@ -8,6 +8,7 @@ params:
     example: AT
     type: choice
     choice: ["DE", "AT"]
+    required: true
   - preset: tariff-base
 render: |
   type: awattar

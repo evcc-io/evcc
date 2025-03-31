@@ -193,7 +193,7 @@
 							@edit="editMeter(meter.id, 'aux')"
 						>
 							<template #icon>
-								<VehicleIcon :name="meter.deviceIcon || 'aux'" />
+								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
 							</template>
 							<template #tags>
 								<DeviceTags :tags="deviceTags('meter', meter.name)" />
