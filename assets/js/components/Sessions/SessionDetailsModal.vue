@@ -198,14 +198,14 @@
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
-import VehicleOptions from "../VehicleOptions.vue";
-import CustomSelect from "../CustomSelect.vue";
+import Options from "../Vehicles/Options.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 
 export default {
 	name: "SessionDetailsModal",
-	components: { VehicleOptions, CustomSelect },
+	components: { VehicleOptions: Options, CustomSelect },
 	mixins: [formatter],
 	props: {
 		session: Object,
@@ -215,23 +215,23 @@ export default {
 	},
 	emits: ["session-changed"],
 	computed: {
-		chargedEnergy: function () {
+		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
 		},
-		avgPower: function () {
+		avgPower() {
 			const hours = this.session.chargeDuration / 1e9 / 3600;
 			return this.chargedEnergy / hours;
 		},
-		solarEnergy: function () {
+		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions: function () {
+		vehicleOptions() {
 			return this.vehicles.map((v) => ({
 				name: v.title,
 				title: v.title,
 			}));
 		},
-		loadpointOptions: function () {
+		loadpointOptions() {
 			return this.loadpoints.map((loadpoint) => ({
 				value: loadpoint,
 				name: loadpoint,
@@ -249,7 +249,7 @@ export default {
 			);
 			modal.show();
 		},
-		formatKm: function (value) {
+		formatKm(value) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
 		async changeVehicle(title) {

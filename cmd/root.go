@@ -69,6 +69,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
+	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
+	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -215,6 +217,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				keys.TariffGrid,
 				keys.TariffPriceHome,
 				keys.TariffPriceLoadpoints,
+				keys.TariffSolar,
 				keys.ChargedEnergy,
 				keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
@@ -223,8 +226,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// remove previous fatal startup errors
-	valueChan <- util.Param{Key: keys.Fatal, Val: nil}
+	// signal restart
+	valueChan <- util.Param{Key: keys.Startup, Val: true}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
@@ -298,7 +301,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		auth.Disable()
 	}
 
-	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
+	httpd.RegisterSystemHandler(site, valueChan, cache, auth, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end

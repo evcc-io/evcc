@@ -435,13 +435,6 @@ tempLimit = " Ograniczenie temp."
 unknown = "Pojazd gościa"
 vehicleSoc = "Bateria"
 
-[main.vehicleSoc]
-charging = "ładuje się"
-connected = "połączony"
-disconnected = "odłączony"
-ready = "gotowy"
-vehicleLimit = "Limit pojazdu: {soc}"
-
 [main.vehicleStatus]
 charging = "Ładuje się..."
 cheapEnergyCharging = "Dostępna tania energia."

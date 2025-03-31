@@ -107,10 +107,10 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/download";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
-import MultiSelect from "../components/MultiSelect.vue";
+import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 
@@ -123,7 +123,7 @@ const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase())
 export default {
 	name: "Log",
 	components: {
-		TopHeader,
+		TopHeader: Header,
 		Play,
 		Record,
 		MultiSelect,

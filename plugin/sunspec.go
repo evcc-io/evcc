@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -24,11 +25,11 @@ type ModbusSunspec struct {
 }
 
 func init() {
-	registry.Add("sunspec", NewModbusSunspecFromConfig)
+	registry.AddCtx("sunspec", NewModbusSunspecFromConfig)
 }
 
 // NewModbusSunspecFromConfig creates Modbus plugin
-func NewModbusSunspecFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewModbusSunspecFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string
@@ -47,7 +48,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Plugin, error) {
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}

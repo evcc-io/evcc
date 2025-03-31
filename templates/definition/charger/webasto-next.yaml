@@ -1,5 +1,8 @@
 template: webasto-next
 products:
+  - brand: Ampure
+    description:
+      generic: NEXT
   - brand: Webasto
     description:
       generic: NEXT

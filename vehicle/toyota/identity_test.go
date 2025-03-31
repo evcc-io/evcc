@@ -19,6 +19,7 @@ func TestIdentityLogin(t *testing.T) {
 		t.Fatal("TOYOTA_USER or TOYOTA_PASSWORD not set")
 	}
 
+	util.LogLevel("trace", nil) // Enable trace logging
 	log := util.NewLogger("test")
 	identity := NewIdentity(log)
 
@@ -31,4 +32,16 @@ func TestIdentityLogin(t *testing.T) {
 	require.NotEmpty(t, token.AccessToken)
 	require.NotEmpty(t, token.RefreshToken)
 	require.True(t, token.Valid())
+
+	originalAccessToken := token.AccessToken
+
+	// Test token refresh
+	newToken, err := identity.RefreshToken(token)
+	require.NoError(t, err)
+	require.NotEmpty(t, newToken.AccessToken)
+	require.NotEmpty(t, newToken.RefreshToken)
+	require.True(t, newToken.Valid())
+
+	// Verify we got a new access token
+	require.NotEqual(t, originalAccessToken, newToken.AccessToken, "Expected new access token after refresh")
 }

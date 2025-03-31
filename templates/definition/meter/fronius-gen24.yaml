@@ -14,6 +14,13 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: id
+    default: 200
+    advanced: true
+    help:
+      en: "Meter address of primary or secondary meters. On the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201)."
+      de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
+    usages: ["grid"]
   - name: integer
     deprecated: true
   - name: maxacpower
@@ -28,14 +35,14 @@ render: |
   power:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
-    id: 200
+    id: {{ .id }}
     value:
       - 203:W
       - 213:W
   energy:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
-    id: 200
+    id: {{ .id }}
     value:
       - 203:TotWhImp
       - 213:TotWhImp
@@ -43,57 +50,57 @@ render: |
   currents:
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:AphA
         - 213:AphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:AphB
         - 213:AphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:AphC
         - 213:AphC
   voltages:
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:PhVphC
         - 213:PhVphC
   powers:
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:WphA
         - 213:WphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:WphB
         - 213:WphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
-      id: 200
+      id: {{ .id }}
       value:
         - 203:WphC
         - 213:WphC
@@ -110,6 +117,19 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:2:DCW # mppt 2
+  energy:
+    source: calc
+    add:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:1:DCWH # mppt 1
+      scale: 0.001
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:2:DCWH # mppt 2
+      scale: 0.001
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

@@ -229,12 +229,12 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 		switch p.Type {
 		case TypeList:
 			for _, e := range v.([]string) {
-				t.Params[index].Values = append(p.Values, yamlQuote(e))
+				t.Params[index].Values = append(p.Values, p.yamlQuote(e))
 			}
 		default:
 			switch v := v.(type) {
 			case string:
-				t.Params[index].Value = yamlQuote(v)
+				t.Params[index].Value = p.yamlQuote(v)
 			case int:
 				t.Params[index].Value = strconv.Itoa(v)
 			}
@@ -297,7 +297,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 	for key, val := range values {
 		out := strings.ToLower(key)
 
-		if i, p := t.ParamByName(key); i == -1 {
+		i, p := t.ParamByName(key)
+		if i == -1 {
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
@@ -313,7 +314,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		case []interface{}:
 			var list []string
 			for _, v := range typed {
-				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
+				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
 			}
 			if res[out] == nil || len(res[out].([]interface{})) == 0 {
 				res[out] = list
@@ -322,7 +323,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		case []string:
 			var list []string
 			for _, v := range typed {
-				list = append(list, yamlQuote(v))
+				list = append(list, p.yamlQuote(v))
 			}
 			if res[out] == nil || len(res[out].([]string)) == 0 {
 				res[out] = list
@@ -333,7 +334,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
-					s = yamlQuote(fmt.Sprintf("%v", val))
+					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
 				res[out] = s
 			}

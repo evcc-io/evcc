@@ -1,5 +1,8 @@
 template: bender
 products:
+  - brand: Ampure
+    description:
+      generic: Live
   - brand: Bender
     description:
       generic: CC612

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"os"
 	"regexp"
@@ -54,7 +54,8 @@ var redactSecrets = []string{
 	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 	"app", "chats", "recipients", // push messaging
-	"vin", // vehicles
+	"vin",               // vehicles
+	"lat", "lon", "zip", // solar forecast
 }
 
 // redact redacts a configuration string
@@ -64,20 +65,15 @@ func redact(src string) string {
 		ReplaceAllString(src, "$1: *****")
 }
 
-func redactJson(src string) string {
-	var j map[string]any
-	if err := json.Unmarshal([]byte(src), &j); err != nil {
-		panic(err)
-	}
-
-	for k := range j {
+func redactMap(src map[string]any) map[string]any {
+	res := maps.Clone(src)
+	for k := range res {
 		if slices.Contains(redactSecrets, k) {
-			j[k] = "*****"
+			res[k] = "*****"
 		}
 	}
 
-	res, _ := json.Marshal(j)
-	return string(res)
+	return res
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating

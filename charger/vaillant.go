@@ -53,16 +53,14 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		Realm           string
 		HeatingZone     int
 		HeatingSetpoint float32
-		Phases          int
 		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Realm:  sensonet.REALM_GERMANY,
-		Phases: 1,
-		Cache:  time.Minute,
+		Realm: sensonet.REALM_GERMANY,
+		Cache: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -112,7 +110,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}
 	}
 
-	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	sgr, err := NewSgReady(ctx, &cc.embed, set, nil)
 	if err != nil {
 		return nil, err
 	}

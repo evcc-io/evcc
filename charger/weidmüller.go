@@ -74,7 +74,7 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{})
 
 // NewWeidmüller creates Weidmüller charger
 func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

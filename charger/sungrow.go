@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -62,11 +63,11 @@ var (
 )
 
 func init() {
-	registry.Add("sungrow", NewSungrowFromConfig)
+	registry.AddCtx("sungrow", NewSungrowFromConfig)
 }
 
 // NewSungrowFromConfig creates a Sungrow charger from generic config
-func NewSungrowFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSungrowFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 248,
 	}
@@ -75,12 +76,12 @@ func NewSungrowFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSungrow(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewSungrow(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewSungrow creates Sungrow charger
-func NewSungrow(uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, id)
+func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
 	}
