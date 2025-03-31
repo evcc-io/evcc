@@ -44,20 +44,20 @@ export default defineComponent({
 		planOverrun: Number,
 	},
 	computed: {
-		endTime() {
+		endTime(): Date | null {
 			if (!this.plan?.plan?.length) {
 				return null;
 			}
 			const { plan } = this.plan;
 			return plan[plan.length - 1].end;
 		},
-		overrunFmt() {
+		overrunFmt(): string {
 			if (!this.planOverrun) {
 				return "";
 			}
 			return this.fmtDuration(this.planOverrun, true, "m");
 		},
-		timeTooFarInTheFuture() {
+		timeTooFarInTheFuture(): boolean {
 			if (!this.effectivePlanTime) {
 				return false;
 			}
@@ -70,7 +70,7 @@ export default defineComponent({
 			}
 			return false;
 		},
-		notReachableInTime() {
+		notReachableInTime(): boolean {
 			const { planTime } = this.plan || {};
 			if (planTime && this.endTime) {
 				const dateWanted = new Date(planTime);
@@ -80,19 +80,19 @@ export default defineComponent({
 			}
 			return false;
 		},
-		targetIsAboveLimit() {
+		targetIsAboveLimit(): boolean {
 			if (this.socBasedPlanning && this.effectivePlanSoc && this.effectiveLimitSoc) {
 				return this.effectivePlanSoc > this.effectiveLimitSoc;
 			}
-			return this.limitEnergy && this.planEnergy && this.planEnergy > this.limitEnergy;
+			return !!this.limitEnergy && !!this.planEnergy && this.planEnergy > this.limitEnergy;
 		},
-		targetIsAboveVehicleLimit() {
+		targetIsAboveVehicleLimit(): boolean {
 			if (this.socBasedPlanning && this.effectivePlanSoc) {
 				return this.effectivePlanSoc > (this.vehicleLimitSoc || 100);
 			}
 			return false;
 		},
-		limitFmt() {
+		limitFmt(): string {
 			if (this.socBasedPlanning && this.effectiveLimitSoc) {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			} else if (this.limitEnergy) {
@@ -103,7 +103,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		fmtSoc(soc: number) {
+		fmtSoc(soc: number): string {
 			return this.fmtPercentage(soc);
 		},
 	},

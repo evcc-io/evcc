@@ -331,7 +331,9 @@ export default defineComponent({
 			// TODO: handle fahrenheit
 			return this.fmtNumber(value, 1, "celsius");
 		},
-		getWeekdaysList(weekdayFormat: Intl.DateTimeFormatOptions["weekday"]) {
+		getWeekdaysList(
+			weekdayFormat: Intl.DateTimeFormatOptions["weekday"]
+		): { name: string; value: number }[] {
 			const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: weekdayFormat,
 			});
@@ -341,7 +343,7 @@ export default defineComponent({
 			const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
 			return [...mondayToSaturday, sunday];
 		},
-		getShortenedWeekdaysLabel(selectedWeekdays: number[]) {
+		getShortenedWeekdaysLabel(selectedWeekdays: number[]): string {
 			if (0 === selectedWeekdays.length) {
 				return "–";
 			}

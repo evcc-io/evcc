@@ -168,7 +168,7 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		dataChanged() {
+		dataChanged(): boolean {
 			return (
 				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
@@ -176,54 +176,54 @@ export default defineComponent({
 				this.active !== this.selectedActive
 			);
 		},
-		showApply() {
+		showApply(): boolean {
 			return this.dataChanged && this.selectedActive;
 		},
-		weekdaysLabel() {
+		weekdaysLabel(): string {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
-		socOptions() {
+		socOptions(): { value: number; name: string }[] {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		dayOptions() {
+		dayOptions(): { name: string; value: number }[] {
 			return this.getWeekdaysList("long");
 		},
 	},
 	watch: {
-		weekdays(newValue, oldValue) {
+		weekdays(newValue: number[], oldValue: number[]) {
 			if (!deepEqual(newValue, oldValue)) {
 				this.selectedWeekdays = newValue;
 			}
 		},
-		time(newValue) {
+		time(newValue: string) {
 			this.selectedTime = newValue;
 		},
-		soc(newValue) {
+		soc(newValue: number) {
 			this.selectedSoc = newValue;
 		},
-		active(newValue) {
+		active(newValue: boolean) {
 			this.selectedActive = newValue;
 		},
 	},
 	methods: {
-		id() {
+		id(): number {
 			return this.number || 0;
 		},
-		changeSelectedWeekdays(weekdays: number[]) {
+		changeSelectedWeekdays(weekdays: number[]): void {
 			this.selectedWeekdays = weekdays;
 			this.update();
 		},
-		formId(name: string) {
+		formId(name: string): string {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption(value: number) {
+		socOption(value: number): { value: number; name: string } {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update(forceSave = false) {
+		update(forceSave = false): void {
 			const plan = {
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,

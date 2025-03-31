@@ -59,35 +59,35 @@ export default defineComponent({
 		return { activeIndex: null as number | null, startTime: new Date() };
 	},
 	computed: {
-		endTime() {
+		endTime(): Date | null {
 			if (!this.plan?.length) {
 				return null;
 			}
 			const end = this.plan[this.plan.length - 1].end;
 			return end ? new Date(end) : null;
 		},
-		timeWarning() {
+		timeWarning(): boolean {
 			if (this.targetTime && this.endTime) {
 				return this.targetTime < this.endTime;
 			}
 			return false;
 		},
-		planDuration() {
+		planDuration(): string {
 			return this.fmtDuration(this.duration);
 		},
-		fmtPower() {
+		fmtPower(): string | null {
 			if (this.duration && this.power && this.duration > 0 && this.power > 0) {
 				return `@ ${this.fmtW(this.power)}`;
 			}
 			return null;
 		},
-		isCo2() {
+		isCo2(): boolean {
 			return this.smartCostType === CO2_TYPE;
 		},
-		hasTariff() {
-			return this.rates && this.rates?.length > 1;
+		hasTariff(): boolean {
+			return (this.rates?.length || 0) > 1;
 		},
-		avgPrice() {
+		avgPrice(): number | undefined {
 			let hourSum = 0;
 			let priceSum = 0;
 			this.convertDates(this.plan).forEach((slot) => {
@@ -99,7 +99,7 @@ export default defineComponent({
 			});
 			return hourSum ? priceSum / hourSum : undefined;
 		},
-		fmtAvgPrice() {
+		fmtAvgPrice(): string {
 			if (this.duration === 0) {
 				return "—";
 			}
@@ -111,10 +111,10 @@ export default defineComponent({
 				? this.fmtCo2Medium(price)
 				: this.fmtPricePerKWh(price, this.currency);
 		},
-		activeSlot() {
+		activeSlot(): Slot | null {
 			return this.activeIndex ? this.slots[this.activeIndex] : null;
 		},
-		activeSlotName() {
+		activeSlotName(): string | null {
 			if (this.activeSlot) {
 				const { day, startHour, endHour } = this.activeSlot;
 				const range = `${startHour}–${endHour}`;
@@ -122,7 +122,7 @@ export default defineComponent({
 			}
 			return null;
 		},
-		targetHourOffset() {
+		targetHourOffset(): number | null {
 			if (!this.targetTime) {
 				return null;
 			}
@@ -132,7 +132,7 @@ export default defineComponent({
 			start.setMilliseconds(0);
 			return (this.targetTime.getTime() - start.getTime()) / (60 * 60 * 1000);
 		},
-		targetText() {
+		targetText(): string | null {
 			if (!this.targetTime) {
 				return null;
 			}
@@ -180,12 +180,12 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		rates() {
+		rates(): void {
 			this.startTime = new Date();
 		},
 	},
 	methods: {
-		convertDates(list: Rate[] | undefined) {
+		convertDates(list: Rate[] | undefined): Rate[] {
 			if (!list?.length) {
 				return [];
 			}
@@ -197,7 +197,7 @@ export default defineComponent({
 				};
 			});
 		},
-		findSlotInRange(start: Date, end: Date, slots: Rate[]) {
+		findSlotInRange(start: Date, end: Date, slots: Rate[]): Rate | undefined {
 			return slots.find((s) => {
 				if (s.start.getTime() < start.getTime()) {
 					return s.end.getTime() > start.getTime();
@@ -205,7 +205,7 @@ export default defineComponent({
 				return s.start.getTime() < end.getTime();
 			});
 		},
-		slotHovered(index: number) {
+		slotHovered(index: number): void {
 			this.activeIndex = index;
 		},
 	},

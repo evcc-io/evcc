@@ -57,7 +57,7 @@ export default defineComponent({
 	},
 	methods: {
 		deepEqual,
-		addPlan() {
+		addPlan(): void {
 			const newPlan = {
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
@@ -71,15 +71,15 @@ export default defineComponent({
 			plans.push(newPlan);
 			this.updatePlans(plans);
 		},
-		updatePlan(index: number, plan: RepeatingPlan) {
+		updatePlan(index: number, plan: RepeatingPlan): void {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1, plan);
 			this.updatePlans(plans);
 		},
-		updatePlans(plans: RepeatingPlan[]) {
+		updatePlans(plans: RepeatingPlan[]): void {
 			this.$emit("updated", plans);
 		},
-		removePlan(index: number) {
+		removePlan(index: number): void {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1);
 			this.updatePlans(plans);

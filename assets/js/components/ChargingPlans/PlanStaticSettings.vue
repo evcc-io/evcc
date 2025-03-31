@@ -209,7 +209,7 @@ export default defineComponent({
 			if (this.isNew) {
 				return {};
 			}
-			const t = this.time ? new Date(this.time) : new Date();
+			const t = this.time || new Date();
 			return {
 				soc: this.soc,
 				energy: this.energy,
