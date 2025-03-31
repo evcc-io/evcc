@@ -177,7 +177,11 @@ export default defineComponent({
 		},
 		staticPlan(): StaticPlan | null {
 			if (this.socBasedPlanning) {
-				return this.vehicle?.plan || null;
+				const plan = this.vehicle?.plan as StaticSocPlan;
+				if (plan) {
+					return { soc: plan.soc, time: new Date(plan.time) };
+				}
+				return null;
 			}
 			if (this.planEnergy && this.planTime) {
 				return { energy: this.planEnergy, time: new Date(this.planTime) };

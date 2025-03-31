@@ -319,7 +319,7 @@ export default defineComponent({
 			const tariffRes = await api.get(`tariff/planner`, allowClientError);
 
 			this.tariff = {
-				rates: tariffRes.status === 404 ? [] : tariffRes.data.result,
+				rates: tariffRes.status === 404 ? [] : tariffRes.data.result.rates,
 				lastUpdate: new Date(),
 			};
 		},
