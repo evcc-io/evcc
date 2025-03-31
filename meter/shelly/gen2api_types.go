@@ -10,6 +10,8 @@ type Gen2RpcPost struct {
 type Gen2SwitchStatus struct {
 	Output  bool
 	Apower  float64
+	Voltage float64
+	Current float64
 	Aenergy struct {
 		Total float64
 	}

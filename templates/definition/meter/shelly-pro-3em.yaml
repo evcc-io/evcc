@@ -5,12 +5,14 @@ products:
       generic: Pro 3 EM
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid", "pv", "charge", "battery"]
   - name: host
   - name: user
   - name: password
+  - name: channel
+    default: 0 
 render: |
-  type: shelly-energymeter
+  type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
   {{- if .user }}
   user: {{ .user }}
@@ -18,4 +20,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
-  channel: 0  # shelly device relay channel
+  channel: {{ .channel }}  # shelly device relay channel
+  usage: {{ .usage }}

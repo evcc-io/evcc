@@ -53,12 +53,27 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
+	var power float64
+	var err error
+
 	switch c.conn.Gen {
 	case 0, 1:
-		return c.conn.Gen1CurrentPower()
+		power, err = c.conn.Gen1CurrentPower()
+		if err != nil {
+			return 0, err
+		}
 	default:
-		return c.conn.Gen2CurrentPower()
+		power, err = c.conn.Gen2CurrentPower()
+		if err != nil {
+			return 0, err
+		}
 	}
+
+	if (c.usage == "pv" || c.usage == "battery") && power < 0 {
+		return -power, nil
+	}
+
+	return power, nil
 }
 
 var _ api.MeterEnergy = (*Shelly)(nil)
@@ -76,7 +91,6 @@ func (c *Shelly) TotalEnergy() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-
 	default:
 		energyConsumed, energyFeedIn, err = c.conn.Gen2TotalEnergy()
 		if err != nil {
@@ -90,5 +104,41 @@ func (c *Shelly) TotalEnergy() (float64, error) {
 		energy = energyConsumed
 	}
 
-	return energy / 1000, nil
+	return energy, nil
+}
+
+var _ api.PhaseCurrents = (*Shelly)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Shelly) Currents() (float64, float64, float64, error) {
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1Currents()
+	default:
+		return c.conn.Gen2Currents()
+	}
+}
+
+var _ api.PhaseVoltages = (*Shelly)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Shelly) Voltages() (float64, float64, float64, error) {
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1Voltages()
+	default:
+		return c.conn.Gen2Voltages()
+	}
+}
+
+var _ api.PhasePowers = (*Shelly)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (c *Shelly) Powers() (float64, float64, float64, error) {
+	switch c.conn.Gen {
+	case 0, 1:
+		return c.conn.Gen1Powers()
+	default:
+		return c.conn.Gen2Powers()
+	}
 }

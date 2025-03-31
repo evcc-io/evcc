@@ -70,6 +70,60 @@ func (c *Connection) Gen1TotalEnergy() (float64, error) {
 	return energy / 1000, nil
 }
 
+// Gen1Currents implements the api.PhaseCurrents interface
+func (c *Connection) Gen1Currents() (float64, float64, float64, error) {
+	var res Gen1StatusResponse
+	uri := fmt.Sprintf("%s/status", c.uri)
+	if err := c.GetJSON(uri, &res); err != nil {
+		return 0, 0, 0, err
+	}
+
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Current, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Current, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
+}
+
+// Gen1Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Gen1Voltages() (float64, float64, float64, error) {
+	var res Gen1StatusResponse
+	uri := fmt.Sprintf("%s/status", c.uri)
+	if err := c.GetJSON(uri, &res); err != nil {
+		return 0, 0, 0, err
+	}
+
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Voltage, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Voltage, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
+}
+
+// Gen1Powers implements the api.PhasePowers interface
+func (c *Connection) Gen1Powers() (float64, float64, float64, error) {
+	var res Gen1StatusResponse
+	uri := fmt.Sprintf("%s/status", c.uri)
+	if err := c.GetJSON(uri, &res); err != nil {
+		return 0, 0, 0, err
+	}
+
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Power, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Power, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
+}
+
 // gen1Energy in kWh
 func gen1Energy(model string, energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes

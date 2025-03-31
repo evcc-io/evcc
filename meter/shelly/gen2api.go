@@ -74,7 +74,7 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 		} else {
 			energyFeedIn = *switchResponse.Ret_Aenergy.Total
 		}
-		return energyConsumed, energyFeedIn, nil
+		return energyConsumed / 1000, energyFeedIn / 1000, nil
 	}
 	// Endpoint EM1Data.GetStatus (monophase profile)
 	var em1DataResponse Gen2EM1Data
@@ -84,7 +84,7 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 		}
 		energyConsumed = em1DataResponse.TotalActEnergy
 		energyFeedIn = em1DataResponse.TotalActRetEnergy
-		return energyConsumed, energyFeedIn, nil
+		return energyConsumed / 1000, energyFeedIn / 1000, nil
 	}
 	// Endpoint EMData.GetStatus (triphase profile)
 	var emDataResponse Gen2EMData
@@ -94,9 +94,96 @@ func (c *Connection) Gen2TotalEnergy() (float64, float64, error) {
 		}
 		energyConsumed = emDataResponse.TotalAct
 		energyFeedIn = emDataResponse.TotalActRet
-		return energyConsumed, energyFeedIn, nil
+		return energyConsumed / 1000, energyFeedIn / 1000, nil
 	}
 	return 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
+}
+
+// Gen2Currents implements the api.PhaseCurrents interface
+func (c *Connection) Gen2Currents() (float64, float64, float64, error) {
+	// Endpoint Switch.GetStatus
+	var switchResponse Gen2SwitchStatus
+	if switchEndpointModel(c.model) {
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return switchResponse.Current, 0, 0, nil
+	}
+	// Endpoint EM1.GetStatus
+	var em1Response Gen2EM1Status
+	if em1EndpointModel(c.model) && c.profile == "monophase" {
+		if err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &em1Response); err != nil {
+			return 0, 0, 0, err
+		}
+		return em1Response.Current, 0, 0, nil
+	}
+	// Endpoint EM.GetStatus
+	var emResponse Gen2EMStatus
+	if em1EndpointModel(c.model) && c.profile == "triphase" {
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return emResponse.ACurrent, emResponse.BCurrent, emResponse.CCurrent, nil
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
+}
+
+// Gen2Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Gen2Voltages() (float64, float64, float64, error) {
+	// Endpoint Switch.GetStatus
+	var switchResponse Gen2SwitchStatus
+	if switchEndpointModel(c.model) {
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return switchResponse.Voltage, 0, 0, nil
+	}
+	// Endpoint EM1.GetStatus
+	var em1Response Gen2EM1Status
+	if em1EndpointModel(c.model) && c.profile == "monophase" {
+		if err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &em1Response); err != nil {
+			return 0, 0, 0, err
+		}
+		return em1Response.Voltage, 0, 0, nil
+	}
+	// Endpoint EM.GetStatus
+	var emResponse Gen2EMStatus
+	if em1EndpointModel(c.model) && c.profile == "triphase" {
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return emResponse.AVoltage, emResponse.BVoltage, emResponse.CVoltage, nil
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
+}
+
+// Gen2Powers implements the api.PhasePowers interface
+func (c *Connection) Gen2Powers() (float64, float64, float64, error) {
+	// Endpoint Switch.GetStatus
+	var switchResponse Gen2SwitchStatus
+	if switchEndpointModel(c.model) {
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &switchResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return switchResponse.Apower, 0, 0, nil
+	}
+	// Endpoint EM1.GetStatus
+	var em1Response Gen2EM1Status
+	if em1EndpointModel(c.model) && c.profile == "monophase" {
+		if err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &em1Response); err != nil {
+			return 0, 0, 0, err
+		}
+		return em1Response.ActPower, 0, 0, nil
+	}
+	// Endpoint EM.GetStatus
+	var emResponse Gen2EMStatus
+	if em1EndpointModel(c.model) && c.profile == "triphase" {
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &emResponse); err != nil {
+			return 0, 0, 0, err
+		}
+		return emResponse.AActPower, emResponse.BActPower, emResponse.CActPower, nil
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // gen2ExecCmd executes a shelly api gen2+ command and provides the response
