@@ -5,7 +5,8 @@
   "scripts": {
     "build": "vite build",
     "test": "TZ=Europe/Berlin vitest",
-    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && vue-tsc --noEmit",
+    "lint": "prettier assets './**/*.{yml,yaml,sh}' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
+    "tsc": "vue-tsc --noEmit",
     "dev": "vite",
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
@@ -20,6 +21,7 @@
     "@h2d2/shopicons": "^1.2.0",
     "@playwright/test": "^1.46.1",
     "@popperjs/core": "^2.11.5",
+    "@types/bootstrap": "^5.2.10",
     "@unhead/vue": "^1.8.9",
     "@vitejs/plugin-legacy": "^6.0.1",
     "@vitejs/plugin-vue": "^5.0.4",

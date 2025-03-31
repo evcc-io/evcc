@@ -126,7 +126,7 @@
 					class="btn btn-sm btn-outline-secondary border-0"
 					aria-label="Remove"
 					tabindex="0"
-					@click="$emit('removed', id)"
+					@click="$emit('removed', id())"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -135,21 +135,22 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../../units.js";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "../../mixins/formatter.js";
 import deepEqual from "../../utils/deepEqual.js";
-export default {
+import type { SelectOption } from "../../types/evcc";
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "ChargingPlanRepeatingSettings",
-	components: {
-		MultiSelect,
-	},
+	components: { MultiSelect },
 	mixins: [formatter],
 	props: {
 		number: Number,
-		weekdays: { type: Array, default: () => [] },
+		weekdays: { type: Array as PropType<number[]>, default: () => [] },
 		time: String,
 		tz: String,
 		soc: Number,
@@ -168,7 +169,7 @@ export default {
 		};
 	},
 	computed: {
-		dataChanged() {
+		dataChanged(): boolean {
 			return (
 				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
@@ -176,51 +177,54 @@ export default {
 				this.active !== this.selectedActive
 			);
 		},
-		showApply() {
+		showApply(): boolean {
 			return this.dataChanged && this.selectedActive;
 		},
-		weekdaysLabel() {
+		weekdaysLabel(): string {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
-		socOptions() {
+		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		dayOptions() {
+		dayOptions(): SelectOption<number>[] {
 			return this.getWeekdaysList("long");
 		},
 	},
 	watch: {
-		weekdays(newValue, oldValue) {
+		weekdays(newValue: number[], oldValue: number[]) {
 			if (!deepEqual(newValue, oldValue)) {
 				this.selectedWeekdays = newValue;
 			}
 		},
-		time(newValue) {
+		time(newValue: string) {
 			this.selectedTime = newValue;
 		},
-		soc(newValue) {
+		soc(newValue: number) {
 			this.selectedSoc = newValue;
 		},
-		active(newValue) {
+		active(newValue: boolean) {
 			this.selectedActive = newValue;
 		},
 	},
 	methods: {
-		changeSelectedWeekdays(weekdays) {
+		id(): number {
+			return this.number || 0;
+		},
+		changeSelectedWeekdays(weekdays: number[]): void {
 			this.selectedWeekdays = weekdays;
 			this.update();
 		},
-		formId(name) {
+		formId(name: string): string {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption(value) {
+		socOption(value: number): SelectOption<number> {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update(forceSave = false) {
+		update(forceSave = false): void {
 			const plan = {
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,
@@ -234,7 +238,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .plan-id {

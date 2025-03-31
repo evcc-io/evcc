@@ -34,57 +34,60 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import formatter from "../../mixins/formatter.js";
 import { CO2_TYPE } from "../../units.js";
 import TariffChart from "../Tariff/TariffChart.vue";
+import type { CURRENCY, Rate } from "assets/js/types/evcc.js";
+import type { Slot } from "./types.js";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanPreview",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
 		duration: Number,
 		power: Number,
-		rates: Array,
-		plan: Array,
+		rates: Array as PropType<Rate[]>,
+		plan: Array as PropType<Rate[]>,
 		smartCostType: String,
-		targetTime: Date,
-		currency: String,
+		targetTime: [Date, null],
+		currency: String as PropType<CURRENCY>,
 	},
 	data() {
-		return { activeIndex: null, startTime: new Date() };
+		return { activeIndex: null as number | null, startTime: new Date() };
 	},
 	computed: {
-		endTime() {
+		endTime(): Date | null {
 			if (!this.plan?.length) {
 				return null;
 			}
 			const end = this.plan[this.plan.length - 1].end;
 			return end ? new Date(end) : null;
 		},
-		timeWarning() {
+		timeWarning(): boolean {
 			if (this.targetTime && this.endTime) {
 				return this.targetTime < this.endTime;
 			}
 			return false;
 		},
-		planDuration() {
+		planDuration(): string {
 			return this.fmtDuration(this.duration);
 		},
-		fmtPower() {
-			if (this.duration > 0 && this.power > 0) {
+		fmtPower(): string | null {
+			if (this.duration && this.power && this.duration > 0 && this.power > 0) {
 				return `@ ${this.fmtW(this.power)}`;
 			}
 			return null;
 		},
-		isCo2() {
+		isCo2(): boolean {
 			return this.smartCostType === CO2_TYPE;
 		},
-		hasTariff() {
-			return this.rates?.length > 1;
+		hasTariff(): boolean {
+			return (this.rates?.length || 0) > 1;
 		},
-		avgPrice() {
+		avgPrice(): number | undefined {
 			let hourSum = 0;
 			let priceSum = 0;
 			this.convertDates(this.plan).forEach((slot) => {
@@ -96,7 +99,7 @@ export default {
 			});
 			return hourSum ? priceSum / hourSum : undefined;
 		},
-		fmtAvgPrice() {
+		fmtAvgPrice(): string {
 			if (this.duration === 0) {
 				return "—";
 			}
@@ -108,10 +111,10 @@ export default {
 				? this.fmtCo2Medium(price)
 				: this.fmtPricePerKWh(price, this.currency);
 		},
-		activeSlot() {
-			return this.slots[this.activeIndex];
+		activeSlot(): Slot | null {
+			return this.activeIndex ? this.slots[this.activeIndex] : null;
 		},
-		activeSlotName() {
+		activeSlotName(): string | null {
 			if (this.activeSlot) {
 				const { day, startHour, endHour } = this.activeSlot;
 				const range = `${startHour}–${endHour}`;
@@ -119,7 +122,7 @@ export default {
 			}
 			return null;
 		},
-		targetHourOffset() {
+		targetHourOffset(): number | null {
 			if (!this.targetTime) {
 				return null;
 			}
@@ -129,13 +132,13 @@ export default {
 			start.setMilliseconds(0);
 			return (this.targetTime.getTime() - start.getTime()) / (60 * 60 * 1000);
 		},
-		targetText() {
+		targetText(): string | null {
 			if (!this.targetTime) {
 				return null;
 			}
 			return this.fmtWeekdayTime(this.targetTime);
 		},
-		slots() {
+		slots(): Slot[] {
 			const result = [];
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
@@ -153,11 +156,13 @@ export default {
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
-				const isTarget = start <= this.targetTime && end > this.targetTime;
+				const isTarget =
+					this.targetTime && start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
 				const warning =
 					charging &&
 					this.targetTime &&
+					this.endTime &&
 					end > this.targetTime &&
 					this.targetTime < this.endTime;
 				result.push({
@@ -175,12 +180,12 @@ export default {
 		},
 	},
 	watch: {
-		rates() {
+		rates(): void {
 			this.startTime = new Date();
 		},
 	},
 	methods: {
-		convertDates(list) {
+		convertDates(list: Rate[] | undefined): Rate[] {
 			if (!list?.length) {
 				return [];
 			}
@@ -192,7 +197,7 @@ export default {
 				};
 			});
 		},
-		findSlotInRange(start, end, slots) {
+		findSlotInRange(start: Date, end: Date, slots: Rate[]): Rate | undefined {
 			return slots.find((s) => {
 				if (s.start.getTime() < start.getTime()) {
 					return s.end.getTime() > start.getTime();
@@ -200,11 +205,11 @@ export default {
 				return s.start.getTime() < end.getTime();
 			});
 		},
-		slotHovered(index) {
+		slotHovered(index: number): void {
 			this.activeIndex = index;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
