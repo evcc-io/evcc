@@ -22,6 +22,7 @@ type Connection struct {
 	profile          string // Shelly device profile
 	Cache            time.Duration
 	gen2SwitchStatus util.Cacheable[Gen2SwitchStatus]
+	gen2EM1Status    util.Cacheable[Gen2EM1Status]
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -84,5 +85,4 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	}
 
 	return c, nil
-	// return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", conn.model, resp.Model, conn.gen)
 }
