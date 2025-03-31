@@ -130,7 +130,11 @@ export default defineComponent({
 	},
 	computed: {
 		noActivePlan(): boolean {
-			return !this.staticPlan && this.repeatingPlans.every((plan) => !plan.active);
+			return (
+				(!this.staticPlan && this.repeatingPlans.every((plan) => !plan.active)) ||
+				Object.keys(this.plan).length === 0 ||
+				this.plan.duration == 0
+			);
 		},
 		multiplePlans(): boolean {
 			return this.repeatingPlans.length !== 0;
@@ -260,7 +264,7 @@ export default defineComponent({
 			}
 		},
 		async updatePreviewPlan(): Promise<void> {
-			// only show preview of no plan is active
+			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
 
 			try {
