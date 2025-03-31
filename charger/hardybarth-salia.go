@@ -271,8 +271,8 @@ func (wb *Salia) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if req := res.Secc.Port0.RFID.AuthorizationRequest; req.Protocol == "ISO14443" && req.Key != "" {
-		return req.Key, nil
+	if req := res.Secc.Port0.RFID.AuthorizationRequest; len(req) == 2 && req[1] != "" {
+		return req[1], nil
 	}
 	return "", api.ErrNotAvailable
 }
