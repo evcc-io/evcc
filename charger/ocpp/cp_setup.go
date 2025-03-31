@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration) error {
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -52,6 +52,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		case match(KeyChargingScheduleAllowedChargingRateUnit):
 			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
+				cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 			}
 
 		case match(KeyConnectorSwitch3to1PhaseSupported) || match(KeyChargeAmpsPhaseSwitchingSupported):
@@ -156,6 +157,11 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 	// configure websocket ping interval
 	if err := cp.ChangeConfigurationRequest(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
+	}
+
+	if forcePowerCtrl {
+		cp.ChargingRateUnit = types.ChargingRateUnitWatts
+		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
 
 	return nil

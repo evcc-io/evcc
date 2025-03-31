@@ -60,3 +60,9 @@ export const i18n = axios.create({
     Accept: "application/toml",
   },
 });
+
+export const allowClientError = {
+  validateStatus(status) {
+    return status >= 200 && status < 500;
+  },
+};

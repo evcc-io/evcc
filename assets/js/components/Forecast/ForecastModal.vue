@@ -40,7 +40,7 @@
 				/>
 				<div class="form-check-label">
 					<label for="solarForecastAdjust"
-						><small>🧪 {{ $t("forecast.solarAdjust") }}</small></label
+						><small>🧪 {{ solarAdjustText }}</small></label
 					>
 				</div>
 			</div>
@@ -65,8 +65,9 @@ import {
 	ForecastType,
 	adjustedSolar,
 } from "../../utils/forecast.ts";
-import formatter from "../../mixins/formatter";
+import formatter from "../../mixins/formatter.ts";
 import settings from "../../settings";
+import type { CURRENCY } from "assets/js/types/evcc.ts";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -79,9 +80,9 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 	},
-	data: function (): {
+	data(): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
 		selectedSlot: PriceSlot | TimeseriesEntry | null;
@@ -104,9 +105,20 @@ export default defineComponent({
 				? adjustedSolar(this.forecast.solar)
 				: this.forecast.solar;
 		},
+		solarAdjustText() {
+			let percent = "";
+
+			const scale = this.forecast.solar?.scale;
+			if (scale) {
+				const percentDiff = scale * 100 - 100;
+				percent = ` (${this.fmtPercentage(percentDiff, 0, true)})`;
+			}
+
+			return this.$t("forecast.solarAdjust", { percent });
+		},
 	},
 	watch: {
-		isModalVisible: function (newVal) {
+		isModalVisible(newVal) {
 			if (newVal) {
 				this.updateSelectedType();
 			}

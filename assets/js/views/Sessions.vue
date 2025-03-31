@@ -439,7 +439,7 @@ export default {
 		startDate() {
 			return new Date(this.sessions[0]?.created || Date.now());
 		},
-		topNavigation: function () {
+		topNavigation() {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
 		},
@@ -642,7 +642,7 @@ export default {
 		},
 	},
 	watch: {
-		offline: function () {
+		offline() {
 			this.loadSessions();
 		},
 	},

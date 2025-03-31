@@ -18,6 +18,7 @@ params:
     type: choice
     choice: ["EU", "NA"]
     default: EU
+    required: true
     advanced: true
   - name: hcaptcha
     required: true

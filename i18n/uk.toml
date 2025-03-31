@@ -160,6 +160,7 @@ v2Support = "Назад до InfluxDB 2.x"
 addCharger = "Додати зарядний пристрій"
 addMeter = "Додати спеціальний лічильник зарядного пристрою"
 cancel = "Скасувати"
+chargerError = "Необхідно налаштувати зарядний пристрій."
 chargerLabel = "Зарядний пристрій"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Використовуватиметься діапазон струму від 6 до 16 А."
@@ -451,7 +452,7 @@ modalUpdateStatusStart = "Встановлення розпочато:"
 
 [forecast]
 modalTitle = "Прогноз"
-solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва."
+solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва{percent}."
 
 [forecast.co2]
 average = "Середній"

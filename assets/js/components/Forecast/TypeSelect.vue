@@ -40,9 +40,9 @@ export default defineComponent({
 		},
 		availableTypes() {
 			return {
-				[ForecastType.Solar]: !!this.forecast.solar,
-				[ForecastType.Price]: !!this.forecast.grid,
-				[ForecastType.Co2]: !!this.forecast.co2,
+				[ForecastType.Solar]: !!this.forecast["solar"],
+				[ForecastType.Price]: !!this.forecast["grid"],
+				[ForecastType.Co2]: !!this.forecast["co2"],
 			};
 		},
 		typeIcons() {

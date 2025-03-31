@@ -5,6 +5,7 @@
 			@mouseleave="onMouseLeave"
 		>
 			<div style="position: relative; height: 220px" class="chart user-select-none">
+				<!-- @vue-ignore -->
 				<Bar ref="chart" :data="chartData" :options="options" />
 			</div>
 		</div>
@@ -25,12 +26,15 @@ import {
 	Tooltip,
 	PointElement,
 	Filler,
+	type ChartEvent,
+	type ActiveElement,
+	Chart,
 } from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
+import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import colors, { lighterColor } from "../../colors";
+import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
+import colors, { lighterColor } from "../../colors.ts";
 import {
 	highestSlotIndexByDay,
 	ForecastType,
@@ -38,6 +42,7 @@ import {
 	type SolarDetails,
 	type TimeseriesEntry,
 } from "../../utils/forecast.ts";
+import type { CURRENCY } from "assets/js/types/evcc.ts";
 
 registerChartComponents([
 	BarController,
@@ -61,7 +66,7 @@ export default defineComponent({
 		grid: { type: Array as PropType<PriceSlot[]> },
 		solar: { type: Object as PropType<SolarDetails> },
 		co2: { type: Array as PropType<PriceSlot[]> },
-		currency: { type: String as PropType<string> },
+		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
 	},
 	emits: ["selected"],
@@ -130,7 +135,7 @@ export default defineComponent({
 			];
 		},
 		chartData() {
-			const datasets: unknown[] = [];
+			const datasets = [];
 			if (this.solarEntries.length > 0) {
 				const active = this.selected === ForecastType.Solar;
 				const color = active ? colors.self : colors.border;
@@ -239,13 +244,13 @@ export default defineComponent({
 				},
 				categoryPercentage: 0.7,
 				events: ["mousemove", "click", "touchstart", "touchend"],
-				onHover: function (event, active) {
+				onHover(event: ChartEvent, active: ActiveElement[], chart: Chart) {
 					if (["touchend", "click"].includes(event.type)) {
 						vThis.selectIndex(null, true);
 						return;
 					}
 					const element = active.find(({ datasetIndex }) => {
-						const { label } = event.chart.getDatasetMeta(datasetIndex);
+						const { label } = chart.getDatasetMeta(datasetIndex);
 						return label === vThis.selected;
 					});
 					vThis.selectIndex(element ? element.index : null);
@@ -253,12 +258,13 @@ export default defineComponent({
 				plugins: {
 					...commonOptions.plugins,
 					datalabels: {
-						backgroundColor: function (context) {
+						backgroundColor(context: Context) {
 							return context.dataset.borderColor;
 						},
-						align: function ({ chart, dataset, dataIndex }) {
-							const { min, max } = chart.scales.x;
-							const time = new Date(dataset.data[dataIndex].x).getTime();
+						align({ chart, dataset, dataIndex }: Context) {
+							const { min, max } = chart.scales["x"];
+							// @ts-expect-error no-explicit-any
+							const time = new Date(dataset.data[dataIndex]?.x).getTime();
 
 							// percent along the x axis (0: start, 1: end)
 							const percent = (time - min) / (max - min);
@@ -280,8 +286,9 @@ export default defineComponent({
 						},
 						anchor: "end",
 						offset: 8,
-						padding: function (context) {
+						padding(context: Context) {
 							const data = context.dataset.data[context.dataIndex];
+							// @ts-expect-error no-explicit-any
 							const x = typeof data.highlight === "number" ? 32 : 8;
 							return {
 								x,
@@ -291,23 +298,24 @@ export default defineComponent({
 						borderRadius: 4,
 						color: colors.background,
 						font: { weight: "bold" },
-						formatter: function (data, ctx) {
-							if (data.highlight) {
-								switch (ctx.dataset.label) {
+						// @ts-expect-error no-explicit-any
+						formatter(value, context: Context) {
+							if (value.highlight) {
+								switch (context.dataset.label) {
 									case ForecastType.Price:
 										return vThis.fmtPricePerKWh(
-											data.y,
+											value.y,
 											vThis.currency,
 											true,
 											true
 										);
 									case ForecastType.Co2:
-										return vThis.fmtGrams(data.y);
+										return vThis.fmtGrams(value.y);
 									case ForecastType.Solar:
-										if (data.highlight === true) {
-											return vThis.fmtW(data.y, POWER_UNIT.AUTO);
+										if (value.highlight === true) {
+											return vThis.fmtW(value.y, POWER_UNIT.AUTO);
 										} else {
-											return vThis.fmtWh(data.highlight, POWER_UNIT.AUTO);
+											return vThis.fmtWh(value.highlight, POWER_UNIT.AUTO);
 										}
 									default:
 										return null;
@@ -328,7 +336,8 @@ export default defineComponent({
 							display: true,
 							color: colors.border,
 							offset: false,
-							lineWidth: function (context) {
+							// @ts-expect-error no-explicit-any
+							lineWidth(context) {
 								if (context.type !== "tick") {
 									return 0;
 								}
@@ -345,7 +354,7 @@ export default defineComponent({
 							minRotation: 0,
 							source: "data",
 							align: "center",
-							callback: function (value) {
+							callback(value: number) {
 								const date = new Date(value);
 								const hour = date.getHours();
 								const minute = date.getMinutes();
@@ -401,7 +410,9 @@ export default defineComponent({
 		}, 1000);
 	},
 	beforeUnmount() {
-		clearTimeout(this.interval);
+		if (this.interval) {
+			clearTimeout(this.interval);
+		}
 	},
 	methods: {
 		updateStartDate() {

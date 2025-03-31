@@ -6,19 +6,34 @@ requirements:
   description:
     de: |
       Tesla bietet eine offizielle, aber kostenpflichtige Fahrzeug-API an.
-      Für private Nutzung kannst du dir einen [Tesla Developer Account](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10$. Das ist für die gängigen evcc-Anwendungsfälle in der Regel ausreichend.
+      Für private Nutzung kannst du dir einen [Tesla Developer Account](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10 €.
+      Das ist für die gängigen evcc-Anwendungsfälle in der Regel ausreichend.
 
       Die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) erklärt den Prozess und generiert dir kostenfrei die für evcc benötigten Access- und Refresh-Token.
-      Mit diesem Tokenpaar und deiner im Tesla Developer Account erstellten Client ID kann evcc direkt mit der Tesla API kommunizieren. Dein verbrauchtes Guthaben kannst du bei Tesla einsehen.
+      Mit diesem Tokenpaar und deiner im Tesla Developer Account erstellten Client ID kann evcc direkt mit der Tesla API kommunizieren.
+      Dein verbrauchtes Guthaben kannst du im Tesla Developer Dashboard einsehen.
 
-      Für die Nutzung des "Tesla Wall Connectors" benötigst du einen öffentlichen Command-Proxy-Server. [myteslamate.com](https://app.myteslamate.com/) stellt diesen Dienst für 12€/Jahr bereit. Konfiguriere dafür bei myteslamate.com die Command-Berechtigungen und trage das Proxy-Token hier ein. Start-, Stopp- und Stromstärken-Kommandos werden über diesen Proxy an Tesla geschickt.
+      Für die Nutzung des Tesla Wall Connectors benötigst du einen öffentlichen Command-Proxy-Server.
+      [myteslamate.com](https://app.myteslamate.com/) stellt diesen Dienst kostenpflichtig (nutzungsbasiert) zur Verfügung.
+      Konfiguriere dafür bei myteslamate.com die Command-Berechtigungen und trage das Proxy-Token hier ein.
+      Start-, Stopp- und Stromstärken-Kommandos werden über diesen Proxy an Tesla geschickt.
+
+      Weitere Informationen und Alternativen findest du in [unserem Blogbeitrag](https://docs.evcc.io/blog/2025/01/20/tesla-api-update).
     en: |
       Tesla offers an official, but paid vehicle API.
-      For private use, you can create a [Tesla Developer Account](https://developer.tesla.com/) and receive a monthly API credit of 10$. This is usually sufficient for the common evcc use cases.
+      For private use, you can create a [Tesla Developer Account](https://developer.tesla.com/) and receive a monthly API credit of $10.
+      This is usually sufficient for the common evcc use cases.
 
-      The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token. With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla API. You can see your used credit at Tesla.
+      The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token.
+      With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla API.
+      You can see your used credit in the Tesla Developer Dashboard.
 
-      To use a Tesla Wall Connector, you need a public Command Proxy Server. [myteslamate.com](https://app.myteslamate.com/) provides this service for 12€/year. Configure the Command permissions at myteslamate.com and enter the Proxy Token here. Start, stopp and current commands are sent to Tesla via this proxy.
+      To use a Tesla Wall Connector, you need a public Command Proxy Server.
+      [myteslamate.com](https://app.myteslamate.com/) provides such a service with per-use pricing.
+      Configure the Command permissions at myteslamate.com and enter the Proxy Token here.
+      Start, stopp and current commands are sent to Tesla via this proxy.
+
+      More information and alternatives can be found in [our blog post](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
 params:
   - preset: vehicle-common
   - name: clientId
@@ -51,8 +66,8 @@ params:
   - name: proxyToken
     advanced: true
     help:
-      en: Token for the [myteslamate.com](https://app.myteslamate.com/) command proxy (12€/year fee). Ensure, that you've installed their Virtual Key and granted 'Charge Start', 'Charge Stop' and 'Set Charging Amps' permissions.
-      de: Token für den Command Proxy von [myteslamate.com](https://app.myteslamate.com/) (12€/Jahr). Stelle sicher, dass du den Virtual Key installiert hast und die Berechtigungen 'Ladung starten', 'Ladung stoppen' und 'Ladestrom setzen' erteilt hast.
+      en: Token for the [myteslamate.com](https://app.myteslamate.com/) command proxy (pay-per use). Ensure, that you've installed their Virtual Key and granted 'Charge Start', 'Charge Stop' and 'Set Charging Amps' permissions.
+      de: Token für den Command Proxy von [myteslamate.com](https://app.myteslamate.com/) (nutzungsbasiert). Stelle sicher, dass du den Virtual Key installiert hast und die Berechtigungen 'Ladung starten', 'Ladung stoppen' und 'Ladestrom setzen' erteilt hast.
   - name: cache
     default: 15m
 render: |
