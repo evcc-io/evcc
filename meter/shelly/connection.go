@@ -61,9 +61,11 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	if err := client.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
 		return nil, err
 	}
-	// Determine device model/type
-	model := strings.Split(resp.Type+resp.Model, "-")
-	modelgroup := model[0]
+
+	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
+		return nil, fmt.Errorf("missing user/password (%s)", resp.Mac)
+	}
+
 	// Set default profile to "monophase" if not provided
 	if resp.Profile == "" {
 		resp.Profile = "monophase"
@@ -74,7 +76,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		log:     *log,
 		channel: channel,
 		Gen:     resp.Gen,
-		model:   modelgroup,
+		model:   strings.Split(resp.Type+resp.Model, "-")[0],
 		app:     resp.App,
 		profile: resp.Profile,
 		Cache:   cache,
@@ -82,9 +84,6 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	c.Client.Transport = request.NewTripper(&c.log, transport.Insecure())
 
-	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return c, fmt.Errorf("%s (%s) missing user/password", c.model, resp.Mac)
-	}
 	// Initialize the connection to the Shelly API
 	switch c.Gen {
 	case 0, 1:
