@@ -11,9 +11,25 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
+// DeviceInfo is the common /shelly endpoint response
+// https://shelly-api-docs.shelly.cloud/#common-http-api
+type DeviceInfo struct {
+	Gen       int    `json:"gen"`
+	Id        string `json:"id"`
+	Model     string `json:"model"`
+	Type      string `json:"type"`
+	Mac       string `json:"mac"`
+	App       string `json:"app"`
+	Auth      bool   `json:"auth"`
+	AuthEn    bool   `json:"auth_en"`
+	NumMeters int    `json:"num_meters"`
+	Profile   string `json:"profile"`
+}
+
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
+	log              util.Logger
 	uri              string
 	channel          int
 	Gen              int    // Shelly api generation
@@ -21,6 +37,7 @@ type Connection struct {
 	app              string // Shelly device app code
 	profile          string // Shelly device profile
 	Cache            time.Duration
+	gen1Status       util.Cacheable[Gen1Status]
 	gen2SwitchStatus util.Cacheable[Gen2SwitchStatus]
 	gen2EM1Status    util.Cacheable[Gen2EM1Status]
 	gen2EMStatus     util.Cacheable[Gen2EMStatus]
@@ -54,6 +71,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	c := &Connection{
 		Helper:  client,
+		log:     *log,
 		channel: channel,
 		Gen:     resp.Gen,
 		model:   modelgroup,
@@ -62,22 +80,15 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		Cache:   cache,
 	}
 
-	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+	c.Client.Transport = request.NewTripper(&c.log, transport.Insecure())
 
 	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
 		return c, fmt.Errorf("%s (%s) missing user/password", c.model, resp.Mac)
 	}
-
+	// Initialize the connection to the Shelly API
 	switch c.Gen {
 	case 0, 1:
-		// Shelly GEN 1 API
-		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		c.uri = util.DefaultScheme(uri, "http")
-		if user != "" {
-			log.Redact(transport.BasicAuthHeader(user, password))
-			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
-		}
-
+		c.gen1InitApi(uri, user, password)
 	case 2, 3:
 		c.gen2InitApi(uri, user, password)
 

@@ -1,20 +1,43 @@
 package shelly
 
+// Gen1 API functions
+// https://shelly-api-docs.shelly.cloud/gen1/
 import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 )
+
+// gen1InitApi initializes the connection to the shelly gen1 api and sets up the cached gen1Status
+func (c *Connection) gen1InitApi(uri, user, password string) {
+	// Shelly GEN 1 API
+	// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
+	c.uri = util.DefaultScheme(uri, "http")
+	if user != "" {
+		c.log.Redact(transport.BasicAuthHeader(user, password))
+		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
+	}
+	// Cached gen1Status
+	c.gen1Status = util.ResettableCached(func() (Gen1Status, error) {
+		var gen1StatusResponse Gen1Status
+		err := c.GetJSON(fmt.Sprintf("%s/status", c.uri), &gen1StatusResponse)
+		if err != nil {
+			return Gen1Status{}, err
+		}
+		return gen1StatusResponse, nil
+	}, c.Cache)
+}
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) Gen1CurrentPower() (float64, error) {
 	var switchpower, meterpower float64
-	var res Gen1StatusResponse
-	uri := fmt.Sprintf("%s/status", c.uri)
-	if err := c.GetJSON(uri, &res); err != nil {
+	res, err := c.gen1Status.Get()
+	if err != nil {
 		return 0, err
 	}
-
 	switch {
 	case c.channel < len(res.Meters):
 		switchpower = res.Meters[c.channel].Power
@@ -49,13 +72,10 @@ func (c *Connection) Gen1Enable(enable bool) error {
 // TotalEnergy implements the api.Meter interface
 func (c *Connection) Gen1TotalEnergy() (float64, error) {
 	var energy float64
-
-	var res Gen1StatusResponse
-	uri := fmt.Sprintf("%s/status", c.uri)
-	if err := c.GetJSON(uri, &res); err != nil {
+	res, err := c.gen1Status.Get()
+	if err != nil {
 		return 0, err
 	}
-
 	switch {
 	case c.channel < len(res.Meters):
 		energy = res.Meters[c.channel].Total - res.Meters[c.channel].Total_Returned
@@ -72,12 +92,10 @@ func (c *Connection) Gen1TotalEnergy() (float64, error) {
 
 // Gen1Currents implements the api.PhaseCurrents interface
 func (c *Connection) Gen1Currents() (float64, float64, float64, error) {
-	var res Gen1StatusResponse
-	uri := fmt.Sprintf("%s/status", c.uri)
-	if err := c.GetJSON(uri, &res); err != nil {
+	res, err := c.gen1Status.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
-
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Current, 0, 0, nil
@@ -90,12 +108,10 @@ func (c *Connection) Gen1Currents() (float64, float64, float64, error) {
 
 // Gen1Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Gen1Voltages() (float64, float64, float64, error) {
-	var res Gen1StatusResponse
-	uri := fmt.Sprintf("%s/status", c.uri)
-	if err := c.GetJSON(uri, &res); err != nil {
+	res, err := c.gen1Status.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
-
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Voltage, 0, 0, nil
@@ -108,12 +124,10 @@ func (c *Connection) Gen1Voltages() (float64, float64, float64, error) {
 
 // Gen1Powers implements the api.PhasePowers interface
 func (c *Connection) Gen1Powers() (float64, float64, float64, error) {
-	var res Gen1StatusResponse
-	uri := fmt.Sprintf("%s/status", c.uri)
-	if err := c.GetJSON(uri, &res); err != nil {
+	res, err := c.gen1Status.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
-
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Power, 0, 0, nil
