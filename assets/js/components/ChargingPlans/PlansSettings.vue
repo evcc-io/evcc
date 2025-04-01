@@ -114,6 +114,7 @@ export default defineComponent({
 		capacity: Number,
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
+		vehicleSoc: Number,
 		planOverrun: Number,
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
@@ -130,10 +131,13 @@ export default defineComponent({
 	},
 	computed: {
 		noActivePlan(): boolean {
-			return (
+			return !!(
 				(!this.staticPlan && this.repeatingPlans.every((plan) => !plan.active)) ||
-				Object.keys(this.plan).length === 0 ||
-				this.plan.duration == 0
+				(this.staticPlan &&
+					this.vehicleSoc &&
+					"soc" in this.staticPlan &&
+					this.staticPlan.soc <= this.vehicleSoc) ||
+				this.repeatingPlans.every((plan) => this.vehicleSoc && plan.soc <= this.vehicleSoc)
 			);
 		},
 		multiplePlans(): boolean {
@@ -206,7 +210,7 @@ export default defineComponent({
 	methods: {
 		selectPreviewPlan(id: number): void {
 			this.selectedPreviewId = id;
-			this.updatePlanPreviewDebounced();
+			this.fetchPlanDebounced();
 		},
 		async fetchPlanDebounced() {
 			if (this.noActivePlan) {
@@ -221,6 +225,7 @@ export default defineComponent({
 			}
 		},
 		async updateActivePlan(): Promise<void> {
+			await this.updateTariff();
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res?.data.result ?? ({} as PlanWrapper);
@@ -228,7 +233,6 @@ export default defineComponent({
 			} catch (e) {
 				console.error(e);
 			}
-			await this.updateTariff();
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
@@ -267,6 +271,8 @@ export default defineComponent({
 			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
 
+			await this.updateTariff();
+
 			try {
 				let planRes: PlanResponse | undefined = undefined;
 
@@ -299,7 +305,6 @@ export default defineComponent({
 					planRes = await this.fetchRepeatingPreview({ weekdays, soc, time, tz });
 				}
 				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
-				await this.updateTariff();
 			} catch (e) {
 				console.error(e);
 			}
