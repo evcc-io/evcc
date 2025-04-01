@@ -89,7 +89,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	switch c.Gen {
 	case 0, 1:
 		c.gen1InitApi(uri, user, password)
-	case 2, 3:
+	case 2, 3, 4:
 		c.gen2InitApi(uri, user, password)
 
 	default:

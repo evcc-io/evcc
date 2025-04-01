@@ -235,8 +235,12 @@ func isSwitchEndpointModel(model string) bool {
 	// - SPSW-003XE16EU: Shelly Pro 3 with 3x relay
 	// - SPSW-004PE16EU: Shelly Pro 4 PM with 4x relay + power meter
 	// Generation 3 Devices:
-	// - S3SW-001P16EU: Shelly 1 PM Gen3 with 1x relay + power meter
-	switchModels := []string{"SNSW", "SNPL", "SPSW", "S3SW"}
+	// - S3SW-001P16EU: Shelly 1PM Gen3 with 1x relay + power meter
+	// Generation 4 Devices:
+	// - S4SW-001X8EU: Shelly 1 Mini Gen4 with 1x relay
+	// - S4SW-001P8EU: Shelly 1PM Mini Gen4 with 1x relay + power meter
+	// - S4SW-001P16EU: Shelly 1PM Gen4 with 1x relay + power meter
+	switchModels := []string{"SNSW", "SNPL", "SPSW", "S3SW", "S4SW"}
 	for _, switchModel := range switchModels {
 		if switchModel == model {
 			return true
@@ -257,7 +261,9 @@ func isEMEndpointModel(model string) bool {
 	// - S3EM-002CXCEU: Shelly EM Gen 3 with 1x relay + 2x energy meter
 	// - S3EM-001XCEU: Shelly 3EM Gen 3 with 3x energy meter
 	// - S3EM-003CXCEU63: Shelly 3EM Gen 3 with 3x energy meter
-	em1Models := []string{"SPEM", "S3EM"}
+	// Generation 4 Devices:
+	// - S4EM-001PXCEU16: Shelly EM Mini Gen4 with power meter
+	em1Models := []string{"SPEM", "S3EM", "S4EM"}
 	for _, em1Model := range em1Models {
 		if em1Model == model {
 			return true
