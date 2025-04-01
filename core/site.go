@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math"
@@ -484,10 +485,22 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		meter := dev.Instance()
 
 		// power
-		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
+		var b bytes.Buffer
+		start := time.Now()
+		power, err := backoff.RetryWithData(func() (float64, error) {
+			f, err := meter.CurrentPower()
+			if err != nil {
+				fmt.Fprintf(&b, "%v !! %v\n", time.Now(), err)
+			}
+			return f, err
+		}, bo())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
+			if b.Len() > 0 {
+				site.log.ERROR.Println(start, "!!")
+				site.log.ERROR.Println(b.String())
+			}
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
