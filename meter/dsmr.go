@@ -247,10 +247,41 @@ func (m *Dsmr) get(id string) (float64, error) {
 	return strconv.ParseFloat(res.Value, 64)
 }
 
+func (m *Dsmr) readPerPhasePower(obis [3]string) (float64, error) {
+	sum := 0.0
+	var err error
+	for _, element := range obis {
+		reading, rerr := m.get(element)
+		sum += reading
+		err = errors.Join(rerr, err)
+	}
+	return sum, err
+}
+
 // CurrentPower implements the api.Meter interface
 func (m *Dsmr) CurrentPower() (float64, error) {
-	bezug, err1 := m.get("1-0:1.7.0")
-	lief, err2 := m.get("1-0:2.7.0")
+	totalImport, err1 := m.get("1-0:1.7.0")
+	// Attempt a fallback to per-phase readings
+	if errors.Is(err1, api.ErrNotAvailable) {
+		fallback, err3 := m.readPerPhasePower([3]string{"1-0:21.7.0", "1-0:41.7.0", "1-0:61.7.0"})
+		if err3 == nil {
+			totalImport = fallback
+			err1 = nil
+		} else {
+			err1 = errors.Join(err1, err3)
+		}
+	}
+
+	totalExport, err2 := m.get("1-0:2.7.0")
+	if errors.Is(err2, api.ErrNotAvailable) {
+		fallback, err3 := m.readPerPhasePower([3]string{"1-0:22.7.0", "1-0:42.7.0", "1-0:62.7.0"})
+		if err3 == nil {
+			totalExport = fallback
+			err2 = nil
+		} else {
+			err2 = errors.Join(err2, err3)
+		}
+	}
 
 	// allow one value to be missing
 	if err1 == nil && errors.Is(err2, api.ErrNotAvailable) || err2 == nil && errors.Is(err1, api.ErrNotAvailable) {
@@ -258,7 +289,7 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 		err2 = nil
 	}
 
-	return (bezug - lief) * 1e3, errors.Join(err1, err2)
+	return (totalImport - totalExport) * 1e3, errors.Join(err1, err2)
 }
 
 // totalEnergy implements the api.MeterEnergy interface
