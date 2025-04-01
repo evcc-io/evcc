@@ -31,11 +31,6 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    rules:
-      - path: (.+)\.go$
-        text: .regActualCurrent. is unused
-      - path: (.+)\.go$
-        text: '`routeLogger` is unused'
     paths:
       - third_party$
       - builtin$
