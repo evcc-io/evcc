@@ -210,23 +210,24 @@ func (c *Connection) CurrentPower() (float64, error) {
 		combinedPower += power
 	}
 	// add SML power
-	if c.usage == "pv" || c.usage == "battery" {
-		// invert SML power for pv and battery usage
-		return combinedPower + float64(-s.StatusSNS.SML.PowerCurr), nil
-	} else {
-		return combinedPower + float64(s.StatusSNS.SML.PowerCurr), nil
+	combinedPower += float64(s.StatusSNS.SML.PowerCurr)
+	// invert power for pv and battery usage
+	if (c.usage == "pv" || c.usage == "battery") && combinedPower < 0 {
+		return -combinedPower, nil
 	}
+
+	return combinedPower, nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.statusSnsG.Get()
-	if c.usage == "grid" || c.usage == "charge" {
-		// use SML TotalIn for grid and charge usage
-		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
-	} else {
+	if c.usage == "pv" || c.usage == "battery" {
 		// use SML TotalOut for pv and battery usage
 		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalOut, err
+	} else {
+		// use SML TotalIn for grid and charge usage
+		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
 	}
 }
 
