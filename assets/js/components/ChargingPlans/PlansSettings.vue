@@ -131,13 +131,21 @@ export default defineComponent({
 	},
 	computed: {
 		noActivePlan(): boolean {
-			return !!(
+			return (
 				(!this.staticPlan && this.repeatingPlans.every((plan) => !plan.active)) ||
+				this.noPlanDuration
+			);
+		},
+		noPlanDuration(): boolean {
+			return (
 				(this.staticPlan &&
 					this.vehicleSoc &&
 					"soc" in this.staticPlan &&
 					this.staticPlan.soc <= this.vehicleSoc) ||
-				this.repeatingPlans.every((plan) => this.vehicleSoc && plan.soc <= this.vehicleSoc)
+				(this.repeatingPlans.length > 0 &&
+					this.repeatingPlans.every(
+						(plan) => this.vehicleSoc && plan.soc <= this.vehicleSoc
+					))
 			);
 		},
 		multiplePlans(): boolean {
