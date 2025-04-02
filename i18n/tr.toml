@@ -68,17 +68,17 @@ chargeStatusF = "hata"
 chargedEnergy = "Doldu"
 co2 = "Şebeke CO₂"
 configured = "Yapılandırıldı"
-controllable = "“Kontrol edilebilir”"
+controllable = “Kontrol edilebilir”
 currency = "Para Birimi"
 current = "Akım"
-currentRange = "“Akım”"
+currentRange = “Akım”
 enabled = "Etkin"
 energy = "Enerji"
 feedinPrice = "Satış fiyatı"
 gridPrice = "Alım fiyatı"
-heaterTempLimit = "“Isıtıcı sınırlaması”"
+heaterTempLimit = “Isıtıcı sınırlaması”
 hemsType = "Sistem"
-identifier = "“RFID tanımlayıcısı”"
+identifier = “RFID tanımlayıcısı”
 no = "hayır"
 odometer = "Kilometre Sayacı"
 org = "Organizasyon"
@@ -97,6 +97,7 @@ topic = "Konu"
 url = "URL"
 vehicleLimitSoc = "“Araç sınırı”"
 yes = "evet"
+solarForecast = "Güneş tahmini"
 
 [config.deviceValueChargeStatus]
 A = "“A (bağlı değil)”"
@@ -226,6 +227,7 @@ vehicleHelpAutoDetection = "“Otomatik olarak en makul aracı seçer. Elden de�
 vehicleHelpDefault = "“Her zaman bu aracın burada doldurduğunu varsayar. Otomatik algılama devre dışı. Elden değiştirme mümkün.”"
 vehicleLabel = "“Varsayılan araç”"
 vehiclesTitle = "“Araçlar”"
+chargerError = "Bir şarj cihazının yapılandırılması gereklidir."
 
 [config.main]
 addGrid = "“Elektrik sayacı ekle”"
@@ -240,6 +242,7 @@ title = "Yapılandırma"
 unconfigured = "yapılandırılmadı"
 vehicles = "Araçlarım"
 yaml = "“evcc.yaml dosyasındaki cihazlar düzenlenemez.”"
+addAdditional = "Ek sayaç ekle"
 
 [config.messaging]
 description = "Dolum oturumları hakkında bildirimler al."
@@ -315,6 +318,7 @@ loadpoints = "Dolum noktaları"
 meter = "GES ve Batarya"
 system = "Sistem"
 vehicles = "Araçlar"
+additionalMeter = "Ek sayaçlar"
 
 [config.sponsor]
 addToken = "Jetonu gir"
@@ -567,6 +571,7 @@ cheapEnergyCharging = "Ucuz enerji ile ısıtılıyor: {price} (sınır {limit})
 cleanEnergyCharging = "Temiz enerji ile ısıtılıyor: {co2} (sınır {limit})"
 vehicleLimit = "“Isıtıcı sınırlaması”"
 waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
+connected = "Standby."
 
 [main.loadpoint]
 avgPrice = "⌀ Fiyat"
@@ -903,3 +908,20 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[config.aux]
+titleEdit = "Kendi Kendini Düzenleyen Tüketiciyi Düzenle"
+titleAdd = "Kendi Kendini Düzenleyen Tüketici Ekle"
+description = "Tüketimini mevcut fazlalığa göre ayarlayan cihaz (akıllı su ısıtıcıları gibi). evcc, bu cihazın gerektiğinde güç tüketimini azaltmasını bekler."
+
+[config.meter.option]
+battery = "Pil ölçer ekle"
+aux = "Kendi kendini düzenleyen tüketici ekle"
+ext = "Harici sayaç ekle"
+pv = "Güneş ölçer ekle"
+
+[config.ext]
+description = "Yük yönetimi veya istatistik amaçları için kullanılabilir."
+titleAdd = "Harici Sayaç Ekle"
+titleEdit = "Harici Sayacı Düzenle"
