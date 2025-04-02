@@ -571,7 +571,7 @@ cheapEnergyCharging = "Ucuz enerji ile ısıtılıyor: {price} (sınır {limit})
 cleanEnergyCharging = "Temiz enerji ile ısıtılıyor: {co2} (sınır {limit})"
 vehicleLimit = "“Isıtıcı sınırlaması”"
 waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
-connected = "Standby."
+connected = “Beklemede."
 
 [main.loadpoint]
 avgPrice = "⌀ Fiyat"
