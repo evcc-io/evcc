@@ -91,13 +91,15 @@ power = "Vermogen"
 powerRange = "Vermogen"
 range = "Actieradius"
 singlePhase = "Monofase"
-soc = "Batterijpercentage"
+soc = "Laden"
 socLimit = "Limiet"
 temp = "Temperatuur"
 topic = "Onderwerp"
 url = "URL"
 vehicleLimitSoc = "Voertuig limiet"
 yes = "ja"
+heaterTempLimit = "Verwarming limiet"
+solarForecast = "Voorspelling van zonne-energie"
 
 [config.deviceValueChargeStatus]
 A = "A (niet aangesloten)"
@@ -193,6 +195,41 @@ pollModeAlways = "altijd"
 priorityLabel = "Prioriteit"
 save = "Opslaan"
 showAllSettings = "Alle instellingen tonen"
+pollModeCharging = "laden"
+priorityHelp = "Oplaadpunten met een hogere prioriteit krijgen voorrang bij zonne-energie overschotten."
+pollModeChargingHelp = "Vraag alleen om updates van de voertuigstatus tijdens het opladen."
+pollModeConnected = "verbonden"
+pollModeConnectedHelp = "Werk de voertuigstatus met regelmatige tussenpozen bij wanneer deze is aangesloten."
+solarBehaviorDefaultHelp = "Laad alleen op met een overschot aan zonne-energie. Begin na {enableDelay} van overschot. Stop als er niet genoeg overschot is voor {disableDelay}."
+pollModeAlwaysHelp = "Vraag altijd om regelmatige statusupdates."
+pollModeLabel = "Update gedrag"
+solarBehaviorCustomHelp = "Definieer uw eigen in- en uitschakeldrempels en vertragingen."
+addMeter = "Toevoegen van een toegewijde laadmeter"
+thresholdDisableDelayLabel = "Vertraging uitschakelen"
+thresholdDisableHelpInvalid = "Gebruik alstublieft een positieve waarde."
+thresholdDisableLabel = "Schakel netspanning uit"
+titleEdit = "Laadpunt bewerken"
+vehicleLabel = "Standaard voertuig"
+solarBehaviorLabel = "Gedrag van de zonne-energie"
+titleExample = "Garage, carport, enz."
+titleLabel = "Titel"
+vehicleAutoDetection = "automatische detectie"
+solarModeMaximum = "Maximale zonne-energie"
+thresholdDisableHelpPositive = "Stop met opladen wanneer er meer dan {stroom} van het net wordt gebruikt voor {vertraging}."
+thresholdDisableHelpZero = "Stop wanneer het minimale laadvermogen niet kan worden voldaan voor {delay}."
+thresholdEnableDelayLabel = "Vertraging inschakelen"
+thresholdEnableLabel = "Netstroom inschakelen"
+vehicleHelpAutoDetection = "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk."
+vehicleHelpDefault = "Ga er altijd vanuit dat dit voertuig hier aan het opladen is. Automatische detectie uitgeschakeld. Handmatige aanpassen is mogelijk."
+vehiclesTitle = "Voertuigen"
+pollIntervalHelp = "Tijd tussen API-updates van voertuigen. Korte intervallen kunnen de accu van het voertuig leegmaken."
+pollIntervalLabel = "Update-interval"
+thresholdEnableHelpNegative = "Begin met opladen wanneer het overschot van {surplus} beschikbaar is voor {delay}."
+titleAdd = "Oplaadpunt toevoegen"
+thresholdEnableHelpInvalid = "Gebruik aub een negatieve waarde."
+solarModeCustom = "Aangepast"
+thresholdEnableHelpZero = "Begin wanneer het minimale overschot aan laadvermogen beschikbaar is voor {delay}."
+chargerError = "Het configureren van een oplader is vereist."
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
@@ -203,7 +240,11 @@ edit = "bewerken"
 title = "Configuratie"
 unconfigured = "Niet geconfigureerd"
 vehicles = "Mijn voertuigen"
-yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface."
+yaml = "Apparaat van evcc.yaml kan niet worden bewerkt."
+name = "Naam"
+addAdditional = "Extra meter toevoegen"
+addGrid = "Netmeter toevoegen"
+addTariffs = "Tarieven toevoegen"
 
 [config.messaging]
 description = "Ontvang berichten over je oplaadsessies."
@@ -274,19 +315,23 @@ loadpoints = "Laadpunten"
 meter = "Zonnepanelen & accu"
 system = "Systeem"
 vehicles = "Voertuigen"
+additionalMeter = "Extra meters"
 
 [config.site]
 cancel = "Annuleren"
 save = "Opslaan"
 
 [config.sponsor]
-addToken = "Sponsortoken invoeren"
-changeToken = "Sponsortoken bewerken"
+addToken = "Token invoeren"
+changeToken = "Token bewerken"
 description = "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten."
 descriptionToken = "Haal de token op vanaf {url}. We bieden ook een trial-token aan om te testen."
 error = "De sponsortoken is ongeldig."
 labelToken = "Sponsortoken"
 title = "Sponsoring"
+tokenRequired = "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken."
+tokenRequiredLearnMore = "Meer informatie."
+trialToken = "Tijdelijke token"
 
 [config.system]
 logs = "Logboeken"
@@ -465,6 +510,8 @@ title = "Authenticatie"
 
 [main]
 vehicles = "Parking"
+welcome = "Welkom aan boord!"
+startConfiguration = "Laten we beginnen met de configuratie"
 
 [main.chargingPlan]
 active = "Actief"
@@ -503,12 +550,15 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
+forecastTooltip = "Voorspelling: resterende zonneproductie voor vandaag"
 
 [main.heatingStatus]
 charging = "Bezig met verwarmen..."
 cheapEnergyCharging = "Verwarmen met goedkope energie: {price} (limiet {limit})"
 cleanEnergyCharging = "Verwarmen met schone energie: {co2} (limiet {limit})"
 waitForVehicle = "Klaar. Wachten op voertuigverwarming"
+vehicleLimit = "Verwarming limiet"
+connected = "Stand-by."
 
 [main.loadpoint]
 avgPrice = "⌀ Prijs"
@@ -599,8 +649,8 @@ targetIsAboveVehicleLimit = "Voertuiglimiet is lager dan het laaddoel."
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
 targetIsTooFarInTheFuture = "We passen het plan aan zodra we meer weten over de toekomst."
 title = "Doeltijd"
-today = "Vandaag"
-tomorrow = "Morgen"
+today = "vandaag"
+tomorrow = "morgen"
 update = "Updaten"
 vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
 vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
@@ -642,7 +692,7 @@ cleanEnergyNextStart = "Schone energie in {duration}."
 cleanEnergySet = "CO₂ limiet ingesteld."
 climating = "Voor-conditionering gedetecteerd."
 connected = "Verbonden."
-disconnectRequired = "Sessie beëindigd. Gelieve opnieuw verbinding te maken."
+disconnectRequired = "Sessie beëindigd. Maak opnieuw verbinding."
 disconnected = "Niet verbonden."
 finished = "Geëindigd."
 minCharge = "Minimaal opladen naar {soc}."
@@ -853,6 +903,8 @@ none = "geen"
 priceLabel = "Energieprijs"
 priceLimit = "Prijslimiet"
 saved = "Opgeslagen"
+resetAction = "Limiet verwijderen"
+resetWarning = "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opruimen?"
 
 [startupError]
 configFile = "Gebruikt configuratiebestand:"
@@ -870,3 +922,51 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.aux]
+description = "Apparaat dat zijn verbruik aanpast op basis van het beschikbare overschot (zoals slimme boilers). EVCC verwacht dat dit apparaat het stroomverbruik vermindert als dat nodig is."
+titleAdd = "Zelfregulerende verbruiker toevoegen"
+titleEdit = "Zelfregulerende verbruiker bewerken"
+
+[config.ext]
+description = "Kan worden gebruikt voor belastingbeheer of statistische doeleinden."
+titleEdit = "Externe meter bewerken"
+titleAdd = "Externe Meter Toevoegen"
+
+[forecast.solar]
+partly = "gedeeltelijk"
+tomorrow = "Morgen"
+today = "Vandaag"
+remaining = "resterend"
+dayAfterTomorrow = "Overmorgen"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Prijs"
+solar = "Zonne-energie"
+
+[config.meter.option]
+aux = "Zelfregulerende consument toevoegen"
+ext = "Externe meter toevoegen"
+pv = "Zonne-energie meter toevoegen"
+battery = "Batterijmeter toevoegen"
+
+[config.options.status]
+A = "A (niet verbonden)"
+B = "B (verbonden)"
+C = "C (opladen)"
+
+[forecast]
+solarAdjust = "Pas de zonnevoorspelling aan op basis van echte productiegegevens{percent}."
+modalTitle = "Voorspelling"
+
+[forecast.price]
+average = "Gemiddeld"
+lowestHour = "Goedkoopste uur"
+range = "Bereik"
+
+[forecast.co2]
+average = "Gemiddeld"
+lowestHour = "Schoonste uur"
+range = "Bereik"
