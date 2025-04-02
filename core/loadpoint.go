@@ -1358,6 +1358,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 		// if we did scale, adjust the effective current to the new phase count
 		effectiveCurrent /= 3.0
 	}
+	if lp.chargerHasFeature(api.IntegratedDevice) {
+		// for slow-acting heating devices, only take actually consumed power into account
+		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases)
+	}
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
