@@ -181,14 +181,14 @@ export default defineComponent({
 	watch: {
 		effectivePlanTime(newValue: string) {
 			if (null !== newValue) {
-				this.fetchPlanDebounced();
+				this.updatePlanDebounced();
 			}
 		},
 		staticPlan: {
 			deep: true,
 			handler(vNew: StaticPlan, vOld: StaticPlan) {
 				if (!deepEqual(vNew, vOld)) {
-					this.fetchPlanDebounced();
+					this.updatePlanDebounced();
 				}
 			},
 		},
@@ -197,20 +197,20 @@ export default defineComponent({
 			handler(vNew: RepeatingPlan[], vOld: RepeatingPlan[]) {
 				if (!deepEqual(vNew, vOld)) {
 					this.adjustPreviewId();
-					this.fetchPlanDebounced();
+					this.updatePlanDebounced();
 				}
 			},
 		},
 	},
 	mounted(): void {
-		this.fetchPlanDebounced();
+		this.updatePlanDebounced();
 	},
 	methods: {
 		selectPreviewPlan(id: number): void {
 			this.selectedPreviewId = id;
-			this.fetchPlanDebounced();
+			this.updatePlanDebounced();
 		},
-		async fetchPlanDebounced() {
+		async updatePlanDebounced() {
 			if (this.noActivePlan) {
 				await this.updatePlanPreviewDebounced();
 			} else {
