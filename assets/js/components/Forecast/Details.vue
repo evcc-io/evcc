@@ -67,7 +67,7 @@ import { defineComponent, type PropType } from "vue";
 import { ForecastType, type PriceSlot, type SolarDetails } from "../../utils/forecast.ts";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import type { CURRENCY } from "assets/js/types/evcc.ts";
+import type { CURRENCY, Timeout } from "assets/js/types/evcc.ts";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
 export interface Energy {
@@ -97,7 +97,7 @@ export default defineComponent({
 	data() {
 		return {
 			now: new Date(),
-			interval: null as ReturnType<typeof setInterval> | null,
+			interval: null as Timeout,
 		};
 	},
 	computed: {

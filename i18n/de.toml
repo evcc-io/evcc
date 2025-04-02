@@ -24,7 +24,7 @@ never = "nur mit genug PV-Überschuss."
 [config]
 
 [config.aux]
-description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es benötigt wird."
+description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist."
 titleAdd = "Intelligenten Verbraucher hinzufügen"
 titleEdit = "Intelligenten Verbraucher bearbeiten"
 
@@ -241,6 +241,7 @@ vehicleLabel = "Standard-Fahrzeug"
 vehiclesTitle = "Fahrzeuge"
 
 [config.main]
+addAdditional = "Zusätzlichen Zähler hinzufügen"
 addGrid = "Netzzähler hinzufügen"
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
@@ -658,6 +659,7 @@ costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
+goalReached = "Ladeziel bereits erreicht"
 inactiveLabel = "Zielzeit"
 nextPlan = "Nächster Plan"
 notReachableInTime = "Zielzeit wird {overrun} später erreicht."

@@ -51,10 +51,6 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
-		if plan == nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
 
 		res := struct {
 			PlanId   int       `json:"planId"`
@@ -110,10 +106,6 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
-		if plan == nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
@@ -163,10 +155,6 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration)
-		if plan == nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
