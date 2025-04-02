@@ -43,6 +43,7 @@ switchsockets = "Kytkettävät pistorasiat"
 template = "Valmistaja"
 titleAdd = "Lisää laturi"
 titleEdit = "Muokkaa laturia"
+heatingdevices = "Lämmityslaitteet"
 
 [config.circuits]
 description = "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin."
@@ -98,6 +99,8 @@ topic = "Aihe"
 url = "URL"
 vehicleLimitSoc = "Ajoneuvonrajoitus"
 yes = "kyllä"
+heaterTempLimit = "Lämmityksen raja"
+solarForecast = "Aurinkosääennuste"
 
 [config.deviceValueChargeStatus]
 A = "A (ei yhdistetty)"
@@ -112,6 +115,7 @@ title = "EEBus"
 deprecated = "vanhentunut"
 example = "Esimerkiksi"
 optional = "valinnainen"
+danger = "Vaara"
 
 [config.general]
 cancel = "Peruuta"
@@ -227,6 +231,8 @@ vehicleHelpAutoDetection = "Valitsee automaattisesti todennäköisimmän ajoneuv
 vehicleHelpDefault = "Olettaa aina, että tämä ajoneuvo latautuu täällä. Automaattinen tunnistus poistettu käytöstä. Manuaalinen ohitus on mahdollista."
 vehicleLabel = "Oletusajoneuvo"
 vehiclesTitle = "Ajoneuvot"
+chargerError = "Vaaditaan käyttöönottoasetusten määrittely laturille."
+pollIntervalDanger = "Ajoneuvon akku voi tyhjentyä tiheiden säännöllisten tietopyyntöjen seurauksena. Joidenkin autovalmistajien ajoneuvot voivat estää tällöin ajoneuvon lataamisen. Ei suositella! Käytä ainoastaan tiedostaen riskit."
 
 [config.main]
 addGrid = "Lisää verkkomittari"
@@ -241,6 +247,7 @@ title = "Määritykset"
 unconfigured = "ei määritetty"
 vehicles = "Minun ajoneuvot"
 yaml = "Laitteita jotka ovat määritetty evcc.yaml, ei voi muokata."
+addAdditional = "Lisää lisämittari"
 
 [config.messaging]
 description = "Vastaanota viestejä koskien lataustapahtumiasi."
@@ -316,6 +323,7 @@ loadpoints = "Latauspisteet"
 meter = "Aurinko & Akku"
 system = "Järjestelmä"
 vehicles = "Ajoneuvot"
+additionalMeter = "Ylimääräiset mittarit"
 
 [config.sponsor]
 addToken = "Anna tunnus"
@@ -445,6 +453,7 @@ modalUpdateStatusStart = "Asennus aloitettu:"
 
 [forecast]
 modalTitle = "Ennuste"
+solarAdjust = "Mukauta aurinkosääennustettu todellisten tuotantotietojen perusteella{percent}."
 
 [forecast.co2]
 average = "Keskimäärin"
@@ -573,6 +582,8 @@ charging = "Lämmitys..."
 cheapEnergyCharging = "Lataa halvalla energialla: {price} (raja {limit})"
 cleanEnergyCharging = "Lämmitä puhtaalla energialla: {co2} (raja {limit})"
 waitForVehicle = "Valmiina. Odottaa lämmitintä..."
+vehicleLimit = "Lämmittimen rajoitin"
+connected = "Valmiustila."
 
 [main.loadpoint]
 avgPrice = "⌀ Hinta"
@@ -601,7 +612,7 @@ vehicle = "Ajoneuvo"
 [main.loadpointSettings.batteryBoost]
 description = "Nopea lataus kodin akusta."
 label = "Akun tehostaminen"
-mode = "Saatavilla vain pv- ja min + pv-tilassa."
+mode = "Saatavilla vain aurinkosähkö(pv)- ja min + pv-tilassa."
 once = "Tehostus on aktiivinen tälle latausistunnolle."
 
 [main.loadpointSettings.limitSoc]
@@ -895,7 +906,7 @@ cheapTitle = "Lataaminen edullisesti sähköverkosta"
 cleanTitle = "Viheränenergian lataminen verkosta"
 co2Label = "CO₂ päästö"
 co2Limit = "CO₂ raja"
-loadpointDescription = "Mahdollistaa nopean lataamisen väliaikaisesti PV tilassa."
+loadpointDescription = "Mahdollistaa nopean lataamisen väliaikaisesti aurinkosähkötilassa (PV)."
 modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"
@@ -920,3 +931,20 @@ title = "Virhe käynnistyksessä"
 cancel = "Peruuta"
 template = "Valmistaja"
 test = "Testi"
+
+
+[config.aux]
+titleAdd = "Lisää kulutustaan itsesäätelevä sähkölaite"
+titleEdit = "Muokkaa kulutustaan itsesäätelevää sähkölaitetta"
+description = "Sähkölaite, jonka kulutusta voi säädellä ylijäämätuotannon mukaan (kuten älykäs lämminvesivaraaja). EVCC olettaa, että tämä laite pystyy tarvittaessa pienentämään sähkönkulutustaan."
+
+[config.ext]
+titleAdd = "Lisää ulkoinen mittari"
+description = "Voidaan käyttää kuormanhallintaan tai tilastointiin"
+titleEdit = "Muokkaa ulkoista mittaria"
+
+[config.meter.option]
+aux = "Lisää kulutustaan itsesäätelevä laite"
+battery = "Lisää akun tilan mittari"
+ext = "Lisää ulkopuolinen mittari"
+pv = "Lisää aurinkovoimalan mittari"
