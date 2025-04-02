@@ -544,6 +544,13 @@ test.describe("repeating", async () => {
     await plan2.getByTestId("repeating-plan-apply").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:30 AM");
+
+    // set lower targets than vehicle soc (50%)
+    await plan1.getByTestId("static-plan-soc").selectOption("40%");
+    await plan1.getByTestId("static-plan-apply").click();
+    await plan2.getByTestId("repeating-plan-soc").selectOption("40%");
+    await plan2.getByTestId("repeating-plan-apply").click();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Goal already reached");
   });
 
   test("repeating plan persistence", async ({ page }) => {
