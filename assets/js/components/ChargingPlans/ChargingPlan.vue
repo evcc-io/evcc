@@ -102,7 +102,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import PlansSettings from "./PlansSettings.vue";
@@ -112,10 +112,13 @@ import formatter from "../../mixins/formatter.js";
 import collector from "../../mixins/collector.js";
 import api from "../../api.js";
 import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
+import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
 
 const ONE_MINUTE = 60 * 1000;
 
-export default {
+export default defineComponent({
 	name: "ChargingPlan",
 	components: {
 		LabelAndValue,
@@ -124,7 +127,7 @@ export default {
 	},
 	mixins: [formatter, collector],
 	props: {
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		disabled: Boolean,
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
@@ -142,22 +145,22 @@ export default {
 		socBasedPlanning: Boolean,
 		socBasedCharging: Boolean,
 		socPerKwh: Number,
-		vehicle: Object,
+		vehicle: Object as PropType<Vehicle>,
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
 	},
 	data() {
 		return {
-			modal: null,
+			modal: null as Modal | null,
 			isModalVisible: false,
 			activeTab: "departure",
 			targetTimeLabel: "",
-			interval: null,
+			interval: null as Timeout,
 		};
 	},
 	computed: {
-		buttonColor() {
+		buttonColor(): string {
 			if (this.planTimeUnreachable) {
 				return "text-warning";
 			}
@@ -166,47 +169,51 @@ export default {
 			}
 			return "evcc-default-text";
 		},
-		minSoc() {
+		minSoc(): number | undefined {
 			return this.vehicle?.minSoc;
 		},
-		limitSoc() {
+		limitSoc(): number | undefined {
 			return this.vehicle?.limitSoc;
 		},
-		staticPlan() {
+		staticPlan(): StaticPlan | null {
 			if (this.socBasedPlanning) {
-				return this.vehicle?.plan;
+				const plan = this.vehicle?.plan as StaticSocPlan;
+				if (plan) {
+					return { soc: plan.soc, time: new Date(plan.time) };
+				}
+				return null;
 			}
 			if (this.planEnergy && this.planTime) {
-				return { energy: this.planEnergy, time: this.planTime };
+				return { energy: this.planEnergy, time: new Date(this.planTime) };
 			}
 			return null;
 		},
-		repeatingPlans() {
-			if (this.vehicle?.repeatingPlans.length > 0) {
+		repeatingPlans(): RepeatingPlan[] {
+			if (this.vehicle && this.vehicle.repeatingPlans.length > 0) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
 		},
-		enabled() {
-			return this.effectivePlanTime;
+		enabled(): boolean {
+			return !!this.effectivePlanTime;
 		},
-		modalId() {
+		modalId(): string {
 			return `chargingPlanModal_${this.id}`;
 		},
-		departureTabActive() {
+		departureTabActive(): boolean {
 			return this.activeTab === "departure";
 		},
-		arrivalTabActive() {
+		arrivalTabActive(): boolean {
 			return this.activeTab === "arrival";
 		},
-		chargingPlansSettingsProps() {
+		chargingPlansSettingsProps(): any {
 			return this.collectProps(PlansSettings);
 		},
-		chargingPlanArrival() {
+		chargingPlanArrival(): any {
 			return this.collectProps(Arrival);
 		},
-		targetSocLabel() {
-			if (this.socBasedPlanning) {
+		targetSocLabel(): string {
+			if (this.socBasedPlanning && this.effectivePlanSoc) {
 				return this.fmtPercentage(this.effectivePlanSoc);
 			}
 			return fmtEnergy(
@@ -216,55 +223,65 @@ export default {
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
-		apiVehicle() {
+		apiVehicle(): string {
 			return `vehicles/${this.vehicle?.name}/`;
 		},
-		apiLoadpoint() {
+		apiLoadpoint(): string {
 			return `loadpoints/${this.id}/`;
 		},
 	},
 	watch: {
-		effectivePlanTime() {
+		effectivePlanTime(): void {
 			this.updateTargetTimeLabel();
 		},
 		"$i18n.locale": {
-			handler() {
+			handler(): void {
 				this.updateTargetTimeLabel();
 			},
 		},
 	},
-	mounted() {
-		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+	mounted(): void {
+		const ref = this.$refs["modal"];
+		if (ref) {
+			this.modal = Modal.getOrCreateInstance(ref);
+			ref.addEventListener("show.bs.modal", this.modalVisible);
+			ref.addEventListener("hidden.bs.modal", this.modalInvisible);
+			ref.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+		}
 		this.interval = setInterval(this.updateTargetTimeLabel, ONE_MINUTE);
 		this.updateTargetTimeLabel();
 	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
-		clearInterval(this.interval);
+	unmounted(): void {
+		const ref = this.$refs["modal"];
+		if (ref) {
+			ref.removeEventListener("show.bs.modal", this.modalVisible);
+			ref.removeEventListener("hidden.bs.modal", this.modalInvisible);
+			ref.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+		}
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	},
 	methods: {
-		checkUnsavedOnClose() {
-			const $applyButton = this.$refs.modal.querySelector("[data-testid=plan-apply]");
-			if ($applyButton) {
+		checkUnsavedOnClose(): void {
+			const applyButton = this.$refs["modal"]?.querySelector<HTMLElement>(
+				"[data-testid=plan-apply]"
+			);
+			if (applyButton) {
 				if (confirm(this.$t("main.chargingPlan.unsavedChanges"))) {
-					$applyButton.click();
+					applyButton.click();
 				}
 			}
 		},
-		modalVisible() {
+		modalVisible(): void {
 			this.isModalVisible = true;
 		},
-		modalInvisible() {
+		modalInvisible(): void {
 			this.isModalVisible = false;
 		},
-		openModal() {
+		openModal(): void {
 			this.showDeatureTab();
-			this.modal.show();
+			this.modal?.show();
 		},
 		openPlanModal(arrivalTab = false) {
 			if (arrivalTab) {
@@ -272,45 +289,47 @@ export default {
 			} else {
 				this.showDeatureTab();
 			}
-			this.modal.show();
+			this.modal?.show();
 		},
-		updateTargetTimeLabel() {
-			if (!this.effectivePlanTime) return "";
+		updateTargetTimeLabel(): void {
+			if (!this.effectivePlanTime) return;
 			const targetDate = new Date(this.effectivePlanTime);
 			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},
-		showDeatureTab() {
+		showDeatureTab(): void {
 			this.activeTab = "departure";
 		},
-		showArrivalTab() {
+		showArrivalTab(): void {
 			this.activeTab = "arrival";
 		},
-		updateStaticPlan({ soc, time, energy }) {
-			const timeISO = time.toISOString();
+		updateStaticPlan(plan: StaticPlan): void {
+			const timeISO = plan.time.toISOString();
 			if (this.socBasedPlanning) {
-				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
+				const p = plan as StaticSocPlan;
+				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`);
 			} else {
-				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
+				const p = plan as StaticEnergyPlan;
+				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`);
 			}
 		},
-		removeStaticPlan() {
+		removeStaticPlan(): void {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
 		},
-		updateRepeatingPlans(plans) {
+		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			api.post(`${this.apiVehicle}plan/repeating`, { plans });
 		},
-		setMinSoc(soc) {
+		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
 		},
-		setLimitSoc(soc) {
+		setLimitSoc(soc: number): void {
 			api.post(`${this.apiVehicle}limitsoc/${soc}`);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

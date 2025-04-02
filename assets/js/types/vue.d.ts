@@ -6,5 +6,6 @@ declare module "vue" {
 		 * Whether experimental UI features should be shown.
 		 */
 		$hiddenFeatures: () => boolean;
+		$refs: { [key: string]: HTMLElement | undefined };
 	}
 }
