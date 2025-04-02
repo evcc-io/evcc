@@ -73,7 +73,8 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		}
 	}
 
-	if (c.usage == "pv" || c.usage == "battery") && power < 0 {
+	// Asure positive power values for pv usage
+	if c.usage == "pv" && power < 0 {
 		return -power, nil
 	}
 
