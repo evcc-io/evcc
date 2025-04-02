@@ -32,7 +32,6 @@ params:
   - name: maxacpower
   - name: includegenport
     type: bool
-    default: false
     advanced: true
 render: |
   type: custom
