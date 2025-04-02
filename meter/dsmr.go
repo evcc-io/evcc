@@ -277,6 +277,12 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 		}
 	}
 
+	// allow one value to be missing
+	if err1 == nil && errors.Is(err2, api.ErrNotAvailable) || err2 == nil && errors.Is(err1, api.ErrNotAvailable) {
+		err1 = nil
+		err2 = nil
+	}
+
 	return (bezug - lief) * 1e3, errors.Join(err1, err2)
 }
 
