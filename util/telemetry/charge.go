@@ -61,10 +61,13 @@ func getOrCreateID() string {
 }
 
 func Create(machineID string) {
+	// no machine id from config
 	if machineID == "" {
 		if id, err := machine.ProtectedID("evcc-api"); err == nil {
+			// use id from hardware
 			machineID = id
 		} else {
+			// use id from database, generate if needed (e.g. in docker environment)
 			machineID = getOrCreateID()
 		}
 	}
