@@ -1,5 +1,10 @@
 package salia
 
+import (
+	"encoding/json"
+	"strconv"
+)
+
 const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
@@ -92,9 +97,40 @@ type Port struct {
 		AuthorizationMethod string `json:"authorization_method"`
 	} `json:"session"`
 	RFID struct {
-		Type                 string   `json:"type"`
-		Available            string   `json:"available"`
-		Authorizereq         string   `json:"authorizereq"`
-		AuthorizationRequest []string `json:"authorization_request,string"`
+		Type                 string               `json:"type"`
+		Available            string               `json:"available"`
+		Authorizereq         string               `json:"authorizereq"`
+		AuthorizationRequest AuthorizationRequest `json:"authorization_request"`
 	} `json:"rfid"`
+}
+
+type AuthorizationRequest struct {
+	Protocol string
+	Key      string
+}
+
+func (a *AuthorizationRequest) UnmarshalJSON(data []byte) error {
+	// Versuche, die äußeren Anführungszeichen direkt zu entfernen.
+	s, err := strconv.Unquote(string(data))
+	if err != nil {
+		// Falls das Unquoting fehlschlägt, behandeln wir den Input als ungültig.
+		*a = AuthorizationRequest{}
+		return nil
+	}
+
+	// Jetzt enthält s beispielsweise: ["ISO14443","9af18400"]
+	var arr []string
+	if err := json.Unmarshal([]byte(s), &arr); err != nil {
+		*a = AuthorizationRequest{}
+		return nil
+	}
+	if len(arr) == 2 {
+		*a = AuthorizationRequest{
+			Protocol: arr[0],
+			Key:      arr[1],
+		}
+		return nil
+	}
+	*a = AuthorizationRequest{}
+	return nil
 }
