@@ -114,7 +114,6 @@ export default defineComponent({
 		capacity: Number,
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
-		vehicleSoc: Number,
 		planOverrun: Number,
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
@@ -131,22 +130,7 @@ export default defineComponent({
 	},
 	computed: {
 		noActivePlan(): boolean {
-			return (
-				(!this.staticPlan && this.repeatingPlans.every((plan) => !plan.active)) ||
-				this.noPlanDuration
-			);
-		},
-		noPlanDuration(): boolean {
-			return (
-				(this.staticPlan &&
-					this.vehicleSoc &&
-					"soc" in this.staticPlan &&
-					this.staticPlan.soc <= this.vehicleSoc) ||
-				(this.repeatingPlans.length > 0 &&
-					this.repeatingPlans.every(
-						(plan) => this.vehicleSoc && plan.soc <= this.vehicleSoc
-					))
-			);
+			return !this.staticPlan && this.repeatingPlans.every((plan) => !plan.active);
 		},
 		multiplePlans(): boolean {
 			return this.repeatingPlans.length !== 0;
@@ -185,6 +169,9 @@ export default defineComponent({
 			return options;
 		},
 		nextPlanTitle(): string {
+			if (this.plan.duration === 0) {
+				return this.$t("main.targetCharge.goalReached");
+			}
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
 		},
 	},
