@@ -271,10 +271,7 @@ func (wb *Salia) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if req := res.Secc.Port0.RFID.AuthorizationRequest; req.Protocol == "ISO14443" && req.Key != "" {
-		return req.Key, nil
-	}
-	return "", api.ErrNotAvailable
+	return res.Secc.Port0.RFID.AuthorizationRequest.Key, nil
 }
 
 func (wb *Salia) getPhases() (int, error) {
