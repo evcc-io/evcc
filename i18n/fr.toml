@@ -43,6 +43,7 @@ switchsockets = "Prises commutables"
 template = "Fabricant"
 titleAdd = "Ajouter un chargeur"
 titleEdit = "Modifier chargeur"
+heatingdevices = "Dispositif de chauffage"
 
 [config.circuits]
 description = "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie."
@@ -99,6 +100,7 @@ topic = "Sujet"
 url = "URL"
 vehicleLimitSoc = "Limite du véhicule"
 yes = "oui"
+solarForecast = "Prévision solaire"
 
 [config.deviceValueChargeStatus]
 A = "A (non connecté)"
@@ -113,6 +115,7 @@ title = "EEBus"
 deprecated = "obsolète"
 example = "Exemple"
 optional = "optionnel"
+danger = "Attention"
 
 [config.general]
 cancel = "Annuler"
@@ -229,6 +232,7 @@ vehicleHelpAutoDetection = "Sélectionner automatiquement le véhicule le plus p
 vehicleHelpDefault = "Toujours considérer que ce véhicule charge ici. Auto-détection désactivée. Un changement manuel reste possible."
 vehicleLabel = "Véhicule par défaut"
 vehiclesTitle = "Véhicules"
+pollIntervalDanger = "L'interrogation régulière du véhicule peut décharger la batterie du véhicule. Certains fabricants de véhicules peuvent empêcher activement le chargement dans ce cas. Déconseillé ! N'utilisez cette fonction que si vous êtes conscient des risques."
 
 [config.main]
 addGrid = "Ajouter un compteur pour le réseau"
@@ -243,6 +247,7 @@ title = "Configuration"
 unconfigured = "non configuré"
 vehicles = "Mes véhicules"
 yaml = "Les appareils provenant de evcc.yaml ne sont pas modifiables."
+addAdditional = "Ajouter un compteur supplémentaire"
 
 [config.messaging]
 description = "Recevoir des messages à propos de vos sessions de charge."
@@ -318,6 +323,7 @@ loadpoints = "Points de charge"
 meter = "Solaire & Batterie"
 system = "Système"
 vehicles = "Véhicules"
+additionalMeter = "Compteurs supplémentaires"
 
 [config.site]
 cancel = "Annuler"
@@ -586,6 +592,7 @@ cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
 vehicleLimit = "Limite de chauffage"
 waitForVehicle = "Prêt. En attente du chauffage… "
+connected = "En attente."
 
 [main.loadpoint]
 avgPrice = "Prix ⌀"
@@ -681,6 +688,7 @@ tomorrow = "demain"
 update = "Mettre à jour"
 vehicleCapacityDocs = "Infos sur la configuration."
 vehicleCapacityRequired = "La capacité de batterie du véhicule est requise pour estimer la durée de charge."
+goalReached = "Objectif déjà atteint"
 
 [main.targetChargePlan]
 chargeDuration = "Durée de charge"
@@ -943,3 +951,20 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.aux]
+description = "Dispositif ajustant sa consommation en fonction du surplus disponible (comme les chauffe-eau intelligents). evcc s'attend à ce que ce dispositif réduise sa consommation d'énergie si nécessaire."
+titleAdd = "Ajouter un consommateur auto-régulé"
+titleEdit = "Modifier le consommateur auto-régulé"
+
+[config.ext]
+description = "Peut être utilisé pour la gestion de la charge ou à des fins statistiques."
+titleAdd = "Ajouter un compteur externe"
+titleEdit = "Modifier le compteur externe"
+
+[config.meter.option]
+battery = "Ajouter un compteur de batterie"
+ext = "Ajouter un compteur externe"
+pv = "Ajouter un compteur solaire"
+aux = "Ajouter un consommateur auto-regulé"
