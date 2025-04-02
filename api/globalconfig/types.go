@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -79,39 +80,18 @@ func masked(s any) string {
 }
 
 type Mqtt struct {
-	Broker     string `json:"broker"`
-	Topic      string `json:"topic"`
-	User       string `json:"user"`
-	ClientID   string `json:"clientID"`
-	Insecure   bool   `json:"insecure"`
-	Password   string `json:"password"`
-	CaCert     string `json:"caCert"`
-	ClientCert string `json:"clientCert"`
-	ClientKey  string `json:"clientKey"`
+	mqtt.Config
+	Topic string `json:"topic"`
 }
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Mqtt) Redacted() any {
 	return struct {
-		Broker     string `json:"broker"`
-		Topic      string `json:"topic"`
-		User       string `json:"user,omitempty"`
-		ClientID   string `json:"clientID,omitempty"`
-		Insecure   bool   `json:"insecure,omitempty"`
-		Password   string `json:"password,omitempty"`
-		CaCert     string `json:"caCert,omitempty"`
-		ClientCert string `json:"clientCert,omitempty"`
-		ClientKey  string `json:"clientKey,omitempty"`
+		mqtt.Config
+		Topic string `json:"topic"`
 	}{
-		Broker:     m.Broker,
-		Topic:      m.Topic,
-		User:       m.User,
-		ClientID:   m.ClientID,
-		Insecure:   m.Insecure,
-		Password:   masked(m.Password),
-		CaCert:     masked(m.CaCert),
-		ClientCert: masked(m.ClientCert),
-		ClientKey:  masked(m.ClientKey),
+		m.Config.Redacted(),
+		m.Topic,
 	}
 }
 
