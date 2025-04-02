@@ -107,7 +107,7 @@ render: |
         type: holding
         decode: uint16
       scale: 10
-    {{- if eq .includegenport true }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -126,7 +126,7 @@ render: |
         type: holding
         decode: uint32s
       scale: 0.1
-    {{- if eq .includegenport true }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
