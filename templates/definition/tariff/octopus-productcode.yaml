@@ -22,8 +22,7 @@ params:
       en: "The DNO region you are located in. More information: https://www.energy-stats.uk/dno-region-codes-explained/"
   - name: directDebit
     type: bool
-    required: false
-    default: True
+    default: true
     help:
       de: "Auf 'False' setzen, wenn Sie Ihre Rechnung NICHT per Lastschrift bezahlen."
       en: "Set to False if you are not paying your bill with Direct Debit."
