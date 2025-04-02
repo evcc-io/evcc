@@ -24,8 +24,8 @@ params:
     type: bool
     default: true
     help:
-      de: "Auf 'False' setzen, wenn Sie Ihre Rechnung NICHT per Lastschrift bezahlen."
-      en: "Set to False if you are not paying your bill with Direct Debit."
+      de: "Nutzen Sie den Lastschrifttarif."
+      en: "Use Direct Debit tariff rates."
 render: |
   type: octopusenergy
   productCode: {{ .productCode }}
