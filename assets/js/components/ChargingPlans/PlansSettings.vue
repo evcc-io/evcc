@@ -51,6 +51,9 @@
 						{{ selectedPreviewPlanTitle }}
 					</span>
 				</CustomSelect>
+				<span v-else-if="alreadyReached">
+					{{ $t("main.targetCharge.goalReached") }}
+				</span>
 				<span v-else>
 					{{ nextPlanTitle }}
 				</span>
@@ -168,10 +171,10 @@ export default defineComponent({
 
 			return options;
 		},
+		alreadyReached(): boolean {
+			return this.plan.duration === 0;
+		},
 		nextPlanTitle(): string {
-			if (this.plan.duration === 0) {
-				return this.$t("main.targetCharge.goalReached");
-			}
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
 		},
 	},
