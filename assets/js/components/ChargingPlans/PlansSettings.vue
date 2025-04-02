@@ -72,9 +72,9 @@ import collector from "../../mixins/collector.js";
 import api, { allowClientError } from "../../api.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "../../utils/deepEqual.js";
+import convertRates from "../../utils/convertRates";
 import { defineComponent, type PropType } from "vue";
 import type { Vehicle, PartialBy, Timeout, Tariff, SelectOption, CURRENCY } from "../../types/evcc";
-
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -309,10 +309,10 @@ export default defineComponent({
 				return;
 			}
 
-			const tariffRes = await api.get(`tariff/planner`, allowClientError);
+			const res = await api.get(`tariff/planner`, allowClientError);
 
 			this.tariff = {
-				rates: tariffRes.status === 404 ? [] : tariffRes.data.result.rates,
+				rates: res.status === 404 ? [] : convertRates(res.data.result.rates),
 				lastUpdate: new Date(),
 			};
 		},
