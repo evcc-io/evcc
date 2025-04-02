@@ -241,6 +241,7 @@ vehicleLabel = "Standard-Fahrzeug"
 vehiclesTitle = "Fahrzeuge"
 
 [config.main]
+addAdditional = "Zusätzlichen Zähler hinzufügen"
 addGrid = "Netzzähler hinzufügen"
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
@@ -253,7 +254,6 @@ title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
 yaml = "Geräte aus evcc.yaml sind nicht editierbar."
-addAdditional = Zusätzlichen Zähler hinzufügen
 
 [config.messaging]
 description = "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten."

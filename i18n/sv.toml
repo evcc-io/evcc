@@ -26,6 +26,11 @@ never = "bara med tillräckligt sol-överskott."
 
 [config]
 
+[config.aux]
+description = "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt."
+titleAdd = "Lägg till enhet som själv anpassar förbrukning"
+titleEdit = "Ändra enhet som själv anpassar förbrukning"
+
 [config.battery]
 titleAdd = "Lägg till batteri"
 titleEdit = "Ändra batteri"
@@ -94,12 +99,12 @@ range = "Räckvidd"
 singlePhase = "En-fas"
 soc = "Laddnivå"
 socLimit = "SoC gräns"
+solarForecast = "Solprognos"
 temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 vehicleLimitSoc = "Fordonsbegränsning"
 yes = "ja"
-solarForecast = "Solprognos"
 
 [config.deviceValueChargeStatus]
 A = "A (ej ansluten)"
@@ -110,11 +115,16 @@ C = "C (laddar)"
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
 title = "EEBus"
 
+[config.ext]
+description = "Kan användas för belastningsstyrning eller statistik."
+titleAdd = "Lägg till extern mätare"
+titleEdit = "Ändra extern mätare"
+
 [config.form]
+danger = "Fara"
 deprecated = "utfasad"
 example = "Exempel"
 optional = "valfri"
-danger = "Fara"
 
 [config.general]
 cancel = "Avbryt"
@@ -233,6 +243,7 @@ vehicleLabel = "Standard fordon"
 vehiclesTitle = "Fordon"
 
 [config.main]
+addAdditional = "Lägg till ytterligare mätare"
 addGrid = "Lägg till elmätare"
 addLoadpoint = "Lägg till laddbox"
 addPvBattery = "Lägg till solceller eller batteri"
@@ -245,7 +256,6 @@ title = "Inställningar"
 unconfigured = "ej konfigurerad"
 vehicles = "Mina fordon"
 yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
-addAdditional = "Lägg till ytterligare mätare"
 
 [config.messaging]
 description = "Få notiser om dina laddningar."
@@ -258,6 +268,12 @@ save = "Spara"
 template = "Tillverkare"
 titleChoice = "Vad vill du lägga till?"
 validateSave = "Validera & spara"
+
+[config.meter.option]
+aux = "Lägg till enhet som själv anpassar förbrukning"
+battery = "Lägg till batterimätare"
+ext = "Lägg till ytterligare mätare"
+pv = "Lägg till solenergimätare"
 
 [config.modbusproxy]
 description = "Tillåt flera klienter till en Modbus-enhet."
@@ -314,6 +330,7 @@ titleAdd = "Lägg till solcellsmätare"
 titleEdit = "Ändra solcellsmätare"
 
 [config.section]
+additionalMeter = "Ytterligare mätare"
 general = "Allmänna"
 grid = "Elnät"
 integrations = "Integrationer"
@@ -321,7 +338,6 @@ loadpoints = "Laddpunkter"
 meter = "Sol & batteri"
 system = "System"
 vehicles = "Fordon"
-additionalMeter = "Ytterligare mätare"
 
 [config.site]
 cancel = "Avbryt"
@@ -583,9 +599,9 @@ selfConsumption = "Egenförbrukning"
 charging = "Värmer..."
 cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+connected = "Standby"
 vehicleLimit = "Värmarbegränsning"
 waitForVehicle = "Redo, väntar på värmare..."
-connected = "Standby"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
@@ -936,20 +952,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[config.ext]
-titleAdd = "Lägg till extern mätare"
-titleEdit = "Ändra extern mätare"
-description = "Kan användas för belastningsstyrning eller statistik."
-
-[config.meter.option]
-aux = "Lägg till enhet som själv anpassar förbrukning"
-battery = "Lägg till batterimätare"
-ext = "Lägg till ytterligare mätare"
-pv = "Lägg till solenergimätare"
-
-[config.aux]
-description = "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt."
-titleEdit = "Ändra enhet som själv anpassar förbrukning"
-titleAdd = "Lägg till enhet som själv anpassar förbrukning"

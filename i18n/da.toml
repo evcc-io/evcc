@@ -26,6 +26,11 @@ never = "kun med nok overskud."
 
 [config]
 
+[config.aux]
+description = "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt."
+titleAdd = "Tilføj selvregulerende forbrugsenhed"
+titleEdit = "Rediger selvregulerende forbrugsenhed"
+
 [config.battery]
 titleAdd = "Tilføj batteri"
 titleEdit = "Rediger batteri"
@@ -37,13 +42,13 @@ titleEdit = "Ændre opladningsmåler"
 [config.charger]
 chargers = "EV opladere"
 generic = "Generisk integration"
+heatingdevices = "Varmeenheder"
 ocppHelp = "Kopier denne adresse til opladerens konfiguration"
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Omskiftelige stikkontakter"
 template = "Fabrikant"
 titleAdd = "Tilføj oplader"
 titleEdit = "Ændre oplader"
-heatingdevices = "Varmeenheder"
 
 [config.circuits]
 description = "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki."
@@ -95,12 +100,12 @@ range = "Rækkevidde"
 singlePhase = "Enkelt fase"
 soc = "Oplader"
 socLimit = "Begrænsning"
+solarForecast = "Sol prognose"
 temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 vehicleLimitSoc = "Køretøjets begrænsning"
 yes = "ja"
-solarForecast = "Sol prognose"
 
 [config.deviceValueChargeStatus]
 A = "A (ikke forbundet)"
@@ -111,11 +116,16 @@ C = "C (oplader)"
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
 title = "EEBus"
 
+[config.ext]
+description = "Kan bruges til belastningsstyring eller statistikformål."
+titleAdd = "Tilføj ekstern måler"
+titleEdit = "Rediger ekstern måler"
+
 [config.form]
+danger = "Pas på"
 deprecated = "forældet"
 example = "Eksempel"
 optional = "valgfrit"
-danger = "Pas på"
 
 [config.general]
 cancel = "Afbryd"
@@ -195,6 +205,7 @@ phasesAutomatic = "Automatisk fase-valg"
 phasesAutomaticHelp = "Din oplader understøtter automatisk skift mellem 1- og 3-faset opladning. I hovedmenuen kan du justere faseadfærd under opladning."
 phasesHelp = "Antal faser forbundet til opladeren."
 phasesLabel = "Faser"
+pollIntervalDanger = "Regelmæssig forespørgsel på køretøjet kan dræne køretøjets batteri. Nogle køretøjsproducenter kan aktivt forhindre opladning i dette tilfælde. Anbefales ikke! Brug kun dette, hvis du er opmærksom på risiciene."
 pollIntervalHelp = "Tid mellem køretøjets API-opdateringer. Korte intervaller kan dræne køretøjets batteri."
 pollIntervalLabel = "Opdateringsinterval"
 pollModeAlways = "altid"
@@ -232,9 +243,9 @@ vehicleHelpAutoDetection = "Vælg automatisk det mest sandsynlige køretøj. Det
 vehicleHelpDefault = "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig."
 vehicleLabel = "Standard køretøj"
 vehiclesTitle = "Køretøjer"
-pollIntervalDanger = "Regelmæssig forespørgsel på køretøjet kan dræne køretøjets batteri. Nogle køretøjsproducenter kan aktivt forhindre opladning i dette tilfælde. Anbefales ikke! Brug kun dette, hvis du er opmærksom på risiciene."
 
 [config.main]
+addAdditional = "Tilføj en ekstra måler"
 addGrid = "Tilføj måler til elnet"
 addLoadpoint = "Tilføj opladningspunkt"
 addPvBattery = "Tilføj solpanel eller batteri"
@@ -247,7 +258,6 @@ title = "Opsætning"
 unconfigured = "ikke konfigureret"
 vehicles = "Mine køretøjer"
 yaml = "Enheder fra evcc.yaml kan ikke ændres her"
-addAdditional = "Tilføj en ekstra måler"
 
 [config.messaging]
 description = "Modtag beskeder om dine opladningssessioner."
@@ -260,6 +270,12 @@ save = "Gem"
 template = "Fabrikant"
 titleChoice = "Hvad ønsker du at tilføje?"
 validateSave = "Valider og gem"
+
+[config.meter.option]
+aux = "Tilføj selvregulerende forbrugsenhed"
+battery = "Tilføj batterimåler"
+ext = "Tilføj en ekstra måler"
+pv = "Tilføj en solenergimåler"
 
 [config.modbusproxy]
 description = "Tillad flere klienter at få adgang til en enkelt Modbus-enhed."
@@ -316,6 +332,7 @@ titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
 
 [config.section]
+additionalMeter = "Tilføj ekstra målere"
 general = "Generelle"
 grid = "Elnettet"
 integrations = "Integrationer"
@@ -323,7 +340,6 @@ loadpoints = "Ladepunkter"
 meter = "Sol og batteri"
 system = "System"
 vehicles = "Køretøjer"
-additionalMeter = "Tilføj ekstra målere"
 
 [config.site]
 cancel = "Afbryd"
@@ -585,9 +601,9 @@ selfConsumption = "Eget forbrug"
 charging = "Opvarmer..."
 cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
+connected = "Standby"
 vehicleLimit = "Opvarmning begrænsning"
 waitForVehicle = "Klar. Venter på varmelegeme..."
-connected = "Standby"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
@@ -932,20 +948,3 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-
-
-[config.aux]
-description = "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt."
-titleAdd = "Tilføj selvregulerende forbrugsenhed"
-titleEdit = "Rediger selvregulerende forbrugsenhed"
-
-[config.ext]
-titleAdd = "Tilføj ekstern måler"
-titleEdit = "Rediger ekstern måler"
-description = "Kan bruges til belastningsstyring eller statistikformål."
-
-[config.meter.option]
-aux = "Tilføj selvregulerende forbrugsenhed"
-battery = "Tilføj batterimåler"
-ext = "Tilføj en ekstra måler"
-pv = "Tilføj en solenergimåler"

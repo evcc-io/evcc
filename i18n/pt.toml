@@ -26,6 +26,11 @@ never = "apenas com excedente de produção suficiente."
 
 [config]
 
+[config.aux]
+description = "Equipamento capaz de ajustar o seu consumo baseado no excedente disponível (como caldeiras AQS inteligentes). O evcc assume que esse equipamento reduz o seu consumo automaticamente, se necessário."
+titleAdd = "Adicionar Equipamento com capacidade de auto-ajuste de consumos"
+titleEdit = "Editar Equipamento com capacidade de auto-ajuste de consumos"
+
 [config.battery]
 titleAdd = "Adicionar Bateria"
 titleEdit = "Editar Bateria"
@@ -37,13 +42,13 @@ titleEdit = "Editar Contador "
 [config.charger]
 chargers = "Carregadores de Veículos Eléctricos"
 generic = "Integrações genéricas"
+heatingdevices = "Equipamentos de aquecimento"
 ocppHelp = "Copie este endereço para a configuração do seu carregador."
 ocppLabel = "URL do servidor OCPP"
 switchsockets = "Tomadas comandadas"
 template = "Fabricante"
 titleAdd = "Adicionar Carregador"
 titleEdit = "Editar Carregador"
-heatingdevices = "Equipamentos de aquecimento"
 
 [config.circuits]
 description = "Assegura que a soma de todos os Postos de Carregamento conectados a um circuito não excede os limites de potência e corrente configurados. Os circuitos podem ser combinados para construir uma hierarquia."
@@ -95,12 +100,12 @@ range = "Autonomia"
 singlePhase = "Monofásico"
 soc = "Carga"
 socLimit = "Limitação do SoC"
+solarForecast = "Previsão solar"
 temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 vehicleLimitSoc = "Limite do veículo"
 yes = "sim"
-solarForecast = "Previsão solar"
 
 [config.deviceValueChargeStatus]
 A = "A (não ligado)"
@@ -111,11 +116,16 @@ C = "C (a carregar)"
 description = "Configuração que permite o evcc comunicar com outros dispositivos EEBus."
 title = "EEBus"
 
+[config.ext]
+description = "Pode ser usado para gestão de cargas ou fins estatísticos."
+titleAdd = "Adicionar Contador externo"
+titleEdit = "Editar Contador externo"
+
 [config.form]
+danger = "Perigo"
 deprecated = "obsoleto"
 example = "Exemplo"
 optional = "opcional"
-danger = "Perigo"
 
 [config.general]
 cancel = "Cancelar"
@@ -163,6 +173,7 @@ v2Support = "Voltar ao InfluxDB 2.x"
 addCharger = "Adicionar Carregador"
 addMeter = "Adicionar um Contador de Carregador dedicado"
 cancel = "Cancelar"
+chargerError = "É necessário configurar um Carregador EV"
 chargerLabel = "Carregador"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Utilização de uma gama de correntes de 6 a 16 A."
@@ -194,6 +205,7 @@ phasesAutomatic = "Fases automáticas"
 phasesAutomaticHelp = "Se o seu carregador suporta a comutação automática entre o carregamento de 1 e 3 fases. No menu principal, pode ajustar o comportamento das fases durante o carregamento."
 phasesHelp = "Número de fases ligadas ao carregador."
 phasesLabel = "Fases"
+pollIntervalDanger = "Intervalos curtos de actualização das leituras podem descarregar a bateria do veículo. Alguns fabricantes podem impedir a carga nestes casos. Não recomendável! Apenas utilize esta opção se está consciente dos riscos."
 pollIntervalHelp = "Tempo entre as actualizações da API do veículo. Intervalos curtos podem descarregar a bateria do veículo."
 pollIntervalLabel = "Intervalo de atualização"
 pollModeAlways = "sempre"
@@ -231,10 +243,9 @@ vehicleHelpAutoDetection = "Seleciona automaticamente o veículo mais provável.
 vehicleHelpDefault = "Presumir sempre que este veículo está a carregar aqui. Detecção automática desativada. É possível a desativação manual."
 vehicleLabel = "Veículo predefinido"
 vehiclesTitle = "Veículos"
-chargerError = "É necessário configurar um Carregador EV"
-pollIntervalDanger = "Intervalos curtos de actualização das leituras podem descarregar a bateria do veículo. Alguns fabricantes podem impedir a carga nestes casos. Não recomendável! Apenas utilize esta opção se está consciente dos riscos."
 
 [config.main]
+addAdditional = "Adicionar Contador adicional"
 addGrid = "Adicionar Contador de Rede"
 addLoadpoint = "Adicionar Posto de Carregamento"
 addPvBattery = "Adicionar solar ou bateria"
@@ -247,7 +258,6 @@ title = "Configuração"
 unconfigured = "não configurado"
 vehicles = "Os meus Veículos"
 yaml = "Os dispositivos de evcc.yaml não são editáveis."
-addAdditional = "Adicionar Contador adicional"
 
 [config.messaging]
 description = "Receber mensagens sobre as sessões de carregamento."
@@ -260,6 +270,12 @@ save = "Guardar"
 template = "Fabricante"
 titleChoice = "O que quer adicionar?"
 validateSave = "Validar e guardar"
+
+[config.meter.option]
+aux = "Adicionar aparelho autorregulável"
+battery = "Adicionar Contador de bateria"
+ext = "Adicionar Contador externo"
+pv = "Adicionar Contador solar"
 
 [config.modbusproxy]
 description = "Permitir que vários clientes acedam ao mesmo dispositivo Modbus."
@@ -316,6 +332,7 @@ titleAdd = "Adicionar Contador Solar"
 titleEdit = "Editar Contador Solar"
 
 [config.section]
+additionalMeter = "Contadores adicionais"
 general = "Geral"
 grid = "Rede"
 integrations = "Integrações"
@@ -323,7 +340,6 @@ loadpoints = "Postos de Carregamento"
 meter = "Solar e Bateria"
 system = "Sistema"
 vehicles = "Veículos"
-additionalMeter = "Contadores adicionais"
 
 [config.sponsor]
 addToken = "Insira token"
@@ -457,7 +473,7 @@ solarAdjust = "Ajustar a previsão solar com base em dados reais de produção{p
 
 [forecast.co2]
 average = "Média"
-lowestHour = "Horário mais "Verde" "
+lowestHour = "Horário mais \"Verde\" "
 range = "Intervalo"
 
 [forecast.price]
@@ -586,9 +602,9 @@ selfConsumption = "Autoconsumo"
 charging = "Aquecendo..."
 cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
 cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
+connected = "Standby."
 vehicleLimit = "Limite do aquecedor"
 waitForVehicle = "Pronto. À espera do aquecedor..."
-connected = "Standby."
 
 [main.loadpoint]
 avgPrice = "Preço"
@@ -610,7 +626,7 @@ default = "predefinido"
 disclaimerHint = "Aviso:"
 onlyForSocBasedCharging = "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido."
 smartCostCheap = "Carregamento de Rede em tarifa mais económica"
-smartCostClean = "Carregamento de Rede "Verde""
+smartCostClean = "Carregamento de Rede \"Verde\""
 title = "Configurações {0}"
 vehicle = "Veículo"
 
@@ -719,8 +735,8 @@ charging = "A carregar..."
 cheapEnergyCharging = "Energia barata disponível."
 cheapEnergyNextStart = "Energia barata em {duration}."
 cheapEnergySet = "Limite de preço definido."
-cleanEnergyCharging = "Energia "Verde" disponível."
-cleanEnergyNextStart = "Energia "Verde" em {duration}."
+cleanEnergyCharging = "Energia \"Verde\" disponível."
+cleanEnergyNextStart = "Energia \"Verde\" em {duration}."
 cleanEnergySet = "Limite de CO₂ definido."
 climating = "Pré-climatização detectada."
 connected = "Ligado."
@@ -927,7 +943,7 @@ activeHoursLabel = "Horas ativas"
 applyToAll = "Aplicar em todo o lado?"
 batteryDescription = "Carrega a bateria doméstica com energia da Rede."
 cheapTitle = "Carregamento da Rede mais económico"
-cleanTitle = "Carregamento de Rede "Verde""
+cleanTitle = "Carregamento de Rede \"Verde\""
 co2Label = "Emissão de CO₂"
 co2Limit = "Limite de CO₂"
 loadpointDescription = "Permite carregamento rápido temporário no modo solar."
@@ -955,20 +971,3 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
-
-
-[config.aux]
-titleAdd = "Adicionar Equipamento com capacidade de auto-ajuste de consumos"
-description = "Equipamento capaz de ajustar o seu consumo baseado no excedente disponível (como caldeiras AQS inteligentes). O evcc assume que esse equipamento reduz o seu consumo automaticamente, se necessário."
-titleEdit = "Editar Equipamento com capacidade de auto-ajuste de consumos"
-
-[config.ext]
-titleAdd = "Adicionar Contador externo"
-titleEdit = "Editar Contador externo"
-description = "Pode ser usado para gestão de cargas ou fins estatísticos."
-
-[config.meter.option]
-aux = "Adicionar aparelho autorregulável"
-battery = "Adicionar Contador de bateria"
-ext = "Adicionar Contador externo"
-pv = "Adicionar Contador solar"
