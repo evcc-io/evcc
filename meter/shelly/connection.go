@@ -97,3 +97,85 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	return c, nil
 }
+
+func (c *Connection) Enabled() (bool, error) {
+	switch c.Gen {
+	case 0, 1:
+		return c.Gen1Enabled()
+	default:
+		return c.Gen2Enabled()
+	}
+}
+
+func (c *Connection) Enable(enable bool) error {
+	switch c.Gen {
+	case 0, 1:
+		return c.Gen1Enable(enable)
+	default:
+		return c.Gen2Enable(enable)
+	}
+}
+
+func (c *Connection) CurrentPower() (float64, error) {
+	var power float64
+	var err error
+	switch c.Gen {
+	case 0, 1:
+		power, err = c.Gen1CurrentPower()
+		if err != nil {
+			return 0, err
+		}
+	default:
+		power, err = c.Gen2CurrentPower()
+		if err != nil {
+			return 0, err
+		}
+	}
+	return power, nil
+}
+
+func (c *Connection) TotalEnergy() (float64, float64, error) {
+	var energyConsumed float64
+	var energyFeedIn float64
+	var err error
+	switch c.Gen {
+	case 0, 1:
+		energyConsumed, err = c.Gen1TotalEnergy()
+		if err != nil {
+			return 0, 0, err
+		}
+	default:
+		energyConsumed, energyFeedIn, err = c.Gen2TotalEnergy()
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+	return energyConsumed, energyFeedIn, nil
+}
+
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	switch c.Gen {
+	case 0, 1:
+		return c.Gen1Currents()
+	default:
+		return c.Gen2Currents()
+	}
+}
+
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	switch c.Gen {
+	case 0, 1:
+		return c.Gen1Voltages()
+	default:
+		return c.Gen2Voltages()
+	}
+}
+
+func (c *Connection) Powers() (float64, float64, float64, error) {
+	switch c.Gen {
+	case 0, 1:
+		return c.Gen1Powers()
+	default:
+		return c.Gen2Powers()
+	}
+}

@@ -59,52 +59,26 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	switch c.conn.Gen {
-	case 0, 1:
-		return c.conn.Gen1CurrentPower()
-	default:
-		return c.conn.Gen2CurrentPower()
-	}
+	return c.conn.CurrentPower()
 }
 
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
-	switch c.conn.Gen {
-	case 0, 1:
-		return c.conn.Gen1Enabled()
-	default:
-		return c.conn.Gen2Enabled()
-	}
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
-	switch c.conn.Gen {
-	case 0, 1:
-		return c.conn.Gen1Enable(enable)
-	default:
-		return c.conn.Gen2Enable(enable)
-	}
+	return c.conn.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Shelly)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Shelly) TotalEnergy() (float64, error) {
-	var energy float64
-	var err error
-	switch c.conn.Gen {
-	case 0, 1:
-		energy, err = c.conn.Gen1TotalEnergy()
-		if err != nil {
-			return 0, err
-		}
-
-	default:
-		energy, _, err = c.conn.Gen2TotalEnergy()
-		if err != nil {
-			return 0, err
-		}
+	energy, _, err := c.conn.Gen2TotalEnergy()
+	if err != nil {
+		return 0, err
 	}
-	return energy / 1000, nil
+	return energy, nil
 }
