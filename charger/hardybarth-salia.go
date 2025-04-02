@@ -266,16 +266,12 @@ func (wb *Salia) currents() (float64, float64, float64, error) {
 	return i.L1.Actual / 1e3, i.L2.Actual / 1e3, i.L3.Actual / 1e3, err
 }
 
-func (wb *Salia) Identify() (string, error) {
-	res, err := wb.apiG.Get()
-	if err != nil {
-		return "", err
-	}
-	if req := res.Secc.Port0.RFID.AuthorizationRequest; len(req) == 2 && req[1] != "" {
-		return req[1], nil
-	}
-	return "", api.ErrNotAvailable
-}
+// var _ api.Identifier = (*Salia)(nil)
+
+// // Identify implements the api.Identifier interface
+// func (wb *Salia) Identify() (string, error) {
+// 	return "", api.ErrNotAvailable
+// }
 
 func (wb *Salia) getPhases() (int, error) {
 	res, err := wb.apiG.Get()
