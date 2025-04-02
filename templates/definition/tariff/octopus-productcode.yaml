@@ -24,7 +24,7 @@ params:
     type: bool
     default: true
     help:
-      de: "Nutzen Sie den Lastschrifttarif."
+      de: "Ich benutze der BACS-Lastschrifttarif."
       en: "Use Direct Debit tariff rates."
 render: |
   type: octopusenergy
