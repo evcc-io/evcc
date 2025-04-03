@@ -111,8 +111,7 @@ func (lp *Loadpoint) minActivePhases() int {
 	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
 		return 1
 	}
-
-	return lp.maxActivePhases()
+	return min(expect(lp.maxActivePhases()), expect(lp.getVehiclePhases()))
 }
 
 // MaxActivePhases returns the maximum number of active phases for the loadpoint.
