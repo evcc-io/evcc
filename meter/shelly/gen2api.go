@@ -44,8 +44,7 @@ func (c *Connection) gen2InitApi(uri, user, password string) {
 	// Cached gen2SwitchStatus
 	c.gen2SwitchStatus = util.ResettableCached(func() (Gen2SwitchStatus, error) {
 		var gen2SwitchStatusResponse Gen2SwitchStatus
-		err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatusResponse)
-		if err != nil {
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatusResponse); err != nil {
 			return Gen2SwitchStatus{}, err
 		}
 		return gen2SwitchStatusResponse, nil
@@ -53,8 +52,7 @@ func (c *Connection) gen2InitApi(uri, user, password string) {
 	// Cached gen2EM1Status
 	c.gen2EM1Status = util.ResettableCached(func() (Gen2EM1Status, error) {
 		var gen2EM1StatusResponse Gen2EM1Status
-		err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1StatusResponse)
-		if err != nil {
+		if err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1StatusResponse); err != nil {
 			return Gen2EM1Status{}, err
 		}
 		return gen2EM1StatusResponse, nil
@@ -62,8 +60,7 @@ func (c *Connection) gen2InitApi(uri, user, password string) {
 	// Cached gen2EMStatus
 	c.gen2EMStatus = util.ResettableCached(func() (Gen2EMStatus, error) {
 		var gen2EMStatusResponse Gen2EMStatus
-		err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatusResponse)
-		if err != nil {
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatusResponse); err != nil {
 			return Gen2EMStatus{}, err
 		}
 		return gen2EMStatusResponse, nil
