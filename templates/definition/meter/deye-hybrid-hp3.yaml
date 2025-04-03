@@ -34,8 +34,8 @@ params:
     type: bool
     advanced: true
     description:
-      de: (optional) addiert Leistung und Energiestatistik vom Generator-Port des Wechselrichters zur PV-Erzeugung hinzu.
-      en: (optional) adds power and energy statistics from the generator port of the inverter to the pv production.
+      de: GEN-Anschluss als Solar-Eingang verwenden
+      en: Treat GEN port as solar input
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -115,7 +115,7 @@ render: |
       register:
         address: 667 # "low word of input power at GEN-Port"
         type: holding
-        decode: int16 # "value is actually a signed 32 bit value but high word in address 671 for powers over 32kW at the gen port is not considered at the moment"
+        decode: int16 # "value is actually a signed 32 bit value but high word is at reg 671
       scale: 1
     {{- end }}
   energy:
@@ -134,7 +134,7 @@ render: |
       register:
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
-        decode: int32s # "value is signed 32 bit value with low word in 537 and high word in 538"
+        decode: int32s
       scale: 0.1
     {{- end }}
   maxacpower: {{ .maxacpower }}
