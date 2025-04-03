@@ -127,13 +127,13 @@ func mergeSettings(old any, new any) error {
 	return mapstructure.Decode(newMap, &new)
 }
 
-func mergeRedacted(old map[string]interface{}, new map[string]interface{}, redacted map[string]interface{}) map[string]interface{} {
+func mergeRedacted(old, new, redacted map[string]any) map[string]any {
 	for k, v := range new {
 		rv := redacted[k]
 		ov := old[k]
-		if nv, ok := v.(map[string]interface{}); ok {
-			rv, ok := rv.(map[string]interface{})
-			ov, ok2 := ov.(map[string]interface{})
+		if nv, ok := v.(map[string]any); ok {
+			rv, ok := rv.(map[string]any)
+			ov, ok2 := ov.(map[string]any)
 			if ok && ok2 {
 				new[k] = mergeRedacted(ov, nv, rv)
 			}
