@@ -33,6 +33,9 @@ params:
   - name: includegenport
     type: bool
     advanced: true
+    description:
+      de: (optional) addiert Leistung und Energiestatistik vom Generator-Port des Wechselrichters zur PV-Erzeugung hinzu.
+      en: (optional) adds power and energy statistics from the generator port of the inverter to the pv production.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
