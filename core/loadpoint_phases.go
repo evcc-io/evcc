@@ -111,6 +111,7 @@ func (lp *Loadpoint) minActivePhases() int {
 	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
 		return 1
 	}
+
 	return lp.maxActivePhases()
 }
 
