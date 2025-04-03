@@ -322,21 +322,18 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
-		delta := max(0, new-old)
 		potential := maxPower - c.power
 
+		capped := 0.0
 		if charging {
-			if delta > potential {
-				capped := max(0, min(new, min(old+potential, maxPower*1.1))) //allow 10% more than maxPower since some devices may not utilize offered power completely
-				c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
-				new = capped
-			} else {
-				c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
-				new = min(new, maxPower*1.1)
-			}
+			capped = min(maxPower, min(max(0, potential+old), new))
 		} else {
-			new = max(0, min(new, potential))
+			capped = max(0, min(new, potential))
 		}
+		if new > capped {
+			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
+		}
+		new = capped
 	}
 
 	if c.parent == nil {
@@ -347,24 +344,20 @@ func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
 }
 
 // ValidateCurrent validates current request
-// ValidateCurrent validates current request
 func (c *Circuit) ValidateCurrent(old, new float64, charging bool) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
-		delta := max(0, new-old)
 		potential := maxCurrent - c.current
 
+		capped := 0.0
 		if charging {
-			if delta > potential {
-				capped := max(0, min(new, min(old+potential, maxCurrent*1.1))) //allow up to 10% more than maxCurrent since some devices may not utilize offered current completely
-				c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
-				new = capped
-			} else {
-				c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
-				new = min(new, maxCurrent*1.1)
-			}
+			capped = min(maxCurrent, min(max(0, potential+old), new))
 		} else {
-			new = max(0, min(new, potential))
+			capped = max(0, min(new, potential))
 		}
+		if new > capped {
+			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
+		}
+		new = capped
 	}
 
 	if c.parent == nil {
