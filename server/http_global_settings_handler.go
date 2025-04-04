@@ -123,13 +123,23 @@ func mergeSettings(old any, new any) error {
 	oldMap := structs.Map(old)
 	redactedMap := structs.Map(redactable.Redacted())
 
-	for k, v := range newMap {
-		if rv, ok := redactedMap[k]; ok && v == rv {
-			if ov, ok := oldMap[k]; ok {
-				newMap[k] = ov
+	newMap = mergeRedacted(oldMap, newMap, redactedMap)
+	return mapstructure.Decode(newMap, &new)
+}
+
+func mergeRedacted(old, new, redacted map[string]any) map[string]any {
+	for k, v := range new {
+		rv := redacted[k]
+		ov := old[k]
+		if nv, ok := v.(map[string]any); ok {
+			rv, ok := rv.(map[string]any)
+			ov, ok2 := ov.(map[string]any)
+			if ok && ok2 {
+				new[k] = mergeRedacted(ov, nv, rv)
 			}
+		} else if rv == v {
+			new[k] = ov
 		}
 	}
-
-	return mapstructure.Decode(newMap, &new)
+	return new
 }
