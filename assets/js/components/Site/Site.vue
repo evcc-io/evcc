@@ -153,9 +153,15 @@ export default {
 			return this.loadpoints.map((lp) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
+				const title =
+					this.vehicleTitle(lp.vehicleName) ||
+					lp.title ||
+					this.$t("main.loadpoint.fallbackName");
 				const charging = lp.charging;
+				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
-				return { icon, charging, power };
+				const heating = lp.chargerFeatureHeating;
+				return { icon, title, charging, power, soc, heating };
 			});
 		},
 		vehicleList() {
@@ -197,6 +203,9 @@ export default {
 	methods: {
 		selectedLoadpointChanged(index) {
 			this.$router.push({ query: { lp: index + 1 } });
+		},
+		vehicleTitle(vehicleName) {
+			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
 };

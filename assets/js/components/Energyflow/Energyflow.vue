@@ -192,7 +192,23 @@
 								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
 							data-testid="energyflow-entry-loadpoints"
-						/>
+							:expanded="loadpointsExpanded"
+							@toggle="toggleLoadpoints"
+						>
+							<template v-if="activeLoadpointsCount > 1" #expanded>
+								<EnergyflowEntry
+									v-for="(lp, index) in activeLoadpoints"
+									:key="index"
+									:name="lp.title"
+									:power="lp.power"
+									:powerUnit="powerUnit"
+									icon="vehicle"
+									:iconProps="{ names: [lp.icon] }"
+									:details="lp.soc || undefined"
+									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
+								/>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
 							:name="batteryChargeLabel"
@@ -387,6 +403,12 @@ export default {
 		batteryFmt() {
 			return (soc) => this.fmtPercentage(soc, 0);
 		},
+		fmtLoadpointSoc() {
+			return (soc) => this.fmtPercentage(soc, 0);
+		},
+		fmtLoadpointTemp() {
+			return (temp) => this.fmtTemperature(temp);
+		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
 		},
@@ -439,6 +461,9 @@ export default {
 		batteryExpanded() {
 			return settings.energyflowBattery;
 		},
+		loadpointsExpanded() {
+			return settings.energyflowLoadpoints;
+		},
 	},
 	watch: {
 		pvConfigured() {
@@ -451,6 +476,9 @@ export default {
 			this.$nextTick(this.updateHeight);
 		},
 		batteryMode() {
+			this.$nextTick(this.updateHeight);
+		},
+		activeLoadpointsCount() {
 			this.$nextTick(this.updateHeight);
 		},
 	},
@@ -527,6 +555,10 @@ export default {
 		},
 		togglePv() {
 			settings.energyflowPv = !settings.energyflowPv;
+			this.$nextTick(this.updateHeight);
+		},
+		toggleLoadpoints() {
+			settings.energyflowLoadpoints = !settings.energyflowLoadpoints;
 			this.$nextTick(this.updateHeight);
 		},
 		genericBatteryTitle(index) {
