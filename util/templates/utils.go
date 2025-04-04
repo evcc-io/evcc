@@ -12,6 +12,10 @@ import (
 )
 
 func yamlQuote(value string) string {
+	if value == "" {
+		return value
+	}
+
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {
