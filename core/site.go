@@ -514,8 +514,16 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		props := deviceProperties(dev)
+		title := props.Title
+		if title == "" {
+			if t, ok := dev.Config().Other["template"].(string); ok {
+				title = t
+			} else {
+				title = dev.Config().Type
+			}
+		}
 		mm[i] = measurement{
-			Title:  props.Title,
+			Title:  title,
 			Icon:   props.Icon,
 			Power:  power,
 			Energy: energy,
