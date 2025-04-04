@@ -1,39 +1,63 @@
 <template>
-	<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
-		<div class="d-flex justify-content-between">
-			<span class="d-flex flex-nowrap">
-				<BatteryIcon v-if="isBattery" v-bind="iconProps" />
-				<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
-				<component :is="`shopicon-regular-${icon}`" v-else></component>
-			</span>
-			<div class="d-block text-nowrap flex-grow-1 ms-3 text-truncate">
-				{{ name }}
+	<div>
+		<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
+			<div class="d-flex justify-content-between">
+				<span class="d-flex flex-nowrap">
+					<BatteryIcon v-if="isBattery" v-bind="iconProps" />
+					<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
+					<div v-else-if="!icon" class="icon-placeholder"></div>
+					<component :is="`shopicon-regular-${icon}`" v-else></component>
+				</span>
+				<div class="d-block flex-grow-1 ms-3 text-truncate">
+					<span v-if="!$slots.expanded">{{ name }}</span>
+					<button
+						v-else
+						class="btn-neutral d-flex align-items-baseline flex-shrink-1 flex-grow-1"
+						style="max-width: 100%"
+						@click="toggle"
+					>
+						<div class="text-truncate flex-shrink-1 flex-grow-0">
+							{{ name }}
+						</div>
+						<shopicon-regular-arrowdropdown
+							class="expand-icon flex-shrink-0 flex-grow-0"
+							:class="{ 'expand-icon--expanded': expanded }"
+						/>
+					</button>
+				</div>
+				<span class="text-end text-nowrap ps-1 fw-bold d-flex">
+					<div
+						ref="details"
+						class="fw-normal"
+						:class="{
+							'text-decoration-underline': detailsClickable,
+							'evcc-gray': detailsInactive,
+						}"
+						data-testid="energyflow-entry-details"
+						data-bs-toggle="tooltip"
+						:tabindex="detailsClickable ? 0 : undefined"
+						@click="detailsClicked"
+					>
+						<ForecastIcon
+							v-if="detailsIcon === 'forecast'"
+							class="ms-2 me-1 d-inline-block"
+						/>
+						<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+					</div>
+					<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
+						<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
+					</div>
+				</span>
 			</div>
-			<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-				<div
-					ref="details"
-					class="fw-normal"
-					:class="{
-						'text-decoration-underline': detailsClickable,
-						'evcc-gray': detailsInactive,
-					}"
-					data-testid="energyflow-entry-details"
-					data-bs-toggle="tooltip"
-					:tabindex="detailsClickable ? 0 : undefined"
-					@click="detailsClicked"
-				>
-					<ForecastIcon
-						v-if="detailsIcon === 'forecast'"
-						class="ms-2 me-1 d-inline-block"
-					/>
-					<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
-				</div>
-				<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
-					<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
-				</div>
-			</span>
 		</div>
-		<div v-if="$slots.subline" class="ms-4 ps-3">
+		<div
+			v-if="$slots.expanded"
+			class="expandable ms-2"
+			:class="{ 'expandable--open': expanded }"
+		>
+			<slot name="expanded" />
+		</div>
+		<div v-if="$slots.subline" class="ms-4 ps-3 mb-2">
 			<slot name="subline" />
 		</div>
 	</div>
@@ -43,6 +67,7 @@
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
+import "@h2d2/shopicons/es/regular/arrowdropdown";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import BatteryIcon from "./BatteryIcon.vue";
 import formatter from "../../mixins/formatter";
@@ -67,8 +92,9 @@ export default {
 		detailsTooltip: { type: Array },
 		detailsClickable: { type: Boolean },
 		detailsInactive: { type: Boolean },
+		expanded: { type: Boolean, default: false },
 	},
-	emits: ["details-clicked"],
+	emits: ["details-clicked", "toggle"],
 	data() {
 		return { powerTooltipInstance: null, detailsTooltipInstance: null };
 	},
@@ -153,6 +179,10 @@ export default {
 			// hide tooltip, chrome needs a timeout
 			setTimeout(() => this.detailsTooltipInstance?.hide(), 10);
 		},
+		toggle($event) {
+			$event.stopPropagation();
+			this.$emit("toggle");
+		},
 	},
 };
 </script>
@@ -162,5 +192,26 @@ export default {
 }
 .power {
 	min-width: 75px;
+}
+.icon-placeholder {
+	width: 24px;
+	aspect-ratio: 1;
+}
+.expand-icon {
+	transition: transform var(--evcc-transition-medium) ease;
+	transform: rotate(-90deg);
+}
+.expand-icon--expanded {
+	transform: rotate(0deg);
+}
+.expandable {
+	overflow: hidden;
+	opacity: 0;
+	height: 0;
+	transition: opacity var(--evcc-transition-medium) ease-in;
+}
+.expandable--open {
+	opacity: 1;
+	height: auto;
 }
 </style>

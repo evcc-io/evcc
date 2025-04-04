@@ -108,6 +108,11 @@ A = "A (nicht verbunden)"
 B = "B (verbunden)"
 C = "C (lädt)"
 
+[config.devices]
+auxMeter = "Smarter Verbraucher"
+batteryStorage = "Batterie"
+solarSystem = "PV-Anlage"
+
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
 title = "EEBus"

@@ -108,6 +108,11 @@ A = "A (not connected)"
 B = "B (connected)"
 C = "C (charging)"
 
+[config.devices]
+auxMeter = "Smart consumer"
+batteryStorage = "Battery storage"
+solarSystem = "Solar system"
+
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
 title = "EEBus"
@@ -591,6 +596,7 @@ gridImport = "Grid use"
 homePower = "Consumption"
 loadpoints = "Charger| Charger | {count} chargers"
 noEnergy = "No meter data"
+pv = "Solar system"
 pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
