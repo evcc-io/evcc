@@ -106,6 +106,6 @@ render: |
       [ .values[][] | {
         start: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | strftime("%FT%TZ")),
         end: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | mktime + 3600 | strftime("%FT%TZ")),
-        price: .power
+        value: .power
       } ] | tostring
   interval: {{ .interval }}
