@@ -91,21 +91,21 @@ render: |
       address: 0x048D # Voltage_Phase_R
       type: holding
       decode: uint16
-    scale: 0.01
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 0x0498 # Voltage_Phase_S
       type: holding
       decode: uint16
-    scale: 0.01
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 0x04A3 # Voltage_Phase_T
       type: holding
       decode: uint16
-    scale: 0.01
+    scale: 0.1
   powers:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
