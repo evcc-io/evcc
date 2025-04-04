@@ -36,17 +36,24 @@ type Config struct {
 	ClientKey  string `json:"clientKey,omitempty"`
 }
 
+func masked(s any) string {
+	if s != "" {
+		return "***"
+	}
+	return ""
+}
+
 // Redacted implements the redactor interface
 func (c Config) Redacted() Config {
 	return Config{
 		Broker:     c.Broker,
 		User:       c.User,
-		Password:   map[bool]string{true: "***", false: ""}[c.Password != ""],
+		Password:   masked(c.Password),
 		ClientID:   c.ClientID,
 		Insecure:   c.Insecure,
-		CaCert:     map[bool]string{true: "***", false: ""}[c.CaCert != ""],
-		ClientCert: map[bool]string{true: "***", false: ""}[c.ClientCert != ""],
-		ClientKey:  map[bool]string{true: "***", false: ""}[c.ClientKey != ""],
+		CaCert:     masked(c.CaCert),
+		ClientCert: masked(c.ClientCert),
+		ClientKey:  masked(c.ClientKey),
 	}
 }
 
