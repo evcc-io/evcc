@@ -22,8 +22,11 @@ func yamlQuote(value string) string {
 		Value any `yaml:"key"`
 	}
 
-	if err := yaml.Unmarshal([]byte(input), &res); err == nil && value == res.Value {
-		return value
+	if err := yaml.Unmarshal([]byte(input), &res); err == nil {
+		b, err := yaml.Marshal(res)
+		if err == nil && strings.TrimSpace(strings.TrimPrefix(string(b), "key: ")) == value {
+			return value
+		}
 	}
 
 	return quote(value)
