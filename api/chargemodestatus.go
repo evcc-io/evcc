@@ -28,10 +28,12 @@ type ChargeStatus string
 // Charging states
 const (
 	StatusNone ChargeStatus = ""
-	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    Ladestation betriebsbereit, Fahrzeug getrennt
-	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fahrzeug verbunden, Netzspannung liegt nicht an
-	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    Fahrzeug lädt, Netzspannung liegt an
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler Fahrzeug / Kabel (CP-Kurzschluss, 0V)
+	StatusA    ChargeStatus = "A" // Vehicle detected:     no    Charging active:  no    Vehicle not detected, charger in standby
+	StatusB    ChargeStatus = "B" // Vehicle detected:    yes    Charging active:  no    Vehicle detected, ready to charge
+	StatusC    ChargeStatus = "C" // Vehicle detected:    yes    Charging active: yes    Vehicle is charging
+	StatusD    ChargeStatus = "D" // Vehicle detected:    yes    Charging active: yes    Vehicle is charging with fan
+	StatusE    ChargeStatus = "E" // Vehicle detected:    yes    Charging active:  no    Error vehicle / cable (CP-Short-Circuit, 0V)
+	statusF    ChargeStatus = "F" // Vehicle detected:    yes    Charging active:  no    Error vehicle / cable (CP: -12 VDC)
 )
 
 var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
@@ -52,7 +54,7 @@ func ChargeStatusString(status string) (ChargeStatus, error) {
 		if s == "C1" || s == "D1" {
 			return StatusB, nil
 		}
-		return StatusC, nil
+		return ChargeStatus(s1), nil
 
 	case "E", "F":
 		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", s)
