@@ -65,7 +65,7 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 }
 
 // GetPlanGoal returns the plan goal in %, true or kWh, false
-func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
+func (lp *Loadpoint) GetPlanGoal() (float64, time.Duration, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
 
@@ -74,17 +74,19 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 		return float64(soc), true
 	}
 
+	// TODO precond
 	_, limit := lp.getPlanEnergy()
-	return limit, false
+	return limit, 0, false
 }
 
 // GetPlan creates a charging plan for given time and duration
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates {
+// The plan is sorted by time
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preCond time.Duration) api.Rates {
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil
 	}
 
-	return lp.planner.Plan(requiredDuration, targetTime)
+	return lp.planner.Plan(requiredDuration, preCond, targetTime)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -132,7 +134,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration)
+	// TODO param
+	plan := lp.GetPlan(planTime, requiredDuration, time.Hour)
 	if plan == nil {
 		return false
 	}
@@ -154,12 +157,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
 	}
 
-	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
-	active = !activeSlot.End.IsZero()
+	activeSlot := plan.At(lp.clock.Now())
+	active = activeSlot != nil
 
 	if active {
 		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(*activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}

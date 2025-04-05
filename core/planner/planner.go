@@ -136,7 +136,7 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) api.Rates {
+func (t *Planner) Plan(requiredDuration, preCond time.Duration, targetTime time.Time) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -175,8 +175,8 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) api
 	// rates are by default sorted by date, oldest to newest
 	last := rates[len(rates)-1].End
 
-	// sort rates by price and time
-	slices.SortStableFunc(rates, sortByCost)
+	// for late start ensure that the last slot is the cheapest
+	rates, adjusted := splitPrecond(rates, preCond, targetTime)
 
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
@@ -194,10 +194,62 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) api
 		requiredDuration -= durationAfterRates
 	}
 
+	// sort rates by price and time
+	slices.SortStableFunc(rates, sortByCost)
+
 	plan := t.plan(rates, requiredDuration, targetTime)
+
+	// correct plan slots to show original, non-adjusted prices
+	for i, r := range plan {
+		if rr := adjusted.At(r.Start); rr != nil {
+			plan[i].Price = rr.Price
+		}
+	}
 
 	// sort plan by time
 	plan.Sort()
 
 	return plan
+}
+
+func splitPrecond(rates api.Rates, preCond time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+	var res, adjusted api.Rates
+
+	for _, r := range slices.Clone(rates) {
+		preCondStart := targetTime.Add(-preCond)
+
+		if !r.End.After(preCondStart) {
+			res = append(res, r)
+			continue
+		}
+
+		// split slot
+		if !r.Start.After(preCondStart) {
+			// keep the first part of the slot
+			res = append(res, api.Rate{
+				Start: r.Start,
+				End:   preCondStart,
+				Price: r.Price,
+			})
+
+			// adjust the second part of the slot
+			r = api.Rate{
+				Start: preCondStart,
+				End:   r.End,
+				Price: r.Price,
+			}
+		}
+
+		// set the price to 0 to include slot in the plan
+		res = append(res, api.Rate{
+			Start: r.Start,
+			End:   r.End,
+			Price: 0,
+		})
+
+		// keep a copy of the adjusted slot
+		adjusted = append(adjusted, r)
+	}
+
+	return res, adjusted
 }

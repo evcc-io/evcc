@@ -40,13 +40,13 @@ func (t *combined) Rates() (api.Rates, error) {
 		var rate api.Rate
 
 		for _, t := range t.tariffs {
-			r, err := At(t, ts)
-			if err != nil {
+			r := At(t, ts)
+			if r == nil {
 				continue
 			}
 
 			if rate.Start.IsZero() {
-				rate = r
+				rate = *r
 				continue
 			}
 

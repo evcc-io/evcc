@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRates(t *testing.T) {
@@ -20,19 +21,17 @@ func TestRates(t *testing.T) {
 
 	rr := Rates{rate(1, 1), rate(2, 2), rate(3, 3), rate(4, 4)}
 
-	_, err := rr.At(clock.Now())
-	assert.Error(t, err)
+	assert.Nil(t, rr.At(clock.Now()))
 
 	for i := 1; i <= 4; i++ {
-		r, err := rr.At(clock.Now().Add(time.Duration(i) * time.Hour))
-		assert.NoError(t, err)
+		r := rr.At(clock.Now().Add(time.Duration(i) * time.Hour))
+		require.NotNil(t, r)
 		assert.Equal(t, float64(i), r.Price)
 
-		r, err = rr.At(clock.Now().Add(time.Duration(i)*time.Hour + 30*time.Minute))
-		assert.NoError(t, err)
+		r = rr.At(clock.Now().Add(time.Duration(i)*time.Hour + 30*time.Minute))
+		require.NotNil(t, r)
 		assert.Equal(t, float64(i), r.Price)
 	}
 
-	_, err = rr.At(clock.Now().Add(5 * time.Hour))
-	assert.Error(t, err)
+	require.Nil(t, rr.At(clock.Now().Add(5*time.Hour)))
 }

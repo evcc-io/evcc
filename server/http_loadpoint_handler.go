@@ -48,9 +48,9 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		planTime := lp.EffectivePlanTime()
 		id := lp.EffectivePlanId()
 
-		goal, _ := lp.GetPlanGoal()
+		goal, precond, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, precond)
 
 		res := struct {
 			PlanId   int       `json:"planId"`
@@ -87,6 +87,12 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		precond, err := strconv.Atoi(vars["preconditionDuration"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		switch typ := vars["type"]; typ {
 		case "soc":
 			if !lp.SocBasedPlanning() {
@@ -105,7 +111,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, time.Duration(precond)*time.Second)
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
@@ -152,9 +158,15 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		precond, err := strconv.Atoi(vars["preconditionDuration"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, time.Duration(precond)*time.Second)
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`

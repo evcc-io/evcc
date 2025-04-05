@@ -898,8 +898,8 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	rate, err := rates.At(time.Now())
-	if rates != nil && err != nil {
+	rate := rates.At(time.Now())
+	if rates != nil && rate == nil {
 		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
 		if len(rates) > 0 {
 			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
