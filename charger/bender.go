@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply
+// Copyright (c) 2022-2025 premultiply, opitzb86, mh81
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -23,11 +23,14 @@ package charger
 //   -> Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
 // * Set 'Allow UID Disclose' to On
 
+// Supports dynamic phase switching for Mennekes Amtron 4You 5xx Series
+
 import (
 	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -40,6 +43,8 @@ type BenderCC struct {
 	conn    *modbus.Connection
 	current uint16
 	legacy  bool
+	model   string
+	phases  int
 }
 
 const (
@@ -54,6 +59,7 @@ const (
 	bendRegEVBatteryState   = 730  // EV Battery State (% 0-100)
 	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
 	bendRegHemsCurrentLimit = 1000 // Current limit of the HEMS module (A)
+	amtronRegHemsPowerLimit = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
@@ -74,9 +80,7 @@ func init() {
 
 // NewBenderCCFromConfig creates a BenderCC charger from generic config
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
-	}
+	cc := modbus.TcpSettings{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -104,11 +108,19 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 	wb := &BenderCC{
 		conn:    conn,
 		current: 6, // assume min current
+		model:   "bender",
+		phases:  3,
 	}
 
-	// check legacy register set
-	if _, err := wb.conn.ReadHoldingRegisters(bendRegChargePointModel, 10); err != nil {
+	// check legacy register set and if the wb is a Mennekes Amtron 4You
+	bModel, err := wb.conn.ReadHoldingRegisters(bendRegChargePointModel, 10)
+	if err != nil {
 		wb.legacy = true
+		wb.model = "bender"
+	} else {
+		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") {
+			wb.model = "4you"
+		}
 	}
 
 	var (
@@ -198,15 +210,36 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	// For Amtron 4You 5xx Models only use HEMS Power Limit to allow for dynamic Phase Switching
+	if wb.model == "4you" {
+		v1, v2, v3, err1 := wb.voltages()
+		if err1 != nil {
+			return fmt.Errorf("error reading voltages: %v", err1)
+		}
 
-	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
-	if err == nil {
-		wb.current = uint16(current)
+		maxVoltage := math.Max(v1, math.Max(v2, v3))
+		maxVoltage_tol := float64(maxVoltage * 1.02)
+
+		power := uint16(float64(current) * maxVoltage_tol * float64(wb.phases))
+
+		b := make([]byte, 2)
+		binary.BigEndian.PutUint16(b, (power))
+
+		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+		if err == nil {
+			wb.current = uint16(current)
+		}
+		return err
+	} else {
+		b := make([]byte, 2)
+		binary.BigEndian.PutUint16(b, uint16(current))
+
+		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
+		if err == nil {
+			wb.current = uint16(current)
+		}
+		return err
 	}
-
-	return err
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555
@@ -283,44 +316,67 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(bendRegVoltages, 1)
 }
 
+func (wb *BenderCC) Phases1p3p(phases int) error {
+	if wb.model == "4you" {
+		fmt.Printf("Switching to %d phases\n", phases)
+		wb.phases = phases
+
+		b := make([]byte, 2)
+		if phases == 1 {
+			binary.BigEndian.PutUint16(b, uint16(3500))
+		} else if phases == 3 {
+			binary.BigEndian.PutUint16(b, uint16(4500))
+		}
+
+		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+
+		return err
+	}
+	return api.ErrNotAvailable
+}
+
 // identify implements the api.Identifier interface
 func (wb *BenderCC) identify() (string, error) {
-	if !wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
-		if err == nil && binary.BigEndian.Uint16(b) != 0 {
-			b, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+	if wb.model == "bender" {
+		if !wb.legacy {
+			b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
+			if err == nil && binary.BigEndian.Uint16(b) != 0 {
+				b, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
+			}
+
+			if id := bytesAsString(b); id != "" || err != nil {
+				return id, err
+			}
 		}
 
-		if id := bytesAsString(b); id != "" || err != nil {
-			return id, err
+		b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
+		if err != nil {
+			return "", err
 		}
-	}
 
-	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
-	if err != nil {
-		return "", err
+		return bytesAsString(b), nil
 	}
-
-	return bytesAsString(b), nil
+	return "N/A", api.ErrNotAvailable
 }
 
 // soc implements the api.Battery interface
 func (wb *BenderCC) soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	if binary.BigEndian.Uint16(b) == 1 {
-		b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
+	if wb.model == "bender" {
+		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 		if err != nil {
 			return 0, err
 		}
-		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
-			return float64(soc), nil
+
+		if binary.BigEndian.Uint16(b) == 1 {
+			b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
+			if err != nil {
+				return 0, err
+			}
+			if soc := binary.BigEndian.Uint16(b); soc <= 100 {
+				return float64(soc), nil
+			}
 		}
 	}
-
 	return 0, api.ErrNotAvailable
 }
 
