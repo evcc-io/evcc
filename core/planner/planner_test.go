@@ -230,7 +230,7 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour), false) // charge efficiency does not allow to test with 1,false
+	plan := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour), false) // charge efficiency does not allow to test with 1h
 	assert.Nil(t, plan.At(clock.Now()), "should not start if car can be charged completely after known prices ")
 
 	plan = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour), false)
