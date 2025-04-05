@@ -49,8 +49,10 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		return i.Start.Compare(j.Start)
 	})
 
-	if len(plans) > 0 {
-		return &plans[0]
+	for _, p := range plans {
+		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+			return &p
+		}
 	}
 
 	return nil
