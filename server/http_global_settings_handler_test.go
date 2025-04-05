@@ -3,8 +3,35 @@ package server
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestMergeSquashedSettings(t *testing.T) {
+	old := globalconfig.Mqtt{
+		Config: mqtt.Config{
+			Broker: "host",
+			User:   "user",
+		},
+		Topic: "test",
+	}
+	{
+		new := old
+		new.User = "***"
+
+		require.NoError(t, mergeSettings(old, &new))
+		assert.Equal(t, "user", new.User)
+	}
+	{
+		new := old
+		new.User = "new"
+
+		require.NoError(t, mergeSettings(old, &new))
+		assert.Equal(t, "new", new.User)
+	}
+}
 
 func TestMergeSettings(t *testing.T) {
 	tests := []struct {
