@@ -136,7 +136,7 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) api.Rates {
+func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, late bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -174,6 +174,11 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) api
 
 	// rates are by default sorted by date, oldest to newest
 	last := rates[len(rates)-1].End
+
+	// for late start ensure that the last slot is the cheapest
+	if r := rates.At(targetTime); r != nil && late {
+		r.Price = 0
+	}
 
 	// sort rates by price and time
 	slices.SortStableFunc(rates, sortByCost)

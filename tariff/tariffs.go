@@ -14,21 +14,22 @@ type Tariffs struct {
 }
 
 // At returns the rate at the given time
-func At(t api.Tariff, ts time.Time) (api.Rate, error) {
+func At(t api.Tariff, ts time.Time) *api.Rate {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
-			if r, err := rr.At(ts); err == nil {
-				return r, nil
-			}
+			return rr.At(ts)
 		}
 	}
-	return api.Rate{}, api.ErrNotAvailable
+	return nil
 }
 
 // Now returns the price/cost/value at the given time
 func Now(t api.Tariff) (float64, error) {
-	r, err := At(t, time.Now())
-	return r.Price, err
+	r := At(t, time.Now())
+	if r == nil {
+		return 0, api.ErrNotAvailable
+	}
+	return r.Price, nil
 }
 
 func Forecast(t api.Tariff) api.Rates {

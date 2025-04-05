@@ -1865,8 +1865,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
 		if smartCostActive {
-			rate, _ := rates.At(time.Now())
-			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Price)
+			rr := "?"
+			if rate := rates.At(time.Now()); rate != nil {
+				rr = fmt.Sprintf("%.2f", rate.Price)
+			}
+			lp.log.DEBUG.Printf("smart cost active: %s", rr)
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

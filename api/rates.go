@@ -13,11 +13,6 @@ type Rate struct {
 	Price float64   `json:"price"`
 }
 
-// IsZero returns is the rate is the zero value
-func (r Rate) IsZero() bool {
-	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
-}
-
 // Rates is a slice of (future) tariff rates
 type Rates []Rate
 
@@ -28,9 +23,9 @@ func (rr Rates) Sort() {
 	})
 }
 
-// At returns the rate for given timestamp or error.
+// At returns the rate for given timestamp.
 // Rates MUST be sorted by start time.
-func (rr Rates) At(ts time.Time) (Rate, error) {
+func (rr Rates) At(ts time.Time) *Rate {
 	if i, ok := slices.BinarySearchFunc(rr, ts, func(r Rate, ts time.Time) int {
 		switch {
 		case ts.Before(r.Start):
@@ -41,10 +36,10 @@ func (rr Rates) At(ts time.Time) (Rate, error) {
 			return 0
 		}
 	}); ok {
-		return rr[i], nil
+		return &rr[i]
 	}
 
-	return Rate{}, ErrNotAvailable
+	return nil
 }
 
 // MarshalMQTT implements server.MQTTMarshaler

@@ -124,7 +124,7 @@ type API interface {
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration time.Duration, late bool) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
