@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 )
@@ -86,7 +84,7 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc fu
 
 		oldStruc := newStruc()
 		if err := settings.Json(key, &oldStruc); err == nil {
-			if err := mergeSettings(oldStruc, struc); err != nil {
+			if err := mergeMaskedAny(oldStruc, struc); err != nil {
 				jsonError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -110,52 +108,4 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 
 		jsonResult(w, true)
 	}
-}
-
-type maskedTransformer struct{}
-
-func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
-	if typ.Kind() != reflect.String {
-		return nil
-	}
-
-	return func(dst, src reflect.Value) error {
-		if dst.String() == masked {
-			dst.Set(src)
-		}
-
-		return nil
-	}
-}
-
-func mergeSettings(old, new any) error {
-	// return mergo.Merge(new, old, mergo.WithTransformers(&maskedTransformer{}))
-
-	var newMap, oldMap map[string]any
-
-	if err := mapstructure.Decode(new, &newMap); err != nil {
-		return err
-	}
-	if err := mapstructure.Decode(old, &oldMap); err != nil {
-		return err
-	}
-
-	res := merged(oldMap, newMap)
-
-	return mapstructure.Decode(res, &new)
-}
-
-func merged(old, new map[string]any) map[string]any {
-	for k, v := range new {
-		if reflect.TypeOf(v).Kind() == reflect.Map {
-			new[k] = merged(old[k].(map[string]any), v.(map[string]any))
-			continue
-		}
-
-		if v == masked {
-			new[k] = old[k]
-		}
-	}
-
-	return new
 }
