@@ -69,7 +69,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 			// capture status code
 			lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 			next.ServeHTTP(lrw, r)
-			log.INFO.Printf("%s %s %d", r.Method, r.URL.Path, lrw.statusCode)
+			log.TRACE.Printf("%s %s %d", r.Method, r.URL.Path, lrw.statusCode)
 		})
 	})
 
