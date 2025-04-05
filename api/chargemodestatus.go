@@ -33,7 +33,7 @@ const (
 	StatusC    ChargeStatus = "C" // Vehicle detected:    yes    Charging active: yes    Vehicle is charging
 	StatusD    ChargeStatus = "D" // Vehicle detected:    yes    Charging active: yes    Vehicle is charging with fan
 	StatusE    ChargeStatus = "E" // Vehicle detected:    yes    Charging active:  no    Error vehicle / cable (CP-Short-Circuit, 0V)
-	statusF    ChargeStatus = "F" // Vehicle detected:    yes    Charging active:  no    Error vehicle / cable (CP: -12 VDC)
+	StatusF    ChargeStatus = "F" // Vehicle detected:    yes    Charging active:  no    Error vehicle / cable (CP: -12 VDC)
 )
 
 var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
