@@ -54,7 +54,7 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
 func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
-	log := util.NewLogger("http")
+	log := util.NewLogger("httpd")
 
 	// log all requests
 	router.Use(func(next http.Handler) http.Handler {
