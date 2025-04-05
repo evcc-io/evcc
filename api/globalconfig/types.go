@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -80,8 +79,8 @@ func masked(s any) string {
 }
 
 type Mqtt struct {
-	mqtt.Config `mapstructure:",squash"`
-	Topic       string `json:"topic"`
+  mqtt.Config  `mapstructure:",squash"`
+	Topic string `json:"topic"`
 }
 
 // Redacted implements the redactor interface used by the tee publisher
