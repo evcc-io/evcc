@@ -36,8 +36,8 @@ func TestMergeSquashedSettings(t *testing.T) {
 func TestMergeSettings(t *testing.T) {
 	tests := []struct {
 		old      any
-		new      any
-		expected any
+		new      *RedactedStruct
+		expected *RedactedStruct
 	}{
 		{
 			old:      nil,
@@ -59,29 +59,12 @@ func TestMergeSettings(t *testing.T) {
 			new:      &RedactedStruct{"newValue1", 42},
 			expected: &RedactedStruct{"newValue1", 42},
 		},
-		{
-			old:      &NestedStruct{RedactedStruct{"oldValue1", 35}, 24},
-			new:      &NestedStruct{RedactedStruct{"newValue1", 45}, 42},
-			expected: &NestedStruct{RedactedStruct{"newValue1", 45}, 42},
-		},
-		{
-			old:      &NestedStruct{RedactedStruct{"oldValue1", 35}, 24},
-			new:      &NestedStruct{RedactedStruct{"redacted", 45}, 0},
-			expected: &NestedStruct{RedactedStruct{"oldValue1", 45}, 24},
-		},
 	}
 
 	for _, tc := range tests {
 		mergeSettings(tc.old, tc.new)
-		switch expected := tc.expected.(type) {
-		case *RedactedStruct:
-			assert.Equal(t, expected.Field1, tc.new.(*RedactedStruct).Field1)
-			assert.Equal(t, expected.Field2, tc.new.(*RedactedStruct).Field2)
-		case *NestedStruct:
-			assert.Equal(t, expected.Field1.Field1, tc.new.(*NestedStruct).Field1.Field1)
-			assert.Equal(t, expected.Field1.Field2, tc.new.(*NestedStruct).Field1.Field2)
-			assert.Equal(t, expected.Field2, tc.new.(*NestedStruct).Field2)
-		}
+		assert.Equal(t, tc.expected.Field1, tc.new.Field1)
+		assert.Equal(t, tc.expected.Field2, tc.new.Field2)
 	}
 }
 
@@ -95,11 +78,6 @@ type RedactedStruct struct {
 	Field2 int
 }
 
-type NestedStruct struct {
-	Field1 RedactedStruct
-	Field2 int
-}
-
 func (t *RedactedStruct) Redacted() any {
 	return struct {
 		Field1 string
@@ -107,18 +85,5 @@ func (t *RedactedStruct) Redacted() any {
 	}{
 		Field1: "redacted",
 		Field2: t.Field2,
-	}
-}
-
-func (t *NestedStruct) Redacted() any {
-	return struct {
-		Field1 RedactedStruct
-		Field2 int
-	}{
-		Field1: t.Field1.Redacted().(struct {
-			Field1 string
-			Field2 int
-		}),
-		Field2: 0,
 	}
 }

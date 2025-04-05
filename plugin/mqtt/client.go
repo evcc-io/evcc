@@ -28,33 +28,12 @@ func ClientID() string {
 type Config struct {
 	Broker     string `json:"broker"`
 	User       string `json:"user"`
-	Password   string `json:"password,omitempty"`
-	ClientID   string `json:"clientID,omitempty"`
-	Insecure   bool   `json:"insecure,omitempty"`
-	CaCert     string `json:"caCert,omitempty"`
-	ClientCert string `json:"clientCert,omitempty"`
-	ClientKey  string `json:"clientKey,omitempty"`
-}
-
-func masked(s any) string {
-	if s != "" {
-		return "***"
-	}
-	return ""
-}
-
-// Redacted implements the redactor interface
-func (c Config) Redacted() Config {
-	return Config{
-		Broker:     c.Broker,
-		User:       c.User,
-		Password:   masked(c.Password),
-		ClientID:   c.ClientID,
-		Insecure:   c.Insecure,
-		CaCert:     masked(c.CaCert),
-		ClientCert: masked(c.ClientCert),
-		ClientKey:  masked(c.ClientKey),
-	}
+	Password   string `json:"password"`
+	ClientID   string `json:"clientID"`
+	Insecure   bool   `json:"insecure"`
+	CaCert     string `json:"caCert"`
+	ClientCert string `json:"clientCert"`
+	ClientKey  string `json:"clientKey"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions
