@@ -75,7 +75,7 @@ func TestMergeMaskedAny(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		mergeMaskedAny(tc.old, tc.new)
+		require.NoError(t, mergeMaskedAny(tc.old, tc.new))
 		assert.Equal(t, tc.expected, tc.new)
 	}
 }
