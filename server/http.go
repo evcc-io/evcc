@@ -61,7 +61,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// simple logging for websocket connections
 			if r.Header.Get("Upgrade") == "websocket" {
-				log.INFO.Printf("%s %s", r.Method, r.URL.Path)
+				log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
 				next.ServeHTTP(w, r)
 				return
 			}

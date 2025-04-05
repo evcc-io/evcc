@@ -84,7 +84,7 @@ async function _start(config, flags = []) {
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
-  additionalFlags.push("--log", "debug");
+  additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
   const instance = spawn(BINARY, ["--config", configFile, ...additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
