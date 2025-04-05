@@ -65,7 +65,7 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 }
 
 // GetPlanGoal returns the plan goal in %, true or kWh, false
-func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
+func (lp *Loadpoint) GetPlanGoal() (float64, time.Duration, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
 
@@ -74,18 +74,19 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 		return float64(soc), true
 	}
 
+	// TODO precond
 	_, limit := lp.getPlanEnergy()
-	return limit, false
+	return limit, 0, false
 }
 
 // GetPlan creates a charging plan for given time and duration
 // The plan is sorted by time
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration, late bool) api.Rates {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preCond time.Duration) api.Rates {
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil
 	}
 
-	return lp.planner.Plan(requiredDuration, targetTime, late)
+	return lp.planner.Plan(requiredDuration, preCond, targetTime)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -133,7 +134,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration, false)
+	// TODO param
+	plan := lp.GetPlan(planTime, requiredDuration, time.Hour)
 	if plan == nil {
 		return false
 	}
