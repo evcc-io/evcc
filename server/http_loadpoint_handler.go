@@ -160,9 +160,15 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		// TODO late option
+		late, err := strconv.ParseBool(vars["late"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, false)
+		plan := lp.GetPlan(planTime, requiredDuration, late)
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
