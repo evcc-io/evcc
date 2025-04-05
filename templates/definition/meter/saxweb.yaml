@@ -1,0 +1,39 @@
+template: saxweb
+products:
+  - brand: SAX
+    description:
+      generic: Homespeicher
+params:
+  - name: baseurl
+    type: string
+    default: "https://webserver.sax-power.net"
+    description:
+      de: "Basis-URL der SAX-API"
+      en: "Base URL of the SAX API"
+  - name: email
+    type: string
+    description:
+      de: "E-Mail-Adresse für die SAX-API"
+      en: "Email address for the SAX API"
+  - name: password
+    type: string
+    description:
+      de: "Passwort für die SAX-API"
+      en: "Password for the SAX API"
+render: |
+  type: custom
+  usage: pv
+  power:
+    source: http
+    uri: {{ .baseurl }}/api/auth/data/
+    auth:
+      source: sax
+      user: {{ .email }}
+      password: {{ .password }}
+    method: GET
+    headers:
+      Accept: application/json
+    value: |
+      {{- /* JSON-Dekodierung und PV_power-Wert extrahieren */ -}}
+      {{- $data := .response | jsonDecode -}}
+      {{- index $data 0 "PV_power" }}
