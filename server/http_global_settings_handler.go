@@ -112,7 +112,25 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 	}
 }
 
+type maskedTransformer struct{}
+
+func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ.Kind() != reflect.String {
+		return nil
+	}
+
+	return func(dst, src reflect.Value) error {
+		if dst.String() == masked {
+			dst.Set(src)
+		}
+
+		return nil
+	}
+}
+
 func mergeSettings(old, new any) error {
+	// return mergo.Merge(new, old, mergo.WithTransformers(&maskedTransformer{}))
+
 	var newMap, oldMap map[string]any
 
 	if err := mapstructure.Decode(new, &newMap); err != nil {
