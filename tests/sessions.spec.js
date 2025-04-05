@@ -46,6 +46,7 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-entry")).toHaveCount(0);
   });
   test("month with data", async ({ page }) => {
+    await page.setViewportSize(desktop);
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("navigate-month")).toHaveText("May");
     await expect(page.getByTestId("navigate-year")).toHaveText("2023");
