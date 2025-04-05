@@ -436,44 +436,21 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	}
 }
 
+var _ api.Identifier = (*Kathrein)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *Kathrein) Identify() (string, error) {
+	u, err := wb.conn.ReadInputRegisters(kathreinRegDeviceType, 7)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(u), nil
+}
+
 var _ api.Diagnosis = (*Kathrein)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Kathrein) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(sgRegSetOutI, 1); err == nil {
-		fmt.Printf("\tSetOutI:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(sgRegPhaseSwitch, 1); err == nil {
-		fmt.Printf("\tPhaseSwitch:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(sgRegUnavailable, 1); err == nil {
-		fmt.Printf("\tUnavailable:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(sgRegRemoteControl, 1); err == nil {
-		fmt.Printf("\tRemoteControl:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegWorkMode, 1); err == nil {
-		fmt.Printf("\tWorkMode:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegPhase, 1); err == nil {
-		fmt.Printf("\tPhase:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegPhaseSwitchStatus, 1); err == nil {
-		fmt.Printf("\tPhasesState:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegStartMode, 1); err == nil {
-		fmt.Printf("\tStartMode:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegState, 1); err == nil {
-		fmt.Printf("\tState:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegRemCtrlStatus, 1); err == nil {
-		fmt.Printf("\tRemCtrlStatus:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegPowerRequest, 1); err == nil {
-		fmt.Printf("\tPowerRequest:\t%d\n", binary.BigEndian.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegPowerFlag, 1); err == nil {
-		fmt.Printf("\tPowerFlag:\t%d\n", binary.BigEndian.Uint16(b))
-	}
+	// TODO
 }
