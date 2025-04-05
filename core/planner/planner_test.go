@@ -21,7 +21,7 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 		ar := api.Rate{
 			Start: slotStart,
 			End:   slotStart.Add(slotDuration),
-			Price: v,
+			Value: v,
 		}
 		res = append(res, ar)
 	}

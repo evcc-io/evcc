@@ -5,14 +5,14 @@ export interface TimeseriesEntry {
 	ts: string;
 }
 
-export interface PriceSlot {
+export interface ForecastSlot {
 	start: string;
 	end: string;
-	price: number;
+	value: number;
 }
 
-export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot): obj is PriceSlot {
-	return (obj as PriceSlot).start !== undefined;
+export function isForecastSlot(obj?: TimeseriesEntry | ForecastSlot): obj is ForecastSlot {
+	return (obj as ForecastSlot).start !== undefined;
 }
 
 export interface EnergyByDay {
@@ -29,8 +29,8 @@ export interface SolarDetails {
 }
 
 export interface Forecast {
-	grid?: PriceSlot[];
-	co2?: PriceSlot[];
+	grid?: ForecastSlot[];
+	co2?: ForecastSlot[];
 	solar?: SolarDetails;
 }
 
@@ -81,7 +81,7 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
 	if (!solar?.scale) return solar;
 
 	const { scale } = solar;
-	let result = deepCopy(solar);
+	const result = deepCopy(solar);
 
 	if (result.today) result.today.energy *= scale;
 	if (result.tomorrow) result.tomorrow.energy *= scale;

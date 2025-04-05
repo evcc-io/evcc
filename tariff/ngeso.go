@@ -91,7 +91,7 @@ func (t *Ngeso) run(done chan error) {
 				Start: r.ValidityStart.Time,
 				End:   r.ValidityEnd.Time,
 				// Use the forecasted rate, as the actual rate is only available for historical data
-				Price: r.Intensity.Forecast,
+				Value: r.Intensity.Forecast,
 			}
 			data = append(data, ar)
 		}
