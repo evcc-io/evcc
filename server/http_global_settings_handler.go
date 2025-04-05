@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/fatih/structs"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
@@ -113,23 +112,32 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 	}
 }
 
-func mergeSettings(old any, new any) error {
-	redactable, ok := old.(api.Redactor)
-	if !ok {
-		return nil
+func mergeSettings(old, new any) error {
+	var newMap, oldMap map[string]any
+
+	if err := mapstructure.Decode(new, &newMap); err != nil {
+		return err
+	}
+	if err := mapstructure.Decode(old, &oldMap); err != nil {
+		return err
 	}
 
-	newMap := structs.Map(new)
-	oldMap := structs.Map(old)
-	redactedMap := structs.Map(redactable.Redacted())
+	res := merged(oldMap, newMap)
 
-	for k, v := range newMap {
-		if rv, ok := redactedMap[k]; ok && v == rv {
-			if ov, ok := oldMap[k]; ok {
-				newMap[k] = ov
-			}
+	return mapstructure.Decode(res, &new)
+}
+
+func merged(old, new map[string]any) map[string]any {
+	for k, v := range new {
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			new[k] = merged(old[k].(map[string]any), v.(map[string]any))
+			continue
+		}
+
+		if v == masked {
+			new[k] = old[k]
 		}
 	}
 
-	return mapstructure.Decode(newMap, &new)
+	return new
 }
