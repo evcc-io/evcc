@@ -1,0 +1,111 @@
+template: api.akkudoktor.net
+products:
+  - brand: Akkudoktor API
+requirements:
+  description:
+    en: "[Akkudoktor API](https://api.akkudoktor.net/) provides free solar production forecasts based on system specifications and location."
+    de: "[Akkudoktor API](https://api.akkudoktor.net/) bietet kostenlos Solarproduktionsprognosen basierend auf Systemparametern und Standort."
+  evcc: ["skiptest"]
+group: solar
+params:
+  - preset: forecast-base
+  - name: az
+    description:
+      en: Azimuth
+      de: Azimut
+    help:
+      en: Orientation of PV modules in azimuth in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+      de: Ausrichtung der PV-Module im Azimut in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+    type: int
+    example: 0
+    required: true
+  - name: ac
+    description:
+      en: AC Power [kW]
+      de: AC Leistung [kW]
+    help:
+      en: Max power of the inverter in kW.
+      de: Maximale Leistung des Wechselrichters in kW.
+    type: float
+    default: 0
+    advanced: true
+  - name: efficiency
+    description:
+      en: Inverter efficiency [%]
+      de: Wechselrichterwirkungsgrad [%]
+    help:
+      en: The inverter efficiency.
+      de: Der Wirkungsgrad des Wechselrichters.
+    type: int
+    default: 100
+    advanced: true
+  - name: alphatemp
+    description:
+      en: Temperature coefficient
+      de: Temperaturkoeffizient
+    help:
+      en: The Temperatur coefficient is used for calculate losses with the temperature of the modules.
+      de: Die Temperaturkoeffizient der PV-Modulzellen wird zur Berechnung der Verluste in Abhängigkeit von der Temperatur der Module verwendet.
+    type: float
+    default: -0.004
+    advanced: true
+  - name: albedo
+    description:
+      en: Albedo
+      de: Albedo
+    help:
+      en: Albedo value of the modules.
+      de: Albedowert der Module.
+    type: float
+    default: 0.2
+    advanced: true
+  - name: range
+    description:
+      en: Weathermodel variation
+      de: Wettermodellvariation
+    help:
+      en: Returns max- and min- generation from different weathermodels.
+      de: Liefert Max- und Min- Erzeugung aus verschiedenen Wettermodellen.
+    type: int
+    default: 0
+    advanced: true
+  - name: horizon
+    description:
+      en: Simulate terrain shadows
+      de: Simuliert Verschattung durch Umgebung
+    help:
+      en: Each number representing the horizon height in degrees. see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizon
+      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizon
+    type: string
+    example: "10,0,10,15"
+    advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    uri: "https://api.akkudoktor.net/forecast?\
+      lat={{ .lat }}\
+      &lon={{ .lon }}\
+      &tilt={{ .dec }}\
+      &power={{ mulf .kwp 1000 }}\
+      &azimuth={{ .az }}\
+      &powerInverter={{ mulf .ac 1000 }}\
+      &inverterEfficiency={{ divf .efficiency 100 }}\
+      &cellCoEff={{ mulf .alphatemp 100 }}\
+      &albedo={{ .albedo }}\
+      &range={{ .range }}\
+      {{ if .horizon }}&horizont={{ .horizon | urlEncode }}{{ end }}\
+      &past_days=0\
+      &timecycle=hourly\
+      &timezone=UTC"
+    jq: |
+      [ .values[][] | {
+        start: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | strftime("%FT%TZ")),
+        end: (.datetime | sub("\\.[0-9]+"; "") | strptime("%FT%T%z") | mktime + 3600 | strftime("%FT%TZ")),
+        value: .power
+      } ] | tostring
+  interval: {{ .interval }}
