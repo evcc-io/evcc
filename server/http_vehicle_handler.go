@@ -92,19 +92,27 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, soc); err != nil {
+		preCond, err := parseDuration(vars["preCondition"])
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, soc = v.GetPlanSoc()
+		if err := v.SetPlanSoc(ts, preCond, soc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, preCond, soc = v.GetPlanSoc()
 
 		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
+			Soc          int       `json:"soc"`
+			PreCondition int64     `json:"preCondition"`
+			Time         time.Time `json:"time"`
 		}{
-			Soc:  soc,
-			Time: ts,
+			Soc:          soc,
+			PreCondition: int64(preCond.Seconds()),
+			Time:         ts,
 		}
 
 		jsonResult(w, res)
@@ -152,7 +160,7 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
