@@ -86,10 +86,7 @@ type Mqtt struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Mqtt) Redacted() any {
-	return struct {
-		mqtt.Config
-		Topic string `json:"topic"`
-	}{
+	return Mqtt{
 		m.Config.Redacted(),
 		m.Topic,
 	}
@@ -108,22 +105,14 @@ type Influx struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (c Influx) Redacted() any {
-	return struct {
-		URL      string `json:"url"`
-		Database string `json:"database"`
-		Org      string `json:"org"`
-		User     string `json:"user"`
-		Insecure bool   `json:"insecure"`
-		Password string `json:"password,omitempty"`
-		Token    string `json:"token,omitempty"`
-	}{
+	return Influx{
 		URL:      c.URL,
 		Database: c.Database,
+		Token:    masked(c.Token),
 		Org:      c.Org,
 		User:     c.User,
-		Insecure: c.Insecure,
 		Password: masked(c.Password),
-		Token:    masked(c.Token),
+		Insecure: c.Insecure,
 	}
 }
 
