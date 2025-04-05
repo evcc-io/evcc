@@ -48,9 +48,10 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		planTime := lp.EffectivePlanTime()
 		id := lp.EffectivePlanId()
 
+		// TODO late option
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, false)
 
 		res := struct {
 			PlanId   int       `json:"planId"`
@@ -87,6 +88,12 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		late, err := strconv.ParseBool(vars["late"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		switch typ := vars["type"]; typ {
 		case "soc":
 			if !lp.SocBasedPlanning() {
@@ -105,7 +112,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, late)
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
@@ -152,9 +159,10 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		// TODO late option
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		plan := lp.GetPlan(planTime, requiredDuration, false)
 
 		res := struct {
 			PlanTime time.Time `json:"planTime"`
