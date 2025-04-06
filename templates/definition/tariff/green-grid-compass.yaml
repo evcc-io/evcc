@@ -33,7 +33,7 @@ render: |
     uri: https://eco2grid.com/green-grid-compass/v2/forecast/hourly?zone_code={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00&apikey={{ .apiKey }}
     jq: |
       .zone_data | map({ 
-        "start": (.interval + "+02:00" | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%FT%TZ")),
+        "start": (.interval + "+02:00"),
         "end": (.interval + "+02:00" | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + 3600 | strftime("%FT%TZ")),
         "value": .consumption_co2_intensity 
       }) | tostring
