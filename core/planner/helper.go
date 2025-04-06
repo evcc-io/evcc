@@ -49,16 +49,6 @@ func AverageCost(plan api.Rates) float64 {
 	return cost / float64(duration)
 }
 
-// SlotAt returns the slot for the given time or an empty slot
-func SlotAt(time time.Time, plan api.Rates) api.Rate {
-	for _, slot := range plan {
-		if !slot.Start.After(time) && slot.End.After(time) {
-			return slot
-		}
-	}
-	return api.Rate{}
-}
-
 // SlotHasSuccessor returns if the slot has an immediate successor.
 // Does not require the plan to be sorted by start time.
 func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
