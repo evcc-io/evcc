@@ -143,6 +143,7 @@ showAdvancedSettings = "Показати розширені налаштуван
 telemetry = "Телеметрія"
 title = "Назва"
 validateSave = "Перевірити та зберегти"
+templateLoading = "Завантаження..."
 
 [config.grid]
 title = "Мережевий лічильник"
@@ -394,6 +395,19 @@ template = "Виробник"
 titleAdd = "Додати Транспорт"
 titleEdit = "Редагувати Транспорт"
 validateSave = "Перевірити та зберегти"
+priorityHelp = "Вищий пріоритет означає, що цей транспортний засіб отримує пріоритетний доступ до надлишку сонячної енергії."
+chargingSettings = "Налаштування зарядки"
+maximumPhases = "Максимум фаз"
+defaultMode = "Режим за замовчуванням"
+identifiers = "RFID ідентифікатори"
+maximumCurrentHelp = "Має бути більше ніж мінімальний струм."
+minimumCurrent = "Мінімальний струм"
+minimumCurrentHelp = "Опускайтеся нижче 6А, лише якщо знаєте, що робите."
+priority = "Пріоритет"
+defaultModeHelp = "Режим зарядки при підключенні автомобіля."
+identifiersHelp = "Список рядків RFID для ідентифікації автомобіля. Один запис на рядок. Поточний ідентифікатор можна знайти у відповідній точці зарядки на сторінці огляду."
+maximumCurrent = "Максимальний струм"
+maximumPhasesHelp = "Скільки фаз може заряджати цей автомобіль? Використовується для розрахунку необхідного мінімального надлишку сонячної енергії та тривалості плану."
 
 [footer]
 
@@ -597,6 +611,7 @@ noEnergy = "Немає даних лічильника"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
+pv = "Сонячна система"
 
 [main.heatingStatus]
 charging = "Опалення…"
@@ -699,6 +714,7 @@ tomorrow = "завтра"
 update = "Оновлення"
 vehicleCapacityDocs = "Дізнайтеся, як це налаштувати."
 vehicleCapacityRequired = "Для оцінки часу заряджання потрібна ємність акумулятора автомобіля."
+goalReached = "Мета вже досягнута"
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
@@ -951,3 +967,9 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.devices]
+auxMeter = "Розумний споживач"
+solarSystem = "Сонячна система"
+batteryStorage = "Акумуляторне зберігання"
