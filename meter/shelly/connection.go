@@ -12,7 +12,7 @@ import (
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
-// Connection is the Shelly cection
+// Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
 	uri     string
@@ -65,7 +65,7 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
 	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return conn, fmt.Errorf("missing user/password (%s)", resp.Mac)
+		return conn, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 	// Set default profile to "monophase" if not provided
 	if resp.Profile == "" {
