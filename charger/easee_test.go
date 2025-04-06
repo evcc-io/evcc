@@ -8,16 +8,18 @@ import (
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockAPI struct {
-	mock.Mock
-}
-
-func (m *MockAPI) GetJSON(uri string, data interface{}) error {
-	args := m.Called(uri, data)
-	return args.Error(0)
+// Helper function to create a payload
+func createPayload(id easee.ObservationID, timestamp time.Time, value string) []byte {
+	payload := easee.Observation{
+		ID:        id,
+		Timestamp: timestamp,
+		DataType:  easee.Integer,
+		Value:     value,
+	}
+	out, _ := json.Marshal(payload)
+	return out
 }
 
 // Refactored TestProductUpdate_IgnoreOutdatedProductUpdate function to reduce repetition in payload generation
@@ -26,18 +28,6 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 		obsTime:   make(map[easee.ObservationID]time.Time),
 		log:       util.NewLogger("easee"),
 		startDone: func() {},
-	}
-
-	// Helper function to create a payload
-	createPayload := func(id easee.ObservationID, timestamp time.Time, value string) []byte {
-		payload := easee.Observation{
-			ID:        id,
-			Timestamp: timestamp,
-			DataType:  easee.Integer,
-			Value:     value,
-		}
-		out, _ := json.Marshal(payload)
-		return out
 	}
 
 	// Test default init
