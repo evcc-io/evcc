@@ -21,8 +21,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    usages: ["battery"]
-    advanced: true
+    default: 10600 # W
 render: |
   type: custom
   {{- if eq .usage "grid" }}
