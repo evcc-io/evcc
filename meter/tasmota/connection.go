@@ -211,7 +211,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 	}
 	// add SML power
 	combinedPower += float64(s.StatusSNS.SML.PowerCurr)
-	// asure positive power for pv usage
+	// ensure positive power for pv usage
 	if c.usage == "pv" && combinedPower < 0 {
 		return -combinedPower, nil
 	}
