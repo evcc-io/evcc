@@ -1,5 +1,3 @@
-// File: easee_test.go
-
 package charger
 
 import (
@@ -22,10 +20,9 @@ func (m *MockAPI) GetJSON(uri string, data interface{}) error {
 	return args.Error(0)
 }
 
+// Refactored TestProductUpdate_IgnoreOutdatedProductUpdate function to reduce repetition in payload generation
 func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
-	// Setup mocks and test cases
 	e := Easee{
-		//	API:  mockAPI,
 		obsTime:   make(map[easee.ObservationID]time.Time),
 		log:       util.NewLogger("easee"),
 		startDone: func() {},
@@ -35,29 +32,28 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 	id := easee.CHARGER_OP_MODE
 	assert.Equal(t, time.Time{}, e.obsTime[id])
 
+	// Helper function to create a payload
+	createPayload := func(timestamp time.Time, value string) []byte {
+		payload := easee.Observation{
+			ID:        id,
+			Timestamp: timestamp,
+			DataType:  easee.Integer,
+			Value:     value,
+		}
+		out, _ := json.Marshal(payload)
+		return out
+	}
+
 	// Test case 1: Normal update
 	now := time.Now().Truncate(0) //truncate removes sub nanos
-	payload := easee.Observation{
-		ID:        easee.CHARGER_OP_MODE,
-		Timestamp: now,
-		DataType:  easee.Integer,
-		Value:     "2",
-	}
-	jsonPayload, _ := json.Marshal(payload)
-
+	jsonPayload := createPayload(now, "2")
 	e.ProductUpdate(json.RawMessage(jsonPayload))
 	assert.Equal(t, now, e.obsTime[id])
 	assert.Equal(t, 2, e.opMode)
 
 	// Test case 2: Outdated update
-	outdatedPayload := easee.Observation{
-		ID:        easee.CHARGER_OP_MODE,
-		Timestamp: now.Add(-5 * time.Second),
-		DataType:  easee.Integer,
-		Value:     "1",
-	}
-	outdatedJsonPayload, _ := json.Marshal(outdatedPayload)
-	e.ProductUpdate(json.RawMessage(outdatedJsonPayload))
+	outdatedPayload := createPayload(now.Add(-5*time.Second), "1")
+	e.ProductUpdate(json.RawMessage(outdatedPayload))
 
 	assert.Equal(t, now, e.obsTime[id])
 	assert.Equal(t, 2, e.opMode)
