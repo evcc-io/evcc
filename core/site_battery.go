@@ -104,7 +104,7 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 		if (site.GetBatteryModeExternal()==api.BatteryCharge) {
 			return true
 		}
-	}	
+	}
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
