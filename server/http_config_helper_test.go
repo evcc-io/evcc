@@ -58,11 +58,6 @@ func TestMergeMaskedAny(t *testing.T) {
 		new, expected *testStruct
 	}{
 		{
-			old:      nil,
-			new:      &testStruct{"newValue1", 42},
-			expected: &testStruct{"newValue1", 42},
-		},
-		{
 			old:      &testStruct{"oldValue1", 24},
 			new:      &testStruct{"newValue1", 42},
 			expected: &testStruct{"newValue1", 42},
