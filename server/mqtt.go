@@ -230,12 +230,13 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"planEnergy", func(payload string) error {
 			var plan struct {
-				Time  time.Time `json:"time"`
-				Value float64   `json:"value"`
+				Time         time.Time `json:"time"`
+				PreCondition int64     `json:"preCondition"`
+				Value        float64   `json:"value"`
 			}
 			err := json.Unmarshal([]byte(payload), &plan)
 			if err == nil {
-				err = lp.SetPlanEnergy(plan.Time, plan.Value)
+				err = lp.SetPlanEnergy(plan.Time, time.Duration(plan.PreCondition)*time.Second, plan.Value)
 			}
 			return err
 		}},
@@ -266,12 +267,13 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
 		{"planSoc", func(payload string) error {
 			var plan struct {
-				Time  time.Time `json:"time"`
-				Value int       `json:"value"`
+				Time         time.Time `json:"time"`
+				PreCondition int64     `json:"preCondition"`
+				Value        int       `json:"value"`
 			}
 			err := json.Unmarshal([]byte(payload), &plan)
 			if err == nil {
-				err = v.SetPlanSoc(plan.Time, plan.Value)
+				err = v.SetPlanSoc(plan.Time, time.Duration(plan.PreCondition)*time.Second, plan.Value)
 			}
 			return err
 		}},

@@ -328,19 +328,19 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
-	return lp.planTime, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
+	return lp.planTime, lp.planPreCond, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, preCond time.Duration, energy float64) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -348,11 +348,14 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	// remove plan
 	if energy == 0 {
 		finishAt = time.Time{}
+		preCond = 0
 	}
 
 	lp.planTime = finishAt
 	lp.publish(keys.PlanTime, finishAt)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
+
+	lp.settings.SetInt(keys.PlanPreCondition, int64(preCond.Seconds()))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -360,7 +363,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, preCond time.Duration, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -371,8 +374,8 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, energy)
+	if lp.planEnergy != energy || lp.planPreCond != preCond || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(finishAt, preCond, energy)
 		lp.requestUpdate()
 	}
 

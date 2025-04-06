@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // pass converts a simple api without return value to api with nil error return value
@@ -26,6 +27,15 @@ func parseFloat(payload string) (float64, error) {
 		err = fmt.Errorf("invalid float value: %s", payload)
 	}
 	return f, err
+}
+
+// parseDuration parses a duration string as seconds
+func parseDuration(payload string) (time.Duration, error) {
+	v, err := strconv.Atoi(payload)
+	if err != nil {
+		return 0, err
+	}
+	return time.Duration(v) * time.Second, err
 }
 
 // jsonDecoder returns a json decoder with disallowed unknown fields
