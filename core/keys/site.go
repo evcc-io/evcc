@@ -55,5 +55,5 @@ const (
 	BatterySoc    = "batterySoc"
 
 	// external battery control
-	BatteryModeExternal   = "batteryModeExternal"
+	BatteryModeExternal = "batteryModeExternal"
 )
