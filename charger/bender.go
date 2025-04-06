@@ -41,7 +41,7 @@ import (
 // BenderCC charger implementation
 type BenderCC struct {
 	conn    *modbus.Connection
-	current uint16
+	current float64
 	legacy  bool
 	model   string
 	phases  int
@@ -49,17 +49,18 @@ type BenderCC struct {
 
 const (
 	// all holding type registers
-	bendRegChargePointState = 122  // Vehicle (Control Pilot) state
-	bendRegPhaseEnergy      = 200  // Phase energy from primary meter (Wh)
-	bendRegCurrents         = 212  // Currents from primary meter (mA)
-	bendRegTotalEnergy      = 218  // Total Energy from primary meter (Wh)
-	bendRegActivePower      = 220  // Active Power from primary meter (W)
-	bendRegVoltages         = 222  // Voltages of the ocpp meter (V)
-	bendRegUserID           = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
-	bendRegEVBatteryState   = 730  // EV Battery State (% 0-100)
-	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
-	bendRegHemsCurrentLimit = 1000 // Current limit of the HEMS module (A)
-	amtronRegHemsPowerLimit = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You
+	bendRegChargePointState   = 122  // Vehicle (Control Pilot) state
+	bendRegPhaseEnergy        = 200  // Phase energy from primary meter (Wh)
+	bendRegCurrents           = 212  // Currents from primary meter (mA)
+	bendRegTotalEnergy        = 218  // Total Energy from primary meter (Wh)
+	bendRegActivePower        = 220  // Active Power from primary meter (W)
+	bendRegVoltages           = 222  // Voltages of the ocpp meter (V)
+	bendRegUserID             = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	bendRegEVBatteryState     = 730  // EV Battery State (% 0-100)
+	bendRegEVCCID             = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
+	bendRegHemsCurrentLimit   = 1000 // Current limit of the HEMS module (A)
+	amtronRegHemsCurrentLimit = 1002 // Current limit of the HEMS module (0.1 A) only used for Amtron 4You
+	amtronRegHemsPowerLimit   = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
@@ -196,7 +197,7 @@ func (wb *BenderCC) Enabled() (bool, error) {
 func (wb *BenderCC) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		binary.BigEndian.PutUint16(b, wb.current)
+		binary.BigEndian.PutUint16(b, uint16(wb.current))
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
@@ -205,41 +206,57 @@ func (wb *BenderCC) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
+func (wb *BenderCC) MaxCurrentMillis(current float64) error {
+
+	v1, v2, v3, err_gv := wb.voltages()
+	if err_gv != nil {
+		return fmt.Errorf("error reading voltages: %v", err_gv)
+	}
+
+	maxVoltage := math.Max(v1, math.Max(v2, v3))
+	maxVoltage_tol := float64(maxVoltage * 1.02)
+
+	power := uint16(current * maxVoltage_tol * float64(wb.phases))
+
+	bp := make([]byte, 2)
+	binary.BigEndian.PutUint16(bp, power)
+
+	bc := make([]byte, 2)
+	binary.BigEndian.PutUint16(bc, uint16(current))
+
+	// For Amtron, need to write both HEMS Power Limit and HEMS Current Limit as min(power, current) defines load current in Amtron Firmware
+	_, err_sp := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp)
+	_, err_sc := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, bc)
+
+	if err_sp == nil && err_sc == nil {
+		wb.current = current
+		return nil
+	} else {
+		return fmt.Errorf("Error setting HEMS current / power: %v, %v", err_sc, err_sp)
+	}
+
+}
+
 func (wb *BenderCC) MaxCurrent(current int64) error {
+
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	// For Amtron 4You 5xx Models only use HEMS Power Limit to allow for dynamic Phase Switching
 	if wb.model == "4you" {
-		v1, v2, v3, err1 := wb.voltages()
-		if err1 != nil {
-			return fmt.Errorf("error reading voltages: %v", err1)
-		}
-
-		maxVoltage := math.Max(v1, math.Max(v2, v3))
-		maxVoltage_tol := float64(maxVoltage * 1.02)
-
-		power := uint16(float64(current) * maxVoltage_tol * float64(wb.phases))
-
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, (power))
-
-		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
-		if err == nil {
-			wb.current = uint16(current)
-		}
-		return err
-	} else {
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, uint16(current))
-
-		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
-		if err == nil {
-			wb.current = uint16(current)
-		}
-		return err
+		return wb.MaxCurrentMillis(float64(current))
 	}
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(current))
+
+	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
+	if err == nil {
+		wb.current = float64(uint16(current))
+	}
+
+	return err
+
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555
