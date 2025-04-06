@@ -36,6 +36,9 @@ const (
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
 
+	// loadpoint setpoint
+	OfferedCurrent = "offeredCurrent" // offered current
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit
