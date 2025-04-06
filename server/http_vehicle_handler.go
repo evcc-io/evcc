@@ -92,26 +92,26 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		preCond, err := parseDuration(vars["preCondition"])
+		precondition, err := parseDuration(vars["precondition"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, preCond, soc); err != nil {
+		if err := v.SetPlanSoc(ts, precondition, soc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, preCond, soc = v.GetPlanSoc()
+		ts, precondition, soc = v.GetPlanSoc()
 
 		res := struct {
 			Soc          int       `json:"soc"`
-			PreCondition int64     `json:"preCondition"`
+			Precondition int64     `json:"precondition"`
 			Time         time.Time `json:"time"`
 		}{
 			Soc:          soc,
-			PreCondition: int64(preCond.Seconds()),
+			Precondition: int64(precondition.Seconds()),
 			Time:         ts,
 		}
 

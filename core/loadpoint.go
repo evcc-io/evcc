@@ -342,7 +342,7 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
-	d, _ := lp.settings.Int(keys.PlanPreCondition)
+	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
 		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
 	}

@@ -136,7 +136,7 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration, preCond time.Duration, targetTime time.Time) api.Rates {
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -179,7 +179,7 @@ func (t *Planner) Plan(requiredDuration, preCond time.Duration, targetTime time.
 	slices.SortStableFunc(rates, sortByCost)
 
 	// for late start ensure that the last slot is the cheapest
-	rates, adjusted := splitPreCond(rates, preCond, targetTime)
+	rates, adjusted := splitPreCond(rates, precondition, targetTime)
 
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
@@ -215,11 +215,11 @@ func (t *Planner) Plan(requiredDuration, preCond time.Duration, targetTime time.
 	return plan
 }
 
-func splitPreCond(rates api.Rates, preCond time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+func splitPreCond(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
 	var res, adjusted api.Rates
 
 	for _, r := range slices.Clone(rates) {
-		preCondStart := targetTime.Add(-preCond)
+		preCondStart := targetTime.Add(-precondition)
 
 		if !r.End.After(preCondStart) {
 			res = append(res, r)

@@ -70,8 +70,8 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 		var plans []plan
 
 		// static plan
-		if planTime, preCond, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, PreCond: preCond, Soc: soc, End: planTime})
+		if planTime, precondition, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+			plans = append(plans, plan{Id: 1, PreCond: precondition, Soc: soc, End: planTime})
 		}
 
 		// repeating plans

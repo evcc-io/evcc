@@ -44,7 +44,7 @@ func (v *dummy) GetPlanSoc() (time.Time, time.Duration, int) {
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *dummy) SetPlanSoc(ts time.Time, preCond time.Duration, soc int) error {
+func (v *dummy) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
 	return nil
 }
 

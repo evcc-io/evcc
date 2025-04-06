@@ -76,19 +76,19 @@ func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
 	}
-	var preCond time.Duration
-	if v, err := settings.Int(v.key() + keys.PlanPreCondition); err == nil {
-		preCond = time.Duration(v) * time.Second
+	var precondition time.Duration
+	if v, err := settings.Int(v.key() + keys.PlanPrecondition); err == nil {
+		precondition = time.Duration(v) * time.Second
 	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, preCond, soc
+	return ts, precondition, soc
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, preCond time.Duration, soc int) error {
+func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -101,7 +101,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, preCond time.Duration, soc int) error
 	v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
-	settings.SetInt(v.key()+keys.PlanPreCondition, int64(preCond.Seconds()))
+	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
 	v.publish()

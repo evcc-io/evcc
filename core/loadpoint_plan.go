@@ -84,22 +84,22 @@ func (lp *Loadpoint) GetPlanPreCondDuration() time.Duration {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, preCond, _, _ := lp.nextVehiclePlan()
-		return preCond
+		_, precondition, _, _ := lp.nextVehiclePlan()
+		return precondition
 	}
 
-	_, preCond, _ := lp.getPlanEnergy()
-	return preCond
+	_, precondition, _ := lp.getPlanEnergy()
+	return precondition
 }
 
 // GetPlan creates a charging plan for given time and duration
 // The plan is sorted by time
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preCond time.Duration) api.Rates {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates {
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil
 	}
 
-	return lp.planner.Plan(requiredDuration, preCond, targetTime)
+	return lp.planner.Plan(requiredDuration, precondition, targetTime)
 }
 
 // plannerActive checks if the charging plan has a currently active slot

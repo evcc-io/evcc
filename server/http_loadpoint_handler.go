@@ -49,22 +49,22 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		id := lp.EffectivePlanId()
 
 		goal, _ := lp.GetPlanGoal()
-		preCond := lp.GetPlanPreCondDuration()
+		precondition := lp.GetPlanPreCondDuration()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, preCond)
+		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
 		res := struct {
 			PlanId       int       `json:"planId"`
 			PlanTime     time.Time `json:"planTime"`
 			Duration     int64     `json:"duration"`
-			PreCondition int64     `json:"preCondition"`
+			Precondition int64     `json:"precondition"`
 			Plan         api.Rates `json:"plan"`
 			Power        float64   `json:"power"`
 		}{
 			PlanId:       id,
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
-			PreCondition: int64(preCond.Seconds()),
+			Precondition: int64(precondition.Seconds()),
 			Plan:         plan,
 			Power:        maxPower,
 		}
@@ -90,7 +90,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		preCond, err := parseDuration(vars["preCondition"])
+		precondition, err := parseDuration(vars["precondition"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -114,18 +114,18 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, preCond)
+		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
 		res := struct {
 			PlanTime     time.Time `json:"planTime"`
 			Duration     int64     `json:"duration"`
-			PreCondition int64     `json:"preCondition"`
+			Precondition int64     `json:"precondition"`
 			Plan         api.Rates `json:"plan"`
 			Power        float64   `json:"power"`
 		}{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
-			PreCondition: int64(preCond.Seconds()),
+			Precondition: int64(precondition.Seconds()),
 			Plan:         plan,
 			Power:        maxPower,
 		}
@@ -163,7 +163,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		preCond, err := parseDuration(vars["preCondition"])
+		precondition, err := parseDuration(vars["precondition"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -171,18 +171,18 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, preCond)
+		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
 		res := struct {
 			PlanTime     time.Time `json:"planTime"`
 			Duration     int64     `json:"duration"`
-			PreCondition int64     `json:"preCondition"`
+			Precondition int64     `json:"precondition"`
 			Plan         api.Rates `json:"plan"`
 			Power        float64   `json:"power"`
 		}{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
-			PreCondition: int64(preCond.Seconds()),
+			Precondition: int64(precondition.Seconds()),
 			Plan:         plan,
 			Power:        maxPower,
 		}
@@ -208,26 +208,26 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		preCond, err := parseDuration(vars["preCondition"])
+		precondition, err := parseDuration(vars["precondition"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := lp.SetPlanEnergy(ts, preCond, val); err != nil {
+		if err := lp.SetPlanEnergy(ts, precondition, val); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, preCond, energy := lp.GetPlanEnergy()
+		ts, precondition, energy := lp.GetPlanEnergy()
 
 		res := struct {
 			Energy       float64   `json:"energy"`
-			PreCondition int64     `json:"preCondition"`
+			Precondition int64     `json:"precondition"`
 			Time         time.Time `json:"time"`
 		}{
 			Energy:       energy,
-			PreCondition: int64(preCond.Seconds()),
+			Precondition: int64(precondition.Seconds()),
 			Time:         ts,
 		}
 
