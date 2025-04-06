@@ -70,3 +70,23 @@ func TestProductUpdate_IgnoreZeroSessionEnergy(t *testing.T) {
 	assert.Equal(t, t2, e.obsTime[easee.SESSION_ENERGY])
 	assert.Equal(t, float64(20), e.sessionEnergy)
 }
+
+func TestProductUpdate_LifetimeEnergy(t *testing.T) {
+	e := newEasee()
+
+	now := time.Now().Truncate(0)
+	payload := createPayload(easee.LIFETIME_ENERGY, now, easee.Double, "20")
+	e.ProductUpdate(json.RawMessage(payload))
+
+	assert.Equal(t, now, e.obsTime[easee.LIFETIME_ENERGY])
+	assert.Equal(t, float64(20), e.totalEnergy)
+	assert.Equal(t, float64(20), *e.sessionStartEnergy)
+
+	t2 := time.Now().Truncate(0)
+	payload2 := createPayload(easee.LIFETIME_ENERGY, t2, easee.Double, "40")
+	e.ProductUpdate(json.RawMessage(payload2))
+
+	assert.Equal(t, t2, e.obsTime[easee.LIFETIME_ENERGY])
+	assert.Equal(t, float64(40), e.totalEnergy)
+	assert.Equal(t, float64(20), *e.sessionStartEnergy)
+}
