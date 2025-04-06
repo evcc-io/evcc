@@ -103,15 +103,15 @@ type Site struct {
 	pvEnergy    map[string]*meterEnergy
 
 	// cached state
-	gridPower       float64         // Grid power
-	pvPower         float64         // PV power
-	excessDCPower   float64         // PV excess DC charge power (hybrid only)
-	auxPower        float64         // Aux power
-	batteryPower    float64         // Battery power (charge negative, discharge positive)
-	batterySoc      float64         // Battery soc
-	batteryCapacity float64         // Battery capacity
-	batteryMode     api.BatteryMode // Battery mode (runtime only, not persisted)
-  batteryModeExternal api.BatteryMode // Battery mode (external, runtime only, not persisted)
+	gridPower       float64             // Grid power
+	pvPower         float64             // PV power
+	excessDCPower   float64             // PV excess DC charge power (hybrid only)
+	auxPower        float64             // Aux power
+	batteryPower    float64             // Battery power (charge negative, discharge positive)
+	batterySoc      float64             // Battery soc
+	batteryCapacity float64             // Battery capacity
+	batteryMode     api.BatteryMode     // Battery mode (runtime only, not persisted)
+    batteryModeExternal api.BatteryMode // Battery mode (external, runtime only, not persisted)
 }
 
 // MetersConfig contains the site's meter configuration
