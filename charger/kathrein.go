@@ -232,7 +232,7 @@ func NewKathrein(ctx context.Context, uri, device, comset string, baudrate int, 
 func (wb *Kathrein) getPhaseValues(regs []uint16, divider float64) (float64, float64, float64, error) {
 	var res [3]float64
 	for i, reg := range regs {
-		b, err := wb.conn.ReadInputRegisters(reg, 2)
+		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -245,7 +245,7 @@ func (wb *Kathrein) getPhaseValues(regs []uint16, divider float64) (float64, flo
 
 // Status implements the api.Charger interface
 func (wb *Kathrein) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegCPState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegCPState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -270,7 +270,7 @@ func (wb *Kathrein) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Kathrein) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegControlRegister, 1)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegControlRegister, 1)
 	if err != nil {
 		return false, err
 	}
@@ -321,7 +321,7 @@ var _ api.Meter = (*Kathrein)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Kathrein) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegTotalActivePower, 2)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -354,7 +354,7 @@ var _ api.ChargeTimer = (*Kathrein)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Kathrein) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegChargingDuration, 2)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -366,7 +366,7 @@ var _ api.ChargeRater = (*Kathrein)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Kathrein) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegChargingEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -378,7 +378,7 @@ var _ api.MeterEnergy = (*Kathrein)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Kathrein) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegTotalEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -418,7 +418,7 @@ var _ api.PhaseGetter = (*Kathrein)(nil)
 
 // GetPhases implements the api.PhaseGetter interface
 func (wb *Kathrein) GetPhases() (int, error) {
-	b, err := wb.conn.ReadInputRegisters(kathreinRegSetpointRelais, 1)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegSetpointRelais, 1)
 	binary.BigEndian.Uint16(b)
 	if err != nil {
 		return 0, err
@@ -436,21 +436,203 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	}
 }
 
-var _ api.Identifier = (*Kathrein)(nil)
-
-// Identify implements the api.Identifier interface
-func (wb *Kathrein) Identify() (string, error) {
-	u, err := wb.conn.ReadInputRegisters(kathreinRegDeviceType, 7)
-	if err != nil {
-		return "", err
-	}
-
-	return bytesAsString(u), nil
-}
-
 var _ api.Diagnosis = (*Kathrein)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Kathrein) Diagnose() {
-	// TODO
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegHeader, 1); err == nil {
+		fmt.Printf("Header - Mapping Version:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceInfo, 1); err == nil {
+		fmt.Printf("Device - Info:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceNumber, 8); err == nil {
+		fmt.Printf("Device - Number:\t%s\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceType, 8); err == nil {
+		fmt.Printf("Device - Type:\t%s\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceSerial, 8); err == nil {
+		fmt.Printf("Device - Serial:\t%s\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceLineMapping, 1); err == nil {
+		fmt.Printf("Device - Line Information:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegDeviceTimestamp, 4); err == nil {
+		fmt.Printf("Device - Timestamp (local):\t%d\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Voltage, 2); err == nil {
+		fmt.Printf("Meter - U1:\t%f V\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Voltage, 2); err == nil {
+		fmt.Printf("Meter - U2:\t%f V\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Voltage, 2); err == nil {
+		fmt.Printf("Meter - U3:\t%f V\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Current, 2); err == nil {
+		fmt.Printf("Meter - I1:\t%f A\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Current, 2); err == nil {
+		fmt.Printf("Meter - I2:\t%f A\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Current, 2); err == nil {
+		fmt.Printf("Meter - I3:\t%f A\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Power, 2); err == nil {
+		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Power, 2); err == nil {
+		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Power, 2); err == nil {
+		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1ApparentPower, 2); err == nil {
+		fmt.Printf("Meter - S1 (apparent):\t%f VA\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2ApparentPower, 2); err == nil {
+		fmt.Printf("Meter - S2 (apparent):\t%f VA\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3ApparentPower, 2); err == nil {
+		fmt.Printf("Meter - S3 (apparent):\t%f VA\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1ReactivePower, 2); err == nil {
+		fmt.Printf("Meter - Q1 (reactive):\t%f VAr\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2ReactivePower, 2); err == nil {
+		fmt.Printf("Meter - Q2 (reactive):\t%f VAr\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3ReactivePower, 2); err == nil {
+		fmt.Printf("Meter - Q3 (reactive):\t%f VAr\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1PowerFactor, 2); err == nil {
+		fmt.Printf("Meter - PF1:\t%f\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2PowerFactor, 2); err == nil {
+		fmt.Printf("Meter - PF2:\t%f\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3PowerFactor, 2); err == nil {
+		fmt.Printf("Meter - PF3:\t%f\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2); err == nil {
+		fmt.Printf("Meter - P tot (active):\t%f W\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalApparentPower, 2); err == nil {
+		fmt.Printf("Meter - S tot (apparent):\t%f VA\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalReactivePower, 2); err == nil {
+		fmt.Printf("Meter - Q tot (reactive):\t%f VAr\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalPowerFactor, 2); err == nil {
+		fmt.Printf("Meter - PF tot:\t%f\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2); err == nil {
+		fmt.Printf("Meter - W tot:\t%f kWh\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
+		fmt.Printf("Meter - W tot:\t%f Hz\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1); err == nil {
+		fmt.Printf("EVSE - Charging-State:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegErrorState, 1); err == nil {
+		fmt.Printf("EVSE - Error-State:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegPPState, 1); err == nil {
+		fmt.Printf("EVSE - PP-State:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegCPState, 1); err == nil {
+		fmt.Printf("EVSE - CP-State:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegRelaisState, 1); err == nil {
+		fmt.Printf("EVSE - Relais-State:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegGrantedCurrent, 1); err == nil {
+		fmt.Printf("EVSE - Granted Current:\t%d mA\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegGrantedPower, 1); err == nil {
+		fmt.Printf("EVSE - Granted Power:\t%d W\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2); err == nil {
+		fmt.Printf("Charging - Duration:\t%d s\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2); err == nil {
+		fmt.Printf("Charging - Energy:\t%d Wh\n", b)
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTariffInfo, 1); err == nil {
+		fmt.Printf("Charging - Tariff Info:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegCurrentTariff, 1); err == nil {
+		fmt.Printf("Charging - Current Tariff:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegNextTariff, 1); err == nil {
+		fmt.Printf("Charging - Next Tariff:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegControlRegister, 1); err == nil {
+		fmt.Printf("EMS-Control - Control-Register:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegSetpointRelais, 1); err == nil {
+		fmt.Printf("EMS-Control - Setpoint Relais-Matrix:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegSetpointChargingCurrent, 1); err == nil {
+		fmt.Printf("EMS-Control - Setpoint Charging Current:\t%d mA\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTimeoutPeriod, 1); err == nil {
+		fmt.Printf("EMS-Control - Timeout Period:\t%d s\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinTimeOutFallbackPattern, 1); err == nil {
+		fmt.Printf("EMS-Control - Timeout Fallback Pattern:\t%d\n", b[1])
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(kathreinTimeOutFallbackCurrent, 1); err == nil {
+		fmt.Printf("EMS-Control - Timeout Fallback Pattern:\t%d mA\n", b[1])
+	}
 }
