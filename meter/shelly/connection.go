@@ -12,18 +12,31 @@ import (
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
-// Connection is the Shelly connection
+// Connection is the Shelly cection
 type Connection struct {
 	*request.Helper
-	uri        string
-	channel    int
-	gen        int    // Shelly api generation
-	devicetype string // Shelly device type
-	app        string // Shelly device app code
-	profile    string // Shelly device profile
+	uri     string
+	channel int
+	gen     int    // Shelly api generation
+	model   string // Shelly device type
+	profile string // Shelly device profile
 }
 
-// NewConnection creates a new Shelly device connection.
+// DeviceInfo is the common /shelly endpoint response
+// https://shelly-api-docs.shelly.cloud/gen1/#shelly
+// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Shelly#http-endpoint-shelly
+type DeviceInfo struct {
+	Mac       string `json:"mac"`
+	Gen       int    `json:"gen"`
+	Model     string `json:"model"`
+	Type      string `json:"type"`
+	Auth      bool   `json:"auth"`
+	AuthEn    bool   `json:"auth_en"`
+	NumMeters int    `json:"num_meters"`
+	Profile   string `json:"profile"`
+}
+
+// NewConnection creates a new Shelly device cection.
 func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
@@ -41,45 +54,44 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	if err := client.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
 		return nil, err
 	}
-
-	conn := &Connection{
-		Helper:     client,
-		channel:    channel,
-		gen:        resp.Gen,
-		devicetype: resp.Type,
-		app:        resp.App,
-		profile:    resp.Profile,
+	c := &Connection{
+		Helper:  client,
+		channel: channel,
+		gen:     resp.Gen,
+		model:   strings.Split(resp.Type+resp.Model, "-")[0],
+		profile: resp.Profile,
 	}
-
-	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
-
+	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return conn, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
+		return c, fmt.Errorf("missing user/password (%s)", resp.Mac)
 	}
-
-	switch conn.gen {
+	// Set default profile to "monophase" if not provided
+	if resp.Profile == "" {
+		resp.Profile = "monophase"
+	}
+	switch c.gen {
 	case 0, 1:
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		conn.uri = util.DefaultScheme(uri, "http")
+		c.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
 			log.Redact(transport.BasicAuthHeader(user, password))
-			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
+			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
 
 	case 2, 3:
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		conn.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
 		if user != "" {
-			conn.Client.Transport = digest.NewTransport(user, password, conn.Client.Transport)
+			c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 		}
 
 	default:
-		return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, conn.gen)
+		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
 
-	return conn, nil
+	return c, nil
 }
 
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response

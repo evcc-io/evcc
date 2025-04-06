@@ -26,7 +26,7 @@ func (sh *Switch) CurrentPower() (float64, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
+		var res Gen1Status
 		uri := fmt.Sprintf("%s/status", d.uri)
 		if err := d.GetJSON(uri, &res); err != nil {
 			return 0, err
@@ -72,7 +72,7 @@ func (sh *Switch) Enabled() (bool, error) {
 		return res.Ison, err
 
 	default:
-		var res Gen2SwitchResponse
+		var res Gen2SwitchStatus
 		err := d.execGen2Cmd("Switch.GetStatus", false, &res)
 		return res.Output, err
 	}
@@ -91,7 +91,7 @@ func (sh *Switch) Enable(enable bool) error {
 		err = d.GetJSON(uri, &res)
 
 	default:
-		var res Gen2SwitchResponse
+		var res Gen2SwitchStatus
 		err = d.execGen2Cmd("Switch.Set", enable, &res)
 	}
 
@@ -105,7 +105,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
+		var res Gen1Status
 		uri := fmt.Sprintf("%s/status", d.uri)
 		if err := d.GetJSON(uri, &res); err != nil {
 			return 0, err
@@ -120,7 +120,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
 
-		energy = gen1Energy(d.devicetype, energy)
+		energy = gen1Energy(d.model, energy)
 
 	default:
 		var res Gen2StatusResponse
