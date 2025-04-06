@@ -762,6 +762,7 @@ export default {
 		},
 		newLoadpoint() {
 			this.selectedLoadpointId = undefined;
+			this.$refs.loadpointModal.reset();
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {

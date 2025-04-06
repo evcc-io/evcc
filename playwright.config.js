@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: "./tests",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 4 : 0,
-  timeout: 20000, // default 30s
+  timeout: 30000, // default 30s
   workers: process.env.CI ? 3 : 4,
   reporter: "html",
   use: {

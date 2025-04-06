@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden } from "./utils";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -42,7 +42,7 @@ test.describe("mqtt", async () => {
     await modal.getByLabel("Password").fill(VALID_PASSWORD);
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
 
     // restart button appears
     const restartButton = await page
