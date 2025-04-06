@@ -85,3 +85,19 @@ func TestProductUpdate_LifetimeEnergy(t *testing.T) {
 	assert.Equal(t, float64(40), e.totalEnergy)
 	assert.Equal(t, float64(20), *e.sessionStartEnergy)
 }
+
+func TestProductUpdate_SessionStartEnergy(t *testing.T) {
+	e := newEasee()
+
+	t_minus_5 := time.Now().Truncate(0).Add(-5 * time.Second)
+
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, t_minus_5, easee.Integer, "2"))
+
+	assert.Equal(t, t_minus_5, e.obsTime[easee.CHARGER_OP_MODE])
+	assert.Equal(t, 2, e.opMode)
+
+	assert.Nil(t, e.sessionStartEnergy)
+
+	assert.Equal(t, float64(0), e.sessionEnergy)
+	assert.NotEqual(t, t_minus_5, e.obsTime[easee.SESSION_ENERGY])
+}
