@@ -766,7 +766,6 @@ export default {
 				await api.post("config/loadpoints", this.values);
 				this.$emit("updated");
 				this.$refs.modal.close();
-				this.reset();
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;

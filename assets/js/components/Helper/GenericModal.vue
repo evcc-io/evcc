@@ -6,7 +6,7 @@
 			:class="classes"
 			tabindex="-1"
 			role="dialog"
-			aria-hidden="true"
+			:aria-hidden="isModalVisible ? 'false' : 'true'"
 			:data-bs-backdrop="uncloseable ? 'static' : 'true'"
 			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
