@@ -102,7 +102,7 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	// Grid charging set externally within the last minute?
 	since := site.GetBatteryModeExternalModified()
 	if since >= 0 && since < 60 {
-		if site.GetBatteryModeExternal()==api.BatteryCharge {
+		if site.GetBatteryModeExternal() == api.BatteryCharge {
 			return true
 		}
 	}
@@ -117,7 +117,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 	// Battery lock set externally within the last minute?
 	since := site.GetBatteryModeExternalModified()
 	if since >= 0 && since < 60 {
-		if site.GetBatteryModeExternal()==api.BatteryHold {
+		if site.GetBatteryModeExternal() == api.BatteryHold {
 			return true
 		}
 	}
