@@ -1,5 +1,6 @@
 __debug_bin*
 .vscode
+!.vscode/extensions.json
 .cache
 .DS_store
 *.gz
@@ -42,3 +43,5 @@ asset-stats.html
 /playwright/.cache/
 .gitpod.yml
 /evcc.db
+/tsconfig.tsbuildinfo
+*storybook.log

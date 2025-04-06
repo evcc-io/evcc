@@ -2,16 +2,15 @@ template: enever
 products:
   - brand: Enever
 requirements:
-  description:
-    de: Nur für Niederlande verfügbar.
-    en: Only available for Netherlands.
   evcc: ["skiptest"]
 group: price
+countries: ["NL"]
 params:
   - name: token
     required: true
   - name: provider
-    validvalues:
+    type: choice
+    choice:
       [
         "",
         "AA",
@@ -35,6 +34,9 @@ params:
       ]
     required: true
   - preset: tariff-base
+  - name: interval
+    default: 3h
+    advanced: true
 render: |
   type: custom
   {{ include "tariff-base" . }}
@@ -50,12 +52,11 @@ render: |
           source: http
           uri: https://enever.nl/api/stroomprijs_vandaag.php?token={{ .token }}
           jq: |
-            .data | [
-              .[] |
+            [ .data.[] |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
-                "price": .prijs{{ .provider }} | tonumber
+                "value": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
       - name: tomorrow
@@ -64,11 +65,11 @@ render: |
           source: http
           uri: https://enever.nl/api/stroomprijs_morgen.php?token={{ .token }}
           jq: |
-            .data | [
-              .[] |
+            [ .data.[] |
               {
                 "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
                 "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
-                "price": .prijs{{ .provider }} | tonumber
+                "value": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
+  interval: {{ .interval }}

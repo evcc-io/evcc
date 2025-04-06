@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:
 		return base
@@ -22,7 +22,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -33,7 +33,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -48,7 +48,41 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -63,7 +97,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -76,6 +110,48 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
 			},
 			MeterEnergy: &decorateRCTMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -100,6 +176,14 @@ type decorateRCTBatteryCapacityImpl struct {
 
 func (impl *decorateRCTBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
+}
+
+type decorateRCTBatteryControllerImpl struct {
+	batteryController func(api.BatteryMode) error
+}
+
+func (impl *decorateRCTBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
+	return impl.batteryController(p0)
 }
 
 type decorateRCTMeterEnergyImpl struct {

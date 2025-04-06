@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/tesla-proxy-client"
 )
 
@@ -15,7 +15,7 @@ type Provider struct {
 
 func NewProvider(vehicle *tesla.Vehicle, cache time.Duration) *Provider {
 	impl := &Provider{
-		dataG: provider.Cached(func() (*tesla.VehicleData, error) {
+		dataG: util.Cached(func() (*tesla.VehicleData, error) {
 			res, err := vehicle.Data()
 			return res, apiError(err)
 		}, cache),

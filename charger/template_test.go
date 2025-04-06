@@ -4,11 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
 var acceptable = []string{
+	api.ErrMissingCredentials.Error(),
+	api.ErrMissingToken.Error(),
 	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
@@ -26,10 +29,9 @@ var acceptable = []string{
 	"(Client.Timeout exceeded while awaiting headers)",
 	"can only have either uri or device",                                   // modbus
 	"connection already registered with different protocol: localhost:502", // modbus
-	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
+	"sponsorship required, see https://docs.evcc.io/docs/sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
-	"missing credentials",
 	"timeout",                    // ocpp
 	"must have uri and password", // Wattpilot
 }

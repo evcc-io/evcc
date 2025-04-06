@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="sizeClass">
+	<div v-if="unitValue" class="input-group" :class="inputClasses">
 		<input
 			:id="id"
 			v-model="value"
@@ -55,7 +55,7 @@
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
 		<option v-if="!required" value="">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
@@ -69,7 +69,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -80,7 +80,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -92,7 +92,7 @@
 <script>
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import formatter from "../../mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;
@@ -111,7 +111,8 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
-		validValues: { type: Array, default: () => [] },
+		invalid: Boolean,
+		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -137,6 +138,13 @@ export default {
 			}
 			return "";
 		},
+		inputClasses() {
+			let result = this.sizeClass;
+			if (this.invalid) {
+				result += " is-invalid";
+			}
+			return result;
+		},
 		endAlign() {
 			return ["Int", "Float", "Duration"].includes(this.type);
 		},
@@ -147,14 +155,14 @@ export default {
 			return null;
 		},
 		unitValue() {
+			if (this.type === "Duration") {
+				return this.fmtDurationUnit(this.value, this.unit);
+			}
 			if (this.unit) {
 				return this.unit;
 			}
 			if (this.property === "capacity") {
 				return "kWh";
-			}
-			if (this.type === "Duration") {
-				return this.fmtSecondUnit(this.value);
 			}
 			return null;
 		},
@@ -168,18 +176,21 @@ export default {
 			return this.type === "Bool";
 		},
 		array() {
-			return this.type === "StringList";
+			return this.type === "List";
 		},
 		select() {
-			return this.validValues.length > 0;
+			return this.choice.length > 0;
+		},
+		durationFactor() {
+			return this.unit === "minute" ? 60 : 1;
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (typeof this.validValues[0] === "object") {
-				return this.validValues;
+			if (typeof this.choice[0] === "object") {
+				return this.choice;
 			}
 
-			let values = [...this.validValues];
+			let values = [...this.choice];
 
 			if (this.icons && !this.required) {
 				values = ["", ...values];
@@ -211,7 +222,7 @@ export default {
 				}
 
 				if (this.type === "Duration" && typeof this.modelValue === "number") {
-					return this.modelValue / NS_PER_SECOND;
+					return this.modelValue / this.durationFactor / NS_PER_SECOND;
 				}
 
 				return this.modelValue;
@@ -228,7 +239,7 @@ export default {
 				}
 
 				if (this.type === "Duration" && typeof newValue === "number") {
-					newValue = newValue * NS_PER_SECOND;
+					newValue = newValue * this.durationFactor * NS_PER_SECOND;
 				}
 
 				this.$emit("update:modelValue", newValue);

@@ -3,7 +3,6 @@ package charger
 import (
 	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
@@ -54,7 +53,7 @@ func NewDadapowerFromConfig(ctx context.Context, other map[string]interface{}) (
 
 // NewDadapower creates a Dadapower charger
 func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -107,19 +106,15 @@ func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch binary.BigEndian.Uint16(b) {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 0x0A: // ready
 		return api.StatusA, nil
 	case 0x0B: // EV is present
 		return api.StatusB, nil
 	case 0x0C: // charging
 		return api.StatusC, nil
-	case 0x0D: // charging with ventilation
-		return api.StatusD, nil
-	case 0x0E: // failure (e.g. diode check, RCD failure)
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

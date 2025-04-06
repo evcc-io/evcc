@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"strconv"
@@ -64,11 +65,11 @@ const (
 )
 
 func init() {
-	registry.Add("smartevse", NewsmartEVSEFromConfig)
+	registry.AddCtx("smartevse", NewsmartEVSEFromConfig)
 }
 
 // NewsmartEVSEFromConfig creates a new smartEVSE ModbusTCP charger
-func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewsmartEVSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -77,12 +78,12 @@ func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewsmartEVSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewsmartEVSE creates a new charger
-func NewsmartEVSE(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*smartEVSE, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+func NewsmartEVSE(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*smartEVSE, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,14 +118,8 @@ func (wb *smartEVSE) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil
-	case 4:
-		return api.StatusD, nil
-	case 5:
-		return api.StatusE, nil
-	case 6:
-		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status returned: %d", status)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

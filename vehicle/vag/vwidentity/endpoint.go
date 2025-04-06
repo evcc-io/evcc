@@ -87,8 +87,8 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 
 	// add nonce and state
 	query := url.Values{
-		"nonce": []string{lo.RandomString(43, lo.LettersCharset)},
-		"state": []string{uuid.NewString()},
+		"nonce": {lo.RandomString(43, lo.LettersCharset)},
+		"state": {uuid.NewString()},
 	}
 
 	var vars FormVars
@@ -147,8 +147,8 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 				err = errors.New(e)
 			}
 
-			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				err = errors.New("terms of service updated- please open app or website and confirm")
+			if consent := resp.Request.URL.Query().Get("updated") != "" || strings.Contains(resp.Request.URL.Path, "/consent/"); err == nil && consent {
+				err = errors.New("terms of service updated- please open app or website and confirm: " + resp.Request.URL.String())
 			}
 		}
 	}

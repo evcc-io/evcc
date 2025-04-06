@@ -3,6 +3,7 @@ products:
   - brand: my-PV
     description:
       generic: AC ELWA 2
+group: heating
 requirements:
   evcc: ["sponsorship"]
 params:

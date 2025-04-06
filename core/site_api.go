@@ -19,12 +19,6 @@ var _ site.API = (*Site)(nil)
 var ErrBatteryNotConfigured = errors.New("battery not configured")
 var batteryModeExternalTimer time.Time
 
-const (
-	GridTariff    = "grid"
-	FeedinTariff  = "feedin"
-	PlannerTariff = "planner"
-)
-
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
 	dev, _ := config.Meters().ByName(ref)
@@ -122,6 +116,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 
 	site.Meters.AuxMetersRef = ref
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
+// GetExtMeterRefs returns the ExtMeterRef
+func (site *Site) GetExtMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ExtMetersRef
+}
+
+// SetExtMeterRefs sets the ExtMeterRef
+func (site *Site) SetExtMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ExtMetersRef = ref
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // Loadpoints returns the loadpoints as api interfaces
@@ -274,39 +284,10 @@ func (site *Site) SetResidualPower(power float64) error {
 }
 
 // GetTariff returns the respective tariff if configured or nil
-func (site *Site) GetTariff(tariff string) api.Tariff {
+func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
 	defer site.RUnlock()
-
-	switch tariff {
-	case GridTariff:
-		return site.tariffs.Grid
-
-	case FeedinTariff:
-		return site.tariffs.FeedIn
-
-	case PlannerTariff:
-		switch {
-		case site.tariffs.Planner != nil:
-			// prio 0: manually set planner tariff
-			return site.tariffs.Planner
-
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
-			// prio 1: grid tariff with forecast
-			return site.tariffs.Grid
-
-		case site.tariffs.Co2 != nil:
-			// prio 2: co2 tariff
-			return site.tariffs.Co2
-
-		default:
-			// prio 3: static grid tariff
-			return site.tariffs.Grid
-		}
-
-	default:
-		return nil
-	}
+	return site.tariffs.Get(tariff)
 }
 
 // GetBatteryDischargeControl returns the battery control mode (no discharge only)

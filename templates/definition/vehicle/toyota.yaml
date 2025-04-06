@@ -1,0 +1,26 @@
+template: toyota
+products:
+  - brand: Toyota
+requirements:
+  description:
+    de: |
+      Benötigt Toyota Connected Services Account.
+    en: |
+      Requires Toyota Connected Services Account.
+params:
+  - preset: vehicle-common
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: vin
+    example: JT...
+  - name: cache
+    default: 15m
+render: |
+  type: toyota
+  {{ include "vehicle-common" . }}
+  user: {{ .user }}
+  password: {{ .password }}
+  vin: {{ .vin }}
+  cache: {{ .cache }}

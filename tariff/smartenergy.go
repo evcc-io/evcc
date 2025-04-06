@@ -68,10 +68,14 @@ func (t *SmartEnergy) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Data))
 		for _, r := range res.Data {
+			if r.Date.Minute() != 0 {
+				continue
+			}
+
 			ar := api.Rate{
 				Start: r.Date.Local(),
-				End:   r.Date.Add(15 * time.Minute).Local(),
-				Price: t.totalPrice(r.Value/100, r.Date),
+				End:   r.Date.Add(time.Hour).Local(),
+				Value: t.totalPrice(r.Value/100, r.Date),
 			}
 			data = append(data, ar)
 		}

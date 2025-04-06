@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"encoding/json"
 	"slices"
 	"time"
 )
@@ -10,35 +10,44 @@ import (
 type Rate struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
+	Value float64   `json:"value"`
 }
 
-// IsEmpty returns is the rate is the zero value
-func (r Rate) IsEmpty() bool {
-	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
+// IsZero returns is the rate is the zero value
+func (r Rate) IsZero() bool {
+	return r.Start.IsZero() && r.End.IsZero() && r.Value == 0
 }
 
 // Rates is a slice of (future) tariff rates
 type Rates []Rate
 
 // Sort rates by start time
-func (r Rates) Sort() {
-	slices.SortStableFunc(r, func(i, j Rate) int {
+func (rr Rates) Sort() {
+	slices.SortStableFunc(rr, func(i, j Rate) int {
 		return i.Start.Compare(j.Start)
 	})
 }
 
-// Current returns the rates current rate or error
-func (r Rates) Current(now time.Time) (Rate, error) {
-	for _, rr := range r {
-		if !rr.Start.After(now) && rr.End.After(now) {
-			return rr, nil
+// At returns the rate for given timestamp or error.
+// Rates MUST be sorted by start time.
+func (rr Rates) At(ts time.Time) (Rate, error) {
+	if i, ok := slices.BinarySearchFunc(rr, ts, func(r Rate, ts time.Time) int {
+		switch {
+		case ts.Before(r.Start):
+			return +1
+		case !ts.Before(r.End):
+			return -1
+		default:
+			return 0
 		}
+	}); ok {
+		return rr[i], nil
 	}
 
-	if len(r) == 0 {
-		return Rate{}, fmt.Errorf("no matching rate for: %s", now.Local().Format(time.RFC3339))
-	}
-	return Rate{}, fmt.Errorf("no matching rate for: %s, %d rates (%s to %s)",
-		now.Local().Format(time.RFC3339), len(r), r[0].Start.Local().Format(time.RFC3339), r[len(r)-1].End.Local().Format(time.RFC3339))
+	return Rate{}, ErrNotAvailable
+}
+
+// MarshalMQTT implements server.MQTTMarshaler
+func (r Rates) MarshalMQTT() ([]byte, error) {
+	return json.Marshal(r)
 }

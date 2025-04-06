@@ -2,6 +2,7 @@
 	<FormRow
 		:id="id"
 		:optional="!Required"
+		:deprecated="Deprecated"
 		:label="Description || `[${Name}]`"
 		:help="Description === Help ? undefined : Help"
 		:example="Example"
@@ -14,7 +15,7 @@
 			:type="Type"
 			class="me-2"
 			:required="Required"
-			:validValues="ValidValues"
+			:choice="Choice"
 		/>
 	</FormRow>
 </template>
@@ -31,12 +32,13 @@ export default {
 		id: String,
 		Name: String,
 		Required: Boolean,
+		Deprecated: Boolean,
 		Description: String,
 		Help: String,
 		Example: String,
 		Type: String,
 		Mask: Boolean,
-		ValidValues: Array,
+		Choice: Array,
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],

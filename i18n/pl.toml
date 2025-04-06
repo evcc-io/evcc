@@ -31,6 +31,19 @@ never = "tylko z wystarczającą nadwyżką."
 titleAdd = "Dodaj baterię"
 titleEdit = "Edytuj baterię"
 
+[config.charge]
+titleAdd = "Dodaj licznik ładowania"
+titleEdit = "Edytuj licznik ładowania"
+
+[config.charger]
+chargers = "ładowarki EV"
+generic = "Ogólne integracje"
+ocppHelp = "Skopiuj ten adres do konfiguracji Twojej ładowarki"
+switchsockets = "Przełączalne gniazdka"
+template = "Producent"
+titleAdd = "Dodaj ładowarkę"
+titleEdit = "Edytuj ładowarkę"
+
 [config.circuits]
 description = "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię."
 title = "Zarządzanie obciążeniem"
@@ -39,8 +52,10 @@ title = "Zarządzanie obciążeniem"
 description = "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz."
 labelInterval = "Interwał aktualizacji"
 labelResidualPower = "Moc resztkowa"
+title = "Kontrola zachowania"
 
 [config.deviceValue]
+amount = "Ilość"
 broker = "Broker"
 bucket = "Bucket"
 capacity = "Pojemność"
@@ -48,23 +63,36 @@ chargeStatus = "Status"
 chargeStatusA = "nie połączony"
 chargeStatusB = "połączony"
 chargeStatusC = "ładowanie"
+chargeStatusE = "brak zasilania"
 chargeStatusF = "błąd"
 chargedEnergy = "Naładowany"
 configured = "Skonfigurowany"
 currency = "Waluta"
 current = "Prąd"
+currentRange = "Aktualne"
 enabled = "Włączony"
 energy = "Energia"
+feedinPrice = "Cena sprzedaży energii do sieci"
 hemsType = "System"
+no = "nie"
 odometer = "Drogomierz"
 phaseCurrents = "Prąd L1, L2, L3"
 phasePowers = "Moc L1, L2, L3"
 phaseVoltages = "Napięcie L1, L2, L3"
 power = "Moc"
+powerRange = "Zasilanie"
 range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
+temp = "Temperatura"
 url = "URL"
+vehicleLimitSoc = "Limit pojazdu"
+yes = "tak"
+
+[config.deviceValueChargeStatus]
+A = "A (nie połączony)"
+B = "B (połączony)"
+C = "C (ładowanie)"
 
 [config.eebus]
 title = "EEBus"
@@ -75,13 +103,26 @@ optional = "opcjonalny"
 
 [config.general]
 cancel = "Anulować"
+delete = "Usuń"
+docsLink = "Zobacz dokumentacje"
 experimental = "Eksperymentalny"
+hideAdvancedSettings = "Schowaj ustawienia zaawansowane"
+off = "wyłączony"
+on = "włączony"
+password = "Hasło"
+readFromFile = "Przeczytaj z pliku"
+remove = "Usuń"
 save = "Zapisz"
+showAdvancedSettings = "Pokaż ustawienia zaawansowane"
 telemetry = "Telemetria"
+title = "Tytuł"
+validateSave = "Zatwierdź i zapisz"
 
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
+
+[config.hems]
 
 [config.influx]
 labelBucket = "Bucket"
@@ -90,6 +131,9 @@ labelPassword = "Hasło"
 labelToken = "API Token"
 labelUrl = "URL"
 title = "InfluxDB"
+
+[config.loadpoint]
+addCharger = "Dodaj ładowarkę"
 
 [config.main]
 addLoadpoint = "Dodaj ładowarkę"
@@ -125,6 +169,8 @@ labelPort = "Port"
 
 [config.options]
 
+[config.options.boolean]
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -141,7 +187,11 @@ titleEdit = "Edytuj licznik energii słonecznej"
 cancel = "Anulować"
 save = "Zapisz"
 
+[config.sponsor]
+
 [config.system]
+
+[config.tariffs]
 
 [config.title]
 
@@ -337,6 +387,8 @@ smartCostClean = "Czyste ładowanie sieci"
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
 
+[main.loadpointSettings.batteryBoost]
+
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
 label = "Domyślny limit"
@@ -372,6 +424,8 @@ logout = "wyloguj"
 
 [main.targetCharge]
 activate = "Aktywować"
+co2Limit = "Limit CO₂ z {co2}"
+costLimitIgnore = "Skonfigurowany {limit} będzie ignorowany w tym okresie."
 currentPlan = "Plan aktywny"
 descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
 descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}?"
@@ -384,6 +438,7 @@ planPeriodLabel = "Okres"
 planPeriodValue = "{start} do {end}"
 planUnknown = "jeszcze nie wiadomo"
 preview = "Podgląd planu"
+priceLimit = "limit ceny {cena}"
 remove = "Usuń"
 setTargetTime = "brak"
 targetIsAboveLimit = "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany."
@@ -421,13 +476,6 @@ temp = "Temp."
 tempLimit = " Ograniczenie temp."
 unknown = "Pojazd gościa"
 vehicleSoc = "Bateria"
-
-[main.vehicleSoc]
-charging = "ładuje się"
-connected = "połączony"
-disconnected = "odłączony"
-ready = "gotowy"
-vehicleLimit = "Limit pojazdu: {soc}"
 
 [main.vehicleStatus]
 charging = "Ładuje się..."
@@ -509,6 +557,14 @@ vehicle = "Pojazd"
 allLoadpoints = "wszystkie punkty ładowania"
 allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
+
+[sessions.group]
+
+[sessions.groupBy]
+
+[sessions.period]
+
+[sessions.type]
 
 [settings]
 title = "Interfejs użytkownika"

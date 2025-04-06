@@ -30,10 +30,3 @@ func (m *battery) LimitController(socG func() (float64, error), limitSocS func(f
 		}
 	}
 }
-
-// ModeController returns an api.BatteryController decorator
-func (m *battery) ModeController(modeS func(int64) error) func(api.BatteryMode) error {
-	return func(mode api.BatteryMode) error {
-		return modeS(int64(mode))
-	}
-}

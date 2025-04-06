@@ -1,11 +1,8 @@
 template: ngeso
 products:
   - brand: National Grid ESO
-requirements:
-  description:
-    de: "Nur für Großbritannien verfügbar."
-    en: "Only available for the United Kingdom."
 group: co2
+countries: ["GB"]
 params:
   - name: region
     type: string

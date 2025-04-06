@@ -6,7 +6,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/discovergy"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -74,7 +73,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}))
 	}
 
-	dataG := provider.Cached(func() (discovergy.Reading, error) {
+	dataG := util.Cached(func() (discovergy.Reading, error) {
 		var res discovergy.Reading
 		uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergy.API, meterID)
 		err := client.GetJSON(uri, &res)

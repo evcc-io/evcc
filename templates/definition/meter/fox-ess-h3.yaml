@@ -19,6 +19,7 @@ params:
   - name: maxsoc
     type: int
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -71,6 +72,7 @@ render: |
         address: 31005 # PV2
         type: holding
         decode: int16
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

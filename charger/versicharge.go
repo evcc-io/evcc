@@ -19,6 +19,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -55,11 +56,11 @@ type Versicharge struct {
 }
 
 func init() {
-	registry.Add("versicharge", NewVersichargeFromConfig)
+	registry.AddCtx("versicharge", NewVersichargeFromConfig)
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
-func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewVersichargeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 2,
 	}
@@ -68,12 +69,12 @@ func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewVersicharge(cc.URI, cc.ID)
+	return NewVersicharge(ctx, cc.URI, cc.ID)
 }
 
 // NewVersicharge creates a Versicharge charger
-func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewVersicharge(ctx context.Context, uri string, id uint8) (*Versicharge, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +149,10 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	}
 
 	var sum float64
-	for i := 0; i < 3; i++ {
-		sum += float64(binary.BigEndian.Uint16(b[2*i:]))
+	for i := range 3 {
+		if u := binary.BigEndian.Uint16(b[2*i:]); u != 0xFFFF {
+			sum += float64(u)
+		}
 	}
 
 	return sum, nil

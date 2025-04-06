@@ -3,15 +3,17 @@ package config
 import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
 var bus = evbus.New()
 
 var instance struct {
-	meters   *handler[api.Meter]
-	chargers *handler[api.Charger]
-	vehicles *handler[api.Vehicle]
-	circuits *handler[api.Circuit]
+	meters     *handler[api.Meter]
+	chargers   *handler[api.Charger]
+	vehicles   *handler[api.Vehicle]
+	circuits   *handler[api.Circuit]
+	loadpoints *handler[loadpoint.API]
 }
 
 func init() {
@@ -23,6 +25,7 @@ func Reset() {
 	instance.chargers = &handler[api.Charger]{topic: "charger"}
 	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
+	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
 }
 
 type Handler[T any] interface {
@@ -47,6 +50,10 @@ func Vehicles() Handler[api.Vehicle] {
 
 func Circuits() Handler[api.Circuit] {
 	return instance.circuits
+}
+
+func Loadpoints() Handler[loadpoint.API] {
+	return instance.loadpoints
 }
 
 // Instances returns the instances of the given devices

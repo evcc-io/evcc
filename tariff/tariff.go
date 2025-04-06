@@ -10,7 +10,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 )
@@ -20,6 +20,7 @@ type Tariff struct {
 	log    *util.Logger
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
+	typ    api.TariffType
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -31,11 +32,14 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
-		Price    *provider.Config
-		Forecast *provider.Config
+		Price    *plugin.Config
+		Forecast *plugin.Config
+		Type     api.TariffType `mapstructure:"tariff"`
+		Interval time.Duration
 		Cache    time.Duration
 	}{
-		Cache: 15 * time.Minute,
+		Interval: time.Hour,
+		Cache:    15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,48 +54,40 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	var (
-		err       error
-		priceG    func() (float64, error)
-		forecastG func() (string, error)
-	)
-
-	if cc.Price != nil {
-		priceG, err = provider.NewFloatGetterFromConfig(ctx, *cc.Price)
-		if err != nil {
-			return nil, fmt.Errorf("price: %w", err)
-		}
-
-		priceG = provider.Cached(priceG, cc.Cache)
+	priceG, err := cc.Price.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("price: %w", err)
+	}
+	if priceG != nil {
+		priceG = util.Cached(priceG, cc.Cache)
 	}
 
-	if cc.Forecast != nil {
-		forecastG, err = provider.NewStringGetterFromConfig(ctx, *cc.Forecast)
-		if err != nil {
-			return nil, fmt.Errorf("forecast: %w", err)
-		}
+	forecastG, err := cc.Forecast.StringGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("forecast: %w", err)
 	}
 
 	t := &Tariff{
 		log:    util.NewLogger("tariff"),
 		embed:  &cc.embed,
+		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	if forecastG != nil {
 		done := make(chan error)
-		go t.run(forecastG, done)
+		go t.run(forecastG, done, cc.Interval)
 		err = <-done
 	}
 
 	return t, err
 }
 
-func (t *Tariff) run(forecastG func() (string, error), done chan error) {
+func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := time.Tick(interval); ; <-tick {
 		var data api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
@@ -102,7 +98,11 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 				return backoff.Permanent(err)
 			}
 			for i, r := range data {
-				data[i].Price = t.totalPrice(r.Price, r.Start)
+				data[i] = api.Rate{
+					Value: t.totalPrice(r.Value, r.Start),
+					Start: r.Start.Local(),
+					End:   r.End.Local(),
+				}
 			}
 			return nil
 		}, bo()); err != nil {
@@ -112,7 +112,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 			continue
 		}
 
-		mergeRates(t.data, data)
+		// only prune rates older than current period
+		periodStart := now.With(time.Now()).BeginningOfHour()
+		if t.typ == api.TariffTypeSolar {
+			periodStart = beginningOfDay()
+		}
+		mergeRatesAfter(t.data, data, periodStart)
+
 		once.Do(func() { close(done) })
 	}
 }
@@ -139,7 +145,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price, slot),
+			Value: t.totalPrice(price, slot),
 		}
 	}
 
@@ -157,8 +163,12 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
-	if t.priceG != nil {
+	switch {
+	case t.typ != 0:
+		return t.typ
+	case t.priceG != nil:
 		return api.TariffTypePriceDynamic
+	default:
+		return api.TariffTypePriceForecast
 	}
-	return api.TariffTypePriceForecast
 }

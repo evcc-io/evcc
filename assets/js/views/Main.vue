@@ -1,9 +1,13 @@
 <template>
-	<Site :notifications="notifications" v-bind="state"></Site>
+	<Site
+		:notifications="notifications"
+		v-bind="state"
+		:selected-loadpoint-index="selectedLoadpointIndex"
+	/>
 </template>
 
 <script>
-import Site from "../components/Site.vue";
+import Site from "../components/Site/Site.vue";
 import store from "../store";
 
 export default {
@@ -11,8 +15,9 @@ export default {
 	components: { Site },
 	props: {
 		notifications: Array,
+		selectedLoadpointIndex: Number,
 	},
-	data: function () {
+	data() {
 		return store;
 	},
 };

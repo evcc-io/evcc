@@ -199,19 +199,12 @@
           "enum": [
             "string",
             "bool",
-            "number",
             "float",
             "int",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]
-        },
-        "validvalues": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         },
         "choice": {
           "type": "array",
@@ -293,9 +286,9 @@
           "enum": [
             "string",
             "bool",
-            "number",
+            "int",
             "float",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]

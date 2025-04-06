@@ -1,5 +1,10 @@
 package salia
 
+import (
+	"encoding/json"
+	"strconv"
+)
+
 const (
 	HeartBeat        = "salia/heartbeat"
 	ChargeMode       = "salia/chargemode"
@@ -87,4 +92,40 @@ type Port struct {
 	EvPresent        int     `json:"ev_present,string"`
 	Charging         int     `json:",string"`
 	GridCurrentLimit float64 `json:"grid_current_limit,string"`
+	Session          struct {
+		AuthorizationStatus string `json:"authorization_status"`
+		AuthorizationMethod string `json:"authorization_method"`
+	} `json:"session"`
+	RFID struct {
+		Type                 string               `json:"type"`
+		Available            string               `json:"available"`
+		Authorizereq         string               `json:"authorizereq"`
+		AuthorizationRequest AuthorizationRequest `json:"authorization_request"`
+	} `json:"rfid"`
+}
+
+type AuthorizationRequest struct {
+	Protocol string
+	Key      string
+}
+
+func (a *AuthorizationRequest) UnmarshalJSON(data []byte) error {
+	s, err := strconv.Unquote(string(data))
+	if err != nil {
+		return nil
+	}
+
+	var arr []string
+	if err := json.Unmarshal([]byte(s), &arr); err != nil {
+		return nil
+	}
+
+	if len(arr) == 2 {
+		*a = AuthorizationRequest{
+			Protocol: arr[0],
+			Key:      arr[1],
+		}
+	}
+
+	return nil
 }

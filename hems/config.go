@@ -23,7 +23,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 	case "sma", "shm", "semp":
 		return semp.New(other, site, httpd)
 	case "eebus":
-		return eebus.New(other, site)
+		return eebus.New(ctx, other, site)
 	case "relay":
 		return relay.New(ctx, other, site)
 	default:

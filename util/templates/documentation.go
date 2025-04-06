@@ -28,14 +28,14 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		}
 
 		switch p.Type {
-		case TypeStringList:
+		case TypeList:
 			for _, e := range v.([]string) {
-				t.Params[index].Values = append(p.Values, yamlQuote(e))
+				t.Params[index].Values = append(p.Values, p.yamlQuote(e))
 			}
 		default:
 			switch v := v.(type) {
 			case string:
-				t.Params[index].Value = yamlQuote(v)
+				t.Params[index].Value = p.yamlQuote(v)
 			case int:
 				t.Params[index].Value = strconv.Itoa(v)
 			}
@@ -95,6 +95,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"ProductDescription":     product.Description.String(lang),
 		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           t.Capabilities,
+		"Countries":              t.Countries,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
 		"Params":                 filteredParams,

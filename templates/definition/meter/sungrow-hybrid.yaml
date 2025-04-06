@@ -20,12 +20,16 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+    usages: ["battery"]
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       type: input
       address: 13009 # Export power
@@ -90,6 +94,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 5016 # Total DC power
       type: input
@@ -106,33 +111,41 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: calc
-    mul:
-    - source: calc
-      abs:
+    source: go # handling old and new firmware
+    script: |
+      res := float64(bp)
+      if (brs&0x2 > 0 || bc < 0) && bp >= 0 {
+        res = float64(-bp)
+      }
+      res
+    in:
+    - name: brs
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 13000 # Battery running state
+          decode: uint16
+    - name: bc
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 13020 # Battery current
+          decode: int16
+    - name: bp
+      type: int
+      config:
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
           type: input
           address: 13021 # Battery power
           decode: int16
-    - source: calc
-      add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 2 # Charging
-        scale: -1
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 13000 # Battery running state
-          decode: bool16
-          bitmask: 4 # Discharging
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -161,7 +174,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode selection
               type: writesingle
@@ -171,9 +183,22 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        # Reset max battery discharge power
+        - source: const
+          {{- if .maxchargepower }}
+          value: {{ div .maxchargepower 10 }}
+          {{- else }}
+          value: 1060 # 10.6kW, max allowed value for register
+          {{- end }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
     - case: 2 # hold
@@ -181,11 +206,10 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 2 # Forced mode (charge/discharge/stop)
+          value: 0 # Self-consumption mode (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode selection
               type: writesingle
@@ -195,9 +219,18 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        # Set max battery discharge power, effectively stops discharging
+        - source: const
+          value: 1 # 0.01kW, min allowed value for register
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
     - case: 3 # charge
@@ -209,7 +242,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode
               type: writesingle
@@ -219,11 +251,21 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
+        {{- if .maxchargepower }}
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge power
+              type: writesingle
+              decode: uint16
+        {{- else }}
         - source: go
           script: power
           in:
@@ -232,7 +274,6 @@ render: |
             config:
               source: modbus
               {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
               register:
                 address: 5627 # BDC rated power
                 type: input
@@ -244,10 +285,10 @@ render: |
             config:
               source: modbus
               {{- include "modbus" . | indent 12 }}
-              timeout: {{ .timeout }}
               register:
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
+        {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

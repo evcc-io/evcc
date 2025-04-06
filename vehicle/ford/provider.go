@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/ford/autonomic"
 )
 
@@ -16,7 +16,7 @@ type Provider struct {
 
 func NewProvider(api *autonomic.API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (autonomic.MetricsResponse, error) {
+		statusG: util.Cached(func() (autonomic.MetricsResponse, error) {
 			return api.Status(vin)
 		}, cache),
 		refreshG: func() error {

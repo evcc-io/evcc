@@ -103,6 +103,11 @@ func (v *API) repeatRequest(path string, event_id string) {
 		count++
 	}
 
+	// Make sure that we don't exit here with status running (probably after 20 tries).
+	// This would not allow us to ever do a query again.
+	if v.request.Status == StatRunning {
+		v.request.Status = StatInvalid
+	}
 	v.Logger.DEBUG.Printf("Exiting repeated query. Count: %d\n", count)
 }
 

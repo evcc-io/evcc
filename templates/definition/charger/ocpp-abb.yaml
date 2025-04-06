@@ -2,7 +2,7 @@ template: ocpp-abb
 products:
   - brand: ABB
     description:
-      generic: TerraAC
+      generic: Terra AC (OCPP)
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

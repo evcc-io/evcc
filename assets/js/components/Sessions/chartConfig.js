@@ -40,11 +40,14 @@ export const commonOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
+    datalabels: { display: false },
     tooltip: {
       backgroundColor: "#000000cc",
       boxPadding: 5,
       usePointStyle: false,
       borderWidth: 0.00001,
+      mode: "index",
+      intersect: false,
     },
   },
 };

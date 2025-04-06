@@ -4,11 +4,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
 var acceptable = []string{
+	api.ErrMissingCredentials.Error(),
+	api.ErrMissingToken.Error(),
+	"missing client id",
 	"invalid plugin source: ...",
 	"missing mqtt broker configuration",
 	"received status code 404 (INVALID PARAMS)", // Nissan
@@ -20,12 +24,9 @@ var acceptable = []string{
 	"network is unreachable",
 	"error connecting: Network Error",
 	"unexpected status: 401",
-	"missing credentials",    // Tesla
-	"missing credentials id", // Tronity
-	"missing access and/or refresh token, use `evcc token` to create", // Tesla
-	"login failed: code not found",                                    // Polestar
-	"empty instance type- check for missing usage",                    // Merces
-	"invalid vehicle type: tesla",                                     // Tesla
+	"discussions/17501",                            // Tesla
+	"login failed: code not found",                 // Polestar
+	"empty instance type- check for missing usage", // Merces
 }
 
 func TestTemplates(t *testing.T) {

@@ -26,7 +26,7 @@ func addInstance(subject string, identity *Identity) {
 func apiError(err error) error {
 	if err != nil && (errors.Is(err, inet.ErrVehicleNotAwake) ||
 		strings.HasSuffix(err.Error(), "408 Request Timeout") || strings.HasSuffix(err.Error(), "408 (Request Timeout)") ||
-		strings.HasSuffix(err.Error(), "vehicle is offline or asleep")) {
+		strings.Contains(err.Error(), "vehicle is offline or asleep")) {
 		err = api.ErrAsleep
 	}
 	return err

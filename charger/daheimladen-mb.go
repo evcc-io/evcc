@@ -22,12 +22,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"golang.org/x/text/encoding/unicode"
 )
 
 // DaheimLadenMB charger implementation
@@ -46,7 +45,6 @@ const (
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
-	dlRegCardId          = 54  // Chr[16] RO UTF16
 	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	dlRegChargingTime    = 78  // Uint32 RO 1s
 	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
@@ -76,7 +74,7 @@ func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{
 
 // NewDaheimLadenMB creates DaheimLadenMB charger
 func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -141,19 +139,6 @@ func (wb *DaheimLadenMB) getCurrent() (uint16, error) {
 	}
 
 	return binary.BigEndian.Uint16(b), nil
-}
-
-// utf16BytesToString converts UTF-16 encoded bytes, in big or little endian byte order,
-// to a UTF-8 encoded string.
-func utf16BytesToString(b []byte, o binary.ByteOrder) string {
-	utf := make([]uint16, (len(b)+(2-1))/2)
-	for i := 0; i+(2-1) < len(b); i += 2 {
-		utf[i/2] = o.Uint16(b[i:])
-	}
-	if len(b)/2 < len(utf) {
-		utf[len(utf)-1] = utf8.RuneError
-	}
-	return string(utf16.Decode(utf))
 }
 
 // Status implements the api.Charger interface
@@ -272,21 +257,15 @@ func (wb *DaheimLadenMB) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
-var _ api.Identifier = (*DaheimLadenMB)(nil)
-
-// Identify implements the api.Identifier interface
-func (wb *DaheimLadenMB) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
-	if err != nil {
-		return "", err
-	}
-	return utf16BytesToString(b, binary.BigEndian), nil
-}
-
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenMB) Diagnose() {
+	utf16BytesToString := func(b []byte) string {
+		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+		return s
+	}
+
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
@@ -300,10 +279,7 @@ func (wb *DaheimLadenMB) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
-		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b, binary.BigEndian))
+		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))

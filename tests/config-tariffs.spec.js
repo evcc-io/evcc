@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
@@ -24,19 +24,17 @@ test.describe("tariffs", async () => {
     await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
-    await expect(page.getByTestId("tariffs")).toBeVisible();
-    await expect(page.getByTestId("tariffs")).toContainText(
-      ["Tariffs", "Currency", "EUR"].join("")
-    );
+    await expect(page.getByTestId("tariffs")).not.toBeVisible();
+    await expect(page.getByTestId("add-tariffs")).toBeVisible();
   });
 
   test("tariffs via ui", async ({ page }) => {
     await start(CONFIG_GRID_ONLY);
     await goToConfig(page);
 
-    await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("add-tariffs").click();
     const modal = await page.getByTestId("tariffs-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await page.waitForLoadState("networkidle");
 
     // default content
@@ -70,7 +68,7 @@ test.describe("tariffs", async () => {
     await expect(modal.getByTestId("error")).not.toBeVisible();
 
     // modal closes
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
 
     // restart button appears
     const restartButton = await page

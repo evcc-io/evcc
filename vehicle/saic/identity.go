@@ -114,8 +114,8 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+		"grant_type":    {"refresh_token"},
 	}
 
 	token, err := v.retrieveToken(data)

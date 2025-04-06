@@ -32,6 +32,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxacpower
   - name: forceaccharging
     default: false
     advanced: true
@@ -110,6 +111,7 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

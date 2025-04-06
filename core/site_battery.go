@@ -66,7 +66,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 
 // applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	for _, meter := range site.batteryMeters {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: battery")
+		}
+
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
@@ -78,7 +83,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 }
 
 func (site *Site) plannerRates() (api.Rates, error) {
-	tariff := site.GetTariff(PlannerTariff)
+	tariff := site.GetTariff(api.TariffUsagePlanner)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}
@@ -88,7 +93,7 @@ func (site *Site) plannerRates() (api.Rates, error) {
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
@@ -100,7 +105,7 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 			return true
 		}
 	}	
-	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {

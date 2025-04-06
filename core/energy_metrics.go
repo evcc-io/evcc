@@ -11,13 +11,6 @@ type EnergyMetrics struct {
 	currentCo2        *float64 // Current co2 emissions
 }
 
-func NewEnergyMetrics() *EnergyMetrics {
-	em := &EnergyMetrics{}
-	em.Reset()
-
-	return em
-}
-
 // SetEnvironment updates site information like solar share, price, co2 for use in later calculations
 func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, effCo2 *float64) {
 	em.currentGreenShare = greenShare

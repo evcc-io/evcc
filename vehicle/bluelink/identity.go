@@ -182,10 +182,10 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 	if err == nil {
 		data := url.Values{
-			"username":     []string{user},
-			"password":     []string{password},
-			"credentialId": []string{""},
-			"rememberMe":   []string{"on"},
+			"username":     {user},
+			"password":     {password},
+			"credentialId": {""},
+			"rememberMe":   {"on"},
 		}
 
 		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)

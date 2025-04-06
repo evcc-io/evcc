@@ -102,9 +102,8 @@ export default {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
-						mode: "index",
+						axis: "r",
 						position: "center",
-						intersect: false,
 						callbacks: {
 							label: (tooltipItem) => this.formatValue(tooltipItem.raw || 0),
 							labelColor: tooltipLabelColor(false),

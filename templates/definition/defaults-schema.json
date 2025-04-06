@@ -50,6 +50,7 @@
       },
       "required": [
         "generic",
+        "heating",
         "sockets",
         "switchsockets",
         "scooter"

@@ -16,3 +16,13 @@ render: |
     source: http
     uri: https://app.evnotify.de/soc?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
     jq: .soc_display
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
+      jq: .normal_charge_port
+    charging:
+      source: http
+      uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
+      jq: .charging

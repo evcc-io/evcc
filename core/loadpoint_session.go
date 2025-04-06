@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/samber/lo"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
@@ -34,6 +35,8 @@ func (lp *Loadpoint) createSession() {
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		lp.session.Vehicle = vehicle.Title()
+	} else if lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.session.Vehicle = lp.GetTitle()
 	}
 
 	if c, ok := lp.charger.(api.Identifier); ok {
@@ -62,17 +65,16 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
-		lp.sessionEnergy.Update(chargedEnergy)
+	if chargedEnergy := lp.GetChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		lp.energyMetrics.Update(chargedEnergy)
 	}
 
-	solarPerc := lp.sessionEnergy.SolarPercentage()
-	s.SolarPercentage = &solarPerc
-	s.Price = lp.sessionEnergy.Price()
-	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
-	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
-	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
-	s.ChargeDuration = &lp.chargeDuration
+	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
+	s.Price = lp.energyMetrics.Price()
+	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
+	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
+	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
+	s.ChargeDuration = lo.ToPtr(lp.chargeDuration.Abs())
 
 	lp.db.Persist(s)
 }

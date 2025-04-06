@@ -19,6 +19,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -49,11 +50,11 @@ const (
 )
 
 func init() {
-	registry.Add("mennekes-hcc3", NewMennekesHcc3FromConfig)
+	registry.AddCtx("mennekes-hcc3", NewMennekesHcc3FromConfig)
 }
 
 // NewMennekesHcc3FromConfig creates a Mennekes mennekesHcc3 charger from generic config
-func NewMennekesHcc3FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewMennekesHcc3FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -62,14 +63,14 @@ func NewMennekesHcc3FromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewMennekesHcc3(cc.URI, cc.ID)
+	return NewMennekesHcc3(ctx, cc.URI, cc.ID)
 }
 
 // NewMennekesHcc3 creates Mennekes HCC3 charger
-func NewMennekesHcc3(uri string, slaveID uint8) (api.Charger, error) {
+func NewMennekesHcc3(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,17 +97,15 @@ func (wb *MennekesHcc3) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch binary.BigEndian.Uint16(b) {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 1, 2:
 		return api.StatusA, nil
 	case 3, 4:
 		return api.StatusB, nil
 	case 5, 6:
 		return api.StatusC, nil
-	case 7, 8:
-		return api.StatusD, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[1])
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
 }
 

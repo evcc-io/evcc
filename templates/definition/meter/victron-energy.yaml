@@ -17,6 +17,7 @@ params:
     default: 502
   - name: capacity
     advanced: true
+  - name: maxacpower
   - name: meterid # grid meter VRM instance
     type: int
     usages: ["grid"]
@@ -138,6 +139,7 @@ render: |
         address: 850 # DC pv power
         type: input
         decode: uint16
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

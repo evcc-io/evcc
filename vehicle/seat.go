@@ -58,7 +58,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs, err := service.TokenRefreshServiceTokenSource(log, cupra.TRSParams, cupra.AuthParams, cc.User, cc.Password)
+	trs, err := vwidentity.Oauth2Login(log, cupra.OAuth2Config, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +103,7 @@ func mbbUserId(log *util.Logger, ts oauth2.TokenSource, uid string) (string, err
 		Base:   client.Transport,
 	}
 
-	data := url.Values{
-		"scopeId": []string{"commonMandatoryFields"},
-	}
+	data := url.Values{"scopeId": {"commonMandatoryFields"}}
 
 	var mandatoryConsentInfo struct {
 		MbbUserId string `json:"mbbUserId"`

@@ -1,6 +1,7 @@
 import { POWER_UNIT } from "../mixins/formatter";
 
 export function optionStep(maxEnergy) {
+  if (maxEnergy < 0.1) return 0.005;
   if (maxEnergy < 1) return 0.05;
   if (maxEnergy < 2) return 0.1;
   if (maxEnergy < 5) return 0.25;

@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -32,12 +33,12 @@ type TcpSettings struct {
 
 // Settings contains the ModBus settings
 type Settings struct {
-	ID                  uint8
-	SubDevice           int
-	URI, Device, Comset string
-	Baudrate            int
-	UDP                 bool
-	RTU                 *bool // indicates RTU over TCP if true
+	ID                  uint8  `json:",omitempty" yaml:",omitempty"`
+	SubDevice           int    `json:",omitempty" yaml:",omitempty"`
+	URI, Device, Comset string `json:",omitempty" yaml:",omitempty"`
+	Baudrate            int    `json:",omitempty" yaml:",omitempty"`
+	UDP                 bool   `json:",omitempty" yaml:",omitempty"`
+	RTU                 *bool  `json:",omitempty" yaml:",omitempty"`
 }
 
 // Protocol identifies the wire format from the RTU setting
@@ -62,6 +63,7 @@ func (s *Settings) String() string {
 type meterConnection struct {
 	meters.Connection
 	proto Protocol
+	refs  int // count of references; first connection has ref count 0
 	*logger
 }
 
@@ -70,7 +72,24 @@ var (
 	mu          sync.Mutex
 )
 
-func registeredConnection(key string, proto Protocol, newConn meters.Connection) (*meterConnection, error) {
+func unregisterConnection(key string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	conn, ok := connections[key]
+	if !ok {
+		panic("unregisterConnection: connection not found " + key)
+	}
+
+	if conn.refs > 0 {
+		conn.refs--
+		return
+	}
+
+	delete(connections, key)
+}
+
+func registeredConnection(ctx context.Context, key string, proto Protocol, newConn meters.Connection) (*meterConnection, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -79,8 +98,15 @@ func registeredConnection(key string, proto Protocol, newConn meters.Connection)
 			return nil, fmt.Errorf("connection already registered with different protocol: %s", key)
 		}
 
+		conn.refs++
+
 		return conn, nil
 	}
+
+	go func() {
+		<-ctx.Done()
+		unregisterConnection(key)
+	}()
 
 	connection := &meterConnection{
 		Connection: newConn,
@@ -95,8 +121,8 @@ func registeredConnection(key string, proto Protocol, newConn meters.Connection)
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
-	conn, err := physicalConnection(proto, Settings{
+func NewConnection(ctx context.Context, uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
+	conn, err := physicalConnection(ctx, proto, Settings{
 		URI:      uri,
 		Device:   device,
 		Comset:   comset,
@@ -115,7 +141,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 	return res, nil
 }
 
-func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) {
+func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*meterConnection, error) {
 	if (cfg.Device != "") == (cfg.URI != "") {
 		return nil, errors.New("invalid modbus configuration: must have either uri or device")
 	}
@@ -135,9 +161,9 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 
 		switch proto {
 		case Ascii:
-			return registeredConnection(cfg.Device, proto, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
+			return registeredConnection(ctx, cfg.Device, proto, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
 		default:
-			return registeredConnection(cfg.Device, proto, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
+			return registeredConnection(ctx, cfg.Device, proto, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
@@ -145,12 +171,30 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 
 	switch proto {
 	case Udp:
-		return registeredConnection(uri, proto, meters.NewRTUOverUDP(uri))
+		return registeredConnection(ctx, uri, proto, meters.NewRTUOverUDP(uri))
+
 	case Rtu:
-		return registeredConnection(uri, proto, meters.NewRTUOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewRTUOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	case Ascii:
-		return registeredConnection(uri, proto, meters.NewASCIIOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewASCIIOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	default:
-		return registeredConnection(uri, proto, meters.NewTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
 	}
 }
