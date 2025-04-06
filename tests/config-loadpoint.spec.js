@@ -348,6 +348,7 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("textbox", { name: "Charger" }).click();
     const chargerModal = page.getByTestId("charger-modal");
+    await expectModalVisible(chargerModal);
     await chargerModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(chargerModal);
 
