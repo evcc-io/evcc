@@ -32,11 +32,11 @@ func (lp *Loadpoint) EffectivePriority() int {
 }
 
 type plan struct {
-	Id      int
-	Start   time.Time // last possible start time
-	End     time.Time // user-selected finish time
-	PreCond time.Duration
-	Soc     int
+	Id           int
+	Start        time.Time // last possible start time
+	End          time.Time // user-selected finish time
+	Precondition time.Duration
+	Soc          int
 }
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
@@ -71,7 +71,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 
 		// static plan
 		if planTime, precondition, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, PreCond: precondition, Soc: soc, End: planTime})
+			plans = append(plans, plan{Id: 1, Precondition: precondition, Soc: soc, End: planTime})
 		}
 
 		// repeating plans
@@ -91,7 +91,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 
 		// calculate earliest required plan start
 		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
-			return plan.End, plan.PreCond, plan.Soc, plan.Id
+			return plan.End, plan.Precondition, plan.Soc, plan.Id
 		}
 	}
 	return time.Time{}, 0, 0, 0
