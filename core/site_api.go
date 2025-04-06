@@ -380,6 +380,6 @@ func (site *Site) GetBatteryModeExternalModified() int {
 	}
 
 	// If the timer is zero, set the external battery mode to unknown and return
-	site.setBatteryModeExternal(api.BatteryUnknown) 
+	site.setBatteryModeExternal(api.BatteryUnknown)
 	return -1
 }
