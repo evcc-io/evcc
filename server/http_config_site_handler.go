@@ -15,11 +15,15 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Grid    string   `json:"grid"`
 			PV      []string `json:"pv"`
 			Battery []string `json:"battery"`
+			Aux     []string `json:"aux"`
+			Ext     []string `json:"ext"`
 		}{
 			Title:   site.GetTitle(),
 			Grid:    site.GetGridMeterRef(),
 			PV:      site.GetPVMeterRefs(),
 			Battery: site.GetBatteryMeterRefs(),
+			Aux:     site.GetAuxMeterRefs(),
+			Ext:     site.GetExtMeterRefs(),
 		}
 
 		jsonResult(w, res)
@@ -44,6 +48,8 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			Grid    *string
 			PV      *[]string
 			Battery *[]string
+			Aux     *[]string
+			Ext     *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -79,6 +85,24 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetBatteryMeterRefs(*payload.Battery)
+			setConfigDirty()
+		}
+
+		if payload.Aux != nil {
+			if !validateRefs(w, *payload.Aux) {
+				return
+			}
+
+			site.SetAuxMeterRefs(*payload.Aux)
+			setConfigDirty()
+		}
+
+		if payload.Ext != nil {
+			if !validateRefs(w, *payload.Ext) {
+				return
+			}
+
+			site.SetExtMeterRefs(*payload.Ext)
 			setConfigDirty()
 		}
 

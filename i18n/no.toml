@@ -319,13 +319,6 @@ tempLimit = "Temp.-grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
 
-[main.vehicleSoc]
-charging = "lader"
-connected = "tilkoblet"
-disconnected = "frakoblet"
-ready = "klar"
-vehicleLimit = "Kjøretøygrense: {soc}"
-
 [main.vehicleStatus]
 charging = "Lading..."
 cheapEnergyCharging = "Billig energi tilgjengelig. Lader …"

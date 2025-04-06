@@ -695,13 +695,6 @@ tempLimit = "Limite temp."
 unknown = "Veicolo ospite"
 vehicleSoc = "Carica"
 
-[main.vehicleSoc]
-charging = "In carica"
-connected = "collegato"
-disconnected = "disconnesso"
-ready = "pronto"
-vehicleLimit = "Limite veicolo: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Aspettando l'autorizzazione."
 batteryBoost = "Boost da batteria attivo"
@@ -726,7 +719,7 @@ targetChargeActive = "Piano di ricarica attivo. Fine prevista tra {duration}."
 targetChargePlanned = "Il piano di ricarica inizia tra {duration}."
 targetChargeWaitForVehicle = "Piano di ricarica pronto. In attesa del veicolo..."
 unknown = ""
-vehicleLimit = "Limite del veicolo."
+vehicleLimit = "Limite del veicolo"
 vehicleLimitReached = "Limite del veicolo raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 welcome = "Piccola carica iniziale per confermare la connessione."

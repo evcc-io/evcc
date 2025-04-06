@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG = "config-empty.evcc.yaml";
 
@@ -21,11 +21,11 @@ test.describe("onboarding", async () => {
 
     // set admin password
     const admin = page.getByTestId("password-modal");
-    await expect(admin).toBeVisible();
+    await expectModalVisible(admin);
     await admin.getByLabel("New password").fill(PASSWORD);
     await admin.getByLabel("Repeat password").fill(PASSWORD);
     await admin.getByRole("button", { name: "Create Password" }).click();
-    await expect(admin).not.toBeVisible();
+    await expectModalHidden(admin);
 
     // onboarding
     await expect(page.locator("body")).toContainText("Hello aboard!");
@@ -33,10 +33,10 @@ test.describe("onboarding", async () => {
 
     // login
     const login = page.getByTestId("login-modal");
-    await expect(login).toBeVisible();
+    await expectModalVisible(login);
     await login.getByLabel("Password").fill(PASSWORD);
     await login.getByRole("button", { name: "Login" }).click();
-    await expect(login).not.toBeVisible();
+    await expectModalHidden(login);
 
     // config page
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
@@ -53,28 +53,30 @@ test.describe("onboarding", async () => {
     await chargerModal.getByLabel("Charge status").selectOption("C");
     await chargerModal.getByLabel("Power").fill("3000");
     await chargerModal.getByRole("button", { name: "Save" }).click();
-    await expect(chargerModal).not.toBeVisible();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
-    await expect(lpModal).not.toBeVisible();
+    await expectModalHidden(lpModal);
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const gridModal = page.getByTestId("meter-modal");
-    await expect(gridModal).toBeVisible();
+    await expectModalVisible(gridModal);
     await gridModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await gridModal.getByLabel("Power").fill("-2000");
     await gridModal.getByRole("button", { name: "Save" }).click();
-    await expect(gridModal).not.toBeVisible();
+    await expectModalHidden(gridModal);
 
     // create pv meter
     await page.getByRole("button", { name: "Add solar or battery" }).click();
     const pvModal = page.getByTestId("meter-modal");
-    await expect(gridModal).toBeVisible();
+    await expectModalVisible(pvModal);
     await pvModal.getByRole("button", { name: "Add solar meter" }).click();
+    await pvModal.getByLabel("Title").fill("PV South");
     await pvModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await pvModal.getByLabel("Power").fill("5000");
     await pvModal.getByRole("button", { name: "Save" }).click();
-    await expect(pvModal).not.toBeVisible();
+    await expectModalHidden(pvModal);
 
     // restart
     const restartButton = await page

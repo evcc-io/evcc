@@ -11,38 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-/*
-This meter supports the LGESS HOME 8, LGESS HOME 10 and LGESS HOME 15 systems from LG with / without battery.
-
-
-** Usages **
-The following usages are supported:
-- grid    ... for reading the power imported or exported to the grid
-- pv      ... for reading the power produced by the pv
-- battery ... for reading the power imported or exported to the battery
-
-** Example configuration **
-meters:
-- name: GridMeter
-  type: template
-  template: lg-ess-home-15
-  usage: grid
-  uri: https://192.168.1.23
-  password: "DE200....."
-- name: PvMeter
-  type: template
-  template: lg-ess-home-15
-  usage: pv
-- name: BatteryMeter
-  type: template
-  template: lg-ess-home-15
-  usage: battery
-
-** Limitations **
-It is not allowed to provide different URIs or passwords for different lgess meters since always the
-same hardware instance is accessed with the different usages.
-*/
-
 // LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string     // grid, pv, battery
@@ -54,7 +22,7 @@ func init() {
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
 
-//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 func NewLgEss8FromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
@@ -70,8 +38,13 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		capacity               `mapstructure:",squash"`
 		URI, Usage             string
 		Registration, Password string
+		battery                `mapstructure:",squash"`
 		Cache                  time.Duration
 	}{
+		battery: battery{
+			MinSoc: 20,
+			MaxSoc: 95,
+		},
 		Cache: time.Second,
 	}
 
@@ -83,11 +56,11 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator(), essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator(), cc.battery, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, battery battery, essType lgpcs.Model) (api.Meter, error) {
 	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
@@ -106,11 +79,15 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
+	var setBatteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7433 {
+			setBatteryMode = m.batteryMode(battery)
+		}
 	}
 
-	return decorateLgEss(m, totalEnergy, batterySoc, capacity), nil
+	return decorateLgEss(m, totalEnergy, batterySoc, setBatteryMode, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -155,4 +132,34 @@ func (m *LgEss) batterySoc() (float64, error) {
 	}
 
 	return data.GetBatUserSoc(), nil
+}
+
+// batteryMode implements the api.BatteryController interface
+func (m *LgEss) batteryMode(battery battery) func(api.BatteryMode) error {
+	return func(mode api.BatteryMode) error {
+		switch mode {
+		case api.BatteryNormal:
+			// firmeware bug: battery not discharging after hold mode
+			// if battery is sleeping, wake up with charging for 10sec
+			m.conn.BatteryMode("on", 100, true)
+			time.Sleep(10 * time.Second)
+			// now turn Battery discharge on
+			return m.conn.BatteryMode("on", int(battery.MinSoc), true)
+		case api.BatteryHold:
+			soc, err := m.batterySoc()
+			if err != nil {
+				return err
+			}
+			// soc needs to be the next higher int value to stop discharging immediately
+			// example: batterySoc=50.7 -> set 51
+			if int(soc)+1 < 100 {
+				soc++
+			}
+			return m.conn.BatteryMode("on", int(soc), true)
+		case api.BatteryCharge:
+			return m.conn.BatteryMode("on", int(battery.MaxSoc), true)
+		default:
+			return api.ErrNotAvailable
+		}
+	}
 }

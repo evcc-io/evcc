@@ -42,6 +42,7 @@ params:
     default: EUR
     type: choice
     choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
+    required: true
   - preset: tariff-base
 render: |
   type: custom
@@ -61,7 +62,7 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }} / 1000
+                "value": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
       - name: tomorrow
@@ -75,7 +76,7 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }} / 1000
+                "value": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
   {{ include "tariff-base" . }}

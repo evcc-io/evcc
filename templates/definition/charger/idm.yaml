@@ -9,16 +9,14 @@ params:
     choice: ["tcpip"]
   - name: tempsource
     type: choice
-    choice: ["", "warmwater_top", "warmwater_bottom", "buffer"]
+    choice: ["warmwater_top", "warmwater_bottom", "buffer"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: heatpump
-  phases: {{ .phases }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}

@@ -664,13 +664,6 @@ tempLimit = "Θερμ. όριο"
 unknown = "Όχημα επισκέπτη"
 vehicleSoc = "Φορτισμένο"
 
-[main.vehicleSoc]
-charging = "φορτίζει"
-connected = "συνδεδεμένο"
-disconnected = "αποσυνδεδεμένο"
-ready = "έτοιμο"
-vehicleLimit = "Όριο οχήματος: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Αναμονή για εξουσιοδότηση."
 batteryBoost = "Ενεργή ενίσχυση από μπαταρία."
@@ -695,7 +688,7 @@ targetChargeActive = "Ενεργό πρόγραμμα φόρτισης. Εκτί
 targetChargePlanned = "Το πρόγραμμα θα ξεκινήσει τη φόρτιση σε {duration}."
 targetChargeWaitForVehicle = "Είναι σε ετοιμότητα το πρόγραμμα φόρτισης. Αναμονή για το όχημα..."
 unknown = "άγνωστο"
-vehicleLimit = "Όριο οχήματος."
+vehicleLimit = "Όριο οχήματος"
 vehicleLimitReached = "Έχει φτάσει στο όριο του οχήματος."
 waitForVehicle = "Έτοιμο. Αναμονή για όχημα..."
 welcome = "Σύντομη αρχική φόρτιση για επιβεβαίωση της σύνδεσης."

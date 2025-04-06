@@ -5,10 +5,14 @@ export interface TimeseriesEntry {
 	ts: string;
 }
 
-export interface PriceSlot {
+export interface ForecastSlot {
 	start: string;
 	end: string;
-	price: number;
+	value: number;
+}
+
+export function isForecastSlot(obj?: TimeseriesEntry | ForecastSlot): obj is ForecastSlot {
+	return (obj as ForecastSlot).start !== undefined;
 }
 
 export interface EnergyByDay {
@@ -25,8 +29,8 @@ export interface SolarDetails {
 }
 
 export interface Forecast {
-	grid?: PriceSlot[];
-	co2?: PriceSlot[];
+	grid?: ForecastSlot[];
+	co2?: ForecastSlot[];
 	solar?: SolarDetails;
 }
 
@@ -73,15 +77,22 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
 	return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 
-export function adjustedSolar(solar: SolarDetails | undefined): SolarDetails | undefined {
+export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
 	if (!solar?.scale) return solar;
 
 	const { scale } = solar;
 	const result = deepCopy(solar);
-	result.today.energy *= scale;
-	result.tomorrow.energy *= scale;
-	result.dayAfterTomorrow.energy *= scale;
-	result.timeseries?.forEach((entry) => (entry.val *= scale));
+
+	if (result.today) result.today.energy *= scale;
+	if (result.tomorrow) result.tomorrow.energy *= scale;
+	if (result.dayAfterTomorrow) result.dayAfterTomorrow.energy *= scale;
+	if (result.timeseries) {
+		result.timeseries.forEach((entry) => {
+			entry.val *= scale;
+		});
+	}
+
 	result.scale = 1 / scale; // invert to allow back-adjustment
+
 	return result;
 }

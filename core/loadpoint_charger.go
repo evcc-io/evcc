@@ -11,19 +11,12 @@ import (
 // chargerHasFeature checks availability of charger feature
 func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
 	c, ok := lp.charger.(api.FeatureDescriber)
-	if ok {
-		ok = slices.Contains(c.Features(), f)
-	}
-	return ok
+	return ok && slices.Contains(c.Features(), f)
 }
 
 // publishChargerFeature publishes availability of charger features
 func (lp *Loadpoint) publishChargerFeature(f api.Feature) {
-	c, ok := lp.charger.(api.FeatureDescriber)
-	if ok {
-		ok = slices.Contains(c.Features(), f)
-	}
-	lp.publish(keys.ChargerFeature+f.String(), ok)
+	lp.publish(keys.ChargerFeature+f.String(), lp.chargerHasFeature(f))
 }
 
 // chargerSoc returns charger soc if available
