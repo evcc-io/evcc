@@ -35,10 +35,29 @@ export interface Tariff {
 	lastUpdate: Date;
 }
 
+// data from api with string-based timestamps
+export interface RateRaw {
+	start: string;
+	end: string;
+	value: number;
+}
+
 export interface Rate {
 	start: Date;
 	end: Date;
-	price: number;
+	value: number;
+}
+
+export interface Slot {
+	day: string;
+	value?: number;
+	startHour: number;
+	endHour: number;
+	charging: boolean;
+	toLate?: boolean | null;
+	warning?: boolean | null;
+	isTarget?: boolean | null;
+	selectable?: boolean | null;
 }
 
 export interface SelectOption<T> {
