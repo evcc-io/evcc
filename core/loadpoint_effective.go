@@ -86,6 +86,8 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 				continue
 			}
 
+			// TODO add precondition
+
 			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: time})
 		}
 
