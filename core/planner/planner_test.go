@@ -264,6 +264,57 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
+func TestPrecondition(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 1, 2, 3}, clock.Now(), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Price: 3,
+		},
+	}, plan, "expected last slot")
+
+	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(1 * time.Hour),
+			Price: 0,
+		},
+		{
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Price: 3,
+		},
+	}, plan, "expected two slots")
+
+	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(30 * time.Minute),
+			End:   clock.Now().Add(time.Hour),
+			Price: 0,
+		},
+		{
+			Start: clock.Now().Add(210 * time.Minute),
+			End:   clock.Now().Add(4 * time.Hour),
+			Price: 3,
+		},
+	}, plan, "expected short early and split late slot")
+}
+
 func TestContinuousPlanNoTariff(t *testing.T) {
 	clock := clock.NewMock()
 
