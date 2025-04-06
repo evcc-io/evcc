@@ -48,6 +48,7 @@ switchsockets = "Byt kontakt"
 template = "Tillverkare"
 titleAdd = "Lägg till laddare"
 titleEdit = "Ändra laddare"
+heatingdevices = "Värmeenheter"
 
 [config.circuits]
 description = "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki."
@@ -142,6 +143,7 @@ showAdvancedSettings = "Visa avancerade inställningar"
 telemetry = "Telemetri"
 title = "Titel"
 validateSave = "Validera & spara"
+templateLoading = "Laddar..."
 
 [config.grid]
 title = "Elmätare"
@@ -392,6 +394,19 @@ template = "Tillverkare"
 titleAdd = "Lägg till fordon"
 titleEdit = "Ändra fordon"
 validateSave = "Bekräfta & spara"
+defaultMode = "Standardläge"
+chargingSettings = "Laddinställningar"
+defaultModeHelp = "Laddläge när fordonet ansluts."
+identifiers = "RFID-identifiering"
+maximumCurrent = "Maximal ström"
+maximumCurrentHelp = "Måste vara högre än minimi-ström."
+maximumPhases = "Maximalt antal faser"
+minimumCurrent = "Minimi ström"
+minimumCurrentHelp = "Ställ enbart under 6A om du är medveten om konsekvenserna."
+priority = "Prioritet"
+priorityHelp = "Högre prioritet betyder att detta fordon får förtur till solöverskott."
+identifiersHelp = "Lista på RFID-strängar för att identifiera fordonet. Ett inlägg per rad. Aktuell identifierare hittas på respektive laddare på översiktssidan."
+maximumPhasesHelp = "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång."
 
 [footer]
 
@@ -594,6 +609,7 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
+pv = "Solanläggning"
 
 [main.heatingStatus]
 charging = "Värmer..."
@@ -700,6 +716,7 @@ tomorrow = "i morgon"
 update = "Uppdatera"
 vehicleCapacityDocs = "Lär dig hur du konfigurerar."
 vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
+goalReached = "Målet är uppnått"
 
 [main.targetChargePlan]
 chargeDuration = "Laddtid"
@@ -952,3 +969,9 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.devices]
+solarSystem = "Solanläggning"
+auxMeter = "Smart förbrukare"
+batteryStorage = "Batterilager"
