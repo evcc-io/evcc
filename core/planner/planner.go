@@ -179,7 +179,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	slices.SortStableFunc(rates, sortByCost)
 
 	// for late start ensure that the last slot is the cheapest
-	rates, adjusted := splitPreCond(rates, precondition, targetTime)
+	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
 
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
@@ -205,7 +205,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// correct plan slots to show original, non-adjusted prices
 	for i, r := range plan {
 		if rr, err := adjusted.At(r.Start); err == nil {
-			plan[i].Price = rr.Price
+			plan[i].Value = rr.Value
 		}
 	}
 
@@ -215,7 +215,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	return plan
 }
 
-func splitPreCond(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
 	var res, adjusted api.Rates
 
 	for _, r := range slices.Clone(rates) {
@@ -232,22 +232,22 @@ func splitPreCond(rates api.Rates, precondition time.Duration, targetTime time.T
 			res = append(res, api.Rate{
 				Start: r.Start,
 				End:   preCondStart,
-				Price: r.Price,
+				Value: r.Value,
 			})
 
 			// adjust the second part of the slot
 			r = api.Rate{
 				Start: preCondStart,
 				End:   r.End,
-				Price: r.Price,
+				Value: r.Value,
 			}
 		}
 
-		// set the price to 0 to include slot in the plan
+		// set the value to 0 to include slot in the plan
 		res = append(res, api.Rate{
 			Start: r.Start,
 			End:   r.End,
-			Price: 0,
+			Value: 0,
 		})
 
 		// keep a copy of the adjusted slot

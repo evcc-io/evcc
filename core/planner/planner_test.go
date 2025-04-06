@@ -282,7 +282,7 @@ func TestPrecondition(t *testing.T) {
 		{
 			Start: clock.Now().Add(3 * time.Hour),
 			End:   clock.Now().Add(4 * time.Hour),
-			Price: 3,
+			Value: 3,
 		},
 	}, plan, "expected last slot")
 
@@ -291,12 +291,12 @@ func TestPrecondition(t *testing.T) {
 		{
 			Start: clock.Now(),
 			End:   clock.Now().Add(1 * time.Hour),
-			Price: 0,
+			Value: 0,
 		},
 		{
 			Start: clock.Now().Add(3 * time.Hour),
 			End:   clock.Now().Add(4 * time.Hour),
-			Price: 3,
+			Value: 3,
 		},
 	}, plan, "expected two slots")
 
@@ -305,12 +305,12 @@ func TestPrecondition(t *testing.T) {
 		{
 			Start: clock.Now().Add(30 * time.Minute),
 			End:   clock.Now().Add(time.Hour),
-			Price: 0,
+			Value: 0,
 		},
 		{
 			Start: clock.Now().Add(210 * time.Minute),
 			End:   clock.Now().Add(4 * time.Hour),
-			Price: 3,
+			Value: 3,
 		},
 	}, plan, "expected short early and split late slot")
 }
