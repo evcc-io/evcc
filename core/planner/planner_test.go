@@ -209,12 +209,12 @@ func TestFlatTariffLongSlots(t *testing.T) {
 
 	// expect 00:00-01:00 UTC
 	plan := p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour))
-	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, plan.At(clock.Now()))
-	assert.Nil(t, plan.At(clock.Now().Add(time.Hour)))
+	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
+	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
 	// expect 00:00-01:00 UTC
 	plan = p.Plan(time.Hour, 0, clock.Now().Add(time.Hour))
-	assert.Equal(t, &api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, plan.At(clock.Now()))
+	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
 
 func TestTargetAfterKnownPrices(t *testing.T) {
