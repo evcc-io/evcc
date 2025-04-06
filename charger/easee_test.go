@@ -22,13 +22,17 @@ func createPayload(id easee.ObservationID, timestamp time.Time, value string) []
 	return out
 }
 
-// Refactored TestProductUpdate_IgnoreOutdatedProductUpdate function to reduce repetition in payload generation
-func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
-	e := Easee{
+func newEasee() Easee {
+	return Easee{
 		obsTime:   make(map[easee.ObservationID]time.Time),
 		log:       util.NewLogger("easee"),
 		startDone: func() {},
 	}
+}
+
+// Refactored TestProductUpdate_IgnoreOutdatedProductUpdate function to reduce repetition in payload generation
+func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
+	e := newEasee()
 
 	// Test default init
 	assert.Equal(t, time.Time{}, e.obsTime[easee.CHARGER_OP_MODE])
