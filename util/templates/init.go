@@ -31,7 +31,7 @@ var (
 func init() {
 	ConfigDefaults.Load()
 
-	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
+	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
 		load(class)

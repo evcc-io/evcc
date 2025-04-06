@@ -836,10 +836,10 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.chargeCurrent, chargeCurrent)
+		currentLimit := lp.circuit.ValidateCurrent(lp.chargeCurrent, chargeCurrent, lp.charging())
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases))
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases), lp.charging())
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		chargeCurrent = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
@@ -1356,7 +1356,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	effectiveCurrent := lp.effectiveCurrent()
 	if scaledTo == 3 {
 		// if we did scale, adjust the effective current to the new phase count
-		effectiveCurrent /= 3.0
+		effectiveCurrent /= float64(lp.maxActivePhases())
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account

@@ -9,11 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/fatih/structs"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 )
@@ -87,7 +84,7 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc fu
 
 		oldStruc := newStruc()
 		if err := settings.Json(key, &oldStruc); err == nil {
-			if err := mergeSettings(oldStruc, struc); err != nil {
+			if err := mergeMaskedAny(oldStruc, struc); err != nil {
 				jsonError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -111,25 +108,4 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 
 		jsonResult(w, true)
 	}
-}
-
-func mergeSettings(old any, new any) error {
-	redactable, ok := old.(api.Redactor)
-	if !ok {
-		return nil
-	}
-
-	newMap := structs.Map(new)
-	oldMap := structs.Map(old)
-	redactedMap := structs.Map(redactable.Redacted())
-
-	for k, v := range newMap {
-		if rv, ok := redactedMap[k]; ok && v == rv {
-			if ov, ok := oldMap[k]; ok {
-				newMap[k] = ov
-			}
-		}
-	}
-
-	return mapstructure.Decode(newMap, &new)
 }
