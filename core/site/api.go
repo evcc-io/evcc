@@ -78,5 +78,5 @@ type API interface {
 	SetBatteryModeExternal(api.BatteryMode)
 	// GetBatteryModeExternalModified returns the seconds since last modification
 	GetBatteryModeExternalModified() int
-	
+
 }
