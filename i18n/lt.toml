@@ -143,6 +143,7 @@ showAdvancedSettings = "Rodyti išplėstinius nustatymus"
 telemetry = "Telemetrija"
 title = "Pavadinimas"
 validateSave = "Patikrinti ir išsaugoti"
+templateLoading = "Įkrauname..."
 
 [config.grid]
 title = "Tinklo skaitiklis"
@@ -394,6 +395,8 @@ template = "Gamintojas"
 titleAdd = "Pridėti Automobilį"
 titleEdit = "Koreguoti Automobilį"
 validateSave = "Patikrinti ir išsaugoti"
+priority = "Pirmumas"
+chargingSettings = "Įkrovimo nustatymai"
 
 [footer]
 
@@ -976,3 +979,9 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.devices]
+batteryStorage = "Energijos kaupiklis"
+solarSystem = "Saulės elektrinė"
+auxMeter = "Išmanusis vartotojas"
