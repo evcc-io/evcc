@@ -54,44 +54,45 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	if err := client.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
 		return nil, err
 	}
-	c := &Connection{
+
+	conn := &Connection{
 		Helper:  client,
 		channel: channel,
 		gen:     resp.Gen,
 		model:   strings.Split(resp.Type+resp.Model, "-")[0],
 		profile: resp.Profile,
 	}
-	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
 	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return c, fmt.Errorf("missing user/password (%s)", resp.Mac)
+		return conn, fmt.Errorf("missing user/password (%s)", resp.Mac)
 	}
 	// Set default profile to "monophase" if not provided
 	if resp.Profile == "" {
 		resp.Profile = "monophase"
 	}
-	switch c.gen {
+
+	switch conn.gen {
 	case 0, 1:
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		c.uri = util.DefaultScheme(uri, "http")
+		conn.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
 			log.Redact(transport.BasicAuthHeader(user, password))
-			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
+			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 		}
-
 	case 2, 3:
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+		conn.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
 		if user != "" {
-			c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+			conn.Client.Transport = digest.NewTransport(user, password, conn.Client.Transport)
 		}
-
 	default:
-		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
+		return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, conn.gen)
 	}
 
-	return c, nil
+	return conn, nil
 }
 
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
