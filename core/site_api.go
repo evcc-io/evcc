@@ -342,7 +342,7 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 	site.RLock()
 	defer site.RUnlock()
-	
+
 	return site.batteryModeExternal
 }
 
@@ -356,7 +356,7 @@ func (site *Site) setBatteryModeExternal(mode api.BatteryMode) {
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
-	
+
 	// Apply the new mode immediately if it is different from the current mode
 	if site.batteryModeExternal != mode {
 		site.setBatteryModeExternal(mode)
@@ -364,7 +364,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	} else {
 		site.log.DEBUG.Printf("triggered reset of timer for battery mode external")
 	}
-	
+
 	// reset timers
 	batteryModeExternalTimer = time.Now()
 }
@@ -373,7 +373,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 func (site *Site) GetBatteryModeExternalModified() int {
 	site.RLock()
 	defer site.RUnlock()
-	
+
 	if !(batteryModeExternalTimer.IsZero()) {
 		// Calculate the seconds since the last external battery mode control message
 		return int(time.Since(batteryModeExternalTimer).Seconds())
