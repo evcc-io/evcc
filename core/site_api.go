@@ -378,7 +378,7 @@ func (site *Site) GetBatteryModeExternalModified() int {
 		// Calculate the seconds since the last external battery mode control message
 		return int(time.Since(batteryModeExternalTimer).Seconds())
 	}
-	
+
 	// If the timer is zero, set the external battery mode to unknown and return
 	site.setBatteryModeExternal(api.BatteryUnknown) 
 	return -1
