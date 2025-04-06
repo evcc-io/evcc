@@ -336,7 +336,7 @@ func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
 
 // getPlanEnergy returns plan target energy
 func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
-	return lp.planTime, lp.planPreCond, lp.planEnergy
+	return lp.planTime, lp.planPrecondition, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
@@ -374,7 +374,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duratio
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || lp.planPreCond != precondition || !lp.planTime.Equal(finishAt) {
+	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
 		lp.setPlanEnergy(finishAt, precondition, energy)
 		lp.requestUpdate()
 	}
