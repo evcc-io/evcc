@@ -28,12 +28,8 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 		startDone: func() {},
 	}
 
-	// Test default init
-	id := easee.CHARGER_OP_MODE
-	assert.Equal(t, time.Time{}, e.obsTime[id])
-
 	// Helper function to create a payload
-	createPayload := func(timestamp time.Time, value string) []byte {
+	createPayload := func(id easee.ObservationID, timestamp time.Time, value string) []byte {
 		payload := easee.Observation{
 			ID:        id,
 			Timestamp: timestamp,
@@ -44,17 +40,20 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 		return out
 	}
 
+	// Test default init
+	assert.Equal(t, time.Time{}, e.obsTime[easee.CHARGER_OP_MODE])
+
 	// Test case 1: Normal update
 	now := time.Now().Truncate(0) //truncate removes sub nanos
-	jsonPayload := createPayload(now, "2")
+	jsonPayload := createPayload(easee.CHARGER_OP_MODE, now, "2")
 	e.ProductUpdate(json.RawMessage(jsonPayload))
-	assert.Equal(t, now, e.obsTime[id])
+	assert.Equal(t, now, e.obsTime[easee.CHARGER_OP_MODE])
 	assert.Equal(t, 2, e.opMode)
 
 	// Test case 2: Outdated update
-	outdatedPayload := createPayload(now.Add(-5*time.Second), "1")
+	outdatedPayload := createPayload(easee.CHARGER_OP_MODE, now.Add(-5*time.Second), "1")
 	e.ProductUpdate(json.RawMessage(outdatedPayload))
 
-	assert.Equal(t, now, e.obsTime[id])
+	assert.Equal(t, now, e.obsTime[easee.CHARGER_OP_MODE])
 	assert.Equal(t, 2, e.opMode)
 }
