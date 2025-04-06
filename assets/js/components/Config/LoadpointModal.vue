@@ -726,7 +726,6 @@ export default {
 			this.updatePhases();
 		},
 		async loadConfiguration() {
-			console.log("loadpoint modal loadConfiguration");
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data.result);
