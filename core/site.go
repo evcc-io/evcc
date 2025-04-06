@@ -111,7 +111,7 @@ type Site struct {
 	batterySoc      float64             // Battery soc
 	batteryCapacity float64             // Battery capacity
 	batteryMode     api.BatteryMode     // Battery mode (runtime only, not persisted)
-    batteryModeExternal api.BatteryMode // Battery mode (external, runtime only, not persisted)
+	batteryModeExternal api.BatteryMode // Battery mode (external, runtime only, not persisted)
 }
 
 // MetersConfig contains the site's meter configuration
