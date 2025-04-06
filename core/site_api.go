@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
-	"time"
 )
 
 var _ site.API = (*Site)(nil)
