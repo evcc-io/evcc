@@ -59,7 +59,7 @@ import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
 import {
-	type PriceSlot,
+	type ForecastSlot,
 	type TimeseriesEntry,
 	type Forecast,
 	ForecastType,
@@ -85,7 +85,7 @@ export default defineComponent({
 	data(): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
-		selectedSlot: PriceSlot | TimeseriesEntry | null;
+		selectedSlot: ForecastSlot | TimeseriesEntry | null;
 	} {
 		return {
 			isModalVisible: false,
@@ -134,7 +134,7 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		updateSlot(slot: PriceSlot | TimeseriesEntry | null) {
+		updateSlot(slot: ForecastSlot | TimeseriesEntry | null) {
 			this.selectedSlot = slot;
 		},
 		updateSelectedType() {

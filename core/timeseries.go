@@ -89,7 +89,7 @@ func timestampSeries(rr api.Rates) timeseries {
 	return lo.Map(rr, func(r api.Rate, _ int) tsval {
 		return tsval{
 			Timestamp: r.Start,
-			Value:     r.Price,
+			Value:     r.Value,
 		}
 	})
 }
