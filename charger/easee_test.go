@@ -101,3 +101,45 @@ func TestProductUpdate_SessionStartEnergy(t *testing.T) {
 	assert.Equal(t, float64(0), e.sessionEnergy)
 	assert.NotEqual(t, t_minus_5, e.obsTime[easee.SESSION_ENERGY])
 }
+
+func TestProductUpdate_SessionStartEnergyOnBootWithCharge(t *testing.T) {
+	e := newEasee()
+
+	t_now := time.Now()
+
+	/*
+		see https://github.com/evcc-io/evcc/issues/20384
+
+		replicate these updates on boot
+		ProductUpdate EXXXXXXX: (2025-04-05 09:53:55 +0000 UTC) CHARGER_OP_MODE 3
+		ProductUpdate EXXXXXXX: (2025-04-05 10:20:00 +0000 UTC) SESSION_ENERGY 14.23585319519043
+		ProductUpdate EXXXXXXX: (2025-04-05 10:00:00 +0000 UTC) LIFETIME_ENERGY 4537.070175000014
+	*/
+	t_opMode, _ := time.Parse(time.DateTime, "2025-04-05 09:53:55")
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, t_opMode, easee.Integer, "3"))
+
+	assert.Equal(t, t_opMode, e.obsTime[easee.CHARGER_OP_MODE])
+	assert.Equal(t, 3, e.opMode)
+
+	assert.Nil(t, e.sessionStartEnergy)
+
+	assert.Equal(t, float64(0), e.sessionEnergy)
+	assert.NotEqual(t, t_opMode, e.obsTime[easee.SESSION_ENERGY])
+
+	t_sessionEnergy, _ := time.Parse(time.DateTime, "2025-04-05 10:20:00")
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, t_sessionEnergy, easee.Double, "14.23585319519043"))
+
+	// opMode update before resets SessionEnergy, ensure Product Update got ignored
+	assert.LessOrEqual(t, t_now, e.obsTime[easee.SESSION_ENERGY])
+	assert.Equal(t, float64(0), e.sessionEnergy)
+
+	t_lifetimeEnergy, _ := time.Parse(time.DateTime, "2025-04-05 10:00:00")
+	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, t_lifetimeEnergy, easee.Double, "4537.070175000014"))
+
+	assert.Equal(t, t_lifetimeEnergy, e.obsTime[easee.LIFETIME_ENERGY])
+	assert.Equal(t, float64(4537.070175000014), e.totalEnergy)
+	assert.Equal(t, float64(4537.070175000014), *e.sessionStartEnergy)
+
+	energy, _ := e.ChargedEnergy()
+	assert.Equal(t, float64(0), energy)
+}
