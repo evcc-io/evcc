@@ -369,7 +369,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	batteryModeExternalTimer = time.Now()
 }
 
-// GetBatteryModeExternalModified returns the seconds since last modification 
+// GetBatteryModeExternalModified calculates the seconds since the last modification
 func (site *Site) GetBatteryModeExternalModified() int {
 	site.RLock()
 	defer site.RUnlock()
