@@ -22,20 +22,6 @@ type Connection struct {
 	profile string // Shelly device profile
 }
 
-// DeviceInfo is the common /shelly endpoint response
-// https://shelly-api-docs.shelly.cloud/gen1/#shelly
-// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Shelly#http-endpoint-shelly
-type DeviceInfo struct {
-	Mac       string `json:"mac"`
-	Gen       int    `json:"gen"`
-	Model     string `json:"model"`
-	Type      string `json:"type"`
-	Auth      bool   `json:"auth"`
-	AuthEn    bool   `json:"auth_en"`
-	NumMeters int    `json:"num_meters"`
-	Profile   string `json:"profile"`
-}
-
 // NewConnection creates a new Shelly device cection.
 func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
@@ -55,6 +41,10 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 		return nil, err
 	}
 
+	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
+		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
+	}
+
 	conn := &Connection{
 		Helper:  client,
 		channel: channel,
@@ -64,9 +54,7 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
-	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return conn, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
-	}
+
 	// Set default profile to "monophase" if not provided
 	if resp.Profile == "" {
 		resp.Profile = "monophase"
