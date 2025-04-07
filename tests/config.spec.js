@@ -50,6 +50,7 @@ test.describe("general", async () => {
 
     // change and save value
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
     await modal.getByLabel("Title").fill("Ahoy World");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
