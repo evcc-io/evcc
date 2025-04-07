@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
-import { enableExperimental, expectModalHidden } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
@@ -61,6 +61,7 @@ test.describe("grid meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
 

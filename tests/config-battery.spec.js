@@ -69,7 +69,9 @@ test.describe("battery meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(meterModal);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
   });
