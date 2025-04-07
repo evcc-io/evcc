@@ -31,9 +31,15 @@ func parseFloat(payload string) (float64, error) {
 
 // parseDuration parses a duration string as seconds
 func parseDuration(payload string) (time.Duration, error) {
+	if payload == "" {
+		return 0, nil
+	}
 	v, err := strconv.Atoi(payload)
 	if err != nil {
 		return 0, err
+	}
+	if v < 0 {
+		return 0, fmt.Errorf("invalid duration: %s", payload)
 	}
 	return time.Duration(v) * time.Second, err
 }
