@@ -3,10 +3,10 @@ package viessmann
 import (
 	"context"
 	"fmt"
-  "os"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -17,17 +17,16 @@ import (
 )
 
 const (
-	ApiURI = "https://api.viessmann.com/iot/v2"
-	OAuthURI = "https://iam.viessmann.com/idp/v3"
-  RedirectURI = "http://localhost:4200/"
-  // ^ the value of RedirectURI doesn't matter, but it must be the same between requests
+	OAuthURI    = "https://iam.viessmann.com/idp/v3"
+	RedirectURI = "http://localhost:4200/"
+	// ^ the value of RedirectURI doesn't matter, but it must be the same between requests
 )
 
 var (
-  User     = os.Getenv("VIESSMANN_USER")
-  Password = os.Getenv("VIESSMANN_PASS")
-  ClientId = os.Getenv("VIESSMANN_CLIENT_ID")
-  // TODO: ^ these should really come from the evcc config...
+	User     = os.Getenv("VIESSMANN_USER")
+	Password = os.Getenv("VIESSMANN_PASS")
+	ClientId = os.Getenv("VIESSMANN_CLIENT_ID")
+	// TODO: ^ these should really come from the evcc config...
 	OAuth2Config = &oauth2.Config{
 		ClientID: ClientId,
 		Endpoint: oauth2.Endpoint{
@@ -36,7 +35,7 @@ var (
 			AuthStyle: oauth2.AuthStyleInHeader,
 		},
 		RedirectURL: RedirectURI,
-		Scopes: []string{"IoT User", "offline_access"},
+		Scopes:      []string{"IoT User", "offline_access"},
 	}
 )
 
@@ -46,24 +45,22 @@ type Identity struct {
 }
 
 func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
-	v := &Identity{
-		Helper: request.NewHelper(log),
-		user:       user,
-		password:   password,
+	refresher := &Identity{
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
-  httpClient := v.Helper
-  httpClient.Transport = transport.BasicAuth(user, password, httpClient.Transport)
-	token, err := v.login()
+	token, err := refresher.login()
 
-	return oauth.RefreshTokenSource(token, v), err
+	return oauth.RefreshTokenSource(token, refresher), err
 }
 
 func (v *Identity) login() (*oauth2.Token, error) {
-	cv := oauth2.GenerateVerifier()
+	code_verifier := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv))
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(code_verifier))
 
 	v.Client.Jar, _ = cookiejar.New(nil)
 	v.Client.CheckRedirect = request.DontFollow
@@ -72,89 +69,36 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		v.Client.CheckRedirect = nil
 	}()
 
+	// we need to set basicauth for this and only this request - there's probably an easier way to do this rather than the Transport...
+	httpClient := v.Helper
+	httpClient.Transport = transport.BasicAuth(v.user, v.password, httpClient.Transport)
 	resp, err := v.Client.Get(uri)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-  fmt.Println(fmt.Sprintf("XXX0 %d", resp.StatusCode))
-	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("unexpected status %d - did you provide correct username/password?", resp.StatusCode)
-	}
-
-	// username
-	u, err := url.Parse(resp.Header.Get("Location"))
-	if err != nil {
-		return nil, err
-	}
-
-  fmt.Println(fmt.Sprintf("XXX2 u=%s", u))
-
-	query := u.Query()
-	query.Set("username", v.user)
-	query.Set("js-available", "true")
-	query.Set("webauthn-available", "false")
-	query.Set("is-brave", "false")
-	query.Set("webauthn-platform-available", "false")
-	query.Set("action", "default")
-
-	resp, err = v.PostForm(OAuthURI+u.String(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	httpClient.Transport = nil // see comment above
 
 	if resp.StatusCode != http.StatusFound {
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
-	// password
-	u, err = url.Parse(resp.Header.Get("Location"))
+	redirect_location, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
 		return nil, err
 	}
-
-	query = u.Query()
-	query.Set("username", v.user)
-	query.Set("password", v.password)
-	query.Set("action", "default")
-
-	resp, err = v.PostForm(OAuthURI+u.String(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
-	}
-
-	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-
-	// resume
-	u, err = url.Parse(resp.Header.Get("Location"))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err = v.Get(OAuthURI + u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	code, err := param()
-	if err != nil {
-		return nil, err
-	}
+	code := redirect_location.Query().Get("code")
 
 	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
 	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
 	defer cancel()
 
-	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	return OAuth2Config.Exchange(
+		ctx,
+		code,
+		oauth2.VerifierOption(code_verifier),
+		oauth2.SetAuthURLParam("client_id", ClientId),
+	)
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
