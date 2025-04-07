@@ -58,8 +58,9 @@ test.describe("pv meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
-
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
     // restart and check again
@@ -96,7 +97,9 @@ test.describe("pv meter", async () => {
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
     // restart and check again
