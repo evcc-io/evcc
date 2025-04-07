@@ -22,7 +22,7 @@ type Connection struct {
 	profile string // Shelly device profile
 }
 
-// NewConnection creates a new Shelly device cection.
+// NewConnection creates a new Shelly device connection.
 func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
