@@ -82,15 +82,14 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 				continue
 			}
 
-			time, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
 			if err != nil {
 				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
 				continue
 			}
 
-			// TODO add precondition
-
-			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: time})
+			precondition := time.Duration(rp.Precondition) * time.Second
+			plans = append(plans, plan{Id: index + 2, Precondition: precondition, Soc: rp.Soc, End: planTime})
 		}
 
 		// calculate earliest required plan start
