@@ -15,7 +15,7 @@ function loadpoint(opts = {}) {
     charging: true,
     vehicleSoc: 66,
     limitSoc: 90,
-    chargeCurrent: 7,
+    offeredCurrent: 7,
     minCurrent: 6,
     maxCurrent: 16,
     activePhases: 2,

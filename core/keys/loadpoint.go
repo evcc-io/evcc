@@ -54,7 +54,6 @@ const (
 	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
 
 	// measurements
-	ChargeCurrent     = "chargeCurrent"     // charge current
 	ChargePower       = "chargePower"       // charge power
 	ChargeCurrents    = "chargeCurrents"    // charge currents
 	ChargeVoltages    = "chargeVoltages"    // charge voltages

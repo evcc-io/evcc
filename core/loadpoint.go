@@ -553,7 +553,6 @@ func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
 	if !lp.enabled {
 		current = 0
 	}
-	lp.publish(keys.ChargeCurrent, current) // deprecated
 	lp.publish(keys.OfferedCurrent, current)
 }
 
