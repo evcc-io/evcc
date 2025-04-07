@@ -76,6 +76,6 @@ type API interface {
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
 	SetBatteryModeExternal(api.BatteryMode)
-	// GetBatteryModeExternalModified returns the seconds since last modification
-	GetBatteryModeExternalModified() int
+	// ValidBatteryModeExternal calculates state for the external battery mode control
+	ValidBatteryModeExternal() bool
 }
