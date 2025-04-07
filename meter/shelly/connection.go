@@ -15,12 +15,11 @@ import (
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri        string
-	channel    int
-	gen        int    // Shelly api generation
-	devicetype string // Shelly device type
-	app        string // Shelly device app code
-	profile    string // Shelly device profile
+	uri     string
+	channel int
+	gen     int    // Shelly api generation
+	model   string // Shelly device type
+	profile string // Shelly device profile
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -42,39 +41,41 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 		return nil, err
 	}
 
+	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
+		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
+	}
+
 	conn := &Connection{
-		Helper:     client,
-		channel:    channel,
-		gen:        resp.Gen,
-		devicetype: resp.Type,
-		app:        resp.App,
-		profile:    resp.Profile,
+		Helper:  client,
+		uri:     util.DefaultScheme(uri, "http"),
+		channel: channel,
+		gen:     resp.Gen,
+		model:   strings.Split(resp.Type+resp.Model, "-")[0],
+		profile: resp.Profile,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
-		return conn, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
+	// Set default profile to "monophase" if not provided
+	if resp.Profile == "" {
+		resp.Profile = "monophase"
 	}
 
 	switch conn.gen {
 	case 0, 1:
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		conn.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
 			log.Redact(transport.BasicAuthHeader(user, password))
 			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 		}
-
 	case 2, 3:
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		conn.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+		conn.uri += "/rpc"
 		if user != "" {
 			conn.Client.Transport = digest.NewTransport(user, password, conn.Client.Transport)
 		}
-
 	default:
 		return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, conn.gen)
 	}
