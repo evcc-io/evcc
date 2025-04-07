@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: nwisbeta/validate-yaml-schema@v2.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: nwisbeta/validate-yaml-schema@c3734e647d2a3beb98b9132330067e900fdbd1a2 # v2.0.0
         with:
           yamlSchemasJson: |
             {
