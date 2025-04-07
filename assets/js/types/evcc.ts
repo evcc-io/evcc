@@ -13,8 +13,8 @@ export interface State {
 	forecast?: any;
 	currency?: CURRENCY;
 	fatal?: {
-		error: any
-	}
+		error: any;
+	};
 }
 
 export enum CURRENCY {
