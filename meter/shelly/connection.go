@@ -22,20 +22,6 @@ type Connection struct {
 	profile string // Shelly device profile
 }
 
-// DeviceInfo is the common /shelly endpoint response
-// https://shelly-api-docs.shelly.cloud/gen1/#shelly
-// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Shelly#http-endpoint-shelly
-type DeviceInfo struct {
-	Mac       string `json:"mac"`
-	Gen       int    `json:"gen"`
-	Model     string `json:"model"`
-	Type      string `json:"type"`
-	Auth      bool   `json:"auth"`
-	AuthEn    bool   `json:"auth_en"`
-	NumMeters int    `json:"num_meters"`
-	Profile   string `json:"profile"`
-}
-
 // NewConnection creates a new Shelly device cection.
 func NewConnection(uri, user, password string, channel int) (*Connection, error) {
 	if uri == "" {
