@@ -47,6 +47,7 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 
 	conn := &Connection{
 		Helper:  client,
+		uri:     util.DefaultScheme(uri, "http"),
 		channel: channel,
 		gen:     resp.Gen,
 		model:   strings.Split(resp.Type+resp.Model, "-")[0],
@@ -64,7 +65,6 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	case 0, 1:
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		conn.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
 			log.Redact(transport.BasicAuthHeader(user, password))
 			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
@@ -72,7 +72,7 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	case 2, 3:
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		conn.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+		conn.uri += "/rpc"
 		if user != "" {
 			conn.Client.Transport = digest.NewTransport(user, password, conn.Client.Transport)
 		}
