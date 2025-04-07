@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // Kathrein charger implementation
@@ -195,19 +194,19 @@ func init() {
 // NewKathreinromConfig creates a Kathrein charger from generic config
 func NewKathreinFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 248,
+		ID: 0x00,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewKathrein(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewKathrein(ctx, cc.URI, cc.ID)
 }
 
 // NewKathrein creates Kathrein charger
-func NewKathrein(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
+func NewKathrein(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +236,7 @@ func (wb *Kathrein) getPhaseValues(regs []uint16, divider float64) (float64, flo
 			return 0, 0, 0, err
 		}
 
-		res[i] = rs485.RTUUint16ToFloat64(b) / divider
+		res[i] = float64(binary.BigEndian.Uint32(b)) / divider
 	}
 
 	return res[0], res[1], res[2], nil
@@ -326,7 +325,7 @@ func (wb *Kathrein) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b), err
+	return float64(binary.BigEndian.Uint32(b)), err
 }
 
 var _ api.PhaseCurrents = (*Kathrein)(nil)
@@ -371,7 +370,7 @@ func (wb *Kathrein) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
@@ -383,7 +382,7 @@ func (wb *Kathrein) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
 var _ api.PhaseSwitcher = (*Kathrein)(nil)
