@@ -865,16 +865,16 @@ func (lp *Loadpoint) setLimit(current float64) error {
 			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
-				lp.log.DEBUG.Printf("max charge current: waking up vehicle")
+				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
 				if err := vv.WakeUp(); err != nil {
 					return fmt.Errorf("wake-up vehicle: %w", err)
 				}
 			}
 
-			return fmt.Errorf("max charge current %.3gA: %w", current, err)
+			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
 		}
 
-		lp.log.DEBUG.Printf("max charge current: %.3gA", current)
+		lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
 		lp.offeredCurrent = current
 		lp.bus.Publish(evChargeCurrent, current)
 	}
