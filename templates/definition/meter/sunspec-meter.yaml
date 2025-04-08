@@ -1,5 +1,8 @@
-template: fronius-smartmeter-inverter
+template: sunspec-meter
 products:
+  - description:
+      de: SunSpec Zähler
+      en: SunSpec Meter
   - brand: Fronius
     description:
       de: Smartmeter (über Wechselrichter)
@@ -7,17 +10,8 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv"]
-    allinone: true
-  - name: host
-  - name: port
-    default: 502
-  - name: id
-    default: 201
-    help:
-      en: "Meter adress of primary or secondary meters. On the web interface of the inverter, only the address of the first meter (e.g., 200 for GEN24 or 240 for Snapinverter) can be set. Additional meters receive an ascending number (e.g., 201 or 241)."
-      de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200 für GEN24 oder 240 für Snapinverter) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201 oder 241)."
-  - name: integer
-    deprecated: true
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   # sunspec model 201 or 203 (int+sf)/ 211 or 213 (float) meter
