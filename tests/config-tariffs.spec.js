@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
@@ -34,7 +34,7 @@ test.describe("tariffs", async () => {
 
     await page.getByTestId("add-tariffs").click();
     const modal = await page.getByTestId("tariffs-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await page.waitForLoadState("networkidle");
 
     // default content
@@ -68,7 +68,7 @@ test.describe("tariffs", async () => {
     await expect(modal.getByTestId("error")).not.toBeVisible();
 
     // modal closes
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
 
     // restart button appears
     const restartButton = await page

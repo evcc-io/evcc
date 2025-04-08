@@ -18,6 +18,9 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON ChargeControl
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You
   - brand: Webasto
     description:
       generic: Live
@@ -55,9 +58,13 @@ requirements:
     en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
   evcc: ["sponsorship"]
 params:
+  - name: modbus
+    choice: ["tcpip"]
   - name: host
   - name: port
     default: 502
+  - name: id
+    default: 255
 render: |
   type: bender
-  uri: {{ .host }}:{{ .port }}
+  {{- include "modbus" . }}

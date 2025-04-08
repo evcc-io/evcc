@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -24,7 +24,7 @@ test.describe("messaging", async () => {
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("messaging-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
 
     await modal.locator(".monaco-editor .view-line").nth(0).click();
     for (let i = 0; i < 4; i++) {
@@ -33,12 +33,12 @@ test.describe("messaging", async () => {
     }
     await page.keyboard.type("# hello world");
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
 
     page.reload();
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await expect(modal).toContainText("# hello world");
   });
 });
