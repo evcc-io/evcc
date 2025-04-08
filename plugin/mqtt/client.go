@@ -26,25 +26,28 @@ func ClientID() string {
 
 // Config is the public configuration
 type Config struct {
-	Broker     string `json:"broker"`
-	User       string `json:"user"`
-	Password   string `json:"password"`
-	ClientID   string `json:"clientID"`
-	Insecure   bool   `json:"insecure"`
-	CaCert     string `json:"caCert"`
-	ClientCert string `json:"clientCert"`
-	ClientKey  string `json:"clientKey"`
+	Broker                string `json:"broker"`
+	User                  string `json:"user"`
+	Password              string `json:"password"`
+	ClientID              string `json:"clientID"`
+	Insecure              bool   `json:"insecure"`
+	CaCert                string `json:"caCert"`
+	ClientCert            string `json:"clientCert"`
+	ClientKey             string `json:"clientKey"`
+	ParallelInflightLimit uint32 `json:"parallelInflightLimit"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions
 type Client struct {
-	log      *util.Logger
-	mux      sync.Mutex
-	Client   paho.Client
-	broker   string
-	Qos      byte
-	inflight uint32
-	listener map[string][]func(string)
+	log                   *util.Logger
+	mux                   sync.Mutex
+	Client                paho.Client
+	broker                string
+	Qos                   byte
+	inflight              uint32
+	listener              map[string][]func(string)
+	inflightChan          chan struct{}
+	parallelInflightLimit uint32
 }
 
 type Option func(*paho.ClientOptions)
@@ -52,7 +55,7 @@ type Option func(*paho.ClientOptions)
 const secure = "tls://"
 
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCert, clientCert, clientKey string, opts ...Option) (*Client, error) {
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCert, clientCert, clientKey string, parallelInflightLimit uint32, opts ...Option) (*Client, error) {
 	broker, isSecure := strings.CutPrefix(broker, secure)
 
 	// strip schema as it breaks net.SplitHostPort
@@ -61,10 +64,17 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		broker = secure + broker
 	}
 
+	// set default parallel limit
+	if parallelInflightLimit <= 0 {
+		parallelInflightLimit = 512
+	}
+
 	mc := &Client{
-		log:      log,
-		Qos:      qos,
-		listener: make(map[string][]func(string)),
+		log:                   log,
+		Qos:                   qos,
+		listener:              make(map[string][]func(string)),
+		inflightChan:          make(chan struct{}, parallelInflightLimit),
+		parallelInflightLimit: parallelInflightLimit,
 	}
 
 	options := paho.NewClientOptions()
@@ -148,12 +158,13 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 		}
 
 		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		m.Client.Publish(msg.Topic(), m.Qos, true, []byte{})
+		m.Publish(msg.Topic(), true, "")
+
 	}).WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(request.Timeout)
 
 	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
@@ -162,12 +173,15 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 	return nil
 }
 
-// Publish synchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
-	m.log.TRACE.Printf("send %s: '%v'", topic, payload)
-	token := m.Client.Publish(topic, m.Qos, retained, payload)
-	go m.WaitForToken("send", topic, token)
-	return nil
+// Publish asynchronously publishes payload using client qos
+func (m *Client) Publish(topic string, retained bool, payload interface{}) {
+	go func() {
+		m.inflightChan <- struct{}{} // reserve slot to publish
+		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
+		token := m.Client.Publish(topic, m.Qos, retained, payload)
+		m.waitForToken("send", topic, token)
+		<-m.inflightChan // free slot
+	}()
 }
 
 // Listen attaches listener to slice of listeners for given topic
@@ -193,9 +207,7 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 		if err := callback(payload); err != nil {
 			m.log.ERROR.Printf("set %s: %v", topic, err)
 		}
-		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear: %s: %v", topic, err)
-		}
+		m.Publish(topic, true, "")
 	})
 	return err
 }
@@ -219,9 +231,9 @@ func (m *Client) listen(topic string) paho.Token {
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(action, topic string, token paho.Token) {
-	if inflight := atomic.LoadUint32(&m.inflight); inflight > 64 {
-		return
+func (m *Client) waitForToken(action, topic string, token paho.Token) {
+	if inflight := atomic.LoadUint32(&m.inflight); inflight > m.parallelInflightLimit {
+		m.log.WARN.Printf("%s: %s: waitForToken to many tokens inflight (%d)", action, topic, inflight)
 	}
 
 	// track inflight token waits

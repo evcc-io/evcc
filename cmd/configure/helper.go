@@ -266,7 +266,7 @@ func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface
 
 		log := util.NewLogger("mqtt")
 
-		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1, false, caCert, clientCert, clientKey); err == nil {
+		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1, false, caCert, clientCert, clientKey, 512); err == nil {
 			return mqttConfig, nil
 		}
 

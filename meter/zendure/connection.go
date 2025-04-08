@@ -41,7 +41,7 @@ func NewConnection(region, account, serial string, timeout time.Duration) (*Conn
 	client, err := mqtt.NewClient(
 		log,
 		net.JoinHostPort(res.Data.MqttUrl, strconv.Itoa(res.Data.Port)), res.Data.AppKey, res.Data.Secret,
-		"", 0, false, "", "", "",
+		"", 0, false, "", "", "", 64,
 	)
 	if err != nil {
 		return nil, err
