@@ -1,6 +1,6 @@
 <template>
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
-		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+		<div class="d-block d-md-flex justify-content-between align-items-center mb-3">
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<VehicleIcon
@@ -11,14 +11,24 @@
 					<div class="text-truncate">
 						{{ loadpointTitle }}
 					</div>
+					<PrioButton
+						v-if="priority || (effectivePriority && effectivePriority !== priority)"
+						:prio="
+							effectivePriority && effectivePriority !== priority
+								? effectivePriority
+								: priority
+						"
+						:editable="effectivePriority === priority"
+						@update:prio="setPriority"
+					/>
 				</h3>
-				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
+				<LoadpointSettingsButton class="d-block d-md-none" @click="openSettingsModal" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
-					class="d-none d-sm-block ms-2"
+					class="d-none d-md-block ms-2"
 					@click="openSettingsModal"
 				/>
 			</div>
@@ -95,6 +105,7 @@ import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
 import api from "../../api.js";
 import Mode from "./Mode.vue";
+import PrioButton from "./PrioButton/PrioButton.vue";
 import Vehicle from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -118,6 +129,7 @@ export default {
 		LoadpointSettingsModal: SettingsModal,
 		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
+		PrioButton,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -148,6 +160,8 @@ export default {
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
 		chargerIcon: String,
+		priority: Number,
+		effectivePriority: Number,
 
 		// vehicle
 		connected: Boolean,
@@ -158,6 +172,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		vehicleIcon: String,
+		PrioButton: String,
 		vehicleLimitSoc: Number,
 		vehicles: Array,
 		planActive: Boolean,
@@ -337,6 +352,9 @@ export default {
 		},
 		setPhasesConfigured(phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
+		},
+		setPriority(prio) {
+			api.post(this.apiPath("priority") + "/" + prio);
 		},
 		changeVehicle(name) {
 			api.post(this.apiPath("vehicle") + `/${name}`);

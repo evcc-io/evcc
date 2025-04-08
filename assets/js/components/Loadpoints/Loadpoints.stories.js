@@ -19,6 +19,7 @@ function loadpoint(opts = {}) {
     minCurrent: 6,
     maxCurrent: 16,
     activePhases: 2,
+    priority: 0,
   };
   return { ...base, ...opts };
 }
