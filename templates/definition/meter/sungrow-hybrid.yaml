@@ -24,7 +24,7 @@ params:
     help:
       en: Maximum charge power for forced charging of the battery in watts. ('max' to automatically set the value of the maximum BDC rated power)
       de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. ("max", um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
-  - name: maxdischargingpower
+  - name: maxdischargepower
     usages: ["battery"]
     advanced: true
     default: 10600
@@ -197,7 +197,7 @@ render: |
               decode: uint16
         # Reset max battery discharge power
         - source: const
-          value: {{ div .maxdischargingpower 10 }}
+          value: {{ div .maxdischargepower 10 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
