@@ -172,7 +172,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		vehicleIcon: String,
-		PrioButton: String,
+		prioButton: String,
 		vehicleLimitSoc: Number,
 		vehicles: Array,
 		planActive: Boolean,
