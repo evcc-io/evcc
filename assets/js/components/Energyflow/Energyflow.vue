@@ -278,7 +278,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
@@ -288,8 +288,10 @@ import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
+import { defineComponent, type PropType } from "vue";
+import type { Forecast, LoadpointCompact } from "assets/js/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Energyflow",
 	components: {
 		Visualization,
@@ -304,9 +306,9 @@ export default {
 		pvConfigured: Boolean,
 		pv: { type: Array },
 		pvPower: { type: Number, default: 0 },
-		loadpointsCompact: { type: Array, default: () => [] },
+		loadpointsCompact: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array },
+		battery: { type: Array as PropType<Battery[]> },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -325,7 +327,7 @@ export default {
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
-		forecast: { type: Object, default: () => ({}) },
+		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
@@ -568,7 +570,7 @@ export default {
 			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .details {

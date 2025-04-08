@@ -9,8 +9,16 @@ declare global {
 export interface State {
 	offline: boolean;
 	loadpoints: [];
-	forecast?: any;
+	forecast?: Forecast;
 	currency?: CURRENCY;
+}
+export interface LoadpointCompact {
+	icon: string;
+	title: string;
+	charging: boolean;
+	soc: number;
+	power: number;
+	chargerFeatureHeating: boolean
 }
 
 export enum CURRENCY {
@@ -58,6 +66,39 @@ export interface Slot {
 	warning?: boolean | null;
 	isTarget?: boolean | null;
 	selectable?: boolean | null;
+}
+
+export interface TimeseriesEntry {
+	val: number;
+	ts: string;
+}
+
+export interface ForecastSlot {
+	start: string;
+	end: string;
+	value: number;
+}
+export function isForecastSlot(obj?: TimeseriesEntry | ForecastSlot): obj is ForecastSlot {
+	return (obj as ForecastSlot).start !== undefined;
+}
+
+export interface EnergyByDay {
+	energy: number;
+	complete: boolean;
+}
+
+export interface SolarDetails {
+	scale?: number;
+	today?: EnergyByDay;
+	tomorrow?: EnergyByDay;
+	dayAfterTomorrow?: EnergyByDay;
+	timeseries?: TimeseriesEntry[];
+}
+
+export interface Forecast {
+	grid?: ForecastSlot[];
+	co2?: ForecastSlot[];
+	solar?: SolarDetails;
 }
 
 export interface SelectOption<T> {

@@ -1,11 +1,12 @@
+import type { Meta, StoryFn } from "@storybook/vue3";
 import Energyflow from "./Energyflow.vue";
 
 export default {
   title: "Energyflow/Energyflow",
   component: Energyflow,
-};
+} as Meta<typeof Energyflow>;
 
-const Template = (args) => ({
+const Template: StoryFn<typeof Energyflow> = (args) => ({
   components: { Energyflow },
   setup() {
     return { args };
