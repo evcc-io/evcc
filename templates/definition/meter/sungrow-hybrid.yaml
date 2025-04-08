@@ -21,7 +21,16 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    default: 10600 # W
+    help:
+      en: Maximum charge power for forced charging of the battery in watts. ('max' to automatically set the value of the maximum BDC rated power)
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. ("max", um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
+  - name: maxdischargingpower
+    usages: ["battery"]
+    advanced: true
+    default: 10600
+    help:
+      de: Maximale Entladeleistung in Watt. (max 10600)
+      en: Maximum discharge power in watts. (max 10600)
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -188,11 +197,7 @@ render: |
               decode: uint16
         # Reset max battery discharge power
         - source: const
-          {{- if .maxchargepower }}
-          value: {{ div .maxchargepower 10 }}
-          {{- else }}
-          value: 1060 # 10.6kW, max allowed value for register
-          {{- end }}
+          value: {{ div .maxdischargingpower 10 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -254,17 +259,7 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if .maxchargepower }}
-        - source: const
-          value: {{ .maxchargepower }} # W
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13051 # Charge power
-              type: writesingle
-              decode: uint16
-        {{- else }}
+        {{- if eq .maxchargepower "max" }}
         - source: go
           script: power
           in:
@@ -288,6 +283,16 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
+        {{- else }}
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge power
+              type: writesingle
+              decode: uint16
         {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
