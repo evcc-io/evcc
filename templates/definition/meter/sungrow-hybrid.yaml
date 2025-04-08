@@ -256,17 +256,7 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if .maxchargepower }}
-        - source: const
-          value: {{ .maxchargepower }} # W
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13051 # Charge power
-              type: writesingle
-              decode: uint16
-        {{- else }}
+        {{- if eq .maxchargepower "max" }}
         - source: go
           script: power
           in:
@@ -290,6 +280,16 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
+        {{- else }}
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge power
+              type: writesingle
+              decode: uint16
         {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
