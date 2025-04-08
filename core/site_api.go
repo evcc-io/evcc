@@ -17,7 +17,6 @@ import (
 var _ site.API = (*Site)(nil)
 
 var ErrBatteryNotConfigured = errors.New("battery not configured")
-var batteryModeExternalTimer time.Time
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -346,6 +345,21 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 	return site.batteryModeExternal
 }
 
+// getBatteryModeExternal returns the current external battery mode (no mutex)
+func (site *Site) getBatteryModeExternal() api.BatteryMode {
+	return site.batteryModeExternal
+}
+
+// getBatteryModeExternalTimer retrieves the timer for external control (no mutex)
+func (site *Site) getBatteryModeExternalTimer() time.Time {
+	return site.batteryModeExternalTimer
+}
+
+// resetBatteryModeExternalTimer resets the timer for external control (no mutex)
+func (site *Site) resetBatteryModeExternalTimer() {
+	site.batteryModeExternalTimer = time.Now()
+}
+
 // setBatteryModeExternal sets external battery mode (no mutex)
 func (site *Site) setBatteryModeExternal(mode api.BatteryMode) {
 	site.batteryModeExternal = mode
@@ -366,15 +380,16 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	}
 
 	// reset timer
-	batteryModeExternalTimer = time.Now()
+	site.resetBatteryModeExternalTimer()
 }
 
-// ValidBatteryModeExternal calculates state for the external battery mode control
-func (site *Site) ValidBatteryModeExternal() bool {
+// validBatteryModeExternal calculates state for the external battery mode control
+func (site *Site) validBatteryModeExternal() bool {
+	timer := site.getBatteryModeExternalTimer()
 	// check for initial timer
-	if !(batteryModeExternalTimer.IsZero()) {
+	if !(timer.IsZero()) {
 		// Calculate the seconds since the last external battery mode control message
-		since := int(time.Since(batteryModeExternalTimer).Seconds())
+		since := int(time.Since(timer).Seconds())
 		// configure timeout value for external setting here; defaults to fixed 60s
 		if since >= 0 && since < 60 {
 			return true

@@ -325,6 +325,6 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, log)
 }
 
-func modeHandler(set func(api.BatteryMode) error, get func() api.BatteryMode) http.HandlerFunc {
+func batteryModeHandler(set func(api.BatteryMode) error, get func() api.BatteryMode) http.HandlerFunc {
 	return handler(api.BatteryModeString, set, get)
 }
