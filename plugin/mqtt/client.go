@@ -41,7 +41,7 @@ type Config struct {
 type Client struct {
 	log                   *util.Logger
 	mux                   sync.Mutex
-	Client                paho.Client
+	client                paho.Client
 	broker                string
 	Qos                   byte
 	inflight              uint32
@@ -126,7 +126,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		return nil, fmt.Errorf("error connecting: %w", token.Error())
 	}
 
-	mc.Client = client
+	mc.client = client
 
 	return mc, nil
 }
@@ -152,7 +152,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
 	statusTopic := topic + "/status"
-	if !m.Client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
+	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
 		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
 			return
 		}
@@ -166,7 +166,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 	time.Sleep(request.Timeout)
 
-	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
+	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
@@ -178,7 +178,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) {
 	go func() {
 		m.inflightChan <- struct{}{} // reserve slot to publish
 		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
-		token := m.Client.Publish(topic, m.Qos, retained, payload)
+		token := m.client.Publish(topic, m.Qos, retained, payload)
 		m.waitForToken("send", topic, token)
 		<-m.inflightChan // free slot
 	}()
@@ -214,7 +214,7 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 
 // listen attaches listener to topic
 func (m *Client) listen(topic string) paho.Token {
-	token := m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
+	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
 		if len(payload) > 0 {
