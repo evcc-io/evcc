@@ -147,8 +147,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
-
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
@@ -234,7 +232,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		var mqtt *server.MQTT
 		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
 		if err == nil {
-			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+			filter := append(ignoreMqtt, ignoreEmpty)
+			filter = append(filter, conf.Mqtt.NoPublish...)
+			go mqtt.Run(site, pipe.NewDropper(filter...).Pipe(tee.Attach()))
 		}
 	}
 
@@ -344,5 +344,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
+	log.INFO.Printf("listening at :%d", conf.Network.Port)
 	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
 }

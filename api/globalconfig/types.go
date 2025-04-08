@@ -81,7 +81,8 @@ func masked(s any) string {
 
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
-	Topic       string `json:"topic"`
+	Topic       string   `json:"topic"`
+	NoPublish   []string `json:"noPublish"`
 }
 
 // Redacted implements the redactor interface used by the tee publisher

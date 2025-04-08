@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/sync/semaphore"
+
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -18,6 +21,8 @@ import (
 
 // Instance is the paho Mqtt client singleton
 var Instance *Client
+
+const parallelInflightLimit uint32 = 128
 
 // ClientID created unique mqtt client id
 func ClientID() string {
@@ -38,13 +43,14 @@ type Config struct {
 
 // Client encapsulates mqtt publish/subscribe functions
 type Client struct {
-	log      *util.Logger
-	mux      sync.Mutex
-	Client   paho.Client
-	broker   string
-	Qos      byte
-	inflight uint32
-	listener map[string][]func(string)
+	log         *util.Logger
+	mux         sync.Mutex
+	client      paho.Client
+	broker      string
+	Qos         byte
+	inflight    uint32
+	listener    map[string][]func(string)
+	inflightSem *semaphore.Weighted
 }
 
 type Option func(*paho.ClientOptions)
@@ -62,9 +68,10 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	}
 
 	mc := &Client{
-		log:      log,
-		Qos:      qos,
-		listener: make(map[string][]func(string)),
+		log:         log,
+		Qos:         qos,
+		listener:    make(map[string][]func(string)),
+		inflightSem: semaphore.NewWeighted(int64(parallelInflightLimit)),
 	}
 
 	options := paho.NewClientOptions()
@@ -116,7 +123,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		return nil, fmt.Errorf("error connecting: %w", token.Error())
 	}
 
-	mc.Client = client
+	mc.client = client
 
 	return mc, nil
 }
@@ -142,32 +149,42 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
 	statusTopic := topic + "/status"
-	if !m.Client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
+	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
 		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
 			return
 		}
 
 		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		m.Client.Publish(msg.Topic(), m.Qos, true, []byte{})
+		m.Publish(msg.Topic(), true, "")
+
 	}).WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(request.Timeout)
 
-	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
+	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
 	return nil
 }
 
-// Publish synchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
-	m.log.TRACE.Printf("send %s: '%v'", topic, payload)
-	token := m.Client.Publish(topic, m.Qos, retained, payload)
-	go m.WaitForToken("send", topic, token)
-	return nil
+// Publish asynchronously publishes payload using client qos
+func (m *Client) Publish(topic string, retained bool, payload interface{}) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		defer cancel()
+		if err := m.inflightSem.Acquire(ctx, 1); err != nil {
+			m.log.ERROR.Printf("send %s: failed to acquire semaphore: %v", topic, err)
+			return
+		}
+		defer m.inflightSem.Release(1)
+
+		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
+		token := m.client.Publish(topic, m.Qos, retained, payload)
+		m.waitForToken("send", topic, token)
+	}()
 }
 
 // Listen attaches listener to slice of listeners for given topic
@@ -193,16 +210,14 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 		if err := callback(payload); err != nil {
 			m.log.ERROR.Printf("set %s: %v", topic, err)
 		}
-		if err := m.Publish(topic, true, ""); err != nil {
-			m.log.ERROR.Printf("clear: %s: %v", topic, err)
-		}
+		m.Publish(topic, true, "")
 	})
 	return err
 }
 
 // listen attaches listener to topic
 func (m *Client) listen(topic string) paho.Token {
-	token := m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
+	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
 		if len(payload) > 0 {
@@ -219,9 +234,9 @@ func (m *Client) listen(topic string) paho.Token {
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(action, topic string, token paho.Token) {
-	if inflight := atomic.LoadUint32(&m.inflight); inflight > 64 {
-		return
+func (m *Client) waitForToken(action, topic string, token paho.Token) {
+	if inflight := atomic.LoadUint32(&m.inflight); inflight > parallelInflightLimit {
+		m.log.WARN.Printf("%s: %s: waitForToken to many tokens inflight (%d)", action, topic, inflight)
 	}
 
 	// track inflight token waits

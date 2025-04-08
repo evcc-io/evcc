@@ -141,8 +141,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 }
 
 func (m *MQTT) publishString(topic string, retained bool, payload string) {
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken("send", topic, token)
+	m.Handler.Publish(topic, retained, m.encode(payload))
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
