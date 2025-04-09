@@ -232,9 +232,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		var mqtt *server.MQTT
 		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
 		if err == nil {
-			filter := append(ignoreMqtt, ignoreEmpty)
-			filter = append(filter, conf.Mqtt.NoPublish...)
-			go mqtt.Run(site, pipe.NewDropper(filter...).Pipe(tee.Attach()))
+			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
 		}
 	}
 
