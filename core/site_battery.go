@@ -23,6 +23,13 @@ func (site *Site) GetBatteryMode() api.BatteryMode {
 	return site.batteryMode
 }
 
+// GetExternalBatteryMode returns the externally-set battery mode
+func (site *Site) GetExternalBatteryMode() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryModeExternal
+}
+
 // setBatteryMode sets the battery mode
 func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.batteryMode = batMode
@@ -43,6 +50,10 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
 func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
+	if mode := site.GetExternalBatteryMode(); mode != api.BatteryUnknown {
+		return mode
+	}
+
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
 
@@ -53,8 +64,6 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
-	case site.validBatteryModeExternal():
-		res = mapper(site.getBatteryModeExternal())
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
@@ -100,7 +109,6 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
-
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
