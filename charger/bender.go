@@ -59,7 +59,7 @@ const (
 	bendRegEVBatteryState     = 730  // EV Battery State (% 0-100)
 	bendRegEVCCID             = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
 	bendRegHemsCurrentLimit   = 1000 // Current limit of the HEMS module (A)
-	amtronRegHemsCurrentLimit = 1002 // Current limit of the HEMS module (0.1 A) only used for Amtron 4You
+	amtronRegHemsCurrentLimit = 1001 // Current limit of the HEMS module (0.1 A) only used for Amtron 4You
 	amtronRegHemsPowerLimit   = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You
 
 	bendRegFirmware             = 100 // Application version number
@@ -185,54 +185,89 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
+
+	if wb.model != "4you" {
+		b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
+		if err != nil {
+			return false, err
+		}
+
+		return binary.BigEndian.Uint16(b) != 0, nil
+	} else {
+		b, err := wb.conn.ReadHoldingRegisters(amtronRegHemsPowerLimit, 1)
+		if err != nil {
+			return false, err
+		}
+
+		return binary.BigEndian.Uint16(b) != 0, nil
+	}
+}
+
+// calculate the power limit for the HEMS module
+func (wb *BenderCC) CalculatePowerLimit(current float64) (float64, error) {
+	v1, v2, v3, err := wb.voltages()
 	if err != nil {
-		return false, err
+		return 0, fmt.Errorf("error reading voltages: %v", err)
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	maxVoltage := math.Max(v1, math.Max(v2, v3))
+	maxVoltageTol := maxVoltage * 1.02
+
+	powerLimit := current * maxVoltageTol * float64(wb.phases)
+
+	return powerLimit, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *BenderCC) Enable(enable bool) error {
-	b := make([]byte, 2)
-	if enable {
-		binary.BigEndian.PutUint16(b, uint16(wb.current))
+
+	if wb.model != "4you" {
+		b := make([]byte, 2)
+		if enable {
+			binary.BigEndian.PutUint16(b, uint16(wb.current))
+		}
+
+		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
+
+		return err
+	} else {
+		powerlimit, err1 := wb.CalculatePowerLimit(wb.current)
+
+		if err1 != nil {
+			return fmt.Errorf("error calculating power limit: %v", err1)
+		}
+
+		b := make([]byte, 2)
+		if enable {
+			binary.BigEndian.PutUint16(b, uint16(powerlimit))
+		}
+
+		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+
+		return err
 	}
-
-	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
-
-	return err
 }
+
+var _ api.ChargerEx = (*BenderCC)(nil)
 
 // MaxCurrent implements the api.Charger interface
 func (wb *BenderCC) MaxCurrentMillis(current float64) error {
 
-	v1, v2, v3, err_gv := wb.voltages()
-	if err_gv != nil {
-		return fmt.Errorf("error reading voltages: %v", err_gv)
+	powerlimit, err1 := wb.CalculatePowerLimit(current)
+	if err1 != nil {
+		return fmt.Errorf("error calculating power limit: %v", err1)
 	}
 
-	maxVoltage := math.Max(v1, math.Max(v2, v3))
-	maxVoltage_tol := float64(maxVoltage * 1.02)
-
-	power := uint16(current * maxVoltage_tol * float64(wb.phases))
-
 	bp := make([]byte, 2)
-	binary.BigEndian.PutUint16(bp, power)
+	binary.BigEndian.PutUint16(bp, uint16(powerlimit))
 
-	bc := make([]byte, 2)
-	binary.BigEndian.PutUint16(bc, uint16(current))
-
-	// For Amtron, need to write both HEMS Power Limit and HEMS Current Limit as min(power, current) defines load current in Amtron Firmware
 	_, err_sp := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp)
-	_, err_sc := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, bc)
 
-	if err_sp == nil && err_sc == nil {
+	if err_sp == nil {
 		wb.current = current
 		return nil
 	} else {
-		return fmt.Errorf("Error setting HEMS current / power: %v, %v", err_sc, err_sp)
+		return fmt.Errorf("Error setting HEMS power: %v", err_sp)
 	}
 
 }
