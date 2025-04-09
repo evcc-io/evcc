@@ -186,7 +186,7 @@ export default {
 		chargerSinglePhase: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
-		chargeCurrent: Number,
+		offeredCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,

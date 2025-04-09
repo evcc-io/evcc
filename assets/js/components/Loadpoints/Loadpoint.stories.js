@@ -22,7 +22,7 @@ const baseState = {
   charging: true,
   vehicleSoc: 66,
   limitSoc: 90,
-  chargeCurrent: 7,
+  offeredCurrent: 7,
   minCurrent: 6,
   maxCurrent: 16,
   activePhases: 2,
@@ -53,7 +53,7 @@ export const Idle = createStory({
   vehicleName: "",
   mode: "off",
   charging: false,
-  chargeCurrent: 0,
+  offeredCurrent: 0,
 });
 
 export const DisabledLongTitle = createStory({
