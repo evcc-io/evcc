@@ -8,7 +8,6 @@ import (
 	"math/rand/v2"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/semaphore"
@@ -43,14 +42,13 @@ type Config struct {
 
 // Client encapsulates mqtt publish/subscribe functions
 type Client struct {
-	log         *util.Logger
-	mux         sync.Mutex
-	client      paho.Client
-	broker      string
-	Qos         byte
-	inflight    uint32
-	listener    map[string][]func(string)
-	inflightSem *semaphore.Weighted
+	log      *util.Logger
+	mux      sync.Mutex
+	client   paho.Client
+	broker   string
+	Qos      byte
+	listener map[string][]func(string)
+	inflight *semaphore.Weighted
 }
 
 type Option func(*paho.ClientOptions)
@@ -68,10 +66,10 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	}
 
 	mc := &Client{
-		log:         log,
-		Qos:         qos,
-		listener:    make(map[string][]func(string)),
-		inflightSem: semaphore.NewWeighted(int64(parallelInflightLimit)),
+		log:      log,
+		Qos:      qos,
+		listener: make(map[string][]func(string)),
+		inflight: semaphore.NewWeighted(int64(parallelInflightLimit)),
 	}
 
 	options := paho.NewClientOptions()
@@ -175,15 +173,22 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
-		if err := m.inflightSem.Acquire(ctx, 1); err != nil {
-			m.log.ERROR.Printf("send %s: failed to acquire semaphore: %v", topic, err)
+		if err := m.inflight.Acquire(ctx, 1); err != nil {
+			m.log.ERROR.Printf("send %s: %v", topic, err)
 			return
 		}
-		defer m.inflightSem.Release(1)
+		defer m.inflight.Release(1)
 
 		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
 		token := m.client.Publish(topic, m.Qos, retained, payload)
-		m.waitForToken("send", topic, token)
+
+		err := api.ErrTimeout
+		if token.WaitTimeout(request.Timeout) {
+			err = token.Error()
+		}
+		if err != nil {
+			m.log.ERROR.Printf("send: %s: %v", topic, err)
+		}
 	}()
 }
 
@@ -231,23 +236,4 @@ func (m *Client) listen(topic string) paho.Token {
 		}
 	})
 	return token
-}
-
-// WaitForToken synchronously waits until token operation completed
-func (m *Client) waitForToken(action, topic string, token paho.Token) {
-	if inflight := atomic.LoadUint32(&m.inflight); inflight > parallelInflightLimit {
-		m.log.WARN.Printf("%s: %s: waitForToken to many tokens inflight (%d)", action, topic, inflight)
-	}
-
-	// track inflight token waits
-	atomic.AddUint32(&m.inflight, 1)
-	defer atomic.AddUint32(&m.inflight, ^uint32(0))
-
-	err := api.ErrTimeout
-	if token.WaitTimeout(request.Timeout) {
-		err = token.Error()
-	}
-	if err != nil {
-		m.log.ERROR.Printf("%s: %s: %v", action, topic, err)
-	}
 }
