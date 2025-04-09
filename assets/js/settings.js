@@ -5,6 +5,9 @@ const SETTINGS_THEME = "settings_theme";
 const SETTINGS_UNIT = "settings_unit";
 const SETTINGS_HIDDEN_FEATURES = "settings_hidden_features";
 const SETTINGS_ENERGYFLOW_DETAILS = "settings_energyflow_details";
+const SETTINGS_ENERGYFLOW_PV = "settings_energyflow_pv";
+const SETTINGS_ENERGYFLOW_BATTERY = "settings_energyflow_battery";
+const SETTINGS_ENERGYFLOW_LOADPOINTS = "settings_energyflow_loadpoints";
 const SESSION_INFO = "session_info";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
@@ -58,6 +61,9 @@ const settings = reactive({
   unit: read(SETTINGS_UNIT),
   hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
+  energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
+  energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
+  energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
   sessionInfo: readArray(SESSION_INFO),
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
@@ -72,6 +78,9 @@ watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.hiddenFeatures, saveBool(SETTINGS_HIDDEN_FEATURES));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
+watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
+watch(() => settings.energyflowBattery, saveBool(SETTINGS_ENERGYFLOW_BATTERY));
+watch(() => settings.energyflowLoadpoints, saveBool(SETTINGS_ENERGYFLOW_LOADPOINTS));
 watch(() => settings.sessionInfo, saveArray(SESSION_INFO));
 watch(() => settings.sessionColumns, saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));

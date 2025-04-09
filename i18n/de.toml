@@ -24,7 +24,7 @@ never = "nur mit genug PV-Überschuss."
 [config]
 
 [config.aux]
-description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es benötigt wird."
+description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist."
 titleAdd = "Intelligenten Verbraucher hinzufügen"
 titleEdit = "Intelligenten Verbraucher bearbeiten"
 
@@ -108,6 +108,11 @@ A = "A (nicht verbunden)"
 B = "B (verbunden)"
 C = "C (lädt)"
 
+[config.devices]
+auxMeter = "Smarter Verbraucher"
+batteryStorage = "Batterie"
+solarSystem = "PV-Anlage"
+
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
 title = "EEBus"
@@ -137,6 +142,7 @@ remove = "Entfernen"
 save = "Speichern"
 showAdvancedSettings = "Erweiterte Einstellungen anzeigen"
 telemetry = "Telemetrie"
+templateLoading = "Lade …"
 title = "Titel"
 validateSave = "Überprüfen & speichern"
 
@@ -241,6 +247,7 @@ vehicleLabel = "Standard-Fahrzeug"
 vehiclesTitle = "Fahrzeuge"
 
 [config.main]
+addAdditional = "Zusätzlichen Zähler hinzufügen"
 addGrid = "Netzzähler hinzufügen"
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
@@ -376,9 +383,22 @@ validate = "prüfen"
 
 [config.vehicle]
 cancel = "Abbrechen"
+chargingSettings = "Ladeeinstellungen"
+defaultMode = "Standard-Modus"
+defaultModeHelp = "Lademodus beim Anschließen des Fahrzeugs."
 delete = "Fahrzeug löschen"
 generic = "Weitere Integrationen"
+identifiers = "RFID-Kennungen"
+identifiersHelp = "Liste der RFID-Kennungen, um das Fahrzeug zu identifizieren. Ein Eintrag pro Zeile. Auf der Übersichtsseite siehst du die aktuelle RFID-Kennung am jeweiligen Ladepunkt."
+maximumCurrent = "Maximaler Strom"
+maximumCurrentHelp = "Muss größer als der minimale Strom sein."
+maximumPhases = "Maximale Phasen"
+maximumPhasesHelp = "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet."
+minimumCurrent = "Minimaler Strom"
+minimumCurrentHelp = "Nur unter 6A, wenn du weißt, was du tust."
 online = "Fahrzeuge mit Schnittstelle"
+priority = "Priorität"
+priorityHelp = "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat."
 save = "Speichern"
 scooter = "Elektroroller"
 template = "Hersteller"
@@ -658,6 +678,7 @@ costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
+goalReached = "Ladeziel bereits erreicht"
 inactiveLabel = "Zielzeit"
 nextPlan = "Nächster Plan"
 notReachableInTime = "Zielzeit wird {overrun} später erreicht."

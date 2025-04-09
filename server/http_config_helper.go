@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"slices"
 	"sync"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -283,4 +285,25 @@ func testInstance(instance any) map[string]testResult {
 	}
 
 	return res
+}
+
+// mergeMaskedAny similar to mergeMasked but for interfaces
+func mergeMaskedAny(old, new any) error {
+	return mergo.Merge(new, old, mergo.WithTransformers(&maskedTransformer{}))
+}
+
+type maskedTransformer struct{}
+
+func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ.Kind() != reflect.String {
+		return nil
+	}
+
+	return func(dst, src reflect.Value) error {
+		if dst.String() == masked {
+			dst.Set(src)
+		}
+
+		return nil
+	}
 }

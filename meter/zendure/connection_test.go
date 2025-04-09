@@ -10,8 +10,9 @@ import (
 
 func TestHandler(t *testing.T) {
 	conn := &Connection{
-		log:  util.NewLogger("test"),
-		data: util.NewMonitor[Data](time.Minute),
+		log:    util.NewLogger("test"),
+		data:   util.NewMonitor[Data](time.Minute),
+		serial: "serial",
 	}
 
 	{

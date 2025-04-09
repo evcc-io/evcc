@@ -131,7 +131,6 @@ chargers:
         if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
 
   - name: charger_2
-    features: [heating]
     type: custom
     enable:
       source: js
