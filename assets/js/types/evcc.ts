@@ -8,9 +8,13 @@ declare global {
 
 export interface State {
 	offline: boolean;
+	startup?: boolean;
 	loadpoints: [];
 	forecast?: any;
 	currency?: CURRENCY;
+	fatal?: {
+		error: any;
+	};
 }
 
 export enum CURRENCY {
