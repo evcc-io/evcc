@@ -196,7 +196,7 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	}
 }
 
-// updateBatteryMode sets the smart cost limit globally
+// updateBatteryMode sets the external battery mode
 func updateBatteryMode(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
