@@ -356,7 +356,6 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
 
-	// Apply the new mode immediately if it is different from the current mode
 	if site.batteryModeExternal != mode {
 		site.batteryModeExternal = mode
 		site.setBatteryMode(mode)
