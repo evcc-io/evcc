@@ -337,23 +337,18 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 	}
 }
 
+// GetBatteryMode returns the battery mode
+func (site *Site) GetBatteryMode() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryMode
+}
+
 // GetBatteryModeExternal returns the current external battery mode
 func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 	site.RLock()
 	defer site.RUnlock()
-
 	return site.batteryModeExternal
-}
-
-func (site *Site) batteryModeWatchdog() {
-	for range time.Tick(time.Second) {
-		site.Lock()
-		defer site.Unlock()
-
-		if time.Since(site.batteryModeExternalTimer) > time.Minute {
-			site.batteryModeExternal = api.BatteryUnknown
-		}
-	}
 }
 
 // SetBatteryModeExternal sets the external battery mode with proper locking
@@ -375,5 +370,16 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 		site.batteryModeExternalTimer = time.Time{}
 	} else {
 		site.batteryModeExternalTimer = time.Now()
+	}
+}
+
+func (site *Site) batteryModeWatchdog() {
+	for range time.Tick(time.Second) {
+		site.Lock()
+		defer site.Unlock()
+
+		if time.Since(site.batteryModeExternalTimer) > time.Minute {
+			site.batteryModeExternal = api.BatteryUnknown
+		}
 	}
 }

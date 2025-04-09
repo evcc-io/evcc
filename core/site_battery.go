@@ -16,20 +16,6 @@ func (site *Site) batteryConfigured() bool {
 	return len(site.batteryMeters) > 0
 }
 
-// GetBatteryMode returns the battery mode
-func (site *Site) GetBatteryMode() api.BatteryMode {
-	site.RLock()
-	defer site.RUnlock()
-	return site.batteryMode
-}
-
-// GetExternalBatteryMode returns the externally-set battery mode
-func (site *Site) GetExternalBatteryMode() api.BatteryMode {
-	site.RLock()
-	defer site.RUnlock()
-	return site.batteryModeExternal
-}
-
 // setBatteryMode sets the battery mode
 func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.batteryMode = batMode
@@ -52,7 +38,7 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
-	extMode := site.GetExternalBatteryMode()
+	extMode := site.GetBatteryModeExternal()
 
 	mapper := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
