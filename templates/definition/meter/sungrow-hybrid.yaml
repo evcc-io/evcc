@@ -22,15 +22,8 @@ params:
   - name: maxacpower
   - name: maxchargepower
     help:
-      en: Maximum charge power for forced charging of the battery in watts. ('max' to automatically set the value of the maximum BDC rated power)
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. ("max", um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
-  - name: maxdischargepower
-    usages: ["battery"]
-    advanced: true
-    default: 10600
-    help:
-      de: Maximale Entladeleistung in Watt. (max 10600)
-      en: Maximum discharge power in watts. (max 10600)
+      en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. (0 um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -196,15 +189,29 @@ render: |
               type: writesingle
               decode: uint16
         # Reset max battery discharge power
-        - source: const
-          value: {{ div .maxdischargepower 10 }}
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 33047 # Battery max discharge power
-              type: writesingle
-              decode: uint16
+        - source: go
+          script: power
+          in:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 5627 # BDC rated power
+                type: input
+                decode: uint16
+              scale: 10
+          out:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 33047 # Battery max discharge power
+                type: writesingle
+                decode: uint16
     - case: 2 # hold
       set:
         source: sequence
@@ -259,7 +266,7 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if eq .maxchargepower "max" }}
+        {{- if lt .maxchargepower 1 }}
         - source: go
           script: power
           in:
