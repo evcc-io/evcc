@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -236,7 +237,7 @@ func (wb *Kathrein) getPhaseValues(regs []uint16, divider float64) (float64, flo
 			return 0, 0, 0, err
 		}
 
-		res[i] = float64(binary.BigEndian.Uint32(b)) / divider
+		res[i] = float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / divider
 	}
 
 	return res[0], res[1], res[2], nil
@@ -306,7 +307,7 @@ func (wb *Kathrein) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	curr := uint16(current)
+	curr := uint16(current * 1e3)
 
 	_, err := wb.conn.WriteSingleRegister(kathreinRegSetpointChargingCurrent, curr)
 	if err == nil {
@@ -370,7 +371,7 @@ func (wb *Kathrein) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3, err
 }
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
@@ -382,7 +383,7 @@ func (wb *Kathrein) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), err
 }
 
 var _ api.PhaseSwitcher = (*Kathrein)(nil)
@@ -468,99 +469,99 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Voltage, 2); err == nil {
-		fmt.Printf("Meter - U1:\t%f V\n", b)
+		fmt.Printf("Meter - U1:\t%f V\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Voltage, 2); err == nil {
-		fmt.Printf("Meter - U2:\t%f V\n", b)
+		fmt.Printf("Meter - U2:\t%f V\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Voltage, 2); err == nil {
-		fmt.Printf("Meter - U3:\t%f V\n", b)
+		fmt.Printf("Meter - U3:\t%f V\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Current, 2); err == nil {
-		fmt.Printf("Meter - I1:\t%f A\n", b)
+		fmt.Printf("Meter - I1:\t%f A\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Current, 2); err == nil {
-		fmt.Printf("Meter - I2:\t%f A\n", b)
+		fmt.Printf("Meter - I2:\t%f A\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Current, 2); err == nil {
-		fmt.Printf("Meter - I3:\t%f A\n", b)
+		fmt.Printf("Meter - I3:\t%f A\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1Power, 2); err == nil {
-		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+		fmt.Printf("Meter - P1 (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2Power, 2); err == nil {
-		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+		fmt.Printf("Meter - P1 (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3Power, 2); err == nil {
-		fmt.Printf("Meter - P1 (active):\t%f W\n", b)
+		fmt.Printf("Meter - P1 (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1ApparentPower, 2); err == nil {
-		fmt.Printf("Meter - S1 (apparent):\t%f VA\n", b)
+		fmt.Printf("Meter - S1 (apparent):\t%f VA\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2ApparentPower, 2); err == nil {
-		fmt.Printf("Meter - S2 (apparent):\t%f VA\n", b)
+		fmt.Printf("Meter - S2 (apparent):\t%f VA\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3ApparentPower, 2); err == nil {
-		fmt.Printf("Meter - S3 (apparent):\t%f VA\n", b)
+		fmt.Printf("Meter - S3 (apparent):\t%f VA\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1ReactivePower, 2); err == nil {
-		fmt.Printf("Meter - Q1 (reactive):\t%f VAr\n", b)
+		fmt.Printf("Meter - Q1 (reactive):\t%f VAr\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2ReactivePower, 2); err == nil {
-		fmt.Printf("Meter - Q2 (reactive):\t%f VAr\n", b)
+		fmt.Printf("Meter - Q2 (reactive):\t%f VAr\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3ReactivePower, 2); err == nil {
-		fmt.Printf("Meter - Q3 (reactive):\t%f VAr\n", b)
+		fmt.Printf("Meter - Q3 (reactive):\t%f VAr\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL1PowerFactor, 2); err == nil {
-		fmt.Printf("Meter - PF1:\t%f\n", b)
+		fmt.Printf("Meter - PF1:\t%f\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL2PowerFactor, 2); err == nil {
-		fmt.Printf("Meter - PF2:\t%f\n", b)
+		fmt.Printf("Meter - PF2:\t%f\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegL3PowerFactor, 2); err == nil {
-		fmt.Printf("Meter - PF3:\t%f\n", b)
+		fmt.Printf("Meter - PF3:\t%f\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2); err == nil {
-		fmt.Printf("Meter - P tot (active):\t%f W\n", b)
+		fmt.Printf("Meter - P tot (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalApparentPower, 2); err == nil {
-		fmt.Printf("Meter - S tot (apparent):\t%f VA\n", b)
+		fmt.Printf("Meter - S tot (apparent):\t%f VA\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalReactivePower, 2); err == nil {
-		fmt.Printf("Meter - Q tot (reactive):\t%f VAr\n", b)
+		fmt.Printf("Meter - Q tot (reactive):\t%f VAr\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalPowerFactor, 2); err == nil {
-		fmt.Printf("Meter - PF tot:\t%f\n", b)
+		fmt.Printf("Meter - PF tot:\t%f\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f kWh\n", b)
+		fmt.Printf("Meter - W tot:\t%f kWh\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f Hz\n", b)
+		fmt.Printf("Meter - W tot:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1); err == nil {
