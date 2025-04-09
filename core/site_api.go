@@ -371,5 +371,9 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	}
 
 	// reset timer
-	site.batteryModeExternalTimer = time.Now()
+	if mode == api.BatteryUnknown {
+		site.batteryModeExternalTimer = time.Time{}
+	} else {
+		site.batteryModeExternalTimer = time.Now()
+	}
 }

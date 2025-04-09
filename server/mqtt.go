@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // MQTTMarshaler is the interface implemented by types that
@@ -204,7 +205,12 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 			}
 		}))},
 		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
-		{"batteryModeExternal", setterFunc(api.BatteryModeString, pass(site.SetBatteryModeExternal))},
+		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
+			if m == nil {
+				m = lo.ToPtr(api.BatteryUnknown)
+			}
+			site.SetBatteryModeExternal(*m)
+		}))},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err
