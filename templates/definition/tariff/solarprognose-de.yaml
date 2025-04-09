@@ -18,7 +18,7 @@ params:
     required: true  
   - name: token
     description:
-      en: Unique Token for selected Item
+      en: Unique token for selected Item
       de: Eindeutiger Schlüssel für das angegebene Element 
     required: true  
   - name: algorithm
