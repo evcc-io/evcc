@@ -40,6 +40,6 @@ render: |
       [ .data | to_entries.[] | {
         "start": (.key | tonumber | strftime("%FT%TZ") ),
         "end": (.key | tonumber + 3600 | strftime("%FT%TZ")  ) ,
-        "price": (.value.[0]*1000)
+        "value": (.value.[0]*1000)
       } ] | tostring
   interval: {{ .interval }}
