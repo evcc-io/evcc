@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -17,12 +16,7 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-var (
-	ErrBatteryNotConfigured = errors.New("battery not configured")
-
-	batteryModeExternalOnce  sync.Once
-	batteryModeExternalTimer time.Time
-)
+var ErrBatteryNotConfigured = errors.New("battery not configured")
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -356,7 +350,7 @@ func (site *Site) batteryModeWatchdog() {
 		site.Lock()
 		defer site.Unlock()
 
-		if time.Since(batteryModeExternalTimer) > time.Minute {
+		if time.Since(site.batteryModeExternalTimer) > time.Minute {
 			site.batteryModeExternal = api.BatteryUnknown
 		}
 	}
@@ -372,7 +366,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 		site.batteryModeExternal = mode
 		site.setBatteryMode(mode)
 
-		batteryModeExternalOnce.Do(site.batteryModeWatchdog)
+		site.batteryModeExternalOnce.Do(site.batteryModeWatchdog)
 		site.log.DEBUG.Printf("set battery mode external: %s", mode.String())
 	}
 

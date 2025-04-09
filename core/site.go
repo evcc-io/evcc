@@ -113,6 +113,7 @@ type Site struct {
 	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time       // Battery mode timer for external control
+	batteryModeExternalOnce  sync.Once       // Battery timer start
 }
 
 // MetersConfig contains the site's meter configuration
