@@ -147,6 +147,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
+	log.INFO.Printf("listening at :%d", conf.Network.Port)
+
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
@@ -342,6 +344,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
 	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
 }
