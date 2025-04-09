@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/vehicle"
@@ -46,6 +47,15 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	if err != nil {
 		err = fmt.Errorf("mqtt: %w", err)
 	}
+
+	shutdown.Register(func() {
+		m.log.DEBUG.Println("shutdown cleanup started")
+		err := m.Handler.Cleanup(m.root, true)
+		if err != nil {
+			m.log.ERROR.Printf("shutdown cleanup failed: %v", err)
+		}
+		m.log.DEBUG.Println("shutdown cleanup done")
+	})
 
 	return m, err
 }

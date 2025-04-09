@@ -146,6 +146,8 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
+	timer := time.NewTimer(time.Second)
+
 	statusTopic := topic + "/status"
 	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
 		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
@@ -155,11 +157,15 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 		m.log.TRACE.Printf("delete: %s", msg.Topic())
 		m.Publish(msg.Topic(), true, "")
 
+		// reset timeout
+		timer.Reset(time.Second)
+
 	}).WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
-	time.Sleep(request.Timeout)
+	// wait for cleanup to finish
+	<-timer.C
 
 	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
