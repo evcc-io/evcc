@@ -26,6 +26,11 @@ never = "bara med tillräckligt sol-överskott."
 
 [config]
 
+[config.aux]
+description = "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt."
+titleAdd = "Lägg till enhet som själv anpassar förbrukning"
+titleEdit = "Ändra enhet som själv anpassar förbrukning"
+
 [config.battery]
 titleAdd = "Lägg till batteri"
 titleEdit = "Ändra batteri"
@@ -94,6 +99,7 @@ range = "Räckvidd"
 singlePhase = "En-fas"
 soc = "Laddnivå"
 socLimit = "SoC gräns"
+solarForecast = "Solprognos"
 temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
@@ -109,7 +115,13 @@ C = "C (laddar)"
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
 title = "EEBus"
 
+[config.ext]
+description = "Kan användas för belastningsstyrning eller statistik."
+titleAdd = "Lägg till extern mätare"
+titleEdit = "Ändra extern mätare"
+
 [config.form]
+danger = "Fara"
 deprecated = "utfasad"
 example = "Exempel"
 optional = "valfri"
@@ -231,6 +243,7 @@ vehicleLabel = "Standard fordon"
 vehiclesTitle = "Fordon"
 
 [config.main]
+addAdditional = "Lägg till ytterligare mätare"
 addGrid = "Lägg till elmätare"
 addLoadpoint = "Lägg till laddbox"
 addPvBattery = "Lägg till solceller eller batteri"
@@ -255,6 +268,12 @@ save = "Spara"
 template = "Tillverkare"
 titleChoice = "Vad vill du lägga till?"
 validateSave = "Validera & spara"
+
+[config.meter.option]
+aux = "Lägg till enhet som själv anpassar förbrukning"
+battery = "Lägg till batterimätare"
+ext = "Lägg till ytterligare mätare"
+pv = "Lägg till solenergimätare"
 
 [config.modbusproxy]
 description = "Tillåt flera klienter till en Modbus-enhet."
@@ -311,6 +330,7 @@ titleAdd = "Lägg till solcellsmätare"
 titleEdit = "Ändra solcellsmätare"
 
 [config.section]
+additionalMeter = "Ytterligare mätare"
 general = "Allmänna"
 grid = "Elnät"
 integrations = "Integrationer"
@@ -579,6 +599,7 @@ selfConsumption = "Egenförbrukning"
 charging = "Värmer..."
 cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+connected = "Standby"
 vehicleLimit = "Värmarbegränsning"
 waitForVehicle = "Redo, väntar på värmare..."
 

@@ -3,7 +3,7 @@
 		<div class="chart position-relative">
 			<div
 				v-for="(slot, index) in slots"
-				:key="slot.start"
+				:key="`${slot.day}-${slot.startHour}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -22,8 +22,8 @@
 				@mouseup="hoverSlot(null)"
 				@click="selectSlot(index)"
 			>
-				<div class="slot-bar" :style="priceStyle(slot.price)">
-					<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
+				<div class="slot-bar" :style="valueStyle(slot.value)">
+					<span v-if="slot.value === undefined && avgValue" class="unknown">?</span>
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
@@ -52,11 +52,12 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import type { PropType } from "vue";
 import "@h2d2/shopicons/es/regular/arrowright";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "../../mixins/formatter.js";
-import { CO2_TYPE } from "../../units.js";
+import type { Slot } from "../../types/evcc.ts";
 
 const BAR_WIDTH = 20;
 
@@ -67,29 +68,29 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		slots: Array,
-		targetText: String,
-		targetOffset: Number,
+		slots: { type: Array as PropType<Slot[]>, default: () => [] },
+		targetText: [String, null],
+		targetOffset: { type: Number, default: 0 },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
 		return {
-			activeIndex: null,
+			activeIndex: null as number | null,
 			startTime: new Date(),
-			longPressTimer: null,
+			longPressTimer: undefined as number | undefined,
 			isLongPress: false,
 		};
 	},
 	computed: {
-		priceInfo() {
+		valueInfo() {
 			let max = Number.MIN_VALUE;
 			let min = 0;
 			this.slots
-				.map((s) => s.price)
-				.filter((price) => price !== undefined)
-				.forEach((price) => {
-					max = Math.max(max, price);
-					min = Math.min(min, price);
+				.map((s) => s.value)
+				.filter((value) => value !== undefined)
+				.forEach((value) => {
+					max = Math.max(max, value);
+					min = Math.min(min, value);
 				});
 			return { min, range: max - min };
 		},
@@ -104,30 +105,27 @@ export default {
 		targetOutOfRange() {
 			return this.targetOffset > this.slots.length;
 		},
-		avgPrice() {
+		avgValue() {
 			let sum = 0;
 			let count = 0;
 			this.slots.forEach((s) => {
-				if (s.price !== undefined) {
-					sum += s.price;
+				if (s.value !== undefined) {
+					sum += s.value;
 					count++;
 				}
 			});
 			return sum / count;
 		},
-		isCo2() {
-			return this.unit === CO2_TYPE;
-		},
 		activeSlot() {
-			return this.slots[this.activeIndex];
+			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
 		},
 	},
 	methods: {
-		hoverSlot(index) {
+		hoverSlot(index: number | null) {
 			this.activeIndex = index;
 			this.$emit("slot-hovered", index);
 		},
-		selectSlot(index) {
+		selectSlot(index: number) {
 			if (this.isLongPress) {
 				this.isLongPress = false;
 				return;
@@ -136,7 +134,7 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
-		showWeekday(index) {
+		showWeekday(index: number) {
 			const slot = this.slots[index];
 			if (!slot) {
 				return false;
@@ -151,15 +149,15 @@ export default {
 			}
 			return false;
 		},
-		priceStyle(price) {
-			const value = price === undefined ? this.avgPrice : price;
+		valueStyle(value: number | undefined) {
+			const val = value === undefined ? this.avgValue : value;
 			const height =
-				value !== undefined && !isNaN(value)
-					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
+				value !== undefined && !isNaN(val)
+					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
 					: "75%";
 			return { height };
 		},
-		startLongPress(index) {
+		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
 				this.isLongPress = true;
 				this.hoverSlot(index);

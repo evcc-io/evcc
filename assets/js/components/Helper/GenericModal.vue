@@ -6,7 +6,7 @@
 			:class="classes"
 			tabindex="-1"
 			role="dialog"
-			aria-hidden="true"
+			:aria-hidden="isModalVisible ? 'false' : 'true'"
 			:data-bs-backdrop="uncloseable ? 'static' : 'true'"
 			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
@@ -88,9 +88,11 @@ export default {
 	},
 	methods: {
 		handleShow() {
+			console.log(this.dataTestid, "> show");
 			this.$emit("open");
 		},
 		handleShown() {
+			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
 			// focus first input or select
 			this.$nextTick(() => {
@@ -102,16 +104,20 @@ export default {
 			this.isModalVisible = true;
 		},
 		handleHide() {
+			console.log(this.dataTestid, "> hide");
 			this.$emit("close");
 		},
 		handleHidden() {
+			console.log(this.dataTestid, "> hidden");
 			this.$emit("closed");
 			this.isModalVisible = false;
 		},
 		open() {
+			console.log(this.dataTestid, "> open", this.$refs.modal._isShown);
 			Modal.getOrCreateInstance(this.$refs.modal).show();
 		},
 		close() {
+			console.log(this.dataTestid, "> close", this.$refs.modal._isShown);
 			Modal.getOrCreateInstance(this.$refs.modal).hide();
 		},
 	},

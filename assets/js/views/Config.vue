@@ -141,7 +141,11 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.solarSystem')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -159,7 +163,9 @@
 							v-for="meter in batteryMeters"
 							:key="meter.name"
 							:title="
-								meter.deviceTitle || meter.config?.template || 'Battery storage'
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.batteryStorage')
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
@@ -185,7 +191,11 @@
 						<DeviceCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Aux meter'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.auxMeter')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -752,6 +762,7 @@ export default {
 		},
 		newLoadpoint() {
 			this.selectedLoadpointId = undefined;
+			this.$refs.loadpointModal.reset();
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {

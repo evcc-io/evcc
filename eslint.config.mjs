@@ -1,13 +1,13 @@
 import globals from "globals";
 import js from "@eslint/js";
 import pluginVue from "eslint-plugin-vue";
-import vueTsEslintConfig from "@vue/eslint-config-typescript";
+import { defineConfigWithVueTs, vueTsConfigs } from "@vue/eslint-config-typescript";
 import skipFormattingConfig from "@vue/eslint-config-prettier/skip-formatting";
 
-export default [
+export default defineConfigWithVueTs(
 	js.configs.recommended,
 	...pluginVue.configs["flat/recommended"],
-	...vueTsEslintConfig(),
+	vueTsConfigs.recommended,
 	skipFormattingConfig,
 	{
 		languageOptions: {
@@ -28,6 +28,7 @@ export default [
 			/*"vue/no-undef-properties": "warn",*/
 			"no-param-reassign": "error",
 			"vue/block-lang": "off",
+			"@typescript-eslint/no-explicit-any": "off",
 		},
-	},
-];
+	}
+);

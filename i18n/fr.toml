@@ -26,6 +26,11 @@ never = "seulement quand surplus suffisant."
 
 [config]
 
+[config.aux]
+description = "Dispositif ajustant sa consommation en fonction du surplus disponible (comme les chauffe-eau intelligents). evcc s'attend à ce que ce dispositif réduise sa consommation d'énergie si nécessaire."
+titleAdd = "Ajouter un consommateur auto-régulé"
+titleEdit = "Modifier le consommateur auto-régulé"
+
 [config.battery]
 titleAdd = "Ajouter une batterie domestique"
 titleEdit = "Modifier batterie"
@@ -37,6 +42,7 @@ titleEdit = "Modifier le compteur de charge"
 [config.charger]
 chargers = "Chargeurs VE"
 generic = "Intégrations génériques"
+heatingdevices = "Dispositif de chauffage"
 ocppHelp = "Copier cette adresse dans votre configuration de chargeurs."
 ocppLabel = "URL du serveur OCPP"
 switchsockets = "Prises commutables"
@@ -94,6 +100,7 @@ range = "Autonomie"
 singlePhase = "Monophasé"
 soc = "Charge"
 socLimit = "Limite"
+solarForecast = "Prévision solaire"
 temp = "Température"
 topic = "Sujet"
 url = "URL"
@@ -109,7 +116,13 @@ C = "C (en charge)"
 description = "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus."
 title = "EEBus"
 
+[config.ext]
+description = "Peut être utilisé pour la gestion de la charge ou à des fins statistiques."
+titleAdd = "Ajouter un compteur externe"
+titleEdit = "Modifier le compteur externe"
+
 [config.form]
+danger = "Attention"
 deprecated = "obsolète"
 example = "Exemple"
 optional = "optionnel"
@@ -192,6 +205,7 @@ phasesAutomatic = "Phases automatiques"
 phasesAutomaticHelp = "Votre chargeur supporte la commutation automatique entre chargement en monophasé ou triphasé. Dans l’écran principal vous pouvez ajuster le comportement pendant la charge."
 phasesHelp = "Nombre de phases auxquelles le chargeur est connecté."
 phasesLabel = "Phases"
+pollIntervalDanger = "L'interrogation régulière du véhicule peut décharger la batterie du véhicule. Certains fabricants de véhicules peuvent empêcher activement le chargement dans ce cas. Déconseillé ! N'utilisez cette fonction que si vous êtes conscient des risques."
 pollIntervalHelp = "Temps entre deux mises à jour du véhicule via l’API. Un intervalle court peut décharger la batterie du véhicule."
 pollIntervalLabel = "Intervalle de mise à jour"
 pollModeAlways = "toujours"
@@ -231,6 +245,7 @@ vehicleLabel = "Véhicule par défaut"
 vehiclesTitle = "Véhicules"
 
 [config.main]
+addAdditional = "Ajouter un compteur supplémentaire"
 addGrid = "Ajouter un compteur pour le réseau"
 addLoadpoint = "Ajouter un point de charge"
 addPvBattery = "Ajouter du solaire ou une batterie"
@@ -255,6 +270,12 @@ save = "Enregistrer"
 template = "Fabricant"
 titleChoice = "Que voulez-vous ajouter ?"
 validateSave = "Valider et enregistrer"
+
+[config.meter.option]
+aux = "Ajouter un consommateur auto-regulé"
+battery = "Ajouter un compteur de batterie"
+ext = "Ajouter un compteur externe"
+pv = "Ajouter un compteur solaire"
 
 [config.modbusproxy]
 description = "Autoriser plusieurs clients à accéder à un appareil Modbus unique."
@@ -311,6 +332,7 @@ titleAdd = "Ajouter un compteur de production solaire"
 titleEdit = "Modifier le compteur de production solaire"
 
 [config.section]
+additionalMeter = "Compteurs supplémentaires"
 general = "Général"
 grid = "Réseau électrique"
 integrations = "Intégrations"
@@ -584,6 +606,7 @@ selfConsumption = "Consommation propre"
 charging = "Chauffage… "
 cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
 cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+connected = "En attente."
 vehicleLimit = "Limite de chauffage"
 waitForVehicle = "Prêt. En attente du chauffage… "
 
@@ -658,6 +681,7 @@ costLimitIgnore = "La limite configurée {limit} sera ignorée durant cette pér
 currentPlan = "Plan actif"
 descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?"
 descriptionSoc = "Quand le véhicule doit-il être chargé à {targetSoc}?"
+goalReached = "Objectif déjà atteint"
 inactiveLabel = "Temps visé"
 modalTitle = "Définir l'heure cible"
 nextPlan = "Prochain planning"
