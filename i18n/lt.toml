@@ -112,6 +112,11 @@ A = "A (neprijungtas)"
 B = "B (prijungtas)"
 C = "C (įkrauna)"
 
+[config.devices]
+auxMeter = "Išmanusis vartotojas"
+batteryStorage = "Energijos kaupiklis"
+solarSystem = "Saulės elektrinė"
+
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
 title = "EEBus"
@@ -141,9 +146,9 @@ remove = "Pašalinti"
 save = "Išsaugoti"
 showAdvancedSettings = "Rodyti išplėstinius nustatymus"
 telemetry = "Telemetrija"
+templateLoading = "Įkrauname..."
 title = "Pavadinimas"
 validateSave = "Patikrinti ir išsaugoti"
-templateLoading = "Įkrauname..."
 
 [config.grid]
 title = "Tinklo skaitiklis"
@@ -385,18 +390,18 @@ validate = "tikrinti"
 
 [config.vehicle]
 cancel = "Atšaukti"
+chargingSettings = "Įkrovimo nustatymai"
 delete = "Ištrinti"
 generic = "Kitos integracijos"
 offline = "Tipinis automobilis"
 online = "Automobiliai su internetiniu API"
+priority = "Pirmumas"
 save = "Išsaugoti"
 scooter = "Motoroleris"
 template = "Gamintojas"
 titleAdd = "Pridėti Automobilį"
 titleEdit = "Koreguoti Automobilį"
 validateSave = "Patikrinti ir išsaugoti"
-priority = "Pirmumas"
-chargingSettings = "Įkrovimo nustatymai"
 
 [footer]
 
@@ -979,9 +984,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[config.devices]
-batteryStorage = "Energijos kaupiklis"
-solarSystem = "Saulės elektrinė"
-auxMeter = "Išmanusis vartotojas"
