@@ -159,7 +159,6 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 		// reset timeout
 		timer.Reset(time.Second)
-
 	}).WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
