@@ -353,32 +353,50 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 
 // SetBatteryModeExternal sets the external battery mode with proper locking
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+	site.log.TRACE.Printf("calling set battery mode external: %s", mode.String())
 	site.Lock()
 	defer site.Unlock()
 
-	if site.batteryModeExternal != mode {
+	if mode != site.batteryModeExternal && mode != api.BatteryUnknown {
 		site.batteryModeExternal = mode
+		site.publish(keys.BatteryModeExternal, mode)
 		site.setBatteryMode(mode)
 
-		site.batteryModeExternalOnce.Do(site.batteryModeWatchdog)
+		// start Watchdog, if not running
+		if site.batteryModeExternalTimer.IsZero() {
+			site.log.TRACE.Printf("starting battery mode watchdog")
+			site.batteryModeExternalTimer = time.Now()
+			go site.batteryModeWatchdog()
+		}
+
 		site.log.DEBUG.Printf("set battery mode external: %s", mode.String())
 	}
 
 	// reset timer
 	if mode == api.BatteryUnknown {
+		site.log.TRACE.Printf("reset watchdog")
 		site.batteryModeExternalTimer = time.Time{}
 	} else {
+		site.log.TRACE.Printf("reset timer")
 		site.batteryModeExternalTimer = time.Now()
 	}
+
+	site.log.TRACE.Printf("updated batteryModeExternalTimer: %v", site.batteryModeExternalTimer)
 }
 
 func (site *Site) batteryModeWatchdog() {
-	for range time.Tick(time.Second) {
-		site.Lock()
-		defer site.Unlock()
-
-		if time.Since(site.batteryModeExternalTimer) > time.Minute {
+	site.log.TRACE.Printf("called battery mode external watchdog")
+	for range time.Tick(time.Second * 5) {
+		elapsed := time.Since(site.batteryModeExternalTimer)
+		site.log.TRACE.Printf("watchdog: batteryModeExternalTimer: %v, elapsed: %v", site.batteryModeExternalTimer, elapsed)
+		if elapsed > time.Minute {
+			site.log.DEBUG.Printf("called battery mode external watchdog - reset")
+			site.Lock()
+			defer site.Unlock()
+			site.batteryModeExternalTimer = time.Time{}
 			site.batteryModeExternal = api.BatteryUnknown
+			site.publish(keys.BatteryModeExternal, site.batteryModeExternal)
+			return
 		}
 	}
 }
