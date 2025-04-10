@@ -21,7 +21,7 @@ import (
 // Instance is the paho Mqtt client singleton
 var Instance *Client
 
-const parallelInflightLimit uint32 = 128
+const parallelInflightLimit int64 = 128
 
 // ClientID created unique mqtt client id
 func ClientID() string {
