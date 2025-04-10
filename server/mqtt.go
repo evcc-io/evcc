@@ -50,8 +50,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 
 	shutdown.Register(func() {
 		m.log.DEBUG.Println("shutdown cleanup started")
-		err := m.Handler.Cleanup(m.root, true)
-		if err != nil {
+		if err := m.Handler.Cleanup(m.root, true); err != nil {
 			m.log.ERROR.Printf("shutdown cleanup failed: %v", err)
 		}
 		m.log.DEBUG.Println("shutdown cleanup done")
