@@ -73,6 +73,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
@@ -92,7 +93,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(vars["precondition"])
+		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

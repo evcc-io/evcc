@@ -12,7 +12,7 @@
 
 		<div class="row d-none d-lg-flex mb-2">
 			<div v-if="multiplePlans" class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6" :class="multiplePlans ? 'col-lg-3' : 'col-lg-4'">
+			<div class="col-6 col-lg-3">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
@@ -22,9 +22,14 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3">
+			<div class="col-6 col-lg-2" :class="multiplePlans ? 'col-lg-2' : 'col-lg-3'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-1">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.precondition") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-1">
@@ -43,7 +48,7 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div :class="['col-7', multiplePlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
@@ -78,7 +83,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
+			<div :class="['col-7', multiplePlans ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -105,11 +110,30 @@
 				</select>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.precondition") }}
+				</label>
+			</div>
+			<div class="col-7 col-lg-1 d-flex align-items-center">
+				<div class="form-check form-switch">
+					<input
+						:id="formId('precondition')"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						data-testid="static-plan-precondition"
+						tabindex="0"
+						:checked="hasPrecondition"
+						@change="togglePrecondition"
+					/>
+				</div>
+			</div>
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 col-lg-1 d-flex align-items-center">
+			<div class="col-7 col-lg-1 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -138,6 +162,18 @@
 				</button>
 			</div>
 		</div>
+		<p v-if="hasPrecondition" class="m-2">
+			<strong>Akkupflege:</strong> Mindestens
+			<CustomSelect
+				class="d-inline-flex"
+				:options="preconditionOptions"
+				:selected="selectedPrecondition"
+				@change="selectPrecondition"
+			>
+				<u>{{ preconditionFmt }}</u>
+			</CustomSelect>
+			direkt vor Abfahrt laden.
+		</p>
 		<p class="mb-0" data-testid="plan-entry-warnings">
 			<span v-if="timeInThePast" class="d-block text-danger my-2">
 				{{ $t("main.targetCharge.targetIsInThePast") }}
@@ -148,6 +184,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/checkmark";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit } from "../../units.js";
 
 import formatter from "../../mixins/formatter.js";
@@ -158,9 +195,11 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 const LAST_SOC_GOAL_KEY = "last_soc_goal";
 const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
+const DEFAULT_PRECONDITION = 3600; // 1 hour
 
 export default defineComponent({
 	name: "ChargingPlanStaticSettings",
+	components: { CustomSelect },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -172,6 +211,7 @@ export default defineComponent({
 		capacity: Number,
 		socBasedPlanning: Boolean,
 		multiplePlans: Boolean,
+		precondition: Number,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data() {
@@ -181,6 +221,7 @@ export default defineComponent({
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
 			active: false,
+			selectedPrecondition: 0,
 		};
 	},
 	computed: {
@@ -192,6 +233,21 @@ export default defineComponent({
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
+		},
+		hasPrecondition() {
+			return this.selectedPrecondition > 0;
+		},
+		preconditionOptions() {
+			const hourOptions = [0.5, 1, 2];
+			return hourOptions
+				.map((hour) => hour * 60 * 60)
+				.map((seconds) => ({
+					value: seconds,
+					name: this.fmtDurationLong(seconds),
+				}));
+		},
+		preconditionFmt() {
+			return this.fmtDurationLong(this.selectedPrecondition);
 		},
 		energyOptions() {
 			const options = energyOptions(
@@ -215,6 +271,7 @@ export default defineComponent({
 				energy: this.energy,
 				day: this.fmtDayString(t),
 				time: this.fmtTimeString(t),
+				precondition: this.precondition,
 			};
 		},
 		dataChanged() {
@@ -224,7 +281,8 @@ export default defineComponent({
 			const goalChanged = this.socBasedPlanning
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
-			return dateChanged || goalChanged;
+			const preconditionChanged = this.originalData.precondition != this.selectedPrecondition;
+			return dateChanged || goalChanged || preconditionChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -250,6 +308,9 @@ export default defineComponent({
 		},
 		isNew(value) {
 			this.active = !value;
+		},
+		precondition(value) {
+			this.selectedPrecondition = value;
 		},
 	},
 	mounted() {
@@ -325,6 +386,7 @@ export default defineComponent({
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
+				precondition: this.selectedPrecondition,
 			});
 		},
 		preview(force = false) {
@@ -335,6 +397,7 @@ export default defineComponent({
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
+				precondition: this.selectedPrecondition,
 			});
 		},
 		toggle(e: Event) {
@@ -346,6 +409,15 @@ export default defineComponent({
 				this.preview(true);
 			}
 			this.active = checked;
+		},
+		togglePrecondition() {
+			this.selectedPrecondition = this.hasPrecondition ? 0 : DEFAULT_PRECONDITION;
+			this.preview();
+		},
+		selectPrecondition(e: Event) {
+			const { value } = e.target as HTMLSelectElement;
+			this.selectedPrecondition = parseInt(value);
+			this.preview();
 		},
 		defaultTime() {
 			const [hours, minutes] = (

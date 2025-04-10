@@ -98,7 +98,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 		ts = time.Time{}
 	}
 
-	v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
+	v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))

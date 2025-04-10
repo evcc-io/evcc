@@ -165,6 +165,7 @@ export default {
 		planProjectedEnd: String,
 		planOverrun: Number,
 		planEnergy: Number,
+		planPrecondition: Number,
 		planTime: String,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,

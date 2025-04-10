@@ -353,8 +353,8 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 
 	lp.planTime = finishAt
 	lp.publish(keys.PlanTime, finishAt)
+	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
-
 	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
 
 	if finishAt.IsZero() {

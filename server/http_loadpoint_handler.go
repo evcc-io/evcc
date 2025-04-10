@@ -77,6 +77,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		planTime, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
@@ -90,7 +91,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(vars["precondition"])
+		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -137,6 +138,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		hourMinute := vars["time"]
 		tz := vars["tz"]
@@ -163,7 +165,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(vars["precondition"])
+		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -195,6 +197,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
@@ -208,7 +211,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(vars["precondition"])
+		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
