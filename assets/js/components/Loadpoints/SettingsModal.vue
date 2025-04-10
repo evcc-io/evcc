@@ -157,12 +157,12 @@
 								<div class="col-sm-8 pe-0">
 									<div class="d-flex align-items-center">
 										<input
+											:id="formId('loadpointParamPriority')"
+											v-model.number="selectedPriority"
 											type="range"
 											class="form-range form-range-sm w-50"
 											min="-99"
 											max="99"
-											v-model.number="selectedPriority"
-											:id="formId('loadpointParamPriority')"
 											:name="formId('loadpointParamPriority')"
 											@change="changePriority"
 										/>
