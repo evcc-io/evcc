@@ -69,7 +69,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		log:      log,
 		Qos:      qos,
 		listener: make(map[string][]func(string)),
-		inflight: semaphore.NewWeighted(int64(parallelInflightLimit)),
+		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
 
 	options := paho.NewClientOptions()
