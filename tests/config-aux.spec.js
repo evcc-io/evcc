@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -48,6 +48,7 @@ test.describe("aux meter", async () => {
     // delete
     await page.goto("/#/config");
     await page.getByTestId("aux").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByTestId("aux")).toHaveCount(0);
 

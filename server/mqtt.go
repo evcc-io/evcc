@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/vehicle"
@@ -46,6 +47,13 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	if err != nil {
 		err = fmt.Errorf("mqtt: %w", err)
 	}
+
+	shutdown.Register(func() {
+		m.log.DEBUG.Println("shutdown cleanup started")
+		if err := m.Handler.Cleanup(m.root, true); err != nil {
+			m.log.ERROR.Printf("shutdown cleanup failed: %v", err)
+		}
+	})
 
 	return m, err
 }
@@ -141,8 +149,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 }
 
 func (m *MQTT) publishString(topic string, retained bool, payload string) {
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken("send", topic, token)
+	m.Handler.Publish(topic, retained, m.encode(payload))
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
