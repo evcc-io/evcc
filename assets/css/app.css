@@ -567,6 +567,14 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
 
+input[type="range"]::-webkit-slider-thumb {
+	background-color: var(--bs-primary);
+}
+
+input[type="range"] {
+	color: var(--bs-gray-medium)
+}
+
 .table {
 	--bs-table-bg: transparent;
 }

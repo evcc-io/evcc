@@ -39,6 +39,7 @@
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
 			@batteryboost-updated="setBatteryBoost"
+			@priority-updated="setPriority"
 		/>
 
 		<div
