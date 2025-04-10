@@ -621,15 +621,15 @@ remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
 [main.loadpointPrio]
-high = "High"
+high = "high"
+higher = "higher"
 loadpoint = "Loadpoint Prio"
-low = "Low"
-neutral = "Neutral"
+low = "low"
+lower = "lower"
+normal = "normal"
 prioTooltip = "Vehicle overrides Loadpoint Priority"
-slightlyHigh = "Slightly High"
-slightlyLow = "Slightly Low"
-veryHigh = "Very High"
-veryLow = "Very Low"
+veryHigh = "very high"
+veryLow = "very low"
 
 [main.loadpointSettings]
 batteryUsage = "Home Battery"

@@ -168,6 +168,10 @@
 										/>
 										<small class="ms-3">{{ priority }}</small>
 									</div>
+									<div class="d-flex justify-content-between w-50">
+										<small class="text-muted">Low</small>
+										<small class="text-muted">High</small>
+									</div>
 									<small class="form-text text-muted">
 										{{ $t("config.loadpoint.priorityHelp") }}
 									</small>

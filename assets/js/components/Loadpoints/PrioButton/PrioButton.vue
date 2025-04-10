@@ -3,13 +3,11 @@
 		v-if="!editable"
 		ref="tooltip"
 		type="button"
-		class="btn btn-sm btn-outline-secondary position-relative border-0 pt-0"
+		class="btn btn-sm btn-outline-secondary position-relative border-0 pt-0 opacity-25"
 		data-testid="loadpoint-prio-button"
-		:class="{ 'opacity-25': !editable }"
 		data-bs-toggle="tooltip"
 		data-bs-html="true"
 		:title="tooltipTitle"
-		:aria-label="editable ? $t('main.loadpointPrio.prioTooltip') : null"
 	>
 		<component :is="icon" :class="`icon icon--${size}`"></component>
 	</button>
@@ -19,11 +17,10 @@
 		type="button"
 		class="btn btn-sm btn-outline-secondary position-relative border-0 pt-0"
 		data-testid="loadpoint-prio-button"
-		:class="{ 'opacity-25': !editable }"
 		data-bs-toggle="tooltip"
 		data-bs-html="true"
 		:title="tooltipTitle"
-		:aria-label="editable ? $t('main.loadpointPrio.prioTooltip') : null"
+		:aria-label="$t('main.loadpointPrio.prioTooltip')"
 	>
 		<CustomSelect
 			v-if="editable"
@@ -82,11 +79,11 @@ export default {
 		priorityOptions() {
 			return [
 				{ value: -3, name: this.$t("main.loadpointPrio.veryLow") },
-				{ value: -2, name: this.$t("main.loadpointPrio.low") },
-				{ value: -1, name: this.$t("main.loadpointPrio.slightlyLow") },
-				{ value: 0, name: this.$t("main.loadpointPrio.neutral") },
-				{ value: 1, name: this.$t("main.loadpointPrio.slightlyHigh") },
-				{ value: 2, name: this.$t("main.loadpointPrio.high") },
+				{ value: -2, name: this.$t("main.loadpointPrio.lower") },
+				{ value: -1, name: this.$t("main.loadpointPrio.low") },
+				{ value: 0, name: this.$t("main.loadpointPrio.normal") },
+				{ value: 1, name: this.$t("main.loadpointPrio.high") },
+				{ value: 2, name: this.$t("main.loadpointPrio.higher") },
 				{ value: 3, name: this.$t("main.loadpointPrio.veryHigh") },
 			];
 		},
