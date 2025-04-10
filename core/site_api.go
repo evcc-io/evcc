@@ -344,19 +344,19 @@ func (site *Site) GetBatteryMode() api.BatteryMode {
 	return site.batteryMode
 }
 
-// GetBatteryModeExternal returns the current external battery mode
+// GetBatteryModeExternal returns the external battery mode
 func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryModeExternal
 }
 
-// SetBatteryModeExternal sets the external battery mode with proper locking
+// SetBatteryModeExternal sets the external battery mode
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.log.DEBUG.Printf("set battery mode external: %s", mode.String())
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
 	if mode != site.batteryModeExternal {
 		site.batteryModeExternal = mode
