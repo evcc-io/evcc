@@ -15,6 +15,12 @@ group: heating
 params:
   - name: host
   - name: token
+  - name: powersource
+    type: choice
+    choice: ["hpcurrpower", "hppower"]
+    description:
+      de: "Leistungsquelle"
+      en: "Power source"
   - name: tempsource
     type: choice
     choice: ["warmwater"]
@@ -24,15 +30,16 @@ params:
 render: |
   type: sgready
   power:
-    source: calc
-    add:
-    - source: http
-      uri: http://{{ .host }}/api/boiler/hpcurrpower
-      jq: .value // 0
-    - source: http
-      uri: http://{{ .host }}/api/boiler/hppower
-      jq: .value // 0
-      scale: 1000
+    source: http
+    {{- if not .powersource }}
+    uri: http://{{ .host }}/api/boiler/hpcurrpower
+    {{- else }}
+    uri: http://{{ .host }}/api/boiler/{{ .powersource }}
+    {{- end }}
+    jq: .value // 0
+    {{- if eq .powersource "hppower" }}
+    scale: 1000
+    {{- end}}
   getmode:
     source: go
     script: |
