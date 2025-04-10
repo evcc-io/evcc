@@ -32,27 +32,36 @@ import (
 
 // Amperfied charger implementation
 type Amperfied struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	current uint16
-	phases  int
-	wakeup  bool
+	log                 *util.Logger
+	conn                *modbus.Connection
+	current             uint16
+	phases              int
+	wakeup              bool
+	internalphaseswitch bool
+	phaseswitchduration time.Duration
+	phaseSwitchStart    time.Time
 }
 
 const (
-	ampRegChargingState      = 5    // Input
-	ampRegCurrents           = 6    // Input 6,7,8
-	ampRegTemperature        = 9    // Input
-	ampRegVoltages           = 10   // Input 10,11,12
-	ampRegPower              = 14   // Input
-	ampRegEnergy             = 17   // Input
-	ampRegTimeoutConfig      = 257  // Holding
-	ampRegRemoteLock         = 259  // Holding
-	ampRegAmpsConfig         = 261  // Holding
-	ampRegFailSafeConfig     = 262  // Holding
-	ampRegPhaseSwitchControl = 501  // Holding
-	ampRegPhaseSwitchState   = 5001 // Input
-	ampRegRfidUID            = 2002 // Input
+	ampRegChargingState       = 5    // Input
+	ampRegCurrents            = 6    // Input 6,7,8
+	ampRegTemperature         = 9    // Input
+	ampRegVoltages            = 10   // Input 10,11,12
+	ampRegPower               = 14   // Input
+	ampRegEnergy              = 17   // Input
+	ampRegTimeoutConfig       = 257  // Holding
+	ampRegRemoteLock          = 259  // Holding
+	ampRegAmpsConfig          = 261  // Holding
+	ampRegFailSafeConfig      = 262  // Holding
+	ampRegMaxPowerSet         = 500  // Holding
+	ampRegPhaseSwitchControl  = 501  // Holding
+	ampRegPhaseSwitchDuration = 503  // Holding
+	ampRegPhaseSwitchState    = 5001 // Input
+	ampRegRfidUID             = 2002 // Input
+)
+
+const (
+	phaseSwitchDurationDefault = 90
 )
 
 func init() {
@@ -64,23 +73,26 @@ func init() {
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-		Phases1p3p         bool
+		modbus.TcpSettings  `mapstructure:",squash"`
+		Phases1p3p          bool
+		Internalphaseswitch bool
+		Phaseswitchduration uint16
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255,
 		},
+		Phaseswitchduration: phaseSwitchDurationDefault,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAmperfied(ctx, cc.URI, cc.ID, cc.Phases1p3p)
+	return NewAmperfied(ctx, cc.URI, cc.ID, cc.Phases1p3p, cc.Phaseswitchduration, cc.Internalphaseswitch)
 }
 
 // NewAmperfied creates Amperfied charger
-func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (api.Charger, error) {
+func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool, phaseswitchduration uint16, internalphaseswitch bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -94,9 +106,12 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 	conn.Logger(log.TRACE)
 
 	wb := &Amperfied{
-		log:     log,
-		conn:    conn,
-		current: 60, // assume min current
+		log:                 log,
+		conn:                conn,
+		current:             60, // assume min current
+		internalphaseswitch: internalphaseswitch,
+		phaseswitchduration: time.Duration(phaseswitchduration) * time.Second,
+		phaseSwitchStart:    time.Now(), // initialize in the past to avoid startup error
 	}
 
 	// get failsafe timeout from charger
@@ -220,6 +235,9 @@ func (wb *Amperfied) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Amperfied) MaxCurrent(current int64) error {
+	if wb.internalphaseswitch {
+		return wb.MaxPower(float64(current))
+	}
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -231,17 +249,50 @@ func (wb *Amperfied) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
+	if wb.internalphaseswitch {
+		return wb.MaxPower(float64(current))
+	}
+
+	// If phase switch timer is running, than do not write new Amps, ignore right after startup
+	if wb.phaseSwitchStart.Add(wb.phaseswitchduration).After(time.Now()) && time.Now().Second() > int(wb.phaseswitchduration) {
+		return fmt.Errorf("MaxCurrent Change ignored due to phase-switch in progress for %.0f seconds", (wb.phaseSwitchStart.Add(wb.phaseswitchduration).Sub(time.Now())).Seconds())
+	}
+
 	cur := uint16(10 * current)
 
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cur)
 
 	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
-	if err == nil {
-		wb.current = cur
+	if err != nil {
+		return err
+	}
+	wb.current = cur
+
+	return nil
+}
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *Amperfied) MaxPower(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	return err
+	pwr := uint16(current * 230 * float64(wb.phases))
+
+	wb.log.DEBUG.Printf("Set MaxPower to %d W\n", pwr)
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, pwr)
+
+	_, err := wb.conn.WriteMultipleRegisters(ampRegMaxPowerSet, 1, b)
+	if err != nil {
+		return err
+	}
+
+	wb.current = uint16(10 * current)
+
+	return nil
 }
 
 var _ api.Meter = (*Amperfied)(nil)
@@ -344,24 +395,52 @@ func (wb *Amperfied) WakeUp() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Amperfied) phases1p3p(phases int) error {
+
+	// If internal phase switching is used, only apply phases for evcc
+	if wb.internalphaseswitch {
+		wb.phases = phases
+		return wb.MaxPower(float64(wb.current / 10)) // call this to make sure the WB switches.
+	}
+
+	// If evcc manages phase-switching, do the job...
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
+	// Read current Phase Switch State
+	c, err := wb.conn.ReadInputRegisters(ampRegPhaseSwitchState, 1)
+	if err != nil {
+		wb.log.ERROR.Println("Error reading ampRegPhaseSwitchState")
+		return err
+	}
+	phases_cur := int(binary.BigEndian.Uint16(c))
+
+	if phases_cur == 0 {
+		return fmt.Errorf("phase-switch still in progress")
+	}
+	// Set new phases
+	_, err = wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
+	if err != nil {
+		wb.log.ERROR.Println("Error reading ampRegPhaseSwitchControl")
+		return err
+	}
 	wb.phases = phases
 
-	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
-	return err
+	// Set Timer to phase switch duration and avoid new switching or current settings during timer
+	wb.phaseSwitchStart = time.Now()
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *Amperfied) getPhases() (int, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegPhaseSwitchState, 1)
 	if err != nil {
+		wb.log.ERROR.Println("Error reading ampRegPhaseSwitchState")
 		return 0, err
 	}
 
 	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
+		wb.log.DEBUG.Println("phase-switching in progress")
 		return wb.phases, nil
 	}
 
