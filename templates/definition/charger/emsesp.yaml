@@ -2,15 +2,18 @@ template: emsesp
 products:
   - brand: Buderus
     description:
-      generic: Buderus (SG Ready)
+      generic: SG Ready
   - brand: Bosch
     description:
-      generic: Bosch (SG Ready)
+      generic: SG Ready
   - brand: Junkers
     description:
-      generic: Junkers (SG Ready)
+      generic: SG Ready
 group: heating
-# requirements:
+requirements:
+  description:
+    de: "Eingebunden via [EMSESP](https://emsesp.org/)"
+    en: "Integrated via [EMSESP](https://emsesp.org/)"
 #   evcc: ["sponsorship"]
 params:
   - name: host
