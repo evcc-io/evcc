@@ -10,7 +10,27 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 255
+  - name: phaseswitchduration
+    default: 90
+    type: int
+    description:
+      de: Dauer Phasenumschaltung
+      en: Phase-Switch Duration
+    help:
+      de: Gibt an, wie lange die Wallbox für die Phasenumschaltung benötigt.
+      en: Defines how long it takes for the wallbox to switch phases.
+  - name: internalphaseswitch
+    default: false
+    type: bool
+    description:
+      de: Interne Phasenumschaltung
+      en: Use internal Phase-Switching
+    help:
+      de: Phasenumschaltung wird durch die Wallbox gesteuert.
+      en: Phase-Switch will be handled by wallbox.
 render: |
   type: amperfied
   {{- include "modbus" . }}
   phases1p3p: true
+  phaseswitchduration: {{ .phaseswitchduration }}
+  internalphaseswitch: {{ .internalphaseswitch }}
