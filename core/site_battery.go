@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -33,8 +34,8 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 		site.setBatteryMode(batMode)
 	}
 
-	if site.GetBatteryModeExternal() == api.BatteryReset {
-		site.batteryModeExternal = api.BatteryUnknown
+	if site.batteryModeExternal == api.BatteryUnknown {
+		site.batteryModeExternalTimer = time.Time{}
 	}
 }
 
@@ -44,6 +45,13 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	batMode := site.GetBatteryMode()
 	extMode := site.GetBatteryModeExternal()
 
+	var extModeReset bool
+	if extMode == api.BatteryUnknown {
+		site.Lock()
+		extModeReset = !site.batteryModeExternalTimer.IsZero()
+		site.Unlock()
+	}
+
 	mapper := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
@@ -51,7 +59,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
-	case extMode == api.BatteryReset:
+	case extModeReset:
 		// require normal mode to leave external control
 		res = api.BatteryNormal
 	case extMode != api.BatteryUnknown:

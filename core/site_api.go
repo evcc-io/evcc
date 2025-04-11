@@ -358,15 +358,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 
 	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
-	var disable bool
-
-	switch mode {
-	case api.BatteryUnknown:
-		mode = api.BatteryReset
-		fallthrough
-	case api.BatteryReset:
-		disable = true
-	}
+	disable := mode == api.BatteryUnknown
 
 	if mode != site.batteryModeExternal {
 		site.batteryModeExternal = mode
@@ -389,9 +381,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	}
 
 	// reset timer
-	if disable {
-		site.batteryModeExternalTimer = time.Time{}
-	} else {
+	if !disable {
 		site.batteryModeExternalTimer = time.Now()
 	}
 }
@@ -401,8 +391,8 @@ func (site *Site) batteryModeWatchdogExpired() bool {
 	elapsed := time.Since(site.batteryModeExternalTimer)
 	site.RUnlock()
 
-	if elapsed > time.Minute {
-		site.SetBatteryModeExternal(api.BatteryReset)
+	if elapsed > time.Minute && !site.batteryModeExternalTimer.IsZero() {
+		site.SetBatteryModeExternal(api.BatteryUnknown)
 		return true
 	}
 

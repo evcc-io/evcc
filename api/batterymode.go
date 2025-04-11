@@ -9,5 +9,4 @@ const (
 	BatteryNormal
 	BatteryHold
 	BatteryCharge
-	BatteryReset // user by external battery api
 )
