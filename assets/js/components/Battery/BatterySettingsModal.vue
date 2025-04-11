@@ -269,7 +269,7 @@ export default defineComponent({
 	components: { SmartCostLimit, CustomSelect, GenericModal },
 	mixins: [formatter, collector],
 	props: {
-		bufferSoc: Number,
+		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
