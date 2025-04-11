@@ -270,9 +270,9 @@ export default defineComponent({
 	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
-		prioritySoc: Number,
+		prioritySoc: { type: Number, default: 0 },
 		batterySoc: Number,
-		bufferStartSoc: Number,
+		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
 		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		batteryGridChargeLimit: { type: Number, default: null },
@@ -345,9 +345,7 @@ export default defineComponent({
 			return options;
 		},
 		bufferStartOption(): SelectOption<number> | undefined {
-			return this.bufferStartOptions.find(
-				(option) => this.computedBufferStartSoc >= option.value
-			);
+			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
 		},
 		selectedBufferStartName() {
 			return this.getBufferStartName(this.selectedBufferStartSoc);
@@ -359,10 +357,7 @@ export default defineComponent({
 			return 100 - this.topHeight - this.bottomHeight;
 		},
 		bottomHeight() {
-			return this.prioritySoc || 0;
-		},
-		computedBufferStartSoc() {
-			return this.bufferStartSoc || 0;
+			return this.prioritySoc;
 		},
 		batteryDetails() {
 			if (!Array.isArray(this.battery)) {
@@ -417,8 +412,8 @@ export default defineComponent({
 	},
 	mounted() {
 		this.selectedBufferSoc = this.bufferSoc || 100;
-		this.selectedPrioritySoc = this.prioritySoc || 0;
-		this.selectedBufferStartSoc = this.computedBufferStartSoc;
+		this.selectedPrioritySoc = this.prioritySoc;
+		this.selectedBufferStartSoc = this.bufferStartSoc;
 	},
 	methods: {
 		showGridTab() {
@@ -449,7 +444,7 @@ export default defineComponent({
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
 			if (soc > (this.bufferSoc || 100)) {
 				this.saveBufferSoc(soc);
-				if (soc > this.computedBufferStartSoc && this.computedBufferStartSoc > 0) {
+				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 					this.setBufferStartSoc(soc);
 				}
 			} else {
@@ -458,7 +453,7 @@ export default defineComponent({
 		},
 		toggleBufferStart() {
 			const options = this.bufferStartOptions.map((option) => option.value);
-			const index = options.findIndex((value) => this.computedBufferStartSoc >= value);
+			const index = options.findIndex((value) => this.bufferStartSoc >= value);
 			const nextIndex = index === 0 ? options.length - 1 : index - 1;
 			this.setBufferStartSoc(options[nextIndex]);
 		},
@@ -468,7 +463,7 @@ export default defineComponent({
 		},
 		async changeBufferSoc($event: Event) {
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
-			if (soc > this.computedBufferStartSoc && this.computedBufferStartSoc > 0) {
+			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 				await this.setBufferStartSoc(soc);
 			}
 			await this.saveBufferSoc(soc);
