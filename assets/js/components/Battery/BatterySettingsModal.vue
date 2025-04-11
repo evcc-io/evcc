@@ -33,7 +33,7 @@
 		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
-				<strong>{{ fmtSoc(batterySoc || 0) }}</strong>
+				<strong>{{ fmtSoc(batterySoc) }}</strong>
 				<small v-for="(line, index) in batteryDetails" :key="index" class="d-block">
 					{{ line }}
 				</small>
@@ -106,7 +106,7 @@
 					</div>
 					<div
 						class="batterySoc ps-0 bg-white pe-none"
-						:style="{ top: `${100 - (batterySoc || 0)}%` }"
+						:style="{ top: `${100 - (batterySoc)}%` }"
 					></div>
 					<div
 						class="bufferStartIndicator pe-none"
@@ -271,7 +271,7 @@ export default defineComponent({
 	props: {
 		bufferSoc: Number,
 		prioritySoc: { type: Number, default: 0 },
-		batterySoc: Number,
+		batterySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
 		battery: { type: Array as PropType<Battery[]>, default: () => [] },
