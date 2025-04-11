@@ -21,6 +21,7 @@ params:
     description:
       de: "Leistungsquelle"
       en: "Power source"
+    default: hpcurrpower
   - name: tempsource
     type: choice
     choice: ["warmwater"]
@@ -31,11 +32,8 @@ render: |
   type: sgready
   power:
     source: http
-    {{- if not .powersource }}
     uri: http://{{ .host }}/api/boiler/hpcurrpower
-    {{- else }}
     uri: http://{{ .host }}/api/boiler/{{ .powersource }}
-    {{- end }}
     jq: .value // 0
     {{- if eq .powersource "hppower" }}
     scale: 1000
