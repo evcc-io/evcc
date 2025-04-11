@@ -269,7 +269,7 @@ export default defineComponent({
 	components: { SmartCostLimit, CustomSelect, GenericModal },
 	mixins: [formatter, collector],
 	props: {
-		bufferSoc: Number,
+		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
@@ -351,7 +351,7 @@ export default defineComponent({
 			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
 		topHeight() {
-			return 100 - (this.bufferSoc || 100);
+			return 100 - this.bufferSoc;
 		},
 		middleHeight() {
 			return 100 - this.topHeight - this.bottomHeight;
@@ -411,7 +411,7 @@ export default defineComponent({
 		},
 	},
 	mounted() {
-		this.selectedBufferSoc = this.bufferSoc || 100;
+		this.selectedBufferSoc = this.bufferSoc;
 		this.selectedPrioritySoc = this.prioritySoc;
 		this.selectedBufferStartSoc = this.bufferStartSoc;
 	},
@@ -442,7 +442,7 @@ export default defineComponent({
 		},
 		changePrioritySoc($event: Event) {
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
-			if (soc > (this.bufferSoc || 100)) {
+			if (soc > this.bufferSoc) {
 				this.saveBufferSoc(soc);
 				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 					this.setBufferStartSoc(soc);
