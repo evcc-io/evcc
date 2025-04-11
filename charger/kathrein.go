@@ -184,8 +184,8 @@ const (
 
 var (
 	kathreinRegVoltages = []uint16{kathreinRegL1Voltage, kathreinRegL2Voltage, kathreinRegL3Voltage} // uint16 V
-	kathreinRegCurrents = []uint16{kathreinRegL1Current, kathreinRegL1Current, kathreinRegL1Current} // uint16 A
-	kathreinRegPowers   = []uint16{kathreinRegL1Power, kathreinRegL1Power, kathreinRegL2Power}       // uint16 W
+	kathreinRegCurrents = []uint16{kathreinRegL1Current, kathreinRegL2Current, kathreinRegL3Current} // uint16 A
+	kathreinRegPowers   = []uint16{kathreinRegL1Power, kathreinRegL2Power, kathreinRegL3Power}       // uint16 W
 )
 
 func init() {
@@ -255,15 +255,12 @@ func (wb *Kathrein) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case 1: // B (EV detected, ready to charge)
 		return api.StatusB, nil
-	case 2: // C (EV charging)
+	case 2, // C (EV charging)
+		3: // D (EV charging with fan)
 		return api.StatusC, nil
-	case 3: // D (EV charging with fan)
-		return api.StatusD, nil
 	case 4: // E (CP Short-Circuit)
 		return api.StatusE, nil
-	case 5: // F (EVSE not available, CP = -12VDC)
-		return api.StatusF, nil
-	default:
+	default: // 5 - F (EVSE not available, CP = -12VDC) and any other value
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
@@ -275,7 +272,7 @@ func (wb *Kathrein) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 0, nil
+	return binary.BigEndian.Uint16(b) == 0x8000, nil
 }
 
 // Enable implements the api.Charger interface
@@ -326,7 +323,7 @@ func (wb *Kathrein) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), err
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), err
 }
 
 var _ api.PhaseCurrents = (*Kathrein)(nil)
@@ -371,7 +368,7 @@ func (wb *Kathrein) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
@@ -419,7 +416,7 @@ var _ api.PhaseGetter = (*Kathrein)(nil)
 // GetPhases implements the api.PhaseGetter interface
 func (wb *Kathrein) GetPhases() (int, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kathreinRegSetpointRelais, 1)
-	binary.BigEndian.Uint16(b)
+
 	if err != nil {
 		return 0, err
 	}
