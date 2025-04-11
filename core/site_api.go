@@ -358,34 +358,53 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 
 	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
+	var disable bool
+
+	switch mode {
+	case api.BatteryUnknown:
+		mode = api.BatteryReset
+		fallthrough
+	case api.BatteryReset:
+		disable = true
+	}
+
 	if mode != site.batteryModeExternal {
 		site.batteryModeExternal = mode
 		site.publish(keys.BatteryModeExternal, mode)
-		site.setBatteryMode(mode)
 
-		// start Watchdog, if not running
-		if site.batteryModeExternalTimer.IsZero() && mode != api.BatteryUnknown {
-			go site.batteryModeWatchdog()
+		if !disable {
+			site.setBatteryMode(mode)
+
+			// start Watchdog, if not running
+			if site.batteryModeExternalTimer.IsZero() {
+				go func() {
+					for range time.Tick(time.Second) {
+						if site.batteryModeWatchdog() {
+							return
+						}
+					}
+				}()
+			}
 		}
 	}
 
 	// reset timer
-	if mode == api.BatteryUnknown {
+	if disable {
 		site.batteryModeExternalTimer = time.Time{}
 	} else {
 		site.batteryModeExternalTimer = time.Now()
 	}
 }
 
-func (site *Site) batteryModeWatchdog() {
-	for range time.Tick(time.Second) {
-		site.RLock()
-		elapsed := time.Since(site.batteryModeExternalTimer)
-		site.RUnlock()
+func (site *Site) batteryModeWatchdog() bool {
+	site.RLock()
+	elapsed := time.Since(site.batteryModeExternalTimer)
+	site.RUnlock()
 
-		if elapsed > time.Minute {
-			site.SetBatteryModeExternal(api.BatteryUnknown)
-			return
-		}
+	if elapsed > time.Minute {
+		site.SetBatteryModeExternal(api.BatteryReset)
+		return true
 	}
+
+	return false
 }

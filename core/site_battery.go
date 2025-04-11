@@ -32,6 +32,10 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	if site.batteryMode != batMode {
 		site.setBatteryMode(batMode)
 	}
+
+	if site.GetBatteryModeExternal() == api.BatteryReset {
+		site.batteryModeExternal = api.BatteryUnknown
+	}
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
@@ -47,6 +51,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
+	case extMode == api.BatteryReset:
+		// require normal mode to leave external control
+		res = api.BatteryNormal
 	case extMode != api.BatteryUnknown:
 		res = extMode
 	case batteryGridChargeActive:
