@@ -70,7 +70,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 
 		// expire timer
 		site.batteryModeExternalTimer = site.batteryModeExternalTimer.Add(-time.Hour)
-		site.batteryModeWatchdog()
+		site.batteryModeWatchdogExpired()
 
 		mode := site.requiredBatteryMode(false, api.Rate{})
 		assert.Equal(t, tc.expired.String(), mode.String(), "external mode expected %s got %s", tc.expired, mode)

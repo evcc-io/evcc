@@ -375,11 +375,11 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 		if !disable {
 			site.setBatteryMode(mode)
 
-			// start Watchdog, if not running
+			// start watchdog if not running
 			if site.batteryModeExternalTimer.IsZero() {
 				go func() {
 					for range time.Tick(time.Second) {
-						if site.batteryModeWatchdog() {
+						if site.batteryModeWatchdogExpired() {
 							return
 						}
 					}
@@ -396,7 +396,7 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	}
 }
 
-func (site *Site) batteryModeWatchdog() bool {
+func (site *Site) batteryModeWatchdogExpired() bool {
 	site.RLock()
 	elapsed := time.Since(site.batteryModeExternalTimer)
 	site.RUnlock()
