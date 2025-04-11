@@ -32,7 +32,6 @@ render: |
   type: sgready
   power:
     source: http
-    uri: http://{{ .host }}/api/boiler/hpcurrpower
     uri: http://{{ .host }}/api/boiler/{{ .powersource }}
     jq: .value // 0
     {{- if eq .powersource "hppower" }}
