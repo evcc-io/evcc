@@ -19,9 +19,8 @@ func TestInternalBatteryMode(t *testing.T) {
 		{api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
 
 		{api.BatteryHold, api.BatteryUnknown, api.BatteryNormal},
-		
-		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
 
+		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
 	} {
 		t.Logf("%+v", tc)
 
@@ -32,7 +31,7 @@ func TestInternalBatteryMode(t *testing.T) {
 
 		site.batteryMode = tc.internal
 		// ensure initial timer, external mode never set
-		site.batteryModeExternalTimer = time.Time{}  
+		site.batteryModeExternalTimer = time.Time{}
 
 		// evaluate internal battery mode
 		mode := site.requiredBatteryMode(false, api.Rate{})
@@ -58,7 +57,7 @@ func TestExternalBatteryMode(t *testing.T) {
 		{api.BatteryHold, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryHold, api.BatteryHold, api.BatteryHold},
 		{api.BatteryHold, api.BatteryCharge, api.BatteryCharge},
-		
+
 		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryHold, api.BatteryHold},
@@ -99,7 +98,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		{api.BatteryHold, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryHold, api.BatteryHold, api.BatteryNormal},
 		{api.BatteryHold, api.BatteryCharge, api.BatteryNormal},
-		
+
 		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryHold, api.BatteryNormal},
@@ -116,13 +115,13 @@ func TestExternalBatteryModeChange(t *testing.T) {
 
 		// timer is initial
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
-		
+
 		// active external battery mode using setter
 		site.SetBatteryModeExternal(tc.ext)
-		
+
 		// validate external battery mode
 		assert.Equal(t, site.batteryModeExternal, tc.ext)
-		
+
 		// timer check
 		if tc.ext != api.BatteryUnknown {
 			// external modes normal/hold/charge - timer active
@@ -130,18 +129,17 @@ func TestExternalBatteryModeChange(t *testing.T) {
 			assert.False(t, site.batteryModeWatchdogExpired())
 			// expire timer
 			site.batteryModeExternalTimer = site.batteryModeExternalTimer.Add(-time.Hour)
-
 		} else {
 			// external mode unknown - timer expired forcefully before watchdog activity
 			assert.True(t, site.batteryModeExternalTimer.IsZero())
 		}
-		
-		// check for expired timer (independent of external battery mode)		
+
+		// check for expired timer (independent of external battery mode)
 		assert.True(t, site.batteryModeWatchdogExpired())
-		
+
 		// wait for expiration watchdog to handle changed timer (looped every second, for safety wait longer)
 		time.Sleep(2 * time.Second)
-		
+
 		// mode reverted to unknown, timer inactive
 		assert.Equal(t, site.batteryModeExternal, api.BatteryUnknown)
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
