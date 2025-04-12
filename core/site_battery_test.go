@@ -123,7 +123,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		// evaluate internal battery mode
 		mode := site.requiredBatteryMode(false, api.Rate{})
 		assert.Equal(t, tc.expired.String(), mode.String(), "external expired, internal mode expected %s got %s", tc.expired, mode)
-		
+
 		// on valid battery mode
 		if mode != api.BatteryUnknown {
 			site.SetBatteryMode(mode)
