@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -32,10 +31,6 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 
 	if site.batteryMode != batMode {
 		site.setBatteryMode(batMode)
-	}
-
-	if site.batteryModeExternal == api.BatteryUnknown {
-		site.batteryModeExternalTimer = time.Time{}
 	}
 }
 
