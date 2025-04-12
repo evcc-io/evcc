@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/volvo"
 )
 
-// Volvo is an api.Vehicle implementation for Volvo. cars
+// Volvo is an api.Vehicle implementation for Volvo cars
 type Volvo struct {
 	*embed
 	*request.Helper
