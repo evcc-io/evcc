@@ -129,7 +129,10 @@ func TestExternalBatteryModeChange(t *testing.T) {
 			site.SetBatteryMode(mode)
 			// timer sill disabled
 			assert.True(t, site.batteryModeExternalTimer.IsZero())
-			// internal battery mode is valid after changes and expiration
+		}
+
+		if tc.internal != api.BatteryUnknown || tc.ext != api.BatteryUnknown {
+			// check internal battery mode after changes and expiration: ensures valid batteryMode
 			assert.Equal(t, site.GetBatteryMode(), api.BatteryNormal)
 		}
 	}
