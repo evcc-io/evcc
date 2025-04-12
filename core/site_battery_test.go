@@ -44,12 +44,12 @@ func TestExternalBatteryMode(t *testing.T) {
 		internal, ext, new api.BatteryMode
 	}{
 		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
-		{api.BatteryUnknown, api.BatteryNormal, api.BatteryUnknown},
+		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryHold, api.BatteryHold},
 		{api.BatteryUnknown, api.BatteryCharge, api.BatteryCharge},
 
 		{api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
-		{api.BatteryNormal, api.BatteryNormal, api.BatteryUnknown},
+		{api.BatteryNormal, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryNormal, api.BatteryHold, api.BatteryHold},
 		{api.BatteryNormal, api.BatteryCharge, api.BatteryCharge},
 
@@ -85,12 +85,12 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		internal, ext, expired api.BatteryMode
 	}{
 		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
-		{api.BatteryUnknown, api.BatteryNormal, api.BatteryUnknown},
+		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryHold, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryCharge, api.BatteryNormal},
 
 		{api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
-		{api.BatteryNormal, api.BatteryNormal, api.BatteryUnknown},
+		{api.BatteryNormal, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryNormal, api.BatteryHold, api.BatteryNormal},
 		{api.BatteryNormal, api.BatteryCharge, api.BatteryNormal},
 
