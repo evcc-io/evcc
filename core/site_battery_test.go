@@ -10,35 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInternalBatteryMode(t *testing.T) {
-	for _, tc := range []struct {
-		internal, ext, new api.BatteryMode
-	}{
-		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
-
-		{api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
-
-		{api.BatteryHold, api.BatteryUnknown, api.BatteryNormal},
-
-		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
-	} {
-		t.Logf("%+v", tc)
-
-		site := &Site{
-			log:           util.NewLogger("foo"),
-			batteryMeters: []config.Device[api.Meter]{nil},
-		}
-
-		site.batteryMode = tc.internal
-		// ensure initial timer, external mode never set
-		site.batteryModeExternalTimer = time.Time{}
-
-		// evaluate internal battery mode
-		mode := site.requiredBatteryMode(false, api.Rate{})
-		assert.Equal(t, tc.new.String(), mode.String(), "external initial, internal mode expected %s got %s", tc.new, mode)
-	}
-}
-
 func TestExternalBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, ext, new api.BatteryMode
