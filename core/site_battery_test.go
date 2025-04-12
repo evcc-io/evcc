@@ -92,6 +92,9 @@ func TestExternalBatteryModeChange(t *testing.T) {
 
 		// validate external battery mode
 		assert.Equal(t, site.batteryModeExternal, tc.ext)
+		
+		// validate internal battery mode
+		assert.Equal(t, site.GetBatteryMode(), tc.ext)
 
 		// timer check
 		if tc.ext != api.BatteryUnknown {
@@ -118,9 +121,14 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		// evaluate internal battery mode
 		mode := site.requiredBatteryMode(false, api.Rate{})
 		assert.Equal(t, tc.expired.String(), mode.String(), "external expired, internal mode expected %s got %s", tc.expired, mode)
-
-		// timer sill disabled
-		site.SetBatteryMode(mode)
-		assert.True(t, site.batteryModeExternalTimer.IsZero())
+		
+		// on valid battery mode
+		if tc.ext != api.BatteryUnknown {
+			site.SetBatteryMode(mode)
+			// timer sill disabled
+			assert.True(t, site.batteryModeExternalTimer.IsZero())
+			// internal battery mode is valid after changes and expiration
+			assert.Equal(t, site.GetBatteryMode(), api.BatteryNormal)
+		}
 	}
 }
