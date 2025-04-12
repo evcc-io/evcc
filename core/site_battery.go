@@ -43,14 +43,6 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
-	extMode := site.GetBatteryModeExternal()
-
-	var extModeReset bool
-	if extMode == api.BatteryUnknown {
-		site.Lock()
-		extModeReset = !site.batteryModeExternalTimer.IsZero()
-		site.Unlock()
-	}
 
 	mapper := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
@@ -59,11 +51,8 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
-	case extModeReset:
-		// require normal mode to leave external control
-		res = api.BatteryNormal
-	case extMode != api.BatteryUnknown:
-		res = extMode
+	case !site.batteryModeWatchdogExpired():
+		res = site.GetBatteryModeExternal()
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
