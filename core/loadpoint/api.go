@@ -26,16 +26,24 @@ type API interface {
 	// references
 	//
 
-	// GetCharger returns the loadpoint charger
-	GetChargerName() string
-	// GetMeter returns the loadpoint meter
-	GetMeterName() string
-	// GetCircuitName returns the loadpoint circuit name
-	GetCircuitName() string
+	// TODO SetCircuitRef
+
+	// GetChargerRef returns the loadpoint charger
+	GetChargerRef() string
+	// SetChargerRef sets the loadpoint charger
+	SetChargerRef(string)
+	// GetMeterRef returns the loadpoint meter
+	GetMeterRef() string
+	// SetMeterRef sets the loadpoint meter
+	SetMeterRef(string)
+	// GetCircuitRef returns the loadpoint circuit name
+	GetCircuitRef() string
 	// GetCircuit returns the loadpoint circuit
 	GetCircuit() api.Circuit
-	// GetDefaultVehicle returns the loadpoint default vehicle
-	GetDefaultVehicle() string
+	// GetDefaultVehicleRef returns the loadpoint default vehicle
+	GetDefaultVehicleRef() string
+	// SetDefaultVehicleRef sets the loadpoint default vehicle
+	SetDefaultVehicleRef(string)
 
 	//
 	// settings
@@ -116,7 +124,7 @@ type API interface {
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
+	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -171,7 +179,7 @@ type API interface {
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
-	GetChargePowerFlexibility() float64
+	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current
 	GetMaxPhaseCurrent() float64
 

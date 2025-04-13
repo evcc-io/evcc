@@ -1,7 +1,7 @@
 export default {
   methods: {
     // collect all target component properties from current instance
-    collectProps: function (component, state) {
+    collectProps(component, state) {
       let data = {};
       for (var p in component.props) {
         // check in optional state

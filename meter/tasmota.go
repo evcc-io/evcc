@@ -61,7 +61,7 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 		voltages = c.voltages
 	}
 
-	return decorateTasmota(c, currents, voltages), nil
+	return decorateTasmota(c, voltages, currents), nil
 }
 
 var _ api.Meter = (*Tasmota)(nil)

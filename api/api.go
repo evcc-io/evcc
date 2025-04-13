@@ -44,8 +44,8 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
-// MaxACPower provides max AC power in W
-type MaxACPower interface {
+// MaxACPowerGetter provides max AC power in W
+type MaxACPowerGetter interface {
 	MaxACPower() float64
 }
 
@@ -239,8 +239,8 @@ type Circuit interface {
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
-	ValidateCurrent(old, new float64) float64
-	ValidatePower(old, new float64) float64
+	ValidateCurrent(old, new float64, charging bool) float64
+	ValidatePower(old, new float64, charging bool) float64
 }
 
 // Redactor is an interface to redact sensitive data

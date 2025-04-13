@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="chargerModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="charger-modal"
 		:fade="fade"
@@ -10,9 +11,10 @@
 		<form ref="form" class="container mx-0 px-0">
 			<FormRow id="chargerTemplate" :label="$t('config.charger.template')">
 				<select
+					v-if="isNew"
 					id="chargerTemplate"
+					ref="templateSelect"
 					v-model="templateName"
-					:disabled="!isNew"
 					class="form-select w-100"
 					@change="templateChanged"
 				>
@@ -35,7 +37,7 @@
 							{{ option.name }}
 						</option>
 					</optgroup>
-					<optgroup :label="$t('config.charger.switchsocket')">
+					<optgroup :label="$t('config.charger.switchsockets')">
 						<option
 							v-for="option in switchSocketOptions"
 							:key="option.name"
@@ -44,9 +46,25 @@
 							{{ option.name }}
 						</option>
 					</optgroup>
+					<optgroup :label="$t('config.charger.heatingdevices')">
+						<option
+							v-for="option in heatingdevicesOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
 				</select>
+				<input
+					v-else
+					type="text"
+					:value="productName"
+					disabled
+					class="form-control w-100"
+				/>
 			</FormRow>
-			<p v-if="loadingTemplate">Loading ...</p>
+			<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 			<SponsorTokenRequired v-if="sponsorTokenRequired" />
 			<Markdown v-if="description" :markdown="description" class="my-4" />
 			<FormRow
@@ -55,12 +73,7 @@
 				:label="$t('config.charger.ocppLabel')"
 				:help="$t('config.charger.ocppHelp')"
 			>
-				<input
-					type="text"
-					class="form-control border border-success bg-transparent"
-					:value="ocppUrl"
-					readonly
-				/>
+				<input type="text" class="form-control border" :value="ocppUrl" readonly />
 			</FormRow>
 
 			<Modbus
@@ -157,7 +170,7 @@ import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 const initialValues = { type: "template" };
@@ -217,6 +230,9 @@ export default {
 		switchSocketOptions() {
 			return this.products.filter((p) => p.group === "switchsockets");
 		},
+		heatingdevicesOptions() {
+			return this.products.filter((p) => p.group === "heating");
+		},
 		templateParams() {
 			const params = this.template?.Params || [];
 			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
@@ -254,6 +270,9 @@ export default {
 		},
 		description() {
 			return this.template?.Requirements?.Description;
+		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
 		},
 		sponsorTokenRequired() {
 			const list = this.template?.Requirements?.EVCC || [];
@@ -303,6 +322,10 @@ export default {
 			try {
 				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
 				this.values = charger.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = charger.type;
+				this.values.deviceProduct = charger.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -322,6 +345,7 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -347,6 +371,13 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testCharger);
 				if (!success) return;
@@ -357,11 +388,9 @@ export default {
 				const response = await api.post("config/devices/charger", this.apiData);
 				const { name } = response.data.result;
 				this.$emit("added", name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -373,7 +402,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {
@@ -385,10 +414,9 @@ export default {
 			try {
 				await api.put(`config/devices/charger/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -396,11 +424,9 @@ export default {
 			try {
 				await api.delete(`config/devices/charger/${this.id}`);
 				this.$emit("removed", this.name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {

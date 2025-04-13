@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -112,7 +113,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, true, ocppTestConnectTimeout)
+	c1, err := NewOCPP(context.TODO(), "test-1", 1, "", "", 0, false, false, true, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -161,7 +162,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP("test-2", 1, "", "", 0, false, true, ocppTestConnectTimeout)
+	c2, err := NewOCPP(context.TODO(), "test-2", 1, "", "", 0, false, false, true, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	{
@@ -203,7 +204,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, ocppTestConnectTimeout)
+	c1, err := NewOCPP(context.TODO(), "test-3", 1, "", "", 0, false, false, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -250,7 +251,7 @@ func (suite *ocppTestSuite) TestTimeout() {
 	})
 
 	// 1st charge point- local
-	_, err := NewOCPP("test-4", 1, "", "", 0, false, false, ocppTestConnectTimeout)
+	_, err := NewOCPP(context.TODO(), "test-4", 1, "", "", 0, false, false, false, ocppTestConnectTimeout)
 
 	suite.Require().NoError(err)
 }

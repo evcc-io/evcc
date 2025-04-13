@@ -2,7 +2,7 @@ template: smaevcharger
 products:
   - brand: SMA
     description:
-      generic: EV Charger
+      generic: EV Charger, eCharger
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]

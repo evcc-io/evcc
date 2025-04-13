@@ -26,7 +26,21 @@
 										{{ $t("sessions.loadpoint") }}
 									</th>
 									<td>
-										{{ session.loadpoint }}
+										<CustomSelect
+											id="session.vehicle"
+											class="options"
+											:options="loadpointOptions"
+											:selected="session.loadpoint"
+											@change="changeLoadpoint($event.target.value)"
+										>
+											<span class="flex-grow-1 text-truncate loadpoint-name">
+												{{
+													session.loadpoint
+														? session.loadpoint
+														: $t("main.loadpoint.fallbackName")
+												}}
+											</span>
+										</CustomSelect>
 									</td>
 								</tr>
 								<tr>
@@ -184,35 +198,43 @@
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "../../mixins/formatter";
-import VehicleOptions from "../VehicleOptions.vue";
+import Options from "../Vehicles/Options.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit, distanceValue } from "../../units";
 import api from "../../api";
 
 export default {
 	name: "SessionDetailsModal",
-	components: { VehicleOptions },
+	components: { VehicleOptions: Options, CustomSelect },
 	mixins: [formatter],
 	props: {
 		session: Object,
 		currency: String,
 		vehicles: Array,
+		loadpoints: Array,
 	},
 	emits: ["session-changed"],
 	computed: {
-		chargedEnergy: function () {
+		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
 		},
-		avgPower: function () {
+		avgPower() {
 			const hours = this.session.chargeDuration / 1e9 / 3600;
 			return this.chargedEnergy / hours;
 		},
-		solarEnergy: function () {
+		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions: function () {
+		vehicleOptions() {
 			return this.vehicles.map((v) => ({
 				name: v.title,
 				title: v.title,
+			}));
+		},
+		loadpointOptions() {
+			return this.loadpoints.map((loadpoint) => ({
+				value: loadpoint,
+				name: loadpoint,
 			}));
 		},
 	},
@@ -227,7 +249,7 @@ export default {
 			);
 			modal.show();
 		},
-		formatKm: function (value) {
+		formatKm(value) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
 		async changeVehicle(title) {
@@ -235,6 +257,9 @@ export default {
 		},
 		async removeVehicle() {
 			await this.updateSession({ vehicle: null });
+		},
+		async changeLoadpoint(title) {
+			await this.updateSession({ loadpoint: title });
 		},
 		async updateSession(data) {
 			try {
@@ -258,6 +283,10 @@ export default {
 
 <style scoped>
 .options .vehicle-name {
+	text-decoration: underline;
+}
+
+.options .loadpoint-name {
 	text-decoration: underline;
 }
 </style>

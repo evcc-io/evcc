@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -57,11 +58,11 @@ const (
 )
 
 func init() {
-	registry.Add("solax", NewSolaxFromConfig)
+	registry.AddCtx("solax", NewSolaxFromConfig)
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -70,12 +71,12 @@ func NewSolaxFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSolax(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, id)
+func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
 	}

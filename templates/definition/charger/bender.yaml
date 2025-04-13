@@ -1,5 +1,8 @@
 template: bender
 products:
+  - brand: Ampure
+    description:
+      generic: Live
   - brand: Bender
     description:
       generic: CC612
@@ -15,6 +18,9 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON ChargeControl
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You
   - brand: Webasto
     description:
       generic: Live

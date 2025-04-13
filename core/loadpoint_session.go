@@ -35,6 +35,8 @@ func (lp *Loadpoint) createSession() {
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		lp.session.Vehicle = vehicle.Title()
+	} else if lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.session.Vehicle = lp.GetTitle()
 	}
 
 	if c, ok := lp.charger.(api.Identifier); ok {

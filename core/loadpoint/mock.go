@@ -154,31 +154,31 @@ func (mr *MockAPIMockRecorder) GetChargePower() *gomock.Call {
 }
 
 // GetChargePowerFlexibility mocks base method.
-func (m *MockAPI) GetChargePowerFlexibility() float64 {
+func (m *MockAPI) GetChargePowerFlexibility(rates api.Rates) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChargePowerFlexibility")
+	ret := m.ctrl.Call(m, "GetChargePowerFlexibility", rates)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // GetChargePowerFlexibility indicates an expected call of GetChargePowerFlexibility.
-func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
+func (mr *MockAPIMockRecorder) GetChargePowerFlexibility(rates any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility), rates)
 }
 
-// GetChargerName mocks base method.
-func (m *MockAPI) GetChargerName() string {
+// GetChargerRef mocks base method.
+func (m *MockAPI) GetChargerRef() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChargerName")
+	ret := m.ctrl.Call(m, "GetChargerRef")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetChargerName indicates an expected call of GetChargerName.
-func (mr *MockAPIMockRecorder) GetChargerName() *gomock.Call {
+// GetChargerRef indicates an expected call of GetChargerRef.
+func (mr *MockAPIMockRecorder) GetChargerRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargerName", reflect.TypeOf((*MockAPI)(nil).GetChargerName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargerRef", reflect.TypeOf((*MockAPI)(nil).GetChargerRef))
 }
 
 // GetCircuit mocks base method.
@@ -195,18 +195,18 @@ func (mr *MockAPIMockRecorder) GetCircuit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuit", reflect.TypeOf((*MockAPI)(nil).GetCircuit))
 }
 
-// GetCircuitName mocks base method.
-func (m *MockAPI) GetCircuitName() string {
+// GetCircuitRef mocks base method.
+func (m *MockAPI) GetCircuitRef() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCircuitName")
+	ret := m.ctrl.Call(m, "GetCircuitRef")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetCircuitName indicates an expected call of GetCircuitName.
-func (mr *MockAPIMockRecorder) GetCircuitName() *gomock.Call {
+// GetCircuitRef indicates an expected call of GetCircuitRef.
+func (mr *MockAPIMockRecorder) GetCircuitRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitName", reflect.TypeOf((*MockAPI)(nil).GetCircuitName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitRef", reflect.TypeOf((*MockAPI)(nil).GetCircuitRef))
 }
 
 // GetDefaultMode mocks base method.
@@ -223,18 +223,18 @@ func (mr *MockAPIMockRecorder) GetDefaultMode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultMode", reflect.TypeOf((*MockAPI)(nil).GetDefaultMode))
 }
 
-// GetDefaultVehicle mocks base method.
-func (m *MockAPI) GetDefaultVehicle() string {
+// GetDefaultVehicleRef mocks base method.
+func (m *MockAPI) GetDefaultVehicleRef() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDefaultVehicle")
+	ret := m.ctrl.Call(m, "GetDefaultVehicleRef")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetDefaultVehicle indicates an expected call of GetDefaultVehicle.
-func (mr *MockAPIMockRecorder) GetDefaultVehicle() *gomock.Call {
+// GetDefaultVehicleRef indicates an expected call of GetDefaultVehicleRef.
+func (mr *MockAPIMockRecorder) GetDefaultVehicleRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicle", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicle))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicleRef))
 }
 
 // GetDisableDelay mocks base method.
@@ -349,18 +349,18 @@ func (mr *MockAPIMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhaseCurrent))
 }
 
-// GetMeterName mocks base method.
-func (m *MockAPI) GetMeterName() string {
+// GetMeterRef mocks base method.
+func (m *MockAPI) GetMeterRef() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMeterName")
+	ret := m.ctrl.Call(m, "GetMeterRef")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetMeterName indicates an expected call of GetMeterName.
-func (mr *MockAPIMockRecorder) GetMeterName() *gomock.Call {
+// GetMeterRef indicates an expected call of GetMeterRef.
+func (mr *MockAPIMockRecorder) GetMeterRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeterName", reflect.TypeOf((*MockAPI)(nil).GetMeterName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeterRef", reflect.TypeOf((*MockAPI)(nil).GetMeterRef))
 }
 
 // GetMinCurrent mocks base method.
@@ -420,12 +420,11 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 }
 
 // GetPlan mocks base method.
-func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
+func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlan", targetTime, requiredDuration)
 	ret0, _ := ret[0].(api.Rates)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // GetPlan indicates an expected call of GetPlan.
@@ -670,6 +669,18 @@ func (mr *MockAPIMockRecorder) SetBatteryBoost(enable any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryBoost", reflect.TypeOf((*MockAPI)(nil).SetBatteryBoost), enable)
 }
 
+// SetChargerRef mocks base method.
+func (m *MockAPI) SetChargerRef(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetChargerRef", arg0)
+}
+
+// SetChargerRef indicates an expected call of SetChargerRef.
+func (mr *MockAPIMockRecorder) SetChargerRef(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetChargerRef", reflect.TypeOf((*MockAPI)(nil).SetChargerRef), arg0)
+}
+
 // SetDefaultMode mocks base method.
 func (m *MockAPI) SetDefaultMode(arg0 api.ChargeMode) {
 	m.ctrl.T.Helper()
@@ -680,6 +691,18 @@ func (m *MockAPI) SetDefaultMode(arg0 api.ChargeMode) {
 func (mr *MockAPIMockRecorder) SetDefaultMode(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultMode", reflect.TypeOf((*MockAPI)(nil).SetDefaultMode), arg0)
+}
+
+// SetDefaultVehicleRef mocks base method.
+func (m *MockAPI) SetDefaultVehicleRef(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDefaultVehicleRef", arg0)
+}
+
+// SetDefaultVehicleRef indicates an expected call of SetDefaultVehicleRef.
+func (mr *MockAPIMockRecorder) SetDefaultVehicleRef(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).SetDefaultVehicleRef), arg0)
 }
 
 // SetDisableDelay mocks base method.
@@ -766,6 +789,18 @@ func (m *MockAPI) SetMaxCurrent(arg0 float64) error {
 func (mr *MockAPIMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).SetMaxCurrent), arg0)
+}
+
+// SetMeterRef mocks base method.
+func (m *MockAPI) SetMeterRef(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMeterRef", arg0)
+}
+
+// SetMeterRef indicates an expected call of SetMeterRef.
+func (mr *MockAPIMockRecorder) SetMeterRef(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMeterRef", reflect.TypeOf((*MockAPI)(nil).SetMeterRef), arg0)
 }
 
 // SetMinCurrent mocks base method.

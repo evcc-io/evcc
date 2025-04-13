@@ -4,7 +4,14 @@
   - {{ . }}
   {{- end }}
   {{- $help := localize .Help | replace "\n" " " -}}
-  {{- if $help }} # {{ $help }}{{- end }}{{- if not .IsRequired }}{{ if not $help }} # {{ else }} ({{ end }}optional{{ if $help }}){{ end }}{{ end }}
+  {{- $choices := join ", " .Choice -}}
+  {{- $optional := not .IsRequired -}}
+  {{- if or $help $choices $optional }} # {{end}}
+  {{- if $help }}{{ $help }} {{end}}
+  {{- if $choices }}[{{ $choices }}] {{end}}
+  {{- if $optional }}
+    {{- if or $help  $choices }}(optional){{ else }}optional{{end }}
+  {{- end }}
 {{- end }}
 
 {{- define "header" }}

@@ -15,15 +15,19 @@
 		<div class="w-100">
 			<slot />
 		</div>
+		<div v-if="error" class="invalid-feedback d-block">{{ error }}</div>
 		<div class="form-text evcc-gray">
 			<div v-if="example" class="hyphenate">
 				{{ $t("config.form.example") }}: {{ example }}
 			</div>
-			<div v-if="help">
+			<div v-if="help" class="d-flex gap-1">
 				<Markdown :markdown="help" class="text-gray hyphenate" />
-				<a v-if="link" class="ms-1 text-gray" :href="link" target="_blank">
+				<a v-if="link" class="text-gray" :href="link" target="_blank">
 					{{ $t("config.general.docsLink") }}
 				</a>
+			</div>
+			<div v-if="danger" class="alert alert-danger my-2" role="alert">
+				<strong>{{ $t("config.form.danger") }}:</strong> {{ danger }}
 			</div>
 		</div>
 	</div>
@@ -42,6 +46,8 @@ export default {
 		help: String,
 		optional: Boolean,
 		deprecated: Boolean,
+		error: String,
+		danger: String,
 		example: String,
 		docsLink: String,
 	},

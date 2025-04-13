@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-
+import { expectModalHidden, expectModalVisible } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const BASIC = "basics.evcc.yaml";
@@ -11,7 +11,7 @@ test("set initial password", async ({ page }) => {
 
   const modal = page.getByTestId("password-modal");
 
-  await expect(modal).toBeVisible();
+  await expectModalVisible(modal);
   await expect(modal.getByRole("heading", { name: "Set Administrator Password" })).toBeVisible();
 
   // empty password
@@ -28,7 +28,7 @@ test("set initial password", async ({ page }) => {
   await modal.getByLabel("New password").fill("secret");
   await modal.getByLabel("Repeat password").fill("secret");
   await modal.getByRole("button", { name: "Create Password" }).click();
-  await expect(modal).not.toBeVisible();
+  await expectModalHidden(modal);
 
   await stop();
 });
@@ -43,7 +43,7 @@ test("login", async ({ page }) => {
 
   // login modal
   const login = page.getByTestId("login-modal");
-  await expect(login).toBeVisible();
+  await expectModalVisible(login);
   await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
 
   // enter wrong password
@@ -54,7 +54,7 @@ test("login", async ({ page }) => {
   // enter correct password
   await login.getByLabel("Password").fill("secret");
   await login.getByRole("button", { name: "Login" }).click();
-  await expect(login).not.toBeVisible();
+  await expectModalHidden(login);
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   await stop();
@@ -70,7 +70,7 @@ test("http iframe hint", async ({ page }) => {
 
   // login modal
   const login = page.getByTestId("login-modal");
-  await expect(login).toBeVisible();
+  await expectModalVisible(login);
   await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
 
   // rewrite api call to simulate lost auth cookie
@@ -97,14 +97,15 @@ test("update password", async ({ page }) => {
   // login modal
   await page.goto("/#/config");
   const loginModal = page.getByTestId("login-modal");
-  await expect(loginModal).toBeVisible();
+  await expectModalVisible(loginModal);
   await loginModal.getByLabel("Password").fill(oldPassword);
   await loginModal.getByRole("button", { name: "Login" }).click();
-  await expect(loginModal).not.toBeVisible();
+  await expectModalHidden(loginModal);
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
   const modal = page.getByTestId("password-modal");
+  await expectModalVisible(modal);
   await expect(modal.getByRole("heading", { name: "Update Administrator Password" })).toBeVisible();
   await modal.getByLabel("Current password").fill(oldPassword);
   await modal.getByLabel("New password").fill(newPassword);
@@ -123,14 +124,15 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await page.getByRole("link", { name: "Configuration" }).click();
   const loginNew = page.getByTestId("login-modal");
-  await expect(loginNew).toBeVisible();
+  await expectModalVisible(loginNew);
   await loginNew.getByLabel("Password").fill(newPassword);
   await loginNew.getByRole("button", { name: "Login" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-  await expect(loginNew).not.toBeVisible();
+  await expectModalHidden(loginNew);
 
   // revert to old password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
+  await expectModalVisible(modal);
   await modal.getByLabel("Current password").fill(newPassword);
   await modal.getByLabel("New password").fill(oldPassword);
   await modal.getByLabel("Repeat password").fill(oldPassword);
@@ -148,7 +150,7 @@ test("disable auth", async ({ page }) => {
 
   // no password modal
   const modal = page.getByTestId("password-modal");
-  await expect(modal).not.toBeVisible();
+  await expectModalHidden(modal);
 
   // configuration page without login
   await page.getByTestId("topnavigation-button").click();

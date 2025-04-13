@@ -79,9 +79,9 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 }
 
 // GetPlan creates a charging plan for given time and duration
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates {
 	if lp.planner == nil || targetTime.IsZero() {
-		return nil, nil
+		return nil
 	}
 
 	return lp.planner.Plan(requiredDuration, targetTime)
@@ -132,9 +132,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan, err := lp.GetPlan(planTime, requiredDuration)
-	if err != nil {
-		lp.log.ERROR.Println("planner:", err)
+	plan := lp.GetPlan(planTime, requiredDuration)
+	if plan == nil {
 		return false
 	}
 
@@ -152,7 +151,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	// log plan
 	for _, slot := range plan {
-		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
+		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Value)
 	}
 
 	activeSlot := planner.SlotAt(lp.clock.Now(), plan)

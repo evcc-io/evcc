@@ -138,8 +138,9 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import { docsPrefix } from "../i18n";
-import { performRestart } from "../restart";
+import { docsPrefix } from "../i18n.js";
+import { performRestart } from "../restart.js";
+import { isLoggedIn, openLoginModal } from "./Auth/auth";
 
 export default {
 	name: "HelpModal",
@@ -156,7 +157,11 @@ export default {
 		},
 		openConfirmRestartModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("confirmRestartModal"));
-			modal.show();
+			if (!isLoggedIn()) {
+				openLoginModal(null, modal);
+			} else {
+				modal.show();
+			}
 		},
 		async restartConfirmed() {
 			await performRestart();

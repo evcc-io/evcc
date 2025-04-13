@@ -26,12 +26,32 @@ never = "ainoastaan kun riittävästi ylijäämää."
 
 [config]
 
+[config.aux]
+description = "Sähkölaite, jonka kulutusta voi säädellä ylijäämätuotannon mukaan (kuten älykäs lämminvesivaraaja). EVCC olettaa, että tämä laite pystyy tarvittaessa pienentämään sähkönkulutustaan."
+titleAdd = "Lisää kulutustaan itsesäätelevä sähkölaite"
+titleEdit = "Muokkaa kulutustaan itsesäätelevää sähkölaitetta"
+
 [config.battery]
 titleAdd = "Lisää akku"
 titleEdit = "Muokkaa akkua"
 
+[config.charge]
+titleAdd = "Lisää latausmittari"
+titleEdit = "Muokkaa latausmittaria"
+
+[config.charger]
+chargers = "Sähköauton latausasemat"
+generic = "Yleiset integraatiot"
+heatingdevices = "Lämmityslaitteet"
+ocppHelp = "Kopioi tämä osoite laturien määrityksiin."
+ocppLabel = "OCPP-palvelimen URL"
+switchsockets = "Kytkettävät pistorasiat"
+template = "Valmistaja"
+titleAdd = "Lisää laturi"
+titleEdit = "Muokkaa laturia"
+
 [config.circuits]
-description = "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkäin hierarkiaan."
+description = "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin."
 title = "Kuormanhallinta"
 
 [config.control]
@@ -40,11 +60,11 @@ descriptionInterval = "Ohjaussilmukan päivitysjakso sekunneissa. Määrittää,
 descriptionResidualPower = "Siirtää ohjaussilmukan toimintapistettä. Jos sinulla on kodissa akku on suositeltavaa asettaa arvo 100 W. Näin akku on hieman etusijalla sähköverkon käyttöön nähden."
 labelInterval = "Päivitystiheys"
 labelResidualPower = "Jäännösteho"
-title = "Hallitse käyttäytymistä"
+title = "Määrittele toimintaa"
 
 [config.deviceValue]
 amount = "Määrä"
-broker = "Broker"
+broker = "Välittäjä (Broker)"
 bucket = "Bucket"
 capacity = "Kapasiteetti"
 chargeStatus = "Tila"
@@ -64,33 +84,52 @@ enabled = "Käytössä"
 energy = "Energia"
 feedinPrice = "Sähköverkkoon myynninhinta"
 gridPrice = "Verkosta ostonhinta"
+heaterTempLimit = "Lämmityksen raja"
 hemsType = "Järjestelmä"
+identifier = "RFID-tunniste"
 no = "ei"
 odometer = "Matkamittari"
 org = "Organisaatio"
 phaseCurrents = "Virta L1, L2, L3"
 phasePowers = "Teho L1, L2, L3"
 phaseVoltages = "Jännite L1, L2, L3"
+phases1p3p = "Vaihekytkin"
 power = "Teho"
 powerRange = "Teho"
 range = "Toimintasäde"
-soc = "SoC"
+singlePhase = "Yksivaiheinen"
+soc = "Lataus"
 socLimit = "Raja"
+solarForecast = "Aurinkosääennuste"
 temp = "Lämpötila"
 topic = "Aihe"
 url = "URL"
+vehicleLimitSoc = "Ajoneuvonrajoitus"
 yes = "kyllä"
+
+[config.deviceValueChargeStatus]
+A = "A (ei yhdistetty)"
+B = "B (yhdistetty)"
+C = "C (lataa)"
 
 [config.eebus]
 description = "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa."
 title = "EEBus"
 
+[config.ext]
+description = "Voidaan käyttää kuormanhallintaan tai tilastointiin"
+titleAdd = "Lisää ulkoinen mittari"
+titleEdit = "Muokkaa ulkoista mittaria"
+
 [config.form]
+danger = "Vaara"
+deprecated = "vanhentunut"
 example = "Esimerkiksi"
 optional = "valinnainen"
 
 [config.general]
 cancel = "Peruuta"
+delete = "Poista"
 docsLink = "Katso dokumentaatio"
 experimental = "Kokeellinen"
 hideAdvancedSettings = "Piilota edistyneet asetukset"
@@ -103,6 +142,7 @@ save = "Tallenna"
 showAdvancedSettings = "Näytä edistyneet asetukset"
 telemetry = "Telemetria"
 title = "Otsikko"
+validateSave = "Vahvista ja tallenna"
 
 [config.grid]
 title = "Sähköverkonmittari"
@@ -129,16 +169,95 @@ title = "InfluxDB"
 v1Support = "Tarvitsetko tukea InfluxDB 1.x:lle?"
 v2Support = "Takaisin InfluxDB 2.x:ään"
 
+[config.loadpoint]
+addCharger = "Lisää laturi"
+addMeter = "Lisää erillinen latausmittari"
+cancel = "Peruuta"
+chargerError = "Vaaditaan käyttöönottoasetusten määrittely laturille."
+chargerLabel = "Laturi"
+chargerPower11kw = "11 kW"
+chargerPower11kwHelp = "Käyttää 6-16 A:n virta-aluetta."
+chargerPower22kw = "22 kW"
+chargerPower22kwHelp = "Käyttää 6-32 A:n virta-aluetta."
+chargerPowerCustom = "muu"
+chargerPowerCustomHelp = "Määritä mukautettu virta-alue."
+chargerTypeLabel = "Laturin tyyppi"
+chargingTitle = "Lataa"
+circuitLabel = "Piiri"
+circuitUnassigned = "määräämätön"
+defaultModeHelp = "Lataustila ajoneuvoa kytkettäessä."
+defaultModeHelpKeep = "Säilyttää viimeksi valitun lataustilan."
+defaultModeLabel = "Oletustila"
+delete = "Poista"
+electricalSubtitle = "Jos olet epävarma, kysy sähkömieheltäsi."
+electricalTitle = "Sähköinen"
+energyMeterHelp = "Lisämittari, jos laturissa ei ole integroitua energiamittaria."
+energyMeterLabel = "Energiamittari"
+estimateLabel = "Arvioi lataustaso API-päivitysten välillä"
+maxCurrentHelp = "On oltava suurempi kuin minimivirta."
+maxCurrentLabel = "Maksimivirta"
+minCurrentHelp = "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä."
+minCurrentLabel = "Minimivirta"
+noVehicles = "Ajoneuvoja ei ole määritetty."
+phases1p = "1-vaihe"
+phases3p = "3-vaihe"
+phasesAutomatic = "Automaattinen"
+phasesAutomaticHelp = "Laturisi tukee automaattista vaihtoa 1- ja 3-vaiheisen latauksen välillä. Päänäytössä voit säätää vaihekäyttäytymistä latauksen aikana."
+phasesHelp = "Laturiin kytkettyjen vaiheiden lukumäärä."
+phasesLabel = "Vaiheet"
+pollIntervalDanger = "Ajoneuvon akku voi tyhjentyä tiheiden säännöllisten tietopyyntöjen seurauksena. Joidenkin autovalmistajien ajoneuvot voivat estää tällöin ajoneuvon lataamisen. Ei suositella! Käytä ainoastaan tiedostaen riskit."
+pollIntervalHelp = "Ajoneuvon API-päivitysten välinen aika. Lyhyet välit voivat tyhjentää ajoneuvon akun."
+pollIntervalLabel = "Päivitysväli"
+pollModeAlways = "aina"
+pollModeAlwaysHelp = "Pyydä aina tilapäivityksiä säännöllisin väliajoin."
+pollModeCharging = "lataa"
+pollModeChargingHelp = "Pyydä ajoneuvon tilapäivityksiä vain latauksen aikana."
+pollModeConnected = "yhdistetty"
+pollModeConnectedHelp = "Päivitä ajoneuvon tila säännöllisin väliajoin, kun yhteys on muodostettu."
+pollModeLabel = "Päivitys käyttäytyminen"
+priorityHelp = "Korkeamman prioriteetin latauspisteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään."
+priorityLabel = "Prioriteetti"
+save = "Tallenna"
+showAllSettings = "Näytä kaikki asetukset"
+solarBehaviorCustomHelp = "Määritä omat päälle- ja poiskytkentä sekä viiveet."
+solarBehaviorDefaultHelp = "Lataa vain aurinkoenergian ylijäämällä. Aloita ylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle."
+solarBehaviorLabel = "PV käyttäytyminen"
+solarModeCustom = "muokattu"
+solarModeMaximum = "maksimi PV"
+thresholdDisableDelayLabel = "Poista viive käytöstä"
+thresholdDisableHelpInvalid = "Käytä positiivista arvoa."
+thresholdDisableHelpPositive = "Lopeta lataaminen, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi."
+thresholdDisableHelpZero = "Pysäytä, kun vähimmäislataustehoa ei voida täyttää {delay} ajaksi."
+thresholdDisableLabel = "Poista verkkoenergia käytöstä"
+thresholdEnableDelayLabel = "Ota viive käyttöön"
+thresholdEnableHelpInvalid = "Käytä negatiivista arvoa."
+thresholdEnableHelpNegative = "Aloita lataaminen, kun {surplus} ylijäämää on käytettävissä {delay}."
+thresholdEnableHelpZero = "Aloita, kun vähimmäislatausteho on käytettävissä {delay}."
+thresholdEnableLabel = "Ota verkkoenergia käyttöön"
+titleAdd = "Lisää latauspiste"
+titleEdit = "Muokkaa latauspistettä"
+titleExample = "Autotalli, autokatos jne."
+titleLabel = "Otsikko"
+vehicleAutoDetection = "automaattinen tunnistus"
+vehicleHelpAutoDetection = "Valitsee automaattisesti todennäköisimmän ajoneuvon. Manuaalinen ohitus on mahdollista."
+vehicleHelpDefault = "Olettaa aina, että tämä ajoneuvo latautuu täällä. Automaattinen tunnistus poistettu käytöstä. Manuaalinen ohitus on mahdollista."
+vehicleLabel = "Oletusajoneuvo"
+vehiclesTitle = "Ajoneuvot"
+
 [config.main]
+addAdditional = "Lisää lisämittari"
+addGrid = "Lisää verkkomittari"
 addLoadpoint = "Lisää latauspiste"
 addPvBattery = "Lisää aurinkovoimala tai akusto"
+addTariffs = "Lisää tariffit"
 addVehicle = "Lisää ajoneuvo"
 configured = "asetettu"
 edit = "muokkaa"
+name = "Nimi"
 title = "Määritykset"
 unconfigured = "ei määritetty"
 vehicles = "Minun ajoneuvot"
-yaml = "Määritetty tiedostossa evcc.yaml. Ei muokattavissa käyttöliittymästä."
+yaml = "Laitteita jotka ovat määritetty evcc.yaml, ei voi muokata."
 
 [config.messaging]
 description = "Vastaanota viestejä koskien lataustapahtumiasi."
@@ -152,6 +271,12 @@ template = "Valmistaja"
 titleChoice = "Mitä haluat lisätä?"
 validateSave = "Vahvista ja tallenna"
 
+[config.meter.option]
+aux = "Lisää kulutustaan itsesäätelevä laite"
+battery = "Lisää akun tilan mittari"
+ext = "Lisää ulkopuolinen mittari"
+pv = "Lisää aurinkovoimalan mittari"
+
 [config.modbusproxy]
 description = "Salli useiden asiakkaiden käyttää yhtä Modbus-laitetta."
 title = "Modbus Proxy"
@@ -161,7 +286,7 @@ authentication = "Todennus"
 description = "Yhdistä MQTT-välittäjään vaihtaaksesi tietoja muiden verkossasi olevien järjestelmien kanssa."
 descriptionClientId = "Viestien kirjoittaja. Jos tyhjää `evcc-[rand]` käytetään."
 descriptionTopic = "Jätä tyhjäksi, jos haluat poistaa julkaisut käytöstä."
-labelBroker = "Broker"
+labelBroker = "Välittäjä (Broker)"
 labelCaCert = "Palvelinvarmenne (CA)"
 labelCheckInsecure = "Salli itse-allekirjoitetut varmenteet"
 labelClientCert = "Asiakasvarmenne"
@@ -197,11 +322,17 @@ little = "little-endian"
 http = "HTTP (salaamaton)"
 https = "HTTPS (salattu)"
 
+[config.options.status]
+A = "A (ei yhdistetty)"
+B = "B (yhdistetty)"
+C = "C (lataa)"
+
 [config.pv]
 titleAdd = "Lisää aurinkovoimalan mittari"
 titleEdit = "Muokkaa aurinkovoimalan mittaria"
 
 [config.section]
+additionalMeter = "Ylimääräiset mittarit"
 general = "Yleinen"
 grid = "Sähköverkko"
 integrations = "Integraatiot"
@@ -211,13 +342,16 @@ system = "Järjestelmä"
 vehicles = "Ajoneuvot"
 
 [config.sponsor]
-addToken = "Anna sponsoritunnus"
-changeToken = "Vaihda sponsoritunnus"
+addToken = "Anna tunnus"
+changeToken = "Vaihda tunnus"
 description = "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset."
 descriptionToken = "Saat tunnuksen osoitteesta {url}. Tarjoamme myös kokeilutunnuksen testausta varten."
 error = "Sponsoritunnus ei kelpaa."
 labelToken = "Sponsoritunnus"
 title = "Sponsorointi"
+tokenRequired = "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen."
+tokenRequiredLearnMore = "Lisätietoja."
+trialToken = "Kokeilutunnus"
 
 [config.system]
 logs = "Logi"
@@ -310,7 +444,7 @@ supportUs = "Missiomme on tehdä aurinkoenergialla lataamisesta normi. Auta evcc
 thanks = "Kiitos, {sponsor}! Panoksesi auttaa kehittämään evcc:tä myös jatkossa."
 titleNoSponsor = "Tue meitä"
 titleSponsor = "Olet kannattaja"
-titleTrial = "Kokeilu tila"
+titleTrial = "Kokeilutila"
 titleVictron = "Sponsored by Victron Energy"
 trial = "Olet kokeilutilassa, voit käyttää kaikkia ominaisuuksia. Ole hyvä ja harkitse projektin tukemista."
 victron = "Käytät evcc:tä Victron Energy -laitteistossa ja sinulla on pääsy kaikkiin ominaisuuksiin."
@@ -332,6 +466,32 @@ modalUpdate = "Asenna"
 modalUpdateNow = "Asenna nyt"
 modalUpdateStarted = "Käynnistetään evcc:n uusin versio..."
 modalUpdateStatusStart = "Asennus aloitettu:"
+
+[forecast]
+modalTitle = "Ennuste"
+solarAdjust = "Mukauta aurinkosääennustettu todellisten tuotantotietojen perusteella{percent}."
+
+[forecast.co2]
+average = "Keskimäärin"
+lowestHour = "Puhtain tunti"
+range = "Toimintamatka"
+
+[forecast.price]
+average = "Keskimääräinen"
+lowestHour = "Edullisin tunti"
+range = "Toimintamatka"
+
+[forecast.solar]
+dayAfterTomorrow = "Ylihuomenna"
+partly = "osittain"
+remaining = "jäljellä"
+today = "Tänään"
+tomorrow = "Huomenna"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Hinta"
+solar = "Aurinko"
 
 [header]
 about = "Tietoa"
@@ -390,7 +550,9 @@ reset = "Määritä salasana uudelleen?"
 title = "Vahvistus"
 
 [main]
+startConfiguration = "Aloita määritys"
 vehicles = "Pysäköinti"
+welcome = "Hei kyytiin!"
 
 [main.chargingPlan]
 active = "Aktiivinen"
@@ -418,8 +580,11 @@ weekdays = "Päivät"
 battery = "Akku"
 batteryCharge = "Akunlataus"
 batteryDischarge = "Akku purkautuu"
+batteryGridChargeActive = "lataaminen verkkosta aktiivinen"
+batteryGridChargeLimit = "milloin ladataan verkosta"
 batteryHold = "Akku (lukittu)"
 batteryTooltip = "{energy} / {total} ({soc})"
+forecastTooltip = "ennuste: jäljellä oleva aurinkotuotanto tänään"
 gridImport = "Kulutus sähköverkosta"
 homePower = "Kodin sähkönkulutus"
 loadpoints = "Latauslaite| Latauslaite | {count} latauslaitetta"
@@ -432,6 +597,8 @@ selfConsumption = "Tuotannon kulutus"
 charging = "Lämmitys..."
 cheapEnergyCharging = "Lataa halvalla energialla: {price} (raja {limit})"
 cleanEnergyCharging = "Lämmitä puhtaalla energialla: {co2} (raja {limit})"
+connected = "Valmiustila."
+vehicleLimit = "Lämmittimen rajoitin"
 waitForVehicle = "Valmiina. Odottaa lämmitintä..."
 
 [main.loadpoint]
@@ -461,7 +628,7 @@ vehicle = "Ajoneuvo"
 [main.loadpointSettings.batteryBoost]
 description = "Nopea lataus kodin akusta."
 label = "Akun tehostaminen"
-mode = "Saatavilla vain pv- ja min + pv-tilassa."
+mode = "Saatavilla vain aurinkosähkö(pv)- ja min + pv-tilassa."
 once = "Tehostus on aktiivinen tälle latausistunnolle."
 
 [main.loadpointSettings.limitSoc]
@@ -554,13 +721,6 @@ tempLimit = "Lämpötila raja-arvo"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
 
-[main.vehicleSoc]
-charging = "lataa"
-connected = "yhdistetty"
-disconnected = "irroitettu"
-ready = "valmis"
-vehicleLimit = "Ajoneuvon raja {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Odotetaan valtuutusta."
 batteryBoost = "Akun tehostus aktiivinen."
@@ -584,6 +744,7 @@ scale3p = "Siirrytään pian 3-vaihe lataukseen"
 targetChargeActive = "Lataussuunnitelma aktiivinen. Arvioitu valmistuminen {duration} kuluttua."
 targetChargePlanned = "Lataussuunnitelma alkaa {duration} kuluttua."
 targetChargeWaitForVehicle = "Lataussuunnitelma valmis. Odotetaan ajoneuvoa…"
+unknown = ""
 vehicleLimit = "Ajoneuvon latausraja"
 vehicleLimitReached = "Ajoneuvon raja saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
@@ -761,11 +922,13 @@ cheapTitle = "Lataaminen edullisesti sähköverkosta"
 cleanTitle = "Viheränenergian lataminen verkosta"
 co2Label = "CO₂ päästö"
 co2Limit = "CO₂ raja"
-loadpointDescription = "Mahdollistaa nopean lataamisen väliaikaisesti PV tilassa."
+loadpointDescription = "Mahdollistaa nopean lataamisen väliaikaisesti aurinkosähkötilassa (PV)."
 modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"
 priceLimit = "Hintaraja"
+resetAction = "Poista rajoitus"
+resetWarning = "Dynaamista sähköverkonhintaa tai sähkötuotannon CO₂-päästöjä ei ole määritetty, vaikka rajoitus {limit} on asetettu. Siistitäänkö asetuksiasi?"
 saved = "Tallenettu"
 
 [startupError]

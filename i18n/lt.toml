@@ -26,17 +26,23 @@ never = "tik su pakankamu pertekliumi."
 
 [config]
 
+[config.aux]
+description = "Įrenginys, kuris koreguoja savo suvartojimą pagal esamą energijos perteklių (pvz., išmanieji vandens šildytuvai). evcc tikisi, kad šis įrenginys prireikus sumažins energijos suvartojimą."
+titleAdd = "Pridėti Savireguliuojantį vartotoją"
+titleEdit = "Redaguoti Savireguliuojantį vartotoją"
+
 [config.battery]
 titleAdd = "Pridėti kaupiklį"
 titleEdit = "Redaguoti kaupiklį"
 
 [config.charge]
-titleAdd = "Pridėti įkrovimo skaitiklį"
+titleAdd = "Pridėti įkroviklio skaitiklį"
 titleEdit = "Redaguoti įkrovimo skaitiklį"
 
 [config.charger]
 chargers = "Elektromobilių įkrovikliai"
 generic = "Tipinės integracijos"
+heatingdevices = "Šildymo prietaisai"
 ocppHelp = "Nukopijuokite šį adresą į jūsų įkroviklio nustatymus."
 ocppLabel = "OCPP-Serverio URL"
 switchsockets = "Išmanios rozetės"
@@ -74,10 +80,11 @@ controllable = "Valdomas"
 currency = "Valiuta"
 current = "Srovė"
 currentRange = "Srovė"
-enabled = "Aktyvuota"
+enabled = "Aktyvuotas"
 energy = "Energija"
 feedinPrice = "Tiekimo į tinklą kaina"
 gridPrice = "Energijos pirkimo kaina"
+heaterTempLimit = "Šildymo limitas"
 hemsType = "Sistema"
 identifier = "RFID-Identifikatorius"
 no = "ne"
@@ -93,6 +100,7 @@ range = "Nuvažiuojamas atstumas"
 singlePhase = "Vienfazis"
 soc = "Įkrova"
 socLimit = "Limitas"
+solarForecast = "Saulės prognozė"
 temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
@@ -104,11 +112,22 @@ A = "A (neprijungtas)"
 B = "B (prijungtas)"
 C = "C (įkrauna)"
 
+[config.devices]
+auxMeter = "Išmanusis vartotojas"
+batteryStorage = "Energijos kaupiklis"
+solarSystem = "Saulės elektrinė"
+
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
 title = "EEBus"
 
+[config.ext]
+description = "Gali būti naudojamas apkrovos valdymo ar statistikos tikslais."
+titleAdd = "Pridėti Išorinį skaitiklį"
+titleEdit = "Redaguoti Išorinį skaitiklį"
+
 [config.form]
+danger = "Pavojus"
 deprecated = "nebenaudojama"
 example = "Pavyzdys"
 optional = "pasirinktinai"
@@ -127,6 +146,7 @@ remove = "Pašalinti"
 save = "Išsaugoti"
 showAdvancedSettings = "Rodyti išplėstinius nustatymus"
 telemetry = "Telemetrija"
+templateLoading = "Įkrauname..."
 title = "Pavadinimas"
 validateSave = "Patikrinti ir išsaugoti"
 
@@ -159,6 +179,7 @@ v2Support = "Atgal į InfluxDB 2.x"
 addCharger = "Pridėti įkroviklį"
 addMeter = "Pridėti įkroviklio skaitiklį"
 cancel = "Atšaukti"
+chargerError = "Reikia sukonfigūruoti įkroviklį."
 chargerLabel = "Įkroviklis"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Naudos įkrovimo srovę nuo 6 iki 16 A."
@@ -190,6 +211,7 @@ phasesAutomatic = "Automatinės fazės"
 phasesAutomaticHelp = "Jūsų įkroviklis palaiko automatinį perjungimą tarp 1 ir 3 fazių įkrovimo. Pagrindiniame ekrane galite reguliuoti fazių elgesį įkrovimo metu."
 phasesHelp = "Kiek fazių prijungta prie įkroviklio."
 phasesLabel = "Fazės"
+pollIntervalDanger = "Reguliarios automobilio užklausos gali iškrauti automobilio akumuliatorių. Kai kurie automobilių gamintojai gali užblokuoti duomenis ar aktyviai neleisti įkrauti. Nerekomenduojama! Naudokite tik pilnai suprasdami riziką."
 pollIntervalHelp = "Laikas tarp transporto priemonės API atnaujinimų. Trumpi intervalai gali iškrauti transporto priemonės akumuliatorių."
 pollIntervalLabel = "Naujinimo intervalas"
 pollModeAlways = "nuolat"
@@ -229,9 +251,10 @@ vehicleLabel = "Numatytasis automobilis"
 vehiclesTitle = "Automobiliai"
 
 [config.main]
+addAdditional = "Pridėti papildomą skaitiklį"
 addGrid = "Pridėti tinklo skaitiklį"
 addLoadpoint = "Pridėti įkroviklį"
-addPvBattery = "Pridėti saulės ar kaupiklio skaitiklį"
+addPvBattery = "Pridėti saulės elektrinę arba kaupiklį"
 addTariffs = "Pridėti tarifus"
 addVehicle = "Pridėti automobilį"
 configured = "sukonfigūruota"
@@ -253,6 +276,12 @@ save = "Išsaugoti"
 template = "Gamintojas"
 titleChoice = "Ką norite pridėti?"
 validateSave = "Patikrinti ir išsaugoti"
+
+[config.meter.option]
+aux = "Pridėti savireguliuojantį vartotoją"
+battery = "Pridėti kaupiklio skaitiklį"
+ext = "Pridėti išorinį skaitiklį"
+pv = "Pridėti saulės elektrinės skaitiklį"
 
 [config.modbusproxy]
 description = "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį."
@@ -309,6 +338,7 @@ titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
 [config.section]
+additionalMeter = "Papildomi skaitikliai"
 general = "Pagrindiniai"
 grid = "Elektros tinklas"
 integrations = "Integracijos"
@@ -360,10 +390,12 @@ validate = "tikrinti"
 
 [config.vehicle]
 cancel = "Atšaukti"
+chargingSettings = "Įkrovimo nustatymai"
 delete = "Ištrinti"
 generic = "Kitos integracijos"
 offline = "Tipinis automobilis"
 online = "Automobiliai su internetiniu API"
+priority = "Pirmumas"
 save = "Išsaugoti"
 scooter = "Motoroleris"
 template = "Gamintojas"
@@ -446,6 +478,32 @@ modalUpdate = "Instaliuoti"
 modalUpdateNow = "Instaliuoti dabar"
 modalUpdateStarted = "Startuoja nauja evcc versija..."
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
+
+[forecast]
+modalTitle = "Prognozė"
+solarAdjust = "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis{percent}."
+
+[forecast.co2]
+average = "Vidurkis"
+lowestHour = "Švariausia valanda"
+range = "Diapazonas"
+
+[forecast.price]
+average = "Vidurkis"
+lowestHour = "Pigiausia valanda"
+range = "Diapazonas"
+
+[forecast.solar]
+dayAfterTomorrow = "Poryt"
+partly = "dalinai"
+remaining = "likę"
+today = "Šiandien"
+tomorrow = "Rytoj"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Kaina"
+solar = "Saulės"
 
 [header]
 about = "Apie"
@@ -543,6 +601,7 @@ batteryGridChargeActive = "įkraunama iš tinklo"
 batteryGridChargeLimit = "įkrauti iš tinklo, kai"
 batteryHold = "Kaupiklis (užblokuotas)"
 batteryTooltip = "{energy} iš {total} ({soc})"
+forecastTooltip = "prognozė: likusi saulės energijos gamyba šiandien"
 gridImport = "Iš tinklo"
 homePower = "Namo suvartojimas"
 loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
@@ -555,6 +614,8 @@ selfConsumption = "Sunaudojama iškart"
 charging = "Šildoma…"
 cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
 cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+connected = "Budėjimo režimas."
+vehicleLimit = "Šildymo limitas"
 waitForVehicle = "Paruošta. Laukiame šildytuvo…"
 
 [main.loadpoint]
@@ -628,6 +689,7 @@ costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 currentPlan = "Planas aktyvus"
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}?"
+goalReached = "Tikslas jau pasiektas"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 nextPlan = "Kitas planas"
@@ -680,13 +742,6 @@ tempLimit = "Temp. limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
 
-[main.vehicleSoc]
-charging = "vyksta įkrovimas"
-connected = "automobilis prijungtas"
-disconnected = "neprijungtas"
-ready = "leidžiama įkrauti"
-vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Laukiama autorizacijos."
 batteryBoost = "Veikia paspartinimas kaupikliu."
@@ -711,7 +766,7 @@ targetChargeActive = "Įkrovimo planas aktyvuotas. Numatoma pabaiga už {duratio
 targetChargePlanned = "Suplanuotas įkrovimas prasidės už {duration}."
 targetChargeWaitForVehicle = "Įkrovimas pagal planą leidžiamas. Laukiama automobilio..."
 unknown = ""
-vehicleLimit = "Automobilyje nustatytas limitas."
+vehicleLimit = "Automobilyje nustatytas limitas"
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
@@ -909,6 +964,8 @@ modalTitle = "Išmanaus tinklo įkrovimas"
 none = "nėra"
 priceLabel = "Energijos kaina"
 priceLimit = "Kainos limitas"
+resetAction = "Pašalinti limitą"
+resetWarning = "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?"
 saved = "Išsaugota."
 
 [startupError]

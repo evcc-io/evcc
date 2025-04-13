@@ -32,7 +32,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
 		fatal(err)
 	}
@@ -84,7 +84,7 @@ func runTariff(cmd *cobra.Command, args []string) {
 		const format = "2006-01-02 15:04:05"
 
 		for _, r := range rates {
-			fmt.Fprintf(tw, "%s\t%s\t%.3f\n", r.Start.Local().Format(format), r.End.Local().Format(format), r.Price)
+			fmt.Fprintf(tw, "%s\t%s\t%.3f\n", r.Start.Local().Format(format), r.End.Local().Format(format), r.Value)
 		}
 		tw.Flush()
 

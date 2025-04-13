@@ -72,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	if forecastG != nil {
@@ -99,7 +99,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
-					Price: t.totalPrice(r.Price, r.Start),
+					Value: t.totalPrice(r.Value, r.Start),
 					Start: r.Start.Local(),
 					End:   r.End.Local(),
 				}
@@ -112,7 +112,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		mergeRates(t.data, data)
+		// only prune rates older than current period
+		periodStart := now.With(time.Now()).BeginningOfHour()
+		if t.typ == api.TariffTypeSolar {
+			periodStart = beginningOfDay()
+		}
+		mergeRatesAfter(t.data, data, periodStart)
+
 		once.Do(func() { close(done) })
 	}
 }
@@ -139,7 +145,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price, slot),
+			Value: t.totalPrice(price, slot),
 		}
 	}
 

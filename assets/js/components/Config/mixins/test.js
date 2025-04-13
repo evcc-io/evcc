@@ -9,6 +9,7 @@ export default {
       testState: TEST_UNKNOWN,
       testError: null,
       testResult: null,
+      testTimeout: 15000, // 15s
     };
   },
   computed: {
@@ -56,6 +57,22 @@ export default {
         this.testError = e.response?.data?.error || e.message;
       }
       return false;
+    },
+    handleCreateError(e) {
+      this.handleError(e, "create failed");
+    },
+    handleUpdateError(e) {
+      this.handleError(e, "update failed");
+    },
+    handleRemoveError(e) {
+      this.handleError(e, "remove failed");
+    },
+    handleError(e, msg) {
+      console.error(e);
+      let message = msg;
+      const { error } = e.response.data || {};
+      if (error) message += `: ${error}`;
+      alert(message);
     },
   },
 };

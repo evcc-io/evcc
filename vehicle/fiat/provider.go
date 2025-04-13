@@ -52,8 +52,7 @@ func (v *Provider) deepRefresh() error {
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 	} else {
-		var se request.StatusError
-		if errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
+		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
 			err = nil
 		}
 	}
