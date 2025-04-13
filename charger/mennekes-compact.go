@@ -44,7 +44,7 @@ const (
 	mennekesRegEvseState            = 0x0100 // uint16
 	mennekesRegAuthorizationStatus  = 0x0101 // uint16
 	mennekesRegCpState              = 0x0108 // uint16
-	mennekesRegChargingCurrentEM    = 0x0302 // float32
+	mennekesRegChargingCurrentEM    = 0x0302 // float32 [Heartbeat]
 	mennekesRegPhaseOptionsHW       = 0x030C // uint16
 	mennekesRegGridPhasesConnected  = 0x0311 // uint16
 	mennekesRegAuthorization        = 0x0312 // uint16
@@ -53,9 +53,9 @@ const (
 	mennekesRegPower                = 0x0512 // float32
 	mennekesRegChargedEnergySession = 0x0B02 // float32
 	mennekesRegDurationSession      = 0x0B04 // uint32
-	mennekesRegHeartbeat            = 0x0D00 // uint16
+	mennekesRegHeartbeat            = 0x0D00 // uint16 [Heartbeat]
 	mennekesRegRequestedPhases      = 0x0D04 // uint16
-	mennekesRegChargingReleaseEM    = 0x0D05 // uint16
+	mennekesRegChargingReleaseEM    = 0x0D05 // uint16 [Heartbeat]
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
@@ -148,13 +148,14 @@ func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 	switch status := encoding.Uint16(b); status {
 	case 1:
 		return api.StatusA, nil
-
 	case 2, 3, 4:
 		return api.StatusB, nil
-
 	case 5:
 		return api.StatusC, nil
-
+	case 6:
+		b := make([]byte, 4)
+		wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b)
+		wb.conn.WriteSingleRegister(mennekesRegChargingReleaseEM, mennekesAllowed)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
