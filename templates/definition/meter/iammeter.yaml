@@ -1,0 +1,82 @@
+template: iammeter
+products:
+  - brand: IAMMETER
+    description:
+      generic: WEM3080T/WEM3046T/WEM3050T
+  - brand: IAMMETER
+    description:
+      generic: WEM3080
+requirements:
+  description:
+    de: |
+      Die 3-phasigen Zähler (WEM3080T/WEM3046T/WEM3050T) benötigen die Aktivierung des Net Metering Mode (NEM) (=phasensaldierende Zählung).
+      Siehe https://www.iammeter.com/newsshow/net-energy-metering
+    en: |
+      3-phase meters (WEM3080T/WEM3046T/WEM3050T) require Net Metering Mode (NEM) to be enabled.
+      See https://www.iammeter.com/newsshow/net-energy-metering
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+render: |
+  type: custom
+  # net metered power/saldierte Leistung (W)
+  power:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[3][2] else .Data[2] end
+    cache: 2s
+  # net metered forward active energy/saldierter Energieverbrauch (kWh)
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[3][3] else .Data[3] end
+    cache: 2s
+  powers:
+  # L1 power (W)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[0][2] else .Data[2] end
+    cache: 2s
+  # L2 power (W)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[1][2] else 0 end
+    cache: 2s
+  # L3 power (W)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[2][2] else 0 end
+    cache: 2s  
+  currents:
+  # L1 current (A)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[0][1] else .Data[1] end
+    cache: 2s
+  # L2 current (A)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[1][1] else 0 end
+    cache: 2s
+  # L3 current (A)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[2][1] else 0 end
+    cache: 2s
+  voltages:
+  # L1 voltage (V)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[0][0] else .Data[0] end
+    cache: 2s
+  # L2 voltage (V)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[1][0] else 0 end
+    cache: 2s
+  # L3 voltage (V)
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: if .Datas then .Datas[2][0] else 0 end
+    cache: 2s

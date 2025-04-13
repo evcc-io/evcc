@@ -1,70 +1,21 @@
 package config
 
+import "sync"
+
 type Device[T any] interface {
 	Config() Named
 	Instance() T
 }
+
 type ConfigurableDevice[T any] interface {
 	Device[T]
 	ID() int
-	// Assign(T)
-	// Update1(map[string]any) error
-	Update(map[string]any, T) error
-	PartialUpdate(map[string]any, T) error
+	Properties() Properties
+	Update(map[string]any, T, ...func(*Config)) error
 	Delete() error
 }
 
-type configurableDevice[T any] struct {
-	config   *Config
-	instance T
-}
-
-func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
-	return &configurableDevice[T]{
-		config:   config,
-		instance: instance,
-	}
-}
-
-func (d *configurableDevice[T]) Config() Named {
-	return d.config.Named()
-}
-
-func (d *configurableDevice[T]) Instance() T {
-	return d.instance
-}
-
-func (d *configurableDevice[T]) ID() int {
-	return d.config.ID
-}
-
-// func (d *configurableDevice[T]) Assign(instance T) {
-// 	d.instance = instance
-// }
-
-//	func (d *configurableDevice[T]) Update(config map[string]any) error {
-//		return d.config.Update(config)
-//	}
-
-func (d *configurableDevice[T]) Update(config map[string]any, instance T) error {
-	if err := d.config.Update(config); err != nil {
-		return err
-	}
-	d.instance = instance
-	return nil
-}
-
-func (d *configurableDevice[T]) PartialUpdate(config map[string]any, instance T) error {
-	if err := d.config.PartialUpdate(config); err != nil {
-		return err
-	}
-	d.instance = instance
-	return nil
-}
-
-func (d *configurableDevice[T]) Delete() error {
-	return d.config.Delete()
-}
+var _ Device[any] = (*staticDevice[any])(nil)
 
 type staticDevice[T any] struct {
 	config   Named
@@ -78,14 +29,65 @@ func NewStaticDevice[T any](config Named, instance T) Device[T] {
 	}
 }
 
-func (d *staticDevice[T]) Configurable() bool {
-	return true
-}
-
 func (d *staticDevice[T]) Config() Named {
 	return d.config
 }
 
 func (d *staticDevice[T]) Instance() T {
 	return d.instance
+}
+
+var _ ConfigurableDevice[any] = (*configurableDevice[any])(nil)
+
+type configurableDevice[T any] struct {
+	mu       sync.Mutex
+	config   *Config
+	instance T
+}
+
+func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
+	return &configurableDevice[T]{
+		config:   config,
+		instance: instance,
+	}
+}
+
+func (d *configurableDevice[T]) Config() Named {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.config.Named()
+}
+
+func (d *configurableDevice[T]) Instance() T {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.instance
+}
+
+func (d *configurableDevice[T]) ID() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.config.ID
+}
+
+func (d *configurableDevice[T]) Properties() Properties {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.config.Properties
+}
+
+func (d *configurableDevice[T]) Update(config map[string]any, instance T, opt ...func(*Config)) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if err := d.config.Update(config, opt...); err != nil {
+		return err
+	}
+	d.instance = instance
+	return nil
+}
+
+func (d *configurableDevice[T]) Delete() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.config.Delete()
 }

@@ -8,10 +8,10 @@ import (
 
 func decorateHeatpump(base *Heatpump, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	switch {
-	case battery == nil && meter == nil && socLimiter == nil:
+	case battery == nil && meter == nil:
 		return base
 
-	case battery == nil && meter != nil && meterEnergy == nil && socLimiter == nil:
+	case battery == nil && meter != nil && meterEnergy == nil:
 		return &struct {
 			*Heatpump
 			api.Meter
@@ -22,7 +22,7 @@ func decorateHeatpump(base *Heatpump, meter func() (float64, error), meterEnergy
 			},
 		}
 
-	case battery == nil && meter != nil && meterEnergy != nil && socLimiter == nil:
+	case battery == nil && meter != nil && meterEnergy != nil:
 		return &struct {
 			*Heatpump
 			api.Meter
@@ -79,51 +79,6 @@ func decorateHeatpump(base *Heatpump, meter func() (float64, error), meterEnergy
 			},
 			MeterEnergy: &decorateHeatpumpMeterEnergyImpl{
 				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery == nil && meter == nil && socLimiter != nil:
-		return &struct {
-			*Heatpump
-			api.SocLimiter
-		}{
-			Heatpump: base,
-			SocLimiter: &decorateHeatpumpSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && meter != nil && meterEnergy == nil && socLimiter != nil:
-		return &struct {
-			*Heatpump
-			api.Meter
-			api.SocLimiter
-		}{
-			Heatpump: base,
-			Meter: &decorateHeatpumpMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateHeatpumpSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && meter != nil && meterEnergy != nil && socLimiter != nil:
-		return &struct {
-			*Heatpump
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			Heatpump: base,
-			Meter: &decorateHeatpumpMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateHeatpumpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateHeatpumpSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 

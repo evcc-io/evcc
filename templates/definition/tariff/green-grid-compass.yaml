@@ -1,0 +1,99 @@
+template: green-grid-compass
+products:
+  - brand: Green Grid Compass
+requirements:
+  description:
+    de: "Europäische CO₂-Intensitätsdaten von [greengrid-compass.eu](https://www.greengrid-compass.eu). Liefert Vorhersagen der nächsten Stunden und ist nach Registrierung kostenlos nutzbar."
+    en: "European CO₂ intensity data from [greengrid-compass.eu](https://www.greengrid-compass.eu). Provides forecasts for the next hours and is free of charge after registration."
+  evcc: ["skiptest"]
+group: co2
+countries: ["EU"]
+params:
+  - name: apiKey
+    description:
+      en: API Key
+      de: API-Key
+    type: string
+    required: true
+    help:
+      de: "Erstelle eine App in https://api-portal.eco2grid.com und kopiere den Key"
+      en: "Create an app in https://api-portal.eco2grid.com and copy the key"
+  - name: zone
+    description:
+      de: Zonencode
+      en: Zone code
+    type: choice
+    required: true
+    choice:
+      [
+        AL,
+        AT,
+        BA,
+        BE,
+        BG,
+        BY,
+        CH,
+        CZ,
+        DE_LU,
+        DK_1,
+        DK_2,
+        EE,
+        ES,
+        FI,
+        FR,
+        GB,
+        GR,
+        HR,
+        HU,
+        IE_SEM,
+        IT_CALA,
+        IT_CNOR,
+        IT_CSUD,
+        IT_NORD,
+        IT_SACO_AC,
+        IT_SACO_DC,
+        IT_SARD,
+        IT_SICI,
+        IT_SUD,
+        LT,
+        LV,
+        MD,
+        ME,
+        MK,
+        MT,
+        NL,
+        NO_1,
+        NO_2,
+        NO_3,
+        NO_4,
+        NO_5,
+        PL,
+        PT,
+        RO,
+        RS,
+        RU,
+        RU_KGD,
+        SE_1,
+        SE_2,
+        SE_3,
+        SE_4,
+        SI,
+        SK,
+        TR,
+        UA,
+        UA_IPS,
+        XK,
+      ]
+    default: DE_LU
+render: |
+  type: custom
+  forecast:
+    source: http
+    uri: https://eco2grid.com/green-grid-compass/v2/forecast/hourly?zone_code={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00&apikey={{ .apiKey }}
+    jq: |
+      .zone_data | map({ 
+        "start": (.interval + "+02:00"),
+        "end": (.interval + "+02:00" | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + 3600 | strftime("%FT%TZ")),
+        "value": .consumption_co2_intensity 
+      }) | tostring
+    cache: 1h

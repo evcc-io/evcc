@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="sizeClass">
+	<div v-if="unitValue" class="input-group" :class="inputClasses">
 		<input
 			:id="id"
 			v-model="value"
@@ -55,7 +55,7 @@
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
 		<option v-if="!required" value="">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
@@ -69,7 +69,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -80,7 +80,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -92,7 +92,7 @@
 <script>
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
-import SelectGroup from "../SelectGroup.vue";
+import SelectGroup from "../Helper/SelectGroup.vue";
 import formatter from "../../mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;
@@ -111,6 +111,7 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
+		invalid: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
@@ -136,6 +137,13 @@ export default {
 				return "w-50 w-min-200";
 			}
 			return "";
+		},
+		inputClasses() {
+			let result = this.sizeClass;
+			if (this.invalid) {
+				result += " is-invalid";
+			}
+			return result;
 		},
 		endAlign() {
 			return ["Int", "Float", "Duration"].includes(this.type);

@@ -14,11 +14,13 @@ import (
 
 func TestMergeRatesAfter(t *testing.T) {
 	clock := clock.NewMock()
+	clock.Set(now.BeginningOfDay())
+
 	rate := func(start int, val float64) api.Rate {
 		return api.Rate{
 			Start: clock.Now().Add(time.Duration(start) * time.Hour),
 			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
-			Price: val,
+			Value: val,
 		}
 	}
 

@@ -53,7 +53,7 @@
 						rows="5"
 						spellcheck="false"
 						class="form-control"
-						@paste="handlePaste"
+						@paste="(event) => handlePaste(event, values)"
 					/>
 				</FormRow>
 			</div>
@@ -64,8 +64,8 @@
 <script>
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
-import Sponsor, { VICTRON_DEVICE } from "../Sponsor.vue";
-import SponsorTokenExpires from "../SponsorTokenExpires.vue";
+import Sponsor, { VICTRON_DEVICE } from "../Savings/Sponsor.vue";
+import SponsorTokenExpires from "../Savings/SponsorTokenExpires.vue";
 import store from "../../store";
 import { docsPrefix } from "../../i18n";
 import { cleanYaml } from "../../utils/cleanYaml";
@@ -97,11 +97,11 @@ export default {
 		transformReadValues() {
 			return { token: "" };
 		},
-		handlePaste(event) {
+		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
 			const cleaned = cleanYaml(text, "sponsortoken");
-			event.target.value = cleaned;
+			values.token = cleaned;
 		},
 	},
 };

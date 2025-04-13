@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 
 // bo returns an exponential backoff for reading meter power quickly
 func bo() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(time.Second))
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(2*time.Second))
 }
 
 // powerToCurrent is a helper function to convert power to per-phase current
@@ -50,4 +51,12 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 	}
 
 	return a == nil && b == nil || (*a) == (*b)
+}
+
+// deviceProperties returns the common device data for the given reference
+func deviceProperties[T any](dev config.Device[T]) config.Properties {
+	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
+		return d.Properties()
+	}
+	return config.Properties{}
 }

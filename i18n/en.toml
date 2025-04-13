@@ -23,6 +23,11 @@ never = "only with enough surplus."
 
 [config]
 
+[config.aux]
+description = "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed."
+titleAdd = "Add Self-Regulating Consumer"
+titleEdit = "Edit Self-Regulating Consumer"
+
 [config.battery]
 titleAdd = "Add Battery"
 titleEdit = "Edit Battery"
@@ -34,6 +39,7 @@ titleEdit = "Edit Charge Meter"
 [config.charger]
 chargers = "EV chargers"
 generic = "Generic integrations"
+heatingdevices = "Heating devices"
 ocppHelp = "Copy this address into your chargers configuration."
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Switchable sockets"
@@ -75,6 +81,7 @@ enabled = "Enabled"
 energy = "Energy"
 feedinPrice = "Feed-in price"
 gridPrice = "Grid price"
+heaterTempLimit = "Heater limit"
 hemsType = "System"
 identifier = "RFID-Identifier"
 no = "no"
@@ -89,6 +96,7 @@ powerRange = "Power"
 range = "Range"
 singlePhase = "Single phase"
 soc = "Charge"
+solarForecast = "Solar forecast"
 temp = "Temperature"
 topic = "Topic"
 url = "URL"
@@ -100,11 +108,22 @@ A = "A (not connected)"
 B = "B (connected)"
 C = "C (charging)"
 
+[config.devices]
+auxMeter = "Smart consumer"
+batteryStorage = "Battery storage"
+solarSystem = "Solar system"
+
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
 title = "EEBus"
 
+[config.ext]
+description = "Can be used for load management or statistics purposes."
+titleAdd = "Add External Meter"
+titleEdit = "Edit External Meter"
+
 [config.form]
+danger = "Danger"
 deprecated = "deprecated"
 example = "Example"
 optional = "optional"
@@ -123,6 +142,7 @@ remove = "Remove"
 save = "Save"
 showAdvancedSettings = "Show advanced settings"
 telemetry = "Telemetry"
+templateLoading = "Loading..."
 title = "Title"
 validateSave = "Validate & save"
 
@@ -155,6 +175,7 @@ v2Support = "Back to InfluxDB 2.x"
 addCharger = "Add charger"
 addMeter = "Add dedicated charger meter"
 cancel = "Cancel"
+chargerError = "Configuring a charger is required."
 chargerLabel = "Charger"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Will use a current range of 6 to 16 A."
@@ -186,6 +207,7 @@ phasesAutomatic = "Automatic phases"
 phasesAutomaticHelp = "Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging."
 phasesHelp = "Number of phases connected to the charger."
 phasesLabel = "Phases"
+pollIntervalDanger = "Regularly querying the vehicle may drain the vehicle battery. Some vehicle manufacturers may actively prevent charging in this case. Not recommended! Only use this if you're aware of the risks."
 pollIntervalHelp = "Time between vehicle API updates. Short intervals may drain the vehicle battery."
 pollIntervalLabel = "Update interval"
 pollModeAlways = "always"
@@ -225,6 +247,7 @@ vehicleLabel = "Default vehicle"
 vehiclesTitle = "Vehicles"
 
 [config.main]
+addAdditional = "Add additional meter"
 addGrid = "Add grid meter"
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
@@ -249,6 +272,12 @@ save = "Save"
 template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
+
+[config.meter.option]
+aux = "Add self-regulating consumer"
+battery = "Add battery meter"
+ext = "Add external meter"
+pv = "Add solar meter"
 
 [config.modbusproxy]
 description = "Allow multiple clients to access a single Modbus device."
@@ -305,6 +334,7 @@ titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
 [config.section]
+additionalMeter = "Additional meters"
 general = "General"
 grid = "Grid"
 integrations = "Integrations"
@@ -352,10 +382,22 @@ validate = "validate"
 
 [config.vehicle]
 cancel = "Cancel"
+chargingSettings = "Charging settings"
+defaultMode = "Default mode"
+defaultModeHelp = "Charging mode when connecting the vehicle."
 delete = "Delete"
 generic = "Other integrations"
-offline = "Generic vehicle"
+identifiers = "RFID identifiers"
+identifiersHelp = "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charge point on the overview page."
+maximumCurrent = "Maximum current"
+maximumCurrentHelp = "Must be greater than minimum current."
+maximumPhases = "Maximum phases"
+maximumPhasesHelp = "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
+minimumCurrent = "Minimum current"
+minimumCurrentHelp = "Only go below 6A if you know what you're doing."
 online = "Vehicles with online API"
+priority = "Priority"
+priorityHelp = "Higher priority means this vehicle gets preferred access to solar surplus."
 save = "Save"
 scooter = "Scooter"
 template = "Manufacturer"
@@ -435,6 +477,7 @@ modalUpdateStatusStart = "Installation started:"
 
 [forecast]
 modalTitle = "Forecast"
+solarAdjust = "Adjust solar forecast based on real production data{percent}."
 
 [forecast.co2]
 average = "Average"
@@ -553,12 +596,15 @@ gridImport = "Grid use"
 homePower = "Consumption"
 loadpoints = "Charger| Charger | {count} chargers"
 noEnergy = "No meter data"
+pv = "Solar system"
 pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
+connected = "Standby."
+vehicleLimit = "Heater limit"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
@@ -632,6 +678,7 @@ costLimitIgnore = "The configured {limit} will be ignored during this period."
 currentPlan = "Active plan"
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}?"
+goalReached = "Goal already reached"
 inactiveLabel = "Target time"
 nextPlan = "Next plan"
 notReachableInTime = "Goal will be reached {overrun} later."
@@ -680,13 +727,6 @@ tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 
-[main.vehicleSoc]
-charging = "charging"
-connected = "connected"
-disconnected = "disconnected"
-ready = "ready"
-vehicleLimit = "Vehicle limit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Waiting for authorization."
 batteryBoost = "Battery boost active."
@@ -711,7 +751,7 @@ targetChargeActive = "Charging plan active. Estimated finish in {duration}."
 targetChargePlanned = "Charging plan starts in {duration}."
 targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleLimit = "Vehicle limit."
+vehicleLimit = "Vehicle limit"
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 welcome = "Short initial charge to confirm connection."
@@ -886,6 +926,8 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+resetAction = "Remove limit"
+resetWarning = "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?"
 saved = "Saved."
 
 [startupError]

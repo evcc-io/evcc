@@ -11,29 +11,30 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func quote(value string) string {
-	quoted := strings.ReplaceAll(value, `'`, `''`)
-	return fmt.Sprintf("'%s'", quoted)
-}
-
-// yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
 func yamlQuote(value string) string {
+	if value == "" {
+		return value
+	}
+
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {
-		Value string `yaml:"key"`
+		Value any `yaml:"key"`
 	}
 
-	if err := yaml.Unmarshal([]byte(input), &res); err != nil || value != res.Value {
-		return quote(value)
+	if err := yaml.Unmarshal([]byte(input), &res); err == nil {
+		b, err := yaml.Marshal(res)
+		if err == nil && strings.TrimSpace(strings.TrimPrefix(string(b), "key: ")) == value {
+			return value
+		}
 	}
 
-	// fix 0815, but not 0
-	if strings.HasPrefix(value, "0") && len(value) > 1 {
-		return quote(value)
-	}
+	return quote(value)
+}
 
-	return value
+func quote(value string) string {
+	quoted := strings.ReplaceAll(value, `'`, `''`)
+	return fmt.Sprintf("'%s'", quoted)
 }
 
 func trimLines(s string) string {
@@ -62,6 +63,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		},
 		"urlEncode": url.QueryEscape,
 		"unquote":   unquote,
+		"quote":     yamlQuote,
 	}
 
 	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)

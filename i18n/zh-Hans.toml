@@ -324,13 +324,6 @@ tempLimit = "临时限制"
 unknown = "来访车辆"
 vehicleSoc = "充电"
 
-[main.vehicleSoc]
-charging = "充电中"
-connected = "已连接"
-disconnected = "已断开"
-ready = "就绪"
-vehicleLimit = "车辆限制: {soc}"
-
 [main.vehicleStatus]
 charging = "充电中…"
 cheapEnergyCharging = "收取廉价能源: {price} (限制 {limit})"

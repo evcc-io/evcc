@@ -106,7 +106,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		return c, err
+		eebus.Instance.UnregisterDevice(ski, c)
+		return nil, err
 	}
 
 	// scenarios

@@ -20,7 +20,14 @@ params:
     help:
       de: "Die DNO-Region, in der Sie sich befinden. Weitere Informationen: https://www.energy-stats.uk/dno-region-codes-explained/"
       en: "The DNO region you are located in. More information: https://www.energy-stats.uk/dno-region-codes-explained/"
+  - name: directDebit
+    type: bool
+    default: true
+    help:
+      de: "Ich benutze den BACS-Lastschrifttarif."
+      en: "Use Direct Debit tariff rates."
 render: |
   type: octopusenergy
   productCode: {{ .productCode }}
   region: {{ .region }}
+  directDebit: {{ .directDebit }}

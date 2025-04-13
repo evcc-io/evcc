@@ -39,6 +39,7 @@ import rickshaw from "./Rickshaw.vue";
 import rocket from "./Rocket.vue";
 import scooter from "./Scooter.vue";
 import shuttle from "./Shuttle.vue";
+import smartconsumer from "./SmartConsumer.vue";
 import taxi from "./Taxi.vue";
 import tool from "./Tool.vue";
 import tractor from "./Tractor.vue";
@@ -79,12 +80,15 @@ const icons = {
 	rocket,
 	scooter,
 	shuttle,
+	smartconsumer,
 	taxi,
 	tool,
 	tractor,
 	van,
 	waterheater,
 };
+
+export const ICONS = Object.keys(icons);
 
 export default {
 	name: "VehicleIcon",
@@ -95,16 +99,16 @@ export default {
 		size: { type: String, default: "s" },
 	},
 	computed: {
-		uniqueNames: function () {
+		uniqueNames() {
 			return [...new Set(this.names || [this.name])];
 		},
-		count: function () {
+		count() {
 			return this.names?.length || 0;
 		},
-		single: function () {
+		single() {
 			return this.uniqueNames.length == 1;
 		},
-		singleIcon: function () {
+		singleIcon() {
 			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
 		},
 	},

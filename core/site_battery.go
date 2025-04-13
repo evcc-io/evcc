@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -14,13 +15,6 @@ func batteryModeModified(mode api.BatteryMode) bool {
 
 func (site *Site) batteryConfigured() bool {
 	return len(site.batteryMeters) > 0
-}
-
-// GetBatteryMode returns the battery mode
-func (site *Site) GetBatteryMode() api.BatteryMode {
-	site.RLock()
-	defer site.RUnlock()
-	return site.batteryMode
 }
 
 // setBatteryMode sets the battery mode
@@ -39,12 +33,24 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	if site.batteryMode != batMode {
 		site.setBatteryMode(batMode)
 	}
+
+	if site.batteryModeExternal == api.BatteryUnknown {
+		site.batteryModeExternalTimer = time.Time{}
+	}
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
 func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
+	extMode := site.GetBatteryModeExternal()
+
+	var extModeReset bool
+	if extMode == api.BatteryUnknown {
+		site.Lock()
+		extModeReset = !site.batteryModeExternalTimer.IsZero()
+		site.Unlock()
+	}
 
 	mapper := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
@@ -53,6 +59,11 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
+	case extModeReset:
+		// require normal mode to leave external control
+		res = api.BatteryNormal
+	case extMode != api.BatteryUnknown:
+		res = extMode
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
@@ -66,7 +77,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 
 // applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	for _, meter := range site.batteryMeters {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if _, ok := meter.(api.Meter); !ok {
+			panic("not a meter: battery")
+		}
+
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
@@ -88,12 +104,12 @@ func (site *Site) plannerRates() (api.Rates, error) {
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsZero() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
-	return limit != nil && !rate.IsZero() && rate.Price <= *limit
+	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {

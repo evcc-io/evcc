@@ -5,13 +5,16 @@ const SETTINGS_THEME = "settings_theme";
 const SETTINGS_UNIT = "settings_unit";
 const SETTINGS_HIDDEN_FEATURES = "settings_hidden_features";
 const SETTINGS_ENERGYFLOW_DETAILS = "settings_energyflow_details";
+const SETTINGS_ENERGYFLOW_PV = "settings_energyflow_pv";
+const SETTINGS_ENERGYFLOW_BATTERY = "settings_energyflow_battery";
+const SETTINGS_ENERGYFLOW_LOADPOINTS = "settings_energyflow_loadpoints";
 const SESSION_INFO = "session_info";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
-
+const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 function read(key) {
   return window.localStorage[key];
 }
@@ -58,12 +61,16 @@ const settings = reactive({
   unit: read(SETTINGS_UNIT),
   hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
+  energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
+  energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
+  energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
   sessionInfo: readArray(SESSION_INFO),
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
   savingsRegion: read(SAVINGS_REGION),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
+  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -71,10 +78,14 @@ watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.hiddenFeatures, saveBool(SETTINGS_HIDDEN_FEATURES));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
+watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
+watch(() => settings.energyflowBattery, saveBool(SETTINGS_ENERGYFLOW_BATTERY));
+watch(() => settings.energyflowLoadpoints, saveBool(SETTINGS_ENERGYFLOW_LOADPOINTS));
 watch(() => settings.sessionInfo, saveArray(SESSION_INFO));
 watch(() => settings.sessionColumns, saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
+watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 export default settings;

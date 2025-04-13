@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -114,6 +115,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 
 	site.Meters.AuxMetersRef = ref
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
+// GetExtMeterRefs returns the ExtMeterRef
+func (site *Site) GetExtMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ExtMetersRef
+}
+
+// SetExtMeterRefs sets the ExtMeterRef
+func (site *Site) SetExtMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ExtMetersRef = ref
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // Loadpoints returns the loadpoints as api interfaces
@@ -318,4 +335,66 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
+}
+
+// GetBatteryMode returns the battery mode
+func (site *Site) GetBatteryMode() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryMode
+}
+
+// GetBatteryModeExternal returns the external battery mode
+func (site *Site) GetBatteryModeExternal() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryModeExternal
+}
+
+// SetBatteryModeExternal sets the external battery mode
+func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
+
+	disable := mode == api.BatteryUnknown
+
+	if mode != site.batteryModeExternal {
+		site.batteryModeExternal = mode
+		site.publish(keys.BatteryModeExternal, mode)
+
+		if !disable {
+			site.setBatteryMode(mode)
+
+			// start watchdog if not running
+			if site.batteryModeExternalTimer.IsZero() {
+				go func() {
+					for range time.Tick(time.Second) {
+						if site.batteryModeWatchdogExpired() {
+							return
+						}
+					}
+				}()
+			}
+		}
+	}
+
+	// reset timer
+	if !disable {
+		site.batteryModeExternalTimer = time.Now()
+	}
+}
+
+func (site *Site) batteryModeWatchdogExpired() bool {
+	site.RLock()
+	elapsed := time.Since(site.batteryModeExternalTimer)
+	site.RUnlock()
+
+	if elapsed > time.Minute && !site.batteryModeExternalTimer.IsZero() {
+		site.SetBatteryModeExternal(api.BatteryUnknown)
+		return true
+	}
+
+	return false
 }

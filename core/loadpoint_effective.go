@@ -49,8 +49,10 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		return i.Start.Compare(j.Start)
 	})
 
-	if len(plans) > 0 {
-		return &plans[0]
+	for _, p := range plans {
+		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+			return &p
+		}
 	}
 
 	return nil
@@ -133,7 +135,7 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.GetMinCurrent()
+	lpMin := lp.getMinCurrent()
 	var vehicleMin, chargerMin float64
 
 	if v := lp.GetVehicle(); v != nil {

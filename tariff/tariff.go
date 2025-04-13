@@ -99,7 +99,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
-					Price: t.totalPrice(r.Price, r.Start),
+					Value: t.totalPrice(r.Value, r.Start),
 					Start: r.Start.Local(),
 					End:   r.End.Local(),
 				}
@@ -115,7 +115,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 		// only prune rates older than current period
 		periodStart := now.With(time.Now()).BeginningOfHour()
 		if t.typ == api.TariffTypeSolar {
-			periodStart = BeginningOfDay()
+			periodStart = beginningOfDay()
 		}
 		mergeRatesAfter(t.data, data, periodStart)
 
@@ -145,7 +145,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price, slot),
+			Value: t.totalPrice(price, slot),
 		}
 	}
 

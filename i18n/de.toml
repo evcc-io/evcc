@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Ladestand der Batterie "
+batteryLevel = "Ladestand der Batterie"
 capacity = "{energy} von {total}"
 control = "Batteriesteuerung"
 discharge = "Verhindere Entladung im Schnell-Modus und bei geplantem Laden."
@@ -23,6 +23,11 @@ never = "nur mit genug PV-Überschuss."
 
 [config]
 
+[config.aux]
+description = "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist."
+titleAdd = "Intelligenten Verbraucher hinzufügen"
+titleEdit = "Intelligenten Verbraucher bearbeiten"
+
 [config.battery]
 titleAdd = "Batterie hinzufügen"
 titleEdit = "Batterie bearbeiten"
@@ -34,6 +39,7 @@ titleEdit = "Energiezähler bearbeiten"
 [config.charger]
 chargers = "Wallboxen"
 generic = "Generische Integrationen"
+heatingdevices = "Wärmeerzeuger"
 ocppHelp = "Kopiere diese Adresse in die Konfiguration der Wallbox."
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Schaltbare Steckdosen"
@@ -75,6 +81,7 @@ enabled = "Ladebereit"
 energy = "Energie"
 feedinPrice = "Einspeisevergütung"
 gridPrice = "Netzpreis"
+heaterTempLimit = "Heizungslimit"
 hemsType = "System"
 identifier = "RFID-Kennung"
 no = "Nein"
@@ -89,6 +96,7 @@ powerRange = "Leistung"
 range = "Reichweite"
 singlePhase = "Einphasig"
 soc = "Ladestand"
+solarForecast = "PV-Vorhersage"
 temp = "Temperatur"
 topic = "Thema"
 url = "URL"
@@ -100,11 +108,22 @@ A = "A (nicht verbunden)"
 B = "B (verbunden)"
 C = "C (lädt)"
 
+[config.devices]
+auxMeter = "Smarter Verbraucher"
+batteryStorage = "Batterie"
+solarSystem = "PV-Anlage"
+
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
 title = "EEBus"
 
+[config.ext]
+description = "Kann für Lastmanagement oder Statistikzwecke verwendet werden."
+titleAdd = "Zusätzlichen Zähler hinzufügen"
+titleEdit = "Zusätzlichen Zähler bearbeiten"
+
 [config.form]
+danger = "Achtung"
 deprecated = "veraltet"
 example = "Beispiel"
 optional = "optional"
@@ -123,6 +142,7 @@ remove = "Entfernen"
 save = "Speichern"
 showAdvancedSettings = "Erweiterte Einstellungen anzeigen"
 telemetry = "Telemetrie"
+templateLoading = "Lade …"
 title = "Titel"
 validateSave = "Überprüfen & speichern"
 
@@ -132,7 +152,7 @@ titleAdd = "Netzzähler hinzufügen"
 titleEdit = "Netzzähler bearbeiten"
 
 [config.hems]
-description = "evcc mit einem anderen Hausenergiemanagementsystem verbinden."
+description = "evcc mit einem anderen Heimenergiemanagementsystem verbinden."
 title = "HEMS"
 
 [config.influx]
@@ -141,7 +161,7 @@ descriptionToken = "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du ein
 labelBucket = "Bucket"
 labelCheckInsecure = "Erlaube unsichere Verbindungen"
 labelDatabase = "Datenbank"
-labelInsecure = "Zertifikatüberprüfung"
+labelInsecure = "Zertifikatsüberprüfung"
 labelOrg = "Organisation"
 labelPassword = "Passwort"
 labelToken = "API-Token"
@@ -155,6 +175,7 @@ v2Support = "Zurück zu InfluxDB 2.x"
 addCharger = "Wallbox hinzufügen"
 addMeter = "Zusätzlichen Zähler hinzufügen"
 cancel = "Abbrechen"
+chargerError = "Wallbox muss konfiguriert sein."
 chargerLabel = "Wallbox"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Verwendet einen Strombereich von 6 bis 16 A."
@@ -170,7 +191,7 @@ defaultModeHelp = "Lademodus beim Anschließen des Fahrzeugs."
 defaultModeHelpKeep = "Der letzte ausgewählte Modus wird beibehalten."
 defaultModeLabel = "Standard-Modus"
 delete = "Löschen"
-electricalSubtitle = "ggf. Elektriker fragen"
+electricalSubtitle = "Im Zweifelsfall Elektriker fragen"
 electricalTitle = "Elektrisch"
 energyMeterHelp = "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat."
 energyMeterLabel = "Energiezähler"
@@ -186,6 +207,7 @@ phasesAutomatic = "Automatische Phasen"
 phasesAutomaticHelp = "Deine Wallbox unterstützt automatisches Umschalten zwischen 1- und 3-phasigem Laden. In der Hauptansicht kannst du das Phasenverhalten während des Ladens anpassen."
 phasesHelp = "Anzahl der an die Wallbox angeschlossenen Phasen."
 phasesLabel = "Phasen"
+pollIntervalDanger = "Regelmäßiges Abfragen des Fahrzeuges kann dazu führen, dass die Fahrzeugbatterie entleert wird. Einige Fahrzeughersteller sperren das Laden in solchen Fällen auch aktiv. Nicht empfohlen! Verwende diese Einstellung nur, wenn du dir der Risiken bewusst bist."
 pollIntervalHelp = "Zeit zwischen Fahrzeug-API-Updates. Kurze Intervalle können die Fahrzeugbatterie belasten."
 pollIntervalLabel = "Update-Intervall"
 pollModeAlways = "immer"
@@ -225,6 +247,7 @@ vehicleLabel = "Standard-Fahrzeug"
 vehiclesTitle = "Fahrzeuge"
 
 [config.main]
+addAdditional = "Zusätzlichen Zähler hinzufügen"
 addGrid = "Netzzähler hinzufügen"
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
@@ -249,6 +272,12 @@ save = "Speichern"
 template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
+
+[config.meter.option]
+aux = "Intelligenten Verbraucher hinzufügen"
+battery = "Hausbatterie hinzufügen"
+ext = "Zusätzlichen Zähler hinzufügen"
+pv = "PV-Anlage hinzufügen"
 
 [config.modbusproxy]
 description = "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät."
@@ -302,10 +331,11 @@ B = "B (verbunden)"
 C = "C (lädt)"
 
 [config.pv]
-titleAdd = "Zähler (PV) hinzufügen"
-titleEdit = "Zähler (PV) bearbeiten"
+titleAdd = "PV-Anlage hinzufügen"
+titleEdit = "PV-Anlage bearbeiten"
 
 [config.section]
+additionalMeter = "Zusätzliche Zähler"
 general = "Allgemein"
 grid = "Netzanschluss"
 integrations = "Integrationen"
@@ -321,7 +351,7 @@ description = "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachh
 descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an."
 error = "Das Sponsortoken ist ungültig."
 labelToken = "Sponsortoken"
-title = "Sponsorship"
+title = "Sponsoring"
 tokenRequired = "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst."
 tokenRequiredLearnMore = "Mehr erfahren."
 trialToken = "Testtoken"
@@ -346,17 +376,29 @@ title = "Titel bearbeiten"
 [config.validation]
 failed = "fehlgeschlagen"
 label = "Status"
-running = "prüfe…"
+running = "prüfe …"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
 
 [config.vehicle]
 cancel = "Abbrechen"
+chargingSettings = "Ladeeinstellungen"
+defaultMode = "Standard-Modus"
+defaultModeHelp = "Lademodus beim Anschließen des Fahrzeugs."
 delete = "Fahrzeug löschen"
 generic = "Weitere Integrationen"
-offline = "Generisches Fahrzeug"
+identifiers = "RFID-Kennungen"
+identifiersHelp = "Liste der RFID-Kennungen, um das Fahrzeug zu identifizieren. Ein Eintrag pro Zeile. Auf der Übersichtsseite siehst du die aktuelle RFID-Kennung am jeweiligen Ladepunkt."
+maximumCurrent = "Maximaler Strom"
+maximumCurrentHelp = "Muss größer als der minimale Strom sein."
+maximumPhases = "Maximale Phasen"
+maximumPhasesHelp = "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet."
+minimumCurrent = "Minimaler Strom"
+minimumCurrentHelp = "Nur unter 6A, wenn du weißt, was du tust."
 online = "Fahrzeuge mit Schnittstelle"
+priority = "Priorität"
+priorityHelp = "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat."
 save = "Speichern"
 scooter = "Elektroroller"
 template = "Hersteller"
@@ -371,7 +413,7 @@ greenEnergy = "Sonne"
 greenEnergySub1 = "über evcc geladen"
 greenEnergySub2 = "seit Oktober 2022"
 greenShare = "Sonnenanteil"
-greenShareSub1 = "Strom bereitgestellt durch"
+greenShareSub1 = "Leistung bereitgestellt durch"
 greenShareSub2 = "PV und Speicher"
 power = "Ladeleistung"
 powerSub1 = "{activeClients} von {totalClients} Nutzern"
@@ -436,6 +478,7 @@ modalUpdateStatusStart = "Installation gestartet:"
 
 [forecast]
 modalTitle = "Vorhersage"
+solarAdjust = "Solarprognose anhand der realen Produktionsdaten anpassen{percent}."
 
 [forecast.co2]
 average = "Durchschnitt"
@@ -560,6 +603,8 @@ selfConsumption = "Eigenverbrauch"
 
 [main.heatingStatus]
 charging = "Heize …"
+connected = "Standby."
+vehicleLimit = "Heizungslimit"
 waitForVehicle = "Bereit. Warte auf Heizung …"
 
 [main.loadpoint]
@@ -603,7 +648,7 @@ label = "Max. Ladestrom"
 label = "Min. Ladestrom"
 
 [main.loadpointSettings.minSoc]
-description = "Fahrzeug wird im PV-Modus „schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
+description = "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -620,7 +665,7 @@ minpv = "Min+PV"
 now = "Schnell"
 off = "Aus"
 pv = "PV"
-smart = "Klever"
+smart = "Intelligent"
 
 [main.provider]
 login = "anmelden"
@@ -633,6 +678,7 @@ costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
+goalReached = "Ladeziel bereits erreicht"
 inactiveLabel = "Zielzeit"
 nextPlan = "Nächster Plan"
 notReachableInTime = "Zielzeit wird {overrun} später erreicht."
@@ -681,13 +727,6 @@ tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
 
-[main.vehicleSoc]
-charging = "lädt"
-connected = "verbunden"
-disconnected = "getrennt"
-ready = "bereit"
-vehicleLimit = "Fahrzeuglimit: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Warte auf Autorisierung."
 batteryBoost = "Batterie Boost aktiv."
@@ -706,13 +745,13 @@ finished = "Abgeschlossen."
 minCharge = "Mindestladung bis {soc}."
 pvDisable = "Zu wenig Überschuss. Ladung wird gleich pausiert."
 pvEnable = "Überschuss verfügbar. Ladung wird gleich fortgesetzt."
-scale1p = "Reduziere gleich auf einphasiges Laden."
-scale3p = "Erhöhe gleich auf dreiphasiges Laden."
-targetChargeActive = "Ladeplan aktiv. Geplantes Ende in {duration}."
+scale1p = "Reduziere gleich auf 1-phasiges Laden."
+scale3p = "Erhöhe gleich auf 3-phasiges Laden."
+targetChargeActive = "Ladeplan aktiv. Geschätztes Ende in {duration}."
 targetChargePlanned = "Ladeplan startet in {duration}."
 targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
 unknown = ""
-vehicleLimit = "Fahrzeuglimit."
+vehicleLimit = "Fahrzeuglimit"
 vehicleLimitReached = "Fahrzeuglimit erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
 welcome = "Kurze initiale Ladung zur Bestätigung der Verbindung."
@@ -887,6 +926,8 @@ modalTitle = "Smartes Netzladen"
 none = "keine"
 priceLabel = "Energiepreis"
 priceLimit = "Preisgrenze"
+resetAction = "Grenze löschen"
+resetWarning = "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?"
 saved = "Gepeichert."
 
 [startupError]

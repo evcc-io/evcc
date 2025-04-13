@@ -1,7 +1,13 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
 import { ensureCurrentLocaleMessages } from "./i18n";
-import { openLoginModal, statusUnknown, updateAuthStatus, isLoggedIn, isConfigured } from "./auth";
+import {
+  openLoginModal,
+  statusUnknown,
+  updateAuthStatus,
+  isLoggedIn,
+  isConfigured,
+} from "./components/Auth/auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {

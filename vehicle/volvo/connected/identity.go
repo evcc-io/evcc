@@ -1,97 +1,91 @@
 package connected
 
 import (
-	"net/http"
-	"net/url"
+	"context"
+	"errors"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
-var Oauth2Config = oauth2.Config{
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
-		TokenURL: "https://volvoid.eu.volvocars.com/as/token.oauth2",
-	},
-	Scopes: []string{
-		oidc.ScopeOpenID, "vehicle:attributes",
-		"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
-		"conve:fuel_status", "conve:odometer_status", "conve:environment",
-	},
+func Oauth2Config(id, secret string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		RedirectURL:  "http://localhost:7070/callback",
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
+			TokenURL:  "https://volvoid.eu.volvocars.com/as/token.oauth2",
+			AuthStyle: oauth2.AuthStyleInHeader,
+		},
+		Scopes: []string{
+			oidc.ScopeOpenID,
+			"conve:vehicle_relation",
+			"energy:recharge_status", "energy:battery_charge_level", "energy:electric_range", "energy:estimated_charging_time", "energy:charging_connection_status", "energy:charging_system_status",
+		},
+	}
 }
-
-const (
-	managerId = "JWTh4Yf0b"
-	basicAuth = "Basic aDRZZjBiOlU4WWtTYlZsNnh3c2c1WVFxWmZyZ1ZtSWFEcGhPc3kxUENhVXNpY1F0bzNUUjVrd2FKc2U0QVpkZ2ZJZmNMeXc="
-)
 
 type Identity struct {
-	log *util.Logger
-	*request.Helper
+	ts      oauth2.TokenSource
+	mu      sync.Mutex
+	subject string
 }
 
-func NewIdentity(log *util.Logger) (*Identity, error) {
-	v := &Identity{
-		log:    log,
-		Helper: request.NewHelper(log),
+func NewIdentity(log *util.Logger, config *oauth2.Config, token *oauth2.Token) (oauth2.TokenSource, error) {
+	// serialise instance handling
+	mu.Lock()
+	defer mu.Unlock()
+	// reuse instance
+	subject := "volvo-connected." + strings.ToLower(config.ClientID)
+	if instance := getInstance(subject); instance != nil {
+		return instance, nil
 	}
+
+	v := &Identity{
+		subject: subject,
+	}
+
+	var tok oauth2.Token
+	if err := settings.Json(v.subject, &tok); err == nil {
+		token = &tok
+	}
+
+	client := request.NewClient(log)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+
+	v.ts = config.TokenSource(ctx, token)
+
+	if tok, err := v.Token(); err == nil {
+		token = tok
+	} else {
+		return nil, err
+	}
+
+	if !token.Valid() {
+		return nil, errors.New("token expired and could not be refreshed")
+	}
+
+	// add instance
+	addInstance(v.subject, v)
 
 	return v, nil
 }
 
-func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
-	data := url.Values{
-		"username":                {user},
-		"password":                {password},
-		"access_token_manager_id": {managerId},
-		"grant_type":              {"password"},
-		"scope":                   {strings.Join(Oauth2Config.Scopes, " ")},
-	}
+func (v *Identity) Token() (*oauth2.Token, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
-	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": basicAuth,
-	})
+	tok, err := v.ts.Token()
 	if err != nil {
 		return nil, err
 	}
+	err = settings.SetJson(v.subject, tok)
 
-	var tok oauth2.Token
-	if err := v.DoJSON(req, &tok); err != nil {
-		return nil, err
-	}
-
-	token := util.TokenWithExpiry(&tok)
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
-	go oauth.Refresh(v.log, token, ts)
-
-	return ts, nil
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"access_token_manager_id": {managerId},
-		"grant_type":              {"refresh_token"},
-		"refresh_token":           {token.RefreshToken},
-	}
-
-	req, err := request.New(http.MethodPost, Oauth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": basicAuth,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var res oauth2.Token
-	if err := v.DoJSON(req, &res); err != nil {
-		return nil, err
-	}
-
-	return util.TokenWithExpiry(&res), err
+	return tok, err
 }
