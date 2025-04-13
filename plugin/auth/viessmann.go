@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -21,13 +20,9 @@ const (
 	// ^ the value of RedirectURI doesn't matter, but it must be the same between requests
 )
 
-var (
-	User     = os.Getenv("VIESSMANN_USER")
-	Password = os.Getenv("VIESSMANN_PASS")
-	ClientId = os.Getenv("VIESSMANN_CLIENT_ID")
-	// TODO: ^ these should really come from the evcc config...
-	OAuth2Config = &oauth2.Config{
-		ClientID: ClientId,
+func OAuth2Config(clientID string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID: clientID,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   OAuthURI + "/authorize",
 			TokenURL:  OAuthURI + "/token",
@@ -36,7 +31,7 @@ var (
 		RedirectURL: RedirectURI,
 		Scopes:      []string{"IoT User", "offline_access"},
 	}
-)
+}
 
 func init() {
 	registry.AddCtx("viessmann", NewViessmannFromConfig)
@@ -49,6 +44,7 @@ type Viessmann struct {
 
 func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authorizer, error) {
 	var cc struct {
+		ClientID       string
 		User, Password string
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -61,12 +57,13 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 
 	ctx = context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
 
-	token, err := v.login(ctx, cc.User, cc.Password)
+	oc := OAuth2Config(cc.ClientID)
+	token, err := v.login(ctx, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	v.ts = OAuth2Config.TokenSource(ctx, token)
+	v.ts = oc.TokenSource(ctx, token)
 
 	return v, nil
 }
@@ -78,11 +75,11 @@ func (v *Viessmann) Transport(base http.RoundTripper) (http.RoundTripper, error)
 	}, nil
 }
 
-func (v *Viessmann) login(ctx context.Context, user, password string) (*oauth2.Token, error) {
+func (v *Viessmann) login(ctx context.Context, oc *oauth2.Config, user, password string) (*oauth2.Token, error) {
 	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv))
+	uri := oc.AuthCodeURL(state, oauth2.S256ChallengeOption(cv))
 
 	v.Client.Jar, _ = cookiejar.New(nil)
 	v.Client.CheckRedirect = request.DontFollow
@@ -114,7 +111,7 @@ func (v *Viessmann) login(ctx context.Context, user, password string) (*oauth2.T
 	ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 	defer cancel()
 
-	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	return oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 }
 
 // func (v *Viessmann) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {

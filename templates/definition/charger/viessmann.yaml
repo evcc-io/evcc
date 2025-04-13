@@ -8,10 +8,12 @@ group: heating
 #   evcc: ["sponsorship"]
 params:
   # TODO mark parameters as required
-  - name: installation_id  # TODO guide user on how to get this value
-  - name: gateway_serial   # TODO guide user on how to get this value
-  - name: device_id        # TODO guide user on how to get this value
-  - name: token            # TODO get with client id via oauth2
+  - name: installation_id # TODO guide user on how to get this value
+  - name: gateway_serial # TODO guide user on how to get this value
+  - name: device_id # TODO guide user on how to get this value
+  - name: user
+  - name: password
+  - name: clientid
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
@@ -24,9 +26,11 @@ render: |
     source: http
     uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
     cache: 2s # to prevent making two identical requests straight after each other for "getmode"
-    headers:  
-      - content-type: application/json
-      - authorization: Bearer {{.token}}
+    auth:
+      source: viessmann
+      user: {{ .user }}
+      password: {{ .password }}
+      clientid: {{ .clientid }}
     jq: '.data.properties.active.value | if . == false then 1 elif . == true then 2 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 1
     # true -> oneTimeCharge is enabled -> boost mode -> 2
@@ -38,9 +42,11 @@ render: |
         source: http
         uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
         method: POST 
-        headers:  
-          - content-type: application/json
-          - authorization: Bearer {{.token}}
+        auth:
+          source: viessmann
+          user: {{ .user }}
+          password: {{ .password }}
+          clientid: {{ .clientid }}
         body: >
           { }
     - case: 2 # boost
@@ -50,16 +56,20 @@ render: |
         - source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
           method: POST
-          headers:  
-            - content-type: application/json
-            - authorization: Bearer {{.token}}
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
           body: >
             {"temperature": {{.target_temperature}}}
         - source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
           method: POST 
-          headers:  
-            - content-type: application/json
-            - authorization: Bearer {{.token}}
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
           body: >
             { }
