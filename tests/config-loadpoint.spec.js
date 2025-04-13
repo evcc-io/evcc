@@ -311,6 +311,7 @@ test.describe("loadpoint", async () => {
     await newLoadpoint(page, "Garage");
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
     await lpModal.getByLabel("Default vehicle").selectOption("Porsche");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -318,6 +319,7 @@ test.describe("loadpoint", async () => {
     // delete vehicle
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
     const vehicleModal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(vehicleModal);
 

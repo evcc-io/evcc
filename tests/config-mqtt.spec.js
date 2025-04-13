@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -33,6 +33,7 @@ test.describe("mqtt", async () => {
   test("mqtt via ui", async ({ page }) => {
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("mqtt-modal");
+    await expectModalVisible(modal);
 
     // setup with invalid broker
     await modal.getByLabel("Broker").fill(INVALID_BROKER);
@@ -61,6 +62,7 @@ test.describe("mqtt", async () => {
     await expect(page.getByTestId("fatal-error")).toContainText("failed configuring mqtt");
 
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
     await expect(modal.getByLabel("Broker")).toHaveValue(INVALID_BROKER);
     await expect(modal.getByLabel("Topic")).toHaveValue(VALID_TOPIC); // whitespace has been trimmed
     await expect(modal.getByLabel("Client ID")).toHaveValue(VALID_CLIENT_ID);

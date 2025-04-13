@@ -10,7 +10,7 @@ export default {
     phasesActive: { control: { type: "number" } },
     minCurrent: { control: { type: "number" } },
     maxCurrent: { control: { type: "number" } },
-    chargeCurrent: { control: { type: "number" } },
+    offeredCurrent: { control: { type: "number" } },
     chargeCurrents: { control: { type: "object" } },
   },
 };
@@ -28,7 +28,7 @@ OnePhase.args = {
   phasesActive: 1,
   minCurrent: 6,
   maxCurrent: 16,
-  chargeCurrent: 8,
+  offeredCurrent: 8,
   chargeCurrents: null,
 };
 
@@ -48,14 +48,14 @@ export const RealCurrents = Template.bind({});
 RealCurrents.args = {
   ...OnePhase.args,
   phasesActive: 3,
-  chargeCurrent: 13,
+  offeredCurrent: 13,
   chargeCurrents: [11, 9, 12],
 };
 
 export const OnePhaseMoreAvailable = Template.bind({});
 OnePhaseMoreAvailable.args = {
   ...OnePhase.args,
-  chargeCurrent: 12,
+  offeredCurrent: 12,
   chargeCurrents: [6, 0.2, 0],
 };
 
@@ -63,7 +63,7 @@ export const TwoPhasesActive = Template.bind({});
 TwoPhasesActive.args = {
   ...OnePhase.args,
   phasesActive: 2,
-  chargeCurrent: 16,
+  offeredCurrent: 16,
   chargeCurrents: [16, 16, 0.3],
 };
 
@@ -71,7 +71,7 @@ export const AsymetricPhases = Template.bind({});
 AsymetricPhases.args = {
   ...OnePhase.args,
   phasesActive: 2,
-  chargeCurrent: 16,
+  offeredCurrent: 16,
   chargeCurrents: [8, 0.9, 14],
 };
 
@@ -79,7 +79,7 @@ export const OnlySecondPhase = Template.bind({});
 OnlySecondPhase.args = {
   ...OnePhase.args,
   phasesActive: 1,
-  chargeCurrent: 13,
+  offeredCurrent: 13,
   chargeCurrents: [0, 13, 0],
 };
 
@@ -87,7 +87,7 @@ export const MainlyThirdPhase = Template.bind({});
 MainlyThirdPhase.args = {
   ...OnePhase.args,
   phasesActive: 1,
-  chargeCurrent: 10,
+  offeredCurrent: 10,
   chargeCurrents: [0.007, 0.009, 5.945],
   minCurrent: 6,
   maxCurrent: 20,
