@@ -25,12 +25,10 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 	switch sh.conn.gen {
 	case 0, 1:
-		var res Gen1Status
-		uri := fmt.Sprintf("%s/status", sh.conn.uri)
-		if err := sh.conn.GetJSON(uri, &res); err != nil {
+		res, err := sh.conn.gen1Status.Get()
+		if err != nil {
 			return 0, err
 		}
-
 		switch {
 		case sh.conn.channel < len(res.Meters):
 			power = res.Meters[sh.conn.channel].Power
@@ -41,11 +39,10 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		var res Gen2StatusResponse
-		if err := sh.conn.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.conn.gen2StatusResponse.Get()
+		if err != nil {
 			return 0, err
 		}
-
 		switch sh.conn.channel {
 		case 1:
 			power = res.Switch1.Apower + res.Pm1.Apower + res.Em1.ActPower
@@ -71,7 +68,7 @@ func (sh *Switch) Enabled() (bool, error) {
 
 	default:
 		var res Gen2SwitchStatus
-		err := sh.conn.execGen2Cmd("Switch.GetStatus", false, &res)
+		err := sh.conn.gen2ExecCmd("Switch.GetStatus", false, &res)
 		return res.Output, err
 	}
 }
@@ -89,7 +86,7 @@ func (sh *Switch) Enable(enable bool) error {
 
 	default:
 		var res Gen2SwitchStatus
-		err = sh.conn.execGen2Cmd("Switch.Set", enable, &res)
+		err = sh.conn.gen2ExecCmd("Switch.Set", enable, &res)
 	}
 
 	return err
@@ -101,12 +98,10 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 
 	switch sh.conn.gen {
 	case 0, 1:
-		var res Gen1Status
-		uri := fmt.Sprintf("%s/status", sh.conn.uri)
-		if err := sh.conn.GetJSON(uri, &res); err != nil {
+		res, err := sh.conn.gen1Status.Get()
+		if err != nil {
 			return 0, err
 		}
-
 		switch {
 		case sh.conn.channel < len(res.Meters):
 			energy = res.Meters[sh.conn.channel].Total
@@ -119,11 +114,10 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(sh.conn.model, energy)
 
 	default:
-		var res Gen2StatusResponse
-		if err := sh.conn.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.conn.gen2StatusResponse.Get()
+		if err != nil {
 			return 0, err
 		}
-
 		switch sh.conn.channel {
 		case 1:
 			energy = res.Switch1.Aenergy.Total + res.Pm1.Aenergy.Total + res.Em1Data.TotalActEnergy - res.Em1Data.TotalActRetEnergy

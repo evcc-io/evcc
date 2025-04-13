@@ -3,27 +3,31 @@ package shelly
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri     string
-	channel int
-	gen     int    // Shelly api generation
-	model   string // Shelly device type
-	profile string // Shelly device profile
+	log                util.Logger
+	uri                string
+	channel            int
+	gen                int    // Shelly api generation
+	model              string // Shelly device type
+	profile            string // Shelly device profile
+	Cache              time.Duration
+	gen1Status         util.Cacheable[Gen1Status]
+	gen2StatusResponse util.Cacheable[Gen2StatusResponse]
+	gen2EMStatus       util.Cacheable[Gen2EMStatus]
 }
 
 // NewConnection creates a new Shelly device connection.
-func NewConnection(uri, user, password string, channel int) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -47,11 +51,13 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 
 	conn := &Connection{
 		Helper:  client,
+		log:     *log,
 		uri:     util.DefaultScheme(uri, "http"),
 		channel: channel,
 		gen:     resp.Gen,
 		model:   strings.Split(resp.Type+resp.Model, "-")[0],
 		profile: resp.Profile,
+		Cache:   cache,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -63,43 +69,12 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 
 	switch conn.gen {
 	case 0, 1:
-		// Shelly GEN 1 API
-		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		if user != "" {
-			log.Redact(transport.BasicAuthHeader(user, password))
-			conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
-		}
+		conn.gen1InitApi(uri, user, password)
 	case 2, 3:
-		// Shelly GEN 2+ API
-		// https://shelly-api-docs.shelly.cloud/gen2/
-		conn.uri += "/rpc"
-		if user != "" {
-			conn.Client.Transport = digest.NewTransport(user, password, conn.Client.Transport)
-		}
+		conn.gen2InitApi(uri, user, password)
 	default:
 		return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, conn.gen)
 	}
 
 	return conn, nil
-}
-
-// execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
-func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) error {
-	// Shelly gen 2 rfc7616 authentication
-	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
-	// https://datatracker.ietf.org/doc/html/rfc7616
-
-	data := &Gen2RpcPost{
-		Id:     d.channel,
-		On:     enable,
-		Src:    "evcc",
-		Method: method,
-	}
-
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", d.uri, method), request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-
-	return d.DoJSON(req, &res)
 }

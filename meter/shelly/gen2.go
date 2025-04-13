@@ -1,5 +1,15 @@
 package shelly
 
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
+)
+
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
 
 type Gen2RpcPost struct {
@@ -79,4 +89,51 @@ type Gen2StatusResponse struct {
 
 type Gen2EmDataStatusResponse struct {
 	TotalEnergy float64 `json:"total_act"`
+}
+
+// gen2ExecCmd executes a shelly api gen2+ command and provides the response
+func (c *Connection) gen2ExecCmd(method string, enable bool, res any) error {
+	// Shelly gen 2 rfc7616 authentication
+	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
+	// https://datatracker.ietf.org/doc/html/rfc7616
+
+	data := &Gen2RpcPost{
+		Id:     c.channel,
+		On:     enable,
+		Src:    "evcc",
+		Method: method,
+	}
+
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	return c.DoJSON(req, &res)
+}
+
+// gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
+func (c *Connection) gen2InitApi(uri, user, password string) {
+	// Shelly GEN 2+ API
+	// https://shelly-api-docs.shelly.cloud/gen2/
+	c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+	if user != "" {
+		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+	}
+	// Cached Gen2StatusResponse
+	c.gen2StatusResponse = util.ResettableCached(func() (Gen2StatusResponse, error) {
+		var gen2StatusResponse Gen2StatusResponse
+		if err := c.gen2ExecCmd("Shelly.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2StatusResponse); err != nil {
+			return Gen2StatusResponse{}, err
+		}
+		return gen2StatusResponse, nil
+	}, c.Cache)
+	// Cached gen2EMStatus
+	c.gen2EMStatus = util.ResettableCached(func() (Gen2EMStatus, error) {
+		var gen2EMStatusResponse Gen2EMStatus
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatusResponse); err != nil {
+			return Gen2EMStatus{}, err
+		}
+		return gen2EMStatusResponse, nil
+	}, c.Cache)
 }

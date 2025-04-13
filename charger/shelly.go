@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/shelly"
@@ -20,25 +21,28 @@ func init() {
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
 		Password     string
 		Channel      int
 		StandbyPower float64
+		Cache        time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
-	conn, err := shelly.NewConnection(uri, user, password, channel)
+func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (*Shelly, error) {
+	conn, err := shelly.NewConnection(uri, user, password, channel, cache)
 	if err != nil {
 		return nil, err
 	}
