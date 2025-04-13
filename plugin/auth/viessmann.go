@@ -105,11 +105,11 @@ func (v *Viessmann) login(ctx context.Context, user, password string) (*oauth2.T
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
-	redirect_location, err := url.Parse(resp.Header.Get("Location"))
+	loc, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
 		return nil, err
 	}
-	code := redirect_location.Query().Get("code")
+	code := loc.Query().Get("code")
 
 	ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 	defer cancel()
