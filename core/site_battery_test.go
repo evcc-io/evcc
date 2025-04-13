@@ -43,7 +43,7 @@ func TestExternalBatteryMode(t *testing.T) {
 
 func TestExternalBatteryModeChange(t *testing.T) {
 	for _, tc := range []struct {
-		internal, ext, expired api.BatteryMode
+		internal, ext, expected api.BatteryMode
 	}{
 		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
@@ -64,17 +64,47 @@ func TestExternalBatteryModeChange(t *testing.T) {
 			batteryMeters: []config.Device[api.Meter]{nil},
 		}
 
+		// set initial state, internal mode may already be changed
 		site.batteryMode = tc.internal
-
+		site.batteryModeExternal = api.BatteryUnknown
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
-		site.SetBatteryModeExternal(tc.ext)
 
-		// timer started
+		// 1. set required external mode
+		site.SetBatteryModeExternal(tc.ext)
+		assert.Equal(t, site.batteryModeExternal, tc.ext, "external mode expected %s got %s", tc.ext, site.batteryModeExternal)
+		assert.Equal(t, site.batteryMode, tc.internal, "internal mode expected unchanged %s got %s", tc.ext, site.batteryMode)
+
+		// 2. verify required external mode is indicated (unless unknown)
+		mode := site.requiredBatteryMode(false, api.Rate{})
+
 		if tc.ext != api.BatteryUnknown {
+			// timer started unless external mode is disabled by setting unknown
 			assert.False(t, site.batteryModeExternalTimer.IsZero())
+
+			// required mode should show external
+			if tc.internal != tc.ext {
+				assert.Equal(t, tc.ext, mode, "required mode expected %s got %s", tc.ext, mode)
+			} else {
+				assert.Equal(t, api.BatteryUnknown, mode, "required mode expected %s got %s", api.BatteryUnknown, mode)
+			}
+		} else {
+			// required mode should be unknown unless internal mode has been changed
+			if tc.internal != api.BatteryCharge {
+				assert.Equal(t, api.BatteryUnknown, mode, "required mode expected %s got %s", api.BatteryUnknown, mode)
+			}
 		}
 
-		// expire timer
+		// 3. apply required external mode (invoke applyBatteryMode, then SetBatteryMode if no error)
+		if mode != api.BatteryUnknown {
+			site.SetBatteryMode(mode)
+			assert.Equal(t, mode, site.batteryMode, "internal mode expected %s got %s", mode, site.batteryMode)
+		}
+
+		// 4. required external mode should only be applied once
+		mode = site.requiredBatteryMode(false, api.Rate{})
+		assert.Equal(t, api.BatteryUnknown, mode, "required mode should only be set once, expected %s got %s", api.BatteryUnknown, mode)
+
+		// 5. timer expiry
 		site.batteryModeExternalTimer = site.batteryModeExternalTimer.Add(-time.Hour)
 		site.batteryModeWatchdogExpired()
 
@@ -82,8 +112,9 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		assert.Equal(t, site.batteryModeExternal, api.BatteryUnknown)
 		assert.False(t, site.batteryModeExternalTimer.IsZero())
 
-		mode := site.requiredBatteryMode(false, api.Rate{})
-		assert.Equal(t, tc.expired.String(), mode.String(), "external mode expected %s got %s", tc.expired, mode)
+		// switch battery back to normal mode
+		mode = site.requiredBatteryMode(false, api.Rate{})
+		assert.Equal(t, tc.expected, mode, "external mode expected %s got %s", tc.expected, mode)
 
 		// timer disabled
 		site.SetBatteryMode(mode)

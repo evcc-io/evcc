@@ -63,7 +63,10 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		// require normal mode to leave external control
 		res = api.BatteryNormal
 	case extMode != api.BatteryUnknown:
-		res = extMode
+		// require external mode only once
+		if extMode != batMode {
+			res = extMode
+		}
 	case batteryGridChargeActive:
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
