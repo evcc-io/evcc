@@ -394,7 +394,12 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 	}
 
 	enabled, err := wb.Enabled()
-	if err == nil && enabled {
+
+	if err != nil {
+		return err
+	}
+
+	if enabled {
 		if err = wb.Enable(false); err != nil {
 			return err
 		}
@@ -403,8 +408,12 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 	// Switch phases
 	_, err = wb.conn.WriteSingleRegister(kathreinRegSetpointRelais, u)
 
+	if err != nil {
+		return err
+	}
+
 	// Re-enable charging if it was previously enabled
-	if err == nil && enabled {
+	if enabled {
 		err = wb.Enable(true)
 	}
 
@@ -429,7 +438,7 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	case 0x0007:
 		return 3, nil
 	default:
-		return 0, err
+		return 0, nil
 	}
 }
 
