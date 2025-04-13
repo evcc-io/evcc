@@ -17,7 +17,7 @@ params:
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
-      en: Target temperator for onetimecharge (°C), max=60
+      en: Target temperature for one-time charge (°C), max=60
     default: 45
     type: int
 render: |
