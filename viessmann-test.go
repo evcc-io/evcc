@@ -15,6 +15,7 @@ func main() {
 	token_source, _ := viessmann.NewIdentity(log, viessmann.User, viessmann.Password)
 	token, _ := token_source.Token()
 	fmt.Println(token)
+	fmt.Println(token.Expiry)
 
 	// TODO test if we can refresh the token - the below doesn't work:
 	// cannot use token_source (variable of interface type oauth2.TokenSource) as oauth.TokenRefresher value in argument to

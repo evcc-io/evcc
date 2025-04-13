@@ -110,5 +110,5 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		token, err = v.login()
 	}
 
-	return token, err
+	return util.TokenWithExpiry(token), err
 }
