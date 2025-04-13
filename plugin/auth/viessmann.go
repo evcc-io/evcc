@@ -38,8 +38,8 @@ func init() {
 }
 
 type Viessmann struct {
-	*request.Helper
-	ts oauth2.TokenSource
+	client *http.Client
+	ts     oauth2.TokenSource
 }
 
 func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authorizer, error) {
@@ -52,12 +52,12 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 	}
 
 	v := &Viessmann{
-		Helper: request.NewHelper(util.NewLogger("viessmann")),
+		client: request.NewClient(util.NewLogger("viessmann")),
 	}
 
-	ctx = context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-
 	oc := OAuth2Config(cc.ClientID)
+
+	ctx = context.WithValue(context.Background(), oauth2.HTTPClient, v.client)
 	token, err := v.login(ctx, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
@@ -81,18 +81,18 @@ func (v *Viessmann) login(ctx context.Context, oc *oauth2.Config, user, password
 	state := lo.RandomString(16, lo.AlphanumericCharset)
 	uri := oc.AuthCodeURL(state, oauth2.S256ChallengeOption(cv))
 
-	v.Client.Jar, _ = cookiejar.New(nil)
-	v.Client.CheckRedirect = request.DontFollow
+	v.client.Jar, _ = cookiejar.New(nil)
+	v.client.CheckRedirect = request.DontFollow
 	defer func() {
-		v.Client.Jar = nil
-		v.Client.CheckRedirect = nil
+		v.client.Jar = nil
+		v.client.CheckRedirect = nil
 	}()
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": transport.BasicAuthHeader(user, password),
 	})
 
-	resp, err := v.Client.Do(req)
+	resp, err := v.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
