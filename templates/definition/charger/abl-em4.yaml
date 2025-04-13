@@ -1,4 +1,5 @@
 template: abl-em4
+protocol: modbus
 products:
   - brand: ABL
     description:
