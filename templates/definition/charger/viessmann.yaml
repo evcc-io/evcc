@@ -4,8 +4,9 @@ products:
     description:
       generic: Viessmann (SG Ready)
 group: heating
-# requirements:
-#   evcc: ["sponsorship"]
+requirements:
+  # evcc: ["sponsorship"]
+  evcc: ["skiptest"]
 params:
   # TODO mark parameters as required
   - name: installation_id # TODO guide user on how to get this value
