@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestExternalBatteryMode(t *testing.T) {
+func TestRequiredExternalBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, ext, new api.BatteryMode
 	}{
@@ -20,12 +20,12 @@ func TestExternalBatteryMode(t *testing.T) {
 		{api.BatteryUnknown, api.BatteryCharge, api.BatteryCharge},
 
 		{api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
-		{api.BatteryNormal, api.BatteryNormal, api.BatteryNormal},
+		{api.BatteryNormal, api.BatteryNormal, api.BatteryUnknown}, // no change required
 		{api.BatteryNormal, api.BatteryCharge, api.BatteryCharge},
 
 		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryNormal, api.BatteryNormal},
-		{api.BatteryCharge, api.BatteryCharge, api.BatteryCharge},
+		{api.BatteryCharge, api.BatteryCharge, api.BatteryUnknown}, // no change required
 	} {
 		t.Logf("%+v", tc)
 
