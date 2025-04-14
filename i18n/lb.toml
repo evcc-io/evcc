@@ -23,6 +23,11 @@ never = "nëmme mat genuch Iwwerschoss."
 
 [config]
 
+[config.aux]
+description = "Gerät, dee säi Verbrauch op de verfügbaren Iwwerschoss (z. B. smarten Heizstaf) selbststänneg upasst. evcc erwaart, datt dëst Gerät selbststänneg säi Verbrauch reduzéiert, wann et noutwenneg ass."
+titleAdd = "Intelligente Verbraucher derbäi fügen"
+titleEdit = "Intelligenten Verbraucher beaarbechten"
+
 [config.battery]
 titleAdd = "Batterie derbäi setzen"
 titleEdit = "Batterie upassen"
@@ -34,6 +39,7 @@ titleEdit = "Energiezieler beaarbechten"
 [config.charger]
 chargers = "Wallboxen"
 generic = "Generesch Integratiounen"
+heatingdevices = "Heizungsgerät"
 ocppHelp = "Kopéier dës Adress an d'Konfiguratioun vun der Wallbox."
 ocppLabel = "URL vum OCPP-Server"
 switchsockets = "Schaltbar Steckdousen"
@@ -91,6 +97,7 @@ range = "Autonomie"
 singlePhase = "Eephaseg"
 soc = "Luedstand"
 socLimit = "SoC Limitt"
+solarForecast = "PV-Previsioun"
 temp = "Temperatur"
 topic = "Sujet"
 url = "URL"
@@ -102,11 +109,22 @@ A = "A (net verbonnen)"
 B = "B (verbonnen)"
 C = "C (luet)"
 
+[config.devices]
+auxMeter = "Smarte Verbraucher"
+batteryStorage = "Batterie"
+solarSystem = "PV-Anlag"
+
 [config.eebus]
 description = "Konfiguratioun déi et evcc erméiglecht fir mat aneren EEBus-Geräter ze kommunizéieren."
 title = "EEBus"
 
+[config.ext]
+description = "Ka fir d'Gestioun vum Lueden oder fir Statistikzwecker verwennt ginn."
+titleAdd = "Zousätzlechen Zieler derbäi fügen"
+titleEdit = "Zousätzlechen Zieler beaarbechten"
+
 [config.form]
+danger = "Oppassen"
 deprecated = "obsolet"
 example = "Beispill"
 optional = "optionell"
@@ -125,6 +143,7 @@ remove = "Ewechhuelen"
 save = "Späicheren"
 showAdvancedSettings = "Fortgeschratten Astellungen uweisen"
 telemetry = "Telemetrie"
+templateLoading = "Luet…"
 title = "Titel"
 validateSave = "Iwwerpréiwen & späicheren"
 
@@ -157,6 +176,7 @@ v2Support = "Zréck op InfluxDB 2.x"
 addCharger = "Wallbox derbäi fügen"
 addMeter = "Zousätzlechen Zieler derbäi fügen"
 cancel = "Ofbriechen"
+chargerError = "Wallbox muss konfiguréiert sinn."
 chargerLabel = "Wallbox"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Verwennt Stroum vu 6 bis 16 A."
@@ -188,6 +208,7 @@ phasesAutomatic = "Automatesch Phasen"
 phasesAutomaticHelp = "Deng Wallbox unterstëtzt dat automatescht Ëmschalten zwëschen 1- und 3-phasegem Lueden. An der Haaptusiicht kanns du d'Verhale vun de Phase wärend dem Lueden upassen."
 phasesHelp = "Unzuel vun de Phasen, déi un der Wallbox ugeschloss sinn ."
 phasesLabel = "Phasen"
+pollIntervalDanger = "Reegelméissegt Ofruffe vum Status vum Gefier kann dozou féieren, datt d'Batterie vum Gefier eidel gëtt. Verschidde Constructeure spären d'Lueden an esou Fäll och aktiv. Net recommandéiert! Benotz dës Astellung nëmmen, wann s du dir vun de der Risiken bewosst bass."
 pollIntervalHelp = "Zäit tëscht den API-Updates vum Gefier. Kuerz Intervalle kënnen d'Batterie vum Gefier belaaschten."
 pollIntervalLabel = "Update-Intervall"
 pollModeAlways = "ëmmer"
@@ -227,6 +248,7 @@ vehicleLabel = "Standard-Gefier"
 vehiclesTitle = "Gefierer"
 
 [config.main]
+addAdditional = "Zousätzlechen Zieler derbäi fügen"
 addGrid = "Netzzieler derbäi fügen"
 addLoadpoint = "Luedstatioun derbäi setzen"
 addPvBattery = "PV oder Batterie derbäi setzen"
@@ -251,6 +273,12 @@ save = "Späicheren"
 template = "Hiersteller"
 titleChoice = "Wat wëlls du derbäi setzen?"
 validateSave = "Überpréiwen & späicheren"
+
+[config.meter.option]
+aux = "Intelligente Verbraucher derbäi fügen"
+battery = "Hausbatterie derbäi fügen"
+ext = "Externen Zieler derbäi fügen"
+pv = "Sonnen-Zieler derbäi fügen"
 
 [config.modbusproxy]
 description = "Erlaabt méi Clienten Zougank zu engem eenzegen Modbus Apparat ze hunn."
@@ -307,6 +335,7 @@ titleAdd = "Zieler (PV) derbäi fügen"
 titleEdit = "Zieler (PV) beaarbechten"
 
 [config.section]
+additionalMeter = "Zousätzlech Zieler"
 general = "Allgemeng"
 grid = "Netzuschloss"
 integrations = "Integratiounen"
@@ -354,10 +383,23 @@ validate = "validéieren"
 
 [config.vehicle]
 cancel = "Ofbriechen"
+chargingSettings = "Astellungen fir ze lueden"
+defaultMode = "Standard-Modus"
+defaultModeHelp = "Luedmodus beim Uschléisse vum Gefier."
 delete = "Läschen"
 generic = "Aner Integratiounen"
+identifiers = "RFID-Kennungen"
+identifiersHelp = "Lëscht vun den RFID-Kennungen, fir d'Gefier ze identifizéieren. Eng Entrée pro Zeil. Op der Iwwersiichts-Säit gesäis du déi aktuell RFID-Kennung am jeeweilege Luedpunkt."
+maximumCurrent = "Maximale Stroum"
+maximumCurrentHelp = "Muss méi grouss wéi de minimale Stroum sinn."
+maximumPhases = "Maximal Phasen"
+maximumPhasesHelp = "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss an an der Planung verwennt."
+minimumCurrent = "Minimale Stroum"
+minimumCurrentHelp = "Nëmmen ënner 6A goen, wann s du weess, wat s du mëss."
 offline = "Genereschen Auto"
 online = "Autoe mat online API"
+priority = "Prioritéit"
+priorityHelp = "Méi héich Prioritéit bedeit, datt dëst Gefier Prioritéit zu anere Gefierer huet ."
 save = "Späicheren"
 scooter = "Trottinett"
 template = "Hiersteller"
@@ -568,12 +610,14 @@ gridImport = "Verbrauch vum Stroumnetz"
 homePower = "Verbrauch"
 loadpoints = "Wallbox | Wallbox | {count} Wallboxen"
 noEnergy = "Keng Moossdaten"
+pv = "Solaranlag"
 pvExport = "Export an d'Stroumnetz"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Verbrauch"
 
 [main.heatingStatus]
 charging = "Wiermen…"
+connected = "Standby."
 vehicleLimit = "Limitt vun der Heizung"
 waitForVehicle = "Prett. Waarden op d'Heizung..."
 
@@ -648,6 +692,7 @@ costLimitIgnore = "Den agestellte {limit} gëtt an dësem Zäitraum ignoréiert.
 currentPlan = "Aktiv Planifikatioun"
 descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier geluede ginn?"
 descriptionSoc = "Wéini soll d'Gefier op {targetSoc} opgeluede ginn?"
+goalReached = "Luedzil schonns erreecht"
 inactiveLabel = "Zilzäit"
 modalTitle = "Zielzäit setzen"
 nextPlan = "Nächst Planifikatioun"

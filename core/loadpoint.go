@@ -1394,6 +1394,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.GetDisableDelay() {
 				lp.log.DEBUG.Println("pv disable timer elapsed")
+
+				// reset timer to prevent immediate charger re-enabling
+				lp.resetPVTimer()
+
 				return 0
 			}
 
@@ -1426,6 +1430,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.GetEnableDelay() {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
+
+				// reset timer to prevent immediate charger re-disabling
+				lp.resetPVTimer()
+
 				return minCurrent
 			}
 
