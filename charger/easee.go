@@ -334,9 +334,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		c.opMode = opMode
 
-		// startup completed
-		c.startDone()
-
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	case easee.PILOT_MODE:
@@ -346,6 +343,19 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	select {
 	case c.obsC <- res:
 	default:
+	}
+
+	// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE
+	allKeysPresent := true
+	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE} {
+		if _, exists := c.obsTime[key]; !exists {
+			allKeysPresent = false
+		}
+	}
+
+	if allKeysPresent {
+		// startup completed
+		c.startDone()
 	}
 }
 
