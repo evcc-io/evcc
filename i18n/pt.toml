@@ -143,6 +143,7 @@ showAdvancedSettings = "Mostrar definições avançadas"
 telemetry = "Telemetria"
 title = "Nome"
 validateSave = "Validar e guardar"
+templateLoading = "Carregando..."
 
 [config.grid]
 title = "Contador de Rede"
@@ -390,6 +391,19 @@ template = "Fabricante"
 titleAdd = "Adicionar Veículo"
 titleEdit = "Editar Veículo"
 validateSave = "Validar e guardar"
+identifiers = "Identificadores RFID"
+priority = "Prioridade"
+chargingSettings = "Parâmetros de carga"
+defaultMode = "Modo predefinido"
+defaultModeHelp = "Modo de carga ao ligar o veículo."
+maximumCurrent = "Corrente máxima"
+maximumCurrentHelp = "Deve ser superior à corrente mínima."
+maximumPhases = "Máximo de fases"
+maximumPhasesHelp = "Com quantas fases pode carregar este veículo? A informação é utilizada para calcular o excedente solar mínimo necessário e a duração do plano."
+minimumCurrent = "Corrente mínima"
+minimumCurrentHelp = "Somente ir abaixo de 6A se souber o que está a fazer."
+identifiersHelp = "Lista de registos RFID para identificar o veículo. Uma entrada por linha. O identificador atual pode ser encontrado no respetivo ponto de carga na página de resumo."
+priorityHelp = "Uma prioridade mais elevada significa que este veículo tem acesso preferencial ao excedente solar."
 
 [footer]
 
@@ -597,6 +611,7 @@ noEnergy = "Sem dados"
 pvExport = "Injeção na Rede"
 pvProduction = "Produção Solar"
 selfConsumption = "Autoconsumo"
+pv = "Sistema fotovoltaico"
 
 [main.heatingStatus]
 charging = "Aquecendo..."
@@ -702,6 +717,7 @@ tomorrow = "amanhã"
 update = "Atualizar"
 vehicleCapacityDocs = "Aprender a configurá-la."
 vehicleCapacityRequired = "A capacidade da bateria do veículo é necessária para estimar o tempo de carregamento."
+goalReached = "Objetivo já atingido"
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
@@ -971,3 +987,9 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[config.devices]
+auxMeter = “Consumidor inteligente”
+batteryStorage = “Bateria”
+solarSystem = "Sistema fotovoltaico"

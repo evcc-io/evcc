@@ -143,6 +143,7 @@ showAdvancedSettings = "Afficher les paramètres avancés"
 telemetry = "Télémétrie"
 title = "Titre"
 validateSave = "Valider & enregistrer"
+templateLoading = "Charge..."
 
 [config.grid]
 title = "Compteur du réseau"
@@ -394,6 +395,19 @@ template = "Fabricant"
 titleAdd = "Ajouter un véhicule"
 titleEdit = "Modifier le véhicule"
 validateSave = "Valider & enregistrer"
+identifiers = "Identifiants RFID"
+maximumCurrent = "Courant maximum"
+maximumPhasesHelp = "Combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan."
+minimumCurrentHelp = "Ne descends en dessous de 6A que si tu sais ce que tu fais."
+priority = "Priorité"
+chargingSettings = "Paramètres de charge"
+defaultMode = "Mode par défaut"
+defaultModeHelp = "Mode de charge lors du branchement du véhicule."
+maximumPhases = "Maximum de phases"
+minimumCurrent = "Courant minimum"
+priorityHelp = "Une priorité plus élevée signifie que ce véhicule bénéficie d'un accès privilégié au surplus solaire."
+identifiersHelp = "Liste des chaînes RFID permettant d'identifier le véhicule. Une entrée par ligne. L'identifiant actuel peut être trouvé au point de charge correspondant sur la page d'aperçu."
+maximumCurrentHelp = "Doit être supérieur au courant minimum."
 
 [footer]
 
@@ -601,6 +615,7 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
+pv = "Système photovoltaïque"
 
 [main.heatingStatus]
 charging = "Chauffage… "
@@ -967,3 +982,9 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.devices]
+auxMeter = "Consommateur intelligent"
+batteryStorage = "Batterie"
+solarSystem = "Système photovoltaïque"
