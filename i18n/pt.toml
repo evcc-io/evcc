@@ -112,6 +112,11 @@ A = "A (não ligado)"
 B = "B (ligado)"
 C = "C (a carregar)"
 
+[config.devices]
+auxMeter = "“Consumidor inteligente”"
+batteryStorage = "“Bateria”"
+solarSystem = "Sistema fotovoltaico"
+
 [config.eebus]
 description = "Configuração que permite o evcc comunicar com outros dispositivos EEBus."
 title = "EEBus"
@@ -141,9 +146,9 @@ remove = "Apagar"
 save = "Guardar"
 showAdvancedSettings = "Mostrar definições avançadas"
 telemetry = "Telemetria"
+templateLoading = "Carregando..."
 title = "Nome"
 validateSave = "Validar e guardar"
-templateLoading = "Carregando..."
 
 [config.grid]
 title = "Contador de Rede"
@@ -381,29 +386,29 @@ validate = "validar"
 
 [config.vehicle]
 cancel = "Cancelar"
-delete = "Apagar"
-generic = "Outras integrações"
-offline = "Veículo genérico"
-online = "Veículos com API online"
-save = "Guardar"
-scooter = "Scooter"
-template = "Fabricante"
-titleAdd = "Adicionar Veículo"
-titleEdit = "Editar Veículo"
-validateSave = "Validar e guardar"
-identifiers = "Identificadores RFID"
-priority = "Prioridade"
 chargingSettings = "Parâmetros de carga"
 defaultMode = "Modo predefinido"
 defaultModeHelp = "Modo de carga ao ligar o veículo."
+delete = "Apagar"
+generic = "Outras integrações"
+identifiers = "Identificadores RFID"
+identifiersHelp = "Lista de registos RFID para identificar o veículo. Uma entrada por linha. O identificador atual pode ser encontrado no respetivo ponto de carga na página de resumo."
 maximumCurrent = "Corrente máxima"
 maximumCurrentHelp = "Deve ser superior à corrente mínima."
 maximumPhases = "Máximo de fases"
 maximumPhasesHelp = "Com quantas fases pode carregar este veículo? A informação é utilizada para calcular o excedente solar mínimo necessário e a duração do plano."
 minimumCurrent = "Corrente mínima"
 minimumCurrentHelp = "Somente ir abaixo de 6A se souber o que está a fazer."
-identifiersHelp = "Lista de registos RFID para identificar o veículo. Uma entrada por linha. O identificador atual pode ser encontrado no respetivo ponto de carga na página de resumo."
+offline = "Veículo genérico"
+online = "Veículos com API online"
+priority = "Prioridade"
 priorityHelp = "Uma prioridade mais elevada significa que este veículo tem acesso preferencial ao excedente solar."
+save = "Guardar"
+scooter = "Scooter"
+template = "Fabricante"
+titleAdd = "Adicionar Veículo"
+titleEdit = "Editar Veículo"
+validateSave = "Validar e guardar"
 
 [footer]
 
@@ -608,10 +613,10 @@ gridImport = "Consumo da Rede"
 homePower = "Consumo"
 loadpoints = "Carregador | Carregador | {count} Carregadores"
 noEnergy = "Sem dados"
+pv = "Sistema fotovoltaico"
 pvExport = "Injeção na Rede"
 pvProduction = "Produção Solar"
 selfConsumption = "Autoconsumo"
-pv = "Sistema fotovoltaico"
 
 [main.heatingStatus]
 charging = "Aquecendo..."
@@ -692,6 +697,7 @@ costLimitIgnore = "O {limit} configurado será ignorado durante este período."
 currentPlan = "Plano ativo"
 descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
 descriptionSoc = "Quando deve o veículo ser carregado até {targetSoc}?"
+goalReached = "Objetivo já atingido"
 inactiveLabel = "Objetivo"
 modalTitle = "Definir hora-alvo"
 nextPlan = "Próximo plano"
@@ -717,7 +723,6 @@ tomorrow = "amanhã"
 update = "Atualizar"
 vehicleCapacityDocs = "Aprender a configurá-la."
 vehicleCapacityRequired = "A capacidade da bateria do veículo é necessária para estimar o tempo de carregamento."
-goalReached = "Objetivo já atingido"
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
@@ -987,9 +992,3 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
-
-
-[config.devices]
-auxMeter = “Consumidor inteligente”
-batteryStorage = “Bateria”
-solarSystem = "Sistema fotovoltaico"

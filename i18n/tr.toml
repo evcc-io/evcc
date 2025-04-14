@@ -40,13 +40,13 @@ titleEdit = "“Doldurma sayacını düzenle”"
 [config.charger]
 chargers = "Doldurma cihazları"
 generic = "“Genel bütünleşmeler”"
+heatingdevices = "“Isıtma cihazları”"
 ocppHelp = "“Bu adresi doldurma cihazının yapılandırmasına kopyala.”"
 ocppLabel = "“OCPP sunucusu URL'si”"
 switchsockets = "“Açılıp kapanabilen prizler”"
 template = "“Üretici”"
 titleAdd = "“Doldurma Cihazı Ekle”"
 titleEdit = "“Doldurma Cihazını Düzenle”"
-heatingdevices = “Isıtma cihazları”
 
 [config.circuits]
 description = "Aynı elektrik devresine bağlı tüm doldurma noktalarının yekûnunun güç ve akım sınırını aşmadığından emin ol. Devreler aşama sılaralaması oluşturmak için iç içe geçebilirler."
@@ -110,6 +110,11 @@ A = "“A (bağlı değil)”"
 B = "“B (bağlı)”"
 C = "“C (dolduruyor)”"
 
+[config.devices]
+auxMeter = "“Akıllı tüketici”"
+batteryStorage = "“Batarya”"
+solarSystem = "“Güneş Enerji Sistemi”"
+
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
 title = "EEBus"
@@ -120,10 +125,10 @@ titleAdd = "Harici Sayaç Ekle"
 titleEdit = "Harici Sayacı Düzenle"
 
 [config.form]
+danger = "Dikkat"
 deprecated = "“kullanımdan kaldırıldı”"
 example = "Örnek"
 optional = "isteğe bağlı"
-danger = "Dikkat"
 
 [config.general]
 cancel = "İptal"
@@ -139,9 +144,9 @@ remove = "Kaldır"
 save = "Kaydet"
 showAdvancedSettings = "“Gelişmiş ayarları göster”"
 telemetry = "Uzölçüm"
+templateLoading = "“Yüklüyorum...”"
 title = "Başlık"
 validateSave = "“Doğrula ve kaydet”"
-templateLoading = “Yüklüyorum...”
 
 [config.grid]
 title = "Elektrik sayacı"
@@ -204,6 +209,7 @@ phasesAutomatic = "“Otomatik aşamalar”"
 phasesAutomaticHelp = "“Doldurma cihazın 1 ve 3 aşamalı doldurma arasında otomatik geçişi destekliyor. Ana perdede doldurma sırasında aşama davranışını ayarlayabilirsin.”"
 phasesHelp = "“Doldurma cihazına bağlı aşama sayısı.”"
 phasesLabel = "“Aşamalar”"
+pollIntervalDanger = "“Aracın sürekli sorgulanması araç bataryasını boşaltabilir. Bazı araç üreticileri bu durumda doldurma işlemini etkin bir şekilde engelleyebilir. Tavsiye etmiyoruz! Bunu yalnızca risklerin farkındaysan kullan.”"
 pollIntervalHelp = "“Araç API güncellemeleri arasındaki süre. Kısa aralıklar aracın bataryasını tüketebilir.”"
 pollIntervalLabel = "“Güncelleme aralığı”"
 pollModeAlways = "“daima”"
@@ -241,7 +247,6 @@ vehicleHelpAutoDetection = "“Otomatik olarak en makul aracı seçer. Elden de�
 vehicleHelpDefault = "“Her zaman bu aracın burada doldurduğunu varsayar. Otomatik algılama devre dışı. Elden değiştirme mümkün.”"
 vehicleLabel = "“Varsayılan araç”"
 vehiclesTitle = "“Araçlar”"
-pollIntervalDanger = “Aracın sürekli sorgulanması araç bataryasını boşaltabilir. Bazı araç üreticileri bu durumda doldurma işlemini etkin bir şekilde engelleyebilir. Tavsiye etmiyoruz! Bunu yalnızca risklerin farkındaysan kullan.”
 
 [config.main]
 addAdditional = "Ek sayaç ekle"
@@ -379,29 +384,29 @@ validate = "doğrula"
 
 [config.vehicle]
 cancel = "İptal"
+chargingSettings = "“ Doldurma ayarları”"
+defaultMode = "“Varsayılan ayar”"
+defaultModeHelp = "“Araç bağlanırken doldurma ayarı.”"
 delete = "Aracı sil"
 generic = "Diğer bütünleştirmeler"
+identifiers = "“RFID tanımlayıcıları”"
+identifiersHelp = "“Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcı, genel bakış sayfasındaki ilgili doldurma noktasında bulunabilir.”"
+maximumCurrent = "“Azami akım”"
+maximumCurrentHelp = "“ Asgari akımdan büyük olmalıdır.”"
+maximumPhases = "“Azami aşamalar”"
+maximumPhasesHelp = "“Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.”"
+minimumCurrent = "“Asgari akım”"
+minimumCurrentHelp = "“Yalnızca ne yaptığını biliyorsan 6A'in altına in.”"
 offline = "Genel Araç"
 online = "Çevrimiçi API'ye sahip araçlar"
+priority = "“Öncelik”"
+priorityHelp = "“Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.”"
 save = "Kaydet"
 scooter = "Elektrikli Scooter"
 template = "Üretici"
 titleAdd = "Araç Ekle"
 titleEdit = "Aracı Düzenle"
 validateSave = "Doğrula ve kaydet"
-chargingSettings = “ Doldurma ayarları”
-defaultMode = “Varsayılan ayar”
-defaultModeHelp = “Araç bağlanırken doldurma ayarı.”
-identifiers = “RFID tanımlayıcıları”
-maximumCurrent = “Azami akım”
-maximumCurrentHelp = “ Asgari akımdan büyük olmalıdır.”
-maximumPhases = “Azami aşamalar”
-maximumPhasesHelp = “Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.”
-minimumCurrent = “Asgari akım”
-minimumCurrentHelp = “Yalnızca ne yaptığını biliyorsan 6A'in altına in.”
-priority = “Öncelik”
-priorityHelp = “Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.”
-identifiersHelp = “Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcı, genel bakış sayfasındaki ilgili doldurma noktasında bulunabilir.”
 
 [footer]
 
@@ -594,10 +599,10 @@ gridImport = "Şebeke kullanımı"
 homePower = "Tüketim"
 loadpoints = "Doldurma Cihazı| Doldurma Cihazı | {count} doldurma cihazları"
 noEnergy = "Ölçüm verisi yok"
+pv = "“Güneş enerji sistemi”"
 pvExport = "Şebekeye ihracat"
 pvProduction = "Üretim"
 selfConsumption = "Öz tüketim"
-pv = “Güneş enerji sistemi”
 
 [main.heatingStatus]
 charging = "Isıtılıyor…"
@@ -678,6 +683,7 @@ costLimitIgnore = "Bu zaman aralığında yapılandırılan {limit} yoksayılaca
 currentPlan = "Etkin plan"
 descriptionEnergy = "{targetEnergy} ne zamana kadar araca doldurulmalı?"
 descriptionSoc = "Araç ne zaman {targetSoc} seviyesine doldurulmalı?"
+goalReached = "“Doldurma hedefine ulaşıldı bile”"
 inactiveLabel = "Hedeflenen zaman"
 nextPlan = "“Sonraki plan”"
 notReachableInTime = "Hedeflenen zamana {overrun} sonra ulaşılacak."
@@ -700,7 +706,6 @@ tomorrow = "yarın"
 update = "Güncelle"
 vehicleCapacityDocs = "Nasıl yapılandırılacağını öğren."
 vehicleCapacityRequired = "Doldurma süresini tahmin etmek için araç batarya kapasitesi gerekli."
-goalReached = “Doldurma hedefine ulaşıldı bile”
 
 [main.targetChargePlan]
 chargeDuration = "Doldurma süresi"
@@ -943,9 +948,3 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
-
-
-[config.devices]
-auxMeter = “Akıllı tüketici”
-batteryStorage = “Batarya”
-solarSystem = “Güneş Enerji Sistemi”
