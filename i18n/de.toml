@@ -600,6 +600,7 @@ noEnergy = "Keine Messwerte"
 pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
+pv = "Solaranlage"
 
 [main.heatingStatus]
 charging = "Heize …"
