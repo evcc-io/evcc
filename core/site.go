@@ -915,14 +915,7 @@ func (site *Site) update(lp updater) {
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-
-	if batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate); batteryMode != api.BatteryUnknown {
-		if err := site.applyBatteryMode(batteryMode); err == nil {
-			site.SetBatteryMode(batteryMode)
-		} else {
-			site.log.ERROR.Println("battery mode:", err)
-		}
-	}
+	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
