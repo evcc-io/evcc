@@ -41,6 +41,7 @@ switchsockets = "Kapcsolható dugaljak"
 template = "Gyártó"
 titleAdd = "Töltő Hozzáadása"
 titleEdit = "Töltő Szerkesztése"
+heatingdevices = "Fűtőberendezések"
 
 [config.circuits]
 description = "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez."
@@ -96,6 +97,8 @@ topic = "Téma"
 url = "URL"
 vehicleLimitSoc = "Jármű limit"
 yes = "igen"
+heaterTempLimit = "Fűtés limit"
+solarForecast = "Napsütés előrejelzés"
 
 [config.deviceValueChargeStatus]
 A = "A (nincs csatlakoztatva)"
@@ -110,6 +113,7 @@ title = "EEBus"
 deprecated = "elavult"
 example = "Példa"
 optional = "opcionális"
+danger = "Veszély"
 
 [config.general]
 cancel = "Mégse"
@@ -127,6 +131,7 @@ showAdvancedSettings = "Speciális beállítások megjelenítése"
 telemetry = "Telemetria"
 title = "Cím"
 validateSave = "Ellenőrzés & mentés"
+templateLoading = "Betöltés..."
 
 [config.grid]
 title = "Hálózati mérő"
@@ -225,6 +230,8 @@ vehicleHelpAutoDetection = "Automatikusan kiválasztja a legvalószínűbb járm
 vehicleHelpDefault = "Mindig feltételezze, hogy ez a jármű itt töltődik. Az automatikus felismerés letiltva. Kézi felülírás lehetséges."
 vehicleLabel = "Alapértelmezett jármű"
 vehiclesTitle = "Járművek"
+chargerError = "Töltő konfigurálása szükséges."
+pollIntervalDanger = "A jármű rendszeres lekérdezése lemerítheti a jármű akkumulátorát. Egyes járműgyártók ebben az esetben aktívan megakadályozhatják a töltést. Nem ajánlott! Csak akkor használja, ha tisztában van a kockázatokkal."
 
 [config.main]
 addGrid = "Hálózati fogyasztásmérő hozzáadása"
@@ -239,6 +246,7 @@ title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
 yaml = "Eszköz az evcc.yaml fájlból nem szerkeszthető."
+addAdditional = "További mérő hozzáadása"
 
 [config.messaging]
 description = "Értesítési üzenetek beállítása a töltési folyamatokról."
@@ -314,6 +322,7 @@ loadpoints = "Töltőpontok"
 meter = "Napelem és Akkumulátor"
 system = "Rendszer"
 vehicles = "Járművek"
+additionalMeter = "További mérők"
 
 [config.sponsor]
 addToken = "Token beírása"
@@ -364,6 +373,19 @@ template = "Gyártó"
 titleAdd = "Jármű hozzáadása"
 titleEdit = "Jármű szerkesztése"
 validateSave = "Ellenőrzés & mentés"
+priorityHelp = "A magasabb prioritás azt jelenti, hogy ez a jármű előnyben részesíti a napenergia-többlet elérését."
+chargingSettings = "Töltési beállítások"
+defaultMode = "Alapértelmezett mód"
+defaultModeHelp = "Töltési mód a jármű csatlakoztatásakor."
+identifiers = "RFID azonosítók"
+identifiersHelp = "A jármű azonosítására szolgáló RFID karakterláncok listája. Soronként egy bejegyzés. Az aktuális azonosító a megfelelő töltési pontnál található az áttekintő oldalon."
+maximumCurrent = "Maximum áram"
+maximumCurrentHelp = "Nagyobbnak kell lennie, mint a minimum áram"
+maximumPhases = "Maximális fázisok"
+maximumPhasesHelp = "Hány fázissal tud ez a jármű tölteni? A szükséges minimális szoláris többlet és a tervezett időtartam kiszámításához használják."
+minimumCurrent = "Minimum áram"
+minimumCurrentHelp = "Csak akkor menj 6A alá, ha tudod, hogy mit csinálsz."
+priority = "Prioritás"
 
 [footer]
 
@@ -437,6 +459,7 @@ modalUpdateStatusStart = "A telepítés elkezdődött:"
 
 [forecast]
 modalTitle = "Előrejelzés"
+solarAdjust = "Módosítsa a napenergia-előrejelzést a valós termelési adatok alapján {percent}."
 
 [forecast.co2]
 average = "Átlag"
@@ -558,12 +581,15 @@ noEnergy = "Nincs mérési adat"
 pvExport = "Hálózatba export"
 pvProduction = "Napelem termelés"
 selfConsumption = "Saját fogyasztás"
+pv = "Napelemes rendszer"
 
 [main.heatingStatus]
 charging = "Fűtés…"
 cheapEnergyCharging = "Fűtés olcsó energiával: {price} (limit {limit})"
 cleanEnergyCharging = "Fűtés tiszta energiával: {co2} (limit {limit})"
 waitForVehicle = "Üzemkész. Fűtésre várakozás…"
+connected = "Készenlét."
+vehicleLimit = "Fűtés limit"
 
 [main.loadpoint]
 avgPrice = "⌀ Ár"
@@ -658,6 +684,7 @@ tomorrow = "holnap"
 update = "Frissítés"
 vehicleCapacityDocs = "Ismerje meg, hogyan kell konfigurálni."
 vehicleCapacityRequired = "A jármű akkumulátor kapacitása szükséges a hozzávetőleges idő meghatározásához."
+goalReached = "Már elértük a célt"
 
 [main.targetChargePlan]
 chargeDuration = "Töltési idő"
@@ -886,15 +913,38 @@ priceLabel = "Energia ár"
 priceLimit = "Ár limit"
 resetAction = "Limit eltávolítása"
 saved = "Elmentve."
+resetWarning = "Nincs konfigurálva dinamikus hálózati ár vagy CO₂-forrás. Azonban még mindig van {limit} korlát. Megtisztítja a konfigurációt?"
 
 [startupError]
 configFile = "Konfigurációs fájl használatban:"
 configuration = "Konfiguráció"
 description = "Kérlek ellenőrizd a konfigurációs fájlodat. Ha a hibaüzenet nem segít, akkor nézd meg a {0}."
-discussions = "GitHub Közösségi oldalát"
+discussions = "GitHub Közösségi oldal"
 fixAndRestart = "Kérlek javítsd ki a problémát és indítsd újra a szervert."
 hint = "Megjegyzés: Lehet, hogy van egy hibás eszközöd (inverter, mérő, …) Ellenőrizd a hálózati kapcsolatokat."
 lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[config.devices]
+auxMeter = "Okos fogyasztó"
+batteryStorage = "Akkumulátoros tároló"
+solarSystem = "Naperőmű"
+
+[config.meter.option]
+aux = "Önszabályozó fogyasztó hozzáadása"
+battery = "Akkumulátoros mérő hozzáadása"
+pv = "Napelem mérő hozzáadása"
+ext = "Külső mérő hozzáadása"
+
+[config.aux]
+titleAdd = "Önszabályozó fogyasztó hozzáadása"
+titleEdit = "Önszabályozó fogyasztó szerkesztése"
+description = "Eszköz, amely a rendelkezésre álló többlet alapján állítja be a fogyasztását (például intelligens vízmelegítők). Az evcc arra számít, hogy ez az eszköz szükség esetén csökkenti az energiafogyasztását."
+
+[config.ext]
+titleEdit = "Külső Mérő Szerkesztése"
+titleAdd = "Külső Mérő Hozzáadása"
+description = "Használható töltés menedzsmentre vagy statisztikai célokra."
