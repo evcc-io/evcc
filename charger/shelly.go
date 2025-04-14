@@ -11,7 +11,7 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn *shelly.Switch
+	conn *shelly.Connection
 	*switchSocket
 }
 
@@ -20,7 +20,7 @@ func init() {
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
@@ -48,7 +48,7 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: shelly.NewSwitch(conn),
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -69,30 +70,37 @@ type Gen2StatusResponse struct {
 	Pm1     Gen2SwitchStatus `json:"pm2:1"`
 	Pm2     Gen2SwitchStatus `json:"pm3:2"`
 	// additional shelly Pro EM meter JSON response
-	TotalPower float64       `json:"total_act_power"`
-	CurrentA   float64       `json:"a_current"`
-	CurrentB   float64       `json:"b_current"`
-	CurrentC   float64       `json:"c_current"`
-	VoltageA   float64       `json:"a_voltage"`
-	VoltageB   float64       `json:"b_voltage"`
-	VoltageC   float64       `json:"c_voltage"`
-	PowerA     float64       `json:"a_act_power"`
-	PowerB     float64       `json:"b_act_power"`
-	PowerC     float64       `json:"c_act_power"`
-	Em0        Gen2EM1Status `json:"em1:0"`
-	Em1        Gen2EM1Status `json:"em1:1"`
-	Em2        Gen2EM1Status `json:"em1:2"`
-	Em0Data    Gen2EM1Data   `json:"em1data:0"`
-	Em1Data    Gen2EM1Data   `json:"em1data:1"`
-	Em2Data    Gen2EM1Data   `json:"em1data:2"`
+	TotalActPower float64       `json:"total_act_power"`
+	ACurrent      float64       `json:"a_current"`
+	BCurrent      float64       `json:"b_current"`
+	CCurrent      float64       `json:"c_current"`
+	AVoltage      float64       `json:"a_voltage"`
+	BVoltage      float64       `json:"b_voltage"`
+	CVoltage      float64       `json:"c_voltage"`
+	APower        float64       `json:"a_act_power"`
+	BPower        float64       `json:"b_act_power"`
+	CPower        float64       `json:"c_act_power"`
+	Em0           Gen2EM1Status `json:"em1:0"`
+	Em1           Gen2EM1Status `json:"em1:1"`
+	Em2           Gen2EM1Status `json:"em1:2"`
+	Em0Data       Gen2EM1Data   `json:"em1data:0"`
+	Em1Data       Gen2EM1Data   `json:"em1data:1"`
+	Em2Data       Gen2EM1Data   `json:"em1data:2"`
 }
 
-type Gen2EmDataStatusResponse struct {
-	TotalEnergy float64 `json:"total_act"`
+type gen2 struct {
+	*request.Helper
+	uri      string
+	channel  int
+	model    string
+	profile  string
+	status   util.Cacheable[Gen2StatusResponse]
+	emstatus util.Cacheable[Gen2EMStatus]
+	emdata   util.Cacheable[Gen2EMData]
 }
 
 // gen2ExecCmd executes a shelly api gen2+ command and provides the response
-func (c *Connection) gen2ExecCmd(method string, enable bool, res any) error {
+func (c *gen2) gen2ExecCmd(method string, enable bool, res any) error {
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
@@ -113,7 +121,7 @@ func (c *Connection) gen2ExecCmd(method string, enable bool, res any) error {
 }
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
-func (c *Connection) gen2InitApi(uri, user, password string) {
+func (c *gen2) InitApi(uri, user, password string, cache time.Duration) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
@@ -121,19 +129,122 @@ func (c *Connection) gen2InitApi(uri, user, password string) {
 		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
 	// Cached Gen2StatusResponse
-	c.gen2StatusResponse = util.ResettableCached(func() (Gen2StatusResponse, error) {
+	c.status = util.ResettableCached(func() (Gen2StatusResponse, error) {
 		var gen2StatusResponse Gen2StatusResponse
 		if err := c.gen2ExecCmd("Shelly.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2StatusResponse); err != nil {
 			return Gen2StatusResponse{}, err
 		}
 		return gen2StatusResponse, nil
-	}, c.Cache)
+	}, cache)
 	// Cached gen2EMStatus
-	c.gen2EMStatus = util.ResettableCached(func() (Gen2EMStatus, error) {
-		var gen2EMStatusResponse Gen2EMStatus
-		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatusResponse); err != nil {
+	c.emstatus = util.ResettableCached(func() (Gen2EMStatus, error) {
+		var gen2EMStatus Gen2EMStatus
+		if err := c.gen2ExecCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatus); err != nil {
 			return Gen2EMStatus{}, err
 		}
-		return gen2EMStatusResponse, nil
-	}, c.Cache)
+		return gen2EMStatus, nil
+	}, cache)
+	// Cached gen2EMData
+	c.emdata = util.ResettableCached(func() (Gen2EMData, error) {
+		var gen2EMData Gen2EMData
+		if err := c.gen2ExecCmd("EMData.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMData); err != nil {
+			return Gen2EMData{}, err
+		}
+		return gen2EMData, nil
+	}, cache)
+}
+
+// CurrentPower implements the api.Meter interface
+func (c *gen2) CurrentPower() (float64, error) {
+	res, err := c.emstatus.Get()
+	if err != nil {
+		return 0, err
+	}
+	return res.TotalActPower, nil
+}
+
+// Gen2Enabled implements the Gen2 api.Charger interface
+func (c *gen2) Enabled() (bool, error) {
+	if hasSwitchEndpoint(c.model) {
+		var gen2SwitchStatus Gen2SwitchStatus
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatus); err != nil {
+			return false, err
+		}
+		return gen2SwitchStatus.Output, nil
+	}
+	return false, fmt.Errorf("unknown shelly model: %s", c.model)
+}
+
+// Gen2Enable implements the api.Charger interface
+func (c *gen2) Enable(enable bool) error {
+	var res Gen2SwitchStatus
+	return c.gen2ExecCmd("Switch.Set", enable, &res)
+}
+
+// TotalEnergy implements the api.Meter interface
+func (c *gen2) TotalEnergy() (float64, error) {
+	res, err := c.emdata.Get()
+	if err != nil {
+		return 0, err
+	}
+	return res.TotalAct / 1000, nil
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *gen2) Currents() (float64, float64, float64, error) {
+	res, err := c.emstatus.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return res.ACurrent, res.BCurrent, res.CCurrent, nil
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *gen2) Voltages() (float64, float64, float64, error) {
+	res, err := c.emstatus.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return res.AVoltage, res.BVoltage, res.CVoltage, nil
+}
+
+// Powers implements the api.PhasePowers interface
+func (c *gen2) Powers() (float64, float64, float64, error) {
+	res, err := c.emstatus.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return res.AActPower, res.BActPower, res.CActPower, nil
+}
+
+// Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
+func hasSwitchEndpoint(model string) bool {
+	// Generation 2 Devices (Plus Series):
+	// - SNSW-001X16EU: Shelly Plus 1 with 1x relay
+	// - SNSW-001P16EU: Shelly Plus 1PM with 1x relay + power meter
+	// - SNSW-002P16EU: Shelly Plus 2PM with 2x relay + power meter
+	// - SNPL-00112EU: Shelly Plus Plug S (EU)
+	// - SNPL-00110IT: Shelly Plus Plug S (Italy)
+	// - SNPL-00112UK: Shelly Plus Plug S (UK)
+	// - SNPL-00116US: Shelly Plus Plug S (US)
+	// Generation 2 Devices (Pro Series - Hutschiene):
+	// - SPSW-001XE16EU: Shelly Pro 1 with 1x relay
+	// - SPSW-001PE16EU: Shelly Pro 1 PM with 1x relay + power meter
+	// - SPSW-002XE16EU: Shelly Pro 2 with 2x relay
+	// - SPSW-002PE16EU: Shelly Pro 2 PM with 2x relay + power meter
+	// - SPSW-003XE16EU: Shelly Pro 3 with 3x relay
+	// - SPSW-004PE16EU: Shelly Pro 4 PM with 4x relay + power meter
+	// Generation 3 Devices:
+	// - S3SW-001P16EU: Shelly 1PM Gen3 with 1x relay + power meter
+	// Generation 4 Devices:
+	// - S4SW-001X8EU: Shelly 1 Mini Gen4 with 1x relay
+	// - S4SW-001P8EU: Shelly 1PM Mini Gen4 with 1x relay + power meter
+	// - S4SW-001P16EU: Shelly 1PM Gen4 with 1x relay + power meter
+	switchModels := []string{"SNSW", "SNPL", "SPSW", "S3SW", "S4SW"}
+	for _, switchModel := range switchModels {
+		if switchModel == model {
+			return true
+		}
+	}
+	return false
 }

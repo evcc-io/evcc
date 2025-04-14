@@ -11,19 +11,21 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
+type Gen interface {
+	InitApi(string, string, string, time.Duration)
+	CurrentPower() (float64, error)
+	Enabled() (bool, error)
+	Enable(bool) error
+	TotalEnergy() (float64, error)
+}
+
 // Connection is the Shelly connection
 type Connection struct {
-	*request.Helper
-	log                util.Logger
-	uri                string
-	channel            int
-	gen                int    // Shelly api generation
-	model              string // Shelly device type
-	profile            string // Shelly device profile
-	Cache              time.Duration
-	gen1Status         util.Cacheable[Gen1Status]
-	gen2StatusResponse util.Cacheable[Gen2StatusResponse]
-	gen2EMStatus       util.Cacheable[Gen2EMStatus]
+	log     util.Logger
+	model   string // Shelly device type
+	profile string // Shelly device profile
+	Cache   time.Duration
+	Gen
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -35,13 +37,14 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
 		uri = strings.TrimSuffix(uri, suffix)
 	}
+	uri = util.DefaultScheme(uri, "http")
 
 	log := util.NewLogger("shelly")
 	client := request.NewHelper(log)
 
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
 	var resp DeviceInfo
-	if err := client.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
+	if err := client.GetJSON(fmt.Sprintf("%s/shelly", uri), &resp); err != nil {
 		return nil, err
 	}
 
@@ -49,32 +52,49 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
-	conn := &Connection{
-		Helper:  client,
-		log:     *log,
-		uri:     util.DefaultScheme(uri, "http"),
-		channel: channel,
-		gen:     resp.Gen,
-		model:   strings.Split(resp.Type+resp.Model, "-")[0],
-		profile: resp.Profile,
-		Cache:   cache,
-	}
-
-	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
-
 	// Set default profile to "monophase" if not provided
 	if resp.Profile == "" {
 		resp.Profile = "monophase"
 	}
 
-	switch conn.gen {
-	case 0, 1:
-		conn.gen1InitApi(uri, user, password)
-	case 2, 3:
-		conn.gen2InitApi(uri, user, password)
-	default:
-		return conn, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, conn.gen)
-	}
+	client.Transport = request.NewTripper(log, transport.Insecure())
 
+	var gen Gen
+	if resp.Gen < 2 {
+		// Shelly GEN 1 API
+		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
+		if user != "" {
+			log.Redact(transport.BasicAuthHeader(user, password))
+			client.Transport = transport.BasicAuth(user, password, client.Transport)
+		}
+		gen = &gen1{
+			Helper:  client,
+			uri:     uri,
+			channel: channel,
+			model:   resp.Model,
+			status:  util.NewCacheable[Gen1Status](),
+		}
+	}
+	if resp.Gen > 1 {
+		// Shelly GEN 2+ API
+		// https://shelly-api-docs.shelly.cloud/gen2/
+		gen = &gen2{
+			Helper:   client,
+			uri:      uri,
+			channel:  channel,
+			model:    resp.Model,
+			profile:  resp.Profile,
+			status:   util.NewCacheable[Gen2StatusResponse](),
+			emstatus: util.NewCacheable[Gen2EMStatus](),
+			emdata:   util.NewCacheable[Gen2EMData](),
+		}
+	}
+	conn := &Connection{
+		model:   strings.Split(resp.Type+resp.Model, "-")[0],
+		profile: resp.Profile,
+		Cache:   cache,
+		Gen:     gen,
+	}
+	conn.Gen.InitApi(uri, user, password, cache)
 	return conn, nil
 }

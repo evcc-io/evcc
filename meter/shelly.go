@@ -14,7 +14,7 @@ func init() {
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -29,10 +29,5 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	conn, err := shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.Cache)
-	if err != nil {
-		return nil, err
-	}
-
-	return shelly.NewSwitch(conn), nil
+	return shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.Cache)
 }

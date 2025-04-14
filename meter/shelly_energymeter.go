@@ -29,10 +29,5 @@ func NewShellyEnergyMeterFromConfig(other map[string]interface{}) (api.Meter, er
 		return nil, err
 	}
 
-	conn, err := shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.Cache)
-	if err != nil {
-		return nil, err
-	}
-
-	return shelly.NewEnergyMeter(conn), nil
+	return shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel, cc.Cache)
 }
