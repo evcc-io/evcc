@@ -211,7 +211,7 @@ import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import co2Reference from "./co2Reference.js";
 import settings from "../../settings.js";
-import api from "../../api.js";
+import api, { allowClientError } from "../../api.js";
 import { docsPrefix } from "../../i18n.js";
 
 export default {
@@ -321,13 +321,11 @@ export default {
 		},
 		async updateReferenceGrid() {
 			try {
-				const res = await api.get(`tariff/grid`, {
-					validateStatus: (status) => status >= 200 && status < 500,
-				});
+				const res = await api.get(`tariff/grid`, allowClientError);
 				const { rates } = res.data.result;
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
-						return acc + slot.price;
+						return acc + slot.value;
 					}, 0) / rates.length;
 			} catch (e) {
 				this.referenceGrid = undefined;

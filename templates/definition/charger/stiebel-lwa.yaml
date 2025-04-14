@@ -14,7 +14,7 @@ params:
     choice: ["tcpip"]
   - name: tempsource
     type: choice
-    choice: ["", "warmwater"]
+    choice: ["warmwater"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"

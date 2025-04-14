@@ -141,7 +141,11 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.solarSystem')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -159,7 +163,9 @@
 							v-for="meter in batteryMeters"
 							:key="meter.name"
 							:title="
-								meter.deviceTitle || meter.config?.template || 'Battery storage'
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.batteryStorage')
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
@@ -185,7 +191,11 @@
 						<DeviceCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Aux meter'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.auxMeter')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -193,7 +203,7 @@
 							@edit="editMeter(meter.id, 'aux')"
 						>
 							<template #icon>
-								<VehicleIcon :name="meter.deviceIcon || 'aux'" />
+								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
 							</template>
 							<template #tags>
 								<DeviceTags :tags="deviceTags('meter', meter.name)" />
@@ -345,9 +355,9 @@
 					:type="selectedMeterType"
 					:typeChoices="selectedMeterTypeChoices"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
-					@added="addMeter"
+					@added="meterAdded"
 					@updated="meterChanged"
-					@removed="removeMeter"
+					@removed="meterRemoved"
 					@close="meterModalClosed"
 				/>
 				<ChargerModal
@@ -355,9 +365,9 @@
 					:name="selectedChargerName"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					:isSponsor="isSponsor"
-					@added="addCharger"
+					@added="chargerAdded"
 					@updated="chargerChanged"
-					@removed="removeCharger"
+					@removed="chargerRemoved"
 					@close="chargerModalClosed"
 				/>
 				<InfluxModal @changed="loadDirty" />
@@ -618,7 +628,7 @@ export default {
 			await this.loadLoadpoints();
 			await this.loadCircuits();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
@@ -738,15 +748,13 @@ export default {
 		},
 		async meterChanged() {
 			await this.loadMeters();
-			this.meterModal().hide();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		async chargerChanged() {
 			await this.loadChargers();
-			this.chargerModal().hide();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		editLoadpoint(id) {
 			this.selectedLoadpointId = id;
@@ -754,12 +762,12 @@ export default {
 		},
 		newLoadpoint() {
 			this.selectedLoadpointId = undefined;
+			this.$refs.loadpointModal.reset();
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {
 			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
-			this.loadpointModal().hide();
 			this.loadDirty();
 		},
 		editVehicle(id) {
@@ -782,7 +790,7 @@ export default {
 		yamlChanged() {
 			this.loadDirty();
 		},
-		addMeter(type, name) {
+		meterAdded(type, name) {
 			if (type === "charge") {
 				// update loadpoint
 				this.$refs.loadpointModal?.setMeter(name);
@@ -798,8 +806,9 @@ export default {
 				this.site[type].push(name);
 				this.saveSite(type);
 			}
+			this.meterChanged();
 		},
-		removeMeter(type) {
+		meterRemoved(type) {
 			if (type === "charge") {
 				// update loadpoint
 				this.$refs.loadpointModal?.setMeter(undefined);
@@ -808,12 +817,15 @@ export default {
 				this.loadSite();
 				this.loadDirty();
 			}
+			this.meterChanged();
 		},
-		addCharger(name) {
+		async chargerAdded(name) {
+			await this.chargerChanged();
 			this.$refs.loadpointModal?.setCharger(name);
 		},
-		removeCharger() {
+		chargerRemoved() {
 			this.$refs.loadpointModal?.setCharger(undefined);
+			this.chargerChanged();
 		},
 		meterModalClosed() {
 			if (this.selectedMeterType === "charge") {
@@ -830,7 +842,7 @@ export default {
 			await api.put("/config/site", body);
 			await this.loadSite();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		todo() {
 			alert("not implemented yet");

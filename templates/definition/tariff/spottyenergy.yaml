@@ -1,6 +1,8 @@
 template: spottyenergy
 products:
   - brand: Spotty Energie
+requirements:
+  evcc: ["skiptest"]
 group: price
 countries: ["AT"]
 params:
@@ -29,5 +31,5 @@ render: |
       [ .[] | {
         start: .from,
         end:   (.from | fromdate + 3600 | todate),
-        price: (.price/100)
+        value: (.price/100)
       } ] | tostring

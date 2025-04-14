@@ -309,7 +309,11 @@ func (c *Zaptec) Identify() (string, error) {
 		return "", err
 	}
 
-	return res.ObservationByID(zaptec.ChargerCurrentUserUuid).ValueAsString, nil
+	if id := res.ObservationByID(zaptec.ChargerCurrentUserUuid); id != nil {
+		return id.ValueAsString, nil
+	}
+
+	return "", nil
 }
 
 var _ api.Diagnosis = (*Zaptec)(nil)

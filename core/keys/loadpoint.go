@@ -36,6 +36,9 @@ const (
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
 
+	// loadpoint setpoint
+	OfferedCurrent = "offeredCurrent" // offered current
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit
@@ -51,7 +54,6 @@ const (
 	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
 
 	// measurements
-	ChargeCurrent     = "chargeCurrent"     // charge current
 	ChargePower       = "chargePower"       // charge power
 	ChargeCurrents    = "chargeCurrents"    // charge currents
 	ChargeVoltages    = "chargeVoltages"    // charge voltages

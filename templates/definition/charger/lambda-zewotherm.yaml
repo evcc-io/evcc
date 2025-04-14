@@ -23,11 +23,10 @@ requirements:
       - E-Meter communication type: "ModBus Client"
       - E-Meter measuring point: "Pos. E-Überschuss"
 params:
-  - name: modbus
-    choice: ["tcpip"]
+  - name: host
   - name: tempsource
     type: choice
-    choice: ["", "warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
+    choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
@@ -45,21 +44,24 @@ render: |
     initial: 0
     set:
       source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:502
+      id: 1
       register:
         address: 102 # PV Überschussleistung
         type: writemultiple # λ erwartet single value als FC16
         decode: int16
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:502
+    id: 1
     register:
       address: 103 # aktuelle Aufnahmeleistung [E] der WP
       type: holding
       decode: int16
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:502
+    id: 1
     register:
       address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
       type: holding
@@ -68,10 +70,20 @@ render: |
   {{- if .tempsource }}
   temp:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:502
+    id: 1
     register:
       address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten
       type: holding
       decode: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 1
+    register:
+      address: {{ if eq .tempsource "warmwater_top" -}} 2050 {{ else if eq .tempsource "warmwater_bottom" -}} 2050 {{ else if eq .tempsource "buffer_top" -}} 3050 {{ else }} 3050 {{- end }} # 2050 Trinkwasser Speicher, 3050 Wärmespeicher
+      type: holding
+      encoding: int16
     scale: 0.1
   {{- end }}

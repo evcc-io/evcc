@@ -24,6 +24,11 @@ never = "yalnızca yeterli fazlalık ile."
 
 [config]
 
+[config.aux]
+description = "Tüketimini mevcut fazlalığa göre ayarlayan cihaz (akıllı su ısıtıcıları gibi). evcc, bu cihazın gerektiğinde güç tüketimini azaltmasını bekler."
+titleAdd = "Kendi Kendini Düzenleyen Tüketici Ekle"
+titleEdit = "Kendi Kendini Düzenleyen Tüketiciyi Düzenle"
+
 [config.battery]
 titleAdd = "Batarya Ekle"
 titleEdit = "Bataryayı Düzenle"
@@ -92,6 +97,7 @@ range = "Menzil"
 singlePhase = "“Tek aşamalı”"
 soc = "Doluluk"
 socLimit = "Doluluk Sınırlaması"
+solarForecast = "Güneş tahmini"
 temp = "Isı"
 topic = "Konu"
 url = "URL"
@@ -106,6 +112,11 @@ C = "“C (dolduruyor)”"
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
 title = "EEBus"
+
+[config.ext]
+description = "Yük yönetimi veya istatistik amaçları için kullanılabilir."
+titleAdd = "Harici Sayaç Ekle"
+titleEdit = "Harici Sayacı Düzenle"
 
 [config.form]
 deprecated = "“kullanımdan kaldırıldı”"
@@ -158,6 +169,7 @@ v2Support = "InfluxDB 2.x'e geri dön"
 addCharger = "“Doldurma cihazı ekle”"
 addMeter = "“Ek doldurma sayacı ekle”"
 cancel = "“İptal”"
+chargerError = "Bir şarj cihazının yapılandırılması gereklidir."
 chargerLabel = "“Doldurma cihazı”"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "“6 ila 16 A akım aralığını kullanır.”"
@@ -228,6 +240,7 @@ vehicleLabel = "“Varsayılan araç”"
 vehiclesTitle = "“Araçlar”"
 
 [config.main]
+addAdditional = "Ek sayaç ekle"
 addGrid = "“Elektrik sayacı ekle”"
 addLoadpoint = "Doldurma noktası ekle"
 addPvBattery = "Güneş enerjisi veya enerji deposu ekle"
@@ -252,6 +265,12 @@ save = "Kaydet"
 template = "Üretici"
 titleChoice = "Ne Eklemek İstersin:"
 validateSave = "Doğrula ve kaydet"
+
+[config.meter.option]
+aux = "Kendi kendini düzenleyen tüketici ekle"
+battery = "Pil ölçer ekle"
+ext = "Harici sayaç ekle"
+pv = "Güneş ölçer ekle"
 
 [config.modbusproxy]
 description = "Birden fazla istemcinin tek bir Modbus cihazına erişmesine izin verir."
@@ -308,6 +327,7 @@ titleAdd = "GES Sayacı Ekle"
 titleEdit = "GES Sayacını Düzenle"
 
 [config.section]
+additionalMeter = "Ek sayaçlar"
 general = "Genel"
 grid = "Şebeke"
 integrations = "Bütünleştirmeler"
@@ -565,6 +585,7 @@ selfConsumption = "Öz tüketim"
 charging = "Isıtılıyor…"
 cheapEnergyCharging = "Ucuz enerji ile ısıtılıyor: {price} (sınır {limit})"
 cleanEnergyCharging = "Temiz enerji ile ısıtılıyor: {co2} (sınır {limit})"
+connected = "“Beklemede.\""
 vehicleLimit = "“Isıtıcı sınırlaması”"
 waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
 

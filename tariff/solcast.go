@@ -76,7 +76,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
-			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT60M&format=json", t.site)
+			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json", t.site)
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
@@ -91,16 +91,16 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 	NEXT:
 		for _, r := range res.Forecasts {
-			start := now.With(r.PeriodEnd.Add(-r.Period.Duration())).BeginningOfHour().Local()
+			start := now.With(r.PeriodEnd).BeginningOfHour().Local()
 			rr := api.Rate{
 				Start: start,
 				End:   start.Add(time.Hour),
-				Price: r.PvEstimate * 1e3,
+				Value: r.PvEstimate * 1e3,
 			}
 			if r.Period.Duration() != time.Hour {
 				for i, r := range data {
 					if r.Start.Equal(rr.Start) {
-						data[i].Price = (r.Price + rr.Price) / 2
+						data[i].Value = (r.Value + rr.Value) / 2
 						continue NEXT
 					}
 				}

@@ -14,27 +14,30 @@
 	</label>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import type { SelectOption } from "../../types/evcc";
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "CustomSelect",
 	props: {
-		options: { type: Array },
+		options: { type: Array as PropType<SelectOption<number | string>[]> },
 		selected: { type: [String, Number] },
 		id: { type: String },
 	},
 	emits: ["change"],
 	methods: {
-		text(name, count) {
+		text(name: string, count?: number) {
 			if (count === undefined) {
 				return name;
 			}
 			return `${name} (${count})`;
 		},
-		change(event) {
+		change(event: Event) {
 			this.$emit("change", event);
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .custom-select {

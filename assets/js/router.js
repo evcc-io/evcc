@@ -7,7 +7,7 @@ import {
   updateAuthStatus,
   isLoggedIn,
   isConfigured,
-} from "./components/Auth/auth.js";
+} from "./components/Auth/auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {

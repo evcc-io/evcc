@@ -477,6 +477,7 @@
 						class="ms-3 mb-5"
 						:label="$t('config.loadpoint.pollIntervalLabel')"
 						:help="$t('config.loadpoint.pollIntervalHelp')"
+						:danger="$t('config.loadpoint.pollIntervalDanger')"
 					>
 						<PropertyField
 							id="loadpointPollInterval"
@@ -741,7 +742,7 @@ export default {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -752,7 +753,7 @@ export default {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -762,9 +763,8 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.reset();
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;
@@ -781,9 +781,6 @@ export default {
 		onClose() {
 			this.showAllSelected = false;
 			this.isModalVisible = false;
-		},
-		close() {
-			this.$refs.modal.close();
 		},
 		editCharger() {
 			this.$emit("openChargerModal", this.values.charger);

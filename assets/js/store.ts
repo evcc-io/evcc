@@ -1,4 +1,5 @@
 import { reactive } from "vue";
+import type { State } from "./types/evcc";
 
 function setProperty(obj: object, props: string[], value: any) {
 	const prop = props.shift();

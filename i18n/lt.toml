@@ -26,6 +26,11 @@ never = "tik su pakankamu pertekliumi."
 
 [config]
 
+[config.aux]
+description = "Įrenginys, kuris koreguoja savo suvartojimą pagal esamą energijos perteklių (pvz., išmanieji vandens šildytuvai). evcc tikisi, kad šis įrenginys prireikus sumažins energijos suvartojimą."
+titleAdd = "Pridėti Savireguliuojantį vartotoją"
+titleEdit = "Redaguoti Savireguliuojantį vartotoją"
+
 [config.battery]
 titleAdd = "Pridėti kaupiklį"
 titleEdit = "Redaguoti kaupiklį"
@@ -37,6 +42,7 @@ titleEdit = "Redaguoti įkrovimo skaitiklį"
 [config.charger]
 chargers = "Elektromobilių įkrovikliai"
 generic = "Tipinės integracijos"
+heatingdevices = "Šildymo prietaisai"
 ocppHelp = "Nukopijuokite šį adresą į jūsų įkroviklio nustatymus."
 ocppLabel = "OCPP-Serverio URL"
 switchsockets = "Išmanios rozetės"
@@ -94,6 +100,7 @@ range = "Nuvažiuojamas atstumas"
 singlePhase = "Vienfazis"
 soc = "Įkrova"
 socLimit = "Limitas"
+solarForecast = "Saulės prognozė"
 temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
@@ -105,11 +112,22 @@ A = "A (neprijungtas)"
 B = "B (prijungtas)"
 C = "C (įkrauna)"
 
+[config.devices]
+auxMeter = "Išmanusis vartotojas"
+batteryStorage = "Energijos kaupiklis"
+solarSystem = "Saulės elektrinė"
+
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais."
 title = "EEBus"
 
+[config.ext]
+description = "Gali būti naudojamas apkrovos valdymo ar statistikos tikslais."
+titleAdd = "Pridėti Išorinį skaitiklį"
+titleEdit = "Redaguoti Išorinį skaitiklį"
+
 [config.form]
+danger = "Pavojus"
 deprecated = "nebenaudojama"
 example = "Pavyzdys"
 optional = "pasirinktinai"
@@ -128,6 +146,7 @@ remove = "Pašalinti"
 save = "Išsaugoti"
 showAdvancedSettings = "Rodyti išplėstinius nustatymus"
 telemetry = "Telemetrija"
+templateLoading = "Įkrauname..."
 title = "Pavadinimas"
 validateSave = "Patikrinti ir išsaugoti"
 
@@ -192,6 +211,7 @@ phasesAutomatic = "Automatinės fazės"
 phasesAutomaticHelp = "Jūsų įkroviklis palaiko automatinį perjungimą tarp 1 ir 3 fazių įkrovimo. Pagrindiniame ekrane galite reguliuoti fazių elgesį įkrovimo metu."
 phasesHelp = "Kiek fazių prijungta prie įkroviklio."
 phasesLabel = "Fazės"
+pollIntervalDanger = "Reguliarios automobilio užklausos gali iškrauti automobilio akumuliatorių. Kai kurie automobilių gamintojai gali užblokuoti duomenis ar aktyviai neleisti įkrauti. Nerekomenduojama! Naudokite tik pilnai suprasdami riziką."
 pollIntervalHelp = "Laikas tarp transporto priemonės API atnaujinimų. Trumpi intervalai gali iškrauti transporto priemonės akumuliatorių."
 pollIntervalLabel = "Naujinimo intervalas"
 pollModeAlways = "nuolat"
@@ -231,6 +251,7 @@ vehicleLabel = "Numatytasis automobilis"
 vehiclesTitle = "Automobiliai"
 
 [config.main]
+addAdditional = "Pridėti papildomą skaitiklį"
 addGrid = "Pridėti tinklo skaitiklį"
 addLoadpoint = "Pridėti įkroviklį"
 addPvBattery = "Pridėti saulės elektrinę arba kaupiklį"
@@ -255,6 +276,12 @@ save = "Išsaugoti"
 template = "Gamintojas"
 titleChoice = "Ką norite pridėti?"
 validateSave = "Patikrinti ir išsaugoti"
+
+[config.meter.option]
+aux = "Pridėti savireguliuojantį vartotoją"
+battery = "Pridėti kaupiklio skaitiklį"
+ext = "Pridėti išorinį skaitiklį"
+pv = "Pridėti saulės elektrinės skaitiklį"
 
 [config.modbusproxy]
 description = "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį."
@@ -311,6 +338,7 @@ titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
 [config.section]
+additionalMeter = "Papildomi skaitikliai"
 general = "Pagrindiniai"
 grid = "Elektros tinklas"
 integrations = "Integracijos"
@@ -362,10 +390,12 @@ validate = "tikrinti"
 
 [config.vehicle]
 cancel = "Atšaukti"
+chargingSettings = "Įkrovimo nustatymai"
 delete = "Ištrinti"
 generic = "Kitos integracijos"
 offline = "Tipinis automobilis"
 online = "Automobiliai su internetiniu API"
+priority = "Pirmumas"
 save = "Išsaugoti"
 scooter = "Motoroleris"
 template = "Gamintojas"
@@ -584,6 +614,7 @@ selfConsumption = "Sunaudojama iškart"
 charging = "Šildoma…"
 cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
 cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+connected = "Budėjimo režimas."
 vehicleLimit = "Šildymo limitas"
 waitForVehicle = "Paruošta. Laukiame šildytuvo…"
 
@@ -658,6 +689,7 @@ costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 currentPlan = "Planas aktyvus"
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}?"
+goalReached = "Tikslas jau pasiektas"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 nextPlan = "Kitas planas"

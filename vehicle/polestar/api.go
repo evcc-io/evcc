@@ -2,7 +2,6 @@ package polestar
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -43,8 +42,7 @@ func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
 		GetConsumerCarsV2 []ConsumerCar `graphql:"getConsumerCarsV2"`
 	}
 
-	err := v.client.WithRequestModifier(func(req *http.Request) {
-	}).Query(ctx, &res, nil, graphql.OperationName("getCars"))
+	err := v.client.Query(ctx, &res, nil, graphql.OperationName("getCars"))
 
 	return res.GetConsumerCarsV2, err
 }

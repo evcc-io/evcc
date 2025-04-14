@@ -9,6 +9,6 @@
 
 <script>
 export default {
-	name: "Aux",
+	name: "SmartConsumer",
 };
 </script>

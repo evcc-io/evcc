@@ -177,6 +177,9 @@ const insertSorted = (arr, num) => {
 	return [...uniqueSet].sort((a, b) => b - a);
 };
 
+// TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
+const MAX_CURRENT = 64;
+
 export default {
 	name: "LoadpointSettingsModal",
 	components: { SmartCostLimit, LoadpointSettingsBatteryBoost: SettingsBatteryBoost },
