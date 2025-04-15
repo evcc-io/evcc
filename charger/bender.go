@@ -376,7 +376,7 @@ func (wb *BenderCC) Phases1p3p(phases int) error {
 		b := make([]byte, 2)
 		if phases == 1 {
 			binary.BigEndian.PutUint16(b, uint16(3500))
-		} else if phases == 3 {
+		} else {
 			binary.BigEndian.PutUint16(b, uint16(4500))
 		}
 
