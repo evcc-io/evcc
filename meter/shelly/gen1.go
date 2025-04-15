@@ -83,10 +83,11 @@ func (c *gen1) Enable(enable bool) error {
 	var err error
 	onoff := map[bool]string{true: "on", false: "off"}
 
+	c.status.Reset()
+
 	var res Gen1SwitchResponse
 	uri := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
 	err = c.GetJSON(uri, &res)
-
 	return err
 }
 
@@ -108,6 +109,51 @@ func (c *gen1) TotalEnergy() (float64, error) {
 	energy = gen1Energy(c.model, energy)
 
 	return energy / 1000, nil
+}
+
+func (c *gen1) Currents() (float64, float64, float64, error) {
+	res, err := c.status.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Current, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Current, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
+}
+
+func (c *gen1) Voltages() (float64, float64, float64, error) {
+	res, err := c.status.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Voltage, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Voltage, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
+}
+
+func (c *gen1) Powers() (float64, float64, float64, error) {
+	res, err := c.status.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	switch {
+	case c.channel < len(res.Meters):
+		return res.Meters[c.channel].Power, 0, 0, nil
+	case c.channel < len(res.EMeters):
+		return res.EMeters[c.channel].Power, 0, 0, nil
+	default:
+		return 0, 0, 0, errors.New("invalid channel, missing power meter")
+	}
 }
 
 // gen1Energy in kWh

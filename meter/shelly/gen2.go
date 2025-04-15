@@ -62,41 +62,17 @@ type Gen2EM1Data struct {
 	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
-type Gen2StatusResponse struct {
-	Switch0 Gen2SwitchStatus `json:"switch:0"`
-	Switch1 Gen2SwitchStatus `json:"switch:1"`
-	Switch2 Gen2SwitchStatus `json:"switch:2"`
-	Pm0     Gen2SwitchStatus `json:"pm1:0"`
-	Pm1     Gen2SwitchStatus `json:"pm2:1"`
-	Pm2     Gen2SwitchStatus `json:"pm3:2"`
-	// additional shelly Pro EM meter JSON response
-	TotalActPower float64       `json:"total_act_power"`
-	ACurrent      float64       `json:"a_current"`
-	BCurrent      float64       `json:"b_current"`
-	CCurrent      float64       `json:"c_current"`
-	AVoltage      float64       `json:"a_voltage"`
-	BVoltage      float64       `json:"b_voltage"`
-	CVoltage      float64       `json:"c_voltage"`
-	APower        float64       `json:"a_act_power"`
-	BPower        float64       `json:"b_act_power"`
-	CPower        float64       `json:"c_act_power"`
-	Em0           Gen2EM1Status `json:"em1:0"`
-	Em1           Gen2EM1Status `json:"em1:1"`
-	Em2           Gen2EM1Status `json:"em1:2"`
-	Em0Data       Gen2EM1Data   `json:"em1data:0"`
-	Em1Data       Gen2EM1Data   `json:"em1data:1"`
-	Em2Data       Gen2EM1Data   `json:"em1data:2"`
-}
-
 type gen2 struct {
 	*request.Helper
-	uri      string
-	channel  int
-	model    string
-	profile  string
-	status   util.Cacheable[Gen2StatusResponse]
-	emstatus util.Cacheable[Gen2EMStatus]
-	emdata   util.Cacheable[Gen2EMData]
+	uri          string
+	channel      int
+	model        string
+	profile      string
+	switchstatus util.Cacheable[Gen2SwitchStatus]
+	em1status    util.Cacheable[Gen2EM1Status]
+	em1data      util.Cacheable[Gen2EM1Data]
+	emstatus     util.Cacheable[Gen2EMStatus]
+	emdata       util.Cacheable[Gen2EMData]
 }
 
 // gen2ExecCmd executes a shelly api gen2+ command and provides the response
@@ -128,13 +104,29 @@ func (c *gen2) InitApi(uri, user, password string, cache time.Duration) {
 	if user != "" {
 		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
-	// Cached Gen2StatusResponse
-	c.status = util.ResettableCached(func() (Gen2StatusResponse, error) {
-		var gen2StatusResponse Gen2StatusResponse
-		if err := c.gen2ExecCmd("Shelly.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2StatusResponse); err != nil {
-			return Gen2StatusResponse{}, err
+	// Cached Gen2StatusGen2SwitchStatus
+	c.switchstatus = util.ResettableCached(func() (Gen2SwitchStatus, error) {
+		var gen2SwitchStatus Gen2SwitchStatus
+		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatus); err != nil {
+			return Gen2SwitchStatus{}, err
 		}
-		return gen2StatusResponse, nil
+		return gen2SwitchStatus, nil
+	}, cache)
+	// Cached gen2EM1Status
+	c.em1status = util.ResettableCached(func() (Gen2EM1Status, error) {
+		var gen2EM1Status Gen2EM1Status
+		if err := c.gen2ExecCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1Status); err != nil {
+			return Gen2EM1Status{}, err
+		}
+		return gen2EM1Status, nil
+	}, cache)
+	// Cached gen2EM1Data
+	c.em1data = util.ResettableCached(func() (Gen2EM1Data, error) {
+		var gen2EM1Data Gen2EM1Data
+		if err := c.gen2ExecCmd("EM1Data.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1Data); err != nil {
+			return Gen2EM1Data{}, err
+		}
+		return gen2EM1Data, nil
 	}, cache)
 	// Cached gen2EMStatus
 	c.emstatus = util.ResettableCached(func() (Gen2EMStatus, error) {
@@ -156,21 +148,29 @@ func (c *gen2) InitApi(uri, user, password string, cache time.Duration) {
 
 // CurrentPower implements the api.Meter interface
 func (c *gen2) CurrentPower() (float64, error) {
-	res, err := c.emstatus.Get()
-	if err != nil {
-		return 0, err
+	// Endpoint Switch.GetStatus
+	if hasSwitchEndpoint(c.model) {
+		res, err := c.switchstatus.Get()
+		return res.Apower, err
 	}
-	return res.TotalActPower, nil
+	// Endpoint EM1.GetStatus
+	if hasEMEndpoint(c.model) && c.profile == "monophase" {
+		res, err := c.em1status.Get()
+		return res.ActPower, err
+	}
+	// Endpoint EM.GetStatus
+	if hasEMEndpoint(c.model) && c.profile == "triphase" {
+		res, err := c.emstatus.Get()
+		return res.TotalActPower, err
+	}
+	return 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Gen2Enabled implements the Gen2 api.Charger interface
 func (c *gen2) Enabled() (bool, error) {
 	if hasSwitchEndpoint(c.model) {
-		var gen2SwitchStatus Gen2SwitchStatus
-		if err := c.gen2ExecCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatus); err != nil {
-			return false, err
-		}
-		return gen2SwitchStatus.Output, nil
+		res, err := c.switchstatus.Get()
+		return res.Output, err
 	}
 	return false, fmt.Errorf("unknown shelly model: %s", c.model)
 }
@@ -178,43 +178,94 @@ func (c *gen2) Enabled() (bool, error) {
 // Gen2Enable implements the api.Charger interface
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
-	return c.gen2ExecCmd("Switch.Set", enable, &res)
+	c.switchstatus.Reset()
+	return c.gen2ExecCmd("Switch.Set?id="+strconv.Itoa(c.channel), enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
 func (c *gen2) TotalEnergy() (float64, error) {
-	res, err := c.emdata.Get()
-	if err != nil {
-		return 0, err
+	if hasSwitchEndpoint(c.model) {
+		res, err := c.switchstatus.Get()
+		if err != nil {
+			return 0, err
+		}
+		return res.Aenergy.Total / 1000, nil
 	}
-	return res.TotalAct / 1000, nil
+	if hasEMEndpoint(c.model) && c.profile == "monophase" {
+		res, err := c.em1data.Get()
+		if err != nil {
+			return 0, err
+		}
+		return res.TotalActEnergy / 1000, nil
+	}
+	if hasEMEndpoint(c.model) && c.profile == "triphase" {
+		res, err := c.emdata.Get()
+		if err != nil {
+			return 0, err
+		}
+		return res.TotalAct / 1000, nil
+	}
+	return 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *gen2) Currents() (float64, float64, float64, error) {
-	res, err := c.emstatus.Get()
-	if err != nil {
-		return 0, 0, 0, err
+	if hasSwitchEndpoint(c.model) {
+		res, err := c.switchstatus.Get()
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		return res.Current, 0, 0, nil
 	}
-	return res.ACurrent, res.BCurrent, res.CCurrent, nil
+	if hasEMEndpoint(c.model) && c.profile == "monophase" {
+		res, err := c.em1status.Get()
+		return res.Current, 0, 0, err
+	}
+	if hasEMEndpoint(c.model) && c.profile == "triphase" {
+		res, err := c.emstatus.Get()
+		return res.ACurrent, res.BCurrent, res.CCurrent, err
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *gen2) Voltages() (float64, float64, float64, error) {
-	res, err := c.emstatus.Get()
-	if err != nil {
-		return 0, 0, 0, err
+	if hasSwitchEndpoint(c.model) {
+		res, err := c.switchstatus.Get()
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		return res.Voltage, 0, 0, nil
 	}
-	return res.AVoltage, res.BVoltage, res.CVoltage, nil
+	if hasEMEndpoint(c.model) && c.profile == "monophase" {
+		res, err := c.em1status.Get()
+		return res.Voltage, 0, 0, err
+	}
+	if hasEMEndpoint(c.model) && c.profile == "triphase" {
+		res, err := c.emstatus.Get()
+		return res.AVoltage, res.BVoltage, res.CVoltage, err
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Powers implements the api.PhasePowers interface
 func (c *gen2) Powers() (float64, float64, float64, error) {
-	res, err := c.emstatus.Get()
-	if err != nil {
-		return 0, 0, 0, err
+	if hasSwitchEndpoint(c.model) {
+		res, err := c.switchstatus.Get()
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		return res.Apower, 0, 0, nil
 	}
-	return res.AActPower, res.BActPower, res.CActPower, nil
+	if hasEMEndpoint(c.model) && c.profile == "monophase" {
+		res, err := c.em1status.Get()
+		return res.ActPower, 0, 0, err
+	}
+	if hasEMEndpoint(c.model) && c.profile == "triphase" {
+		res, err := c.emstatus.Get()
+		return res.AActPower, res.BActPower, res.CActPower, err
+	}
+	return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
@@ -243,6 +294,29 @@ func hasSwitchEndpoint(model string) bool {
 	switchModels := []string{"SNSW", "SNPL", "SPSW", "S3SW", "S4SW"}
 	for _, switchModel := range switchModels {
 		if switchModel == model {
+			return true
+		}
+	}
+	return false
+}
+
+// Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy
+// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1#em1getstatus-example
+// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1Data#em1datagetstatus-example
+func hasEMEndpoint(model string) bool {
+	// Generation 2 Devices (Pro Series - Hutschiene):
+	// - SPEM-002CEBEU50: Shelly Pro EM 50 with 1x relay + 2x energy meter
+	// - SPEM-003CEBEU120: Shelly Pro 3EM with 3x energy meter
+	// - SPEM-003CEBEU63: Shelly Pro 3EM-3CT63 with 3x energy meter
+	// Generation 3 Devices:
+	// - S3EM-002CXCEU: Shelly EM Gen 3 with 1x relay + 2x energy meter
+	// - S3EM-001XCEU: Shelly 3EM Gen 3 with 3x energy meter
+	// - S3EM-003CXCEU63: Shelly 3EM Gen 3 with 3x energy meter
+	// Generation 4 Devices:
+	// - S4EM-001PXCEU16: Shelly EM Mini Gen4 with power meter
+	em1Models := []string{"SPEM", "S3EM", "S4EM"}
+	for _, em1Model := range em1Models {
+		if em1Model == model {
 			return true
 		}
 	}

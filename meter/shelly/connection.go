@@ -17,6 +17,9 @@ type Gen interface {
 	Enabled() (bool, error)
 	Enable(bool) error
 	TotalEnergy() (float64, error)
+	Currents() (float64, float64, float64, error)
+	Voltages() (float64, float64, float64, error)
+	Powers() (float64, float64, float64, error)
 }
 
 // Connection is the Shelly connection
@@ -56,6 +59,8 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		resp.Profile = "monophase"
 	}
 
+	model := strings.Split(resp.Type+resp.Model, "-")[0]
+
 	client.Transport = request.NewTripper(log, transport.Insecure())
 
 	var gen Gen
@@ -70,7 +75,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 			Helper:  client,
 			uri:     uri,
 			channel: channel,
-			model:   resp.Model,
+			model:   model,
 			status:  util.NewCacheable[Gen1Status](),
 		}
 	}
@@ -78,14 +83,16 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
 		gen = &gen2{
-			Helper:   client,
-			uri:      uri,
-			channel:  channel,
-			model:    resp.Model,
-			profile:  resp.Profile,
-			status:   util.NewCacheable[Gen2StatusResponse](),
-			emstatus: util.NewCacheable[Gen2EMStatus](),
-			emdata:   util.NewCacheable[Gen2EMData](),
+			Helper:       client,
+			uri:          uri,
+			channel:      channel,
+			model:        model,
+			profile:      resp.Profile,
+			switchstatus: util.NewCacheable[Gen2SwitchStatus](),
+			em1status:    util.NewCacheable[Gen2EM1Status](),
+			em1data:      util.NewCacheable[Gen2EM1Data](),
+			emstatus:     util.NewCacheable[Gen2EMStatus](),
+			emdata:       util.NewCacheable[Gen2EMData](),
 		}
 	}
 	conn := &Connection{
