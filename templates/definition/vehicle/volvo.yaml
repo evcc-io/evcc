@@ -1,4 +1,5 @@
 template: volvo
+deprecated: true
 products:
   - brand: Volvo
     description:

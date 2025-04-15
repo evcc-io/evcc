@@ -18,6 +18,13 @@ requirements:
 params:
   - name: host
   - name: token
+  - name: powersource
+    type: choice
+    choice: ["hpcurrpower", "hppower"]
+    description:
+      de: "Leistungsquelle"
+      en: "Power source"
+    default: hpcurrpower
   - name: tempsource
     type: choice
     choice: ["warmwater"]
@@ -28,8 +35,11 @@ render: |
   type: sgready
   power:
     source: http
-    uri: http://{{ .host }}/api/boiler/hpcurrpower
-    jq: .value
+    uri: http://{{ .host }}/api/boiler/{{ .powersource }}
+    jq: .value // 0
+    {{- if eq .powersource "hppower" }}
+    scale: 1000
+    {{- end}}
   getmode:
     source: go
     script: |
