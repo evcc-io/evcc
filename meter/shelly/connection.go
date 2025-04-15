@@ -21,7 +21,6 @@ type Gen interface {
 
 // Connection is the Shelly connection
 type Connection struct {
-	log     util.Logger
 	model   string // Shelly device type
 	profile string // Shelly device profile
 	Cache   time.Duration
