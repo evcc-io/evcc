@@ -2,23 +2,44 @@ template: viessmann
 products:
   - brand: Viessmann
     description:
-      generic: Viessmann (SG Ready)
+      generic: Heatpump (SG Ready)
 group: heating
 requirements:
   # evcc: ["sponsorship"]
   evcc: ["skiptest"]
 params:
-  # TODO mark parameters as required
-  - name: installation_id # TODO guide user on how to get this value
-  - name: gateway_serial # TODO guide user on how to get this value
-  - name: device_id # TODO guide user on how to get this value
   - name: user
+    required: true
   - name: password
+    required: true
   - name: clientid
+    required: true
+    description:
+      de: ClientID
+      en: ClientID
+    help:
+      de: https://app.developer.viessmann.com
+      en: https://app.developer.viessmann.com
+  - name: installation_id # TODO guide user on how to get this value
+    required: true
+    description:
+      de: InstallationID
+      en: InstallationID
+  - name: gateway_serial # TODO guide user on how to get this value
+    required: true
+    description:
+      de: Gateway Serial
+      en: Gateway Serial
+  - name: device_id # TODO guide user on how to get this value
+    required: true
+    description:
+      de: Device ID
+      en: Device ID
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
       en: Target temperature for one-time charge (°C), max=60
+    required: true
     default: 45
     type: int
 render: |
