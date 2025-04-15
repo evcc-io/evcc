@@ -351,7 +351,7 @@ export default defineComponent({
 			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
 		topHeight() {
-			return 100 - this.bufferSoc;
+			return 100 - (this.bufferSoc || 100);
 		},
 		middleHeight() {
 			return 100 - this.topHeight - this.bottomHeight;
@@ -411,7 +411,7 @@ export default defineComponent({
 		},
 	},
 	mounted() {
-		this.selectedBufferSoc = this.bufferSoc;
+		this.selectedBufferSoc = this.bufferSoc || 100;
 		this.selectedPrioritySoc = this.prioritySoc;
 		this.selectedBufferStartSoc = this.bufferStartSoc;
 	},
