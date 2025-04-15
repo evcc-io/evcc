@@ -62,6 +62,8 @@ type Gen2EM1Data struct {
 	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
+var _ Gen = (*gen2)(nil)
+
 type gen2 struct {
 	*request.Helper
 	uri          string

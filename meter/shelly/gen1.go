@@ -34,6 +34,8 @@ type Gen1Status struct {
 	}
 }
 
+var _ Gen = (*gen1)(nil)
+
 type gen1 struct {
 	*request.Helper
 	uri     string
