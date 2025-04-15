@@ -14,7 +14,7 @@ func init() {
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyEnergyMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewShellyEnergyMeterFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		User     string
