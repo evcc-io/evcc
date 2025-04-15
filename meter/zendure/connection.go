@@ -70,7 +70,7 @@ func (c *Connection) handler(data string) {
 		return
 	}
 
-	if res.Sn != c.serial || res.Data == nil {
+	if res.Data == nil || res.Sn != c.serial {
 		return
 	}
 
