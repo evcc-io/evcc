@@ -289,17 +289,6 @@ export default {
 		};
 	},
 	computed: {
-		uniqueProducts() {
-			// add protocol to name if multiple products with same name exist
-			// TODO: add this logic to all devices (charger, meter, ...)
-			const names = this.products.map((p) => p.name);
-			return this.products.map((p) => {
-				if (names.filter((n) => n === p.name).length > 1 && p.protocol) {
-					return { ...p, name: `${p.name} (${p.protocol})` };
-				}
-				return p;
-			});
-		},
 		templateOptions() {
 			return {
 				online: this.products.filter((p) => !p.group && p.template !== "offline"),

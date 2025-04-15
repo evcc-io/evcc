@@ -59,6 +59,14 @@ labelInterval = "Update interval"
 labelResidualPower = "Residual power"
 title = "Control behavior"
 
+[config.deviceProtocol]
+cloudapi = "Cloud"
+eebus = "EEBus"
+localapi = "Local"
+modbus = "Modbus"
+mqtt = "MQTT"
+ocpp = "OCPP"
+
 [config.deviceValue]
 amount = "Amount"
 broker = "Broker"
