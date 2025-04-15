@@ -13,10 +13,8 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 	{
 		// Switch.GetStatus Endpoint
 		var res Gen2SwitchStatus
-
 		jsonstr := `{"id":0, "source":"HTTP", "output":false, "apower":47.11, "voltage":232.0, "current":0.000, "pf":0.00, "aenergy":{"total":5.125,"by_minute":[0.000,0.000,0.000],"minute_ts":1675718520},"temperature":{"tC":25.3, "tF":77.5}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-
 		assert.Equal(t, 5.125, res.Aenergy.Total)
 		assert.Equal(t, 47.11, res.Apower)
 	}
