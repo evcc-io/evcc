@@ -371,7 +371,6 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 func (wb *BenderCC) Phases1p3p(phases int) error {
 	if wb.model == "4you" {
 		fmt.Printf("Switching to %d phases\n", phases)
-		wb.phases = phases
 
 		b := make([]byte, 2)
 		if phases == 1 {
@@ -381,6 +380,10 @@ func (wb *BenderCC) Phases1p3p(phases int) error {
 		}
 
 		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+
+		if err == nil {
+			wb.phases = phases
+		}
 
 		return err
 	}
