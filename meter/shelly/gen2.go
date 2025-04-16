@@ -78,6 +78,16 @@ type gen2 struct {
 	emdata       util.Cacheable[Gen2EMData]
 }
 
+func apiCall[T any](c *gen2, api string) func() (T, error) {
+	return func() (T, error) {
+		var res T
+		if err := c.execCmd(fmt.Sprintf("%s?id=%d", api, c.channel), false, &res); err != nil {
+			return res, err
+		}
+		return res, nil
+	}
+}
+
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
 func newGen2(helper *request.Helper, uri, model, profile string, channel int, user, password string, cache time.Duration) *gen2 {
 	c := &gen2{
@@ -95,50 +105,11 @@ func newGen2(helper *request.Helper, uri, model, profile string, channel int, us
 		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
 
-	// Cached Gen2StatusGen2SwitchStatus
-	c.switchstatus = util.ResettableCached(func() (Gen2SwitchStatus, error) {
-		var res Gen2SwitchStatus
-		if err := c.execCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
-			return Gen2SwitchStatus{}, err
-		}
-		return res, nil
-	}, cache)
-
-	// Cached gen2EM1Status
-	c.em1status = util.ResettableCached(func() (Gen2EM1Status, error) {
-		var res Gen2EM1Status
-		if err := c.execCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
-			return Gen2EM1Status{}, err
-		}
-		return res, nil
-	}, cache)
-
-	// Cached gen2EM1Data
-	c.em1data = util.ResettableCached(func() (Gen2EM1Data, error) {
-		var res Gen2EM1Data
-		if err := c.execCmd("EM1Data.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
-			return Gen2EM1Data{}, err
-		}
-		return res, nil
-	}, cache)
-
-	// Cached gen2EMStatus
-	c.emstatus = util.ResettableCached(func() (Gen2EMStatus, error) {
-		var res Gen2EMStatus
-		if err := c.execCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
-			return Gen2EMStatus{}, err
-		}
-		return res, nil
-	}, cache)
-
-	// Cached gen2EMData
-	c.emdata = util.ResettableCached(func() (Gen2EMData, error) {
-		var res Gen2EMData
-		if err := c.execCmd("EMData.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
-			return Gen2EMData{}, err
-		}
-		return res, nil
-	}, cache)
+	c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
+	c.em1status = util.ResettableCached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
+	c.em1data = util.ResettableCached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.ResettableCached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
+	c.emdata = util.ResettableCached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
 
 	return c
 }
