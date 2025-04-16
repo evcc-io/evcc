@@ -11,8 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-type Gen interface {
-	InitApi(string, string, string, time.Duration)
+type Generation interface {
 	CurrentPower() (float64, error)
 	Enabled() (bool, error)
 	Enable(bool) error
@@ -24,10 +23,7 @@ type Gen interface {
 
 // Connection is the Shelly connection
 type Connection struct {
-	model   string // Shelly device type
-	profile string // Shelly device profile
-	Cache   time.Duration
-	Gen
+	Generation
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -63,44 +59,21 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	client.Transport = request.NewTripper(log, transport.Insecure())
 
-	var gen Gen
+	var gen Generation
 	if resp.Gen < 2 {
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		if user != "" {
 			log.Redact(transport.BasicAuthHeader(user, password))
-			client.Transport = transport.BasicAuth(user, password, client.Transport)
 		}
-		gen = &gen1{
-			Helper:  client,
-			uri:     uri,
-			channel: channel,
-			model:   model,
-			status:  util.NewCacheable[Gen1Status](),
-		}
-	}
-	if resp.Gen > 1 {
+		gen = newGen1(client, uri, model, channel, user, password, cache)
+	} else {
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		gen = &gen2{
-			Helper:       client,
-			uri:          uri,
-			channel:      channel,
-			model:        model,
-			profile:      resp.Profile,
-			switchstatus: util.NewCacheable[Gen2SwitchStatus](),
-			em1status:    util.NewCacheable[Gen2EM1Status](),
-			em1data:      util.NewCacheable[Gen2EM1Data](),
-			emstatus:     util.NewCacheable[Gen2EMStatus](),
-			emdata:       util.NewCacheable[Gen2EMData](),
-		}
+		gen = newGen2(client, uri, model, resp.Profile, channel, user, password, cache)
 	}
-	conn := &Connection{
-		model:   strings.Split(resp.Type+resp.Model, "-")[0],
-		profile: resp.Profile,
-		Cache:   cache,
-		Gen:     gen,
-	}
-	conn.Gen.InitApi(uri, user, password, cache)
+
+	conn := &Connection{gen}
+
 	return conn, nil
 }

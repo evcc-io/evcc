@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Gen1API endpoint reference: https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
@@ -34,7 +35,7 @@ type Gen1Status struct {
 	}
 }
 
-var _ Gen = (*gen1)(nil)
+var _ Generation = (*gen1)(nil)
 
 type gen1 struct {
 	*request.Helper
@@ -44,8 +45,19 @@ type gen1 struct {
 	status  util.Cacheable[Gen1Status]
 }
 
-// gen1InitApi initializes the connection to the shelly gen1 api and sets up the cached gen1Status
-func (c *gen1) InitApi(uri, user, password string, cache time.Duration) {
+// newGen1 initializes the connection to the shelly gen1 api and sets up the cached gen1Status
+func newGen1(client *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) *gen1 {
+	if user != "" {
+		client.Transport = transport.BasicAuth(user, password, client.Transport)
+	}
+
+	c := &gen1{
+		Helper:  client,
+		uri:     uri,
+		model:   model,
+		channel: channel,
+	}
+
 	// Cached gen1Status
 	c.status = util.ResettableCached(func() (Gen1Status, error) {
 		var gen1StatusResponse Gen1Status
@@ -55,6 +67,8 @@ func (c *gen1) InitApi(uri, user, password string, cache time.Duration) {
 		}
 		return gen1StatusResponse, nil
 	}, cache)
+
+	return c
 }
 
 func (c *gen1) CurrentPower() (float64, error) {
@@ -63,6 +77,7 @@ func (c *gen1) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	switch {
 	case c.channel < len(res.Meters):
 		power = res.Meters[c.channel].Power
@@ -71,6 +86,7 @@ func (c *gen1) CurrentPower() (float64, error) {
 	default:
 		return 0, errors.New("invalid channel, missing power meter")
 	}
+
 	return power, nil
 }
 
@@ -99,6 +115,7 @@ func (c *gen1) TotalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	switch {
 	case c.channel < len(res.Meters):
 		energy = res.Meters[c.channel].Total - res.Meters[c.channel].Total_Returned
@@ -118,6 +135,7 @@ func (c *gen1) Currents() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Current, 0, 0, nil
@@ -133,6 +151,7 @@ func (c *gen1) Voltages() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Voltage, 0, 0, nil
@@ -148,6 +167,7 @@ func (c *gen1) Powers() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+
 	switch {
 	case c.channel < len(res.Meters):
 		return res.Meters[c.channel].Power, 0, 0, nil
