@@ -72,10 +72,10 @@ type gen2 struct {
 	model        string
 	profile      string
 	switchstatus util.Cacheable[Gen2SwitchStatus]
-	em1status    util.Cacheable[Gen2EM1Status]
-	em1data      util.Cacheable[Gen2EM1Data]
-	emstatus     util.Cacheable[Gen2EMStatus]
-	emdata       util.Cacheable[Gen2EMData]
+	em1status    func() (Gen2EM1Status, error)
+	em1data      func() (Gen2EM1Data, error)
+	emstatus     func() (Gen2EMStatus, error)
+	emdata       func() (Gen2EMData, error)
 }
 
 func apiCall[T any](c *gen2, api string) func() (T, error) {
@@ -106,10 +106,10 @@ func newGen2(helper *request.Helper, uri, model, profile string, channel int, us
 	}
 
 	c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
-	c.em1status = util.ResettableCached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
-	c.em1data = util.ResettableCached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.ResettableCached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
-	c.emdata = util.ResettableCached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
+	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
 
 	return c
 }
@@ -145,12 +145,12 @@ func (c *gen2) CurrentPower() (float64, error) {
 
 		// Endpoint EM1.GetStatus
 	case c.hasEMEndpoint() && c.profile == "monophase":
-		res, err := c.em1status.Get()
+		res, err := c.em1status()
 		return res.ActPower, err
 
 		// Endpoint EM.GetStatus
 	case c.hasEMEndpoint() && c.profile == "triphase":
-		res, err := c.emstatus.Get()
+		res, err := c.emstatus()
 		return res.TotalActPower, err
 
 	default:
@@ -183,11 +183,11 @@ func (c *gen2) TotalEnergy() (float64, error) {
 		return res.Aenergy.Total / 1000, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
-		res, err := c.em1data.Get()
+		res, err := c.em1data()
 		return res.TotalActEnergy / 1000, err
 
 	case c.hasEMEndpoint() && c.profile == "triphase":
-		res, err := c.emdata.Get()
+		res, err := c.emdata()
 		return res.TotalAct / 1000, err
 
 	default:
@@ -203,11 +203,11 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 		return res.Current, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
-		res, err := c.em1status.Get()
+		res, err := c.em1status()
 		return res.Current, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "triphase":
-		res, err := c.emstatus.Get()
+		res, err := c.emstatus()
 		return res.ACurrent, res.BCurrent, res.CCurrent, err
 
 	default:
@@ -223,11 +223,11 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 		return res.Voltage, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
-		res, err := c.em1status.Get()
+		res, err := c.em1status()
 		return res.Voltage, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "triphase":
-		res, err := c.emstatus.Get()
+		res, err := c.emstatus()
 		return res.AVoltage, res.BVoltage, res.CVoltage, err
 
 	default:
@@ -243,11 +243,11 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 		return res.Apower, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
-		res, err := c.em1status.Get()
+		res, err := c.em1status()
 		return res.ActPower, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "triphase":
-		res, err := c.emstatus.Get()
+		res, err := c.emstatus()
 		return res.AActPower, res.BActPower, res.CActPower, err
 
 	default:
