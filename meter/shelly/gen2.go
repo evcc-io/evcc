@@ -178,27 +178,17 @@ func (c *gen2) Enable(enable bool) error {
 // TotalEnergy implements the api.Meter interface
 func (c *gen2) TotalEnergy() (float64, error) {
 	switch {
-
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		if err != nil {
-			return 0, err
-		}
-		return res.Aenergy.Total / 1000, nil
+		return res.Aenergy.Total / 1000, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
 		res, err := c.em1data.Get()
-		if err != nil {
-			return 0, err
-		}
-		return res.TotalActEnergy / 1000, nil
+		return res.TotalActEnergy / 1000, err
 
 	case c.hasEMEndpoint() && c.profile == "triphase":
 		res, err := c.emdata.Get()
-		if err != nil {
-			return 0, err
-		}
-		return res.TotalAct / 1000, nil
+		return res.TotalAct / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -208,13 +198,9 @@ func (c *gen2) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *gen2) Currents() (float64, float64, float64, error) {
 	switch {
-
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		return res.Current, 0, 0, nil
+		return res.Current, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
 		res, err := c.em1status.Get()
@@ -234,10 +220,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 	switch {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		return res.Voltage, 0, 0, nil
+		return res.Voltage, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
 		res, err := c.em1status.Get()
@@ -255,13 +238,9 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 // Powers implements the api.PhasePowers interface
 func (c *gen2) Powers() (float64, float64, float64, error) {
 	switch {
-
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		return res.Apower, 0, 0, nil
+		return res.Apower, 0, 0, err
 
 	case c.hasEMEndpoint() && c.profile == "monophase":
 		res, err := c.em1status.Get()

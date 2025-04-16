@@ -97,15 +97,13 @@ func (c *gen1) Enabled() (bool, error) {
 }
 
 func (c *gen1) Enable(enable bool) error {
-	var err error
 	onoff := map[bool]string{true: "on", false: "off"}
 
 	c.status.Reset()
 
 	var res Gen1SwitchResponse
 	uri := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
-	err = c.GetJSON(uri, &res)
-	return err
+	return c.GetJSON(uri, &res)
 }
 
 func (c *gen1) TotalEnergy() (float64, error) {
@@ -124,9 +122,7 @@ func (c *gen1) TotalEnergy() (float64, error) {
 		return 0, errors.New("invalid channel, missing power meter")
 	}
 
-	energy = gen1Energy(c.model, energy)
-
-	return energy / 1000, nil
+	return c.energy(energy) / 1000, nil
 }
 
 func (c *gen1) Currents() (float64, float64, float64, error) {
@@ -178,9 +174,9 @@ func (c *gen1) Powers() (float64, float64, float64, error) {
 }
 
 // gen1Energy in kWh
-func gen1Energy(devicetype string, energy float64) float64 {
+func (c *gen1) energy(energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes
-	if !strings.Contains(devicetype, "EM") {
+	if !strings.Contains(c.model, "EM") {
 		energy /= 60
 	}
 	return energy
