@@ -97,47 +97,47 @@ func newGen2(helper *request.Helper, uri, model, profile string, channel int, us
 
 	// Cached Gen2StatusGen2SwitchStatus
 	c.switchstatus = util.ResettableCached(func() (Gen2SwitchStatus, error) {
-		var gen2SwitchStatus Gen2SwitchStatus
-		if err := c.execCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2SwitchStatus); err != nil {
+		var res Gen2SwitchStatus
+		if err := c.execCmd("Switch.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
 			return Gen2SwitchStatus{}, err
 		}
-		return gen2SwitchStatus, nil
+		return res, nil
 	}, cache)
 
 	// Cached gen2EM1Status
 	c.em1status = util.ResettableCached(func() (Gen2EM1Status, error) {
-		var gen2EM1Status Gen2EM1Status
-		if err := c.execCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1Status); err != nil {
+		var res Gen2EM1Status
+		if err := c.execCmd("EM1.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
 			return Gen2EM1Status{}, err
 		}
-		return gen2EM1Status, nil
+		return res, nil
 	}, cache)
 
 	// Cached gen2EM1Data
 	c.em1data = util.ResettableCached(func() (Gen2EM1Data, error) {
-		var gen2EM1Data Gen2EM1Data
-		if err := c.execCmd("EM1Data.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EM1Data); err != nil {
+		var res Gen2EM1Data
+		if err := c.execCmd("EM1Data.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
 			return Gen2EM1Data{}, err
 		}
-		return gen2EM1Data, nil
+		return res, nil
 	}, cache)
 
 	// Cached gen2EMStatus
 	c.emstatus = util.ResettableCached(func() (Gen2EMStatus, error) {
-		var gen2EMStatus Gen2EMStatus
-		if err := c.execCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMStatus); err != nil {
+		var res Gen2EMStatus
+		if err := c.execCmd("EM.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
 			return Gen2EMStatus{}, err
 		}
-		return gen2EMStatus, nil
+		return res, nil
 	}, cache)
 
 	// Cached gen2EMData
 	c.emdata = util.ResettableCached(func() (Gen2EMData, error) {
-		var gen2EMData Gen2EMData
-		if err := c.execCmd("EMData.GetStatus?id="+strconv.Itoa(c.channel), false, &gen2EMData); err != nil {
+		var res Gen2EMData
+		if err := c.execCmd("EMData.GetStatus?id="+strconv.Itoa(c.channel), false, &res); err != nil {
 			return Gen2EMData{}, err
 		}
-		return gen2EMData, nil
+		return res, nil
 	}, cache)
 
 	return c

@@ -60,12 +60,11 @@ func newGen1(client *request.Helper, uri, model string, channel int, user, passw
 
 	// Cached gen1Status
 	c.status = util.ResettableCached(func() (Gen1Status, error) {
-		var gen1StatusResponse Gen1Status
-		err := c.GetJSON(fmt.Sprintf("%s/status", uri), &gen1StatusResponse)
-		if err != nil {
+		var res Gen1Status
+		if err := c.GetJSON(fmt.Sprintf("%s/status", uri), &res); err != nil {
 			return Gen1Status{}, err
 		}
-		return gen1StatusResponse, nil
+		return res, nil
 	}, cache)
 
 	return c
