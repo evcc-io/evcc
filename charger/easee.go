@@ -345,18 +345,20 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	default:
 	}
 
-	// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE
-	allKeysPresent := true
-	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE} {
-		if _, exists := c.obsTime[key]; !exists {
-			allKeysPresent = false
-		}
-	}
-
-	if allKeysPresent {
+	if c.checkInitialStatePresent() {
 		// startup completed
 		c.startDone()
 	}
+}
+
+// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE
+func (c *Easee) checkInitialStatePresent() bool {
+	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE, easee.TOTAL_POWER} {
+		if _, exists := c.obsTime[key]; !exists {
+			return false
+		}
+	}
+	return true
 }
 
 // ChargerUpdate implements the signalr receiver
