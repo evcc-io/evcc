@@ -55,6 +55,7 @@ type Easee struct {
 	smartCharging         bool
 	authorize             bool
 	enabled               bool
+	initialStatePresent   bool
 	opMode                int
 	pilotMode             string
 	reasonForNoCurrent    int
@@ -345,8 +346,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	default:
 	}
 
-	if c.checkInitialStatePresent() {
+	if !c.initialStatePresent && c.checkInitialStatePresent() {
 		// startup completed
+		c.initialStatePresent = true
 		c.startDone()
 	}
 }
