@@ -23,7 +23,7 @@ package charger
 //   -> Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
 // * Set 'Allow UID Disclose' to On
 
-// Supports dynamic phase switching for Mennekes Amtron 4You 5xx Series
+// Supports dynamic phase switching for Mennekes Amtron 4You 5xx Series and 4Business 7xx (same charger type, but with Eichrecht)
 
 import (
 	"context"
@@ -60,7 +60,7 @@ const (
 	bendRegEVCCID             = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
 	bendRegHemsCurrentLimit   = 1000 // Current limit of the HEMS module (A)
 	amtronRegHemsCurrentLimit = 1001 // Current limit of the HEMS module (0.1 A) only used for Amtron 4You
-	amtronRegHemsPowerLimit   = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You
+	amtronRegHemsPowerLimit   = 1002 // Power limit of the HEMS module (W) only used for Amtron 4You (SW >=1.1)
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
@@ -119,7 +119,8 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		wb.legacy = true
 		wb.model = "bender"
 	} else {
-		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") {
+		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") || 
+			strings.Contains(strings.ToLower(string(bModel[:])), "4business") {
 			wb.model = "4you"
 		}
 	}
@@ -374,9 +375,9 @@ func (wb *BenderCC) Phases1p3p(phases int) error {
 
 		b := make([]byte, 2)
 		if phases == 1 {
-			binary.BigEndian.PutUint16(b, uint16(3500))
+			binary.BigEndian.PutUint16(b, uint16(3680)) // use max. 1-phase power, no offset needed because of gap to 4140W
 		} else {
-			binary.BigEndian.PutUint16(b, uint16(4500))
+			binary.BigEndian.PutUint16(b, uint16(4500)) // use min. 3-phase power plus offset to stay safely on 3 phases
 		}
 
 		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
