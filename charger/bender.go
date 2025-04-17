@@ -119,7 +119,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		wb.legacy = true
 		wb.model = "bender"
 	} else {
-		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") || 
+		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") ||
 			strings.Contains(strings.ToLower(string(bModel[:])), "4business") {
 			wb.model = "4you"
 		}
@@ -231,21 +231,39 @@ func (wb *BenderCC) Enable(enable bool) error {
 		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
 
 		return err
+
 	} else {
+
 		powerlimit, err1 := wb.CalculatePowerLimit(wb.current)
 
 		if err1 != nil {
 			return fmt.Errorf("error calculating power limit: %v", err1)
 		}
 
-		b := make([]byte, 2)
+		bp := make([]byte, 2)
 		if enable {
-			binary.BigEndian.PutUint16(b, uint16(powerlimit))
+			binary.BigEndian.PutUint16(bp, uint16(powerlimit))
+		} else {
+			binary.BigEndian.PutUint16(bp, uint16(0))
 		}
 
-		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+		_, err_p := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp)
 
-		return err
+		if err_p != nil {
+			return fmt.Errorf("Error setting HEMS Power Limit: %v", err_p)
+		}
+
+		bc := make([]byte, 2)
+		if enable {
+			binary.BigEndian.PutUint16(bc, uint16(16))
+		} else {
+			binary.BigEndian.PutUint16(bc, uint16(0))
+		}
+
+		_, err_c := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, bc)
+
+		return err_c
+
 	}
 }
 
