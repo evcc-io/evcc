@@ -2,11 +2,14 @@ package charger
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,9 +26,11 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 }
 
 func newEasee() Easee {
+	log := util.NewLogger("easee")
 	return Easee{
+		Helper:    request.NewHelper(log),
 		obsTime:   make(map[easee.ObservationID]time.Time),
-		log:       util.NewLogger("easee"),
+		log:       log,
 		startDone: func() {},
 	}
 }
@@ -112,5 +117,59 @@ func TestInExpectedOpMode(t *testing.T) {
 		e.opMode = tc.opMode
 		res := e.inExpectedOpMode(tc.enable)
 		assert.Equal(t, tc.expect, res)
+	}
+}
+
+func TestEasee_waitForTickResponse(t *testing.T) {
+
+	// Define test cases
+	testCases := []struct {
+		name         string
+		expectedTick int64
+		cmdCValue    *easee.SignalRCommandResponse
+		expectedErr  error
+	}{
+		{
+			name:         "Success - Tick Found",
+			expectedTick: 123,
+			cmdCValue:    &easee.SignalRCommandResponse{Ticks: 123, WasAccepted: true},
+			expectedErr:  nil,
+		},
+		{
+			name:         "Success - Tick Found, but Rejected",
+			expectedTick: 456,
+			cmdCValue:    &easee.SignalRCommandResponse{Ticks: 456, WasAccepted: false},
+			expectedErr:  fmt.Errorf("command rejected: %d", 456),
+		},
+		{
+			name:         "Timeout",
+			expectedTick: 789,
+			expectedErr:  api.ErrTimeout,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			e := newEasee()
+			e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
+
+			// Set up the command channel for test and Easee to share
+			cmdC := make(chan easee.SignalRCommandResponse, 1) // make it buffered for ease of testing
+			e.cmdC = cmdC
+
+			if tc.cmdCValue != nil {
+				cmdC <- *tc.cmdCValue
+			}
+
+			err := e.waitForTickResponse(tc.expectedTick)
+
+			// Assert the result
+			if tc.expectedErr != nil {
+				assert.EqualError(t, err, tc.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
