@@ -681,6 +681,8 @@ var _ api.MeterEnergy = (*Easee)(nil)
 func (c *Easee) TotalEnergy() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+	// updates for this are only sent once an hour, so inaccurate by design
+	// see also https://github.com/evcc-io/evcc/issues/20594
 	return c.totalEnergy, nil
 }
 
