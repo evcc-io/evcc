@@ -90,7 +90,7 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (a
 	return NewBenderCC(ctx, cc.URI, cc.ID)
 }
 
-//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error) {
@@ -119,7 +119,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		wb.legacy = true
 		wb.model = "bender"
 	} else {
-		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") || 
+		if strings.Contains(strings.ToLower(string(bModel[:])), "4you") ||
 			strings.Contains(strings.ToLower(string(bModel[:])), "4business") {
 			wb.model = "4you"
 		}
@@ -162,7 +162,14 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify), nil
+	// decorate phases - phases1p3p is only available for Amtron 4You
+	// option should not be available in GUI for other models
+	var phases1p3p func(int) error
+	if wb.model == "4you" {
+		phases1p3p = wb.phases1p3p
+	}
+
+	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, phases1p3p), nil
 }
 
 // Status implements the api.Charger interface
@@ -369,7 +376,7 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(bendRegVoltages, 1)
 }
 
-func (wb *BenderCC) Phases1p3p(phases int) error {
+func (wb *BenderCC) phases1p3p(phases int) error {
 	if wb.model == "4you" {
 		fmt.Printf("Switching to %d phases\n", phases)
 
