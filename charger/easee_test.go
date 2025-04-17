@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -172,4 +173,24 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEasee_postJsonAndWait_SyncReply(t *testing.T) {
+
+	e := newEasee()
+	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, "TESTTEST")
+
+	httpmock.ActivateNonDefault(e.Client)
+	httpmock.RegisterResponder("POST", uri,
+		httpmock.NewBytesResponder(200, nil))
+
+	enabled := true
+	data := easee.ChargerSettings{
+		Enabled: &enabled,
+	}
+
+	noop, err := e.postJSONAndWait(uri, data)
+
+	assert.False(t, noop)
+	assert.NoError(t, err)
 }
