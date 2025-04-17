@@ -83,3 +83,34 @@ func TestProductUpdate_ChargeStartSessionEnergy(t *testing.T) {
 	assert.Equal(t, float64(0), e.sessionEnergy)
 	assert.NotEqual(t, t_minus_5, e.obsTime[easee.SESSION_ENERGY])
 }
+
+// TestInExpectedOpMode tests the inExpectedOpMode function with different scenarios
+func TestInExpectedOpMode(t *testing.T) {
+
+	tc := []struct {
+		opMode int
+		enable bool
+		expect bool
+	}{
+		{easee.ModeDisconnected, false, false},
+		{easee.ModeAwaitingAuthentication, false, true},
+		{easee.ModeAwaitingStart, false, true},
+		{easee.ModeOffline, false, false},
+
+		//enable cases
+		{easee.ModeAwaitingAuthentication, true, false},
+		{easee.ModeOffline, true, false},
+		{easee.ModeCharging, true, true},
+		{easee.ModeCompleted, true, true},
+		{easee.ModeAwaitingStart, true, true},
+		{easee.ModeReadyToCharge, true, true},
+	}
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		e := newEasee()
+		e.opMode = tc.opMode
+		res := e.inExpectedOpMode(tc.enable)
+		assert.Equal(t, tc.expect, res)
+	}
+}
