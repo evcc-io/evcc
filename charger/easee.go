@@ -60,7 +60,6 @@ type Easee struct {
 	pilotMode             string
 	reasonForNoCurrent    int
 	phaseMode             int
-	sessionStartEnergy    *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid      string
@@ -294,11 +293,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.sessionEnergy = value.(float64)
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
-		// Remember value of LIFETIME_ENERGY as start value of the charging session
-		if c.sessionStartEnergy == nil {
-			f := c.totalEnergy
-			c.sessionStartEnergy = &f
-		}
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -317,17 +311,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
-
 	case easee.CHARGER_OP_MODE:
-		opMode := value.(int)
-
-		// New charging session pending, reset sessionStartEnergy
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
-			c.sessionStartEnergy = nil
-		}
-
-		c.opMode = opMode
-
+		c.opMode = value.(int)
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	case easee.PILOT_MODE:
@@ -678,14 +663,6 @@ var _ api.ChargeRater = (*Easee)(nil)
 func (c *Easee) ChargedEnergy() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-
-	// return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value),
-	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
-	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
-	if c.sessionStartEnergy != nil {
-		return max(c.sessionEnergy, c.totalEnergy-*c.sessionStartEnergy), nil
-	}
-
 	return c.sessionEnergy, nil
 }
 
