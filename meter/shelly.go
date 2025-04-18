@@ -12,7 +12,7 @@ import (
 
 // Shelly meter considering usage
 type Shelly struct {
-	conn  *shelly.Connection
+	shelly.Connection
 	usage string
 }
 
@@ -20,8 +20,6 @@ type Shelly struct {
 func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
-
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
@@ -49,25 +47,18 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 	if err != nil {
 		return nil, err
 	}
-
 	c := &Shelly{
-		conn:  conn,
-		usage: usage,
+		Connection: *conn,
+		usage:      usage,
 	}
-
-	var currents, voltages, powers func() (float64, float64, float64, error)
-	currents = c.currents
-	voltages = c.voltages
-	powers = c.powers
-
-	return decorateShelly(c, voltages, currents, powers), nil
+	return c, nil
 }
 
 var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	power, err := c.conn.CurrentPower()
+	power, err := c.Connection.CurrentPower()
 	if err != nil {
 		return 0, err
 	}
@@ -75,26 +66,4 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		power = math.Abs(power)
 	}
 	return power, nil
-}
-
-var _ api.MeterEnergy = (*Shelly)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Shelly) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
-}
-
-// currents implements the api.PhaseCurrents interface
-func (c *Shelly) currents() (float64, float64, float64, error) {
-	return c.conn.Currents()
-}
-
-// voltages implements the api.PhaseVoltages interface
-func (c *Shelly) voltages() (float64, float64, float64, error) {
-	return c.conn.Voltages()
-}
-
-// powers implements the api.PhaseVoltages interface
-func (c *Shelly) powers() (float64, float64, float64, error) {
-	return c.conn.Powers()
 }
