@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/shelly"
@@ -10,7 +11,7 @@ import (
 
 // Shelly charger implementation
 type Shelly struct {
-	conn *shelly.Switch
+	conn *shelly.Connection
 	*switchSocket
 }
 
@@ -18,33 +19,50 @@ func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
 
+//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
+
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
+	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
 		Password     string
 		Channel      int
 		StandbyPower float64
+		Cache        time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	c, err := NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	var vol, cur, pow func() (float64, float64, float64, error)
+	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
+		vol = phases.Voltages
+		cur = phases.Currents
+		pow = phases.Powers
+	}
+
+	return decorateShelly(c, vol, cur, pow), nil
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
-	conn, err := shelly.NewConnection(uri, user, password, channel)
+func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (*Shelly, error) {
+	conn, err := shelly.NewConnection(uri, user, password, channel, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Shelly{
-		conn: shelly.NewSwitch(conn),
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
