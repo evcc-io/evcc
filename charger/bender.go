@@ -202,12 +202,21 @@ func (wb *BenderCC) Enabled() (bool, error) {
 
 		return binary.BigEndian.Uint16(b) != 0, nil
 	} else {
-		b, err := wb.conn.ReadHoldingRegisters(amtronRegHemsPowerLimit, 1)
-		if err != nil {
-			return false, err
+
+		// Check if the charger is enabled by reading the HEMS Power and Current limits.
+		// If both limit are non-zero, the charger is enabled.
+		// If either limit is zero, the charger is disabled.
+		bPower, errPower := wb.conn.ReadHoldingRegisters(amtronRegHemsPowerLimit, 1)
+		if errPower != nil {
+			return false, errPower
 		}
 
-		return binary.BigEndian.Uint16(b) != 0, nil
+		bCurrent, errCurrent := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
+		if errCurrent != nil {
+			return false, errCurrent
+		}
+
+		return binary.BigEndian.Uint16(bPower) != 0 && binary.BigEndian.Uint16(bCurrent) != 0, nil
 	}
 }
 
@@ -218,6 +227,11 @@ func (wb *BenderCC) CalculatePowerLimit(current float64) (float64, error) {
 		return 0, fmt.Errorf("error reading voltages: %v", err)
 	}
 
+	// Calculate the power limit for the AMTRON 4You charger.
+	// Ensure that the resulting power corresponds to at least 6A charging current
+	// to guarantee charging functionality.
+	// Use the maximum voltage among the three phases,
+	// applying a 2% tolerance to account for voltage fluctuations.
 	maxVoltage := math.Max(v1, math.Max(v2, v3))
 	maxVoltageTol := maxVoltage * 1.02
 
@@ -240,7 +254,10 @@ func (wb *BenderCC) Enable(enable bool) error {
 		return err
 
 	} else {
+		// Ensure the current limit is set to address potential issues with undefined states
+		// that may occur after charger timeouts or reboots.
 
+		// Calculate the power limit based on the current setting.
 		powerlimit, err1 := wb.CalculatePowerLimit(wb.current)
 
 		if err1 != nil {
@@ -248,28 +265,28 @@ func (wb *BenderCC) Enable(enable bool) error {
 		}
 
 		bp := make([]byte, 2)
+		bc := make([]byte, 2)
+
+		// If enabling, set HEMS Power to the calculated power limit and HEMS Current to 16A
+		// If disabling, set both HEMS Power and HEMS Current to 0
 		if enable {
-			binary.BigEndian.PutUint16(bp, uint16(powerlimit))
+			binary.BigEndian.PutUint16(bp, uint16(powerlimit)) // Set power limit
+			binary.BigEndian.PutUint16(bc, uint16(16))         // Set current limit to 16A
 		} else {
-			binary.BigEndian.PutUint16(bp, uint16(0))
+			binary.BigEndian.PutUint16(bp, uint16(0)) // Disable power limit
+			binary.BigEndian.PutUint16(bc, uint16(0)) // Disable current limit
 		}
 
 		_, err_p := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp)
-
-		if err_p != nil {
-			return fmt.Errorf("Error setting HEMS Power Limit: %v", err_p)
-		}
-
-		bc := make([]byte, 2)
-		if enable {
-			binary.BigEndian.PutUint16(bc, uint16(16))
-		} else {
-			binary.BigEndian.PutUint16(bc, uint16(0))
-		}
-
 		_, err_c := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, bc)
 
-		return err_c
+		// If there are errors in either of the writes, return a combined error message
+		if err_p != nil || err_c != nil {
+			return fmt.Errorf("Error setting HEMS Power Limit: %v, Error setting HEMS Current Limit: %v", err_p, err_c)
+		}
+
+		// Return nil if both operations succeed
+		return nil
 
 	}
 }
@@ -279,6 +296,7 @@ var _ api.ChargerEx = (*BenderCC)(nil)
 // MaxCurrent implements the api.Charger interface
 func (wb *BenderCC) MaxCurrentMillis(current float64) error {
 
+	// Calculate the power limit based on the current setting.
 	powerlimit, err1 := wb.CalculatePowerLimit(current)
 	if err1 != nil {
 		return fmt.Errorf("error calculating power limit: %v", err1)
@@ -289,12 +307,11 @@ func (wb *BenderCC) MaxCurrentMillis(current float64) error {
 
 	_, err_sp := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp)
 
-	if err_sp == nil {
-		wb.current = current
-		return nil
-	} else {
+	if err_sp != nil {
 		return fmt.Errorf("Error setting HEMS power: %v", err_sp)
 	}
+	wb.current = current
+	return nil
 
 }
 
@@ -304,6 +321,7 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
+	// use power setpoint based on milliampere values for AMTRON 4You
 	if wb.model == "4you" {
 		return wb.MaxCurrentMillis(float64(current))
 	}
@@ -400,9 +418,14 @@ func (wb *BenderCC) phases1p3p(phases int) error {
 
 		b := make([]byte, 2)
 		if phases == 1 {
-			binary.BigEndian.PutUint16(b, uint16(3680)) // use max. 1-phase power, no offset needed because of gap to 4140W
+			// Set the power limit to a minimum value for single-phase operation (1500W).
+			// This includes an offset to ensure the charger remains safely in single-phase mode.
+			// Helps avoid unexpected behavior in "PV+Min" mode when PV power is below 6A.
+			binary.BigEndian.PutUint16(b, uint16(1500))
 		} else {
-			binary.BigEndian.PutUint16(b, uint16(4500)) // use min. 3-phase power plus offset to stay safely on 3 phases
+			// Set the power limit to a minimum value for three-phase operation (4500W).
+			// This includes an offset to ensure the charger remains safely in three-phase mode.
+			binary.BigEndian.PutUint16(b, uint16(4500))
 		}
 
 		_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
