@@ -67,7 +67,7 @@ export default {
 				{
 					key: "finished",
 					value: this.fmtHourMinute(this.finishTime),
-					available: this.finishTime,
+					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
 					key: "duration",
