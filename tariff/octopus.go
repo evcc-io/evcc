@@ -16,11 +16,12 @@ import (
 )
 
 type Octopus struct {
-	log         *util.Logger
-	region      string
-	productCode string
-	apikey      string
-	data        *util.Monitor[api.Rates]
+	log           *util.Logger
+	region        string
+	productCode   string
+	apikey        string
+	paymentMethod string
+	data          *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -34,6 +35,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Region      string
 		Tariff      string // DEPRECATED: use ProductCode
 		ProductCode string
+		DirectDebit bool
 		ApiKey      string
 	}
 
@@ -65,13 +67,18 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}
-
+	paymentMethod := octoRest.RatePaymentMethodDirectDebit
+	if !cc.DirectDebit {
+		// Not using Direct Debit, filter by non-Direct Debit tariff entries
+		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
+	}
 	t := &Octopus{
-		log:         logger,
-		region:      cc.Region,
-		productCode: cc.ProductCode,
-		apikey:      cc.ApiKey,
-		data:        util.NewMonitor[api.Rates](2 * time.Hour),
+		log:           logger,
+		region:        cc.Region,
+		productCode:   cc.ProductCode,
+		apikey:        cc.ApiKey,
+		paymentMethod: paymentMethod,
+		data:          util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -122,11 +129,23 @@ func (t *Octopus) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
+			if t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
+				// A Payment Method filter is set, and this Tariff entry does not match our filter.
+				continue
+			}
+			// ValidityEnd can be zero (wonderful) which just means that the tariff has no present expected end.
+			// We need to catch that and set the date to something way in the future.
+			rateEnd := r.ValidityEnd
+			if rateEnd.IsZero() {
+				t.log.DEBUG.Printf("handling rate with indefinite length: %v", r.ValidityStart)
+				// Currently adds a year from the start date
+				rateEnd = r.ValidityStart.AddDate(1, 0, 0)
+			}
 			ar := api.Rate{
 				Start: r.ValidityStart,
-				End:   r.ValidityEnd,
+				End:   rateEnd,
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
-				Price: r.PriceInclusiveTax / 1e2,
+				Value: r.PriceInclusiveTax / 1e2,
 			}
 			data = append(data, ar)
 		}

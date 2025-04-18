@@ -8,15 +8,26 @@ declare global {
 
 export interface State {
 	offline: boolean;
+	startup?: boolean;
 	loadpoints: [];
 	forecast?: any;
 	currency?: CURRENCY;
+	fatal?: {
+		error: any;
+	};
 }
 
 export enum CURRENCY {
 	EUR = "EUR",
 	USD = "USD",
 	DKK = "DKK",
+}
+export interface Battery {
+	power: number;
+	soc: number;
+	controllable: boolean;
+	capacity: number; // 0 when not specified
+	title?: string;
 }
 
 export interface Vehicle {
@@ -35,10 +46,29 @@ export interface Tariff {
 	lastUpdate: Date;
 }
 
+// data from api with string-based timestamps
+export interface RateRaw {
+	start: string;
+	end: string;
+	value: number;
+}
+
 export interface Rate {
 	start: Date;
 	end: Date;
-	price: number;
+	value: number;
+}
+
+export interface Slot {
+	day: string;
+	value?: number;
+	startHour: number;
+	endHour: number;
+	charging: boolean;
+	toLate?: boolean | null;
+	warning?: boolean | null;
+	isTarget?: boolean | null;
+	selectable?: boolean | null;
 }
 
 export interface SelectOption<T> {

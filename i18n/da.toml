@@ -26,6 +26,11 @@ never = "kun med nok overskud."
 
 [config]
 
+[config.aux]
+description = "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt."
+titleAdd = "Tilføj selvregulerende forbrugsenhed"
+titleEdit = "Rediger selvregulerende forbrugsenhed"
+
 [config.battery]
 titleAdd = "Tilføj batteri"
 titleEdit = "Rediger batteri"
@@ -37,6 +42,7 @@ titleEdit = "Ændre opladningsmåler"
 [config.charger]
 chargers = "EV opladere"
 generic = "Generisk integration"
+heatingdevices = "Varmeenheder"
 ocppHelp = "Kopier denne adresse til opladerens konfiguration"
 ocppLabel = "OCPP-Server URL"
 switchsockets = "Omskiftelige stikkontakter"
@@ -94,6 +100,7 @@ range = "Rækkevidde"
 singlePhase = "Enkelt fase"
 soc = "Oplader"
 socLimit = "Begrænsning"
+solarForecast = "Sol prognose"
 temp = "Temperatur"
 topic = "Emne"
 url = "URL"
@@ -105,11 +112,22 @@ A = "A (ikke forbundet)"
 B = "B (forbundet)"
 C = "C (oplader)"
 
+[config.devices]
+auxMeter = "Smart forbrugsenhed"
+batteryStorage = "Batterilagring"
+solarSystem = "Solcelleanlæg"
+
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
 title = "EEBus"
 
+[config.ext]
+description = "Kan bruges til belastningsstyring eller statistikformål."
+titleAdd = "Tilføj ekstern måler"
+titleEdit = "Rediger ekstern måler"
+
 [config.form]
+danger = "Pas på"
 deprecated = "forældet"
 example = "Eksempel"
 optional = "valgfrit"
@@ -128,6 +146,7 @@ remove = "Fjern"
 save = "Gem"
 showAdvancedSettings = "Vis avancerede indstillinger"
 telemetry = "Telemetri"
+templateLoading = "Indlæser..."
 title = "Titel"
 validateSave = "Valider & gem"
 
@@ -192,6 +211,7 @@ phasesAutomatic = "Automatisk fase-valg"
 phasesAutomaticHelp = "Din oplader understøtter automatisk skift mellem 1- og 3-faset opladning. I hovedmenuen kan du justere faseadfærd under opladning."
 phasesHelp = "Antal faser forbundet til opladeren."
 phasesLabel = "Faser"
+pollIntervalDanger = "Regelmæssig forespørgsel på køretøjet kan dræne køretøjets batteri. Nogle køretøjsproducenter kan aktivt forhindre opladning i dette tilfælde. Anbefales ikke! Brug kun dette, hvis du er opmærksom på risiciene."
 pollIntervalHelp = "Tid mellem køretøjets API-opdateringer. Korte intervaller kan dræne køretøjets batteri."
 pollIntervalLabel = "Opdateringsinterval"
 pollModeAlways = "altid"
@@ -231,6 +251,7 @@ vehicleLabel = "Standard køretøj"
 vehiclesTitle = "Køretøjer"
 
 [config.main]
+addAdditional = "Tilføj en ekstra måler"
 addGrid = "Tilføj måler til elnet"
 addLoadpoint = "Tilføj opladningspunkt"
 addPvBattery = "Tilføj solpanel eller batteri"
@@ -255,6 +276,12 @@ save = "Gem"
 template = "Fabrikant"
 titleChoice = "Hvad ønsker du at tilføje?"
 validateSave = "Valider og gem"
+
+[config.meter.option]
+aux = "Tilføj selvregulerende forbrugsenhed"
+battery = "Tilføj batterimåler"
+ext = "Tilføj en ekstra måler"
+pv = "Tilføj en solenergimåler"
 
 [config.modbusproxy]
 description = "Tillad flere klienter at få adgang til en enkelt Modbus-enhed."
@@ -311,6 +338,7 @@ titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
 
 [config.section]
+additionalMeter = "Tilføj ekstra målere"
 general = "Generelle"
 grid = "Elnettet"
 integrations = "Integrationer"
@@ -362,10 +390,23 @@ validate = "validerer"
 
 [config.vehicle]
 cancel = "Annuller"
+chargingSettings = "Opladnings indstillinger"
+defaultMode = "Standardtilstand"
+defaultModeHelp = "Opladnings tilstand når køretøj forbindes"
 delete = "Slet"
 generic = "Andre integrationer"
+identifiers = "RFID identifikatorer"
+identifiersHelp = "Liste over RFID-strenge til at identificere køretøjet. En indtastning pr. linje. Den aktuelle identifikator kan findes på det respektive ladepunkt på oversigtssiden."
+maximumCurrent = "Maksimal strømstyrke"
+maximumCurrentHelp = "Skal være højere end minimal strømstyrke"
+maximumPhases = "Maksimal antal faser"
+maximumPhasesHelp = "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed."
+minimumCurrent = "Minimal strømstyrke"
+minimumCurrentHelp = "Gå kun under 6A, hvis du ved, hvad du har med at gøre."
 offline = "Generisk køretøj"
 online = "Køretøj med online API"
+priority = "Prioritet"
+priorityHelp = "Højere prioritet betyder, at dette køretøj får fortrin til soloverskud."
 save = "Gem"
 scooter = "Knallert/Scooter"
 template = "Fabrikant"
@@ -571,6 +612,7 @@ gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
 noEnergy = "Ingen målerdata"
+pv = "Solcelleanlæg"
 pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
@@ -579,6 +621,7 @@ selfConsumption = "Eget forbrug"
 charging = "Opvarmer..."
 cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
 cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
+connected = "Standby"
 vehicleLimit = "Opvarmning begrænsning"
 waitForVehicle = "Klar. Venter på varmelegeme..."
 
@@ -653,6 +696,7 @@ costLimitIgnore = "Den konfigurerede {limit} vil blive ignoreret i denne periode
 currentPlan = "Aktiv plan"
 descriptionEnergy = "Hvornår skal {targetEnergy} være sendt til køretøjet?"
 descriptionSoc = "Hvornår skal køretøjet være opladet til {targetSoc}?"
+goalReached = "Mål er allerede nået"
 inactiveLabel = "Planlagt tid"
 modalTitle = "Sæt måltid"
 nextPlan = "Næste plan"

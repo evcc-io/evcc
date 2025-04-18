@@ -51,6 +51,9 @@
 						{{ selectedPreviewPlanTitle }}
 					</span>
 				</CustomSelect>
+				<span v-else-if="alreadyReached">
+					{{ $t("main.targetCharge.goalReached") }}
+				</span>
 				<span v-else>
 					{{ nextPlanTitle }}
 				</span>
@@ -72,9 +75,9 @@ import collector from "../../mixins/collector.js";
 import api, { allowClientError } from "../../api.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "../../utils/deepEqual.js";
+import convertRates from "../../utils/convertRates";
 import { defineComponent, type PropType } from "vue";
 import type { Vehicle, PartialBy, Timeout, Tariff, SelectOption, CURRENCY } from "../../types/evcc";
-
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -168,6 +171,9 @@ export default defineComponent({
 
 			return options;
 		},
+		alreadyReached(): boolean {
+			return this.plan.duration === 0;
+		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
 		},
@@ -175,14 +181,14 @@ export default defineComponent({
 	watch: {
 		effectivePlanTime(newValue: string) {
 			if (null !== newValue) {
-				this.fetchPlanDebounced();
+				this.updatePlanDebounced();
 			}
 		},
 		staticPlan: {
 			deep: true,
 			handler(vNew: StaticPlan, vOld: StaticPlan) {
 				if (!deepEqual(vNew, vOld)) {
-					this.fetchPlanDebounced();
+					this.updatePlanDebounced();
 				}
 			},
 		},
@@ -191,20 +197,20 @@ export default defineComponent({
 			handler(vNew: RepeatingPlan[], vOld: RepeatingPlan[]) {
 				if (!deepEqual(vNew, vOld)) {
 					this.adjustPreviewId();
-					this.fetchPlanDebounced();
+					this.updatePlanDebounced();
 				}
 			},
 		},
 	},
 	mounted(): void {
-		this.fetchPlanDebounced();
+		this.updatePlanDebounced();
 	},
 	methods: {
 		selectPreviewPlan(id: number): void {
 			this.selectedPreviewId = id;
-			this.updatePlanPreviewDebounced();
+			this.updatePlanDebounced();
 		},
-		async fetchPlanDebounced() {
+		async updatePlanDebounced() {
 			if (this.noActivePlan) {
 				await this.updatePlanPreviewDebounced();
 			} else {
@@ -217,6 +223,7 @@ export default defineComponent({
 			}
 		},
 		async updateActivePlan(): Promise<void> {
+			await this.updateTariff();
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res?.data.result ?? ({} as PlanWrapper);
@@ -224,7 +231,6 @@ export default defineComponent({
 			} catch (e) {
 				console.error(e);
 			}
-			await this.updateTariff();
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
@@ -260,8 +266,10 @@ export default defineComponent({
 			}
 		},
 		async updatePreviewPlan(): Promise<void> {
-			// only show preview of no plan is active
+			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
+
+			await this.updateTariff();
 
 			try {
 				let planRes: PlanResponse | undefined = undefined;
@@ -295,7 +303,6 @@ export default defineComponent({
 					planRes = await this.fetchRepeatingPreview({ weekdays, soc, time, tz });
 				}
 				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
-				await this.updateTariff();
 			} catch (e) {
 				console.error(e);
 			}
@@ -309,10 +316,10 @@ export default defineComponent({
 				return;
 			}
 
-			const tariffRes = await api.get(`tariff/planner`, allowClientError);
+			const res = await api.get(`tariff/planner`, allowClientError);
 
 			this.tariff = {
-				rates: tariffRes.status === 404 ? [] : tariffRes.data.result.rates,
+				rates: res.status === 404 ? [] : convertRates(res.data.result.rates),
 				lastUpdate: new Date(),
 			};
 		},

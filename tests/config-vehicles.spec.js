@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -42,23 +42,28 @@ test.describe("vehicles", async () => {
 
     // edit #1
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(vehicleModal);
     await expect(vehicleModal.getByLabel("Title")).toHaveValue("Green Car");
     await vehicleModal.getByLabel("Title").fill("Fancy Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
-
+    await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Fancy Car/);
 
     // delete #1
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Yellow Van/);
 
     // delete #2
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
   });
@@ -177,6 +182,7 @@ test.describe("vehicles", async () => {
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();

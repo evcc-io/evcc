@@ -32,14 +32,3 @@ export interface StaticEnergyPlan {
 	energy: number;
 	time: Date;
 }
-
-export interface Slot {
-	day: string;
-	price?: number;
-	startHour: number;
-	endHour: number;
-	charging: boolean;
-	toLate?: boolean | null;
-	warning?: boolean | null;
-	isTarget?: boolean | null;
-}
