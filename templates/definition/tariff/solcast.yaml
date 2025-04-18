@@ -26,7 +26,6 @@ params:
       en: Start of API calls
       de: Beginn der API Aufrufe
   - name: to
-    default: 20
     help:
       en: End of API calls
       de: Ende der API Aufrufe
