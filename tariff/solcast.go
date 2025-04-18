@@ -24,15 +24,6 @@ type Solcast struct {
 	data   *util.Monitor[api.Rates]
 }
 
-type FromTo struct {
-	From, To int
-}
-
-func (ft FromTo) IsActive() bool {
-	now := time.Now().Hour()
-	return ft.From == 0 && ft.To == 0 || ft.From <= now && now <= ft.To
-}
-
 var _ api.Tariff = (*Solcast)(nil)
 
 func init() {
@@ -87,7 +78,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		// ensure we don't run when not needed, but execute once at startup
 		select {
 		case <-t.data.Done():
-			if !t.fromTo.IsActive() {
+			if !t.fromTo.IsActive(time.Now().Hour()) {
 				continue
 			}
 		default:
