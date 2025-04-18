@@ -3,6 +3,7 @@ package charger
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
+
+const chargerID string = "TESTTEST"
 
 // Helper function to create a payload
 func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.DataType, value string) json.RawMessage {
@@ -28,12 +31,15 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 
 func newEasee() Easee {
 	log := util.NewLogger("easee")
-	return Easee{
+	e := Easee{
 		Helper:    request.NewHelper(log),
 		obsTime:   make(map[easee.ObservationID]time.Time),
 		log:       log,
 		startDone: func() {},
+		cmdC:      make(chan easee.SignalRCommandResponse),
 	}
+	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
+	return e
 }
 
 func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
@@ -152,8 +158,9 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
+			t.Logf("%+v", tc)
+
 			e := newEasee()
-			e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 
 			// Set up the command channel for test and Easee to share
 			cmdC := make(chan easee.SignalRCommandResponse, 1) // make it buffered for ease of testing
@@ -175,22 +182,66 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 	}
 }
 
-func TestEasee_postJsonAndWait_SyncReply(t *testing.T) {
+func TestEasee_postJsonAndWait(t *testing.T) {
 
-	e := newEasee()
-	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, "TESTTEST")
+	const ticks int64 = 638798974487432600
 
-	httpmock.ActivateNonDefault(e.Client)
-	httpmock.RegisterResponder("POST", uri,
-		httpmock.NewBytesResponder(200, nil))
+	settingsUri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	commandUri := fmt.Sprintf("%s/chargers/%s/commands/resume_charging", easee.API, chargerID)
 
-	enabled := true
-	data := easee.ChargerSettings{
-		Enabled: &enabled,
+	settingsReply := fmt.Sprintf("{\"device\":\"%s\",\"commandId\":48,\"ticks\":%d}", chargerID, ticks)
+
+	cmdResponse := easee.SignalRCommandResponse{
+		SerialNumber: chargerID,
+		ID:           48,
+		Timestamp:    time.Now().UTC(),
+		DeliveredAt:  time.Now().UTC(),
+		WasAccepted:  true,
+		ResultCode:   0,
+		Comment:      "",
+		Ticks:        ticks}
+
+	testCases := []struct {
+		uri      string
+		httpRc   int
+		respBody string
+		cmdResp  *easee.SignalRCommandResponse
+		noop     bool
+		err      error
+	}{
+		{settingsUri, 200, "", nil, false, nil},                                   //sync reply
+		{settingsUri, 202, "[]", nil, true, nil},                                  //noop reply
+		{settingsUri, 202, "[" + settingsReply + "]", nil, false, api.ErrTimeout}, //timeout
+		{commandUri, 202, "{}", nil, true, nil},                                   //noop command reply
+		{commandUri, 202, settingsReply, &cmdResponse, false, nil},                //command reply
+		{commandUri, 400, "", nil, false, fmt.Errorf("invalid status: %d", 400)},  //unexpected result
 	}
 
-	noop, err := e.postJSONAndWait(uri, data)
+	for _, tc := range testCases {
+		t.Logf("%+v", tc)
 
-	assert.False(t, noop)
-	assert.NoError(t, err)
+		e := newEasee()
+
+		httpmock.ActivateNonDefault(e.Client)
+		httpmock.RegisterResponder(http.MethodPost, tc.uri,
+			httpmock.NewStringResponder(tc.httpRc, tc.respBody))
+
+		enabled := true
+		data := easee.ChargerSettings{
+			Enabled: &enabled,
+		}
+
+		if tc.cmdResp != nil {
+			go func() {
+				e.cmdC <- *tc.cmdResp
+			}()
+		}
+
+		noop, err := e.postJSONAndWait(tc.uri, data)
+
+		assert.Equal(t, tc.noop, noop)
+		assert.Equal(t, tc.err, err)
+
+		httpmock.Reset()
+	}
 }
