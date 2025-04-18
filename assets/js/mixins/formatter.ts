@@ -201,6 +201,12 @@ export default defineComponent({
 
 			return `${weekday} ${hour}`.trim();
 		},
+		fmtHourMinute(date: Date) {
+			return new Intl.DateTimeFormat(this.$i18n?.locale, {
+				hour: "numeric",
+				minute: "numeric",
+			}).format(date);
+		},
 		fmtFullDateTime(date: Date, short: boolean) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				weekday: short ? undefined : "short",
