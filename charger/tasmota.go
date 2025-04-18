@@ -76,27 +76,27 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	return c.Enabled()
+	return c.Connection.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	return c.Enable(enable)
+	return c.Connection.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.TotalEnergy()
+	return c.Connection.TotalEnergy()
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.Currents()
+	return c.Connection.Currents()
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
-	return c.Voltages()
+	return c.Connection.Voltages()
 }
