@@ -15,7 +15,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	conn *tasmota.Connection
+	tasmota.Connection
 	*switchSocket
 }
 
@@ -50,7 +50,7 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewTasmota creates Tasmota charger
 func NewTasmota(embed embed, uri, user, password, usage string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, usage, channels, cache)
+	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +60,10 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	c := &Tasmota{
-		conn: conn,
+		Connection: *conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.Connection.CurrentPower, standbypower)
 
 	var currents, voltages func() (float64, float64, float64, error)
 	if len(channels) == 3 {
@@ -76,27 +76,27 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	return c.conn.Enabled()
+	return c.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	return c.conn.Enable(enable)
+	return c.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+	return c.TotalEnergy()
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.conn.Currents()
+	return c.Currents()
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
-	return c.conn.Voltages()
+	return c.Voltages()
 }

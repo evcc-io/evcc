@@ -15,14 +15,14 @@ import (
 // Connection is the Tasmota connection
 type Connection struct {
 	*request.Helper
-	uri, user, password, usage string
-	channels                   []int
-	statusSnsG                 util.Cacheable[StatusSNSResponse]
-	statusStsG                 util.Cacheable[StatusSTSResponse]
+	uri, user, password string
+	channels            []int
+	statusSnsG          util.Cacheable[StatusSNSResponse]
+	statusStsG          util.Cacheable[StatusSTSResponse]
 }
 
 // NewConnection creates a Tasmota connection
-func NewConnection(uri, user, password, usage string, channels []int, cache time.Duration) (*Connection, error) {
+func NewConnection(uri, user, password string, channels []int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -44,7 +44,6 @@ func NewConnection(uri, user, password, usage string, channels []int, cache time
 		uri:      util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		user:     user,
 		password: password,
-		usage:    usage,
 		channels: channels,
 	}
 
@@ -211,24 +210,13 @@ func (c *Connection) CurrentPower() (float64, error) {
 	}
 	// add SML power
 	combinedPower += float64(s.StatusSNS.SML.PowerCurr)
-	// ensure positive power for pv usage
-	if c.usage == "pv" && combinedPower < 0 {
-		return -combinedPower, nil
-	}
-
 	return combinedPower, nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.statusSnsG.Get()
-	if c.usage == "pv" || c.usage == "battery" {
-		// use SML TotalOut for pv and battery usage
-		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalOut, err
-	} else {
-		// use SML TotalIn for grid and charge usage
-		return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
-	}
+	return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalOut, err
 }
 
 // Currents implements the api.PhaseCurrents interface

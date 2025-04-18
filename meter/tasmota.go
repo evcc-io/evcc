@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"math"
 	"strings"
 	"time"
 
@@ -11,7 +12,8 @@ import (
 
 // Tasmota meter implementation
 type Tasmota struct {
-	conn *tasmota.Connection
+	tasmota.Connection
+	usage string
 }
 
 // Tasmota meter implementation
@@ -44,13 +46,14 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewTasmota creates Tasmota meter
 func NewTasmota(uri, user, password, usage string, channels []int, cache time.Duration) (api.Meter, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, usage, channels, cache)
+	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Tasmota{
-		conn: conn,
+		Connection: *conn,
+		usage:      usage,
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
@@ -66,22 +69,30 @@ var _ api.Meter = (*Tasmota)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tasmota) CurrentPower() (float64, error) {
-	return c.conn.CurrentPower()
+	power, err := c.CurrentPower()
+	if err != nil {
+		return 0, err
+	}
+	// asure positive power for pv usage
+	if c.usage == "pv" {
+		return math.Abs(power), nil
+	}
+	return power, nil
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+	return c.TotalEnergy()
 }
 
 // currents implements the api.PhaseCurrents interface
 func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.conn.Currents()
+	return c.Currents()
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
-	return c.conn.Voltages()
+	return c.Voltages()
 }
