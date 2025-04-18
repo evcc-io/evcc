@@ -22,7 +22,6 @@ params:
     default: 3h
     advanced: true
   - name: from
-    default: 6
     help:
       en: Start of API calls
       de: Beginn der API Aufrufe
