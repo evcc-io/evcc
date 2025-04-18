@@ -39,17 +39,6 @@ type HTTPd struct {
 	*http.Server
 }
 
-// loggingResponseWriter wraps http.ResponseWriter to capture status code
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-	lrw.statusCode = code
-	lrw.ResponseWriter.WriteHeader(code)
-}
-
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
@@ -59,17 +48,8 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	// log all requests
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// simple logging for websocket connections
-			if r.Header.Get("Upgrade") == "websocket" {
-				log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// capture status code
-			lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-			next.ServeHTTP(lrw, r)
-			log.TRACE.Printf("%s %s %d", r.Method, r.URL.Path, lrw.statusCode)
+			log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
+			next.ServeHTTP(w, r)
 		})
 	})
 
