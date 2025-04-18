@@ -62,11 +62,6 @@ func ResettableCached[T any](g func() (T, error), cache time.Duration) *cached[T
 	return c
 }
 
-// NewCacheable initializes a new Cacheable instance with a given duration.
-func NewCacheable[T any]() Cacheable[T] {
-	return ResettableCached[T](nil, time.Second)
-}
-
 func (c *cached[T]) Get() (T, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
