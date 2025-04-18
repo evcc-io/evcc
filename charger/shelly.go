@@ -19,6 +19,8 @@ func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
 
+//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
+
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -37,7 +39,19 @@ func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
+	c, err := NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	var vol, cur, pow func() (float64, float64, float64, error)
+	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
+		vol = phases.Voltages
+		cur = phases.Currents
+		pow = phases.Powers
+	}
+
+	return decorateShelly(c, vol, cur, pow), nil
 }
 
 // NewShelly creates Shelly charger

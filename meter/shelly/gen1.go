@@ -125,54 +125,6 @@ func (c *gen1) TotalEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
-func (c *gen1) Currents() (float64, float64, float64, error) {
-	res, err := c.status.Get()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	switch {
-	case c.channel < len(res.Meters):
-		return res.Meters[c.channel].Current, 0, 0, nil
-	case c.channel < len(res.EMeters):
-		return res.EMeters[c.channel].Current, 0, 0, nil
-	default:
-		return 0, 0, 0, errors.New("invalid channel, missing power meter")
-	}
-}
-
-func (c *gen1) Voltages() (float64, float64, float64, error) {
-	res, err := c.status.Get()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	switch {
-	case c.channel < len(res.Meters):
-		return res.Meters[c.channel].Voltage, 0, 0, nil
-	case c.channel < len(res.EMeters):
-		return res.EMeters[c.channel].Voltage, 0, 0, nil
-	default:
-		return 0, 0, 0, errors.New("invalid channel, missing power meter")
-	}
-}
-
-func (c *gen1) Powers() (float64, float64, float64, error) {
-	res, err := c.status.Get()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	switch {
-	case c.channel < len(res.Meters):
-		return res.Meters[c.channel].Power, 0, 0, nil
-	case c.channel < len(res.EMeters):
-		return res.EMeters[c.channel].Power, 0, 0, nil
-	default:
-		return 0, 0, 0, errors.New("invalid channel, missing power meter")
-	}
-}
-
 // gen1Energy in kWh
 func (c *gen1) energy(energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes

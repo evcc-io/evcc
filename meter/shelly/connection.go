@@ -16,6 +16,9 @@ type Generation interface {
 	Enabled() (bool, error)
 	Enable(bool) error
 	TotalEnergy() (float64, error)
+}
+
+type Phases interface {
 	Currents() (float64, float64, float64, error)
 	Voltages() (float64, float64, float64, error)
 	Powers() (float64, float64, float64, error)
