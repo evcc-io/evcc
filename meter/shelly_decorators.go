@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
+func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
 	switch {
 	case phaseCurrents == nil && phaseVoltages == nil:
 		return base
@@ -22,7 +22,7 @@ func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float6
 			},
 		}
 
-	case phaseCurrents != nil && phaseVoltages == nil:
+	case phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			*Shelly
 			api.PhaseCurrents
@@ -33,7 +33,7 @@ func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float6
 			},
 		}
 
-	case phaseCurrents != nil && phaseVoltages != nil:
+	case phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			*Shelly
 			api.PhaseCurrents
@@ -42,6 +42,40 @@ func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float6
 			Shelly: base,
 			PhaseCurrents: &decorateShellyPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateShellyPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*Shelly
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Shelly: base,
+			PhaseCurrents: &decorateShellyPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateShellyPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*Shelly
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Shelly: base,
+			PhaseCurrents: &decorateShellyPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateShellyPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 			PhaseVoltages: &decorateShellyPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
@@ -58,6 +92,14 @@ type decorateShellyPhaseCurrentsImpl struct {
 
 func (impl *decorateShellyPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decorateShellyPhasePowersImpl struct {
+	phasePowers func() (float64, float64, float64, error)
+}
+
+func (impl *decorateShellyPhasePowersImpl) Powers() (float64, float64, float64, error) {
+	return impl.phasePowers()
 }
 
 type decorateShellyPhaseVoltagesImpl struct {

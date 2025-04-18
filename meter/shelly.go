@@ -21,7 +21,7 @@ func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
 
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
@@ -55,11 +55,12 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		usage: usage,
 	}
 
-	var currents, voltages func() (float64, float64, float64, error)
+	var currents, voltages, powers func() (float64, float64, float64, error)
 	currents = c.currents
 	voltages = c.voltages
+	powers = c.powers
 
-	return decorateShelly(c, voltages, currents), nil
+	return decorateShelly(c, voltages, currents, powers), nil
 }
 
 var _ api.Meter = (*Shelly)(nil)
@@ -91,4 +92,9 @@ func (c *Shelly) currents() (float64, float64, float64, error) {
 // voltages implements the api.PhaseVoltages interface
 func (c *Shelly) voltages() (float64, float64, float64, error) {
 	return c.conn.Voltages()
+}
+
+// powers implements the api.PhaseVoltages interface
+func (c *Shelly) powers() (float64, float64, float64, error) {
+	return c.conn.Powers()
 }
