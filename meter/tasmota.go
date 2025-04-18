@@ -12,7 +12,7 @@ import (
 
 // Tasmota meter implementation
 type Tasmota struct {
-	tasmota.Connection
+	conn  *tasmota.Connection
 	usage string
 }
 
@@ -52,8 +52,8 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	c := &Tasmota{
-		Connection: *conn,
-		usage:      usage,
+		conn:  conn,
+		usage: usage,
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
@@ -69,7 +69,7 @@ var _ api.Meter = (*Tasmota)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tasmota) CurrentPower() (float64, error) {
-	power, err := c.Connection.CurrentPower()
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return 0, err
 	}
@@ -84,15 +84,15 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.Connection.TotalEnergy()
+	return c.conn.TotalEnergy()
 }
 
 // currents implements the api.PhaseCurrents interface
 func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.Connection.Currents()
+	return c.conn.Currents()
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
-	return c.Connection.Voltages()
+	return c.conn.Voltages()
 }

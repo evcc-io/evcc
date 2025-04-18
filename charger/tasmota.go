@@ -15,7 +15,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	tasmota.Connection
+	conn *tasmota.Connection
 	*switchSocket
 }
 
@@ -60,10 +60,10 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	c := &Tasmota{
-		Connection: *conn,
+		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.Connection.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	var currents, voltages func() (float64, float64, float64, error)
 	if len(channels) == 3 {
@@ -76,27 +76,27 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	return c.Connection.Enabled()
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	return c.Connection.Enable(enable)
+	return c.conn.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.Connection.TotalEnergy()
+	return c.conn.TotalEnergy()
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.Connection.Currents()
+	return c.conn.Currents()
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
-	return c.Connection.Voltages()
+	return c.conn.Voltages()
 }
