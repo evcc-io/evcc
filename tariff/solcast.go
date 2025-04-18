@@ -18,9 +18,19 @@ import (
 
 type Solcast struct {
 	*request.Helper
-	log  *util.Logger
-	site string
-	data *util.Monitor[api.Rates]
+	log    *util.Logger
+	site   string
+	fromTo FromTo
+	data   *util.Monitor[api.Rates]
+}
+
+type FromTo struct {
+	From, To int
+}
+
+func (ft FromTo) IsActive() bool {
+	now := time.Now().Hour()
+	return ft.From == 0 && ft.To == 0 || ft.From <= now && now <= ft.To
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -34,6 +44,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Site     string
 		Token    string
 		Interval time.Duration
+		FromTo   `mapstructure:",squash"`
 	}{
 		Interval: 3 * time.Hour,
 	}
@@ -56,6 +67,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		site:   cc.Site,
 		Helper: request.NewHelper(log),
+		fromTo: cc.FromTo,
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
@@ -68,22 +80,17 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-// Funktion, um zu prüfen, ob es Tag ist
-func isDaytime() bool {
-	now := time.Now()
-	hour := now.Hour()
-	// Definiere die Tageszeit, zwischen 6 und 20 Uhr
-	return hour >= 6 && hour < 20
-}
-
 func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	for ; true; <-time.Tick(interval) {
-		// Prüfe, ob es Tag ist
-		if !isDaytime() {
-			// Wenn es Nacht ist, warte bis zum nächsten Intervall
-			continue
+		// ensure we don't run when not needed, but execute once at startup
+		select {
+		case <-t.data.Done():
+			if !t.fromTo.IsActive() {
+				continue
+			}
+		default:
 		}
 
 		var res solcast.Forecasts
