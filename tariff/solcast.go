@@ -68,11 +68,24 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
+// Funktion, um zu prüfen, ob es Tag ist
+func isDaytime() bool {
+	now := time.Now()
+	hour := now.Hour()
+	// Definiere die Tageszeit, zwischen 6 und 20 Uhr
+	return hour >= 6 && hour < 20
+}
+
 func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
-	// don't exceed 10 requests per 24h
 	for ; true; <-time.Tick(interval) {
+		// Prüfe, ob es Tag ist
+		if !isDaytime() {
+			// Wenn es Nacht ist, warte bis zum nächsten Intervall
+			continue
+		}
+
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
@@ -80,7 +93,6 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
