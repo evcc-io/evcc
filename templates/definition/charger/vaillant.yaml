@@ -12,6 +12,10 @@ requirements:
 params:
   - name: user
   - name: password
+  - name: realm
+    type: choice
+    choice: [DE, AT]
+    default: DE
   - name: zone
     type: int
     help:
@@ -28,5 +32,6 @@ render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
+  realm: {{ if eq .realm "AT" -}} vaillant-austria-b2c {{- end }}
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
