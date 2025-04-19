@@ -115,9 +115,9 @@ func (c *gen1) TotalEnergy() (float64, error) {
 
 	switch {
 	case c.channel < len(res.Meters):
-		energy = res.Meters[c.channel].Total - res.Meters[c.channel].Total_Returned
+		energy = res.Meters[c.channel].Total
 	case c.channel < len(res.EMeters):
-		energy = res.EMeters[c.channel].Total - res.EMeters[c.channel].Total_Returned
+		energy = res.EMeters[c.channel].Total
 	default:
 		return 0, errors.New("invalid channel, missing power meter")
 	}
