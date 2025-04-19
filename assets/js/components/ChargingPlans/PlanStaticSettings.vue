@@ -29,7 +29,7 @@
 			</div>
 			<div class="col-6 col-lg-1">
 				<label :for="formId('precondition')">
-					{{ $t("main.chargingPlan.precondition") }}
+					{{ $t("main.chargingPlan.preconditionShort") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-1">
@@ -111,11 +111,11 @@
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('precondition')">
-					{{ $t("main.chargingPlan.precondition") }}
+					{{ $t("main.chargingPlan.preconditionLong") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-1 d-flex align-items-center">
-				<div class="form-check form-switch">
+			<div class="col-7 col-lg-1 d-flex flex-column justify-content-center">
+				<div class="form-check form-switch d-none d-lg-block">
 					<input
 						:id="formId('precondition')"
 						class="form-check-input"
@@ -127,14 +127,35 @@
 						@change="togglePrecondition"
 					/>
 				</div>
+				<select
+					:id="formId('precondition-sm')"
+					v-model="selectedPrecondition"
+					class="form-select mx-0 d-lg-none"
+					data-testid="static-plan-precondition"
+					@change="preview()"
+				>
+					<option :value="0">
+						{{ $t("main.chargingPlan.preconditionOptionNo") }}
+					</option>
+					<option v-for="opt in preconditionOptions" :key="opt.value" :value="opt.value">
+						{{ opt.name }}
+					</option>
+				</select>
+				<small v-if="hasPrecondition" class="d-block d-lg-none mt-1 mb-2">
+					{{
+						$t("main.chargingPlan.preconditionDescription", {
+							duration: preconditionFmt,
+						})
+					}}
+				</small>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-1 d-flex align-items-center">
-				<div class="form-check form-switch">
+			<div class="col-3 col-lg-1 d-flex align-items-center">
+				<div class="form-check form-switch my-1">
 					<input
 						:id="formId('active')"
 						class="form-check-input"
@@ -148,7 +169,9 @@
 					/>
 				</div>
 			</div>
-			<div class="col-5 col-lg-2 d-flex align-items-center">
+			<div
+				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+			>
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
@@ -162,17 +185,20 @@
 				</button>
 			</div>
 		</div>
-		<p v-if="hasPrecondition" class="m-2">
-			<strong>Akkupflege:</strong> Mindestens
-			<CustomSelect
-				class="d-inline-flex"
-				:options="preconditionOptions"
-				:selected="selectedPrecondition"
-				@change="selectPrecondition"
-			>
-				<u>{{ preconditionFmt }}</u>
-			</CustomSelect>
-			direkt vor Abfahrt laden.
+		<p v-if="hasPrecondition" class="m-2 d-none d-lg-block">
+			<strong>{{ $t("main.chargingPlan.preconditionLong") }}: </strong>
+			<i18n-t tag="span" scope="global" keypath="main.chargingPlan.preconditionDescription">
+				<template #duration>
+					<CustomSelect
+						class="d-inline-flex"
+						:options="preconditionOptions"
+						:selected="selectedPrecondition"
+						@change="selectPrecondition"
+					>
+						<u>{{ preconditionFmt }}</u>
+					</CustomSelect>
+				</template>
+			</i18n-t>
 		</p>
 		<p class="mb-0" data-testid="plan-entry-warnings">
 			<span v-if="timeInThePast" class="d-block text-danger my-2">
@@ -238,16 +264,30 @@ export default defineComponent({
 			return this.selectedPrecondition > 0;
 		},
 		preconditionOptions() {
-			const hourOptions = [0.5, 1, 2];
-			return hourOptions
-				.map((hour) => hour * 60 * 60)
-				.map((seconds) => ({
-					value: seconds,
-					name: this.fmtDurationLong(seconds),
-				}));
+			const HOUR = 60 * 60;
+			const HALF_HOUR = 0.5 * HOUR;
+			const ONE_HOUR = 1 * HOUR;
+			const TWO_HOURS = 2 * HOUR;
+			const EVERYTHING = 7 * 24 * HOUR;
+
+			const options = [HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
+
+			// support custom values (via API)
+			if (this.selectedPrecondition && !options.includes(this.selectedPrecondition)) {
+				options.push(this.selectedPrecondition);
+			}
+
+			return options.map((s) => ({
+				value: s,
+				name:
+					s === EVERYTHING
+						? this.$t("main.chargingPlan.preconditionOptionAll")
+						: this.fmtDurationLong(s),
+			}));
 		},
 		preconditionFmt() {
-			return this.fmtDurationLong(this.selectedPrecondition);
+			return this.preconditionOptions.find((o) => o.value === this.selectedPrecondition)
+				?.name;
 		},
 		energyOptions() {
 			const options = energyOptions(
