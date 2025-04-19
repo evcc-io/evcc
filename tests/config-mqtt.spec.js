@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { isMqttReachable } from "./mqtt";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -25,6 +26,11 @@ const VALID_USERNAME = "rw";
 const VALID_PASSWORD = "readwrite";
 
 test.describe("mqtt", async () => {
+  test.skip(
+    async () => !(await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD)),
+    `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
+  );
+
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
     await expect(page.getByTestId("mqtt")).toContainText(["Configured", "no"].join(""));

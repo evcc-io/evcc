@@ -99,7 +99,7 @@ function debounedUpdateAuthStatus() {
 	clearTimeout(timeoutId);
 	timeoutId = setTimeout(() => {
 		updateAuthStatus();
-	}, 500);
+	}, 500) as unknown as number;
 }
 
 // update auth status on reconnect or server restart
