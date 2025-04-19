@@ -5,10 +5,12 @@ products:
       generic: Manager flex
 requirements:
   description:
-    en: |
+    en: >
       Combines data of all connected PV inverters or batteries.
-    de: |
+      For multiple batteries, only the state of charge (SoC) of one is determined.
+    de: >
       Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+      Bei mehreren Batterien wird nur der Füllstand (SoC) von einer ermittelt.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -66,9 +68,15 @@ render: |
   soc: # %
     source: http
     uri: http://{{ .host }}/rest/items # EnergyManager flex
+    # Two versions to cover different variants of the EnergyManager
     jq: >
       def parseFirstNumber: sub("(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
-      [(.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)] | add // 0
+      first(
+        (.[] | select(.name | test(".*_batteryChannel_state_of_charge$")).state | parseFirstNumber)
+        //
+        (.[] | select(.name | test(".*_batteryChannelGroup_batteryStateOfCharge$")).state | tonumber)
+      )
+      // 0
   energy: # kWh
     source: http
     uri: http://{{ .host }}/rest/items # EnergyManager flex
