@@ -239,8 +239,8 @@ type Circuit interface {
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
-	ValidateCurrent(old, new float64, charging bool) float64
-	ValidatePower(old, new float64, charging bool) float64
+	ValidateCurrent(old, new float64) float64
+	ValidatePower(old, new float64) float64
 }
 
 // Redactor is an interface to redact sensitive data
