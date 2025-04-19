@@ -266,7 +266,7 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if lt .maxchargepower 1 }}
+        {{- if eq .maxchargepower "0" }}
         - source: go
           script: power
           in:
