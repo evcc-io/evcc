@@ -279,25 +279,6 @@
 						</div>
 					</div>
 				</div>
-
-				<FormRow
-					v-show="showAll"
-					v-if="showPriority"
-					id="loadpointParamPriority"
-					:label="$t('config.loadpoint.priorityLabel')"
-					:help="$t('config.loadpoint.priorityHelp')"
-				>
-					<PropertyField
-						id="loadpointParamPriority"
-						v-model="values.priority"
-						type="Choice"
-						size="w-100"
-						class="me-2"
-						:choice="priorityOptions"
-						required
-					/>
-				</FormRow>
-
 				<h6 v-show="showAll">
 					{{ $t("config.loadpoint.electricalTitle") }}
 					<small class="text-muted">{{
@@ -566,7 +547,6 @@ const defaultValues = {
 	phasesConfigured: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
-	priority: 0,
 	defaultMode: "",
 	thresholds: {
 		enable: { delay: 1 * nsPerMin, threshold: 0 },
@@ -658,16 +638,6 @@ export default {
 		},
 		isDeletable() {
 			return !this.isNew;
-		},
-		showPriority() {
-			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
-		},
-		priorityOptions() {
-			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
-			result[0].name = "0 (default)";
-			result[0].key = undefined;
-			result[10].name = "10 (highest)";
-			return result;
 		},
 		showCircuit() {
 			return this.circuits.length > 0;

@@ -621,6 +621,17 @@ remoteDisabledHard = "{source}: turned off"
 remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
+[main.loadpointPrio]
+high = "High"
+loadpoint = "Loadpoint Prio"
+low = "Low"
+neutral = "Neutral"
+prioTooltip = "Vehicle overrides Loadpoint Priority"
+slightlyHigh = "Slightly High"
+slightlyLow = "Slightly Low"
+veryHigh = "Very High"
+veryLow = "Very Low"
+
 [main.loadpointSettings]
 batteryUsage = "Home Battery"
 currents = "Charging Current"
