@@ -192,14 +192,9 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 	settingsReply := fmt.Sprintf("{\"device\":\"%s\",\"commandId\":48,\"ticks\":%d}", chargerID, ticks)
 
 	cmdResponse := easee.SignalRCommandResponse{
-		SerialNumber: chargerID,
-		ID:           48,
-		Timestamp:    time.Now().UTC(),
-		DeliveredAt:  time.Now().UTC(),
-		WasAccepted:  true,
-		ResultCode:   0,
-		Comment:      "",
-		Ticks:        ticks}
+		WasAccepted: true,
+		Ticks:       ticks,
+	}
 
 	testCases := []struct {
 		uri      string
@@ -226,18 +221,13 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodPost, tc.uri,
 			httpmock.NewStringResponder(tc.httpRc, tc.respBody))
 
-		enabled := true
-		data := easee.ChargerSettings{
-			Enabled: &enabled,
-		}
-
 		if tc.cmdResp != nil {
 			go func() {
 				e.cmdC <- *tc.cmdResp
 			}()
 		}
 
-		noop, err := e.postJSONAndWait(tc.uri, data)
+		noop, err := e.postJSONAndWait(tc.uri, nil)
 
 		assert.Equal(t, tc.noop, noop)
 		assert.Equal(t, tc.err, err)
