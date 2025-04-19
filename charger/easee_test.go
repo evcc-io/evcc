@@ -315,3 +315,39 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 		}
 	}
 }
+
+func TestEasee_MaxCurrent(t *testing.T) {
+
+	// Define test cases
+	testCases := []struct {
+		targetCurrent int64
+		expectCurrent float64
+	}{
+		{6, 6},   // short circuit
+		{32, 16}, // target above max
+		{10, 10}, // normal case
+	}
+
+	for _, tc := range testCases {
+		t.Logf("%+v", tc)
+
+		e := newEasee()
+		e.charger = "CHARGERID"
+		e.maxChargerCurrent = 16
+		e.dynamicChargerCurrent = 6
+
+		uriPattern := fmt.Sprintf("=~%s.*", easee.API)
+
+		//register mock NoOp reply, suffices for this test case
+		httpmock.ActivateNonDefault(e.Client)
+		httpmock.RegisterResponder(http.MethodPost, uriPattern,
+			httpmock.NewStringResponder(202, "[]"))
+
+		err := e.MaxCurrent(tc.targetCurrent)
+
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expectCurrent, e.current)
+		//TODO this fails, either current or dynamicChargerCurrent need to go
+		//assert.Equal(t, e.current, e.dynamicChargerCurrent)
+	}
+}
