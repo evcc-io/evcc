@@ -117,6 +117,7 @@ export default {
 		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planPrecondition: Number,
 		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,

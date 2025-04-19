@@ -235,7 +235,8 @@ export default defineComponent({
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`
+				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
+				{ precondition: plan.precondition }
 			);
 		},
 		async fetchRepeatingPreview(
@@ -251,10 +252,14 @@ export default defineComponent({
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`
 			);
 		},
-		async apiFetchPlan(url: string): Promise<PlanResponse | undefined> {
+		async apiFetchPlan(
+			url: string,
+			params?: Record<string, unknown>
+		): Promise<PlanResponse | undefined> {
 			try {
 				const res = (await api.get(url, {
 					validateStatus: (code) => [200, 404].includes(code),
+					params,
 				})) as PlanResponse;
 				if (res.status === 404) {
 					return { data: { result: {} as PlanWrapper } } as PlanResponse;
@@ -282,12 +287,14 @@ export default defineComponent({
 						planRes = await this.fetchStaticPreviewSoc({
 							soc: plan.soc,
 							time: plan.time,
+							precondition: plan.precondition,
 						});
 					} else {
 						plan = plan as StaticEnergyPlan;
 						planRes = await this.fetchStaticPreviewEnergy({
 							energy: plan.energy,
 							time: plan.time,
+							precondition: plan.precondition,
 						});
 					}
 				} else {

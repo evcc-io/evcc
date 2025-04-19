@@ -420,26 +420,27 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 }
 
 // GetPlan mocks base method.
-func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates {
+func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlan", targetTime, requiredDuration)
+	ret := m.ctrl.Call(m, "GetPlan", targetTime, requiredDuration, precondition)
 	ret0, _ := ret[0].(api.Rates)
 	return ret0
 }
 
 // GetPlan indicates an expected call of GetPlan.
-func (mr *MockAPIMockRecorder) GetPlan(targetTime, requiredDuration any) *gomock.Call {
+func (mr *MockAPIMockRecorder) GetPlan(targetTime, requiredDuration, precondition any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), targetTime, requiredDuration)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), targetTime, requiredDuration, precondition)
 }
 
 // GetPlanEnergy mocks base method.
-func (m *MockAPI) GetPlanEnergy() (time.Time, float64) {
+func (m *MockAPI) GetPlanEnergy() (time.Time, time.Duration, float64) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanEnergy")
 	ret0, _ := ret[0].(time.Time)
-	ret1, _ := ret[1].(float64)
-	return ret0, ret1
+	ret1, _ := ret[1].(time.Duration)
+	ret2, _ := ret[2].(float64)
+	return ret0, ret1, ret2
 }
 
 // GetPlanEnergy indicates an expected call of GetPlanEnergy.
@@ -461,6 +462,20 @@ func (m *MockAPI) GetPlanGoal() (float64, bool) {
 func (mr *MockAPIMockRecorder) GetPlanGoal() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanGoal", reflect.TypeOf((*MockAPI)(nil).GetPlanGoal))
+}
+
+// GetPlanPreCondDuration mocks base method.
+func (m *MockAPI) GetPlanPreCondDuration() time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanPreCondDuration")
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// GetPlanPreCondDuration indicates an expected call of GetPlanPreCondDuration.
+func (mr *MockAPIMockRecorder) GetPlanPreCondDuration() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanPreCondDuration", reflect.TypeOf((*MockAPI)(nil).GetPlanPreCondDuration))
 }
 
 // GetPlanRequiredDuration mocks base method.
@@ -844,17 +859,17 @@ func (mr *MockAPIMockRecorder) SetPhasesConfigured(arg0 any) *gomock.Call {
 }
 
 // SetPlanEnergy mocks base method.
-func (m *MockAPI) SetPlanEnergy(arg0 time.Time, arg1 float64) error {
+func (m *MockAPI) SetPlanEnergy(arg0 time.Time, arg1 time.Duration, arg2 float64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPlanEnergy", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetPlanEnergy", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetPlanEnergy indicates an expected call of SetPlanEnergy.
-func (mr *MockAPIMockRecorder) SetPlanEnergy(arg0, arg1 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetPlanEnergy(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanEnergy", reflect.TypeOf((*MockAPI)(nil).SetPlanEnergy), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanEnergy", reflect.TypeOf((*MockAPI)(nil).SetPlanEnergy), arg0, arg1, arg2)
 }
 
 // SetPriority mocks base method.

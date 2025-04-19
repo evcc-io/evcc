@@ -26,9 +26,11 @@ export type StaticPlan = StaticSocPlan | StaticEnergyPlan;
 export interface StaticSocPlan {
 	soc: number;
 	time: Date;
+	precondition: number;
 }
 
 export interface StaticEnergyPlan {
 	energy: number;
 	time: Date;
+	precondition: number;
 }

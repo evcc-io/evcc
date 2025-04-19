@@ -133,7 +133,7 @@ func TestNilTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute))
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -155,7 +155,7 @@ func TestRatesError(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute))
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -184,10 +184,10 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		},
 	}
 
-	plan := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute))
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
-	plan = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(-30*time.Minute))
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
@@ -208,12 +208,12 @@ func TestFlatTariffLongSlots(t *testing.T) {
 	// that slots are not longer than 1 hour and with that context this is not a problem
 
 	// expect 00:00-01:00 UTC
-	plan := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour))
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
 	// expect 00:00-01:00 UTC
-	plan = p.Plan(time.Hour, clock.Now().Add(time.Hour))
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(time.Hour))
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
 
@@ -230,10 +230,10 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
+	plan := p.Plan(40*time.Minute, 0, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
 	assert.False(t, !SlotAt(clock.Now(), plan).IsZero(), "should not start if car can be charged completely after known prices ")
 
-	plan = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour))
+	plan = p.Plan(2*time.Hour, 0, clock.Now().Add(2*time.Hour))
 	assert.True(t, !SlotAt(clock.Now(), plan).IsZero(), "should start if car can not be charged completely after known prices ")
 }
 
@@ -257,11 +257,62 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		},
 	}
 
-	plan := p.Plan(time.Hour, clock.Now())
+	plan := p.Plan(time.Hour, 0, clock.Now())
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
-	plan = p.Plan(time.Hour, clock.Now().Add(-time.Hour))
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(-time.Hour))
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
+}
+
+func TestPrecondition(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 1, 2, 3}, clock.Now(), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 3,
+		},
+	}, plan, "expected last slot")
+
+	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(1 * time.Hour),
+			Value: 0,
+		},
+		{
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 3,
+		},
+	}, plan, "expected two slots")
+
+	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(30 * time.Minute),
+			End:   clock.Now().Add(time.Hour),
+			Value: 0,
+		},
+		{
+			Start: clock.Now().Add(210 * time.Minute),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 3,
+		},
+	}, plan, "expected short early and split late slot")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
@@ -272,7 +323,7 @@ func TestContinuousPlanNoTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan := p.Plan(time.Hour, clock.Now())
+	plan := p.Plan(time.Hour, 0, clock.Now())
 
 	// single-slot plan
 	assert.Len(t, plan, 1)
@@ -293,7 +344,7 @@ func TestContinuousPlan(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(150*time.Minute, clock.Now())
+	plan := p.Plan(150*time.Minute, 0, clock.Now())
 
 	// 3-slot plan
 	assert.Len(t, plan, 3)
@@ -312,7 +363,7 @@ func TestContinuousPlanOutsideRates(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(30*time.Minute, clock.Now())
+	plan := p.Plan(30*time.Minute, 0, clock.Now())
 
 	// 3-slot plan
 	assert.Len(t, plan, 1)
