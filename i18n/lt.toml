@@ -642,6 +642,7 @@ remaining = "Liko"
 remoteDisabledHard = "{source}: išjungtas"
 remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
 solar = "Saulės"
+finished = "Bus baigta"
 
 [main.loadpointSettings]
 batteryUsage = "Namų kaupiklis"
