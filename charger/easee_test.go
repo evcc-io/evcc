@@ -15,8 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const chargerID string = "TESTTEST"
-
 // Helper function to create a payload
 func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.DataType, value string) json.RawMessage {
 	payload := easee.Observation{
@@ -150,6 +148,7 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 
 func TestEasee_postJsonAndWait(t *testing.T) {
 
+	const chargerID string = "TESTTEST"
 	const ticks int64 = 638798974487432600
 
 	settingsUri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
