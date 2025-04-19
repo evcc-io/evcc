@@ -43,7 +43,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 625 # Grid side total power
+      address: 619 # Out-of-grid –total power
       type: holding
       decode: int16
   energy:
