@@ -35,6 +35,7 @@ func newEasee() *Easee {
 		log:       log,
 		startDone: func() {},
 		cmdC:      make(chan easee.SignalRCommandResponse),
+		obsC:      make(chan easee.Observation),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
@@ -226,5 +227,47 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 		assert.Equal(t, tc.err, err)
 
 		httpmock.Reset()
+	}
+}
+
+func TestEasee_waitForChargerEnabledState(t *testing.T) {
+
+	// Define test cases
+	testCases := []struct {
+		initOpMode int
+		expEnabled bool
+		sendObs    bool
+		expectErr  error
+	}{
+		{easee.ModeCharging, true, false, nil},              // short circuit
+		{easee.ModeAwaitingAuthentication, true, true, nil}, // normal flow
+		{easee.ModeCharging, false, false, api.ErrTimeout},  //missing state change
+	}
+
+	for _, tc := range testCases {
+		t.Logf("%+v", tc)
+
+		e := newEasee()
+		e.opMode = tc.initOpMode
+
+		if tc.sendObs { // send Observations to simulate state changes
+			go func() {
+				e.obsC <- easee.Observation{
+					ID: easee.DYNAMIC_CHARGER_CURRENT,
+				}
+				e.opMode = easee.ModeCharging //transition to charging
+				e.obsC <- easee.Observation{
+					ID: easee.CHARGER_OP_MODE,
+				}
+			}()
+		}
+
+		err := e.waitForChargerEnabledState(tc.expEnabled)
+
+		if tc.expectErr != nil {
+			assert.EqualError(t, err, tc.expectErr.Error())
+		} else {
+			assert.NoError(t, err)
+		}
 	}
 }
