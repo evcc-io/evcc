@@ -2,7 +2,10 @@ template: cfos
 products:
   - brand: cFos
     description:
-      generic: Power Brain, Power Brain Solar
+      generic: Power Brain
+  - brand: cFos
+    description:
+      generic: Power Brain Solar
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
