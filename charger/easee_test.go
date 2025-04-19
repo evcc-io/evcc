@@ -29,7 +29,7 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 	return json.RawMessage(out)
 }
 
-func newEasee() Easee {
+func newEasee() *Easee {
 	log := util.NewLogger("easee")
 	e := Easee{
 		Helper:    request.NewHelper(log),
@@ -39,7 +39,7 @@ func newEasee() Easee {
 		cmdC:      make(chan easee.SignalRCommandResponse),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
-	return e
+	return &e
 }
 
 func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
