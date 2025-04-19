@@ -1,0 +1,18 @@
+template: mennekes-amtron
+products:
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You 560 11 C2
+capabilities: ["rfid","1p3p", "mA"]
+requirements:
+  description:
+    de: Externes Energiemanagement muss aktiviert und "Modbus TCP" als Schnittstelle ausgewählt sein. Phasenumschaltmodus muss auf "flexible Phasenumschaltung" eingestellt sein.
+    en: External energy management must be activated, and "Modbus TCP" must be selected as the interface. Phase switching mode must be set to "flexible phase switching". 
+  evcc: ["sponsorship"]
+params:
+  - name: host
+  - name: port
+    default: 502
+render: |
+  type: mennekes-amtron
+  uri: {{ .host }}:{{ .port }}
