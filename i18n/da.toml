@@ -637,6 +637,7 @@ remaining = "Resterende tid"
 remoteDisabledHard = "{source}: slukket"
 remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
 solar = "solenergi"
+finished = "Sluttidspunkt"
 
 [main.loadpointSettings]
 batteryUsage = "Husbatteri"
