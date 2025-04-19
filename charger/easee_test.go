@@ -234,30 +234,37 @@ func TestEasee_waitForChargerEnabledState(t *testing.T) {
 
 	// Define test cases
 	testCases := []struct {
-		initOpMode int
-		expEnabled bool
-		sendObs    bool
-		expectErr  error
+		expEnabled  bool
+		updateState bool
+		sendObs     bool
+		expectErr   error
 	}{
-		{easee.ModeCharging, true, false, nil},              // short circuit
-		{easee.ModeAwaitingAuthentication, true, true, nil}, // normal flow
-		{easee.ModeCharging, false, false, api.ErrTimeout},  //missing state change
+		{false, false, false, nil},           // short circuit, already in target state
+		{true, true, true, nil},              // normal flow
+		{true, false, false, api.ErrTimeout}, // missing state change
+		{true, true, false, nil},             // late landing state change (transition without Obs)
 	}
 
 	for _, tc := range testCases {
 		t.Logf("%+v", tc)
 
 		e := newEasee()
-		e.opMode = tc.initOpMode
+		e.opMode = easee.ModeAwaitingAuthentication
 
-		if tc.sendObs { // send Observations to simulate state changes
+		if tc.updateState { // send Observations to simulate state changes
 			go func() {
-				e.obsC <- easee.Observation{
-					ID: easee.DYNAMIC_CHARGER_CURRENT,
+				if tc.sendObs {
+					e.obsC <- easee.Observation{
+						ID: easee.DYNAMIC_CHARGER_CURRENT,
+					}
 				}
+
 				e.opMode = easee.ModeCharging //transition to charging
-				e.obsC <- easee.Observation{
-					ID: easee.CHARGER_OP_MODE,
+
+				if tc.sendObs {
+					e.obsC <- easee.Observation{
+						ID: easee.CHARGER_OP_MODE,
+					}
 				}
 			}()
 		}
