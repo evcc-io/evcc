@@ -3,14 +3,18 @@ package cmd
 import (
 	"bytes"
 	_ "embed"
+	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
 	"github.com/cli/browser"
 	"github.com/evcc-io/evcc/server"
 	"github.com/spf13/cobra"
+	vpr "github.com/spf13/viper"
 )
 
 // discussCmd represents the discuss command
@@ -36,6 +40,9 @@ func errorString(err error) string {
 
 func runDiscuss(cmd *cobra.Command, args []string) {
 	cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
+	if errors.As(cfgErr, new(vpr.ConfigFileNotFoundError)) {
+		log.FATAL.Println(cfgErr)
+	}
 
 	file, pathErr := filepath.Abs(cfgFile)
 	if pathErr != nil {
@@ -44,6 +51,9 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 
 	var redacted string
 	if src, err := os.ReadFile(cfgFile); err == nil {
+		src = regexp.MustCompile(`(?m)^\s*#.*$`).ReplaceAll(src, nil)
+		src = regexp.MustCompile(`(?m)^\s+$`).ReplaceAll(src, nil)
+		src = regexp.MustCompile(`(?m)\n\n`).ReplaceAll(src, []byte("\n"))
 		redacted = redact(string(src))
 	}
 
@@ -58,6 +68,9 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 	})
 
 	body := out.String()
+	fmt.Println(body)
+	fmt.Println(len(body))
+	fmt.Println(len(url.QueryEscape(body)))
 	uri := "https://github.com/evcc-io/evcc/discussions/new?category=erste-hilfe&body=" + url.QueryEscape(body)
 
 	if err := browser.OpenURL(uri); err != nil {
