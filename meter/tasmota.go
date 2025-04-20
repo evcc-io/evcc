@@ -73,7 +73,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// asure positive power for pv usage
+	// positive power for pv usage
 	if c.usage == "pv" {
 		return math.Abs(power), nil
 	}

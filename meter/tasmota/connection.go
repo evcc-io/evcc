@@ -200,17 +200,15 @@ func (c *Connection) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	var combinedPower float64
+	var res float64
 	for _, channel := range c.channels {
 		power, err := s.StatusSNS.Energy.Power.Channel(channel)
 		if err != nil {
 			return 0, err
 		}
-		combinedPower += power
+		res += power
 	}
-	// add SML power
-	combinedPower += float64(s.StatusSNS.SML.PowerCurr)
-	return combinedPower, nil
+	return res + float64(s.StatusSNS.SML.PowerCurr), nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
