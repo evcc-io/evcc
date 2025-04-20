@@ -62,7 +62,6 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 }
 
 func TestProductUpdate_InitialStateCheck(t *testing.T) {
-
 	now := time.Now().UTC().Truncate(0) //truncate removes sub nanos
 
 	e := newEasee()
@@ -91,7 +90,6 @@ func TestProductUpdate_InitialStateCheck(t *testing.T) {
 
 // TestInExpectedOpMode tests the inExpectedOpMode function with different scenarios
 func TestInExpectedOpMode(t *testing.T) {
-
 	tc := []struct {
 		opMode int
 		enable bool
@@ -121,8 +119,6 @@ func TestInExpectedOpMode(t *testing.T) {
 }
 
 func TestEasee_waitForTickResponse(t *testing.T) {
-
-	// Define test cases
 	testCases := []struct {
 		name         string
 		expectedTick int64
@@ -150,7 +146,6 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			t.Logf("%+v", tc)
 
 			e := newEasee()
@@ -176,7 +171,6 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 }
 
 func TestEasee_postJsonAndWait(t *testing.T) {
-
 	const chargerID string = "TESTTEST"
 	const ticks int64 = 638798974487432600
 
@@ -231,8 +225,6 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 }
 
 func TestEasee_waitForChargerEnabledState(t *testing.T) {
-
-	// Define test cases
 	testCases := []struct {
 		expEnabled  bool
 		updateState bool
@@ -273,8 +265,6 @@ func TestEasee_waitForChargerEnabledState(t *testing.T) {
 }
 
 func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
-
-	// Define test cases
 	testCases := []struct {
 		expectedDcc float64
 		updateState bool
@@ -317,8 +307,6 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 }
 
 func TestEasee_MaxCurrent(t *testing.T) {
-
-	// Define test cases
 	testCases := []struct {
 		targetCurrent int64
 		expectCurrent float64
