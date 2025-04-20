@@ -219,6 +219,6 @@ tool (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250403111054-69e330ffbd07
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250420095335-2cd088941a35
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0
