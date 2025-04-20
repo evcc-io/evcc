@@ -67,14 +67,13 @@ func GetInstance(uri, registration, password string, cache time.Duration, essTyp
 
 	// do first login if no authKey exists and uri and password exist
 	if instance.authKey == "" && instance.uri != "" && (instance.password != "" || instance.registration != "") {
-		err := instance.Login()
-		if err != nil {
+		if err := instance.Login(); err != nil {
 			return nil, err
 		}
 		return instance, nil
 	}
 
-	return nil, errors.New("no credentials provided")
+	return nil, errors.New("missing credentials")
 }
 
 // Login calls login and stores the returned authorization key
