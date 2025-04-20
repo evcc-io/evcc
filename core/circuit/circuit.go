@@ -327,7 +327,7 @@ func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
 
 		var capped float64
 		if charging {
-			capped = min(maxPower, new, max(0, potential+old))
+			capped = min(maxPower, min(max(0, potential+old), new))
 		} else {
 			capped = max(0, min(new, potential))
 		}
@@ -351,7 +351,7 @@ func (c *Circuit) ValidateCurrent(old, new float64, charging bool) float64 {
 
 		var capped float64
 		if charging {
-			capped = min(maxCurrent, new, max(0, potential+old))
+			capped = min(maxCurrent, min(max(0, potential+old), new))
 		} else {
 			capped = max(0, min(new, potential))
 		}
