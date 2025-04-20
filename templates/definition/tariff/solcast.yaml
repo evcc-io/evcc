@@ -23,12 +23,12 @@ params:
     advanced: true
   - name: from
     help:
-      en: Start of API calls
-      de: Beginn der API Aufrufe
+      en: Start time of data retrieval, specified in full hours, e.g. "6"
+      de: Startzeit der Datenabrufe, Angabe in vollen Stunden, z.B "6"
   - name: to
     help:
-      en: End of API calls
-      de: Ende der API Aufrufe
+      en: End time of data retrieval, specified in full hours, e.g. "20"
+      de: Endzeit der Datenabrufe, Angabe in vollen Stunden, z.B "20"
 render: |
   type: solcast
   site: {{ .site }}
