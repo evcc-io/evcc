@@ -327,7 +327,7 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 		potential := maxPower - c.power
 
 		if delta > potential {
-			capped := max(0, old+potential)
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
@@ -349,7 +349,7 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 		potential := maxCurrent - c.current
 
 		if delta > potential {
-			capped := max(0, old+potential)
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
 			new = capped
 		} else {
