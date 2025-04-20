@@ -837,7 +837,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.offeredCurrent, current)
+		currentLimit := lp.circuit.ValidateCurrent(max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2]), current)
 
 		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
