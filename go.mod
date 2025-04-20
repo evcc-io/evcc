@@ -53,6 +53,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
+	github.com/jarcoal/httpmock v1.3.0
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
