@@ -31,55 +31,49 @@ type Com struct {
 }
 
 var (
-	once     sync.Once
-	instance *Com
+	instances map[string]*Com = map[string]*Com{}
+	mu        sync.Mutex      = sync.Mutex{}
 )
 
-// GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
+// GetInstance retrives a singleton per uri from a map to handle the access via the authkey to the PCS of the LG ESS HOME system
 func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
-	var err error
-	once.Do(func() {
-		log := util.NewLogger("lgess")
-		instance = &Com{
-			Helper:       request.NewHelper(log),
-			uri:          uri,
-			registration: registration,
-			password:     password,
-			essType:      essType,
-			log:          log,
+	instance, found := instances[uri]
+	if found {
+		return instance, nil
+	}
+
+	log := util.NewLogger(fmt.Sprintf("lgess-%s", strings.TrimPrefix("https://", uri)))
+	instance = &Com{uri: uri,
+		Helper:       request.NewHelper(log),
+		registration: registration,
+		password:     password,
+		essType:      essType,
+		log:          log,
+	}
+	// put instance into the cache map
+	instances[uri] = instance
+
+	// ignore the self signed certificate
+	instance.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	// caches the data access for the "cache" time duration
+	// sends a new request to the pcs if the cache is expired and Data() requested
+	instance.dataG = util.Cached(instance.essInfo, cache)
+
+	// do first login if no authKey exists and uri and password exist
+	if instance.authKey == "" && instance.uri != "" && (instance.password != "" || instance.registration != "") {
+		if err := instance.Login(); err != nil {
+			return nil, err
 		}
-
-		// ignore the self signed certificate
-		instance.Client.Transport = request.NewTripper(log, transport.Insecure())
-
-		// caches the data access for the "cache" time duration
-		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.dataG = util.Cached(instance.essInfo, cache)
-
-		// do first login if no authKey exists and uri and password exist
-		if instance.authKey == "" && instance.uri != "" && (instance.password != "" || instance.registration != "") {
-			err = instance.Login()
-		}
-	})
-
-	// check if different uris are provided
-	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
+		return instance, nil
 	}
 
-	// check if different registrations are provided
-	if registration != "" && instance.registration != registration {
-		return nil, errors.New("registration mismatch")
-	}
-
-	// check if different passwords are provided
-	if password != "" && instance.password != password {
-		return nil, errors.New("password mismatch")
-	}
-
-	return instance, err
+	return nil, errors.New("missing credentials")
 }
 
 // Login calls login and stores the returned authorization key
