@@ -327,9 +327,9 @@ func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
 
 		var capped float64
 		if charging {
-			capped = min(new, maxPower, max(0, potential+old))
+			capped = min(maxPower, new, max(0, potential+old))
 		} else {
-			capped = min(new, max(0, potential))
+			capped = max(0, min(new, potential))
 		}
 		if new > capped {
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
@@ -351,9 +351,9 @@ func (c *Circuit) ValidateCurrent(old, new float64, charging bool) float64 {
 
 		var capped float64
 		if charging {
-			capped = min(new, maxCurrent, max(0, potential+old))
+			capped = min(maxCurrent, new, max(0, potential+old))
 		} else {
-			capped = min(new, max(0, potential))
+			capped = max(0, min(new, potential))
 		}
 		if new > capped {
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
