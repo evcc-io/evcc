@@ -38,6 +38,7 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -45,6 +46,9 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh

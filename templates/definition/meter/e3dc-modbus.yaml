@@ -11,6 +11,7 @@ params:
     default: 502
   - name: capacity
     advanced: true
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -39,6 +40,7 @@ render: |
         decode: int32s
         address: 40075 # Leistung zusätzlicher Einspeiser in Watt
       scale: -1 # reverse sign
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
