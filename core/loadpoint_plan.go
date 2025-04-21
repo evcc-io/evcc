@@ -177,7 +177,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
 			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Println("plan: continuing until end of slot")
+			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
 		case requiredDuration < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
