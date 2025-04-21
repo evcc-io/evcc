@@ -230,7 +230,7 @@ func (wb *EProWallbox) MaxCurrent(current int64) error {
 	return wb.MaxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*ABB)(nil)
+var _ api.ChargerEx = (*EProWallbox)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *EProWallbox) MaxCurrentMillis(current float64) error {
@@ -291,42 +291,131 @@ func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, flo
 	return res[0], res[1], res[2], nil
 }
 
-var _ api.PhaseCurrents = (*ABB)(nil)
+var _ api.PhaseCurrents = (*EProWallbox)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *EProWallbox) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(eproRegL1Iac, 1)
 }
 
-var _ api.PhaseVoltages = (*ABB)(nil)
+var _ api.PhaseVoltages = (*EProWallbox)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *EProWallbox) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(eproRegL1Vac, 1)
 }
 
-// var _ api.PhaseSwitcher = (*ABB)(nil)
-
-// // Phases1p3p implements the api.PhaseSwitcher interface
-// func (wb *ABB) Phases1p3p(phases int) error {
-// 	var b uint16 = 1
-// 	if phases != 1 {
-// 		b = 2 // 3p
-// 	}
-
-// 	_, err := wb.conn.WriteSingleRegister(abbRegPhases, b)
-// 	return err
-// }
-
 var _ api.Diagnosis = (*EProWallbox)(nil)
 
-// Diagnose implements the api.Diagnosis interface
 func (wb *EProWallbox) Diagnose() {
+
+	// use description from modbus communication map pdf from Free2Move
+	var decoderOcppStatus = map[uint16]string{
+		0: "Available (A)", 1: "Preparing (B)", 2: "Charging (C)",
+		3: "SuspendedEV (D)", 4: "SuspendedEVSE (E)", 5: "Finishing (F)",
+		6: "Reserved (G)", 7: "Unavailable (H)", 8: "Faulted (I)",
+	}
+
+	var decoderDeviceType = map[uint16]string{
+		0: "AC 1-phase",
+		1: "AC 3-phase",
+	}
+
+	var decoderGeneralStatus = map[uint16]string{
+		0: "A1", 1: "A2", 2: "B1", 3: "B2", 4: "C1", 5: "C2", 6: "D1", 7: "D2", 8: "E", 9: "F",
+	}
+
+	var decoderEnabledDisabled = map[uint16]string{0: "Disabled", 1: "Enabled"}
+
+	var decoderTempDerating = map[uint16]string{
+		0: "Disabled",
+		1: "Enabled (limits when temperature > 85°C)",
+	}
+
+	var decoderMeterUsed = map[uint16]string{0: "External", 1: "Internal"}
+
+	var decoderBaudRate = map[uint16]string{
+		0: "9600", 1: "19200", 2: "38400", 3: "57600", 4: "115200",
+	}
+
+	decode := func(m map[uint16]string, value uint16) string {
+		if decoded, ok := m[value]; ok {
+			return decoded
+		}
+		return fmt.Sprintf("Unknown (%d)", value)
+	}
+
+	readASCII := func(address, size uint16, label string) {
+		b, _ := wb.conn.ReadHoldingRegisters(address, size)
+		fmt.Printf("%-25s %s\n", label+":", string(b))
+	}
+
+	readUint16Dec := func(address uint16, label string, decoder map[uint16]string) {
+		b, _ := wb.conn.ReadHoldingRegisters(address, 1)
+		val := binary.BigEndian.Uint16(b)
+		if decoder != nil {
+			fmt.Printf("%-25s %s (%d)\n", label+":", decode(decoder, val), val)
+		} else {
+			fmt.Printf("%-25s %d\n", label+":", val)
+		}
+	}
+
+	readUint16 := func(address uint16, label string, unit string) {
+		b, _ := wb.conn.ReadHoldingRegisters(address, 1)
+		val := binary.BigEndian.Uint16(b)
+		if unit != "" {
+			fmt.Printf("%-25s %d %s\n", label+":", val, unit)
+		} else {
+			fmt.Printf("%-25s %d\n", label+":", val)
+		}
+	}
+
+	readUint32 := func(address uint16, label string, unit string) {
+		b, _ := wb.conn.ReadHoldingRegisters(address, 2)
+		val := binary.BigEndian.Uint32(b)
+		if unit != "" {
+			fmt.Printf("%-25s %d %s\n", label+":", val, unit)
+		} else {
+			fmt.Printf("%-25s %d\n", label+":", val)
+		}
+	}
 
 	fmt.Println("eProWallbox diagnostics:")
 
-	b, _ := wb.conn.ReadHoldingRegisters(eproRegSerial, 8)
-	fmt.Printf("Serial Number: %s", string(b))
+	// Identification
+	readASCII(40000, 8, "Serial Number")
+	readASCII(40008, 4, "Software Version")
+	readASCII(40012, 4, "Modbus Version")
 
-	// TODO
+	// Device Info
+	readUint16(40016, "HW Type", "")
+	readUint16Dec(40017, "Device Type", decoderDeviceType)
+	readUint32(40018, "HW Current Limit", "mA")
+
+	// Status
+	readUint16(40100, "Actual Error", "")
+	readUint16Dec(40101, "General Status", decoderGeneralStatus)
+	readUint16Dec(40102, "OCPP Status", decoderOcppStatus)
+	readUint32(40103, "User Current Limit", "mA")
+	readUint16Dec(40106, "Load Unbalance Limiting", decoderEnabledDisabled)
+	readUint16Dec(40107, "DPM Limiting", decoderEnabledDisabled)
+	readUint16Dec(40108, "Temp Derating Status", decoderTempDerating)
+
+	// Communication
+	readUint16(40200, "RTU Address", "")
+	readUint16(40201, "New RTU Address", "")
+	readUint16Dec(40210, "Baud Rate", decoderBaudRate)
+	readUint16Dec(40211, "New Baud Rate", decoderBaudRate)
+
+	// Config
+	readUint16Dec(40400, "DPM Enabled", decoderEnabledDisabled)
+	readUint16Dec(40401, "MID Meter Enabled", decoderEnabledDisabled)
+	readUint16Dec(40402, "Load Unbalance Enabled", decoderEnabledDisabled)
+	readUint32(40403, "Load Unbalance Current", "mA")
+	readUint16(40406, "On/Off Input", "")
+	readUint32(40407, "Current Limit", "mA")
+	readUint32(40409, "Fallback Current", "mA")
+	readUint16Dec(40411, "Meter Used", decoderMeterUsed)
+	readUint16(40412, "Watchdog Enabled", "")
+	readUint16(40413, "Watchdog Timer", "s")
 }
