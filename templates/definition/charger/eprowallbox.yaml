@@ -1,0 +1,15 @@
+template: eprowallbox
+products:
+  - brand: Free2Move
+    description:
+      generic: eProWallbox
+capabilities: ["mA"]
+requirements:
+  description:
+  evcc: []
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+render: |
+  type: eprowallbox
+  {{- include "modbus" . }}
