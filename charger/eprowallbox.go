@@ -91,10 +91,6 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 	// 	}
 	// }()
 
-	b, err := wb.conn.ReadHoldingRegisters(eproRegSerial, 8)
-	sn := string(b)
-	log.TRACE.Printf("Serial Number: %s", sn)
-
 	return wb, err
 }
 
