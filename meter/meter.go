@@ -24,7 +24,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 
 		// battery
 		capacity    `mapstructure:",squash"`
-		maxpower    `mapstructure:",squash"`
+		maxacpower  `mapstructure:",squash"`
 		battery     `mapstructure:",squash"`
 		Soc         *plugin.Config // optional
 		LimitSoc    *plugin.Config // optional
@@ -80,7 +80,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		}
 	}
 
-	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), cc.maxpower.Decorator(), batModeS)
+	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), cc.maxacpower.Decorator(), batModeS)
 
 	return res, nil
 }
