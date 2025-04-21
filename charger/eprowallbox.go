@@ -113,11 +113,9 @@ func (wb *EProWallbox) getGeneralStatus() (string, error) {
 		9: "F",
 	}
 	if status, ok := statusDecodeMap[s]; ok {
-		wb.log.TRACE.Printf("IEC 61851 Status: %s", status)
 		return status, nil
 	} else {
 
-		wb.log.TRACE.Printf("IEC 61851 Status: Unknown (%x)", s)
 		return "F", fmt.Errorf("invalid status value: %d", s)
 	}
 }
