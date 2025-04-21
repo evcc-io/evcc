@@ -39,31 +39,34 @@ import (
 type BenderCC struct {
 	conn    *modbus.Connection
 	current uint16
+	power   uint16
 	phases  int
-	legacy  bool
+
+	// feature flags
+	legacy    bool
+	currmilli bool
 }
 
 const (
 	// all holding type registers
-	bendRegChargePointState = 122  // Vehicle (Control Pilot) state
-	bendRegPhaseEnergy      = 200  // Phase energy from primary meter (Wh)
-	bendRegCurrents         = 212  // Currents from primary meter (mA)
-	bendRegTotalEnergy      = 218  // Total Energy from primary meter (Wh)
-	bendRegActivePower      = 220  // Active Power from primary meter (W)
-	bendRegVoltages         = 222  // Voltages of the ocpp meter (V)
-	bendRegUserID           = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
-	bendRegEVBatteryState   = 730  // EV Battery State (% 0-100)
-	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
-	bendRegHemsCurrentLimit = 1000 // HEMS Current Limit (A)
+	bendRegChargePointState   = 122  // Vehicle (Control Pilot) state
+	bendRegPhaseEnergy        = 200  // Phase energy from primary meter (Wh)
+	bendRegCurrents           = 212  // Currents from primary meter (mA)
+	bendRegTotalEnergy        = 218  // Total Energy from primary meter (Wh)
+	bendRegActivePower        = 220  // Active Power from primary meter (W)
+	bendRegVoltages           = 222  // Voltages of the ocpp meter (V)
+	bendRegUserID             = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	bendRegEVBatteryState     = 730  // EV Battery State (% 0-100)
+	bendRegEVCCID             = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
+	bendRegHemsCurrentLimit   = 1000 // HEMS Current Limit (A)
+	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A)
+	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W)
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
 	bendRegProtocolVersion      = 120 // Ebee Modbus TCP Server Protocol Version number
 	bendRegChargePointModel     = 142 // ChargePoint Model. Bytes 0 to 19.
 	bendRegSmartVehicleDetected = 740 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
-
-	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A)
-	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W)
 
 	// unused
 	// bendRegChargedEnergyLegacy    = 705 // Sum of charged energy for the current session (Wh)
@@ -156,6 +159,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
 		maxCurrentMillis = wb.maxCurrentMillis
+		wb.currmilli = true
 
 		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 			phases1p3p = wb.phases1p3p
@@ -187,25 +191,51 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
-	if err != nil {
-		return false, err
+	if wb.currmilli {
+		if wb.phases != 0 {
+			b, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1)
+			if err != nil || binary.BigEndian.Uint16(b) == 0 {
+				return false, err
+			}
+		}
+		b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1)
+		if err != nil || binary.BigEndian.Uint16(b) == 0 {
+			return false, err
+		}
+	} else {
+		b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
+		if err != nil || binary.BigEndian.Uint16(b) == 0 {
+			return false, err
+		}
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	return true, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *BenderCC) Enable(enable bool) error {
 	b := make([]byte, 2)
+	p := make([]byte, 2)
+
 	if enable {
 		binary.BigEndian.PutUint16(b, wb.current)
+		binary.BigEndian.PutUint16(p, wb.power)
+	}
+
+	if wb.currmilli {
+		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
+		if err != nil {
+			return err
+		}
+		if wb.phases != 0 {
+			_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, p)
+			return err
+		}
+
+		return nil
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
-
-	// ToDo
-	//_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
 
 	return err
 }
@@ -233,37 +263,41 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	var err error
 	b := make([]byte, 2)
 
-	if wb.phases != 0 {
+	if wb.phases != 0 { // 1p3p supported, use power limit
 		var power float64
 
-		u1, u2, u3, err := wb.voltages()
-		if err == nil {
+		if u1, u2, u3, err := wb.voltages(); err == nil {
+			// voltages available
 			if wb.phases == 1 {
 				power = u1 * current
 			} else {
 				power = (u1 + u2 + u3) * current
 			}
 		} else {
+			// no voltages available
 			power = 230.0 * current * float64(wb.phases)
 		}
 
 		binary.BigEndian.PutUint16(b, uint16(power))
+		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, b)
+		if err != nil {
+			return err
+		}
 
-		_, err = wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, b)
-	} else {
-		binary.BigEndian.PutUint16(b, uint16(current*10)) // 0.1A Steps
-
-		_, err = wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
+		wb.power = uint16(power)
 	}
 
-	if err == nil {
-		wb.current = uint16(current * 10) // 0.1A Steps
+	binary.BigEndian.PutUint16(b, uint16(current*10)) // 0.1A Steps
+	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
+	if err != nil {
+		return err
 	}
 
-	return err
+	wb.current = uint16(current * 10) // 0.1A Steps
+
+	return nil
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555
