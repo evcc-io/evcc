@@ -163,7 +163,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 
 		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 			phases1p3p = wb.phases1p3p
-			wb.phases = 3
+			wb.phases = 3 // assume 3p until set
 		}
 	}
 
