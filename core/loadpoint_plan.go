@@ -164,8 +164,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return false
 		}
 
-		// remember last active plan's end time
-		lp.setPlanActive(true)
+		// remember last active plan's slot end time
 		lp.planSlotEnd = activeSlot.End
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
