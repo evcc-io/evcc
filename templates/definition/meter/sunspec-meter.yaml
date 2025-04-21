@@ -21,8 +21,6 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-      - 201:W
-      - 211:W
       - 203:W
       - 213:W
   energy:
@@ -30,8 +28,6 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-      - 201:TotWhImp
-      - 211:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
@@ -40,8 +36,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
-        - 201:AphA
-        - 211:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
@@ -61,8 +55,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
-        - 201:PhVphA
-        - 211:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
@@ -82,8 +74,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
-        - 201:WphA
-        - 211:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
@@ -105,8 +95,6 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-      - 201:W
-      - 211:W
       - 203:W
       - 213:W
   energy:
@@ -114,8 +102,6 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-      - 201:TotWhExp
-      - 211:TotWhExp
       - 203:TotWhExp
       - 213:TotWhExp
     scale: 0.001
