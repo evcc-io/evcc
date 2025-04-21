@@ -8,19 +8,45 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Netz und Batterie erfordern den PowerSensor.
+
+      Die Verbindung zum Wechselrichter erfolgt über Modbus. Die folgenden Details sollten Ihnen bei der Einrichtung der Verbindung helfen.
+
+      - Die Modbus-ID sollte 0 sein, es sei denn, Sie verwenden eine RS485-Verbindung.
+      - Die IP-Adresse sollte auf die IP-Adresse des Wechselrichters oder auf 192.168.200.1 gesetzt sein, wenn Sie eine Verbindung zum Wechselrichter-Zugangspunkt herstellen.
+      - Der Port sollte auf 6607 eingestellt sein, wenn Sie eine Firmware-Version ab Dezember 2021 verwenden, andernfalls sollte er auf 502 eingestellt sein.
+
+      Sie können eine der folgenden Optionen verwenden, um eine Verbindung zum Wechselrichter herzustellen:
+      - Sie können Modbus/TCP in den Kommunikationseinstellungen des Wechselrichters aktivieren. Dazu benötigen Sie ein Installateurkonto.
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      - Sie können sich direkt mit dem Zugangspunkt des Wechselrichters verbinden (SUN2000-<Seriennummer> wifi). Dies ist derselbe Zugang, der für die
+      Geräteinbetriebnahme verwendet und erfordert keinen besonderen Zugriff. Wenn diese Option verwendet wird, sollte der Host auf
+      192.168.200.1 gesetzt werden, die Standard-IP-Adresse des Wechselrichters.
+      Siehe https://github.com/wlcrs/huawei_solar/wiki/Connecting-to-the-inverter#connect-to-the-inverter-ap-sun2000-serial_no-wifi
     en: |
       Grid and Battery require the PowerSensor.
-      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
+
+      The connection to the inverter is done via Modbus. The details below should help you to set up the connection.
+
+      - Modbus ID should be 0, unless you're connecting using RS485.
+      - IP address should be set to the IP address of the inverter or 192.168.200.1 if you're connecting to the inverter access point.
+      - Port should be set to 6607 if you're using a firmware version from December 2021 or later, else it should be set to 502.
+
+      You can use one of the following options to connect to the inverter:
+      - You can activate Modbus/TCP within the communication settings of the inverter, this requires an installer account.
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      - You can connect to the inverter access point directly (SUN2000-<serial_no> wifi). This is the same access used for
+      device commissioning and does not require any special access. If this option is used, the host should be set to
+      192.168.200.1 which is the default IP address of the inverter.
+      See https://github.com/wlcrs/huawei_solar/wiki/Connecting-to-the-inverter#connect-to-the-inverter-ap-sun2000-serial_no-wifi
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
+    port: 6607
+    id: 0
   - name: timeout
     default: 15s
   - name: storageunit
