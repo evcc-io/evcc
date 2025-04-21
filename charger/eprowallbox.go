@@ -83,41 +83,7 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 		current: 6000, // assume min current
 		log:     log,
 	}
-
-	// keep-alive
-	// go func() {
-	// 	for range time.Tick(30 * time.Second) {
-	// 		_, _ = wb.status()
-	// 	}
-	// }()
-
 	return wb, err
-}
-
-func (wb *EProWallbox) getGeneralStatus() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(eproRegGeneralStatus, 1)
-	if err != nil {
-		return "F", err
-	}
-	s := binary.BigEndian.Uint16(b)
-	statusDecodeMap := map[uint16]string{
-		0: "A1",
-		1: "A2",
-		2: "B1",
-		3: "B2",
-		4: "C1",
-		5: "C2",
-		6: "D1",
-		7: "D2",
-		8: "E",
-		9: "F",
-	}
-	if status, ok := statusDecodeMap[s]; ok {
-		return status, nil
-	} else {
-
-		return "F", fmt.Errorf("invalid status value: %d", s)
-	}
 }
 
 func (wb *EProWallbox) getOCPPStatus() (core.ChargePointStatus, error) {
@@ -141,10 +107,8 @@ func (wb *EProWallbox) getOCPPStatus() (core.ChargePointStatus, error) {
 	}
 
 	if status, ok := statusDecodeMap[s]; ok {
-		wb.log.TRACE.Printf("OCPP Status: %s", status)
 		return status, nil
 	} else {
-		wb.log.TRACE.Printf("OCPP Status: Unknown (%x)", s)
 		return core.ChargePointStatusFaulted, fmt.Errorf("invalid status value: %d", s)
 	}
 }
@@ -199,7 +163,6 @@ func (wb *EProWallbox) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *EProWallbox) Enable(enable bool) error {
 	var current uint32
-	wb.log.TRACE.Printf("Called Set Enable: %t", enable)
 
 	if enable {
 		current = wb.current
@@ -229,7 +192,6 @@ var _ api.ChargerEx = (*EProWallbox)(nil)
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *EProWallbox) MaxCurrentMillis(current float64) error {
 
-	wb.log.TRACE.Printf("Called Set MaxCurrentMillis: %f", current)
 	wb.current = uint32(current * 1e3)
 
 	if (wb.current < 6000) || (wb.current > 32000) {
@@ -238,34 +200,6 @@ func (wb *EProWallbox) MaxCurrentMillis(current float64) error {
 	return wb.setCurrent(wb.current)
 }
 
-// var _ api.Meter = (*ABB)(nil)
-
-// // CurrentPower implements the api.Meter interface
-// func (wb *EProWallbox) CurrentPower() (float64, error) {
-// 	return 30, nil
-
-// 	// b, err := wb.conn.ReadHoldingRegisters(abbRegPower, 2)
-// 	// if err != nil {
-// 	// 	return 0, err
-// 	// }
-
-// 	// return float64(binary.BigEndian.Uint32(b)), err
-// }
-
-// var _ api.ChargeRater = (*ABB)(nil)
-
-// // ChargedEnergy implements the api.MeterEnergy interface
-// func (wb *EProWallbox) ChargedEnergy() (float64, error) {
-
-// 	return 30, nil
-
-// 	// 	b, err := wb.conn.ReadHoldingRegisters(abbRegEnergy, 2)
-// 	// 	if err != nil {
-// 	// 		return 0, err
-// 	// 	}
-
-// 	// return float64(binary.BigEndian.Uint32(b)) / 1e3, err
-// }
 
 // getPhaseValues returns 3 sequential register values
 func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
@@ -280,7 +214,6 @@ func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, flo
 		bits := binary.BigEndian.Uint32(b) // falls Big-Endian – sonst LittleEndian
 		res[i] = float64(math.Float32frombits(bits)) / divider
 	}
-	wb.log.TRACE.Printf("getPhaseValues: %d %f %f %f", reg, res[0], res[1], res[2])
 
 	return res[0], res[1], res[2], nil
 }
