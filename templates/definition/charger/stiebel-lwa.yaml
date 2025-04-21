@@ -23,10 +23,10 @@ render: |
   getmode:
     source: map
     values:
-      1: 3 # Frostschutz
-      2: 1 # Normal
-      3: 2 # Forcierter Betrieb
-      4: 2 # Sofortige Ansteuerung
+      1: 1 # Frostschutz
+      2: 2 # Normal
+      3: 3 # Forcierter Betrieb
+      4: 3 # Sofortige Ansteuerung
     get:
       source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -37,7 +37,7 @@ render: |
   setmode:
     source: switch
     switch:
-    - case: 1 # normal
+    - case: 2 # normal
       set:
         source: sequence
         set:
@@ -59,7 +59,7 @@ render: |
               address: 4002
               type: writesingle
               encoding: uint16
-    - case: 2 # boost
+    - case: 3 # boost
       set:
         source: sequence
         set:
@@ -81,7 +81,7 @@ render: |
               address: 4002
               type: writesingle
               encoding: uint16
-    - case: 3 # dimm
+    - case: 1 # dimm
       set:
         source: sequence
         set:
