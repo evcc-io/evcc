@@ -156,6 +156,7 @@ func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 		b := make([]byte, 4)
 		wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b)
 		wb.conn.WriteSingleRegister(mennekesRegChargingReleaseEM, mennekesAllowed)
+		return api.StatusNone, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
@@ -283,7 +284,11 @@ func (wb *MennekesCompact) phases1p3p(phases int) error {
 
 	// temporarily disable charger during phase switching
 	if en, err := wb.Enabled(); err == nil && en {
-		wb.Enable(false)
+		err := wb.Enable(false)
+		if err != nil {
+			return err
+		}
+
 		defer wb.Enable(true)
 	}
 
