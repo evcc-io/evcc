@@ -23,8 +23,6 @@ package charger
 //   -> Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
 // * Set 'Allow UID Disclose' to On
 
-// Supports dynamic phase switching for Mennekes Amtron 4You 5xx Series and 4Business 7xx (same charger type, but with Eichrecht)
-
 import (
 	"context"
 	"encoding/binary"
@@ -78,7 +76,9 @@ func init() {
 
 // NewBenderCCFromConfig creates a BenderCC charger from generic config
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{}
+	cc := modbus.TcpSettings{
+		ID: 255,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (wb *BenderCC) Enabled() (bool, error) {
 func (wb *BenderCC) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		binary.BigEndian.PutUint16(b, uint16(wb.current))
+		binary.BigEndian.PutUint16(b, wb.current)
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
@@ -192,6 +192,7 @@ func (wb *BenderCC) Enable(enable bool) error {
 	return err
 }
 
+// MaxCurrent implements the api.Charger interface
 func (wb *BenderCC) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
