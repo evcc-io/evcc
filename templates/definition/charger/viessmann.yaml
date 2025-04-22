@@ -64,6 +64,8 @@ render: |
         source: http
         uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
         method: POST 
+        headers:  
+          - content-type: application/json
         auth:
           source: viessmann
           user: {{ .user }}
@@ -78,6 +80,8 @@ render: |
         - source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
           method: POST
+          headers:  
+            - content-type: application/json
           auth:
             source: viessmann
             user: {{ .user }}
@@ -88,6 +92,8 @@ render: |
         - source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
           method: POST 
+          headers:  
+            - content-type: application/json
           auth:
             source: viessmann
             user: {{ .user }}
