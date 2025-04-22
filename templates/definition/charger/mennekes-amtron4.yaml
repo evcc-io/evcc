@@ -9,8 +9,8 @@ products:
 capabilities: ["rfid","1p3p", "mA"]
 requirements:
   description:
-    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
-    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+    de: Der Modbus TCP Server muss unter 'Einstellungen -> Vernetzung -> Externes Energiemanagement' aktiviert sein. Unit-ID: 1, Server-Port: 502 als default Einstellungen empfohlen. SEMP-Schnittstelle muss deaktiviert sein. Für eine automatische Phasenumschaltung muss der 'Phasenumaschaltmodus' auf 'dynamisch' gesetzt sein.
+    en: The Modbus TCP Server needs to be enabled in 'Settings -> Networking -> External Energy Management'. Unit-ID: 1, Server-Port: 502 recommended as default settings. SEMP Interface has to be disabled. To use dynamic phase switching, the 'Phase Switching Mode' has to be set to 'Dynamic Phase Switching'.
   evcc: ["sponsorship"]
 params:
   - name: host
