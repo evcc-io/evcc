@@ -17,14 +17,6 @@ package charger
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Supports all chargers based on Bender CC612/613 controller series
-// * The 'Modbus TCP Server for energy management systems' must be enabled.
-// * The setting 'Register Address Set' must NOT be set to 'Phoenix', 'TQ-DM100' or 'ISE/IGT Kassel'.
-//   -> Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc.
-// * Set 'Allow UID Disclose' to On
-
-// Supports dynamic phase switching for Mennekes Amtron 4You 5xx Series and 4Business 7xx (same charger type, but with Eichrecht)
-
 import (
 	"context"
 	"encoding/binary"
@@ -38,7 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// Amtron4 charger implementation
+// Amtron4you/4business charger implementation
 type Amtron4 struct {
 	*BenderCC
 	current float64
