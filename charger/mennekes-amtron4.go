@@ -136,41 +136,6 @@ func (wb *Amtron4) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Amtron4) Enable(enable bool) error {
-	// Ensure the current limit is set to address potential issues with undefined states
-	// that may occur after charger timeouts or reboots.
-
-	// Calculate the power limit based on the current setting.
-	powerlimit, err := wb.powerLimit(wb.current)
-	if err != nil {
-		return fmt.Errorf("power limit: %v", err)
-	}
-
-	bp := make([]byte, 2)
-	bc := make([]byte, 2)
-
-	// If enabling, set HEMS Power to the calculated power limit and HEMS Current to 16A
-	if enable {
-		binary.BigEndian.PutUint16(bp, uint16(powerlimit)) // Set power limit
-		binary.BigEndian.PutUint16(bc, uint16(16))         // Set current limit to 16A
-	}
-
-	if _, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp); err != nil {
-		return fmt.Errorf("power limit: %v", err)
-	}
-
-	if _, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, bc); err != nil {
-		return fmt.Errorf("current limit: %v", err)
-	}
-
-	return nil
-}
-
-// calculate the power limit for the HEMS module
-func (wb *Amtron4) powerLimit(current float64) (float64, error) {
-	v1, v2, v3, err := wb.voltages()
-	if err != nil {
-		return 0, fmt.Errorf("voltages: %v", err)
-	}
 
 	phases := wb.phases
 	if phases == 0 && wb.lp != nil {
@@ -178,29 +143,35 @@ func (wb *Amtron4) powerLimit(current float64) (float64, error) {
 		phases = wb.lp.GetPhases()
 	}
 
-	// Calculate the power limit for the AMTRON 4You charger.
-	// Ensure that the resulting power corresponds to at least 6A charging current
-	// to guarantee charging functionality.
-	// Use the maximum voltage among the three phases,
-	// applying a 2% tolerance to account for voltage fluctuations.
-	powerLimit := current * max(v1, v2, v3) * 1.02 * float64(phases)
+	bp := make([]byte, 2)
+	bc := make([]byte, 2)
 
-	return powerLimit, nil
+	if enable {
+		binary.BigEndian.PutUint16(bp, uint16(230*16*phases))
+		binary.BigEndian.PutUint16(bc, uint16(wb.current*10))
+	}
+
+	if _, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, bp); err != nil {
+		return fmt.Errorf("power limit: %v", err)
+	}
+
+	if _, err := wb.conn.WriteMultipleRegisters(amtronRegHemsCurrentLimit, 1, bc); err != nil {
+		return fmt.Errorf("current limit: %v", err)
+	}
+
+	return nil
 }
 
 var _ api.ChargerEx = (*Amtron4)(nil)
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Amtron4) MaxCurrentMillis(current float64) error {
-	powerlimit, err := wb.powerLimit(current)
-	if err != nil {
-		return fmt.Errorf("power limit: %v", err)
-	}
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(powerlimit))
+	binary.BigEndian.PutUint16(b, uint16(current*10))
 
-	_, err = wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsCurrentLimit, 1, b)
+
 	if err == nil {
 		wb.current = current
 	}
@@ -215,8 +186,16 @@ func (wb *Amtron4) MaxCurrent(current int64) error {
 var _ api.PhaseSwitcher = (*Amtron4)(nil)
 
 func (wb *Amtron4) Phases1p3p(phases int) error {
-	wb.phases = phases
-	return nil
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(230*16*phases))
+	_, err := wb.conn.WriteMultipleRegisters(amtronRegHemsPowerLimit, 1, b)
+
+	if err == nil {
+		wb.phases = phases
+	}
+
+	return err
 }
 
 var _ loadpoint.Controller = (*Delta)(nil)
