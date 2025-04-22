@@ -30,6 +30,7 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -38,6 +39,7 @@ import (
 // BenderCC charger implementation
 type BenderCC struct {
 	conn    *modbus.Connection
+	lp      loadpoint.API
 	current uint16
 	power   uint16
 	phases  int
@@ -164,6 +166,11 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 			phases1p3p = wb.phases1p3p
 			wb.phases = 3 // assume 3p until set
+			if wb.lp != nil {
+				if p := wb.lp.GetPhases(); p != 0 {
+					wb.phases = p
+				}
+			}
 		}
 	}
 
@@ -451,4 +458,11 @@ func (wb *BenderCC) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
 		fmt.Printf("\tUserID:\t%s\n", b)
 	}
+}
+
+var _ loadpoint.Controller = (*MyPv)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
