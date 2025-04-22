@@ -105,6 +105,7 @@ test("update password", async ({ page }) => {
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
   const modal = page.getByTestId("password-modal");
+  await expectModalVisible(modal);
   await expect(modal.getByRole("heading", { name: "Update Administrator Password" })).toBeVisible();
   await modal.getByLabel("Current password").fill(oldPassword);
   await modal.getByLabel("New password").fill(newPassword);
@@ -131,6 +132,7 @@ test("update password", async ({ page }) => {
 
   // revert to old password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
+  await expectModalVisible(modal);
   await modal.getByLabel("Current password").fill(newPassword);
   await modal.getByLabel("New password").fill(oldPassword);
   await modal.getByLabel("Repeat password").fill(oldPassword);

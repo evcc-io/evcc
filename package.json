@@ -49,6 +49,7 @@
     "globals": "^16.0.0",
     "happy-dom": "^17.4.4",
     "markty-toml": "^0.1.1",
+    "mqtt": "^5.11.0",
     "prettier": "^3.0.0",
     "prettier-plugin-sh": "^0.15.0",
     "prettier-plugin-toml": "^2.0.1",

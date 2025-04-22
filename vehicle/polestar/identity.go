@@ -93,7 +93,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	matches := regexp.MustCompile(`url:\s*"/as/(.+?)/resume/as/authorization\.ping"`).FindStringSubmatch(string(body))
+	matches := regexp.MustCompile(`(?:url|action):\s*"/as/(.+?)/resume/as/authorization\.ping"`).FindStringSubmatch(string(body))
+
 	if len(matches) < 2 {
 		return nil, errors.New("could not find resume path")
 	}

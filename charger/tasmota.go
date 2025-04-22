@@ -32,6 +32,7 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI          string
 		User         string
 		Password     string
+		Usage        string
 		StandbyPower float64
 		Channel      []int
 		Cache        time.Duration
@@ -44,11 +45,11 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
+	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Usage, cc.Channel, cc.StandbyPower, cc.Cache)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
+func NewTasmota(embed embed, uri, user, password, usage string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
 	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err

@@ -1,17 +1,55 @@
 template: volvo-connected
 products:
   - brand: Volvo
-    description:
-      de: aktuell
-      en: latest
+requirements:
+  description:
+    de: |
+      Für die Nutzung mit EVCC benötigst du einen Volvo Account und einen Volvo Connected Car API Key. 
+      Erstelle dazu auf der [Account Seite](https://developer.volvocars.com/account/) eine neue Applikation und speichere den primären VCC API Key ab. 
+      Veröffentliche nun deine Applikation und wähle unter "Scopes" die Berechtigungen "Connected Vehicle API -> conve:vehicle_relation" und "Energy API -> (alles)" aus.
+      Als Redirect URL kannst du erstmal "http://localhost:9999" (oder etwas anderes nicht erreichbares) verwenden. Der Authorisierungscode wird später händisch aus dem Browser gelesen und eingegeben.
+      Sobald die Applikation erstellt ist, wird sie als "Publication under Review" angezeigt. Das ist nicht weiter schlimm, es funktioniert trotzdem.
+      Erstelle danach einen Token mit `evcc token <auto-name>` und speichere die Tokens in der Konfiguration. Falls Evcc wegen einem invaliden Refresh Token abbricht, lösche die Tokens mit `evcc settings` und generiere sie neu.
+    en: |
+      To use with EVCC, you need a Volvo account and a Volvo Connected Car API Key.
+      To do this, create a new application on the [Account page](https://developer.volvocars.com/account/) and save the primary VCC API key.
+      Now publish your application and select the permissions "Connected Vehicle API -> conve:vehicle_relation" and "Energy API -> (everything)" under "Scopes".
+      You can use "http://localhost:9999" (or something else unreachable) as the redirect URL for now. The authorization code will be read and entered manually from the browser later.
+      Once the application is created, it will be displayed as "Publication under Review". This is not a problem, it still works.
+      Then create a token with `evcc token <car-name>` and save the tokens in the configuration. If Evcc crashes due to an invalid refresh token, delete the tokens with `evcc settings` and generate them again.
 params:
-  - preset: vehicle-base
+  - preset: vehicle-common
   - name: vccapikey
     required: true
     help:
-      en: "Volvo developer portal VCC API Key, see https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
-      de: "Volvo developer portal VCC API Key, siehe https://github.com/evcc-io/evcc/discussions/3677#discussioncomment-4106300"
+      en: "Volvo developer portal VCC API Key"
+      de: "Volvo developer portal VCC API Key"
+  - name: clientId
+    required: true
+    help:
+      en: "Client ID of your [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "Client ID deiner [Volvo Developer App](https://developer.volvocars.com/)."
+  - name: clientSecret
+    required: true
+    help:
+      en: "Client Secret of your [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "Client Secret deiner [Volvo Developer App](https://developer.volvocars.com/)."
+  - name: accessToken
+    required: true
+    mask: true
+  - name: refreshToken
+    required: true
+    mask: true
+  - name: vin
+    example: WF0FXX...
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}
-  {{ include "vehicle-base" . }}
+  credentials:
+    id: {{ .clientId }}
+    secret: {{ .clientSecret }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  vin: {{ .vin }}
+  {{ include "vehicle-common" . }}
