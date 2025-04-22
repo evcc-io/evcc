@@ -154,8 +154,12 @@ func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case 6:
 		b := make([]byte, 4)
-		wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b)
-		wb.conn.WriteSingleRegister(mennekesRegChargingReleaseEM, mennekesAllowed)
+		if _, err := wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b); err != nil {
+			return api.StatusNone, err
+		}
+		if _, err := wb.conn.WriteSingleRegister(mennekesRegChargingReleaseEM, mennekesAllowed); err != nil {
+			return api.StatusNone, err
+		}
 		return api.StatusNone, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
