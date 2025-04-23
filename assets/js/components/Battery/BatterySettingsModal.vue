@@ -555,18 +555,20 @@ export default defineComponent({
 	transform: translateY(-50%);
 }
 .batterySoc {
-	border-radius: 0.5rem;
-	left: 0.5rem;
-	right: 0.5rem;
-	height: 0.5rem;
-	opacity: 0.5;
+	--size: 0.7rem;
+	border-radius: var(--size);
+	left: 1rem;
+	right: 1rem;
+	height: var(--size);
+	opacity: 0.8;
 }
 
 .bufferStartIndicator {
+	--size: 0.7rem;
 	display: flex;
 	justify-content: space-between;
-	left: 0;
-	right: 0;
+	left: calc(-1 * var(--size) / 4);
+	right: calc(-1 * var(--size) / 4);
 }
 .bufferStartIndicator--hidden {
 	opacity: 0;
@@ -574,15 +576,15 @@ export default defineComponent({
 }
 .bufferStartIndicator__left,
 .bufferStartIndicator__right {
-	height: 0.5rem;
-	width: 0.5rem;
+	height: var(--size);
+	width: var(--size);
 	background-color: var(--evcc-box);
 }
 .bufferStartIndicator__left {
-	border-radius: 0 0.5rem 0.5rem 0;
+	border-radius: 0 var(--size) var(--size) 0;
 }
 .bufferStartIndicator__right {
-	border-radius: 0.5rem 0 0 0.5rem;
+	border-radius: var(--size) 0 0 var(--size);
 }
 .progress {
 	flex: 1;
