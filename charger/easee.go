@@ -173,7 +173,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
 		}),
 		signalr.WithReceiver(c),
-		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
+		signalr.Logger(easee.SignalrLogger(c.log.TRACE), true),
 	)
 
 	if err == nil {
@@ -268,7 +268,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 	// https://github.com/evcc-io/evcc/issues/8009
 	// logging might be slow or block, execute outside lock
-	c.log.TRACE.Printf("ProductUpdate %s: (%v) %s %v", res.Mid, res.Timestamp, res.ID, value)
+	c.log.TRACE.Printf("ProductUpdate %s (%s): (%v) %s %v", c.charger, res.Mid, res.Timestamp, res.ID, value)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
