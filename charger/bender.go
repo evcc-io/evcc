@@ -69,6 +69,9 @@ const (
 	// bendRegChargingDurationLegacy = 709 // Duration since beginning of charge (Seconds)
 	// bendRegChargedEnergy          = 716 // Sum of charged energy for the current session (Wh)
 	// bendRegChargingDuration       = 718 // Duration since beginning of charge (Seconds)
+
+	powerLimit1p uint16 = 3725 // 207V * 3p * 6A - 1W
+	powerLimit3p uint16 = 0xffff
 )
 
 func init() {
@@ -316,14 +319,12 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *BenderCC) phases1p3p(phases int) error {
-	var power uint16 = 0xffff // 65535W - no limit
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, powerLimit3p)
 
 	if phases == 1 {
-		power = 3725 // 207V * 3p * 6A - 1W
+		binary.BigEndian.PutUint16(b, powerLimit1p)
 	}
-
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, power)
 
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, b)
 
@@ -337,7 +338,7 @@ func (wb *BenderCC) getPhases() (int, error) {
 		return 0, err
 	}
 
-	if binary.BigEndian.Uint16(b) < 3726 { // 207V * 3p * 6A
+	if binary.BigEndian.Uint16(b) <= powerLimit1p {
 		return 1, nil
 	}
 
