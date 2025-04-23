@@ -218,7 +218,9 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set priority:", prio)
-	lp.setPriority(prio)
+	if lp.priority != prio {
+		lp.setPriority(prio)
+	}
 }
 
 // GetPhases returns the enabled phases
