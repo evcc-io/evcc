@@ -20,6 +20,7 @@ type Gen2RpcPost struct {
 	Src    string `json:"src"`
 	Method string `json:"method"`
 }
+
 type Gen2Methods struct {
 	Methods []string
 }
