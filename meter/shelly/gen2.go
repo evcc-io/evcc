@@ -94,16 +94,14 @@ func apiCall[T any](c *gen2, api string) func() (T, error) {
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
 func newGen2(helper *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) (*gen2, error) {
+	// Shelly GEN 2+ API
+	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
 		Helper:  helper,
-		uri:     uri,
+		uri:     fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
 		channel: channel,
 		model:   model,
 	}
-
-	// Shelly GEN 2+ API
-	// https://shelly-api-docs.shelly.cloud/gen2/
-	c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
 
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
