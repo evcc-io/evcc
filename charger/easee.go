@@ -311,18 +311,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		opMode := value.(int)
-
-		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
-		// This should be done in a proper way by the api, but it's not.
-		// Remember value of LIFETIME_ENERGY as start value of the charging session
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
-			c.sessionEnergy = 0
-			c.obsTime[easee.SESSION_ENERGY] = time.Now()
-			c.sessionStartEnergy = nil
-		}
-
-		c.opMode = opMode
+		c.opMode = value.(int)
 
 		// startup completed
 		c.startDone()
