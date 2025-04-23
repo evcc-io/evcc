@@ -57,13 +57,17 @@ products:
 capabilities: ["rfid"]
 requirements:
   description:
-    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
-    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein. Für Mennekes Amtron 4You/4Business 5XX/7XX muss 'Modbus TCP' unter 'Einstellungen -> Vernetzung -> Externes Energiemanagement' aktiviert sein und die Modbus TCP id der evcc Konfiguration muss entsprechend der Modbus TCP Unit-ID der Amtron 4You/4Business Wallbox gesetzt werden (Wallbox Voreinstellung ist id: 1).
+    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On. For Mennekes Amtron 4You/YBusiness 5XX/7XX 'Modbus TCP' needs to be enabled in 'Settings -> Networking -> External Energy Management' and the Modbus TCP id in evcc's configuration needs to be set according to the Modbus TCP Unit-ID of the Amtron 4You/4Business Wallbox (Wallbox preset is id: 1).
   evcc: ["sponsorship"]
 params:
+  - name: modbus
+    choice: ["tcpip"]
   - name: host
   - name: port
     default: 502
+  - name: id
+    default: 255
 render: |
   type: bender
-  uri: {{ .host }}:{{ .port }}
+  {{- include "modbus" . }}
