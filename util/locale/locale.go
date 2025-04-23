@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/server/assets"
@@ -22,6 +23,7 @@ var (
 	Localizer *i18n.Localizer
 )
 
+// Init initializes the localization bundle and loads all JSON message files.
 func Init() error {
 	Bundle = i18n.NewBundle(language.English)
 	Bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
@@ -31,28 +33,57 @@ func Init() error {
 		panic(err)
 	}
 
+	// Iterate over each file and process only .json files
 	for _, d := range dir {
-		name := d.Name()
-
-		data, err := fs.ReadFile(assets.I18n, name)
-		if err != nil {
-			return fmt.Errorf("loading locale file %s failed: %w", name, err)
+		if filepath.Ext(d.Name()) != ".json" {
+			continue
 		}
 
-		if _, err := Bundle.ParseMessageFileBytes(data, name); err != nil {
-			return fmt.Errorf("parsing locale file %s failed: %w", name, err)
+		b, err := fs.ReadFile(assets.I18n, d.Name())
+		if err != nil {
+			return fmt.Errorf("reading locale file %s failed: %w", d.Name(), err)
+		}
+
+		// Unmarshal into generic structure to inspect sessions field
+		var raw map[string]interface{}
+		if err := json.Unmarshal(b, &raw); err != nil {
+			return fmt.Errorf("unmarshal locale file %s failed: %w", d.Name(), err)
+		}
+
+		// Session-specific logic: load only sessions.csv if present
+		if sessionsRaw, ok := raw["sessions"]; ok {
+			if sessionsMap, ok2 := sessionsRaw.(map[string]interface{}); ok2 {
+				if csvVal, ok3 := sessionsMap["csv"]; ok3 {
+					// Marshal only the sessions.csv sub-tree back to JSON
+					sub := map[string]interface{}{
+						"sessions": map[string]interface{}{"csv": csvVal},
+					}
+					b2, err := json.Marshal(sub)
+					if err != nil {
+						return fmt.Errorf("marshal sessions for %s failed: %w", d.Name(), err)
+					}
+					if _, err := Bundle.ParseMessageFileBytes(b2, d.Name()); err != nil {
+						return fmt.Errorf("loading session locales failed: %w", err)
+					}
+					continue
+				}
+			}
+		}
+
+		// Otherwise parse full JSON file as message file
+		if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
+			return fmt.Errorf("loading locales failed: %w", err)
 		}
 	}
 
-	// Detect system language, fallback to German if detection fails
-	lang, err := jibber_jabber.DetectLanguage()
+	// Detect system language; default to German on failure
+	Language, err = jibber_jabber.DetectLanguage()
 	if err != nil {
 		Language = language.German.String()
-	} else {
-		Language = lang
 	}
 
-	// Initialize the localizer with the detected language
+	// Create a localizer for the detected language
 	Localizer = i18n.NewLocalizer(Bundle, Language)
+
 	return nil
 }
