@@ -149,11 +149,11 @@ func (c *gen2) CurrentPower() (float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Apower, err
 
-	case c.hasMethod("EM1.GetStatus"):
+	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.ActPower, err
 
-	case c.hasMethod("EM.GetStatus"):
+	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.TotalActPower, err
 
@@ -186,11 +186,11 @@ func (c *gen2) TotalEnergy() (float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Aenergy.Total / 1000, err
 
-	case c.hasMethod("EM1Data.GetStatus"):
+	case c.hasEM1Endpoint():
 		res, err := c.em1data()
 		return res.TotalActEnergy / 1000, err
 
-	case c.hasMethod("EMData.GetStatus"):
+	case c.hasEMEndpoint():
 		res, err := c.emdata()
 		return res.TotalAct / 1000, err
 
@@ -206,11 +206,11 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Current, 0, 0, err
 
-	case c.hasMethod("EM1.GetStatus"):
+	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.Current, 0, 0, err
 
-	case c.hasMethod("EM.GetStatus"):
+	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.ACurrent, res.BCurrent, res.CCurrent, err
 
@@ -226,11 +226,11 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Voltage, 0, 0, err
 
-	case c.hasMethod("EM1.GetStatus"):
+	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.Voltage, 0, 0, err
 
-	case c.hasMethod("EM.GetStatus"):
+	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.AVoltage, res.BVoltage, res.CVoltage, err
 
@@ -246,11 +246,11 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Apower, 0, 0, err
 
-	case c.hasMethod("EM1.GetStatus"):
+	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.ActPower, 0, 0, err
 
-	case c.hasMethod("EM.GetStatus"):
+	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.AActPower, res.BActPower, res.CActPower, err
 
@@ -261,7 +261,15 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 
 // Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
 func (c *gen2) hasSwitchEndpoint() bool {
-	return slices.Contains(c.methods, "Switch.GetStatus")
+	return c.hasMethod("Switch.GetStatus")
+}
+
+func (c *gen2) hasEM1Endpoint() bool {
+	return c.hasMethod("EM1.GetStatus")
+}
+
+func (c *gen2) hasEMEndpoint() bool {
+	return c.hasMethod("EM.GetStatus")
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy
