@@ -227,7 +227,7 @@ export default {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
-		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
 	}
 }
 
