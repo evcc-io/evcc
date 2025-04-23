@@ -196,6 +196,20 @@ test.describe("loadpoint", async () => {
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await expect(lpModal.getByLabel("Priority")).toHaveValue("1");
+
+    // change back to 0
+    await lpModal.getByLabel("Priority").selectOption("0 (default)");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // restart
+    await restart(CONFIG_ONE_LP);
+    await page.reload();
+
+    // check priorities
+    await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
   });
 
   test("vehicle", async ({ page }) => {
@@ -311,6 +325,7 @@ test.describe("loadpoint", async () => {
     await newLoadpoint(page, "Garage");
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
     await lpModal.getByLabel("Default vehicle").selectOption("Porsche");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -318,6 +333,7 @@ test.describe("loadpoint", async () => {
     // delete vehicle
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
     const vehicleModal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(vehicleModal);
 

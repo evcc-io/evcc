@@ -161,7 +161,7 @@ export default {
 			this.longPressTimer = setTimeout(() => {
 				this.isLongPress = true;
 				this.hoverSlot(index);
-			}, 300);
+			}, 300) as unknown as number;
 		},
 		cancelLongPress() {
 			clearTimeout(this.longPressTimer);

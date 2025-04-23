@@ -65,6 +65,11 @@ export default {
 					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
+					key: "finished",
+					value: this.fmtHourMinute(this.finishTime),
+					available: this.chargeRemainingDurationInterpolated > 0,
+				},
+				{
 					key: "duration",
 					value: this.fmtDuration(this.chargeDurationInterpolated),
 				},
@@ -118,6 +123,14 @@ export default {
 		},
 		showSm() {
 			return this.valueSm !== undefined;
+		},
+		finishTime() {
+			const remainingSeconds = this.chargeRemainingDurationInterpolated;
+			if (remainingSeconds > 0) {
+				const now = new Date();
+				return new Date(now.getTime() + remainingSeconds * 1000);
+			}
+			return undefined;
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);

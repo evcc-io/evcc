@@ -23,6 +23,7 @@ func circuitTests() []circuitTest {
 		{0, 0, 0, 0, 0, 0}, // =
 		{0, 0, 0, 0, 1, 1}, // +
 		{0, 0, 0, 0, 2, 1}, // +
+		{0, 0, 0, 1, 1, 1}, // =
 
 		// circuit 1 loaded
 		{0, 1, 0, 0, 0, 0}, // =
@@ -39,6 +40,9 @@ func circuitTests() []circuitTest {
 		{0, 2, 0, 2, 3, 1}, // +
 		{0, 2, 0, 2, 1, 1}, // -
 
+		{0, 1.1, 0, 2, 1, 1}, // -
+		{0, 1.1, 0, 1, 0, 0}, // -
+
 		// parent loaded
 		{1, 0, 0, 0, 0, 0}, // =
 		{1, 0, 0, 0, 1, 0}, // +
@@ -47,13 +51,18 @@ func circuitTests() []circuitTest {
 		{1, 0, 0, 2, 1, 1}, // -
 
 		// parent overloaded
-		{2, 0, 0, 0, 0, 0},   // =
-		{2, 0, 0, 0, 1, 0},   // +
-		{2, 0, 0, 1, 1, 0},   // =
-		{2, 0, 0, 2, 2, 1},   // =
-		{2, 0, 0, 2, 3, 1},   // +
-		{2, 0, 0, 2, 1, 1},   // -
+		{2, 0, 0, 0, 0, 0}, // =
+		{2, 0, 0, 0, 1, 0}, // +
+		{2, 0, 0, 1, 1, 0}, // =
+		{2, 0, 0, 2, 2, 1}, // =
+		{2, 0, 0, 2, 3, 1}, // +
+		{2, 0, 0, 2, 1, 1}, // -
+
+		{1.1, 0, 0, 2, 1, 1}, // -
 		{1.1, 0, 0, 1, 0, 0}, // -
+
+		// negative load
+		{-1, -1, 0, 0, 2, 2}, // +
 	}
 }
 
@@ -83,7 +92,7 @@ func TestCircuitPower(t *testing.T) {
 		cm2.EXPECT().CurrentPower().Return(tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidatePower(tc.old, tc.new, true), tc)
+		assert.Equal(t, tc.res, c1.ValidatePower(tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}
@@ -125,7 +134,7 @@ func TestCircuitCurrents(t *testing.T) {
 		cm2.MockPhaseCurrents.EXPECT().Currents().Return(tc.c2, tc.c2, tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.old, tc.new, true), tc)
+		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}

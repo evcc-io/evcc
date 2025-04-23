@@ -93,18 +93,46 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	systemId := homes[0].SystemID
 	heating := cc.HeatingSetpoint > 0
 
+	wwCancel := func() {}
+
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
 			if heating {
 				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
 			}
+
+			wwCancel()
 			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
+
 		case Boost:
 			if heating {
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
-			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT) // zone 255
+
+			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+				return err
+			}
+
+			var wwCtx context.Context
+			wwCtx, wwCancel = context.WithCancel(ctx)
+
+			// re-boost every 15m
+			go func() {
+				for {
+					select {
+					case <-wwCtx.Done():
+						return
+					case <-time.After(15 * time.Minute):
+						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+							log.ERROR.Println("hot water boost:", err)
+						}
+					}
+				}
+			}()
+
+			return nil
+
 		default:
 			return api.ErrNotAvailable
 		}

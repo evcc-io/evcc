@@ -5,9 +5,10 @@ import (
 )
 
 type Zone struct {
-	Price float64
-	Days  []Day
-	Hours TimeRange
+	Price  float64
+	Days   []Day
+	Hours  TimeRange
+	Months []Month
 }
 
 type Zones []Zone
@@ -29,10 +30,10 @@ func (r Zones) Swap(i, j int) {
 }
 
 // ForDay returns the zones for given day in ascending order
-func (r Zones) ForDay(day Day) Zones {
+func (r Zones) ForDayAndMonth(day Day, month Month) Zones {
 	var zones Zones
 	for _, z := range r {
-		if slices.Contains(z.Days, day) || len(z.Days) == 0 {
+		if (slices.Contains(z.Days, day) || len(z.Days) == 0) && (slices.Contains(z.Months, month) || len(z.Months) == 0) {
 			zones = append(zones, z)
 		}
 	}

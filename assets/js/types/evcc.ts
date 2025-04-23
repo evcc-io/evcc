@@ -8,9 +8,13 @@ declare global {
 
 export interface State {
 	offline: boolean;
+	startup?: boolean;
 	loadpoints: [];
 	forecast?: Forecast;
 	currency?: CURRENCY;
+	fatal?: {
+		error: any;
+	};
 }
 export interface LoadpointCompact {
 	icon: string;
@@ -25,6 +29,13 @@ export enum CURRENCY {
 	EUR = "EUR",
 	USD = "USD",
 	DKK = "DKK",
+}
+export interface Battery {
+	power: number;
+	soc: number;
+	controllable: boolean;
+	capacity: number; // 0 when not specified
+	title?: string;
 }
 
 export interface Vehicle {

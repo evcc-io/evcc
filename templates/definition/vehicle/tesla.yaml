@@ -3,6 +3,7 @@ covers: ["tesla-command", "tesla-proxy"]
 products:
   - brand: Tesla
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
       Tesla bietet eine offizielle, aber kostenpflichtige Fahrzeug-API an.

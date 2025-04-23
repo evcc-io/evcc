@@ -9,11 +9,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // MQTTMarshaler is the interface implemented by types that
@@ -46,6 +48,13 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	if err != nil {
 		err = fmt.Errorf("mqtt: %w", err)
 	}
+
+	shutdown.Register(func() {
+		m.log.DEBUG.Println("shutdown cleanup started")
+		if err := m.Handler.Cleanup(m.root, true); err != nil {
+			m.log.ERROR.Printf("shutdown cleanup failed: %v", err)
+		}
+	})
 
 	return m, err
 }
@@ -141,8 +150,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 }
 
 func (m *MQTT) publishString(topic string, retained bool, payload string) {
-	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
-	go m.Handler.WaitForToken("send", topic, token)
+	m.Handler.Publish(topic, retained, m.encode(payload))
 }
 
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
@@ -204,6 +212,12 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 			}
 		}))},
 		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
+		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
+			if m == nil {
+				m = lo.ToPtr(api.BatteryUnknown)
+			}
+			site.SetBatteryModeExternal(*m)
+		}))},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err
