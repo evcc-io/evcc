@@ -195,8 +195,11 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1)
+	if err != nil {
+		return false, err
+	}
 
-	return binary.BigEndian.Uint16(b) != 0, err
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -417,5 +420,8 @@ func (wb *BenderCC) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
 		fmt.Printf("\tUserID:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1); err == nil {
+		fmt.Printf("\tCurrent Limit:\t%t\n", binary.BigEndian.Uint16(b) != 0)
 	}
 }
