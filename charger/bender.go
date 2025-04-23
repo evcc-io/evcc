@@ -41,12 +41,10 @@ type BenderCC struct {
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	current uint16
-	power   uint16
-	phases  int
 
 	// feature flags
-	legacy    bool
-	currmilli bool
+	legacy bool
+	fine   bool
 }
 
 const (
@@ -161,16 +159,10 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
 		maxCurrentMillis = wb.maxCurrentMillis
-		wb.currmilli = true
+		wb.fine = true
 
 		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 			phases1p3p = wb.phases1p3p
-			wb.phases = 3 // assume 3p until set
-			if wb.lp != nil {
-				if p := wb.lp.GetPhases(); p != 0 {
-					wb.phases = p
-				}
-			}
 		}
 	}
 
@@ -198,51 +190,30 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
-	if wb.currmilli {
-		if wb.phases != 0 {
-			b, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1)
-			if err != nil || binary.BigEndian.Uint16(b) == 0 {
-				return false, err
-			}
-		}
-		b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1)
-		if err != nil || binary.BigEndian.Uint16(b) == 0 {
-			return false, err
-		}
-	} else {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit, 1)
-		if err != nil || binary.BigEndian.Uint16(b) == 0 {
-			return false, err
-		}
+	reg := uint16(bendRegHemsCurrentLimit)
+	if wb.fine {
+		reg = bendRegHemsCurrentLimit10
 	}
 
-	return true, nil
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+
+	return binary.BigEndian.Uint16(b) == 0, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *BenderCC) Enable(enable bool) error {
 	b := make([]byte, 2)
-	p := make([]byte, 2)
 
 	if enable {
 		binary.BigEndian.PutUint16(b, wb.current)
-		binary.BigEndian.PutUint16(p, wb.power)
 	}
 
-	if wb.currmilli {
-		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
-		if err != nil {
-			return err
-		}
-		if wb.phases != 0 {
-			_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, p)
-			return err
-		}
-
-		return nil
+	reg := uint16(bendRegHemsCurrentLimit)
+	if wb.fine {
+		reg = bendRegHemsCurrentLimit10
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
 
 	return err
 }
@@ -271,40 +242,14 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 	}
 
 	b := make([]byte, 2)
-
-	if wb.phases != 0 { // 1p3p supported, use power limit
-		var power float64
-
-		if u1, u2, u3, err := wb.voltages(); err == nil {
-			// voltages available
-			if wb.phases == 1 {
-				power = u1 * current
-			} else {
-				power = (u1 + u2 + u3) * current
-			}
-		} else {
-			// no voltages available
-			power = 230.0 * current * float64(wb.phases)
-		}
-
-		binary.BigEndian.PutUint16(b, uint16(power))
-		_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, b)
-		if err != nil {
-			return err
-		}
-
-		wb.power = uint16(power)
-	}
-
 	binary.BigEndian.PutUint16(b, uint16(current*10)) // 0.1A Steps
+
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
-	if err != nil {
-		return err
+	if err == nil {
+		wb.current = uint16(current * 10) // 0.1A Steps
 	}
 
-	wb.current = uint16(current * 10) // 0.1A Steps
-
-	return nil
+	return err
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555
@@ -383,8 +328,17 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *BenderCC) phases1p3p(phases int) error {
-	wb.phases = phases
-	return nil
+	power := uint16(0xffff)
+	if phases == 1 {
+		power = 3725 // 207V * 3p * 6A - 1W
+	}
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, power)
+
+	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsPowerLimit, 1, b)
+
+	return err
 }
 
 // identify implements the api.Identifier interface
@@ -460,9 +414,9 @@ func (wb *BenderCC) Diagnose() {
 	}
 }
 
-var _ loadpoint.Controller = (*MyPv)(nil)
+var _ loadpoint.Controller = (*BenderCC)(nil)
 
 // LoadpointControl implements loadpoint.Controller
-func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
+func (wb *BenderCC) LoadpointControl(lp loadpoint.API) {
 	wb.lp = lp
 }
