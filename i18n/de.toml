@@ -625,7 +625,6 @@ solar = "Sonne"
 [main.loadpointPrio]
 high = "hoch"
 higher = "höher"
-loadpoint = "Ladepunkt Prioität"
 low = "niedrig"
 lower = "niedriger"
 normal = "normal"

@@ -11,15 +11,11 @@
 					<div class="text-truncate">
 						{{ loadpointTitle }}
 					</div>
-					<PrioButton
-						v-if="priority || (effectivePriority && effectivePriority !== priority)"
-						:prio="
-							effectivePriority && effectivePriority !== priority
-								? effectivePriority
-								: priority
-						"
-						:editable="effectivePriority === priority"
-						@update:prio="setPriority"
+					<PrioritySelect
+						v-if="showPriorityOnAllLoadpoints"
+						:priority="priority"
+						:effectivePriority="effectivePriority"
+						@priority-updated="priorityUpdated"
 					/>
 				</h3>
 				<LoadpointSettingsButton class="d-block d-md-none" @click="openSettingsModal" />
@@ -39,7 +35,7 @@
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
 			@batteryboost-updated="setBatteryBoost"
-			@priority-updated="setPriority"
+			@priority-updated="priorityUpdated"
 		/>
 
 		<div
@@ -106,7 +102,7 @@ import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
 import api from "../../api.js";
 import Mode from "./Mode.vue";
-import PrioButton from "./PrioButton/PrioButton.vue";
+import PrioritySelect from "./PrioritySelect/PrioritySelect.vue";
 import Vehicle from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -130,7 +126,7 @@ export default {
 		LoadpointSettingsModal: SettingsModal,
 		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
-		PrioButton,
+		PrioritySelect,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -173,7 +169,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		vehicleIcon: String,
-		prioButton: String,
+		prioritySelect: String,
 		vehicleLimitSoc: Number,
 		vehicles: Array,
 		planActive: Boolean,
@@ -220,6 +216,7 @@ export default {
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		showPriorityOnAllLoadpoints: Boolean,
 	},
 	data() {
 		return {
@@ -354,7 +351,7 @@ export default {
 		setPhasesConfigured(phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		setPriority(prio) {
+		priorityUpdated(prio) {
 			api.post(this.apiPath("priority") + "/" + prio);
 		},
 		changeVehicle(name) {

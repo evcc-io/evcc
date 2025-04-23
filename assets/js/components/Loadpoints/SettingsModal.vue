@@ -154,27 +154,21 @@
 								>
 									{{ $t("config.loadpoint.priorityLabel") }}
 								</label>
-								<div class="col-sm-8 pe-0">
-									<div class="d-flex align-items-center">
-										<input
-											:id="formId('loadpointParamPriority')"
-											v-model.number="selectedPriority"
-											type="range"
-											class="form-range form-range-sm w-50"
-											min="-99"
-											max="99"
-											:name="formId('loadpointParamPriority')"
-											@change="changePriority"
-										/>
-										<small class="ms-3">{{ priority }}</small>
-									</div>
-									<div class="d-flex justify-content-between w-50">
-										<small class="text-muted">Low</small>
-										<small class="text-muted">High</small>
-									</div>
-									<small class="form-text text-muted">
-										{{ $t("config.loadpoint.priorityHelp") }}
-									</small>
+								<div class="col-sm-8 pe-0 d-flex align-items-center">
+									<select
+										:id="formId('loadpointParamPriority')"
+										v-model.number="selectedPriority"
+										class="form-select form-select-sm w-50"
+										@change="changePriority"
+									>
+										<option
+											v-for="{ value, name } in priorityOptions"
+											:key="value"
+											:value="value"
+										>
+											{{ name }}
+										</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -306,6 +300,25 @@ export default {
 		},
 		smartCostAvailable() {
 			return smartCostAvailable(this.smartCostType);
+		},
+		priorityOptions() {
+			const range = Array.from({ length: 18 }, (_, i) => i - 7); // [-7...10]
+			const options = range.map((value) => {
+				let name = `${value}`;
+				if (value === 0) name += " (default)";
+				if (value === 10) name += " (highest)";
+				return { value, name };
+			});
+
+			// Aktuellen Wert einfügen, wenn nicht enthalten
+			if (!options.some((opt) => opt.value === this.selectedPriority)) {
+				options.unshift({
+					value: this.selectedPriority,
+					name: `${this.selectedPriority} (current)`,
+				});
+			}
+
+			return options;
 		},
 	},
 	watch: {

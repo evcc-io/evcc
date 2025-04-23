@@ -624,7 +624,6 @@ solar = "Solar"
 [main.loadpointPrio]
 high = "high"
 higher = "higher"
-loadpoint = "Loadpoint Prio"
 low = "low"
 lower = "lower"
 normal = "normal"
