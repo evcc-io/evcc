@@ -104,6 +104,9 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
+
+	// Shelly gen 2 rfc7616 authentication
+	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
 	if user != "" {
 		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
@@ -126,10 +129,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
-	// Shelly gen 2 rfc7616 authentication
-	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
-	// https://datatracker.ietf.org/doc/html/rfc7616
-
 	data := &Gen2RpcPost{
 		Id:     c.channel,
 		On:     enable,
