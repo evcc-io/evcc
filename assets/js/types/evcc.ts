@@ -22,6 +22,13 @@ export enum CURRENCY {
 	USD = "USD",
 	DKK = "DKK",
 }
+export interface Battery {
+	power: number;
+	soc: number;
+	controllable: boolean;
+	capacity: number; // 0 when not specified
+	title?: string;
+}
 
 export interface Vehicle {
 	name: string;

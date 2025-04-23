@@ -92,9 +92,10 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	// remove plan
 	if soc == 0 {
 		ts = time.Time{}
+		v.log.DEBUG.Printf("delete %s plan", v.name)
+	} else {
+		v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 	}
-
-	v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))

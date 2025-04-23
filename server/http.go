@@ -39,17 +39,6 @@ type HTTPd struct {
 	*http.Server
 }
 
-// loggingResponseWriter wraps http.ResponseWriter to capture status code
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-	lrw.statusCode = code
-	lrw.ResponseWriter.WriteHeader(code)
-}
-
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
@@ -59,17 +48,8 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	// log all requests
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// simple logging for websocket connections
-			if r.Header.Get("Upgrade") == "websocket" {
-				log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// capture status code
-			lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-			next.ServeHTTP(lrw, r)
-			log.TRACE.Printf("%s %s %d", r.Method, r.URL.Path, lrw.statusCode)
+			log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
+			next.ServeHTTP(w, r)
 		})
 	})
 
@@ -138,6 +118,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
 		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
 		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
+		"batterymode":             {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
+		"batterymodedelete":       {"DELETE", "/batterymode", updateBatteryMode(site)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
