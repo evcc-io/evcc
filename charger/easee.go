@@ -55,7 +55,6 @@ type Easee struct {
 	smartCharging         bool
 	authorize             bool
 	enabled               bool
-	initialStatePresent   bool
 	opMode                int
 	pilotMode             string
 	reasonForNoCurrent    int
@@ -312,7 +311,22 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		opMode := value.(int)
+
+		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
+		// This should be done in a proper way by the api, but it's not.
+		// Remember value of LIFETIME_ENERGY as start value of the charging session
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			c.sessionEnergy = 0
+			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+			c.sessionStartEnergy = nil
+		}
+
+		c.opMode = opMode
+
+		// startup completed
+		c.startDone()
+
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	case easee.PILOT_MODE:
@@ -323,22 +337,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case c.obsC <- res:
 	default:
 	}
-
-	if !c.initialStatePresent && c.checkInitialStatePresent() {
-		// startup completed
-		c.initialStatePresent = true
-		c.startDone()
-	}
-}
-
-// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE
-func (c *Easee) checkInitialStatePresent() bool {
-	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.CHARGER_OP_MODE, easee.TOTAL_POWER} {
-		if _, exists := c.obsTime[key]; !exists {
-			return false
-		}
-	}
-	return true
 }
 
 // ChargerUpdate implements the signalr receiver
