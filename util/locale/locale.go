@@ -1,10 +1,10 @@
 package locale
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 
-	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util/locale/internal"
@@ -24,7 +24,7 @@ var (
 
 func Init() error {
 	Bundle = i18n.NewBundle(language.English)
-	Bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
+	Bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 
 	dir, err := fs.ReadDir(assets.I18n, ".")
 	if err != nil {
@@ -32,34 +32,27 @@ func Init() error {
 	}
 
 	for _, d := range dir {
-		var data map[string]map[string]map[string]any
-		if _, err := toml.DecodeFS(assets.I18n, d.Name(), &data); err != nil {
-			return fmt.Errorf("loading locales failed: %w", err)
+		name := d.Name()
+
+		data, err := fs.ReadFile(assets.I18n, name)
+		if err != nil {
+			return fmt.Errorf("loading locale file %s failed: %w", name, err)
 		}
 
-		// load sessions.csv only
-		if sessions := data["sessions"]; sessions != nil && len(sessions["csv"]) != 0 {
-			b, err := toml.Marshal(map[string]any{
-				"sessions": map[string]any{
-					"csv": sessions["csv"],
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("marshal session.csv failed: %w", err)
-			}
-
-			if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
-				return fmt.Errorf("loading locales failed: %w", err)
-			}
+		if _, err := Bundle.ParseMessageFileBytes(data, name); err != nil {
+			return fmt.Errorf("parsing locale file %s failed: %w", name, err)
 		}
 	}
 
-	Language, err = jibber_jabber.DetectLanguage()
+	// Detect system language, fallback to German if detection fails
+	lang, err := jibber_jabber.DetectLanguage()
 	if err != nil {
 		Language = language.German.String()
+	} else {
+		Language = lang
 	}
 
+	// Initialize the localizer with the detected language
 	Localizer = i18n.NewLocalizer(Bundle, Language)
-
 	return nil
 }

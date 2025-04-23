@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
-import { ViteToml } from "vite-plugin-toml";
 import legacy from "@vitejs/plugin-legacy";
 import { visualizer } from "rollup-plugin-visualizer";
 
@@ -34,7 +33,6 @@ export default defineConfig({
         },
       },
     }),
-    ViteToml(),
     visualizer({ filename: "asset-stats.html" }),
   ],
 });

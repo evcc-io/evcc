@@ -1,7 +1,6 @@
-import parseToml from "markty-toml";
 import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
-import en from "../../i18n/en.toml";
+import en from "../../i18n/en.json";
 import { i18n as i18nApi } from "./api";
 import settings from "./settings";
 
@@ -84,9 +83,8 @@ export function setI18nLanguage(i18n, locale) {
 
 async function loadLocaleMessages(i18n, locale) {
   try {
-    const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
-    const messages = parseToml(response.data);
-    i18n.setLocaleMessage(locale, messages);
+    const response = await i18nApi.get(`${locale}.json`, { params: { v: window.evcc?.version } });
+    i18n.setLocaleMessage(locale, response.data);
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);
   }

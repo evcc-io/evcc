@@ -57,7 +57,7 @@ export default api;
 export const i18n = axios.create({
   baseURL: base + "i18n/",
   headers: {
-    Accept: "application/toml",
+    Accept: "application/json",
   },
 });
 
