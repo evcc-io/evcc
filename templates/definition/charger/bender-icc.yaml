@@ -15,8 +15,9 @@ products:
 capabilities: ["rfid", "mA", "1p3p"]
 requirements:
   description:
-    de: Das 'Externes Energiemanagement' muss aktiviert sein.
-    en: The 'External Energy Management' must be enabled.
+    description:
+    de: 'Externes Energiemanagement' muss aktiviert sein. Für Amtron 4You/4Business 5XX/7XX muss der Modbus TCP Server unter 'Einstellungen -> Vernetzung -> Externes Energiemanagement' aktiviert sein. SEMP-Schnittstelle muss deaktiviert sein. Für eine automatische Phasenumschaltung muss der 'Phasenumaschaltmodus' auf 'dynamisch' gesetzt sein. RFID ist für Amtron 4You/4Business nicht verfügbar.
+    en: 'External Energy Management' has to be enabled. For Amtron 4You/4Business 5XX/7XX the Modbus TCP Server has to be enabled in 'Settings -> Networking -> External Energy Management'. SEMP Interface has to be disabled. To use dynamic phase switching, the 'Phase Switching Mode' has to be set to 'Dynamic Phase Switching'. RFID is unavailable for Amtron 4You/4Business.
   evcc: ["sponsorship"]
 params:
   - name: modbus
