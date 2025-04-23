@@ -164,7 +164,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		wb.regCurr = bendRegHemsCurrentLimit10
 	}
 
-	// ceck feature power control/1p3p
+	// check feature power control/1p3p
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
