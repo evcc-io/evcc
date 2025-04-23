@@ -422,6 +422,6 @@ func (wb *BenderCC) Diagnose() {
 		fmt.Printf("\tUserID:\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1); err == nil {
-		fmt.Printf("\tCurrent Limit:\t%t\n", binary.BigEndian.Uint16(b) != 0)
+		fmt.Printf("\tCurrent Limit:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
