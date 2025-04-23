@@ -1,4 +1,4 @@
-import type { SolarDetails, TimeseriesEntry } from "../types/evcc";
+import type { TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
 import deepCopy from "./deepClone";
 
 export enum ForecastType {

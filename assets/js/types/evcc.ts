@@ -1,4 +1,5 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
+import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
 declare global {
 	interface Window {
@@ -20,9 +21,9 @@ export interface LoadpointCompact {
 	icon: string;
 	title: string;
 	charging: boolean;
-	soc: number;
+	soc?: number;
 	power: number;
-	chargerFeatureHeating: boolean
+	heating?: boolean;
 }
 
 export enum CURRENCY {
@@ -77,33 +78,6 @@ export interface Slot {
 	warning?: boolean | null;
 	isTarget?: boolean | null;
 	selectable?: boolean | null;
-}
-
-export interface TimeseriesEntry {
-	val: number;
-	ts: string;
-}
-
-export interface ForecastSlot {
-	start: string;
-	end: string;
-	value: number;
-}
-export function isForecastSlot(obj?: TimeseriesEntry | ForecastSlot): obj is ForecastSlot {
-	return (obj as ForecastSlot).start !== undefined;
-}
-
-export interface EnergyByDay {
-	energy: number;
-	complete: boolean;
-}
-
-export interface SolarDetails {
-	scale?: number;
-	today?: EnergyByDay;
-	tomorrow?: EnergyByDay;
-	dayAfterTomorrow?: EnergyByDay;
-	timeseries?: TimeseriesEntry[];
 }
 
 export interface Forecast {

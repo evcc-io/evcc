@@ -58,16 +58,12 @@ import Chart from "./Chart.vue";
 import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
-import {
-	type ForecastSlot,
-	type TimeseriesEntry,
-	type Forecast,
-	ForecastType,
-	adjustedSolar,
-} from "../../utils/forecast.ts";
+
 import formatter from "../../mixins/formatter.ts";
 import settings from "../../settings";
-import type { CURRENCY } from "assets/js/types/evcc.ts";
+import type { CURRENCY, Forecast } from "assets/js/types/evcc.ts";
+import { ForecastType, adjustedSolar } from "assets/js/utils/forecast.ts";
+import type { ForecastSlot, TimeseriesEntry } from "./types.ts";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {

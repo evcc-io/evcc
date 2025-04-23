@@ -94,7 +94,7 @@
 							@details-clicked="openForecastModal"
 							@toggle="togglePv"
 						>
-							<template v-if="pv.length > 1" #expanded>
+							<template v-if="(pv?.length ?? 0) > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
@@ -127,7 +127,7 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="battery.length > 1" #expanded>
+							<template v-if="(battery?.length ?? 0) > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -174,9 +174,7 @@
 						/>
 						<EnergyflowEntry
 							:name="
-								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
-									count: activeLoadpointsCount,
-								})
+								$t('main.energyflow.loadpoints', { count: activeLoadpointsCount })
 							"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
@@ -204,7 +202,7 @@
 									:powerUnit="powerUnit"
 									icon="vehicle"
 									:iconProps="{ names: [lp.icon] }"
-									:details="lp.soc || undefined"
+									:details="lp.soc"
 									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
 								/>
 							</template>
@@ -248,7 +246,7 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="battery.length > 1" #expanded>
+							<template v-if="(battery?.length ?? 0) > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -266,9 +264,9 @@
 							icon="powersupply"
 							:power="pvExport"
 							:powerUnit="powerUnit"
-							:details="detailsValue(-tariffFeedIn)"
+							:details="detailsValue(-(tariffFeedIn ?? 0))"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
+							:detailsTooltip="detailsTooltip(-(tariffFeedIn ?? 0))"
 							data-testid="energyflow-entry-gridexport"
 						/>
 					</div>
@@ -289,7 +287,7 @@ import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
 import { defineComponent, type PropType } from "vue";
-import type { Forecast, LoadpointCompact } from "assets/js/types/evcc";
+import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "assets/js/types/evcc";
 
 export default defineComponent({
 	name: "Energyflow",
@@ -304,7 +302,7 @@ export default defineComponent({
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
-		pv: { type: Array },
+		pv: { type: Array as PropType<Pv[]> },
 		pvPower: { type: Number, default: 0 },
 		loadpointsCompact: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
@@ -323,14 +321,14 @@ export default defineComponent({
 		tariffPriceLoadpoints: { type: Number },
 		tariffCo2Loadpoints: { type: Number },
 		smartCostType: { type: String },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
+		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
 	},
 	computed: {
 		gridImport() {
@@ -403,13 +401,13 @@ export default defineComponent({
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 		batteryFmt() {
-			return (soc) => this.fmtPercentage(soc, 0);
+			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
 		fmtLoadpointSoc() {
-			return (soc) => this.fmtPercentage(soc, 0);
+			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
 		fmtLoadpointTemp() {
-			return (temp) => this.fmtTemperature(temp);
+			return (temp: number) => this.fmtTemperature(temp);
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
@@ -446,7 +444,7 @@ export default defineComponent({
 			}
 			const { today, scale } = this.forecast.solar || {};
 			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
-			return today.energy * factor;
+			return (today?.energy ?? 0) * factor;
 		},
 		solarForecastIcon() {
 			return this.solarForecastExists ? "forecast" : undefined;
@@ -496,7 +494,7 @@ export default defineComponent({
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
-		detailsTooltip(price, co2) {
+		detailsTooltip(price?: number, co2?: number) {
 			const result = [];
 			if (co2 !== undefined) {
 				result.push(`${this.fmtCo2Long(co2)}`);
@@ -506,25 +504,25 @@ export default defineComponent({
 			}
 			return result;
 		},
-		detailsValue(price, co2) {
+		detailsValue(price?: number, co2?: number) {
 			if (this.co2Available) {
 				return co2;
 			}
 			return price;
 		},
-		detailsFmt(value) {
+		detailsFmt(value: number) {
 			if (this.co2Available) {
 				return this.fmtCo2Short(value);
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
-		forecastFmt(value) {
+		forecastFmt(value: number) {
 			if (value === null) {
 				return "";
 			}
 			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
-		kw(watt) {
+		kw(watt: number) {
 			return this.fmtW(watt, this.powerUnit);
 		},
 		toggleDetails() {
@@ -533,22 +531,24 @@ export default defineComponent({
 			settings.energyflowDetails = this.detailsOpen;
 		},
 		updateHeight() {
-			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
+			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal")
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("forecastModal") as HTMLElement
+			);
 			modal.show();
 		},
-		dischargePower(power) {
+		dischargePower(power: number) {
 			return Math.abs(Math.max(0, power));
 		},
-		chargePower(power) {
+		chargePower(power: number) {
 			return Math.abs(Math.min(0, power) * -1);
 		},
 		toggleBattery() {
@@ -563,10 +563,10 @@ export default defineComponent({
 			settings.energyflowLoadpoints = !settings.energyflowLoadpoints;
 			this.$nextTick(this.updateHeight);
 		},
-		genericBatteryTitle(index) {
+		genericBatteryTitle(index: number) {
 			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
 		},
-		genericPvTitle(index) {
+		genericPvTitle(index: number) {
 			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
 		},
 	},
