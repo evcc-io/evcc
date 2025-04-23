@@ -41,10 +41,8 @@ type BenderCC struct {
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	current uint16
-
-	// feature flags
-	legacy bool
-	fine   bool
+	regCurr uint16
+	legacy  bool
 }
 
 const (
@@ -111,6 +109,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 	wb := &BenderCC{
 		conn:    conn,
 		current: 6, // assume min current
+		regCurr: bendRegHemsCurrentLimit,
 	}
 
 	// check legacy register set
@@ -160,7 +159,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
 		maxCurrentMillis = wb.maxCurrentMillis
-		wb.fine = true
+		wb.regCurr = bendRegHemsCurrentLimit10
 
 		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 			phases1p3p = wb.phases1p3p
@@ -192,12 +191,7 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
-	reg := uint16(bendRegHemsCurrentLimit)
-	if wb.fine {
-		reg = bendRegHemsCurrentLimit10
-	}
-
-	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1)
 
 	return binary.BigEndian.Uint16(b) == 0, err
 }
@@ -210,12 +204,7 @@ func (wb *BenderCC) Enable(enable bool) error {
 		binary.BigEndian.PutUint16(b, wb.current)
 	}
 
-	reg := uint16(bendRegHemsCurrentLimit)
-	if wb.fine {
-		reg = bendRegHemsCurrentLimit10
-	}
-
-	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.regCurr, 1, b)
 
 	return err
 }
