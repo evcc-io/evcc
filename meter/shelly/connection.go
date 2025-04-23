@@ -13,8 +13,6 @@ import (
 
 type Generation interface {
 	CurrentPower() (float64, error)
-	Enabled() (bool, error)
-	Enable(bool) error
 	TotalEnergy() (float64, error)
 }
 
@@ -22,11 +20,6 @@ type Phases interface {
 	Currents() (float64, float64, float64, error)
 	Voltages() (float64, float64, float64, error)
 	Powers() (float64, float64, float64, error)
-}
-
-type Generation2 interface {
-	Generation
-	Phases
 }
 
 // Connection is the Shelly connection
@@ -74,10 +67,23 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
 
-		var err error
-		gen, err = newGen2(client, uri, model, channel, user, password, cache)
+		c, err := newGen2Conn(client, uri, user, password, channel)
 		if err != nil {
 			return nil, err
+		}
+
+		switch {
+		case c.hasSwitchEndpoint():
+			gen = newGen2Switch(c, cache)
+
+		case c.hasEM1Endpoint():
+			gen = newGen2EM1(c, cache)
+
+		case c.hasEMEndpoint():
+			gen = newGen2EM(c, cache)
+
+		default:
+			return nil, fmt.Errorf("unknown model: %s", model)
 		}
 	}
 
