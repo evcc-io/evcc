@@ -24,6 +24,11 @@ type Phases interface {
 	Powers() (float64, float64, float64, error)
 }
 
+type Generation2 interface {
+	Generation
+	Phases
+}
+
 // Connection is the Shelly connection
 type Connection struct {
 	Generation
