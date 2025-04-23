@@ -191,13 +191,12 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 func (wb *BenderCC) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1)
 
-	return binary.BigEndian.Uint16(b) == 0, err
+	return binary.BigEndian.Uint16(b) != 0, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *BenderCC) Enable(enable bool) error {
 	b := make([]byte, 2)
-
 	if enable {
 		binary.BigEndian.PutUint16(b, wb.current)
 	}
