@@ -18,7 +18,7 @@ const MIN_ACTIVE_CURRENT = 1;
 export default {
 	name: "Phases",
 	props: {
-		chargeCurrent: { type: Number },
+		offeredCurrent: { type: Number },
 		chargeCurrents: { type: Array },
 		phasesActive: { type: Number },
 		minCurrent: { type: Number },
@@ -32,7 +32,7 @@ export default {
 	methods: {
 		targetWidth() {
 			const current = Math.min(
-				Math.max(this.minCurrent, this.chargeCurrent),
+				Math.max(this.minCurrent, this.offeredCurrent),
 				this.maxCurrent
 			);
 			return (100 / this.maxCurrent) * current;

@@ -11,10 +11,16 @@ import (
 func TestHandler(t *testing.T) {
 	conn := &Connection{
 		log:    util.NewLogger("test"),
-		data:   util.NewMonitor[Data](time.Minute),
+		data:   util.NewMonitor[Data](time.Millisecond),
 		serial: "serial",
 	}
 
+	{
+		// command
+		conn.handler(`{"name":"foo"}`)
+		_, err := conn.data.Get()
+		assert.Error(t, err)
+	}
 	{
 		conn.handler(`{"solarInputPower":113,"sn":"serial"}`)
 		res, err := conn.data.Get()

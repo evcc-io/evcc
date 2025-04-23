@@ -218,8 +218,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set priority:", prio)
-
-	if lp.Priority != prio {
+	if lp.priority != prio {
 		lp.setPriority(prio)
 	}
 }
@@ -610,7 +609,7 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	if lp.chargeCurrents == nil {
-		return lp.chargeCurrent
+		return lp.offeredCurrent
 	}
 	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }
