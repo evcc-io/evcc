@@ -30,7 +30,6 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -39,7 +38,6 @@ import (
 // BenderCC charger implementation
 type BenderCC struct {
 	conn    *modbus.Connection
-	lp      loadpoint.API
 	current uint16
 	regCurr uint16
 	legacy  bool
@@ -418,11 +416,4 @@ func (wb *BenderCC) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
 		fmt.Printf("\tUserID:\t%s\n", b)
 	}
-}
-
-var _ loadpoint.Controller = (*BenderCC)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *BenderCC) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
