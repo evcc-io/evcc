@@ -1,4 +1,5 @@
-template: bender
+template: bender-cc
+covers: ["bender"]
 products:
   - brand: Ampure
     description:
@@ -60,11 +61,11 @@ products:
   - brand: Spelsberg
     description:
       generic: Wallbox Smart Pro
-capabilities: ["rfid", "mA", "1p3p"]
+capabilities: ["rfid"]
 requirements:
   description:
-    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein. Für neuere Controller muss auch 'Externes Energiemanagement' aktiviert sein.
-    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On. For newer controllers, 'External Energy Management' must also be enabled.
+    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
+    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
   evcc: ["sponsorship"]
 params:
   - name: modbus
