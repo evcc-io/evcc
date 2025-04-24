@@ -53,11 +53,6 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
-	// Set default profile to "monophase" if not provided
-	if resp.Profile == "" {
-		resp.Profile = "monophase"
-	}
-
 	model := strings.Split(resp.Type+resp.Model, "-")[0]
 
 	client.Transport = request.NewTripper(log, transport.Insecure())
@@ -73,7 +68,12 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	} else {
 		// Shelly GEN 2+ API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		gen = newGen2(client, uri, model, resp.Profile, channel, user, password, cache)
+
+		var err error
+		gen, err = newGen2(client, uri, model, channel, user, password, cache)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	conn := &Connection{gen}
