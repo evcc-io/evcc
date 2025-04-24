@@ -3,7 +3,9 @@ package meter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -17,6 +19,22 @@ import (
 
 func init() {
 	registry.AddCtx("tibber-pulse", NewTibberFromConfig)
+}
+
+func getUserAgent() string {
+	evccVersion := "0.203.2+unknown"
+	graphqlClientVersion := "0.13.2+unknown"
+
+	if info, ok := debug.ReadBuildInfo(); ok {
+		evccVersion = info.Main.Version
+		for _, dep := range info.Deps {
+			if dep.Path == "github.com/hasura/go-graphql-client" {
+				graphqlClientVersion = dep.Version
+			}
+		}
+	}
+
+	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", evccVersion, graphqlClientVersion)
 }
 
 type Tibber struct {
@@ -78,7 +96,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 				Transport: &transport.Decorator{
 					Base: http.DefaultTransport,
 					Decorator: transport.DecorateHeaders(map[string]string{
-						"User-Agent": "go-graphql-client/0.9.0",
+						"User-Agent": getUserAgent(),
 					}),
 				},
 			},
