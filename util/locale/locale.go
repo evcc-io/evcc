@@ -23,12 +23,6 @@ var (
 	Localizer *i18n.Localizer
 )
 
-type sessions struct {
-	Sessions struct {
-		CSV json.RawMessage `json:"csv"`
-	} `json:"sessions"`
-}
-
 // Init initializes the localization bundle and loads all JSON message files.
 func Init() error {
 	Bundle = i18n.NewBundle(language.English)
@@ -50,22 +44,21 @@ func Init() error {
 			return fmt.Errorf("reading locale file %s failed: %w", d.Name(), err)
 		}
 
-		var s sessions
-		err = json.Unmarshal(b, &s)
-		if err == nil && len(s.Sessions.CSV) > 0 {
-			sub := map[string]json.RawMessage{ "sessions": s.Sessions.CSV }
-			b2, err := json.Marshal(sub)
-			if err != nil {
-				return fmt.Errorf("marshal sessions for %s failed: %w", d.Name(), err)
-			}
-			if _, err := Bundle.ParseMessageFileBytes(b2, d.Name()); err != nil {
-				return fmt.Errorf("loading session locales failed: %w", err)
-			}
-			continue
+		var s struct {
+			Sessions struct {
+				CSV map[string]string `json:"csv"`
+			} `json:"sessions"`
 		}
 
-		if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
-			return fmt.Errorf("loading locales failed: %w", err)
+		if err := json.Unmarshal(b, &s); err != nil {
+			return err
+		}
+
+		if len(s.Sessions.CSV) > 0 {
+			b, _ = json.Marshal(s)
+			if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
+				return fmt.Errorf("loading locales failed: %w", err)
+			}
 		}
 	}
 
