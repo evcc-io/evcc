@@ -39,7 +39,6 @@ export enum ForecastType {
 	Solar = "solar",
 	Price = "price",
 	Co2 = "co2",
-	Planner = "planner",
 }
 
 // return the date in local YYYY-MM-DD format

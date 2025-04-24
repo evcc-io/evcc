@@ -309,11 +309,17 @@ export default defineComponent({
 					if (!plan) {
 						return;
 					}
-					const { weekdays, soc, time, tz } = plan;
+					const { weekdays, soc, time, tz, precondition } = plan;
 					if (weekdays.length === 0) {
 						return;
 					}
-					planRes = await this.fetchRepeatingPreview({ weekdays, soc, time, tz });
+					planRes = await this.fetchRepeatingPreview({
+						weekdays,
+						soc,
+						time,
+						tz,
+						precondition,
+					});
 				}
 				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
 			} catch (e) {
