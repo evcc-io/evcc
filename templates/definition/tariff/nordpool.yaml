@@ -46,6 +46,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
+  {{ include "tariff-base" . }}
   forecast:
     source: go
     script: |
@@ -79,4 +80,3 @@ render: |
                 "value": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
-  {{ include "tariff-base" . }}

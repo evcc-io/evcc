@@ -96,11 +96,12 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 	// remove plan
 	if soc == 0 {
 		ts = time.Time{}
+		v.log.DEBUG.Printf("delete %s plan", v.name)
+	} else {
+  	v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
 	}
 
-	v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
-
-	settings.SetTime(v.key()+keys.PlanTime, ts)
+  settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
