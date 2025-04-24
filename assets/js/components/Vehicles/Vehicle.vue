@@ -111,6 +111,7 @@ export default {
 		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
+		forecast: Object, // as PropType<Forecast>,
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,

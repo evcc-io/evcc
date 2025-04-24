@@ -115,7 +115,7 @@ import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
 import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
-
+import type { Forecast } from "../../utils/forecast.ts";
 const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({
@@ -150,6 +150,7 @@ export default defineComponent({
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
+		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -313,7 +314,7 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			const params = { precondition: plan.precondition };
+			const params = this.socBasedPlanning ? { precondition: plan.precondition } : undefined;
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
 				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });

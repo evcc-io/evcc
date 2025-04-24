@@ -6,6 +6,7 @@ export interface RepeatingPlan {
 	tz: string; // timezone like "Europe/Berlin"
 	soc: number;
 	active: boolean;
+	precondition: number;
 }
 
 export interface PlanWrapper {
