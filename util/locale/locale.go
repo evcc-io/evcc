@@ -55,8 +55,15 @@ func Init() error {
 		}
 
 		if len(s.Sessions.CSV) > 0 {
-			b, _ = json.Marshal(s)
-			if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
+			m := make([]*i18n.Message, 0, len(s.Sessions.CSV))
+			for k, v := range s.Sessions.CSV {
+				m = append(m, &i18n.Message{
+					ID:    k,
+					Other: v,
+				})
+			}
+
+			if err := Bundle.AddMessages(language.Make(d.Name()), m...); err != nil {
 				return fmt.Errorf("loading locales failed: %w", err)
 			}
 		}
