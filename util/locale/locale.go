@@ -23,6 +23,12 @@ var (
 	Localizer *i18n.Localizer
 )
 
+type sessions struct {
+	Sessions struct {
+		CSV json.RawMessage `json:"csv"`
+	} `json:"sessions"`
+}
+
 // Init initializes the localization bundle and loads all JSON message files.
 func Init() error {
 	Bundle = i18n.NewBundle(language.English)
@@ -44,33 +50,20 @@ func Init() error {
 			return fmt.Errorf("reading locale file %s failed: %w", d.Name(), err)
 		}
 
-		// Unmarshal into generic structure to inspect sessions field
-		var raw map[string]interface{}
-		if err := json.Unmarshal(b, &raw); err != nil {
-			return fmt.Errorf("unmarshal locale file %s failed: %w", d.Name(), err)
-		}
-
-		// Session-specific logic: load only sessions.csv if present
-		if sessionsRaw, ok := raw["sessions"]; ok {
-			if sessionsMap, ok2 := sessionsRaw.(map[string]interface{}); ok2 {
-				if csvVal, ok3 := sessionsMap["csv"]; ok3 {
-					// Marshal only the sessions.csv sub-tree back to JSON
-					sub := map[string]interface{}{
-						"sessions": map[string]interface{}{"csv": csvVal},
-					}
-					b2, err := json.Marshal(sub)
-					if err != nil {
-						return fmt.Errorf("marshal sessions for %s failed: %w", d.Name(), err)
-					}
-					if _, err := Bundle.ParseMessageFileBytes(b2, d.Name()); err != nil {
-						return fmt.Errorf("loading session locales failed: %w", err)
-					}
-					continue
-				}
+		var s sessions
+		err = json.Unmarshal(b, &s)
+		if err == nil && len(s.Sessions.CSV) > 0 {
+			sub := map[string]json.RawMessage{ "sessions": s.Sessions.CSV }
+			b2, err := json.Marshal(sub)
+			if err != nil {
+				return fmt.Errorf("marshal sessions for %s failed: %w", d.Name(), err)
 			}
+			if _, err := Bundle.ParseMessageFileBytes(b2, d.Name()); err != nil {
+				return fmt.Errorf("loading session locales failed: %w", err)
+			}
+			continue
 		}
 
-		// Otherwise parse full JSON file as message file
 		if _, err := Bundle.ParseMessageFileBytes(b, d.Name()); err != nil {
 			return fmt.Errorf("loading locales failed: %w", err)
 		}
