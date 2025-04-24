@@ -6,15 +6,18 @@ declare global {
 	}
 }
 
+export interface FatalError {
+	error: any;
+	class?: any;
+}
+
 export interface State {
 	offline: boolean;
 	startup?: boolean;
 	loadpoints: [];
 	forecast?: any;
 	currency?: CURRENCY;
-	fatal?: {
-		error: any;
-	};
+	fatal?: FatalError;
 }
 
 export enum CURRENCY {
