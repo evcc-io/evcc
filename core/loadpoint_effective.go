@@ -212,6 +212,11 @@ func (lp *Loadpoint) EffectiveStepPower() float64 {
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.effectiveMinPower()
+}
+
+// EffectiveMinPower returns the effective min power for the minimum active phases
+func (lp *Loadpoint) effectiveMinPower() float64 {
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
@@ -226,3 +231,5 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 func (lp *Loadpoint) effectiveMaxPower() float64 {
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
+
+// ToDo: Add new power limits from vehicle & charger

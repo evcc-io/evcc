@@ -95,6 +95,15 @@ type PhaseGetter interface {
 	GetPhases() (int, error)
 }
 
+// ChargerPowerCtrl provides power control
+type ChargerPowerCtrl interface {
+	MaxPower(power float64) error
+}
+
+type PowerLimitGetter interface {
+	GetPower() (float64, error)
+}
+
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
 	Diagnose()

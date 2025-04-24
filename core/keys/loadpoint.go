@@ -38,6 +38,7 @@ const (
 
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
+	OfferedPower   = "offeredPower"   // offered power
 
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
