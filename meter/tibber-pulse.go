@@ -26,15 +26,22 @@ func getUserAgent() string {
 	graphqlClientVersion := "0.13.2+unknown"
 
 	if info, ok := debug.ReadBuildInfo(); ok {
-		evccVersion = info.Main.Version
+		evccVersion = baseVersion(info.Main.Version)
 		for _, dep := range info.Deps {
 			if dep.Path == "github.com/hasura/go-graphql-client" {
-				graphqlClientVersion = dep.Version
+				graphqlClientVersion = baseVersion(dep.Version)
 			}
 		}
 	}
 
 	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", evccVersion, graphqlClientVersion)
+}
+
+func baseVersion(v string) string {
+	if i := strings.IndexAny(v, "-+"); i != -1 {
+		return v[:i]
+	}
+	return v
 }
 
 type Tibber struct {
