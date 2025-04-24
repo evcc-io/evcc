@@ -76,7 +76,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
@@ -90,12 +90,14 @@ import { getThemePreference, setThemePreference, THEMES } from "../../theme.js";
 import { getUnits, setUnits, UNITS } from "../../units.js";
 import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags.js";
 import { isApp } from "../../utils/native.js";
+import { defineComponent, type PropType } from "vue";
+import type { Sponsor } from "assets/js/types/evcc.js";
 
-export default {
+export default defineComponent({
 	name: "UserInterfaceSettings",
 	components: { TelemetrySettings, FormRow, SelectGroup },
 	props: {
-		sponsor: Object,
+		sponsor: Object as PropType<Sponsor>,
 	},
 	data() {
 		return {
@@ -120,7 +122,8 @@ export default {
 		fullscreenAvailable: () => {
 			const isSupported = document.fullscreenEnabled;
 			const isPwa =
-				navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
+				(navigator as any).standalone ||
+				window.matchMedia("(display-mode: standalone)").matches;
 			return isSupported && !isPwa && !isApp();
 		},
 	},
@@ -135,7 +138,7 @@ export default {
 			setHiddenFeatures(value);
 		},
 		language(value) {
-			const i18n = this.$root.$i18n;
+			const i18n = this.$root?.$i18n;
 			if (value) {
 				setLocalePreference(i18n, value);
 			} else {
@@ -160,5 +163,5 @@ export default {
 			this.fullscreenActive = !!document.fullscreenElement;
 		},
 	},
-};
+});
 </script>
