@@ -24,7 +24,7 @@
 				<option value="">{{ $t("settings.language.auto") }}</option>
 				<option v-for="option in languageOptions" :key="option.value" :value="option.value">
 					{{ option.name }}
-					{{option}}
+					{{ option }}
 				</option>
 			</select>
 		</FormRow>
