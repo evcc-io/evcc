@@ -302,11 +302,12 @@ export default {
 			return smartCostAvailable(this.smartCostType);
 		},
 		priorityOptions() {
-			const range = Array.from({ length: 18 }, (_, i) => i - 7); // [-7...10]
+			const range = Array.from({ length: 21 }, (_, i) => 10 - i); // [10...-10]
 			const options = range.map((value) => {
-				let name = `${value}`;
-				if (value === 0) name += " (default)";
-				if (value === 10) name += " (highest)";
+				let name = this.fmtNumberWithSign(value);
+				if (value === 10) name += ` (highest)`;
+				if (value === 0) name += ` (default)`;
+				if (value === -10) name += ` (lowest)`;
 				return { value, name };
 			});
 

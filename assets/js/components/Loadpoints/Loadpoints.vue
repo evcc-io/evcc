@@ -25,7 +25,6 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
-					:showPriorityOnAllLoadpoints="showPriority"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="goTo(index)"
@@ -79,11 +78,6 @@ export default {
 	emits: ["index-changed"],
 	data() {
 		return { snapTimeout: null, scrollTimeout: null, highlightedIndex: 0 };
-	},
-	computed: {
-		showPriority() {
-			return this.loadpoints.some((lp) => lp.priority !== 0);
-		},
 	},
 	watch: {
 		selectedIndex(newIndex) {
@@ -227,7 +221,7 @@ export default {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
-		grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
 }
 
