@@ -280,10 +280,10 @@ ext = "Add external meter"
 pv = "Add solar meter"
 
 [config.modbus]
-baudrate = "Baudrate"
+baudrate = "Baud rate"
 comset = "ComSet"
 connection = "Modbus connection"
-connectionHintSerial = "The device is diretly connected to evcc via a RS485 interface."
+connectionHintSerial = "The device is directly connected to evcc via a RS485 interface."
 connectionHintTcpip = "The device is addressable from evcc via LAN/Wifi."
 connectionValueSerial = "Serial / USB"
 connectionValueTcpip = "Network"
