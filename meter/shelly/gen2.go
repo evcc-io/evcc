@@ -145,10 +145,6 @@ func (c *gen2) execCmd(method string, enable bool, res any) error {
 // CurrentPower implements the api.Meter interface
 func (c *gen2) CurrentPower() (float64, error) {
 	switch {
-	case c.hasSwitchEndpoint():
-		res, err := c.switchstatus.Get()
-		return res.Apower, err
-
 	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.ActPower, err
@@ -156,6 +152,10 @@ func (c *gen2) CurrentPower() (float64, error) {
 	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.TotalActPower, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Apower, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -182,10 +182,6 @@ func (c *gen2) Enable(enable bool) error {
 // TotalEnergy implements the api.Meter interface
 func (c *gen2) TotalEnergy() (float64, error) {
 	switch {
-	case c.hasSwitchEndpoint():
-		res, err := c.switchstatus.Get()
-		return res.Aenergy.Total / 1000, err
-
 	case c.hasEM1Endpoint():
 		res, err := c.em1data()
 		return res.TotalActEnergy / 1000, err
@@ -193,6 +189,10 @@ func (c *gen2) TotalEnergy() (float64, error) {
 	case c.hasEMEndpoint():
 		res, err := c.emdata()
 		return res.TotalAct / 1000, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Aenergy.Total / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -202,10 +202,6 @@ func (c *gen2) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *gen2) Currents() (float64, float64, float64, error) {
 	switch {
-	case c.hasSwitchEndpoint():
-		res, err := c.switchstatus.Get()
-		return res.Current, 0, 0, err
-
 	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.Current, 0, 0, err
@@ -213,6 +209,10 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.ACurrent, res.BCurrent, res.CCurrent, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Current, 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -222,10 +222,6 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 // Voltages implements the api.PhaseVoltages interface
 func (c *gen2) Voltages() (float64, float64, float64, error) {
 	switch {
-	case c.hasSwitchEndpoint():
-		res, err := c.switchstatus.Get()
-		return res.Voltage, 0, 0, err
-
 	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.Voltage, 0, 0, err
@@ -233,6 +229,10 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.AVoltage, res.BVoltage, res.CVoltage, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Voltage, 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -242,10 +242,6 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 // Powers implements the api.PhasePowers interface
 func (c *gen2) Powers() (float64, float64, float64, error) {
 	switch {
-	case c.hasSwitchEndpoint():
-		res, err := c.switchstatus.Get()
-		return res.Apower, 0, 0, err
-
 	case c.hasEM1Endpoint():
 		res, err := c.em1status()
 		return res.ActPower, 0, 0, err
@@ -253,6 +249,10 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 	case c.hasEMEndpoint():
 		res, err := c.emstatus()
 		return res.AActPower, res.BActPower, res.CActPower, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Apower, 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
