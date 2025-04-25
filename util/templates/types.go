@@ -195,7 +195,7 @@ type Param struct {
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
 	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
 	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
-	ID       *int   `json:",omitempty"` // device specific default for modbus ID
+	ID       int    `json:",omitempty"` // device specific default for modbus ID
 }
 
 // DefaultValue returns a default or example value depending on the renderMode

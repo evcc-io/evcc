@@ -46,7 +46,6 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     port: 6607
-    id: 0
   - name: timeout
     default: 15s
   - name: storageunit
