@@ -56,7 +56,7 @@ requirements:
       ```
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv", "battery", "charge"]
   - name: host
   - name: user
     required: false

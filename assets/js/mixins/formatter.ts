@@ -57,7 +57,12 @@ export default defineComponent({
 				value = watt / 1_000_000;
 			}
 			if (d === undefined) {
-				d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || 0 === watt ? 1 : 0;
+				d =
+					POWER_UNIT.KW === unit ||
+					POWER_UNIT.MW === unit ||
+					(POWER_UNIT.W !== unit && 0 === watt)
+						? 1
+						: 0;
 			}
 			return `${new Intl.NumberFormat(this.$i18n?.locale, {
 				style: "decimal",
@@ -195,6 +200,12 @@ export default defineComponent({
 			}).format(date);
 
 			return `${weekday} ${hour}`.trim();
+		},
+		fmtHourMinute(date: Date) {
+			return new Intl.DateTimeFormat(this.$i18n?.locale, {
+				hour: "numeric",
+				minute: "numeric",
+			}).format(date);
 		},
 		fmtFullDateTime(date: Date, short: boolean) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {

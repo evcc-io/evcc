@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 var _ api.Circuit = (*Circuit)(nil)
@@ -235,7 +236,7 @@ func (c *Circuit) overloadOnError(t time.Time, val *float64) {
 }
 
 func (c *Circuit) updateMeters() error {
-	if f, err := backoff.RetryWithData(c.meter.CurrentPower, bo()); err == nil {
+	if f, err := backoff.RetryWithData(c.meter.CurrentPower, modbus.Backoff()); err == nil {
 		c.power = f
 		c.powerUpdated = time.Now()
 	} else {
@@ -249,7 +250,7 @@ func (c *Circuit) updateMeters() error {
 			var err error
 			i1, i2, i3, err = phaseMeter.Currents()
 			return err
-		}, bo()); err != nil {
+		}, modbus.Backoff()); err != nil {
 			c.overloadOnError(c.currentUpdated, &c.current)
 			return fmt.Errorf("circuit currents: %w", err)
 		}
@@ -320,54 +321,45 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 }
 
 // ValidatePower validates power request
-func (c *Circuit) ValidatePower(old, new float64, charging bool) float64 {
+func (c *Circuit) ValidatePower(old, new float64) float64 {
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
+		delta := max(0, new-old)
 		potential := maxPower - c.power
 
-		var capped float64
-		if charging {
-			capped = min(new, maxPower, max(0, potential+old))
-		} else {
-			capped = min(new, max(0, potential))
-		}
-		if new > capped {
+		if delta > potential {
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
+			new = capped
 		} else {
 			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
 		}
-		new = capped
 	}
 
 	if c.parent == nil {
 		return new
 	}
 
-	return c.parent.ValidatePower(old, new, charging)
+	return c.parent.ValidatePower(old, new)
 }
 
 // ValidateCurrent validates current request
-func (c *Circuit) ValidateCurrent(old, new float64, charging bool) float64 {
+func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		delta := max(0, new-old)
 		potential := maxCurrent - c.current
 
-		var capped float64
-		if charging {
-			capped = min(new, maxCurrent, max(0, potential+old))
-		} else {
-			capped = min(new, max(0, potential))
-		}
-		if new > capped {
+		if delta > potential {
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
+			new = capped
 		} else {
 			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
 		}
-
-		new = capped
 	}
 
 	if c.parent == nil {
 		return new
 	}
 
-	return c.parent.ValidateCurrent(old, new, charging)
+	return c.parent.ValidateCurrent(old, new)
 }
