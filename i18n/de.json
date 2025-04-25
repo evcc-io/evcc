@@ -279,6 +279,26 @@
         "pv": "PV-Anlage hinzufügen"
       }
     },
+    "modbus": {
+      "baudrate": "Baudrate",
+      "comset": "ComSet",
+      "connection": "Modbus Verbindung",
+      "connectionHintSerial": "Das Gerät ist direkt an evcc über eine RS485 Schnittstelle angeschlossen.",
+      "connectionHintTcpip": "Das Gerät ist von evcc aus über LAN/Wifi erreichbar.",
+      "connectionValueSerial": "Seriell / USB",
+      "connectionValueTcpip": "Netzwerk",
+      "device": "Gerätename",
+      "deviceHint": "Beispiel: /dev/ttyUSB0",
+      "host": "IP Adresse oder Hostname",
+      "hostHint": "Beispiel: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Port",
+      "protocol": "Modbus Protokoll",
+      "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
+      "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
     "modbusproxy": {
       "description": "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät.",
       "title": "Modbus-Proxy"
@@ -572,6 +592,11 @@
       "modalTitle": "Ladeplanung",
       "none": "keiner",
       "planNumber": "Plan {number}",
+      "preconditionDescription": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+      "preconditionLong": "Spätes Laden",
+      "preconditionOptionAll": "alles",
+      "preconditionOptionNo": "nein",
+      "preconditionShort": "Spät",
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
@@ -597,6 +622,7 @@
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
       "noEnergy": "Keine Messwerte",
+      "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
       "selfConsumption": "Eigenverbrauch"
@@ -613,6 +639,7 @@
       "co2": "⌀ CO₂",
       "duration": "Ladedauer",
       "fallbackName": "Ladepunkt",
+      "finished": "Ladeende",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",

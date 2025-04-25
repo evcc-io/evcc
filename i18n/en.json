@@ -279,6 +279,26 @@
         "pv": "Add solar meter"
       }
     },
+    "modbus": {
+      "baudrate": "Baud rate",
+      "comset": "ComSet",
+      "connection": "Modbus connection",
+      "connectionHintSerial": "The device is directly connected to evcc via a RS485 interface.",
+      "connectionHintTcpip": "The device is addressable from evcc via LAN/Wifi.",
+      "connectionValueSerial": "Serial / USB",
+      "connectionValueTcpip": "Network",
+      "device": "Device name",
+      "deviceHint": "Example: /dev/ttyUSB0",
+      "host": "IP address or hostname",
+      "hostHint": "Example: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Port",
+      "protocol": "Modbus protocol",
+      "protocolHintRtu": "Connection through a RS485 to Ethernet adapter without protocol translation.",
+      "protocolHintTcp": "Device has native LAN/Wifi support or is connected through a RS485 to Ethernet adapter with protocol translation.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
     "modbusproxy": {
       "description": "Allow multiple clients to access a single Modbus device.",
       "title": "Modbus Proxy"
@@ -571,6 +591,11 @@
       "modalTitle": "Charging Plan",
       "none": "none",
       "planNumber": "Plan {number}",
+      "preconditionDescription": "Charge {duration} before departure for battery preconditioning.",
+      "preconditionLong": "Late Charging",
+      "preconditionOptionAll": "everything",
+      "preconditionOptionNo": "no",
+      "preconditionShort": "Late",
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
@@ -613,6 +638,7 @@
       "co2": "⌀ CO₂",
       "duration": "Duration",
       "fallbackName": "Charging point",
+      "finished": "Finish time",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
