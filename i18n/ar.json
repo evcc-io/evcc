@@ -1,0 +1,143 @@
+{
+  "batterySettings": {
+    "batteryLevel": "مستوى البطارية",
+    "legendBottomName": "أولوية المنزل",
+    "legendBottomSubline": "لا تستخدم للشحن",
+    "legendMiddleName": "السيارة أولا",
+    "legendMiddleSubline": "المنزل الثاني",
+    "legendTitle": "كيف يجب استخدام الطاقة الشمسية?",
+    "legendTopAutostart": "يبدأ تلقائيًا",
+    "legendTopName": "بطارية تدعم الشحن",
+    "legendTopSubline": "بدون انقطاع",
+    "modalTitle": "إعدادات البطارية",
+    "note": "ملحوظة: تؤثر هذه الإعدادات فقط على الوضع الشمسي. يتم تعديل سلوك الشحن وفقًا لذلك.",
+    "bufferStart": {
+      "full": "عندما أوشكت على الامتلاء",
+      "low": "عندما تكون ممتلئة إلى حد ما",
+      "medium": "عندما نصف ممتلئ",
+      "never": "فقط مع فائض كافٍ"
+    }
+  },
+  "config": {
+    "battery": {},
+    "circuits": {},
+    "control": {},
+    "deviceValue": {},
+    "eebus": {},
+    "form": {
+      "example": "مثال",
+      "optional": "اختياري"
+    },
+    "general": {},
+    "grid": {},
+    "hems": {},
+    "influx": {},
+    "main": {
+      "addVehicle": "اضف عربة",
+      "edit": "عدّل",
+      "title": "الإعدادات",
+      "vehicles": "عرباتي"
+    },
+    "messaging": {},
+    "meter": {},
+    "modbusproxy": {},
+    "mqtt": {},
+    "network": {},
+    "options": {
+      "boolean": {},
+      "endianness": {},
+      "schema": {}
+    },
+    "pv": {},
+    "section": {},
+    "sponsor": {},
+    "system": {},
+    "tariffs": {},
+    "title": {},
+    "validation": {
+      "failed": "أخفق",
+      "label": "الحالة",
+      "running": "التحقق من صحة...",
+      "success": "ناجح",
+      "unknown": "غير معروف",
+      "validate": "تحقق من الصحة"
+    },
+    "vehicle": {
+      "cancel": "الغاء",
+      "delete": "احذف عربة"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "شمسي",
+      "greenEnergySub1": "مشحونة بـ evcc",
+      "greenEnergySub2": "منذ أكتوبر ٢٠٢٢",
+      "greenShare": "حصة الطاقة الشمسية",
+      "greenShareSub1": "القوة المقدمة من",
+      "greenShareSub2": "تخزين الطاقة الشمسية وتخزين البطارية",
+      "power": "قوة الشحن",
+      "powerSub1": "{activeClients} من إجمالي {totalClients} مشاركين",
+      "powerSub2": "الشحن ...",
+      "tabTitle": "مجتمع مباشر"
+    },
+    "savings": {
+      "footerLong": "{percent} من الطاقة الشمسية",
+      "footerShort": "{percent} شمسي\"",
+      "period": {}
+    },
+    "sponsor": {},
+    "telemetry": {},
+    "version": {}
+  },
+  "header": {},
+  "help": {
+    "restart": {}
+  },
+  "log": {},
+  "loginModal": {},
+  "main": {
+    "chargingPlan": {},
+    "energyflow": {},
+    "heatingStatus": {},
+    "loadpoint": {},
+    "loadpointSettings": {
+      "batteryBoost": {},
+      "limitSoc": {},
+      "maxCurrent": {},
+      "minCurrent": {},
+      "minSoc": {},
+      "phasesConfigured": {}
+    },
+    "mode": {},
+    "provider": {},
+    "targetCharge": {},
+    "targetChargePlan": {},
+    "targetEnergy": {},
+    "vehicle": {},
+    "vehicleStatus": {}
+  },
+  "notifications": {},
+  "offline": {},
+  "passwordModal": {},
+  "session": {},
+  "sessions": {
+    "chartTitle": {},
+    "csv": {},
+    "filter": {},
+    "group": {},
+    "groupBy": {},
+    "period": {},
+    "type": {}
+  },
+  "settings": {
+    "fullscreen": {},
+    "hiddenFeatures": {},
+    "language": {},
+    "sponsorToken": {},
+    "telemetry": {},
+    "theme": {},
+    "unit": {}
+  },
+  "smartCost": {},
+  "startupError": {}
+}
