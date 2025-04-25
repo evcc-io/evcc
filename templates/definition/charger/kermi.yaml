@@ -1,0 +1,86 @@
+template: kermi
+products:
+  - brand: Bösch
+    description:
+      generic: x-change
+  - brand: Kermi
+    description:
+      generic: x-center pro
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: host
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
+render: |
+  type: heatpump
+  setmaxpower:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:    
+      source: modbus
+      uri: {{ .host }}:502
+      id: 40 # WP
+      register:
+        address: 301 # PV Überschussleistung
+        type: writesingle
+        decode: int16
+      scale: 10.0
+  power:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 40
+    register:
+      address: 108
+      type: holding
+      decode: int16
+    scale: 100
+  {{- if eq .tempsource "warmwater" }}
+  temp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 51 # TWE
+    register:
+      address: 100
+      type: holding
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 51 # TWE
+    register:
+      address: 101
+      type: holding
+      encoding: int16
+    scale: 0.1
+  {{- end }}
+  {{- if eq .tempsource "buffer" }}
+  temp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 50 # Speicher
+    register:
+      address: 1
+      type: holding
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:502
+    id: 50 # Speicher
+    register:
+      address: 2
+      type: holding
+      encoding: int16
+    scale: 0.1
+  {{- end }}

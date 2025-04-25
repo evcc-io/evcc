@@ -8,9 +8,12 @@
 					data-testid="sessionInfoSelect"
 					@change="selectOption($event.target.value)"
 				>
-					<span class="text-decoration-underline" data-testid="sessionInfoLabel">
+					<div
+						class="text-decoration-underline text-truncate-xs-only"
+						data-testid="sessionInfoLabel"
+					>
 						{{ label }}
-					</span>
+					</div>
 				</CustomSelect>
 			</template>
 			<template #value>
@@ -25,9 +28,9 @@
 
 <script>
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import formatter from "../../mixins/formatter.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import { getSessionInfo, setSessionInfo } from "./sessionInfo.js";
+import formatter from "../../mixins/formatter.ts";
+import { getSessionInfo, setSessionInfo } from "./session.ts";
 
 export default {
 	name: "LoadpointSessionInfo",
@@ -54,11 +57,16 @@ export default {
 		};
 	},
 	computed: {
-		options: function () {
+		options() {
 			const result = [
 				{
 					key: "remaining",
 					value: this.fmtDuration(this.chargeRemainingDurationInterpolated),
+					available: this.chargeRemainingDurationInterpolated > 0,
+				},
+				{
+					key: "finished",
+					value: this.fmtHourMinute(this.finishTime),
 					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
@@ -115,6 +123,14 @@ export default {
 		},
 		showSm() {
 			return this.valueSm !== undefined;
+		},
+		finishTime() {
+			const remainingSeconds = this.chargeRemainingDurationInterpolated;
+			if (remainingSeconds > 0) {
+				const now = new Date();
+				return new Date(now.getTime() + remainingSeconds * 1000);
+			}
+			return undefined;
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);

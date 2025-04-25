@@ -72,6 +72,13 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
+func masked(s any) string {
+	if s != "" {
+		return "***"
+	}
+	return ""
+}
+
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -79,19 +86,18 @@ type Mqtt struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Mqtt) Redacted() any {
-	// TODO add masked password
-	return struct {
-		Broker   string `json:"broker"`
-		Topic    string `json:"topic"`
-		User     string `json:"user,omitempty"`
-		ClientID string `json:"clientID,omitempty"`
-		Insecure bool   `json:"insecure,omitempty"`
-	}{
-		Broker:   m.Broker,
-		Topic:    m.Topic,
-		User:     m.User,
-		ClientID: m.ClientID,
-		Insecure: m.Insecure,
+	return Mqtt{
+		Config: mqtt.Config{
+			Broker:     m.Broker,
+			User:       m.User,
+			Password:   masked(m.Password),
+			ClientID:   m.ClientID,
+			Insecure:   m.Insecure,
+			CaCert:     masked(m.CaCert),
+			ClientCert: masked(m.ClientCert),
+			ClientKey:  masked(m.ClientKey),
+		},
+		Topic: m.Topic,
 	}
 }
 
@@ -108,18 +114,13 @@ type Influx struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (c Influx) Redacted() any {
-	// TODO add masked password
-	return struct {
-		URL      string `json:"url"`
-		Database string `json:"database"`
-		Org      string `json:"org"`
-		User     string `json:"user"`
-		Insecure bool   `json:"insecure"`
-	}{
+	return Influx{
 		URL:      c.URL,
 		Database: c.Database,
+		Token:    masked(c.Token),
 		Org:      c.Org,
 		User:     c.User,
+		Password: masked(c.Password),
 		Insecure: c.Insecure,
 	}
 }

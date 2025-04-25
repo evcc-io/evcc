@@ -59,14 +59,15 @@ import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
 import {
-	type PriceSlot,
+	type ForecastSlot,
 	type TimeseriesEntry,
 	type Forecast,
 	ForecastType,
 	adjustedSolar,
 } from "../../utils/forecast.ts";
-import formatter from "../../mixins/formatter";
+import formatter from "../../mixins/formatter.ts";
 import settings from "../../settings";
+import type { CURRENCY } from "assets/js/types/evcc.ts";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -79,12 +80,12 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 	},
-	data: function (): {
+	data(): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
-		selectedSlot: PriceSlot | TimeseriesEntry | null;
+		selectedSlot: ForecastSlot | TimeseriesEntry | null;
 	} {
 		return {
 			isModalVisible: false,
@@ -117,7 +118,7 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		isModalVisible: function (newVal) {
+		isModalVisible(newVal) {
 			if (newVal) {
 				this.updateSelectedType();
 			}
@@ -133,7 +134,7 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		updateSlot(slot: PriceSlot | TimeseriesEntry | null) {
+		updateSlot(slot: ForecastSlot | TimeseriesEntry | null) {
 			this.selectedSlot = slot;
 		},
 		updateSelectedType() {

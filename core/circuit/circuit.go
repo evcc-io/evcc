@@ -7,10 +7,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 var _ api.Circuit = (*Circuit)(nil)
@@ -234,7 +236,7 @@ func (c *Circuit) overloadOnError(t time.Time, val *float64) {
 }
 
 func (c *Circuit) updateMeters() error {
-	if f, err := c.meter.CurrentPower(); err == nil {
+	if f, err := backoff.RetryWithData(c.meter.CurrentPower, modbus.Backoff()); err == nil {
 		c.power = f
 		c.powerUpdated = time.Now()
 	} else {
@@ -243,6 +245,16 @@ func (c *Circuit) updateMeters() error {
 	}
 
 	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
+		var i1, i2, i3 float64
+		if err := backoff.Retry(func() error {
+			var err error
+			i1, i2, i3, err = phaseMeter.Currents()
+			return err
+		}, modbus.Backoff()); err != nil {
+			c.overloadOnError(c.currentUpdated, &c.current)
+			return fmt.Errorf("circuit currents: %w", err)
+		}
+
 		var p1, p2, p3 float64
 		if phaseMeter, ok := c.meter.(api.PhasePowers); ok {
 			var err error // phases needed for signed currents
@@ -251,13 +263,8 @@ func (c *Circuit) updateMeters() error {
 			}
 		}
 
-		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
-			c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
-			c.currentUpdated = time.Now()
-		} else {
-			c.overloadOnError(c.currentUpdated, &c.current)
-			return fmt.Errorf("circuit currents: %w", err)
-		}
+		c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
+		c.currentUpdated = time.Now()
 	}
 
 	return nil
@@ -320,7 +327,7 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 		potential := maxPower - c.power
 
 		if delta > potential {
-			capped := max(0, old+potential)
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
@@ -342,7 +349,7 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 		potential := maxCurrent - c.current
 
 		if delta > potential {
-			capped := max(0, old+potential)
+			capped := min(new, max(0, old+potential))
 			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
 			new = capped
 		} else {

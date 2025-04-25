@@ -16,6 +16,7 @@ params:
     type: choice
     choice: [A, B, C]
     default: A
+    required: true
   - name: power
     description:
       de: Leistung

@@ -97,11 +97,11 @@ params:
     usages: ["vehicle", "battery"]
   - name: maxacpower
     description:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     help:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     default: 0
     example: 5000
     type: float
@@ -269,6 +269,7 @@ params:
       - meter
       - microwave
       - pump
+      - smartconsumer
       - tool
       - waterheater
 

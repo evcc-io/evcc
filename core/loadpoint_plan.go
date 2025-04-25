@@ -151,7 +151,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	// log plan
 	for _, slot := range plan {
-		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Price)
+		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Value)
 	}
 
 	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
@@ -164,8 +164,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return false
 		}
 
-		// remember last active plan's end time
-		lp.setPlanActive(true)
+		// remember last active plan's slot end time
 		lp.planSlotEnd = activeSlot.End
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
@@ -177,7 +176,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
 			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Println("plan: continuing until end of slot")
+			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
 		case requiredDuration < smallSlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))

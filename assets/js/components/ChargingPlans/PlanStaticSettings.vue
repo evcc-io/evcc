@@ -146,26 +146,27 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "../../units.js";
 
 import formatter from "../../mixins/formatter.js";
 import { energyOptions } from "../../utils/energyOptions.js";
+import { defineComponent } from "vue";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
 const LAST_SOC_GOAL_KEY = "last_soc_goal";
 const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanStaticSettings",
 	mixins: [formatter],
 	props: {
-		id: String,
+		id: [String, Number],
 		soc: Number,
 		energy: Number,
-		time: String,
+		time: Date,
 		rangePerSoc: Number,
 		socPerKwh: Number,
 		capacity: Number,
@@ -173,26 +174,26 @@ export default {
 		multiplePlans: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
-	data: function () {
+	data() {
 		return {
-			selectedDay: null,
-			selectedTime: null,
+			selectedDay: null as string | null,
+			selectedTime: null as string | null,
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
 			active: false,
 		};
 	},
 	computed: {
-		selectedDate: function () {
+		selectedDate() {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
-		socOptions: function () {
+		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		energyOptions: function () {
+		energyOptions() {
 			const options = energyOptions(
 				0,
 				this.capacity || 100,
@@ -204,18 +205,19 @@ export default {
 			// remove the first entry (0)
 			return options.slice(1);
 		},
-		originalData: function () {
+		originalData() {
 			if (this.isNew) {
 				return {};
 			}
+			const t = this.time || new Date();
 			return {
 				soc: this.soc,
 				energy: this.energy,
-				day: this.fmtDayString(new Date(this.time)),
-				time: this.fmtTimeString(new Date(this.time)),
+				day: this.fmtDayString(t),
+				time: this.fmtTimeString(t),
 			};
 		},
-		dataChanged: function () {
+		dataChanged() {
 			const dateChanged =
 				this.originalData.day != this.selectedDay ||
 				this.originalData.time != this.selectedTime;
@@ -224,10 +226,10 @@ export default {
 				: this.originalData.energy != this.selectedEnergy;
 			return dateChanged || goalChanged;
 		},
-		isNew: function () {
+		isNew() {
 			return !this.time && (!this.soc || !this.energy);
 		},
-		timeInThePast: function () {
+		timeInThePast() {
 			const now = new Date();
 			return now >= this.selectedDate;
 		},
@@ -255,14 +257,14 @@ export default {
 		this.preview();
 	},
 	methods: {
-		formId: function (name) {
+		formId(name: string) {
 			return `chargingplan-${this.id}-${name}`;
 		},
-		socOption: function (value) {
+		socOption(value: number) {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		initInputFields: function () {
+		initInputFields() {
 			if (!this.selectedSoc) {
 				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
 			}
@@ -271,19 +273,19 @@ export default {
 					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
 			}
 
-			let time = this.time;
-			if (!time) {
+			let t = this.time;
+			if (!t) {
 				// no time but existing selection, keep it
 				if (this.selectedDay && this.selectedTime) {
 					return;
 				}
-				time = this.defaultTime();
+				t = this.defaultTime();
 			}
-			const date = new Date(time);
+			const date = new Date(t);
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
 		},
-		dayOptions: function () {
+		dayOptions() {
 			const options = [];
 			const date = new Date();
 			const labels = [
@@ -305,7 +307,7 @@ export default {
 			}
 			return options;
 		},
-		update: function () {
+		update() {
 			try {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
@@ -325,9 +327,9 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		preview: function (force = false) {
+		preview(force = false) {
 			if (!this.isNew && !force) {
-				return false;
+				return;
 			}
 			this.$emit("plan-preview", {
 				time: this.selectedDate,
@@ -335,8 +337,8 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		toggle: function (e) {
-			const { checked } = e.target;
+		toggle(e: Event) {
+			const { checked } = e.target as HTMLInputElement;
 			if (checked) {
 				this.update();
 			} else {
@@ -345,7 +347,7 @@ export default {
 			}
 			this.active = checked;
 		},
-		defaultTime: function () {
+		defaultTime() {
 			const [hours, minutes] = (
 				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
 			).split(":");
@@ -362,7 +364,7 @@ export default {
 			return target;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .plan-id {
