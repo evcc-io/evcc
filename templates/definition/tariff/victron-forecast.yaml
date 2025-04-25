@@ -13,14 +13,14 @@ params:
       en: VRM-ID of the installation
       de: VRM-ID der Installation
     help:
-      en: VRM-ID is visible in the URL of VRM portal view
-      de: VRM-ID steht in der URL der Portalansicht der Anlage
+      en: VRM-ID is shown as VRM Site ID in VRM general settings
+      de: VRM-ID wird in den allg. Einstellungen als VRM Site ID in VRM angezeigt
     example: 123456
     required: true
   - name: token
     description:
-      en: user access token
-      de: user access token
+      en: user access token - create in VRM
+      de: user access token - in VRM anlegen
     required: true
   - name: interval
     default: 1h
