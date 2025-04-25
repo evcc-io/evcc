@@ -34,12 +34,15 @@ import (
 
 // https://www.keba.com/en/emobility/service-support/downloads/Downloads
 // https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
+// https://www.keba.com/download/x/4a24e19f80/kecontactp40modbustcp_pgen.pdf
 
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
-	log  *util.Logger
-	conn *modbus.Connection
+	log         *util.Logger
+	conn        *modbus.Connection
+	lastCurrent float64
+	enableReg   uint16
 }
 
 const (
@@ -101,13 +104,30 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		return nil, err
 	}
 
-	if features := binary.BigEndian.Uint32(b); (features/10)%10 > 0 {
+	productCodeStr := fmt.Sprintf("%d", binary.BigEndian.Uint32(b))
+
+	var haveEnergyMeter bool
+	var haveRFID bool
+
+	if len(productCodeStr) == 6 && productCodeStr[0] == '3' {
+		// P30
+		wb.enableReg = kebaRegEnable
+		haveEnergyMeter = productCodeStr[4] != '0'
+		haveRFID = productCodeStr[5] == '1'
+	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
+		// P40
+		wb.enableReg = kebaRegMaxCurrent
+		haveEnergyMeter = productCodeStr[4] != '0'
+		haveRFID = productCodeStr[5] == '1'
+	}
+
+	if haveEnergyMeter {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
 	}
 
-	if features := binary.BigEndian.Uint32(b); features%10 > 0 {
+	if haveRFID {
 		identify = wb.identify
 		reason = wb.statusReason
 	}
@@ -247,10 +267,25 @@ func (wb *Keba) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *Keba) Enable(enable bool) error {
 	var u uint16
-	if enable {
-		u = 1
+
+	switch wb.enableReg {
+	case kebaRegEnable:
+		if enable {
+			u = 1
+		}
+	case kebaRegMaxCurrent:
+		if enable {
+			u = uint16(wb.lastCurrent) * 1000
+
+			if u == 0 {
+				u = 6000 // Fallback to 6A
+			}
+		}
+	default:
+		return fmt.Errorf("unknown enable register %d", wb.enableReg)
 	}
-	_, err := wb.conn.WriteSingleRegister(kebaRegEnable, u)
+
+	_, err := wb.conn.WriteSingleRegister(wb.enableReg, u)
 	return err
 }
 
@@ -265,6 +300,11 @@ var _ api.ChargerEx = (*Keba)(nil)
 func (wb *Keba) MaxCurrentMillis(current float64) error {
 	u := uint16(current * 1000)
 	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
+
+	if err == nil {
+		wb.lastCurrent = current
+	}
+
 	return err
 }
 
