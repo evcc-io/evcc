@@ -99,14 +99,16 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2    api.Rates     `json:"co2,omitempty"`
-		FeedIn api.Rates     `json:"feedin,omitempty"`
-		Grid   api.Rates     `json:"grid,omitempty"`
-		Solar  *solarDetails `json:"solar,omitempty"`
+		Co2     api.Rates     `json:"co2,omitempty"`
+		FeedIn  api.Rates     `json:"feedin,omitempty"`
+		Grid    api.Rates     `json:"grid,omitempty"`
+		Planner api.Rates     `json:"planner,omitempty"`
+		Solar   *solarDetails `json:"solar,omitempty"`
 	}{
-		Co2:    tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn: tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Grid:   tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Co2:     tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:  tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
+		Planner: tariff.Forecast(site.GetTariff(api.TariffUsagePlanner)),
+		Grid:    tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
 	}
 
 	// calculate adjusted solar forecast
