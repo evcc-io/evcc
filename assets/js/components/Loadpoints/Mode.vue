@@ -14,8 +14,10 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { CHARGE_MODE } from "assets/js/types/evcc";
+import { defineComponent } from "vue";
+export default defineComponent({
 	name: "Mode",
 	props: {
 		mode: String,
@@ -25,33 +27,33 @@ export default {
 	emits: ["updated"],
 
 	computed: {
-		modes() {
+		modes(): CHARGE_MODE[] {
 			if (this.pvPossible) {
-				return ["off", "pv", "minpv", "now"];
+				return Object.values(CHARGE_MODE);
 			}
 			if (this.hasSmartCost) {
-				return ["off", "pv", "now"];
+				return [CHARGE_MODE.OFF, CHARGE_MODE.PV, CHARGE_MODE.NOW];
 			}
-			return ["off", "now"];
+			return [CHARGE_MODE.OFF, CHARGE_MODE.NOW];
 		},
 	},
 	methods: {
-		label(mode) {
+		label(mode: CHARGE_MODE) {
 			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
 			// TODO: rollout smart name for everyting later
-			if (mode === "pv" && !this.pvPossible && this.hasSmartCost) {
+			if (mode === CHARGE_MODE.PV && !this.pvPossible && this.hasSmartCost) {
 				return this.$t("main.mode.smart");
 			}
 			return this.$t(`main.mode.${mode}`);
 		},
-		isActive(mode) {
+		isActive(mode: CHARGE_MODE) {
 			return this.mode === mode;
 		},
-		setTargetMode(mode) {
+		setTargetMode(mode: CHARGE_MODE) {
 			this.$emit("updated", mode);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

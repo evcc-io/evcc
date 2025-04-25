@@ -12,17 +12,19 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import type { PHASES } from "assets/js/types/evcc";
+import { defineComponent, type PropType } from "vue";
 const MIN_ACTIVE_CURRENT = 1;
 
-export default {
+export default defineComponent({
 	name: "Phases",
 	props: {
-		offeredCurrent: { type: Number },
-		chargeCurrents: { type: Array },
-		phasesActive: { type: Number },
-		minCurrent: { type: Number },
-		maxCurrent: { type: Number },
+		offeredCurrent: { type: Number, default: 0 },
+		chargeCurrents: { type: Array as PropType<number[]>, default: () => [] },
+		phasesActive: { type: Number as PropType<PHASES> },
+		minCurrent: { type: Number, default: 0 },
+		maxCurrent: { type: Number, default: 0 },
 	},
 	computed: {
 		chargeCurrentsActive() {
@@ -37,21 +39,21 @@ export default {
 			);
 			return (100 / this.maxCurrent) * current;
 		},
-		realWidth(num) {
+		realWidth(num: number) {
 			if (this.chargeCurrents) {
 				const current = this.chargeCurrents[num - 1] || 0;
 				return (100 / this.maxCurrent) * current;
 			}
 			return this.targetWidth();
 		},
-		isPhaseActive(num) {
+		isPhaseActive(num: number) {
 			if (this.chargeCurrentsActive) {
 				return this.chargeCurrents[num - 1] >= MIN_ACTIVE_CURRENT;
 			}
-			return num <= this.phasesActive;
+			return this.phasesActive && num <= this.phasesActive;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

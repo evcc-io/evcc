@@ -90,12 +90,12 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
 import api from "../../api.js";
 import Mode from "./Mode.vue";
-import Vehicle from "../Vehicles/Vehicle.vue";
+import VehicleComponent from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
@@ -106,12 +106,14 @@ import VehicleIcon from "../VehicleIcon/index.js";
 import SessionInfo from "./SessionInfo.vue";
 import smartCostAvailable from "../../utils/smartCostAvailable.js";
 import Modal from "bootstrap/js/dist/modal";
+import { defineComponent, type PropType } from "vue";
+import type { CHARGE_MODE, PHASES, Timeout, Vehicle } from "assets/js/types/evcc.js";
 
-export default {
+export default defineComponent({
 	name: "Loadpoint",
 	components: {
 		Mode,
-		Vehicle,
+		Vehicle: VehicleComponent,
 		Phases,
 		LabelAndValue,
 		LoadpointSettingsButton: SettingsButton,
@@ -129,9 +131,9 @@ export default {
 		mode: String,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
-		remoteDisabled: Boolean,
+		remoteDisabled: String,
 		remoteDisabledSource: String,
-		chargeDuration: Number,
+		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
 		batteryConfigured: Boolean,
@@ -155,15 +157,15 @@ export default {
 		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
-		vehicleSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
-		vehicles: Array,
+		vehicles: Array as PropType<Vehicle[]>,
 		planActive: Boolean,
 		planProjectedStart: String,
 		planProjectedEnd: String,
-		planOverrun: Number,
+		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
 		planTime: String,
 		effectivePlanTime: String,
@@ -175,9 +177,9 @@ export default {
 		// details
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
-		chargePower: Number,
-		chargedEnergy: Number,
-		chargeRemainingDuration: Number,
+		chargePower: { type: Number, default: 0 },
+		chargedEnergy: { type: Number, default: 0 },
+		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
 		phasesConfigured: Number,
@@ -191,8 +193,8 @@ export default {
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,
 		phaseAction: String,
-		phaseRemaining: Number,
-		pvRemaining: Number,
+		phaseRemaining: { type: Number, default: 0 },
+		pvRemaining: { type: Number, default: 0 },
 		pvAction: String,
 		smartCostLimit: { type: Number, default: null },
 		smartCostType: String,
@@ -207,7 +209,7 @@ export default {
 	},
 	data() {
 		return {
-			tickerHandler: null,
+			tickerHandler: null as Timeout,
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
@@ -243,7 +245,7 @@ export default {
 			return this.collectProps(SettingsModal);
 		},
 		vehicleProps() {
-			return this.collectProps(Vehicle);
+			return this.collectProps(VehicleComponent);
 		},
 		showChargingIndicator() {
 			return this.charging && this.chargePower > 0;
@@ -267,7 +269,7 @@ export default {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
 		socBasedPlanning() {
-			return this.socBasedCharging && this.vehicle?.capacity > 0;
+			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
@@ -279,7 +281,12 @@ export default {
 			return this.batteryConfigured && this.$hiddenFeatures();
 		},
 		batteryBoostActive() {
-			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+			return (
+				this.batteryBoost &&
+				this.charging &&
+				this.mode &&
+				!["off", "now"].includes(this.mode)
+			);
 		},
 	},
 	watch: {
@@ -300,7 +307,9 @@ export default {
 		this.tickerHandler = setInterval(this.tick, 1000);
 	},
 	unmounted() {
-		clearInterval(this.tickerHandler);
+		if (this.tickerHandler) {
+			clearInterval(this.tickerHandler);
+		}
 	},
 	methods: {
 		tick() {
@@ -317,50 +326,50 @@ export default {
 				this.chargeRemainingDurationInterpolated--;
 			}
 		},
-		apiPath(func) {
+		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
-		setTargetMode(mode) {
+		setTargetMode(mode: CHARGE_MODE) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setLimitSoc(soc) {
+		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
-		setLimitEnergy(kWh) {
+		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
-		setMaxCurrent(maxCurrent) {
+		setMaxCurrent(maxCurrent: number) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
 		},
-		setMinCurrent(minCurrent) {
+		setMinCurrent(minCurrent: number) {
 			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
 		},
-		setPhasesConfigured(phases) {
+		setPhasesConfigured(phases: PHASES) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		changeVehicle(name) {
+		changeVehicle(name: string) {
 			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
-		setBatteryBoost(batteryBoost) {
+		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
-		fmtPower(value) {
+		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById(`loadpointSettingsModal_${this.id}`)
+				document.getElementById(`loadpointSettingsModal_${this.id}`) as HTMLElement
 			);
 			modal.show();
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
