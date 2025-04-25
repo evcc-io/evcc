@@ -16,9 +16,9 @@ params:
     default: ess0
     usages: ["battery"]	
     advanced: true
-  - name: cycle
+  - name: watchdog
     type: duration
-    default: 1s
+    default: 60s
     usages: ["battery"]	
     advanced: true	
   - name: maxacpower
@@ -57,7 +57,7 @@ render: |
   {{- if .battery }}
   batterymode:
     source: watchdog
-    timeout: {{ .cycle }} # re-write at timeout/2
+    timeout: {{ .watchdog }} # re-write at timeout/2
     reset: 1
     set:
       source: switch
