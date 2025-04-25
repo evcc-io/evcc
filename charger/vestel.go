@@ -43,6 +43,7 @@ const (
 	vestelRegPower           = 1020
 	vestelRegTotalEnergy     = 1036
 	vestelRegSessionEnergy   = 1502
+	vestelRegRFID            = 1516
 	vestelRegFailsafeTimeout = 2002
 	vestelRegAlive           = 6000
 	// vestelRegChargepointState = 1000
@@ -295,6 +296,18 @@ func (wb *Vestel) getPhases() (int, error) {
 		return 0, err
 	}
 	return 1 + int(binary.BigEndian.Uint16(b))<<1, nil
+}
+
+var _ api.Identifier = (*Vestel)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *Vestel) Identify() (string, error) {
+	b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)

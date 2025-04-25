@@ -31,6 +31,7 @@ export interface SolarDetails {
 export interface Forecast {
 	grid?: ForecastSlot[];
 	co2?: ForecastSlot[];
+	planner?: ForecastSlot[];
 	solar?: SolarDetails;
 }
 
