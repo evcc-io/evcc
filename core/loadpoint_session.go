@@ -43,7 +43,7 @@ func (lp *Loadpoint) createSession() {
 		lp.session.Identifier = id
 	}
 
-	if soc, err := lp.chargerSoc(); err == nil {
+	if soc, err := lp.chargerSoc(); err == nil && soc > 0 {
 		lp.session.SocStart = lo.ToPtr(soc)
 	}
 }

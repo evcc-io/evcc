@@ -441,7 +441,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
-		if session.SocStart == nil {
+		if session.SocStart == nil && lp.vehicleSoc > 0 {
 			session.SocStart = lo.ToPtr(lp.vehicleSoc)
 		}
 	})
