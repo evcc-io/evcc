@@ -2,6 +2,7 @@ template: openems
 products:
   - brand: OpenEMS
   - brand: FENECON
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -11,6 +12,15 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: battery
+    default: ess0
+    usages: ["battery"]	
+    advanced: true
+  - name: cycle
+    type: duration
+    default: 1s
+    usages: ["battery"]	
+    advanced: true	
   - name: maxacpower
   - name: capacity
     advanced: true
@@ -44,5 +54,46 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
+  batterymode:
+    source: watchdog
+    timeout: {{ .cycle }} # re-write at timeout/2
+    reset: 1
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 0 # % (set once to reset)
+          set:
+            source: http
+              uri: http://{{ .host }}/rest/channel/{{ .device }}/SetActivePowerEquals
+              auth:
+                type: basic
+                user: x
+                password: {{ .password }}
+              method: POST
+              headers:
+              - content-type: application/json
+              body: '{"value":0}'		  
+        - case: 2 # hold
+          set:
+            source: const
+            value: 0 # % (set once to reset from forced charge)
+            set:
+              source: http
+              uri: http://{{ .host }}/rest/channel/{{ .device }}/SetActivePowerEquals
+              auth:
+                type: basic
+                user: x
+                password: {{ .password }}
+              method: POST
+              headers:
+              - content-type: application/json
+              body: '{"value":0}'
+        - case: 3 # charge (not implemented)
+          set:
+            source: error
+            error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
