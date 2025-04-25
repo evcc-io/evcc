@@ -41,19 +41,19 @@ const (
 	sgRegPhase             = 21224 // uint16 [1: Single-phase,	3: Three-phase]
 	sgRegWorkMode          = 21262 // uint16 [0: Network, 2: Plug&Play, 6: EMS]
 	sgRegRemCtrlStatus     = 21267 // uint16 [0: Disable, 1: Enable]
-	sgRegPhaseSwitchStatus = 21269 // uint16
+	sgRegPhaseSwitchStatus = 21269 // uint16 [0: Three-phase, 1: Single-phase]
 	sgRegTotalEnergy       = 21299 // uint32s 1Wh
 	sgRegActivePower       = 21307 // uint32s 1W
 	sgRegChargedEnergy     = 21309 // uint32s 1Wh
 	sgRegStartMode         = 21313 // uint16 [1: Started by EMS, 2: Started by swiping card]
 	sgRegPowerRequest      = 21314 // uint16 [0: Enable, 1: Close]
 	sgRegPowerFlag         = 21315 // uint16 [0: Charging or power regulation is not allowed; 1: Charging or power regulation is allowed]
-	sgRegState             = 21316 // uint16
+	sgRegState             = 21316 // uint16 [1: Idle, 2: Standby, 3: Charging, 4: Charging Suspended pile, 5: Charging suspended vehicle, 6: Charging complete, 7: Reserved, 8: Disabled, 9: Fault]
 
 	// holding
 	sgRegSetOutI       = 21202 // uint16 0.01A
 	sgRegPhaseSwitch   = 21203 // uint16 [0: Three-phase, 1: Single-phase]
-	sgRegUnavailable   = 21210 // uint16
+	sgRegUnavailable   = 21210 // uint16 [0: Disable, 1: Enable]
 	sgRegRemoteControl = 21211 // uint16 [0: Start, 1: Stop]
 )
 
@@ -142,12 +142,14 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sungrow) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(sgRegStartMode, 1)
+	b, err := wb.conn.ReadInputRegisters(sgRegState, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	state := binary.BigEndian.Uint16(b)
+	// 3 and 5 should be considered "actively charging"
+	return state == 3 || state == 5, nil
 }
 
 // Enable implements the api.Charger interface
@@ -155,6 +157,13 @@ func (wb *Sungrow) Enable(enable bool) error {
 	var u uint16
 	if !enable {
 		u = 1
+	}
+
+	if enable {
+		// Make sure the charger is enabled, otherwise sgRegRemoteControl is not usable
+		if _, err := wb.conn.WriteSingleRegister(sgRegUnavailable, 1); err != nil {
+			return err
+		}
 	}
 
 	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u)
@@ -249,20 +258,8 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		u = 1
 	}
 
-	enabled, err := wb.Enabled()
-	if err == nil && enabled {
-		if err = wb.Enable(false); err != nil {
-			return err
-		}
-	}
-
 	// Switch phases
-	_, err = wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
-
-	// Re-enable charging if it was previously enabled
-	if err == nil && enabled {
-		err = wb.Enable(true)
-	}
+	_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
 
 	return err
 }
