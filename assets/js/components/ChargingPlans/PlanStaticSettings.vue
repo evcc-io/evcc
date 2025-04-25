@@ -118,7 +118,11 @@
 				v-if="showPrecondition"
 				class="col-7 col-lg-1 mb-2 mb-lg-0 d-flex align-items-center"
 			>
-				<PreconditionSelect :id="formId('precondition')" v-model="selectedPrecondition" />
+				<PreconditionSelect
+					:id="formId('precondition')"
+					v-model="selectedPrecondition"
+					testid="static-plan-precondition"
+				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
@@ -161,6 +165,7 @@
 			<PreconditionSelect
 				:id="formId('precondition')"
 				v-model="selectedPrecondition"
+				testid="static-plan-precondition"
 				description-lg-only
 			/>
 		</div>

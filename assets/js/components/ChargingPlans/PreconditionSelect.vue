@@ -7,7 +7,7 @@
 				class="form-check-input d-none d-lg-block"
 				type="checkbox"
 				tabindex="0"
-				:data-testid="`${id}-toggle`"
+				:data-testid="`${testid}-lg-toggle`"
 				:checked="enabled"
 				@change="toggle"
 			/>
@@ -18,7 +18,7 @@
 				:id="`${id}-sm`"
 				v-model="localValue"
 				class="form-select mx-0 d-lg-none"
-				:data-testid="`${id}-select`"
+				:data-testid="`${testid}-select`"
 				@change="onChange"
 			>
 				<option :value="0">
@@ -46,7 +46,7 @@
 						class="d-inline-flex"
 						:options="options"
 						:selected="localValue"
-						:data-testid="`${id}-select`"
+						:data-testid="`${testid}-lg-select`"
 						@change="onChange"
 					>
 						<u>{{ valueFmt }}</u>
@@ -67,18 +67,10 @@ export default defineComponent({
 	components: { CustomSelect },
 	mixins: [formatter],
 	props: {
-		id: {
-			type: String,
-			required: true,
-		},
-		modelValue: {
-			type: Number,
-			default: 0,
-		},
-		descriptionLgOnly: {
-			type: Boolean,
-			default: false,
-		},
+		id: String,
+		modelValue: { type: Number, default: 0 },
+		testid: String,
+		descriptionLgOnly: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data() {
