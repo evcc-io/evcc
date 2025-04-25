@@ -54,6 +54,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:forecast="forecast"
 				:selectedIndex="selectedLoadpointIndex"
 				@index-changed="selectedLoadpointChanged"
 			/>
@@ -131,7 +132,7 @@ export default {
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {
