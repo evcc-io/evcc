@@ -45,7 +45,6 @@ params:
     allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
-    port: 6607
   - name: timeout
     default: 15s
   - name: storageunit
