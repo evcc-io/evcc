@@ -300,7 +300,7 @@ func (wb *Vestel) getPhases() (int, error) {
 
 var _ api.Identifier = (*Vestel)(nil)
 
-// identify implements the api.Identifier interface
+// Identify implements the api.Identifier interface
 func (wb *Vestel) Identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15)
 	if err != nil {
