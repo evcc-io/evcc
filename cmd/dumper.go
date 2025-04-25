@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/fatih/structs"
 )
@@ -34,6 +35,11 @@ func (d *dumper) DumpWithHeader(name string, device interface{}) {
 	}
 }
 
+// bo returns an exponential backoff for reading meter power quickly
+func bo() *backoff.ExponentialBackOff {
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(time.Second))
+}
+
 func (d *dumper) Dump(name string, v interface{}) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
@@ -45,7 +51,15 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// meter
 
 	if v, ok := v.(api.Meter); ok {
-		if power, err := v.CurrentPower(); err != nil {
+		power, err := backoff.RetryWithData(func() (float64, error) {
+			f, err := v.CurrentPower()
+			if err != nil {
+				fmt.Println(err)
+			}
+			return f, err
+		}, bo())
+
+		if err != nil {
 			fmt.Fprintf(w, "Power:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Power:\t%.0fW\n", power)
@@ -120,7 +134,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 	}
 
-	if v, ok := v.(api.MaxACPower); ok {
+	if v, ok := v.(api.MaxACPowerGetter); ok {
 		fmt.Fprintf(w, "Max AC power:\t%.0fW\n", v.MaxACPower())
 	}
 

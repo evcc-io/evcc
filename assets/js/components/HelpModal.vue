@@ -294,6 +294,11 @@ export default {
 			} else {
 				modal.show();
 			}
+			if (!isLoggedIn()) {
+				openLoginModal(null, modal);
+			} else {
+				modal.show();
+			}
 		},
 		async restartConfirmed() {
 			await performRestart();

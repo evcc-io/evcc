@@ -51,7 +51,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(conf.Circuits))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 2)
 	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
 
@@ -82,7 +82,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(conf.Circuits))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 2)
 	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
 
@@ -141,7 +141,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(conf.Circuits))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 1)
 
 	// mock charger

@@ -26,6 +26,11 @@ never = "тільки з достатнім надлишком"
 
 [config]
 
+[config.aux]
+description = "Пристрій, який регулює споживання на основі наявного надлишку (наприклад, розумні водонагрівачі). evcc очікує, що цей пристрій за потреби зменшить споживання енергії."
+titleAdd = "Додайте саморегулюючого споживача"
+titleEdit = "Редагувати саморегулюючого споживача"
+
 [config.battery]
 titleAdd = "Додати батарею"
 titleEdit = "Редагувати батарею"
@@ -37,6 +42,7 @@ titleEdit = "Редагувати лічильник заряду"
 [config.charger]
 chargers = "Зарядні пристрої для електромобілів"
 generic = "Загальні інтеграції"
+heatingdevices = "Нагрівальні прилади"
 ocppHelp = "Скопіюйте цю адресу в конфігурацію зарядних пристроїв."
 ocppLabel = "URL-адреса OCPP-сервера"
 switchsockets = "Перемикаються розетки"
@@ -78,6 +84,7 @@ enabled = "Ввімкнено"
 energy = "Енергія"
 feedinPrice = "Збірна ціна"
 gridPrice = "Ціна сітки"
+heaterTempLimit = "Обмеження нагрівача"
 hemsType = "Система"
 identifier = "RFID-ідентифікатор"
 no = "ні"
@@ -93,6 +100,7 @@ range = "Дальність"
 singlePhase = "Однофазний"
 soc = "Зарядити"
 socLimit = "Ліміт"
+solarForecast = "Сонячний прогноз"
 temp = "Температура"
 topic = "Тема"
 url = "URL"
@@ -104,11 +112,22 @@ A = "A (не підключено)"
 B = "B (підключено)"
 C = "C (зарядка)"
 
+[config.devices]
+auxMeter = "Розумний споживач"
+batteryStorage = "Акумуляторне зберігання"
+solarSystem = "Сонячна система"
+
 [config.eebus]
 description = "Конфігурація, яка дозволяє evcc спілкуватися з іншими пристроями EEBus."
 title = "EEBus"
 
+[config.ext]
+description = "Може використовуватися для керування навантаженням або статистики."
+titleAdd = "Додати зовнішній лічильник"
+titleEdit = "Редагувати зовнішній лічильник"
+
 [config.form]
+danger = "Небезпека"
 deprecated = "застарілий"
 example = "Наприклад"
 optional = "необов'язково"
@@ -127,6 +146,7 @@ remove = "Вилучити"
 save = "зберегти"
 showAdvancedSettings = "Показати розширені налаштування"
 telemetry = "Телеметрія"
+templateLoading = "Завантаження..."
 title = "Назва"
 validateSave = "Перевірити та зберегти"
 
@@ -159,6 +179,7 @@ v2Support = "Назад до InfluxDB 2.x"
 addCharger = "Додати зарядний пристрій"
 addMeter = "Додати спеціальний лічильник зарядного пристрою"
 cancel = "Скасувати"
+chargerError = "Необхідно налаштувати зарядний пристрій."
 chargerLabel = "Зарядний пристрій"
 chargerPower11kw = "11 kW"
 chargerPower11kwHelp = "Використовуватиметься діапазон струму від 6 до 16 А."
@@ -190,6 +211,7 @@ phasesAutomatic = "Автоматичні фази"
 phasesAutomaticHelp = "Ваш зарядний пристрій підтримує автоматичне перемикання між 1- і 3-фазним заряджанням. На головному екрані ви можете налаштувати поведінку фаз під час заряджання."
 phasesHelp = "Кількість фаз, підключених до зарядного пристрою."
 phasesLabel = "Фази"
+pollIntervalDanger = "Регулярне опитування автомобіля може розрядити акумулятор автомобіля. Деякі виробники транспортних засобів можуть активно забороняти зарядку в цьому випадку. Не рекомендується! Використовуйте це, лише якщо ви усвідомлюєте ризики."
 pollIntervalHelp = "Час між оновленнями API автомобіля. Короткі проміжки часу можуть розрядити акумулятор автомобіля."
 pollIntervalLabel = "Інтервал оновлення"
 pollModeAlways = "завжди"
@@ -229,6 +251,7 @@ vehicleLabel = "Автомобіль за замовчуванням"
 vehiclesTitle = "Транспортні засоби"
 
 [config.main]
+addAdditional = "Додати додатковий лічильник"
 addGrid = "Додати вимірювач сітки"
 addLoadpoint = "Додати точку зарядки"
 addPvBattery = "Додати сонячну або батарею"
@@ -253,6 +276,12 @@ save = "Зберегти"
 template = "Виробник"
 titleChoice = "Що ви хочете додати?"
 validateSave = "Перевірте та збережіть"
+
+[config.meter.option]
+aux = "Додайте саморегульованого споживача"
+battery = "Додати лічильник батареї"
+ext = "Додати зовнішній лічильник"
+pv = "Додати сонячний лічильник"
 
 [config.modbusproxy]
 description = "Дозволити кільком клієнтам доступ до одного пристрою Modbus."
@@ -309,6 +338,7 @@ titleAdd = "Додати сонячний лічильник"
 titleEdit = "Редагувати сонячний лічильник"
 
 [config.section]
+additionalMeter = "Додаткові метри"
 general = "Загальний"
 grid = "Сітка"
 integrations = "Інтеграції"
@@ -360,10 +390,23 @@ validate = "перевірити"
 
 [config.vehicle]
 cancel = "Скасувати"
+chargingSettings = "Налаштування зарядки"
+defaultMode = "Режим за замовчуванням"
+defaultModeHelp = "Режим зарядки при підключенні автомобіля."
 delete = "Видалити"
 generic = "Інші інтеграції"
+identifiers = "RFID ідентифікатори"
+identifiersHelp = "Список рядків RFID для ідентифікації автомобіля. Один запис на рядок. Поточний ідентифікатор можна знайти у відповідній точці зарядки на сторінці огляду."
+maximumCurrent = "Максимальний струм"
+maximumCurrentHelp = "Має бути більше ніж мінімальний струм."
+maximumPhases = "Максимум фаз"
+maximumPhasesHelp = "Скільки фаз може заряджати цей автомобіль? Використовується для розрахунку необхідного мінімального надлишку сонячної енергії та тривалості плану."
+minimumCurrent = "Мінімальний струм"
+minimumCurrentHelp = "Опускайтеся нижче 6А, лише якщо знаєте, що робите."
 offline = "Загальний транспорт"
 online = "Транспорт з онлайн API"
+priority = "Пріоритет"
+priorityHelp = "Вищий пріоритет означає, що цей транспортний засіб отримує пріоритетний доступ до надлишку сонячної енергії."
 save = "Зберегти"
 scooter = "Скутер"
 template = "Виробник"
@@ -447,6 +490,32 @@ modalUpdate = "Встановити"
 modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
+
+[forecast]
+modalTitle = "Прогноз"
+solarAdjust = "Скоригуйте сонячний прогноз на основі реальних даних виробництва{percent}."
+
+[forecast.co2]
+average = "Середній"
+lowestHour = "Найчистіша година"
+range = "Діапазон"
+
+[forecast.price]
+average = "Середній"
+lowestHour = "Найдешевша година"
+range = "Діапазон"
+
+[forecast.solar]
+dayAfterTomorrow = "Післязавтра"
+partly = "частково"
+remaining = "залишилося"
+today = "Сьогодні"
+tomorrow = "Завтра"
+
+[forecast.type]
+co2 = "CO₂"
+price = "Ціна"
+solar = "Сонячна"
 
 [header]
 about = "Про evcc"
@@ -539,16 +608,20 @@ batteryGridChargeActive = "активна зарядка мережі"
 batteryGridChargeLimit = "зарядка мережі коли"
 batteryHold = "Акумулятор (locked)"
 batteryTooltip = "{energy} із {total} ({soc})"
+forecastTooltip = "Прогноз: залишкове виробництво сонячної енергії сьогодні"
 gridImport = "Використання мережі"
 homePower = "Споживання"
 loadpoints = "Зарядний пристрій| Зарядний пристрій | {count} зарядні пристрої"
 noEnergy = "Немає даних лічильника"
+pv = "Сонячна система"
 pvExport = "Експорт мережі"
 pvProduction = "Виробництво"
 selfConsumption = "Власне споживання"
 
 [main.heatingStatus]
 charging = "Опалення…"
+connected = "Режим очікування."
+vehicleLimit = "Обмеження нагрівача"
 waitForVehicle = "Готовий. Очікування обігрівача…"
 
 [main.loadpoint]
@@ -623,6 +696,7 @@ currentPlan = "Активний план"
 description = "Коли транспортний засіб повинен бути заряджений на {targetSoc}?"
 descriptionEnergy = "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?"
 descriptionSoc = "Коли автомобіль повинен бути заряджений на {targetSoc}?"
+goalReached = "Мета вже досягнута"
 inactiveLabel = "Запланований час"
 modalTitle = "Встановити запланований час"
 nextPlan = "Наступний план"
@@ -672,13 +746,6 @@ tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
 
-[main.vehicleSoc]
-charging = "зарядка"
-connected = "підключено"
-disconnected = "відключено"
-ready = "готовий"
-vehicleLimit = "Ліміт транспортного засобу: {soc}"
-
 [main.vehicleStatus]
 awaitingAuthorization = "Очікування авторизації."
 batteryBoost = "Підвищення заряду батареї активне."
@@ -703,7 +770,7 @@ targetChargeActive = "Запланований заряд активний. Ор
 targetChargePlanned = "Запланована зарядка починається о {duration}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
 unknown = ""
-vehicleLimit = "Ліміт транспортного засобу."
+vehicleLimit = "Ліміт транспортного засобу"
 vehicleLimitReached = "Ліміт транспортного засобу досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 welcome = "Короткий початковий заряд для підтвердження підключення."
@@ -885,6 +952,8 @@ modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
+resetAction = "Зняти обмеження"
+resetWarning = "«Динамічна ціна мережі або джерело CO₂ не налаштовано. Проте обмеження в {limit} усе ще є. Очистити конфігурацію?»"
 saved = "Збережено."
 
 [startupError]

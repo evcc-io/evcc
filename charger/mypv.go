@@ -84,7 +84,7 @@ func newMyPvFromConfig(ctx context.Context, name string, other map[string]interf
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
 func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

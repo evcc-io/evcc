@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
@@ -40,7 +41,7 @@ type Limits struct {
 }
 
 // New creates an EEBus HEMS from generic config
-func New(other map[string]interface{}, site site.API) (*EEBus, error) {
+func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
 	cc := struct {
 		Ski    string
 		Limits `mapstructure:",squash"`
@@ -75,11 +76,11 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	}
 	site.SetCircuit(lpc)
 
-	return NewEEBus(cc.Ski, cc.Limits, lpc)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -104,8 +105,9 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		return nil, err
 	}
 
-	if err := c.Wait(90 * time.Second); err != nil {
-		return c, err
+	if err := c.Wait(ctx); err != nil {
+		eebus.Instance.UnregisterDevice(ski, c)
+		return nil, err
 	}
 
 	// scenarios

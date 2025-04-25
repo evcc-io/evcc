@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -16,8 +17,7 @@ import (
 )
 
 const (
-	api            = "https://api.evcc.io"
-	enabledSetting = "telemetry"
+	api = "https://api.evcc.io"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 )
 
 func Enabled() bool {
-	enabled, _ := settings.Bool(enabledSetting)
+	enabled, _ := settings.Bool(keys.Telemetry)
 	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
 }
 
@@ -43,14 +43,33 @@ func Enable(enable bool) error {
 		}
 	}
 
-	settings.SetBool(enabledSetting, enable)
+	settings.SetBool(keys.Telemetry, enable)
 
 	return nil
 }
 
+// getOrCreateID return instance id from settings if exists, otherwise creates and stores a new one
+func getOrCreateID() string {
+	if id, err := settings.String(keys.Plant); err == nil {
+		return id
+	}
+
+	id := machine.RandomID()
+	settings.SetString(keys.Plant, id)
+
+	return id
+}
+
 func Create(machineID string) {
+	// no machine id from config
 	if machineID == "" {
-		machineID, _ = machine.ProtectedID("evcc-api")
+		if id, err := machine.ProtectedID("evcc-api"); err == nil {
+			// use id from hardware
+			machineID = id
+		} else {
+			// use id from database, generate if needed (e.g. in docker environment)
+			machineID = getOrCreateID()
+		}
 	}
 
 	instanceID = machineID
@@ -66,7 +85,7 @@ func UpdateChargeProgress(log *util.Logger, power, greenShare float64) {
 	}
 
 	if err := upload(log, power, power*greenShare); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
@@ -90,7 +109,7 @@ func Persist(log *util.Logger) {
 	}
 
 	if err := upload(log, 0, 0); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 

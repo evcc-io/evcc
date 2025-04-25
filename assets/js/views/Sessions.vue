@@ -182,6 +182,7 @@
 			<SessionDetailsModal
 				:session="selectedSession"
 				:vehicles="vehicleList"
+				:loadpoints="loadpointList"
 				:currency="currency"
 				@session-changed="loadSessions"
 			/>
@@ -207,11 +208,11 @@ import SolarYearChart from "../components/Sessions/SolarYearChart.vue";
 import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
-import TopHeader from "../components/TopHeader.vue";
-import IconSelectGroup from "../components/IconSelectGroup.vue";
-import IconSelectItem from "../components/IconSelectItem.vue";
-import SelectGroup from "../components/SelectGroup.vue";
-import CustomSelect from "../components/CustomSelect.vue";
+import Header from "../components/Top/Header.vue";
+import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
+import IconSelectItem from "../components/Helper/IconSelectItem.vue";
+import SelectGroup from "../components/Helper/SelectGroup.vue";
+import CustomSelect from "../components/Helper/CustomSelect.vue";
 import colors from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
@@ -224,7 +225,7 @@ export default {
 	components: {
 		SessionDetailsModal,
 		SessionTable,
-		TopHeader,
+		TopHeader: Header,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -438,7 +439,7 @@ export default {
 		startDate() {
 			return new Date(this.sessions[0]?.created || Date.now());
 		},
-		topNavigation: function () {
+		topNavigation() {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
 		},
@@ -469,6 +470,10 @@ export default {
 		vehicleList() {
 			const vehicles = store.state.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+		},
+		loadpointList() {
+			const loadpoints = store.state.loadpoints || [];
+			return loadpoints.map(({ title }) => title);
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
@@ -637,7 +642,7 @@ export default {
 		},
 	},
 	watch: {
-		offline: function () {
+		offline() {
 			this.loadSessions();
 		},
 	},

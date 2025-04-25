@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gregjones/httpcache"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
@@ -31,11 +31,6 @@ func init() {
 }
 
 var mc = httpcache.NewMemoryCache()
-
-// Auth is the authorization config
-type Auth struct {
-	Type, User, Password string
-}
 
 // NewHTTPPluginFromConfig creates a HTTP provider
 func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
@@ -60,6 +55,10 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, err
 	}
 
+	if cc.URI == "" {
+		return nil, errors.New("missing uri")
+	}
+
 	log := contextLogger(ctx, util.NewLogger("http"))
 	p := NewHTTP(
 		log,
@@ -75,18 +74,21 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 
 	p.getter = defaultGetters(p, cc.Scale)
 
-	var err error
-	if cc.Auth.Type != "" {
-		_, err = p.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+	if cc.Auth.Type != "" || cc.Auth.Source != "" {
+		transport, err := cc.Auth.Transport(ctx, p.Client.Transport)
+		if err != nil {
+			return nil, err
+		}
+		p.Client.Transport = transport
 	}
 
-	if err == nil {
-		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(log, cc.Settings)
-		p = p.WithPipeline(pipe)
+	pipe, err := pipeline.New(log, cc.Settings)
+	if err != nil {
+		return nil, err
 	}
+	p.pipeline = pipe
 
-	return p, err
+	return p, nil
 }
 
 // NewHTTP create HTTP provider
@@ -123,7 +125,12 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 // WithBody adds request body
 func (p *HTTP) WithBody(body string) *HTTP {
-	p.body = body
+	if body != "" {
+		p.body = body
+		if p.method == http.MethodGet {
+			p.method = http.MethodPost
+		}
+	}
 	return p
 }
 
@@ -131,28 +138,6 @@ func (p *HTTP) WithBody(body string) *HTTP {
 func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
 	p.headers = headers
 	return p
-}
-
-// WithPipeline adds a processing pipeline
-func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
-	p.pipeline = pipeline
-	return p
-}
-
-// WithAuth adds authorized transport
-func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
-	switch strings.ToLower(typ) {
-	case "basic":
-		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
-	case "bearer":
-		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
-	case "digest":
-		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
-	default:
-		return nil, fmt.Errorf("unknown auth type '%s'", typ)
-	}
-
-	return p, nil
 }
 
 // request executes the configured request or returns the cached value

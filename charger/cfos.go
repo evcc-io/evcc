@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -34,13 +35,13 @@ type CfosPowerBrain struct {
 }
 
 func init() {
-	registry.Add("cfos", NewCfosPowerBrainFromConfig)
+	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
 
 //go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
-func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -49,14 +50,14 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
 }
 
 // NewCfosPowerBrain creates a cFos charger
-func NewCfosPowerBrain(uri string, id uint8) (api.Charger, error) {
+func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 4701)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

@@ -56,7 +56,7 @@
 	--evcc-gray: var(--bs-gray-medium);
 	--evcc-gray-50: #93949e80;
 	--evcc-gray-25: #93949e40;
-
+	--evcc-gray-10: #93949e20;
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
 	--evcc-accent3: var(--evcc-darkest-green);
@@ -80,9 +80,10 @@
 	--bs-danger-rgb: var(--evcc-red-rgb);
 
 	--bs-body-font-size: 14px;
-	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-		Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-		"Segoe UI Symbol", "Noto Color Emoji";
+	--bs-font-sans-serif:
+		Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+		"Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+		"Noto Color Emoji";
 	--bs-success: var(--evcc-primary);
 	--bs-success-rgb: var(--bs-primary-rgb);
 	--bs-code-color: var(--evcc-darkest-green);
@@ -548,8 +549,8 @@ input::-webkit-datetime-edit {
 .form-control:read-only,
 .dark .form-control:disabled,
 .dark .form-control:read-only {
-	background-color: var(--bs-secondary-bg);
-	color: var(--bs-gray-dark);
+	background-color: var(--evcc-gray-10);
+	color: var(--bs-default-text);
 	opacity: 1;
 }
 
@@ -673,4 +674,11 @@ html.app .modal-dialog {
 
 input::-webkit-date-and-time-value {
 	text-align: left;
+}
+
+@media (max-width: 576px) {
+	.text-truncate-xs-only {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 }

@@ -24,6 +24,7 @@ package charger
 // * Set DIP switch 10 to ON
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -58,13 +59,13 @@ const (
 )
 
 func init() {
-	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
+	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
 //go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
-func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -73,12 +74,12 @@ func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixEVEth(cc.URI, cc.ID)
+	return NewPhoenixEVEth(ctx, cc.URI, cc.ID)
 }
 
 // NewPhoenixEVEth creates a PhoenixEVEth charger
-func NewPhoenixEVEth(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

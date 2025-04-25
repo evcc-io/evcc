@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -51,6 +52,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		case match(KeyChargingScheduleAllowedChargingRateUnit):
 			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
+				cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 			}
 
 		case match(KeyConnectorSwitch3to1PhaseSupported) || match(KeyChargeAmpsPhaseSwitchingSupported):
@@ -136,6 +138,8 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		if err := cp.TriggerMessageRequest(0, core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			case <-time.After(Timeout):
 				cp.log.WARN.Println("meter timeout")
 			case <-cp.meterC:
@@ -153,6 +157,11 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	// configure websocket ping interval
 	if err := cp.ChangeConfigurationRequest(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
+	}
+
+	if forcePowerCtrl {
+		cp.ChargingRateUnit = types.ChargingRateUnitWatts
+		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,11 +22,11 @@ type PhoenixEVSer struct {
 }
 
 func init() {
-	registry.Add("phoenix-ev-ser", NewPhoenixEVSerFromConfig)
+	registry.AddCtx("phoenix-ev-ser", NewPhoenixEVSerFromConfig)
 }
 
 // NewPhoenixEVSerFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEVSerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -34,12 +35,12 @@ func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewPhoenixEVSer(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewPhoenixEVSer creates a Phoenix charger
-func NewPhoenixEVSer(uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (*PhoenixEVSer, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, id)
+func NewPhoenixEVSer(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (*PhoenixEVSer, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
 	}

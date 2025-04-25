@@ -196,6 +196,28 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	}
 }
 
+// updateBatteryMode sets the external battery mode
+func updateBatteryMode(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		var val api.BatteryMode
+
+		if r.Method != http.MethodDelete {
+			s, err := api.BatteryModeString(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = s
+		}
+
+		site.SetBatteryModeExternal(val)
+
+		jsonResult(w, site.GetBatteryModeExternal())
+	}
+}
+
 // stateHandler returns the combined state
 func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -290,6 +312,11 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	util.ResetCached()
+	jsonResult(w, "OK")
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {

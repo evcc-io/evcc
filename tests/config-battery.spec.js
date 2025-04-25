@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -34,6 +34,7 @@ test.describe("battery meter", async () => {
 
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+    await meterModal.getByLabel("Title").fill("Battery Basement");
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -41,20 +42,20 @@ test.describe("battery meter", async () => {
     await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("battery")).toBeVisible(1);
-    await expect(page.getByTestId("battery")).toContainText("openems");
+    await expect(page.getByTestId("battery")).toContainText("Battery Basement");
 
     // edit #1
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
-    await expect(meterModal).toBeVisible();
+    await expectModalVisible(meterModal);
     await meterModal.getByLabel("Battery capacity in kWh").fill("20");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
 
     const battery = page.getByTestId("battery");
     await expect(battery).toBeVisible(1);
-    await expect(battery).toContainText("openems");
+    await expect(battery).toContainText("Battery Basement");
     await expect(battery.getByTestId("device-tag-soc")).toContainText("75.0%");
     await expect(battery.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await expect(battery.getByTestId("device-tag-capacity")).toContainText("20.0 kWh");
@@ -68,7 +69,9 @@ test.describe("battery meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(meterModal);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
   });
@@ -81,6 +84,7 @@ test.describe("battery meter", async () => {
 
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+    await meterModal.getByLabel("Title").fill("Battery Basement");
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await expect(meterModal.getByLabel("Password optional")).not.toBeVisible();
     await page.getByRole("button", { name: "Show advanced settings" }).click();

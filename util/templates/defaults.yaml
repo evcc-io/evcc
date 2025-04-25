@@ -97,11 +97,11 @@ params:
     usages: ["vehicle", "battery"]
   - name: maxacpower
     description:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     help:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     default: 0
     example: 5000
     type: float
@@ -269,6 +269,7 @@ params:
       - meter
       - microwave
       - pump
+      - smartconsumer
       - tool
       - waterheater
 
@@ -417,6 +418,40 @@ presets:
           de: Individuelle Formel zur Berechnung des Preises
           en: Individual formula for calculating the price
         example: "math.Max((price + charges) * (1 + tax), 0.0)"
+  forecast-base:
+    params:
+      - name: lat
+        description:
+          en: Latitude
+          de: Breitengrad
+        type: float
+        example: 55.7351
+        required: true
+      - name: lon
+        description:
+          en: Longitude
+          de: Längengrad
+        type: float
+        example: 9.1275
+        required: true
+      - name: dec
+        description:
+          en: Decline
+          de: Neigung
+        help:
+          en: 0 = horizontal, 90 = vertical
+          de: 0 = horizontal, 90 = vertikal
+        type: int
+        example: 25
+        required: true
+      - name: kwp
+        description:
+          en: Maximum generator power [kWp]
+          de: Maximale Generatorleistung [kWp]
+        type: float
+        example: 9.8
+        required: true
+
   eebus:
     params:
       - name: ski

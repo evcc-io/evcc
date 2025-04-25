@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -55,11 +56,11 @@ const (
 )
 
 func init() {
-	registry.Add("hesotec", NewHesotecFromConfig)
+	registry.AddCtx("hesotec", NewHesotecFromConfig)
 }
 
 // NewHesotecFromConfig creates a Hesotec charger from generic config
-func NewHesotecFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHesotecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -68,12 +69,12 @@ func NewHesotecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewHesotec(cc.URI, cc.ID)
+	return NewHesotec(ctx, cc.URI, cc.ID)
 }
 
 // NewHesotec creates Hesotec charger
-func NewHesotec(uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewHesotec(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

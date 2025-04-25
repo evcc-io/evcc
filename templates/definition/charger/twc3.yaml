@@ -5,8 +5,8 @@ products:
       generic: TWC3
 requirements:
   description:
-    en: The TWC wallbox cannot be controlled directly. Control is via the vehicle. The vehicle must be associated with the TWC3 loadpoint. At this time only Tesla vehicles are supported.
-    de: Die TWC Wallbox ist nicht direkt regelbar. Die Regelung erfolgt über das Fahrzeug. Das Fahrzeug muss dem TWC3 Ladepunkt zugewiesen sein. Aktuell ausschließlich mit Tesla Fahrzeugen nutzbar.
+    en: The TWC wallbox cannot be controlled directly. Control is via the vehicle. The vehicle must be selected at the TWC3 loadpoint. At this time only [Tesla vehicles](https://docs.evcc.io/en/docs/devices/vehicles#tesla) are supported.
+    de: Die TWC Wallbox ist nicht direkt regelbar. Die Regelung erfolgt über das Fahrzeug. Das Fahrzeug muss am TWC3 Ladepunkt ausgewählt sein. Aktuell ausschließlich mit [Tesla Fahrzeugen](https://docs.evcc.io/docs/devices/vehicles#tesla) nutzbar.
 params:
   - name: host
 render: |

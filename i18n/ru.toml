@@ -250,12 +250,6 @@ targetSoc = "Лимит"
 unknown = "Гостевое транспортное средство"
 vehicleSoc = "Заряд"
 
-[main.vehicleSoc]
-charging = "заряжается"
-connected = "подключено"
-disconnected = "отключено"
-ready = "готово"
-
 [main.vehicleStatus]
 charging = "Зарядка..."
 connected = "Подключено."

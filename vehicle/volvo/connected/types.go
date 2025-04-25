@@ -31,3 +31,7 @@ type RechargeStatus struct {
 		}
 	}
 }
+
+type Vehicle struct {
+	VIN string
+}
