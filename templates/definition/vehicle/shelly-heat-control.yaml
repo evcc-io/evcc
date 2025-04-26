@@ -3,7 +3,7 @@ products:
   - brand: Shelly
     description:
       generic: Sensor Add-On (Temperature)
-group: heating
+group: generic
 params:
   - name: title
   - name: icon
