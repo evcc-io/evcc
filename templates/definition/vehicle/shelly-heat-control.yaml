@@ -31,7 +31,7 @@ render: |
     {{- end }}
     {{- if .icon }}
     icon: {{ .icon }}
-    {{- end }}    
+    {{- end }}
     uri: http://{{ .host }}
     {{- if .user }}
     user: {{ .user }}
@@ -41,4 +41,4 @@ render: |
     {{- end }}
     channel: {{ .channel }}  # shelly device relay channel
     targettc: {{ .targettc }}
-    capacity: {{ .capacity }}    
+    capacity: {{ .capacity }}
