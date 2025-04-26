@@ -1,0 +1,44 @@
+template: shelly-heat-control
+products:
+  - brand: Shelly
+    description:
+      generic: Sensor Add-On (Temperature)
+group: heating
+params:
+  - name: title
+  - name: icon
+    default: heater
+  - name: host
+    required: true
+  - name: user
+  - name: password
+  - name: channel
+    default: 100
+    description:
+      de: Shelly Add-On Mess-Kanal
+      en: Shelly Add-On channel
+  - name: targettc
+    required: true
+    description:
+      de: Zieltemperatur in °C
+      en: Target temperature in °C
+  - name: capacity
+    default: 12
+render: |
+    type: shelly-heat-control
+    {{- if .title }}
+    title: {{ .title }}
+    {{- end }}
+    {{- if .icon }}
+    icon: {{ .icon }}
+    {{- end }}    
+    uri: http://{{ .host }}
+    {{- if .user }}
+    user: {{ .user }}
+    {{- end }}
+    {{- if .password }}
+    password: {{ .password }}
+    {{- end }}
+    channel: {{ .channel }}  # shelly device relay channel
+    targettc: {{ .targettc }}
+    capacity: {{ .capacity }}    

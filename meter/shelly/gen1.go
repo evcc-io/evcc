@@ -133,3 +133,7 @@ func (c *gen1) energy(energy float64) float64 {
 	}
 	return energy
 }
+
+func (c *gen1) ExecCmd(method string, enable bool, res any) error {
+	return nil
+}

@@ -85,7 +85,7 @@ type gen2 struct {
 func apiCall[T any](c *gen2, api string) func() (T, error) {
 	return func() (T, error) {
 		var res T
-		if err := c.execCmd(fmt.Sprintf("%s?id=%d", api, c.channel), false, &res); err != nil {
+		if err := c.ExecCmd(fmt.Sprintf("%s?id=%d", api, c.channel), false, &res); err != nil {
 			return res, err
 		}
 		return res, nil
@@ -110,7 +110,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	var res Gen2Methods
-	if err := c.execCmd("Shelly.ListMethods", false, &res); err != nil {
+	if err := c.ExecCmd("Shelly.ListMethods", false, &res); err != nil {
 		return nil, err
 	}
 
@@ -130,7 +130,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 }
 
 // execCmd executes a shelly api gen2+ command and provides the response
-func (c *gen2) execCmd(method string, enable bool, res any) error {
+func (c *gen2) ExecCmd(method string, enable bool, res any) error {
 	data := &Gen2RpcPost{
 		Id:     c.channel,
 		On:     enable,
@@ -180,7 +180,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execCmd("Switch.Set?id="+strconv.Itoa(c.channel), enable, &res)
+	return c.ExecCmd("Switch.Set?id="+strconv.Itoa(c.channel), enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
