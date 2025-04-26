@@ -18,6 +18,7 @@ params:
       de: Shelly Add-On Mess-Kanal
       en: Shelly Add-On channel
   - name: targettc
+    default: 45
     required: true
     description:
       de: Zieltemperatur in °C
