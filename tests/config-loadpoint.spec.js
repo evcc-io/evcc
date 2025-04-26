@@ -196,6 +196,20 @@ test.describe("loadpoint", async () => {
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await expect(lpModal.getByLabel("Priority")).toHaveValue("1");
+
+    // change back to 0
+    await lpModal.getByLabel("Priority").selectOption("0 (default)");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // restart
+    await restart(CONFIG_ONE_LP);
+    await page.reload();
+
+    // check priorities
+    await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
   });
 
   test("vehicle", async ({ page }) => {

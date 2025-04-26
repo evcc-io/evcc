@@ -140,11 +140,12 @@ type Loadpoint struct {
 	socEstimator   *soc.Estimator
 
 	// charge planning
-	planner     *planner.Planner
-	planTime    time.Time // time goal
-	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
-	planSlotEnd time.Time // current plan slot end time
-	planActive  bool      // charge plan exists and has a currently active slot
+	planner          *planner.Planner
+	planTime         time.Time     // time goal
+	planPrecondition time.Duration // precondition duration
+	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
+	planSlotEnd      time.Time     // current plan slot end time
+	planActive       bool          // charge plan exists and has a currently active slot
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
@@ -308,7 +309,7 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" && lp.DefaultMode == api.ModeEmpty {
 		lp.setMode(api.ChargeMode(v))
 	}
-	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
+	if v, err := lp.settings.Int(keys.Priority); err == nil {
 		lp.setPriority(int(v))
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
@@ -342,8 +343,9 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, v)
+		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
 	}
 }
 
@@ -657,6 +659,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
+	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -953,7 +956,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, id := lp.NextVehiclePlan()
+	_, _, _, id := lp.NextVehiclePlan()
 	return id > 1
 }
 
