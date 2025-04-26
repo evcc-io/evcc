@@ -39,10 +39,10 @@ import (
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
-	log         *util.Logger
-	conn        *modbus.Connection
-	lastCurrent float64
-	enableReg   uint16
+	log       *util.Logger
+	conn      *modbus.Connection
+	current   uint16
+	regEnable uint16
 }
 
 const (
@@ -91,12 +91,14 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		return nil, err
 	}
 
-	// features
+	// optional features
 	var (
 		currentPower, totalEnergy func() (float64, error)
 		currents                  func() (float64, float64, float64, error)
 		identify                  func() (string, error)
 		reason                    func() (api.Reason, error)
+		phasesS                   func(int) error
+		phasesG                   func() (int, error)
 	)
 
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2)
@@ -106,37 +108,32 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 
 	productCodeStr := fmt.Sprintf("%d", binary.BigEndian.Uint32(b))
 
-	var haveEnergyMeter bool
-	var haveRFID bool
+	var hasEnergyMeter bool
+	var hasRFID bool
 
 	if len(productCodeStr) == 6 && productCodeStr[0] == '3' {
 		// P30
-		wb.enableReg = kebaRegEnable
-		haveEnergyMeter = productCodeStr[4] != '0'
-		haveRFID = productCodeStr[5] == '1'
+		hasEnergyMeter = productCodeStr[4] != '0'
+		hasRFID = productCodeStr[5] == '1'
 	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
 		// P40
-		wb.enableReg = kebaRegMaxCurrent
-		haveEnergyMeter = productCodeStr[4] != '0'
-		haveRFID = productCodeStr[5] == '1'
+		wb.regEnable = kebaRegMaxCurrent
+		hasEnergyMeter = productCodeStr[4] != '0'
+		hasRFID = productCodeStr[5] == '1'
 	}
 
-	if haveEnergyMeter {
+	if hasEnergyMeter {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
 	}
 
-	if haveRFID {
+	if hasRFID {
 		identify = wb.identify
 		reason = wb.statusReason
 	}
 
 	// phases
-	var (
-		phasesS func(int) error
-		phasesG func() (int, error)
-	)
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
 			phasesS = wb.phases1p3p
@@ -172,9 +169,10 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	conn.Logger(log.TRACE)
 
 	wb := &Keba{
-		embed: &embed,
-		log:   log,
-		conn:  conn,
+		embed:     &embed,
+		log:       log,
+		conn:      conn,
+		regEnable: kebaRegEnable,
 	}
 
 	return wb, err
@@ -267,25 +265,15 @@ func (wb *Keba) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *Keba) Enable(enable bool) error {
 	var u uint16
-
-	switch wb.enableReg {
-	case kebaRegEnable:
-		if enable {
+	if enable {
+		if wb.regEnable == kebaRegMaxCurrent {
+			u = wb.current
+		} else {
 			u = 1
 		}
-	case kebaRegMaxCurrent:
-		if enable {
-			u = uint16(wb.lastCurrent) * 1000
-
-			if u == 0 {
-				u = 6000 // Fallback to 6A
-			}
-		}
-	default:
-		return fmt.Errorf("unknown enable register %d", wb.enableReg)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(wb.enableReg, u)
+	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
 	return err
 }
 
@@ -302,7 +290,7 @@ func (wb *Keba) MaxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
 
 	if err == nil {
-		wb.lastCurrent = current
+		wb.current = u
 	}
 
 	return err
