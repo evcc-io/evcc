@@ -19,10 +19,10 @@ params:
       en: Shelly Add-On channel
   - name: targettc
     default: 45
-    required: true
     description:
-      de: "Zieltemperatur in °C"
-      en: "Target temperature in °C"
+      de: Zieltemperatur in °C
+      en: Target temperature in °C
+    required: true
   - name: capacity
     default: 12
 render: |
