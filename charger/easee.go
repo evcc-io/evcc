@@ -219,12 +219,8 @@ func (c *Easee) waitForOptionalState() {
 func (c *Easee) optionalStatePresent() bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.TOTAL_POWER} {
-		if _, exists := c.obsTime[key]; !exists {
-			return false
-		}
-	}
-	return true
+	wanted := []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.TOTAL_POWER}
+	return len(wanted) == len(lo.Intersect(wanted, lo.Keys(c.obsTime)))
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
