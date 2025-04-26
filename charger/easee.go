@@ -192,7 +192,39 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		err = os.ErrDeadlineExceeded
 	}
 
+	if err == nil {
+		c.waitForOptionalState()
+	}
+
 	return c, err
+}
+
+func (c *Easee) waitForOptionalState() {
+	if !c.optionalStatePresent() {
+		timeout := time.After(3 * time.Second)
+		for {
+			select {
+			case <-time.Tick(500 * time.Millisecond):
+				if c.optionalStatePresent() {
+					return
+				}
+			case <-timeout:
+				return
+			}
+		}
+	}
+}
+
+// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
+func (c *Easee) optionalStatePresent() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	for _, key := range []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.TOTAL_POWER} {
+		if _, exists := c.obsTime[key]; !exists {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {

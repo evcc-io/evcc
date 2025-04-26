@@ -61,6 +61,48 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 	assert.Equal(t, 2, e.opMode)
 }
 
+func TestProductUpdate_InitialStateCheck(t *testing.T) {
+	now := time.Now().UTC().Truncate(0) //truncate removes sub nanos
+
+	e := newEasee()
+
+	assert.False(t, e.optionalStatePresent())
+
+	tc := []struct {
+		obsId           easee.ObservationID
+		dataType        easee.DataType
+		value           string
+		expectInitState bool
+	}{
+		{easee.TOTAL_POWER, easee.Double, "11.0", false},
+		{easee.SESSION_ENERGY, easee.Double, "22.0", false},
+		{easee.LIFETIME_ENERGY, easee.Double, "1000.0", true},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		e.ProductUpdate(createPayload(tc.obsId, now, tc.dataType, tc.value))
+		assert.Equal(t, tc.expectInitState, e.optionalStatePresent())
+	}
+}
+
+func TestEasee_waitForOptionalStateTimeout(t *testing.T) {
+	e := newEasee()
+
+	done := make(chan bool, 1)
+	go func(chan bool) {
+		e.waitForOptionalState()
+		done <- true
+	}(done)
+
+	select {
+	case <-done:
+	case <-time.After(4 * time.Second):
+		assert.Fail(t, "waitForOptionalState did not return")
+	}
+}
+
 // TestInExpectedOpMode tests the inExpectedOpMode function with different scenarios
 func TestInExpectedOpMode(t *testing.T) {
 	tc := []struct {
