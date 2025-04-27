@@ -76,13 +76,11 @@ const shellyMiddleware = (req, res, next) => {
   if (req.originalUrl === "/shelly") {
     res.end(JSON.stringify({ gen: 2 }));
   } else if (req.originalUrl === "/rpc/Shelly.ListMethods") {
-    res.end(JSON.stringify({ methods: ["Switch.GetStatus","Temperature.GetStatus"] }));
+    res.end(JSON.stringify({ methods: ["Switch.GetStatus"] }));
   } else if (req.originalUrl === "/rpc/Switch.GetStatus?id=0") {
     res.end(
       JSON.stringify({ apower: state.site.pv.power, aenergy: { total: state.site.pv.energy } })
     );
-  } else if (req.originalUrl === "/rpc/Temperature.GetStatus?id=100") {
-    res.end(JSON.stringify({ tC: 24, tF: 75 }));
   } else {
     next();
   }
