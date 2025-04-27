@@ -26,20 +26,20 @@ params:
   - name: capacity
     default: 12
 render: |
-    type: shelly-heat-control
-    {{- if .title }}
-    title: {{ .title }}
-    {{- end }}
-    {{- if .icon }}
-    icon: {{ .icon }}
-    {{- end }}
-    uri: http://{{ .host }}
-    {{- if .user }}
-    user: {{ .user }}
-    {{- end }}
-    {{- if .password }}
-    password: {{ .password }}
-    {{- end }}
-    channel: {{ .channel }}  # shelly device relay channel
-    targettc: {{ .targettc }}
-    capacity: {{ .capacity }}
+  type: shelly-heat-control
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  uri: http://{{ .host }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  channel: {{ .channel }}  # shelly device relay channel
+  targettc: {{ .targettc }}
+  capacity: {{ .capacity }}
