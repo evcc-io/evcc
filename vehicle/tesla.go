@@ -47,7 +47,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.Credentials.ID == "" {
-		return nil, errors.New("missing client id, see https://github.com/evcc-io/evcc/discussions/17501")
+		return nil, errors.New("missing client id, see https://docs.evcc.io/en/docs/devices/vehicles#tesla")
 	}
 
 	token, err := cc.Tokens.Token()
@@ -66,11 +66,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	hc := request.NewClient(log)
-	baseTransport := hc.Transport
-
 	hc.Transport = &oauth2.Transport{
 		Source: identity,
-		Base:   baseTransport,
+		Base:   hc.Transport,
 	}
 
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
@@ -99,9 +97,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	pc := request.NewClient(log)
 	pc.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": "Bearer " + cc.ProxyToken,
+			"X-Authorization": "Bearer " + cc.ProxyToken,
 		}),
-		Base: baseTransport,
+		Base: hc.Transport,
 	}
 
 	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))

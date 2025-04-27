@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/go-http-utils/headers"
 	"golang.org/x/oauth2"
 )
 
@@ -50,9 +49,9 @@ func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		headers.Accept: request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
+		"Accept":    request.JSONContent,
+		"x-guid":    v.identity.uuid,
+		"x-api-key": ApiKey,
 	})
 	var resp Vehicles
 	if err == nil {
@@ -69,10 +68,10 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		headers.Accept: request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
-		"vin":          vin,
+		"Accept":    request.JSONContent,
+		"x-guid":    v.identity.uuid,
+		"x-api-key": ApiKey,
+		"vin":       vin,
 	})
 	var status Status
 	if err == nil {

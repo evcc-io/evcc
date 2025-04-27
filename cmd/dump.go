@@ -10,7 +10,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
@@ -78,7 +78,7 @@ func runDump(cmd *cobra.Command, args []string) {
 			"CfgFile":    file,
 			"CfgError":   errorString(err),
 			"CfgContent": redacted,
-			"Version":    server.FormattedVersion(),
+			"Version":    util.FormattedVersion(),
 		})
 
 		fmt.Println(out.String())

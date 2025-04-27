@@ -1,0 +1,51 @@
+template: idm
+products:
+  - brand: IDM
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["warmwater_top", "warmwater_bottom", "buffer"]
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
+  - name: phases
+    deprecated: true
+render: |
+  type: heatpump
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 74 # PV Überschussleistung
+      type: writeholdings
+      decode: float32s
+    scale: 0.001
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4122 # aktuelle Aufnahmeleistung der WP
+      type: holding
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4128
+      type: holding
+      decode: float32s
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater_top" -}} 1014 {{ else if eq .tempsource "warmwater_bottom" -}} 1012 {{ else }} 1008 {{- end }} # 1014 Trinkwasser Oben, 1012 Trinkwasser Unten, 1008 Wärmespeicher
+      type: holding
+      decode: float32s
+  {{- end }}

@@ -4,7 +4,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: host
   - name: device
     description:
@@ -25,13 +25,12 @@ params:
     default: 6
     type: int
     required: true
-    advanced: true
     description:
-      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
-      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM-ES-TX-WM=1)
+      de: Kanalnummer des Power- oder Netz-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM-ES-TX-WM=1)
     help:
-      en: Homematic meter channel number like shown in the CCU web user interface.
-      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+      en: Homematic meter channel number like shown after the device id separated with a colon in the CCU web user interface.
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend mit Doppelpunkt getrennt nach der Geräte Id angezeigt.
   - name: cache
     advanced: true
     default: 1s

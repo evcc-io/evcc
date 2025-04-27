@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="meterModal"
+		ref="modal"
 		:title="modalTitle"
 		data-testid="meter-modal"
 		:fade="fade"
@@ -9,126 +10,167 @@
 	>
 		<div v-if="!meterType">
 			<NewDeviceButton
-				title="Add solar meter"
+				v-for="t in typeChoices"
+				:key="t"
+				:title="$t(`config.meter.option.${t}`)"
 				class="mb-4 addButton"
-				@click="selectType('pv')"
-			/>
-			<NewDeviceButton
-				title="Add battery meter"
-				class="addButton"
-				@click="selectType('battery')"
+				@click="selectType(t)"
 			/>
 		</div>
 		<form v-else ref="form" class="container mx-0 px-0">
-			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
-				<select
-					id="meterTemplate"
-					v-model="templateName"
-					:disabled="!isNew"
-					class="form-select w-100"
-					@change="templateChanged"
+			<p v-if="['aux', 'ext'].includes(meterType)" class="mt-0 mb-4">
+				{{ $t(`config.${meterType}.description`) }}
+			</p>
+			<div v-if="meterType === 'ext'" class="alert alert-warning mb-4" role="alert">
+				<strong>Work in Progress:</strong> This feature is not yet available.
+			</div>
+			<div v-else>
+				<FormRow
+					v-if="hasDeviceTitle"
+					id="meterParamDeviceTitle"
+					label="Title"
+					help="Will be displayed in the user interface"
 				>
-					<option
-						v-for="option in genericOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
-					<option v-if="genericOptions.length" disabled>──────────</option>
-					<option
-						v-for="option in templateOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
-				</select>
-			</FormRow>
-			<p v-if="loadingTemplate">Loading ...</p>
-			<Markdown v-if="description" :markdown="description" class="my-4" />
-			<Modbus
-				v-if="modbus"
-				v-model:modbus="values.modbus"
-				v-model:id="values.id"
-				v-model:host="values.host"
-				v-model:port="values.port"
-				v-model:device="values.device"
-				v-model:baudrate="values.baudrate"
-				v-model:comset="values.comset"
-				:defaultId="modbus.ID"
-				:defaultComset="modbus.Comset"
-				:defaultBaudrate="modbus.Baudrate"
-				:defaultPort="modbus.Port"
-				:capabilities="modbusCapabilities"
-			/>
-			<PropertyEntry
-				v-for="param in normalParams"
-				:id="`meterParam${param.Name}`"
-				:key="param.Name"
-				v-bind="param"
-				v-model="values[param.Name]"
-			/>
-
-			<PropertyCollapsible>
-				<template v-if="advancedParams.length" #advanced>
-					<PropertyEntry
-						v-for="param in advancedParams"
-						:id="`meterParam${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						v-model="values[param.Name]"
+					<PropertyField
+						id="meterParamDeviceTitle"
+						v-model.trim="values.deviceTitle"
+						type="String"
+						size="w-100"
+						class="me-2"
+						required
 					/>
-				</template>
-			</PropertyCollapsible>
+				</FormRow>
+				<FormRow v-if="hasDeviceIcon" id="meterParamDeviceIcon" label="Icon">
+					<PropertyField
+						id="meterParamDeviceIcon"
+						v-model="values.deviceIcon"
+						:choice="iconChoices"
+						property="icon"
+						type="String"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+				<FormRow id="meterTemplate" :label="$t('config.meter.template')">
+					<select
+						v-if="isNew"
+						id="meterTemplate"
+						ref="templateSelect"
+						v-model="templateName"
+						class="form-select w-100"
+						@change="templateChanged"
+					>
+						<option
+							v-for="option in genericOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+						<option v-if="genericOptions.length" disabled>──────────</option>
+						<option
+							v-for="option in templateOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</select>
+					<input
+						v-else
+						type="text"
+						:value="productName"
+						disabled
+						class="form-control w-100"
+					/>
+				</FormRow>
+				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
+				<Markdown v-if="description" :markdown="description" class="my-4" />
+				<Modbus
+					v-if="modbus"
+					v-model:modbus="values.modbus"
+					v-model:id="values.id"
+					v-model:host="values.host"
+					v-model:port="values.port"
+					v-model:device="values.device"
+					v-model:baudrate="values.baudrate"
+					v-model:comset="values.comset"
+					:defaultId="modbus.ID"
+					:defaultComset="modbus.Comset"
+					:defaultBaudrate="modbus.Baudrate"
+					:defaultPort="modbus.Port"
+					:capabilities="modbusCapabilities"
+				/>
+				<PropertyEntry
+					v-for="param in normalParams"
+					:id="`meterParam${param.Name}`"
+					:key="param.Name"
+					v-bind="param"
+					v-model="values[param.Name]"
+				/>
 
-			<TestResult
-				v-if="templateName"
-				:success="testSuccess"
-				:failed="testFailed"
-				:unknown="testUnknown"
-				:running="testRunning"
-				:result="testResult"
-				:error="testError"
-				@test="testManually"
-			/>
+				<PropertyCollapsible>
+					<template v-if="advancedParams.length" #advanced>
+						<PropertyEntry
+							v-for="param in advancedParams"
+							:id="`meterParam${param.Name}`"
+							:key="param.Name"
+							v-bind="param"
+							v-model="values[param.Name]"
+						/>
+					</template>
+				</PropertyCollapsible>
 
-			<div v-if="templateName" class="my-4 d-flex justify-content-between">
-				<button
-					v-if="isDeletable"
-					type="button"
-					class="btn btn-link text-danger"
-					tabindex="0"
-					@click.prevent="remove"
-				>
-					{{ $t("config.general.delete") }}
-				</button>
-				<button
-					v-else
-					type="button"
-					class="btn btn-link text-muted"
-					data-bs-dismiss="modal"
-					tabindex="0"
-				>
-					{{ $t("config.general.cancel") }}
-				</button>
-				<button
-					type="submit"
-					class="btn btn-primary"
-					:disabled="testRunning || saving"
-					tabindex="0"
-					@click.prevent="isNew ? create() : update()"
-				>
-					<span
-						v-if="saving"
-						class="spinner-border spinner-border-sm"
-						role="status"
-						aria-hidden="true"
-					></span>
-					{{
-						testUnknown ? $t("config.general.validateSave") : $t("config.general.save")
-					}}
-				</button>
+				<TestResult
+					v-if="templateName"
+					:success="testSuccess"
+					:failed="testFailed"
+					:unknown="testUnknown"
+					:running="testRunning"
+					:result="testResult"
+					:error="testError"
+					@test="testManually"
+				/>
+
+				<div v-if="templateName" class="my-4 d-flex justify-content-between">
+					<button
+						v-if="isDeletable"
+						type="button"
+						class="btn btn-link text-danger"
+						tabindex="0"
+						@click.prevent="remove"
+					>
+						{{ $t("config.general.delete") }}
+					</button>
+					<button
+						v-else
+						type="button"
+						class="btn btn-link text-muted"
+						data-bs-dismiss="modal"
+						tabindex="0"
+					>
+						{{ $t("config.general.cancel") }}
+					</button>
+					<button
+						type="submit"
+						class="btn btn-primary"
+						:disabled="testRunning || saving"
+						tabindex="0"
+						@click.prevent="isNew ? create() : update()"
+					>
+						<span
+							v-if="saving"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{
+							testUnknown
+								? $t("config.general.validateSave")
+								: $t("config.general.save")
+						}}
+					</button>
+				</div>
 			</div>
 		</form>
 	</GenericModal>
@@ -143,10 +185,11 @@ import api from "../../api";
 import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
-import GenericModal from "../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-
-const initialValues = { type: "template" };
+import PropertyField from "./PropertyField.vue";
+const initialValues = { type: "template", deviceTitle: "", deviceIcon: "" };
+import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -154,11 +197,17 @@ function sleep(ms) {
 
 const CUSTOM_FIELDS = ["usage", "modbus"];
 
+const defaultIcons = {
+	aux: "smartconsumer",
+	ext: "meter",
+};
+
 export default {
 	name: "MeterModal",
 	components: {
 		FormRow,
 		PropertyEntry,
+		PropertyField,
 		GenericModal,
 		Modbus,
 		TestResult,
@@ -171,6 +220,10 @@ export default {
 		id: Number,
 		name: String,
 		type: String,
+		typeChoices: {
+			type: Array,
+			default: () => ["pv", "battery", "aux", "ext"],
+		},
 		fade: String,
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -184,6 +237,7 @@ export default {
 			saving: false,
 			selectedType: null,
 			loadingTemplate: false,
+			iconChoices: ICONS,
 			values: { ...initialValues },
 		};
 	},
@@ -200,6 +254,12 @@ export default {
 		},
 		meterType() {
 			return this.type || this.selectedType;
+		},
+		hasDeviceTitle() {
+			return ["pv", "battery", "aux", "ext"].includes(this.meterType);
+		},
+		hasDeviceIcon() {
+			return ["aux", "ext"].includes(this.meterType);
 		},
 		templateOptions() {
 			return this.products.filter((p) => p.group !== "generic");
@@ -242,6 +302,9 @@ export default {
 		description() {
 			return this.template?.Requirements?.Description;
 		},
+		productName() {
+			return this.values.deviceProduct || this.templateName;
+		},
 		apiData() {
 			return {
 				template: this.templateName,
@@ -269,8 +332,9 @@ export default {
 				}
 			}
 		},
-		meterType() {
+		meterType(type) {
 			this.loadProducts();
+			this.values.deviceIcon = defaultIcons[type] || "";
 		},
 		templateName() {
 			this.loadTemplate();
@@ -283,14 +347,23 @@ export default {
 		},
 	},
 	methods: {
-		reset() {
-			this.values = { ...initialValues };
+		reset(keepTitle = false) {
+			const keep = keepTitle
+				? { deviceTitle: this.values.deviceTitle, deviceIcon: this.values.deviceIcon }
+				: {};
+			this.values = { ...initialValues, ...keep };
 			this.resetTest();
 		},
 		async loadConfiguration() {
 			try {
 				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
 				this.values = meter.config;
+				// convert structure to flat list
+				// TODO: adjust GET response to match POST/PUT formats
+				this.values.type = meter.type;
+				this.values.deviceTitle = meter.deviceTitle;
+				this.values.deviceIcon = meter.deviceIcon;
+				this.values.deviceProduct = meter.deviceProduct;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -314,8 +387,8 @@ export default {
 			}
 		},
 		async loadTemplate() {
-			if (!this.templateName) return;
 			this.template = null;
+			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -341,6 +414,13 @@ export default {
 				});
 		},
 		async create() {
+			// persist selected template product
+			if (this.template) {
+				const select = this.$refs.templateSelect;
+				const name = select.options[select.selectedIndex].text;
+				this.values.deviceProduct = name;
+			}
+
 			if (this.testUnknown) {
 				const success = await this.test(this.testMeter);
 				if (!success) return;
@@ -351,11 +431,9 @@ export default {
 				const response = await api.post("config/devices/meter", this.apiData);
 				const { name } = response.data.result;
 				this.$emit("added", this.meterType, name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("create failed");
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -367,7 +445,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData);
+			return await api.post(url, this.apiData, { timeout: this.testTimeout });
 		},
 		async update() {
 			if (this.testUnknown) {
@@ -379,10 +457,9 @@ export default {
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -390,11 +467,9 @@ export default {
 			try {
 				await api.delete(`config/devices/meter/${this.id}`);
 				this.$emit("removed", this.meterType, this.name);
-				this.$emit("updated");
-				this.close();
+				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		open() {
@@ -408,7 +483,7 @@ export default {
 			this.selectedType = type;
 		},
 		templateChanged() {
-			this.reset();
+			this.reset(true);
 		},
 	},
 };

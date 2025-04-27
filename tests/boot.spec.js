@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
@@ -37,7 +37,7 @@ test.describe("boost", async () => {
       "Boost active for this charging session."
     );
     await modal.getByLabel("Close").click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("vehicle-status-batteryboost")).toBeVisible();
   });
 

@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/copier"
 )
 
 type ResultDetails struct {
@@ -12,14 +11,6 @@ type ResultDetails struct {
 	ModbusResult *ModbusResult `json:",omitempty"`
 	KebaResult   *KebaResult   `json:",omitempty"`
 	SmaResult    *SmaResult    `json:",omitempty"`
-}
-
-func (d *ResultDetails) Clone() ResultDetails {
-	var c ResultDetails
-	if err := copier.Copy(&c, *d); err != nil {
-		panic(err)
-	}
-	return c
 }
 
 type Result struct {

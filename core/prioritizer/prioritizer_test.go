@@ -24,17 +24,17 @@ func TestPrioritzer(t *testing.T) {
 	hi.EXPECT().EffectivePriority().Return(1).AnyTimes() // prio 1
 
 	// no additional power available
-	lo.EXPECT().GetChargePowerFlexibility().Return(300.0)
-	p.UpdateChargePowerFlexibility(lo)
+	lo.EXPECT().GetChargePowerFlexibility(nil).Return(300.0)
+	p.UpdateChargePowerFlexibility(lo, nil)
 	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(lo))
 
 	// additional power available
-	hi.EXPECT().GetChargePowerFlexibility().Return(1e3)
-	p.UpdateChargePowerFlexibility(hi)
+	hi.EXPECT().GetChargePowerFlexibility(nil).Return(1e3)
+	p.UpdateChargePowerFlexibility(hi, nil)
 	assert.Equal(t, 300.0, p.GetChargePowerFlexibility(hi))
 
 	// additional power removed
-	lo.EXPECT().GetChargePowerFlexibility().Return(0.0)
-	p.UpdateChargePowerFlexibility(lo)
+	lo.EXPECT().GetChargePowerFlexibility(nil).Return(0.0)
+	p.UpdateChargePowerFlexibility(lo, nil)
 	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(hi))
 }

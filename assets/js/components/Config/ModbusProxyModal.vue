@@ -6,6 +6,7 @@
 		docs="/docs/reference/configuration/modbusproxy"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/modbusproxy"
+		removeKey="modbusproxy"
 		size="md"
 		@changed="$emit('changed')"
 	/>

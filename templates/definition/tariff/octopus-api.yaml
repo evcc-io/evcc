@@ -17,4 +17,4 @@ params:
       generic: "Octopus Energy API Key."
 render: |
   type: octopusenergy
-  apikey: {{ .apikey }}
+  apikey: {{ .apiKey }}
