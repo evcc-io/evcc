@@ -112,6 +112,36 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	return h, err
 }
 
+// FormatPayload processes a payload and returns what to publish to the topic.
+func (m *Mqtt) FormatPayload(playload_to_format string, param string, v any) (string, error) {
+	payload, err := setFormattedValue(playload_to_format, param, v)
+	if err != nil {
+		return "", err
+	}
+
+	if m.pipeline != nil {
+		processed_payload, err := m.pipeline.Process([]byte(payload))
+		if err != nil {
+			return "", err
+		}
+
+		payload = string(processed_payload)
+	}
+
+	return payload, nil
+}
+
+// Publish formats and publishes a value to the topic
+func (m *Mqtt) Publish(param string, value any) error {
+	payload, err := m.FormatPayload(m.payload, param, value)
+	if err != nil {
+		return err
+	}
+
+	m.client.Publish(m.topic, m.retained, payload)
+	return nil
+}
+
 var _ Getters = (*Mqtt)(nil)
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
@@ -125,13 +155,7 @@ var _ IntSetter = (*Mqtt)(nil)
 // IntSetter publishes topic with parameter replaced by int value
 func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 	return func(v int64) error {
-		payload, err := setFormattedValue(m.payload, param, v)
-		if err != nil {
-			return err
-		}
-
-		m.client.Publish(m.topic, m.retained, payload)
-		return nil
+		return m.Publish(param, v)
 	}, nil
 }
 
@@ -140,13 +164,7 @@ var _ FloatSetter = (*Mqtt)(nil)
 // FloatSetter publishes topic with parameter replaced by float value
 func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
 	return func(v float64) error {
-		payload, err := setFormattedValue(m.payload, param, v)
-		if err != nil {
-			return err
-		}
-
-		m.client.Publish(m.topic, m.retained, payload)
-		return nil
+		return m.Publish(param, v)
 	}, nil
 }
 
@@ -155,13 +173,7 @@ var _ BoolSetter = (*Mqtt)(nil)
 // BoolSetter invokes script with parameter replaced by bool value
 func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
 	return func(v bool) error {
-		payload, err := setFormattedValue(m.payload, param, v)
-		if err != nil {
-			return err
-		}
-
-		m.client.Publish(m.topic, m.retained, payload)
-		return nil
+		return m.Publish(param, v)
 	}, nil
 }
 
@@ -170,12 +182,6 @@ var _ StringSetter = (*Mqtt)(nil)
 // StringSetter invokes script with parameter replaced by string value
 func (m *Mqtt) StringSetter(param string) (func(string) error, error) {
 	return func(v string) error {
-		payload, err := setFormattedValue(m.payload, param, v)
-		if err != nil {
-			return err
-		}
-
-		m.client.Publish(m.topic, m.retained, payload)
-		return nil
+		return m.Publish(param, v)
 	}, nil
 }
