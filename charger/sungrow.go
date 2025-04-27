@@ -49,12 +49,12 @@ const (
 	sgRegStartMode         = 21313 // uint16 [1: Started by EMS, 2: Started by swiping card]
 	sgRegPowerRequest      = 21314 // uint16 [0: Enable, 1: Close]
 	sgRegPowerFlag         = 21315 // uint16 [0: Charging or power regulation is not allowed; 1: Charging or power regulation is allowed]
-	sgRegState             = 21316 // uint16 [1: Idle, 2: Standby, 3: Charging, 4: Charging Suspended pile, 5: Charging suspended vehicle, 6: Charging complete, 7: Reserved, 8: Disabled, 9: Fault]
+	sgRegState             = 21316 // uint16 [1: Idle, 2: Standby, 3: Charging, 4: Charging suspended (pile side), 5: Charging suspended (vehicle side), 6: Charging completed, 7: Reserved, 8: Unavailable, 9: Faulted]
 
 	// holding
 	sgRegSetOutI       = 21202 // uint16 0.01A
 	sgRegPhaseSwitch   = 21203 // uint16 [0: Three-phase, 1: Single-phase]
-	sgRegUnavailable   = 21210 // uint16 [0: Disable, 1: Enable]
+	sgRegAvailability  = 21210 // uint16 [0: Unavailable, 1: Available]
 	sgRegRemoteControl = 21211 // uint16 [0: Start, 1: Stop]
 )
 
@@ -159,7 +159,7 @@ func (wb *Sungrow) Enable(enable bool) error {
 		u = 0 // Start
 
 		// Make sure the charger is available, otherwise sgRegRemoteControl is not usable
-		if _, err := wb.conn.WriteSingleRegister(sgRegUnavailable, 1); err != nil {
+		if _, err := wb.conn.WriteSingleRegister(sgRegAvailability, 1); err != nil {
 			return err
 		}
 	}
@@ -294,8 +294,8 @@ func (wb *Sungrow) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(sgRegPhaseSwitch, 1); err == nil {
 		fmt.Printf("\tPhaseSwitch:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(sgRegUnavailable, 1); err == nil {
-		fmt.Printf("\tUnavailable:\t%d\n", binary.BigEndian.Uint16(b))
+	if b, err := wb.conn.ReadHoldingRegisters(sgRegAvailability, 1); err == nil {
+		fmt.Printf("\tAavailability:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(sgRegRemoteControl, 1); err == nil {
 		fmt.Printf("\tRemoteControl:\t%d\n", binary.BigEndian.Uint16(b))
