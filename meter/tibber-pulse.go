@@ -113,7 +113,8 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}).
 		WithRetryTimeout(0).
 		WithRetryDelay(5 * time.Second).
-		WithTimeout(request.Timeout).
+		WithWriteTimeout(request.Timeout).
+		WithReadTimeout(90 * time.Second).
 		WithLog(log.TRACE.Println).
 		OnError(func(_ *graphql.SubscriptionClient, err error) error {
 			// exit the subscription client due to unauthorized error
