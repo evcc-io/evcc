@@ -1,10 +1,13 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, devices } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
+const mobile = devices["iPhone 12 Mini"].viewport;
+
 const CONFIG = "plan.evcc.yaml";
+const CONFIG_NO_TARIFF = "basics.evcc.yaml";
 
 test.beforeEach(async () => {
   await start(CONFIG);
@@ -71,6 +74,11 @@ test.describe("basic functionality", async () => {
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
     await page.getByTestId("static-plan-time").fill("09:30");
     await page.getByTestId("static-plan-soc").selectOption("80%");
+    await page.getByTestId("static-plan-precondition-lg-toggle").click();
+    await page
+      .getByTestId("static-plan-precondition-lg-select")
+      .getByRole("combobox")
+      .selectOption("1 hour");
     await page.getByTestId("static-plan-active").click();
     await page.getByRole("button", { name: "Close" }).click();
 
@@ -574,6 +582,11 @@ test.describe("repeating", async () => {
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
     await plan.getByRole("checkbox", { name: tomorrow }).check();
     await plan.getByTestId("repeating-plan-time").fill("09:20");
+    await plan.getByTestId("repeating-plan-precondition-lg-toggle").click();
+    await plan
+      .getByTestId("repeating-plan-precondition-lg-select")
+      .getByRole("combobox")
+      .selectOption("2 hours");
     await plan.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
@@ -595,5 +608,26 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("9:20 AM");
+    await expect(modal.getByTestId("repeating-plan-precondition-lg-toggle")).toBeChecked();
+    await expect(
+      modal.getByTestId("repeating-plan-precondition-lg-select").locator("option:checked")
+    ).toHaveText("2 hours");
+  });
+});
+
+// add test for precondition, start with basic.evcc.yaml and verify that precondition toggle element is not visible. make dedicated describe block
+test.describe("precondition", async () => {
+  test("only if dynamic tariff exists", async ({ page }) => {
+    await restart(CONFIG_NO_TARIFF);
+    await page.goto("/");
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    await expect(page.getByTestId("static-plan-active")).toBeVisible();
+    await expect(page.getByTestId("static-plan-precondition-lg-toggle")).not.toBeVisible();
+    await expect(page.getByTestId("static-plan-precondition-lg-select")).not.toBeVisible();
+
+    // verify small viewport
+    await page.setViewportSize(mobile);
+    await expect(page.getByTestId("static-plan-precondition-select")).not.toBeVisible();
   });
 });

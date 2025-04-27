@@ -28,7 +28,7 @@ params:
     default: DE_LU
 render: |
   type: custom
-  tariff: solar
+  tariff: co2
   forecast:
     source: http
     uri: https://eco2grid.com/green-grid-compass/v2/forecast/hourly?zone_code={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00&apikey={{ .apiKey }}

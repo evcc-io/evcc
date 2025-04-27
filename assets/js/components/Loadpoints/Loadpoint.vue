@@ -165,6 +165,7 @@ export default {
 		planProjectedEnd: String,
 		planOverrun: Number,
 		planEnergy: Number,
+		planPrecondition: Number,
 		planTime: String,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
@@ -204,6 +205,7 @@ export default {
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -280,6 +282,9 @@ export default {
 		},
 		batteryBoostActive() {
 			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+		},
+		plannerForecast() {
+			return this.forecast?.planner;
 		},
 	},
 	watch: {

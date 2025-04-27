@@ -46,13 +46,6 @@ export interface Tariff {
 	lastUpdate: Date;
 }
 
-// data from api with string-based timestamps
-export interface RateRaw {
-	start: string;
-	end: string;
-	value: number;
-}
-
 export interface Rate {
 	start: Date;
 	end: Date;
