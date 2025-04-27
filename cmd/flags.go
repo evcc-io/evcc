@@ -54,8 +54,10 @@ const (
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
 
-	flagRepeat            = "repeat"
-	flagRepeatDescription = "Repeat until interrupted"
+	flagRepeat                    = "repeat"
+	flagRepeatDescription         = "Repeat until interrupted"
+	flagRepeatInterval            = "repeat-interval"
+	flagRepeatIntervalDescription = "Interval between repetitions"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

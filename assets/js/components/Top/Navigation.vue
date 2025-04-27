@@ -131,7 +131,7 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../../mixins/collector.js";
-import { logout, isLoggedIn, openLoginModal } from "../Auth/auth.js";
+import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
 import baseAPI from "./baseapi.js";
 import { isApp, sendToApp } from "../../utils/native.js";
 import { isUserConfigError } from "../../utils/fatal.js";
@@ -162,7 +162,7 @@ export default {
 		};
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryConfigured() {
 			return this.battery?.length;
 		},
 		logoutCount() {
@@ -211,7 +211,7 @@ export default {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		handleProviderAuthorization: async function (provider) {
+		async handleProviderAuthorization(provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;

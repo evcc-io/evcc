@@ -54,6 +54,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:forecast="forecast"
 				:selectedIndex="selectedLoadpointIndex"
 				@index-changed="selectedLoadpointChanged"
 			/>
@@ -131,49 +132,55 @@ export default {
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryConfigured() {
 			return this.battery?.length > 0;
 		},
-		pvConfigured: function () {
+		pvConfigured() {
 			return this.pv?.length > 0;
 		},
-		gridPower: function () {
+		gridPower() {
 			return this.grid?.power || 0;
 		},
-		energyflow: function () {
+		energyflow() {
 			return this.collectProps(Energyflow);
 		},
-		loadpointTitles: function () {
+		loadpointTitles() {
 			return this.loadpoints.map((lp) => lp.title);
 		},
-		loadpointsCompact: function () {
+		loadpointsCompact() {
 			return this.loadpoints.map((lp) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
+				const title =
+					this.vehicleTitle(lp.vehicleName) ||
+					lp.title ||
+					this.$t("main.loadpoint.fallbackName");
 				const charging = lp.charging;
+				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
-				return { icon, charging, power };
+				const heating = lp.chargerFeatureHeating;
+				return { icon, title, charging, power, soc, heating };
 			});
 		},
-		vehicleList: function () {
+		vehicleList() {
 			const vehicles = this.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
-		topNavigation: function () {
+		topNavigation() {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(Navigation) };
 		},
-		showParkingLot: function () {
+		showParkingLot() {
 			// work in progess
 			return false;
 		},
-		isInitialSetup: function () {
+		isInitialSetup() {
 			return this.loadpoints.length === 0;
 		},
-		footer: function () {
+		footer() {
 			return {
 				version: {
 					installed: window.evcc.version,
@@ -197,6 +204,9 @@ export default {
 	methods: {
 		selectedLoadpointChanged(index) {
 			this.$router.push({ query: { lp: index + 1 } });
+		},
+		vehicleTitle(vehicleName) {
+			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
 };

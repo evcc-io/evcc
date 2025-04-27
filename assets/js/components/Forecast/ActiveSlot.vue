@@ -11,36 +11,36 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import type { PropType } from "vue";
-import { type PriceSlot, type TimeseriesEntry } from "../../utils/forecast.ts";
+import { isForecastSlot, type ForecastSlot, type TimeseriesEntry } from "../../utils/forecast";
 import formatter from "../../mixins/formatter";
 
 export default defineComponent({
 	name: "ForecastActiveSlot",
 	mixins: [formatter],
 	props: {
-		activeSlot: { type: Object as PropType<PriceSlot | TimeseriesEntry | null> },
+		activeSlot: { type: Object as PropType<ForecastSlot | TimeseriesEntry | null> },
 	},
 	computed: {
 		isSlot() {
-			return this.activeSlot?.start && this.activeSlot?.end;
+			return this.activeSlot !== null && isForecastSlot(this.activeSlot);
 		},
 		isTimeseries() {
-			return this.activeSlot?.ts;
+			return this.activeSlot !== null && !isForecastSlot(this.activeSlot);
 		},
 		day() {
-			const startDate = new Date(this.activeSlot!.start);
+			const startDate = new Date((this.activeSlot! as ForecastSlot).start);
 			return this.weekdayShort(startDate);
 		},
 		start() {
-			const startDate = new Date(this.activeSlot!.start);
+			const startDate = new Date((this.activeSlot! as ForecastSlot).start);
 			return this.hourShort(startDate);
 		},
 		end() {
-			const endDate = new Date(this.activeSlot!.end);
+			const endDate = new Date((this.activeSlot! as ForecastSlot).end);
 			return this.hourShort(endDate);
 		},
 		time() {
-			const time = new Date(this.activeSlot!.ts);
+			const time = new Date((this.activeSlot! as TimeseriesEntry).ts);
 			return `${this.weekdayShort(time)} ${this.hourShort(time)}`;
 		},
 	},

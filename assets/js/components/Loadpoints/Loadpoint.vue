@@ -54,7 +54,7 @@
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
 						:valueFmt="fmtPower"
-						class="mb-2 text-nowrap"
+						class="mb-2 text-nowrap text-truncate-xs-only"
 						align="start"
 					/>
 					<shopicon-regular-lightning
@@ -165,6 +165,7 @@ export default {
 		planProjectedEnd: String,
 		planOverrun: Number,
 		planEnergy: Number,
+		planPrecondition: Number,
 		planTime: String,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
@@ -186,7 +187,7 @@ export default {
 		chargerSinglePhase: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
-		chargeCurrent: Number,
+		offeredCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,
@@ -204,6 +205,7 @@ export default {
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -215,71 +217,74 @@ export default {
 		};
 	},
 	computed: {
-		vehicle: function () {
+		vehicle() {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
-		vehicleTitle: function () {
+		vehicleTitle() {
 			return this.vehicle?.title;
 		},
-		loadpointTitle: function () {
+		loadpointTitle() {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
-		integratedDevice: function () {
+		integratedDevice() {
 			return this.chargerFeatureIntegratedDevice;
 		},
-		heating: function () {
+		heating() {
 			return this.chargerFeatureHeating;
 		},
-		phasesProps: function () {
+		phasesProps() {
 			return this.collectProps(Phases);
 		},
-		modeProps: function () {
+		modeProps() {
 			return this.collectProps(Mode);
 		},
-		sessionInfoProps: function () {
+		sessionInfoProps() {
 			return this.collectProps(SessionInfo);
 		},
-		settingsModal: function () {
+		settingsModal() {
 			return this.collectProps(SettingsModal);
 		},
-		vehicleProps: function () {
+		vehicleProps() {
 			return this.collectProps(Vehicle);
 		},
-		showChargingIndicator: function () {
+		showChargingIndicator() {
 			return this.charging && this.chargePower > 0;
 		},
-		vehicleKnown: function () {
+		vehicleKnown() {
 			return !!this.vehicleName;
 		},
-		vehicleHasSoc: function () {
+		vehicleHasSoc() {
 			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
 		},
-		vehicleNotReachable: function () {
+		vehicleNotReachable() {
 			// online vehicle that was not reachable at startup
 			const features = this.vehicle?.features || [];
 			return features.includes("Offline") && features.includes("Retryable");
 		},
-		planTimeUnreachable: function () {
+		planTimeUnreachable() {
 			// 1 minute tolerance
 			return this.planOverrun > 60;
 		},
-		socBasedCharging: function () {
+		socBasedCharging() {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
-		socBasedPlanning: function () {
+		socBasedPlanning() {
 			return this.socBasedCharging && this.vehicle?.capacity > 0;
 		},
-		pvPossible: function () {
+		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
-		hasSmartCost: function () {
+		hasSmartCost() {
 			return smartCostAvailable(this.smartCostType);
 		},
-		batteryBoostAvailable: function () {
+		batteryBoostAvailable() {
 			return this.batteryConfigured && this.$hiddenFeatures();
 		},
-		batteryBoostActive: function () {
+		batteryBoostActive() {
 			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+		},
+		plannerForecast() {
+			return this.forecast?.planner;
 		},
 	},
 	watch: {
@@ -317,25 +322,25 @@ export default {
 				this.chargeRemainingDurationInterpolated--;
 			}
 		},
-		apiPath: function (func) {
+		apiPath(func) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
-		setTargetMode: function (mode) {
+		setTargetMode(mode) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setLimitSoc: function (soc) {
+		setLimitSoc(soc) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
-		setLimitEnergy: function (kWh) {
+		setLimitEnergy(kWh) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
-		setMaxCurrent: function (maxCurrent) {
+		setMaxCurrent(maxCurrent) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
 		},
-		setMinCurrent: function (minCurrent) {
+		setMinCurrent(minCurrent) {
 			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
 		},
-		setPhasesConfigured: function (phases) {
+		setPhasesConfigured(phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
 		changeVehicle(name) {
@@ -344,7 +349,7 @@ export default {
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
-		setBatteryBoost: function (batteryBoost) {
+		setBatteryBoost(batteryBoost) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
 		fmtPower(value) {
@@ -372,7 +377,9 @@ export default {
 
 .details > div {
 	flex-grow: 1;
+	flex-shrink: 1;
 	flex-basis: 0;
+	min-width: 0;
 }
 .details > div:nth-child(2) {
 	text-align: center;

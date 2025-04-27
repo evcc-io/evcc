@@ -14,6 +14,7 @@ params:
     type: choice
     choice: ["com", "de"]
     default: com
+    required: true
 render: |
   type: ford
   {{ include "vehicle-base" . }}

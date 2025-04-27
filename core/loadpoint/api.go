@@ -26,16 +26,24 @@ type API interface {
 	// references
 	//
 
-	// GetCharger returns the loadpoint charger
-	GetChargerName() string
-	// GetMeter returns the loadpoint meter
-	GetMeterName() string
-	// GetCircuitName returns the loadpoint circuit name
-	GetCircuitName() string
+	// TODO SetCircuitRef
+
+	// GetChargerRef returns the loadpoint charger
+	GetChargerRef() string
+	// SetChargerRef sets the loadpoint charger
+	SetChargerRef(string)
+	// GetMeterRef returns the loadpoint meter
+	GetMeterRef() string
+	// SetMeterRef sets the loadpoint meter
+	SetMeterRef(string)
+	// GetCircuitRef returns the loadpoint circuit name
+	GetCircuitRef() string
 	// GetCircuit returns the loadpoint circuit
 	GetCircuit() api.Circuit
-	// GetDefaultVehicle returns the loadpoint default vehicle
-	GetDefaultVehicle() string
+	// GetDefaultVehicleRef returns the loadpoint default vehicle
+	GetDefaultVehicleRef() string
+	// SetDefaultVehicleRef sets the loadpoint default vehicle
+	SetDefaultVehicleRef(string)
 
 	//
 	// settings
@@ -106,17 +114,19 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, float64)
+	GetPlanEnergy() (time.Time, time.Duration, float64)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, float64) error
-	// GetPlanGoal returns the plan goal and if the goal is soc based
+	SetPlanEnergy(time.Time, time.Duration, float64) error
+	// GetPlanGoal returns the plan goal, precondition duration and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
+	// GetPlanPreCondDuration returns the precondition duration
+	GetPlanPreCondDuration() time.Duration
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig

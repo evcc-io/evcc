@@ -14,6 +14,7 @@ type watchdogPlugin struct {
 	ctx     context.Context
 	log     *util.Logger
 	reset   *string
+	initial *string
 	set     Config
 	timeout time.Duration
 	cancel  func()
@@ -27,6 +28,7 @@ func init() {
 func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Reset   *string
+		Initial *string
 		Set     Config
 		Timeout time.Duration
 	}
@@ -39,6 +41,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (P
 		ctx:     ctx,
 		log:     contextLogger(ctx, util.NewLogger("watchdog")),
 		reset:   cc.Reset,
+		initial: cc.Initial,
 		set:     cc.Set,
 		timeout: cc.Timeout,
 	}
@@ -104,7 +107,19 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		reset = &val
 	}
 
-	return setter(o, set, reset), nil
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseInt(*o.initial, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }
 
 var _ FloatSetter = (*watchdogPlugin)(nil)
@@ -124,7 +139,19 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		reset = &val
 	}
 
-	return setter(o, set, reset), nil
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseFloat(*o.initial, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }
 
 var _ BoolSetter = (*watchdogPlugin)(nil)
@@ -144,5 +171,17 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		reset = &val
 	}
 
-	return setter(o, set, reset), nil
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseBool(*o.initial)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }

@@ -420,7 +420,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = minA
+	lp.offeredCurrent = minA
 	lp.status = api.StatusC
 
 	t.Log("charging below soc target")
@@ -490,7 +490,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = minA
+	lp.offeredCurrent = minA
 	lp.mode = api.ModeNow
 
 	t.Log("charging at min")
@@ -556,7 +556,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = maxA
+	lp.offeredCurrent = maxA
 	lp.mode = api.ModeNow
 
 	// attach cache for verifying values

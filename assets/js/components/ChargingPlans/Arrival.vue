@@ -59,11 +59,13 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { distanceUnit } from "../../units.js";
 import formatter from "../../mixins/formatter.js";
+import type { SelectOption } from "../../types/evcc";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanArrival",
 	mixins: [formatter],
 	props: {
@@ -75,17 +77,17 @@ export default {
 		rangePerSoc: Number,
 	},
 	emits: ["minsoc-updated", "limitsoc-updated"],
-	data: function () {
+	data() {
 		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
 	},
 	computed: {
-		minSocOptions() {
+		minSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 95 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
-		limitSocOptions() {
+		limitSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 100 with a step of 5
 			return Array.from(Array(21).keys())
 				.map((i) => i * 5)
@@ -93,29 +95,29 @@ export default {
 		},
 	},
 	watch: {
-		minSoc: function (value) {
+		minSoc(value: number): void {
 			this.selectedMinSoc = value;
 		},
-		limitSoc: function (value) {
+		limitSoc(value: number): void {
 			this.selectedLimitSoc = value;
 		},
 	},
 	methods: {
-		socOption: function (soc) {
+		socOption(soc: number): SelectOption<number> {
 			return {
 				value: soc,
 				name: soc === 0 ? "---" : this.fmtSocOption(soc, this.rangePerSoc, distanceUnit()),
 			};
 		},
-		formId: function (name) {
+		formId(name: string): string {
 			return `chargingplan_${this.id}_${name}`;
 		},
-		changeMinSoc: function () {
+		changeMinSoc(): void {
 			this.$emit("minsoc-updated", this.selectedMinSoc);
 		},
-		changeLimitSoc: function () {
+		changeLimitSoc(): void {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
 		},
 	},
-};
+});
 </script>

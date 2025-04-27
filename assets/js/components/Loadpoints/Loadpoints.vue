@@ -25,6 +25,7 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="goTo(index)"
@@ -74,13 +75,14 @@ export default {
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["index-changed"],
 	data() {
 		return { snapTimeout: null, scrollTimeout: null, highlightedIndex: 0 };
 	},
 	watch: {
-		selectedIndex: function (newIndex) {
+		selectedIndex(newIndex) {
 			this.scrollTo(newIndex);
 		},
 	},
