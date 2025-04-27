@@ -57,8 +57,8 @@ func indexHandler() http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version":     Version,
-			"Commit":      Commit,
+			"Version":     util.Version,
+			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
