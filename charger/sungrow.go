@@ -31,9 +31,10 @@ import (
 
 // Sungrow charger implementation
 type Sungrow struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	curr    uint16
+	enabled bool
 }
 
 const (
@@ -129,12 +130,17 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case
 		2, // Standby
-		4, // SuspendedEVSE
-		5, // SuspendedEV
 		6: // Completed
 		return api.StatusB, nil
 	case 3: // Charging
+		wb.enabled = true
 		return api.StatusC, nil
+	case 4: // SuspendedEVSE
+		wb.enabled = false
+		return api.StatusB, nil
+	case 5: // SuspendedEV
+		wb.enabled = true
+		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -142,37 +148,35 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sungrow) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(sgRegState, 1)
-	if err != nil {
-		return false, err
-	}
-
-	state := binary.BigEndian.Uint16(b)
-	// 3 and 5 should be considered "actively charging"
-	return state == 3 || state == 5, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Sungrow) Enable(enable bool) error {
-	var u uint16
-	if !enable {
-		u = 1
-	}
+	var u uint16 = 1 // Stop
 
 	if enable {
-		// Make sure the charger is enabled, otherwise sgRegRemoteControl is not usable
+		u = 0 // Start
+
+		// Make sure the charger is available, otherwise sgRegRemoteControl is not usable
 		if _, err := wb.conn.WriteSingleRegister(sgRegUnavailable, 1); err != nil {
 			return err
 		}
 	}
 
-	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u)
-
-	if err == nil && enable {
-		_, err = wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
+	if _, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u); err != nil {
+		return err
 	}
 
-	return err
+	if enable {
+		if _, err := wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr); err != nil {
+			return err
+		}
+	}
+
+	wb.enabled = enable
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
