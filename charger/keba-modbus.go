@@ -39,10 +39,11 @@ import (
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
-	log       *util.Logger
-	conn      *modbus.Connection
-	current   uint16
-	regEnable uint16
+	log          *util.Logger
+	conn         *modbus.Connection
+	current      uint16
+	regEnable    uint16
+	energyFactor float64
 }
 
 const (
@@ -120,6 +121,18 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		wb.regEnable = kebaRegMaxCurrent
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
+
+		b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2)
+		if err != nil {
+			return nil, err
+		}
+
+		// software version
+		if binary.BigEndian.Uint32(b) < 10201 {
+			// In software versions below 1.2.1 the registers 1502 and 1036
+			// falsely report the value in “Wh” instead of “0.1 Wh”.
+			wb.energyFactor = 1e3
+		}
 	}
 
 	if hasEnergyMeter {
@@ -169,10 +182,11 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	conn.Logger(log.TRACE)
 
 	wb := &Keba{
-		embed:     &embed,
-		log:       log,
-		conn:      conn,
-		regEnable: kebaRegEnable,
+		embed:        &embed,
+		log:          log,
+		conn:         conn,
+		regEnable:    kebaRegEnable,
+		energyFactor: 1e4,
 	}
 
 	return wb, err
@@ -313,7 +327,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
+	return float64(binary.BigEndian.Uint32(b)) / wb.energyFactor, nil
 }
 
 // chargedEnergy is not supported since Keba does not reset it when plugging in a new car
