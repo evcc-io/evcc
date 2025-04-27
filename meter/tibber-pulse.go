@@ -22,7 +22,7 @@ func init() {
 }
 
 func getUserAgent() string {
-	evccVersion := "0.203.2+unknown"
+	evccVersion := util.Version
 	graphqlClientVersion := "0.13.2+unknown"
 
 	if info, ok := debug.ReadBuildInfo(); ok {
