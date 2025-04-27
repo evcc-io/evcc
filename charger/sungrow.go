@@ -295,7 +295,7 @@ func (wb *Sungrow) Diagnose() {
 		fmt.Printf("\tPhaseSwitch:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(sgRegAvailability, 1); err == nil {
-		fmt.Printf("\tAavailability:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tAvailability:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(sgRegRemoteControl, 1); err == nil {
 		fmt.Printf("\tRemoteControl:\t%d\n", binary.BigEndian.Uint16(b))
