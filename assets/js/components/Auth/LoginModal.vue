@@ -61,12 +61,7 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
-import {
-	updateAuthStatus,
-	getAndClearNextUrl,
-	getAndClearNextModal,
-	isLoggedIn,
-} from "@/components/Auth/auth";
+import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
 import { docsPrefix } from "@/i18n";
 import { defineComponent } from "vue";
 
