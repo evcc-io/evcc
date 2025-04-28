@@ -43,7 +43,7 @@
 							class="ms-2 me-1 d-inline-block"
 						/>
 						<AnimatedNumber
-							v-if="details && !isNaN(details)"
+							v-if="details !== undefined && !isNaN(details)"
 							:to="details"
 							:format="detailsFmt as Function"
 						/>

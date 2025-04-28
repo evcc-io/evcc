@@ -174,7 +174,10 @@
 						/>
 						<EnergyflowEntry
 							:name="
-								$t('main.energyflow.loadpoints', { count: activeLoadpointsCount })
+								// @ts-ignore
+								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
+									count: activeLoadpointsCount,
+								})
 							"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
@@ -202,7 +205,7 @@
 									:powerUnit="powerUnit"
 									icon="vehicle"
 									:iconProps="{ names: [lp.icon] }"
-									:details="lp.soc"
+									:details="lp.soc || undefined"
 									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
 								/>
 							</template>
