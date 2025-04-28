@@ -157,7 +157,7 @@ func (c *gen2) CurrentPower() (float64, error) {
 		res, err := c.emstatus()
 		return res.TotalActPower, err
 
-	case c.hasSwitchEndpoint():
+	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
 		res, err := c.switchstatus.Get()
 		return res.Apower, err
 
@@ -194,7 +194,7 @@ func (c *gen2) TotalEnergy() (float64, error) {
 		res, err := c.emdata()
 		return res.TotalAct / 1000, err
 
-	case c.hasSwitchEndpoint():
+	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
 		res, err := c.switchstatus.Get()
 		return res.Aenergy.Total / 1000, err
 
@@ -214,7 +214,7 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.ACurrent, res.BCurrent, res.CCurrent, err
 
-	case c.hasSwitchEndpoint():
+	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
 		res, err := c.switchstatus.Get()
 		return res.Current, 0, 0, err
 
@@ -234,7 +234,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.AVoltage, res.BVoltage, res.CVoltage, err
 
-	case c.hasSwitchEndpoint():
+	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
 		res, err := c.switchstatus.Get()
 		return res.Voltage, 0, 0, err
 
@@ -254,7 +254,7 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.AActPower, res.BActPower, res.CActPower, err
 
-	case c.hasSwitchEndpoint():
+	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
 		res, err := c.switchstatus.Get()
 		return res.Apower, 0, 0, err
 
