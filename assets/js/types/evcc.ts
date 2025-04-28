@@ -7,15 +7,18 @@ declare global {
 	}
 }
 
+export interface FatalError {
+	error: any;
+	class?: any;
+}
+
 export interface State {
 	offline: boolean;
 	startup?: boolean;
 	loadpoints: [];
 	forecast?: Forecast;
 	currency?: CURRENCY;
-	fatal?: {
-		error: any;
-	};
+	fatal?: FatalError;
 }
 export interface LoadpointCompact {
 	icon: string;
