@@ -1,4 +1,5 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
+import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
 declare global {
 	interface Window {
@@ -6,15 +7,26 @@ declare global {
 	}
 }
 
+export interface FatalError {
+	error: any;
+	class?: any;
+}
+
 export interface State {
 	offline: boolean;
 	startup?: boolean;
 	loadpoints: [];
-	forecast?: any;
+	forecast?: Forecast;
 	currency?: CURRENCY;
-	fatal?: {
-		error: any;
-	};
+	fatal?: FatalError;
+}
+export interface LoadpointCompact {
+	icon: string;
+	title: string;
+	charging: boolean;
+	soc?: number;
+	power: number;
+	heating?: boolean;
 }
 
 export enum CURRENCY {
@@ -52,13 +64,6 @@ export interface Tariff {
 	lastUpdate: Date;
 }
 
-// data from api with string-based timestamps
-export interface RateRaw {
-	start: string;
-	end: string;
-	value: number;
-}
-
 export interface Rate {
 	start: Date;
 	end: Date;
@@ -75,6 +80,13 @@ export interface Slot {
 	warning?: boolean | null;
 	isTarget?: boolean | null;
 	selectable?: boolean | null;
+}
+
+export interface Forecast {
+	grid?: ForecastSlot[];
+	co2?: ForecastSlot[];
+	solar?: SolarDetails;
+	planner?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {

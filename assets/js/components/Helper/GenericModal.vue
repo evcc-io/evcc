@@ -34,10 +34,11 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "GenericModal",
 	props: {
 		id: String,
@@ -75,16 +76,16 @@ export default {
 		},
 	},
 	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.addEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.removeEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	methods: {
 		handleShow() {
@@ -96,8 +97,8 @@ export default {
 			this.$emit("opened");
 			// focus first input or select
 			this.$nextTick(() => {
-				const firstInput = this.$refs.modalBody.querySelector("input, select, button");
-				if (firstInput) {
+				const firstInput = this.$refs["modalBody"]?.querySelector("input, select, button");
+				if (firstInput instanceof HTMLElement) {
 					firstInput.focus();
 				}
 			});
@@ -113,13 +114,17 @@ export default {
 			this.isModalVisible = false;
 		},
 		open() {
-			console.log(this.dataTestid, "> open", this.$refs.modal._isShown);
-			Modal.getOrCreateInstance(this.$refs.modal).show();
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
+			console.log(this.dataTestid, "> open", modal._isShown);
+			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
-			console.log(this.dataTestid, "> close", this.$refs.modal._isShown);
-			Modal.getOrCreateInstance(this.$refs.modal).hide();
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
+			console.log(this.dataTestid, "> close", modal._isShown);
+			Modal.getOrCreateInstance(modal).hide();
 		},
 	},
-};
+});
 </script>
