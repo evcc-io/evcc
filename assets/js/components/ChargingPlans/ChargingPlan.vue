@@ -115,7 +115,7 @@ import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
 import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
-
+import type { Forecast } from "../../utils/forecast.ts";
 const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({
@@ -139,6 +139,7 @@ export default defineComponent({
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planPrecondition: { type: Number, default: 0 },
 		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostType: String,
@@ -149,6 +150,7 @@ export default defineComponent({
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
+		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -179,12 +181,20 @@ export default defineComponent({
 			if (this.socBasedPlanning) {
 				const plan = this.vehicle?.plan as StaticSocPlan;
 				if (plan) {
-					return { soc: plan.soc, time: new Date(plan.time) };
+					return {
+						soc: plan.soc,
+						time: new Date(plan.time),
+						precondition: plan.precondition,
+					};
 				}
 				return null;
 			}
 			if (this.planEnergy && this.planTime) {
-				return { energy: this.planEnergy, time: new Date(this.planTime) };
+				return {
+					energy: this.planEnergy,
+					time: new Date(this.planTime),
+					precondition: this.planPrecondition,
+				};
 			}
 			return null;
 		},
@@ -304,12 +314,15 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
+			const params = this.socBasedPlanning ? { precondition: plan.precondition } : undefined;
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
-				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`);
+				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });
 			} else {
 				const p = plan as StaticEnergyPlan;
-				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`);
+				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null, {
+					params,
+				});
 			}
 		},
 		removeStaticPlan(): void {

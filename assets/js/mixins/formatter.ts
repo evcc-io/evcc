@@ -140,6 +140,19 @@ export default defineComponent({
 			}
 			return result;
 		},
+		fmtDurationLong(seconds: number) {
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			if (!Intl.DurationFormat) {
+				// old browser fallback
+				return this.fmtDuration(seconds);
+			}
+			const hours = Math.floor(seconds / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style: "long" });
+			return formatter.format({ minutes, hours });
+		},
 		fmtDayString(date: Date) {
 			const YY = `${date.getFullYear()}`;
 			const MM = `${date.getMonth() + 1}`.padStart(2, "0");

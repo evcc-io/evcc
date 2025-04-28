@@ -34,7 +34,7 @@ const (
 	maxAge           = 1800
 )
 
-var serverName = "EVCC SEMP Server " + server.Version
+var serverName = "EVCC SEMP Server " + util.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
