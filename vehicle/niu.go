@@ -161,7 +161,7 @@ var _ api.VehicleOdometer = (*Niu)(nil)
 func (v *Niu) Odometer() (float64, error) {
 	var res niu.Response
 
-	req, err := v.request(niu.ApiURI + "/overallTally?sn=" + v.serial)
+	req, err := v.request(niu.ApiURI + "/motoinfo/overallTally?sn=" + v.serial)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
