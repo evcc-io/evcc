@@ -17,6 +17,9 @@
 <script lang="ts">
 import { CHARGE_MODE } from "@/types/evcc";
 import { defineComponent } from "vue";
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+
 export default defineComponent({
 	name: "Mode",
 	props: {
@@ -29,19 +32,19 @@ export default defineComponent({
 	computed: {
 		modes(): CHARGE_MODE[] {
 			if (this.pvPossible) {
-				return Object.values(CHARGE_MODE);
+				return [OFF, PV, MINPV, NOW];
 			}
 			if (this.hasSmartCost) {
-				return [CHARGE_MODE.OFF, CHARGE_MODE.PV, CHARGE_MODE.NOW];
+				return [OFF, PV, NOW];
 			}
-			return [CHARGE_MODE.OFF, CHARGE_MODE.NOW];
+			return [OFF, NOW];
 		},
 	},
 	methods: {
 		label(mode: CHARGE_MODE) {
 			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
 			// TODO: rollout smart name for everyting later
-			if (mode === CHARGE_MODE.PV && !this.pvPossible && this.hasSmartCost) {
+			if (mode === PV && !this.pvPossible && this.hasSmartCost) {
 				return this.$t("main.mode.smart");
 			}
 			return this.$t(`main.mode.${mode}`);
