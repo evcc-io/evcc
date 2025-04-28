@@ -54,7 +54,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "evcc - open source solar charging",
-	Version: server.FormattedVersion(),
+	Version: util.FormattedVersion(),
 	Run:     runRoot,
 }
 
@@ -112,7 +112,7 @@ func initConfig() {
 
 	// print version
 	util.LogLevel("info", nil)
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -308,8 +308,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	})
 
 	// show and check version, reduce api load during development
-	if server.Version != server.DevVersion {
-		valueChan <- util.Param{Key: keys.Version, Val: server.FormattedVersion()}
+	if util.Version != util.DevVersion {
+		valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 		go updater.Run(log, httpd, valueChan)
 	}
 
