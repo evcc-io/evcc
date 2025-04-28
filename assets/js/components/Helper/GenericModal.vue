@@ -114,14 +114,16 @@ export default defineComponent({
 			this.isModalVisible = false;
 		},
 		open() {
-			const modal = Modal.getOrCreateInstance(this.$refs["modal"] as HTMLElement);
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
 			console.log(this.dataTestid, "> open", modal._isShown);
-			modal.show();
+			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
-			const modal = Modal.getOrCreateInstance(this.$refs["modal"] as HTMLElement);
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
 			console.log(this.dataTestid, "> close", modal._isShown);
-			modal.hide();
+			Modal.getOrCreateInstance(modal).hide();
 		},
 	},
 });

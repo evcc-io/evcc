@@ -45,7 +45,7 @@
 						<AnimatedNumber
 							v-if="details !== undefined && !isNaN(details)"
 							:to="details"
-							:format="detailsFmt as Function"
+							:format="detailsFmt!"
 						/>
 					</div>
 					<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
@@ -93,7 +93,7 @@ export default defineComponent({
 		powerUnit: { type: String as PropType<POWER_UNIT> },
 		details: { type: Number },
 		detailsIcon: { type: String },
-		detailsFmt: { type: Function },
+		detailsFmt: { type: Function as PropType<(n: number) => string> },
 		detailsTooltip: { type: Array as PropType<string[]> },
 		detailsClickable: { type: Boolean },
 		detailsInactive: { type: Boolean },
