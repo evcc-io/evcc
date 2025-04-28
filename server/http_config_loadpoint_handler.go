@@ -46,13 +46,52 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	}
 }
 
-type loadpointFullConfig struct {
-	ID   int    `json:"id,omitempty"` // db row id
-	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
+func loadpointConfig(dev config.Device[loadpoint.API]) map[string]any {
+	lp := dev.Instance()
 
-	// static config
-	loadpoint.StaticConfig
-	loadpoint.DynamicConfig
+	var id int
+	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
+		id = configurable.ID()
+	}
+
+	// Basisdaten
+	res := map[string]any{
+		"id":   id,
+		"name": dev.Config().Name,
+	}
+
+	// StaticConfig
+	static := getLoadpointStaticConfig(lp)
+	res["charger"] = static.Charger
+	res["meter"] = static.Meter
+	res["circuit"] = static.Circuit
+	res["vehicle"] = static.Vehicle
+
+	// DynamicConfig
+	dyn := getLoadpointDynamicConfig(lp)
+	res["title"] = dyn.Title
+	res["defaultMode"] = dyn.DefaultMode
+	res["priority"] = dyn.Priority
+	res["phasesConfigured"] = dyn.PhasesConfigured
+	res["minCurrent"] = dyn.MinCurrent
+	res["maxCurrent"] = dyn.MaxCurrent
+	res["smartCostLimit"] = dyn.SmartCostLimit
+	res["planEnergy"] = dyn.PlanEnergy
+	res["planTime"] = dyn.PlanTime
+	res["planPrecondition"] = dyn.PlanPrecondition
+	res["limitEnergy"] = dyn.LimitEnergy
+	res["limitSoc"] = dyn.LimitSoc
+	res["thresholds"] = dyn.Thresholds
+	res["soc"] = dyn.Soc
+
+	// Zusätzliche Felder aus YAML (Other)
+	for k, v := range dev.Config().Other {
+		if _, exists := res[k]; !exists {
+			res[k] = v
+		}
+	}
+
+	return res
 }
 
 func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, error) {
@@ -65,30 +104,10 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 	return loadpoint.SplitConfig(payload)
 }
 
-// loadpointConfig returns a single loadpoint's configuration
-func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	lp := dev.Instance()
-
-	var id int
-	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
-		id = configurable.ID()
-	}
-
-	res := loadpointFullConfig{
-		ID:   id,
-		Name: dev.Config().Name,
-
-		StaticConfig:  getLoadpointStaticConfig(lp),
-		DynamicConfig: getLoadpointDynamicConfig(lp),
-	}
-
-	return res
-}
-
 // loadpointsConfigHandler returns a device configurations by class
 func loadpointsConfigHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) loadpointFullConfig {
+		res := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) map[string]any {
 			return loadpointConfig(dev)
 		})
 
