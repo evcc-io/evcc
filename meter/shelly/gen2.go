@@ -116,7 +116,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 	c.methods = res.Methods
 
-	if c.hasPM1Endpoint() {
+	if c.hasMethod("PM1.GetStatus") {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "PM1.GetStatus"), cache)
 	} else {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
@@ -157,7 +157,7 @@ func (c *gen2) CurrentPower() (float64, error) {
 		res, err := c.emstatus()
 		return res.TotalActPower, err
 
-	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
+	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Apower, err
 
@@ -194,7 +194,7 @@ func (c *gen2) TotalEnergy() (float64, error) {
 		res, err := c.emdata()
 		return res.TotalAct / 1000, err
 
-	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
+	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Aenergy.Total / 1000, err
 
@@ -214,7 +214,7 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.ACurrent, res.BCurrent, res.CCurrent, err
 
-	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
+	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Current, 0, 0, err
 
@@ -234,7 +234,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.AVoltage, res.BVoltage, res.CVoltage, err
 
-	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
+	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Voltage, 0, 0, err
 
@@ -254,7 +254,7 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 		res, err := c.emstatus()
 		return res.AActPower, res.BActPower, res.CActPower, err
 
-	case c.hasSwitchEndpoint() || c.hasPM1Endpoint():
+	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Apower, 0, 0, err
 
@@ -265,11 +265,7 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 
 // Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
 func (c *gen2) hasSwitchEndpoint() bool {
-	return c.hasMethod("Switch.GetStatus")
-}
-
-func (c *gen2) hasPM1Endpoint() bool {
-	return c.hasMethod("PM1.GetStatus")
+	return c.hasMethod("Switch.GetStatus") || c.hasMethod("PM1.GetStatus")
 }
 
 func (c *gen2) hasEM1Endpoint() bool {
