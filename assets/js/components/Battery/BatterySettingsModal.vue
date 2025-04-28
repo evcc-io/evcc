@@ -262,7 +262,7 @@ import collector from "../../mixins/collector.js";
 import api from "../../api.js";
 import smartCostAvailable from "../../utils/smartCostAvailable.js";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, SelectOption } from "assets/js/types/evcc.js";
+import type { Battery, SelectOption } from "../../types/evcc.js";
 
 export default defineComponent({
 	name: "BatterySettingsModal",

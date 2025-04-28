@@ -96,8 +96,8 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms: number) {
-			return `${this.fmtNumber(gramms, 0)} g`;
+		fmtCo2Short(gramms?: number) {
+			return gramms ? `${this.fmtNumber(gramms, 0)} g` : "?";
 		},
 		fmtCo2Medium(gramms: number) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
@@ -139,6 +139,19 @@ export default defineComponent({
 				result += `\u202F${unit}`;
 			}
 			return result;
+		},
+		fmtDurationLong(seconds: number) {
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			if (!Intl.DurationFormat) {
+				// old browser fallback
+				return this.fmtDuration(seconds);
+			}
+			const hours = Math.floor(seconds / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style: "long" });
+			return formatter.format({ minutes, hours });
 		},
 		fmtDayString(date: Date) {
 			const YY = `${date.getFullYear()}`;

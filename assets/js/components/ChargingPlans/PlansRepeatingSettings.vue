@@ -8,6 +8,7 @@
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
+				:showPrecondition="showPrecondition"
 				@updated="updatePlan(index, $event)"
 				@removed="removePlan(index)"
 			/>
@@ -48,6 +49,7 @@ export default defineComponent({
 		id: [Number, String],
 		rangePerSoc: Number,
 		plans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
+		showPrecondition: Boolean,
 	},
 	emits: ["updated"],
 	computed: {
@@ -62,6 +64,7 @@ export default defineComponent({
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
+				precondition: 0,
 				active: false,
 				tz: this.timezone(),
 			};
