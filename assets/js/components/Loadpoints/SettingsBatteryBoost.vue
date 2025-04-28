@@ -39,8 +39,8 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter from "../../mixins/formatter.js";
-import { CHARGE_MODE } from "assets/js/types/evcc.js";
+import formatter from "@/mixins/formatter";
+import { CHARGE_MODE } from "@/types/evcc";
 
 export default defineComponent({
 	mixins: [formatter],

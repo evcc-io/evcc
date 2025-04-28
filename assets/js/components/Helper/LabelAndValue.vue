@@ -17,16 +17,17 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
 
-export default {
+export default defineComponent({
 	name: "LabelAndValue",
 	components: { AnimatedNumber },
 	props: {
 		label: String,
-		value: [Number, String],
-		valueFmt: Function,
+		value: [Number],
+		valueFmt: Function as PropType<(n: number) => string>,
 		extraValue: String,
 		align: { type: String, default: "center" },
 	},
@@ -38,7 +39,7 @@ export default {
 			return `justify-content-${this.align}`;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .root {

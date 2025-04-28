@@ -25,6 +25,7 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="goTo(index)"
@@ -76,6 +77,7 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["index-changed"],
 	data() {

@@ -10,7 +10,8 @@
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
-					:multiplePlans="multiplePlans"
+					:multiple-plans="multiplePlans"
+					:show-precondition="showPrecondition"
 					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
 					@static-plan-removed="() => removeStaticPlan(0)"
 					@plan-preview="previewStaticPlan"
@@ -29,6 +30,7 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:plans="repeatingPlans"
+						:show-precondition="showPrecondition"
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
@@ -59,8 +61,8 @@
 				</span>
 			</div>
 		</h5>
-		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 	</div>
 </template>
 
@@ -70,14 +72,14 @@ import Preview from "./Preview.vue";
 import PlanStaticSettings from "./PlanStaticSettings.vue";
 import RepeatingSettings from "./PlansRepeatingSettings.vue";
 import Warnings from "./Warnings.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api, { allowClientError } from "../../api.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import deepEqual from "../../utils/deepEqual.js";
-import convertRates from "../../utils/convertRates";
+import deepEqual from "@/utils/deepEqual";
+import convertRates from "@/utils/convertRates";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, PartialBy, Timeout, Tariff, SelectOption, CURRENCY } from "../../types/evcc";
+import type { Vehicle, PartialBy, Timeout, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -85,9 +87,7 @@ import type {
 	StaticSocPlan,
 	StaticEnergyPlan,
 	PlanResponse,
-} from "./types.js";
-
-const TARIFF_CACHE_TIME = 300000; // 5 minutes
+} from "./types";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",
@@ -118,12 +118,12 @@ export default defineComponent({
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
+		forecast: Object as PropType<Forecast>,
 	},
 	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
 	data() {
 		return {
 			staticPlanPreview: {} as StaticPlan,
-			tariff: {} as Tariff,
 			plan: {} as PlanWrapper,
 			activeTab: "time",
 			debounceTimer: null as Timeout,
@@ -145,7 +145,8 @@ export default defineComponent({
 			return this.collectProps(Warnings);
 		},
 		chargingPlanPreviewProps(): any {
-			const { rates } = this.tariff;
+			const forecastSlots = this.forecast?.planner || [];
+			const rates = convertRates(forecastSlots);
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
@@ -176,6 +177,12 @@ export default defineComponent({
 		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
+		},
+		showPrecondition(): boolean {
+			// only show option if planner forecast has different values
+			const slots = this.forecast?.planner || [];
+			const values = new Set(slots.map(({ value }) => value));
+			return values.size > 1;
 		},
 	},
 	watch: {
@@ -223,7 +230,6 @@ export default defineComponent({
 			}
 		},
 		async updateActivePlan(): Promise<void> {
-			await this.updateTariff();
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res?.data.result ?? ({} as PlanWrapper);
@@ -234,8 +240,10 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
+			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`
+				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
+				params
 			);
 		},
 		async fetchRepeatingPreview(
@@ -251,10 +259,14 @@ export default defineComponent({
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`
 			);
 		},
-		async apiFetchPlan(url: string): Promise<PlanResponse | undefined> {
+		async apiFetchPlan(
+			url: string,
+			params?: Record<string, unknown>
+		): Promise<PlanResponse | undefined> {
 			try {
 				const res = (await api.get(url, {
 					validateStatus: (code) => [200, 404].includes(code),
+					params,
 				})) as PlanResponse;
 				if (res.status === 404) {
 					return { data: { result: {} as PlanWrapper } } as PlanResponse;
@@ -269,8 +281,6 @@ export default defineComponent({
 			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
 
-			await this.updateTariff();
-
 			try {
 				let planRes: PlanResponse | undefined = undefined;
 
@@ -282,12 +292,14 @@ export default defineComponent({
 						planRes = await this.fetchStaticPreviewSoc({
 							soc: plan.soc,
 							time: plan.time,
+							precondition: plan.precondition,
 						});
 					} else {
 						plan = plan as StaticEnergyPlan;
 						planRes = await this.fetchStaticPreviewEnergy({
 							energy: plan.energy,
 							time: plan.time,
+							precondition: plan.precondition,
 						});
 					}
 				} else {
@@ -296,32 +308,22 @@ export default defineComponent({
 					if (!plan) {
 						return;
 					}
-					const { weekdays, soc, time, tz } = plan;
+					const { weekdays, soc, time, tz, precondition } = plan;
 					if (weekdays.length === 0) {
 						return;
 					}
-					planRes = await this.fetchRepeatingPreview({ weekdays, soc, time, tz });
+					planRes = await this.fetchRepeatingPreview({
+						weekdays,
+						soc,
+						time,
+						tz,
+						precondition,
+					});
 				}
 				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
 			} catch (e) {
 				console.error(e);
 			}
-		},
-		async updateTariff(): Promise<void> {
-			// cache tariff for 5 minutes
-			if (
-				this.tariff?.lastUpdate &&
-				Date.now() - this.tariff.lastUpdate.getTime() <= TARIFF_CACHE_TIME
-			) {
-				return;
-			}
-
-			const res = await api.get(`tariff/planner`, allowClientError);
-
-			this.tariff = {
-				rates: res.status === 404 ? [] : convertRates(res.data.result.rates),
-				lastUpdate: new Date(),
-			};
 		},
 		async updatePlanPreviewDebounced(): Promise<void> {
 			if (!this.debounceTimer) {

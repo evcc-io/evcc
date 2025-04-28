@@ -109,18 +109,22 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
 
-	c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
-
 	var res Gen2Methods
 	if err := c.execCmd("Shelly.ListMethods", false, &res); err != nil {
 		return nil, err
 	}
 
 	c.methods = res.Methods
+
+	if c.hasMethod("PM1.GetStatus") {
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "PM1.GetStatus"), cache)
+	} else {
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
+	}
+	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
@@ -261,7 +265,7 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 
 // Gen2+ models using Switch.GetStatus endpoint https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#switchgetstatus-example
 func (c *gen2) hasSwitchEndpoint() bool {
-	return c.hasMethod("Switch.GetStatus")
+	return c.hasMethod("Switch.GetStatus") || c.hasMethod("PM1.GetStatus")
 }
 
 func (c *gen2) hasEM1Endpoint() bool {

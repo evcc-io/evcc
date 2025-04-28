@@ -106,8 +106,8 @@
 	</div>
 </template>
 
-<script>
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+<script lang="ts">
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
@@ -115,8 +115,10 @@ import VehicleIcon from "../VehicleIcon";
 import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
+import { defineComponent, type PropType } from "vue";
+import type { LoadpointCompact } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Visualization",
 	components: { BatteryIcon, LabelBar, AnimatedNumber, VehicleIcon, QuestionIcon },
 	mixins: [formatter],
@@ -125,7 +127,7 @@ export default {
 		selfPv: { type: Number, default: 0 },
 		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
-		loadpoints: { type: Array, default: () => [] },
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		batteryHold: { type: Boolean, default: false },
@@ -133,7 +135,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerUnit: { type: String, default: POWER_UNIT.KW },
+		powerUnit: { type: String as PropType<POWER_UNIT>, default: POWER_UNIT.KW },
 		inPower: { type: Number, default: 0 },
 		outPower: { type: Number, default: 0 },
 	},
@@ -197,42 +199,42 @@ export default {
 		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	methods: {
-		widthTotal(power) {
+		widthTotal(power: number) {
 			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
-		fmtBarValue(watt) {
+		fmtBarValue(watt: number) {
 			if (!this.enoughSpaceForValue(watt)) {
 				return "";
 			}
 			const withUnit = this.enoughSpaceForUnit(watt);
 			return this.fmtW(watt, this.powerUnit, withUnit);
 		},
-		powerLabelAvailableSpace(power) {
+		powerLabelAvailableSpace(power: number) {
 			if (this.totalAdjusted === 0) return 0;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		enoughSpaceForValue(power) {
+		enoughSpaceForValue(power: number) {
 			return this.powerLabelAvailableSpace(power) > 40;
 		},
-		enoughSpaceForUnit(power) {
+		enoughSpaceForUnit(power: number) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
-		hideLabelIcon(power, minWidth = 32) {
+		hideLabelIcon(power: number, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent < minWidth;
 		},
-		applyThreshold(power, threshold = 2) {
+		applyThreshold(power: number, threshold = 2) {
 			const percent = (100 / this.totalRaw) * power;
 			return percent < threshold ? 0 : power;
 		},
 		updateElementWidth() {
-			this.width = this.$refs.site_progress.getBoundingClientRect().width;
+			this.width = this.$refs["site_progress"]?.getBoundingClientRect().width ?? 0;
 		},
-		labelBarProps(position, name, val) {
-			const value = val === undefined ? this[name] : val;
+		labelBarProps(position: string, name: string, val?: number) {
+			const value = val === undefined ? (this as any)[name] : val;
 			const minWidth = 40;
 			return {
 				value,
@@ -242,7 +244,7 @@ export default {
 			};
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .site-progress {

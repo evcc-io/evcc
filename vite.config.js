@@ -3,11 +3,17 @@ import vuePlugin from "@vitejs/plugin-vue";
 import { ViteToml } from "vite-plugin-toml";
 import legacy from "@vitejs/plugin-legacy";
 import { visualizer } from "rollup-plugin-visualizer";
+import path from "path";
 
 export default defineConfig({
   root: "./assets",
   publicDir: "public",
   base: "./",
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./assets/js"),
+    },
+  },
   build: {
     outDir: "../dist/",
     emptyOutDir: true,

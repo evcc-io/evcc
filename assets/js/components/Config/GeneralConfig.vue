@@ -109,10 +109,10 @@
 import Modal from "bootstrap/js/dist/modal";
 import TitleModal from "./TitleModal.vue";
 import EditIcon from "../MaterialIcon/Edit.vue";
-import api from "../../api";
-import settings from "../../settings";
-import store from "../../store";
-import formatter from "../../mixins/formatter";
+import api from "@/api";
+import settings from "@/settings";
+import store from "@/store";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",

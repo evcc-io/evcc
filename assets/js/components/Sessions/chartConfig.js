@@ -1,5 +1,5 @@
 import { Chart, Tooltip } from "chart.js";
-import colors from "../../colors";
+import colors from "@/colors";
 // Register common components
 export function registerChartComponents(components) {
   Chart.register(...components);

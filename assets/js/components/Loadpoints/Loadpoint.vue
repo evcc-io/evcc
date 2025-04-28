@@ -93,18 +93,18 @@
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
-import api from "../../api.js";
+import api from "@/api";
 import Mode from "./Mode.vue";
 import VehicleComponent from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import collector from "@/mixins/collector";
 import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
-import VehicleIcon from "../VehicleIcon/index.js";
+import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
+import smartCostAvailable from "@/utils/smartCostAvailable";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
 import type { CHARGE_MODE, PHASES, Timeout, Vehicle } from "assets/js/types/evcc.js";
@@ -167,6 +167,7 @@ export default defineComponent({
 		planProjectedEnd: String,
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
+		planPrecondition: Number,
 		planTime: String,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
@@ -206,6 +207,7 @@ export default defineComponent({
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -287,6 +289,9 @@ export default defineComponent({
 				this.mode &&
 				!["off", "now"].includes(this.mode)
 			);
+		},
+		plannerForecast() {
+			return this.forecast?.planner;
 		},
 	},
 	watch: {

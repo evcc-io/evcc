@@ -54,6 +54,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:forecast="forecast"
 				:selectedIndex="selectedLoadpointIndex"
 				@index-changed="selectedLoadpointChanged"
 			/>
@@ -69,8 +70,8 @@ import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
 
 export default {
@@ -131,7 +132,7 @@ export default {
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {

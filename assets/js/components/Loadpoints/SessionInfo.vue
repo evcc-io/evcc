@@ -30,8 +30,8 @@
 import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "../../mixins/formatter.ts";
-import { getSessionInfo, setSessionInfo } from "./session.ts";
+import formatter from "@/mixins/formatter";
+import { getSessionInfo, setSessionInfo } from "./session";
 import type { CURRENCY, SelectOption } from "assets/js/types/evcc.ts";
 
 export default defineComponent({

@@ -11,7 +11,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Tag }} -X github.com/evcc-io/evcc/util.Commit={{ .ShortCommit }} -s -w
     env:
       - CGO_ENABLED=0
     goos:

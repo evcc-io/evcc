@@ -25,7 +25,7 @@
 
 <script>
 import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
-import { cleanYaml } from "../../utils/cleanYaml";
+import { cleanYaml } from "@/utils/cleanYaml.js";
 
 const $html = document.querySelector("html");
 export default {
