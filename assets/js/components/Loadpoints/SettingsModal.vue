@@ -163,7 +163,7 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import smartCostAvailable from "@/utils/smartCostAvailable";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES } from "assets/js/types/evcc.js";
+import { PHASES } from "@/types/evcc";
 
 const V = 230;
 

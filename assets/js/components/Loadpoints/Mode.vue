@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import { CHARGE_MODE } from "assets/js/types/evcc";
+import { CHARGE_MODE } from "@/types/evcc";
 import { defineComponent } from "vue";
 export default defineComponent({
 	name: "Mode",

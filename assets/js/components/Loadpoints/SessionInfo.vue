@@ -32,7 +32,7 @@ import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter from "@/mixins/formatter";
 import { getSessionInfo, setSessionInfo } from "./session";
-import type { CURRENCY, SelectOption } from "assets/js/types/evcc.ts";
+import type { CURRENCY, SelectOption } from "@/types/evcc";
 
 export default defineComponent({
 	name: "LoadpointSessionInfo",

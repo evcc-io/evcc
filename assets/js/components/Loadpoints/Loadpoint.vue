@@ -72,7 +72,8 @@
 			<LabelAndValue
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtEnergy(chargedEnergy)"
+				:value="chargedEnergy"
+				:valueFmt="fmtEnergy"
 				align="center"
 			/>
 			<LoadpointSessionInfo v-bind="sessionInfoProps" />
@@ -107,7 +108,7 @@ import SessionInfo from "./SessionInfo.vue";
 import smartCostAvailable from "@/utils/smartCostAvailable";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
-import type { CHARGE_MODE, PHASES, Timeout, Vehicle } from "assets/js/types/evcc.js";
+import type { CHARGE_MODE, PHASES, Timeout, Vehicle, Forecast } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -207,7 +208,7 @@ export default defineComponent({
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
-		forecast: Object, // as PropType<Forecast>,
+		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {

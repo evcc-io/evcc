@@ -59,7 +59,7 @@ export enum PHASES {
 	TWO_PHASES = 2,
 	THREE_PHASES = 3,
 }
-  
+
 export interface Sponsor {
 	name: string;
 	expiresAt: Date;

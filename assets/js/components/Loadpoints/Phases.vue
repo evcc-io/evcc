@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import type { PHASES } from "assets/js/types/evcc";
+import type { PHASES } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 const MIN_ACTIVE_CURRENT = 1;
 
