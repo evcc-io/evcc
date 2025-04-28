@@ -647,6 +647,16 @@ remoteDisabledHard = "{source}: Deaktiviert"
 remoteDisabledSoft = "{source}: Adaptives PV-Laden deaktiviert"
 solar = "Sonne"
 
+[main.loadpointPrio]
+high = "hoch"
+higher = "höher"
+low = "niedrig"
+lower = "niedriger"
+normal = "normal"
+prioTooltip = "Das Fahrzeug überschreibt die Ladepunkt Priorität"
+veryHigh = "sery hoch"
+veryLow = "sehr niedrig"
+
 [main.loadpointSettings]
 batteryUsage = "Hausbatterie"
 currents = "Ladestrom"

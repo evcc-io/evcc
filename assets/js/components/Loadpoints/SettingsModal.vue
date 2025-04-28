@@ -147,6 +147,30 @@
 									<small class="ms-3">~ {{ minPower }}</small>
 								</div>
 							</div>
+							<div class="mb-3 row">
+								<label
+									:for="formId('loadpointParamPriority')"
+									class="col-sm-4 col-form-label pt-0 pt-sm-2"
+								>
+									{{ $t("config.loadpoint.priorityLabel") }}
+								</label>
+								<div class="col-sm-8 pe-0 d-flex align-items-center">
+									<select
+										:id="formId('loadpointParamPriority')"
+										v-model.number="selectedPriority"
+										class="form-select form-select-sm w-50"
+										@change="changePriority"
+									>
+										<option
+											v-for="{ value, name } in priorityOptions"
+											:key="value"
+											:value="value"
+										>
+											{{ name }}
+										</option>
+									</select>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -201,12 +225,14 @@ export default {
 		tariffGrid: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
+		priority: Number,
 	},
 	emits: [
 		"phasesconfigured-updated",
 		"maxcurrent-updated",
 		"mincurrent-updated",
 		"batteryboost-updated",
+		"priority-updated",
 	],
 	data() {
 		return {
@@ -214,6 +240,7 @@ export default {
 			selectedMinCurrent: this.minCurrent,
 			selectedPhases: this.phasesConfigured,
 			isModalVisible: false,
+			selectedPriority: this.priority,
 		};
 	},
 	computed: {
@@ -274,6 +301,26 @@ export default {
 		smartCostAvailable() {
 			return smartCostAvailable(this.smartCostType);
 		},
+		priorityOptions() {
+			const range = Array.from({ length: 21 }, (_, i) => 10 - i); // [10...-10]
+			const options = range.map((value) => {
+				let name = this.fmtNumberWithSign(value);
+				if (value === 10) name += ` (highest)`;
+				if (value === 0) name += ` (default)`;
+				if (value === -10) name += ` (lowest)`;
+				return { value, name };
+			});
+
+			// Aktuellen Wert einfügen, wenn nicht enthalten
+			if (!options.some((opt) => opt.value === this.selectedPriority)) {
+				options.unshift({
+					value: this.selectedPriority,
+					name: `${this.selectedPriority} (current)`,
+				});
+			}
+
+			return options;
+		},
 	},
 	watch: {
 		maxCurrent(value) {
@@ -281,6 +328,9 @@ export default {
 		},
 		minCurrent(value) {
 			this.selectedMinCurrent = value;
+		},
+		priority(value) {
+			this.selectedPriority = value;
 		},
 		phasesConfigured(value) {
 			this.selectedPhases = value;
@@ -312,6 +362,9 @@ export default {
 		},
 		changeMinCurrent() {
 			this.$emit("mincurrent-updated", this.selectedMinCurrent);
+		},
+		changePriority() {
+			this.$emit("priority-updated", this.selectedPriority);
 		},
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
