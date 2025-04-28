@@ -88,7 +88,7 @@ export default defineComponent({
 		name: { type: String },
 		icon: { type: String },
 		iconProps: { type: Object, default: () => ({}) },
-		power: { type: Number },
+		power: { type: Number, default: 0 },
 		powerTooltip: { type: Array as PropType<string[]> },
 		powerUnit: { type: String as PropType<POWER_UNIT> },
 		details: { type: Number },
@@ -108,7 +108,7 @@ export default defineComponent({
 	},
 	computed: {
 		active() {
-			return (this.power ?? 0) > 10;
+			return this.power > 10;
 		},
 		isBattery() {
 			return this.icon === "battery";

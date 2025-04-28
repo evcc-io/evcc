@@ -116,7 +116,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact } from "assets/js/types/evcc";
+import type { LoadpointCompact } from "../../types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -234,7 +234,7 @@ export default defineComponent({
 			this.width = this.$refs["site_progress"]?.getBoundingClientRect().width ?? 0;
 		},
 		labelBarProps(position: string, name: string, val?: number) {
-			const value = val === undefined ? this[name] : val;
+			const value = val === undefined ? (this as any)[name] : val;
 			const minWidth = 40;
 			return {
 				value,

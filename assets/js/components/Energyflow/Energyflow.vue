@@ -94,7 +94,7 @@
 							@details-clicked="openForecastModal"
 							@toggle="togglePv"
 						>
-							<template v-if="(pv?.length ?? 0) > 1" #expanded>
+							<template v-if="multiplePv" #expanded>
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
@@ -127,7 +127,7 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="(battery?.length ?? 0) > 1" #expanded>
+							<template v-if="multipleBattery" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -246,7 +246,7 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="(battery?.length ?? 0) > 1" #expanded>
+							<template v-if="multipleBattery" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -264,9 +264,9 @@
 							icon="powersupply"
 							:power="pvExport"
 							:powerUnit="powerUnit"
-							:details="detailsValue(-(tariffFeedIn ?? 0))"
+							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(-(tariffFeedIn ?? 0))"
+							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
 							data-testid="energyflow-entry-gridexport"
 						/>
 					</div>
@@ -287,7 +287,7 @@ import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "assets/js/types/evcc";
+import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "../../types/evcc";
 
 export default defineComponent({
 	name: "Energyflow",
@@ -314,7 +314,7 @@ export default defineComponent({
 		batteryGridChargeActive: { type: Boolean },
 		batteryMode: { type: String },
 		tariffGrid: { type: Number },
-		tariffFeedIn: { type: Number },
+		tariffFeedIn: { type: Number, default: 0 },
 		tariffCo2: { type: Number },
 		tariffPriceHome: { type: Number },
 		tariffCo2Home: { type: Number },
@@ -403,6 +403,12 @@ export default defineComponent({
 		batteryFmt() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
+		multipleBattery() {
+			return (this.battery?.length || 0) > 1;
+		},
+		multiplePv() {
+			return (this.pv?.length || 0) > 1;
+		},
 		fmtLoadpointSoc() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
@@ -444,7 +450,8 @@ export default defineComponent({
 			}
 			const { today, scale } = this.forecast.solar || {};
 			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
-			return (today?.energy ?? 0) * factor;
+			const energy = today?.energy || 0;
+			return energy * factor;
 		},
 		solarForecastIcon() {
 			return this.solarForecastExists ? "forecast" : undefined;

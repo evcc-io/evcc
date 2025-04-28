@@ -13,9 +13,6 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
     chunkSizeWarningLimit: 800, // legacy build increases file size
-    rollupOptions: {
-      external: ["assets/js/utils/forecast.ts"],
-    },
   },
   server: {
     port: 7071,
