@@ -284,13 +284,13 @@ import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import Entry from "./Entry.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import settings from "../../settings";
-import { CO2_TYPE } from "../../units";
-import collector from "../../mixins/collector";
+import settings from "@/settings";
+import { CO2_TYPE } from "@/units";
+import collector from "@/mixins/collector";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "../../types/evcc";
+import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Energyflow",

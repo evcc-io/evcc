@@ -179,10 +179,10 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/checkmark";
-import { distanceUnit } from "../../units.js";
+import { distanceUnit } from "@/units";
 
-import formatter from "../../mixins/formatter.js";
-import { energyOptions } from "../../utils/energyOptions.js";
+import formatter from "@/mixins/formatter";
+import { energyOptions } from "@/utils/energyOptions";
 import { defineComponent } from "vue";
 import PreconditionSelect from "./PreconditionSelect.vue";
 

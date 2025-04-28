@@ -21,8 +21,8 @@ import {
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
-import formatter from "../../mixins/formatter";
-import colors from "../../colors";
+import formatter from "@/mixins/formatter";
+import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS } from "./types";
 
 registerChartComponents([

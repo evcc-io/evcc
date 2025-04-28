@@ -1,4 +1,4 @@
-import settings from "../../settings.js";
+import settings from "@/settings";
 
 export function getSessionInfo(index: number, fallback: string) {
 	return settings.sessionInfo[index - 1] || fallback;

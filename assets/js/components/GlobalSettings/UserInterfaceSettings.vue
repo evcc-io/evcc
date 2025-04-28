@@ -80,18 +80,13 @@
 import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
-import {
-	getLocalePreference,
-	setLocalePreference,
-	LOCALES,
-	removeLocalePreference,
-} from "../../i18n.js";
-import { getThemePreference, setThemePreference, THEMES } from "../../theme.js";
-import { getUnits, setUnits, UNITS } from "../../units.js";
-import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags.js";
-import { isApp } from "../../utils/native.js";
+import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "@/i18n";
+import { getThemePreference, setThemePreference, THEMES } from "@/theme";
+import { getUnits, setUnits, UNITS } from "@/units";
+import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
+import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import type { Sponsor } from "assets/js/types/evcc.js";
+import type { Sponsor } from "@/types/evcc";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",

@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import icon from "../../mixins/icon";
+import icon from "@/mixins/icon";
 
 export default defineComponent({
 	name: "BatteryIcon",

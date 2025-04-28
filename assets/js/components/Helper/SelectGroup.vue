@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts">
-import type { SelectOption } from "assets/js/types/evcc";
+import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({

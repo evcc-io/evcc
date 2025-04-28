@@ -10,8 +10,8 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter from "../../mixins/formatter";
-import { isForecastSlot, type ForecastSlot, type TimeseriesEntry } from "./types.js";
+import formatter from "@/mixins/formatter";
+import { isForecastSlot, type ForecastSlot, type TimeseriesEntry } from "./types";
 
 export default defineComponent({
 	name: "ForecastActiveSlot",

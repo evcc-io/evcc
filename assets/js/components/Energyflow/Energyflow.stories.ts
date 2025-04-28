@@ -1,6 +1,6 @@
 import type { Meta, StoryFn } from "@storybook/vue3";
 import Energyflow from "./Energyflow.vue";
-import { CURRENCY } from "../../types/evcc";
+import { CURRENCY } from "@/types/evcc";
 
 export default {
 	title: "Energyflow/Energyflow",

@@ -31,7 +31,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import UserInterfaceSettings from "./UserInterfaceSettings.vue";
-import type { Sponsor } from "assets/js/types/evcc";
+import type { Sponsor } from "@/types/evcc";
 
 export default defineComponent({
 	name: "GlobalSettingsModal",
