@@ -6,7 +6,11 @@
 		<slot>
 			<h3 class="value m-0" :class="valueClass">
 				<slot name="value">
-					<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
+					<AnimatedNumber
+						v-if="valueFmt && typeof value === 'number'"
+						:to="value"
+						:format="valueFmt"
+					/>
 					<span v-else>{{ value }}</span>
 					<div v-if="extraValue != null" class="extraValue text-nowrap">
 						{{ extraValue || "&nbsp;" }}
@@ -26,7 +30,7 @@ export default defineComponent({
 	components: { AnimatedNumber },
 	props: {
 		label: String,
-		value: [Number],
+		value: [Number, String],
 		valueFmt: Function as PropType<(n: number) => string>,
 		extraValue: String,
 		align: { type: String, default: "center" },

@@ -29,10 +29,35 @@ export interface LoadpointCompact {
 	heating?: boolean;
 }
 
+export interface LoadpointCompact {
+	icon: string;
+	title: string;
+	charging: boolean;
+	soc?: number;
+	power: number;
+	heating?: boolean;
+	chargePower: number;
+	connected: boolean;
+}
+
 export enum CURRENCY {
 	EUR = "EUR",
 	USD = "USD",
 	DKK = "DKK",
+}
+
+export enum CHARGE_MODE {
+	OFF = "off",
+	NOW = "now",
+	MINPV = "minpv",
+	PV = "pv",
+}
+
+export enum PHASES {
+	AUTO = 0,
+	ONE_PHASE = 1,
+	TWO_PHASES = 2,
+	THREE_PHASES = 3,
 }
 
 export interface Sponsor {
@@ -55,6 +80,8 @@ export interface Vehicle {
 	plan?: StaticPlan;
 	repeatingPlans: RepeatingPlan[];
 	title: string;
+	features?: string[];
+	capacity?: number;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;
