@@ -18,8 +18,10 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
 	name: "LabelBar",
 	props: {
 		value: { type: Number, default: 0 },
@@ -29,7 +31,7 @@ export default {
 		first: { type: Boolean },
 		last: { type: Boolean },
 	},
-};
+});
 </script>
 <style scoped>
 .label-bar {

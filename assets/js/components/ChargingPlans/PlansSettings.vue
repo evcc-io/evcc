@@ -88,7 +88,7 @@ import type {
 	StaticEnergyPlan,
 	PlanResponse,
 } from "./types.js";
-import type { Forecast } from "../../utils/forecast.ts";
+import type { Forecast } from "../../types/evcc.ts";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",

@@ -113,9 +113,9 @@ import collector from "../../mixins/collector.js";
 import api from "../../api.js";
 import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
+import type { CURRENCY, Timeout, Vehicle } from "../../types/evcc.js";
 import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
-import type { Forecast } from "../../utils/forecast.ts";
+import type { Forecast } from "../../types/evcc.ts";
 const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({
