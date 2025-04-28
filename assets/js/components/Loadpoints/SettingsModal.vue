@@ -179,6 +179,8 @@ const insertSorted = (arr: number[], num: number) => {
 // TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
 const MAX_CURRENT = 64;
 
+const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
+
 export default defineComponent({
 	name: "LoadpointSettingsModal",
 	components: { SmartCostLimit, LoadpointSettingsBatteryBoost: SettingsBatteryBoost },
@@ -222,20 +224,20 @@ export default defineComponent({
 			}
 			if (this.chargerPhases1p3p) {
 				// automatic switching
-				return [PHASES.AUTO, PHASES.THREE_PHASES, PHASES.ONE_PHASE];
+				return [AUTO, THREE_PHASES, ONE_PHASE];
 			}
 			// 1p or 3p possible
-			return [PHASES.THREE_PHASES, PHASES.ONE_PHASE];
+			return [THREE_PHASES, ONE_PHASE];
 		},
 		batteryBoostProps() {
 			return this.collectProps(SettingsBatteryBoost);
 		},
 		maxPower() {
 			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === PHASES.AUTO) {
-					return this.maxPowerPhases(PHASES.THREE_PHASES);
+				if (this.phasesConfigured === AUTO) {
+					return this.maxPowerPhases(THREE_PHASES);
 				}
-				if ([PHASES.THREE_PHASES, PHASES.ONE_PHASE].includes(this.phasesConfigured)) {
+				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
 					return this.maxPowerPhases(this.phasesConfigured);
 				}
 			}
@@ -243,10 +245,10 @@ export default defineComponent({
 		},
 		minPower() {
 			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === PHASES.AUTO) {
-					return this.minPowerPhases(PHASES.ONE_PHASE);
+				if (this.phasesConfigured === AUTO) {
+					return this.minPowerPhases(ONE_PHASE);
 				}
-				if ([PHASES.THREE_PHASES, PHASES.ONE_PHASE].includes(this.phasesConfigured)) {
+				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
 					return this.minPowerPhases(this.phasesConfigured);
 				}
 			}
