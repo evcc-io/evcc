@@ -21,14 +21,15 @@ export default defineComponent({
 	name: "Phases",
 	props: {
 		offeredCurrent: { type: Number, default: 0 },
-		chargeCurrents: { type: Array as PropType<number[]>, default: () => [] },
+		chargeCurrents: { type: Array as PropType<number[]> },
 		phasesActive: { type: Number as PropType<PHASES> },
-		minCurrent: { type: Number, default: 0 },
-		maxCurrent: { type: Number, default: 0 },
+		minCurrent: { type: Number, default: 6 },
+		maxCurrent: { type: Number, default: 16 },
 	},
 	computed: {
 		chargeCurrentsActive() {
-			return this.chargeCurrents?.filter((c) => c >= MIN_ACTIVE_CURRENT).length > 0;
+			if (!this.chargeCurrents) return false;
+			return this.chargeCurrents.filter((c) => c >= MIN_ACTIVE_CURRENT).length > 0;
 		},
 	},
 	methods: {
@@ -47,10 +48,10 @@ export default defineComponent({
 			return this.targetWidth();
 		},
 		isPhaseActive(num: number) {
-			if (this.chargeCurrentsActive) {
+			if (this.chargeCurrentsActive && this.chargeCurrents) {
 				return this.chargeCurrents[num - 1] >= MIN_ACTIVE_CURRENT;
 			}
-			return this.phasesActive && num <= this.phasesActive;
+			return num <= (this.phasesActive || 0);
 		},
 	},
 });
