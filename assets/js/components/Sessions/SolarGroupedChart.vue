@@ -13,8 +13,8 @@
 import { PolarArea } from "vue-chartjs";
 import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
-import formatter from "../../mixins/formatter";
-import colors, { dimColor } from "../../colors";
+import formatter from "@/mixins/formatter";
+import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { GROUPS } from "./types";
 

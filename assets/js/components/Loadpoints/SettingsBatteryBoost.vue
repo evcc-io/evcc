@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 
 export default {
 	mixins: [formatter],

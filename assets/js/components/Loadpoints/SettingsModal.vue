@@ -156,10 +156,10 @@
 </template>
 
 <script>
-import collector from "../../mixins/collector.js";
-import formatter from "../../mixins/formatter.js";
+import collector from "@/mixins/collector";
+import formatter from "@/mixins/formatter";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
+import smartCostAvailable from "@/utils/smartCostAvailable";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 
 const V = 230;

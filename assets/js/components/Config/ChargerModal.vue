@@ -167,7 +167,7 @@ import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
-import api from "../../api";
+import api from "@/api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../Helper/GenericModal.vue";

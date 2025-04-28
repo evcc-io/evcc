@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts">
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
@@ -116,7 +116,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact } from "../../types/evcc";
+import type { LoadpointCompact } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",

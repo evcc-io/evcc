@@ -29,8 +29,8 @@
 <script>
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "../../mixins/formatter.ts";
-import { getSessionInfo, setSessionInfo } from "./session.ts";
+import formatter from "@/mixins/formatter";
+import { getSessionInfo, setSessionInfo } from "./session";
 
 export default {
 	name: "LoadpointSessionInfo",

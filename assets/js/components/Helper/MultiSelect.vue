@@ -50,9 +50,9 @@
 
 <script lang="ts">
 import Dropdown from "bootstrap/js/dist/dropdown";
-import deepEqual from "../../utils/deepEqual.js";
+import deepEqual from "@/utils/deepEqual";
 import { defineComponent, type PropType } from "vue";
-import type { SelectOption } from "assets/js/types/evcc.js";
+import type { SelectOption } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MultiSelect",

@@ -77,8 +77,8 @@ import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/car1";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
-import restart, { performRestart, restartComplete } from "../../restart.js";
-import type { FatalError } from "assets/js/types/evcc.js";
+import restart, { performRestart, restartComplete } from "@/restart";
+import type { FatalError } from "@/types/evcc";
 
 export default defineComponent({
 	name: "OfflineIndicator",

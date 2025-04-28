@@ -197,11 +197,11 @@
 <script>
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
-import formatter from "../../mixins/formatter";
+import formatter from "@/mixins/formatter";
 import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import { distanceUnit, distanceValue } from "../../units";
-import api from "../../api";
+import { distanceUnit, distanceValue } from "@/units";
+import api from "@/api";
 
 export default {
 	name: "SessionDetailsModal",

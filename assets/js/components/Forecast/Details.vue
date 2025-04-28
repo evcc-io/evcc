@@ -64,11 +64,11 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import type { CURRENCY, Timeout } from "../../types/evcc.ts";
-import { ForecastType } from "../../utils/forecast.ts";
-import type { ForecastSlot, SolarDetails } from "./types.ts";
+import type { CURRENCY, Timeout } from "@/types/evcc";
+import { ForecastType } from "@/utils/forecast";
+import type { ForecastSlot, SolarDetails } from "./types";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
 export interface Energy {

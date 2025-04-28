@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from "vue";
 import SelectGroup from "./SelectGroup.vue";
-import type { SelectOption } from "assets/js/types/evcc";
+import type { SelectOption } from "@/types/evcc";
 
 const state = reactive({
 	value: "orange",

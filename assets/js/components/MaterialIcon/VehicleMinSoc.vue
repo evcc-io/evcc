@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import icon from "../../mixins/icon";
+import icon from "@/mixins/icon";
 
 export default {
 	name: "VehicleMinSoc",

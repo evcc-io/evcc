@@ -129,7 +129,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
-import api from "../../api.js";
+import api from "@/api";
 import Logo from "./Logo.vue";
 import { defineComponent } from "vue";
 

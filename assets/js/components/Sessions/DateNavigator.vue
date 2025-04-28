@@ -96,7 +96,7 @@
 <script>
 import CustomSelect from "../Helper/CustomSelect.vue";
 import DateNavigatorButton from "./DateNavigatorButton.vue";
-import formatter from "../../mixins/formatter";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "DateNavigator",

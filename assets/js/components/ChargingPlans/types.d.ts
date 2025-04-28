@@ -1,4 +1,4 @@
-import type { Rate } from "../../types/evcc";
+import type { Rate } from "@/types/evcc";
 
 export interface RepeatingPlan {
 	weekdays: number[];

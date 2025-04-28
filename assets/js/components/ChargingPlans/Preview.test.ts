@@ -1,7 +1,7 @@
 import { mount, config } from "@vue/test-utils";
 import { beforeAll, describe, expect, test } from "vitest";
 import Preview from "./Preview.vue";
-import type { Slot } from "../../types/evcc.js";
+import type { Slot } from "@/types/evcc";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 config.global.mocks["$t"] = (a: any) => a;

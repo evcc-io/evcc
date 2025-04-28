@@ -34,6 +34,12 @@ export enum CURRENCY {
 	USD = "USD",
 	DKK = "DKK",
 }
+
+export interface Sponsor {
+	name: string;
+	expiresAt: Date;
+}
+
 export interface Battery {
 	power: number;
 	soc: number;
