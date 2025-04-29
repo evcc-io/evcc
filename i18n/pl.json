@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "kiedy powyżej {soc}.",
       "full": "kiedy na {soc}.",
-      "low": "kiedy nieco pełny",
-      "medium": "kiedy w połowie pełny",
       "never": "tylko z wystarczającą nadwyżką."
     },
     "capacity": "{energy} z {total}",
@@ -18,12 +16,10 @@
     "legendBottomSubline": "aż osiągnie {soc}.",
     "legendMiddleName": "Ustaw priorytet ładowaniu pojazdów",
     "legendMiddleSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
-    "legendTitle": "Jak należy wykorzystać energię słoneczną?",
     "legendTopAutostart": "Rozpocznij automatycznie",
     "legendTopName": "Ładowanie pojazdu z wykorzystaniem akumulatora",
     "legendTopSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
     "modalTitle": "Bateria domowa",
-    "notControllable": "Sterowanie baterią nie jest dostępne dla tej baterii.",
     "usageTab": "Użycie baterii"
   },
   "config": {
@@ -83,7 +79,6 @@
       "powerRange": "Zasilanie",
       "range": "Zasięg",
       "soc": "Stan naładowania",
-      "socLimit": "Limit",
       "temp": "Temperatura",
       "url": "URL",
       "vehicleLimitSoc": "Limit pojazdu",
@@ -175,10 +170,6 @@
       "titleAdd": "Dodaj licznik energii słonecznej",
       "titleEdit": "Edytuj licznik energii słonecznej"
     },
-    "site": {
-      "cancel": "Anulować",
-      "save": "Zapisz"
-    },
     "validation": {
       "failed": "nie udało się",
       "label": "Status",
@@ -191,7 +182,6 @@
       "cancel": "Anulować",
       "delete": "Usuń.",
       "generic": "Inne integracje",
-      "offline": "Samochód ogólny",
       "online": "Pojazdy z API online",
       "save": "Zapisz",
       "scooter": "Skuter",
@@ -231,15 +221,9 @@
         "total": "cały czas"
       },
       "periodLabel": "Okres:",
-      "priceFeedIn": "{feedInPrice} eksport",
-      "priceGrid": "{gridPrice} sieć",
       "priceTitle": "Cena Energii",
       "referenceGrid": "sieć",
       "referenceLabel": "Dane referencyjne:",
-      "savingsComparedToGrid": "w porównaniu z siecią",
-      "savingsTitle": "Oszczędności",
-      "savingsTotalEnergy": "{total} kWh naładowanych",
-      "since": "od {since}",
       "tabTitle": "Moje dane"
     },
     "sponsor": {
@@ -279,13 +263,7 @@
     "login": "Dane logowania pojazdu",
     "nativeSettings": "Zmień serwer",
     "needHelp": "Potrzebuję Pomocy?",
-    "sessions": "Sesje ładowania",
-    "settings": "Ustawienia",
-    "theme": {
-      "auto": "Wygląd: system",
-      "dark": "Wygląd: ciemny",
-      "light": "Wygląd: światły"
-    }
+    "sessions": "Sesje ładowania"
   },
   "help": {
     "discussionsButton": "Dyskusje na GitHub'ie",
@@ -339,8 +317,6 @@
     },
     "heatingStatus": {
       "charging": "Ogrzewanie…",
-      "cheapEnergyCharging": "Ogrzewanie tanią energią: {price} (limit {limit})",
-      "cleanEnergyCharging": "Ogrzewanie czystą energią: {co2} (limit {limit})",
       "waitForVehicle": "Gotowe. Czekam na grzejnik…"
     },
     "loadpoint": {
@@ -407,7 +383,6 @@
       "descriptionEnergy": "Do kiedy należy załadować {targetEnergy} do pojazdu?",
       "descriptionSoc": "Kiedy pojazd powinien zostać naladowany do {targetSoc}?",
       "inactiveLabel": "Czas docelowy",
-      "modalTitle": "Ustaw docelowy czas",
       "notReachableInTime": "Cel zostanie osiągnięty {overrun} później.",
       "onlyInPvMode": "Plan ładowania działa tylko w trybie solarnym.",
       "planDuration": "Czas ładowania",
@@ -479,8 +454,7 @@
     "modalTitle": "Powiadomienia"
   },
   "offline": {
-    "message": "Brak połączenia z serwerem.",
-    "reload": "Przeładować?"
+    "message": "Brak połączenia z serwerem."
   },
   "session": {
     "cancel": "Anuluj",
@@ -536,12 +510,6 @@
     "vehicle": "Pojazd"
   },
   "settings": {
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Szczegóły sieci",
-      "none": "nic",
-      "price": "cena"
-    },
     "hiddenFeatures": {
       "label": "Eksperymentalny",
       "value": "Pokaż eksperymentalne funkcje interfejsu"
@@ -598,10 +566,5 @@
     "lineErrorLink": "wiersz {0}",
     "restartButton": "Restartuj",
     "title": "Błąd uruchamiania"
-  },
-  "vehicleSettings": {
-    "cancel": "Anulować",
-    "template": "Producent",
-    "test": "Test"
   }
 }

@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "коли вище {soc}.",
       "full": "коли при {soc}.",
-      "low": "коли трохи повний",
-      "medium": "коли наполовину повна",
       "never": "тільки з достатнім надлишком"
     },
     "capacity": "{energy} із {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "поки не досягне {soc}.",
     "legendMiddleName": "Пріоритет заряджання автомобіля",
     "legendMiddleSubline": "коли домашня батарея вище {soc}.",
-    "legendTitle": "Як використовувати сонячну енергію?",
     "legendTopAutostart": "Запустити автоматично",
     "legendTopName": "Заряджання автомобіля за допомогою акумулятора",
     "legendTopSubline": "коли домашня батарея вище {soc}.",
@@ -99,7 +96,6 @@
       "range": "Дальність",
       "singlePhase": "Однофазний",
       "soc": "Зарядити",
-      "socLimit": "Ліміт",
       "solarForecast": "Сонячний прогноз",
       "temp": "Температура",
       "topic": "Тема",
@@ -367,10 +363,6 @@
       "system": "Система",
       "vehicles": "Транспортні засоби"
     },
-    "site": {
-      "cancel": "Скасувати",
-      "save": "Зберегти"
-    },
     "sponsor": {
       "addToken": "Введіть маркер",
       "changeToken": "Змінити маркер",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Скільки фаз може заряджати цей автомобіль? Використовується для розрахунку необхідного мінімального надлишку сонячної енергії та тривалості плану.",
       "minimumCurrent": "Мінімальний струм",
       "minimumCurrentHelp": "Опускайтеся нижче 6А, лише якщо знаєте, що робите.",
-      "offline": "Загальний транспорт",
       "online": "Транспорт з онлайн API",
       "priority": "Пріоритет",
       "priorityHelp": "Вищий пріоритет означає, що цей транспортний засіб отримує пріоритетний доступ до надлишку сонячної енергії.",
@@ -466,15 +457,9 @@
         "total": "з самого початку"
       },
       "periodLabel": "Період:",
-      "priceFeedIn": "{feedInPrice} подача",
-      "priceGrid": "{gridPrice} мережа",
       "priceTitle": "Ціна енергії",
       "referenceGrid": "сітка",
       "referenceLabel": "Довідкові дані:",
-      "savingsComparedToGrid": "у порівнянні з мережою",
-      "savingsTitle": "Економія",
-      "savingsTotalEnergy": "{total} кВт/год заряджено",
-      "since": "оскільки {since}",
       "tabTitle": "Мої дані"
     },
     "sponsor": {
@@ -500,7 +485,6 @@
     },
     "version": {
       "availableLong": "доступна нова версія",
-      "availableShort": "встановити",
       "modalCancel": "Скасувати",
       "modalDownload": "Завантажити",
       "modalInstalledVersion": "Встановлена версія",
@@ -547,8 +531,7 @@
     "logout": "Вийти",
     "nativeSettings": "Змінити сервер",
     "needHelp": "Потрібна Допомога?",
-    "sessions": "Сеанси Зарядки",
-    "settings": "Налаштування"
+    "sessions": "Сеанси Зарядки"
   },
   "help": {
     "discussionsButton": "Обговорення GitHub",
@@ -717,12 +700,10 @@
       "co2Limit": "Ліміт CO₂ для {co2}",
       "costLimitIgnore": "Налаштований {ліміт} буде ігноруватися протягом цього періоду.",
       "currentPlan": "Активний план",
-      "description": "Коли транспортний засіб повинен бути заряджений на {targetSoc}?",
       "descriptionEnergy": "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?",
       "descriptionSoc": "Коли автомобіль повинен бути заряджений на {targetSoc}?",
       "goalReached": "Мета вже досягнута",
       "inactiveLabel": "Запланований час",
-      "modalTitle": "Встановити запланований час",
       "nextPlan": "Наступний план",
       "notReachableInTime": "Ціль буде досягнуто {overrun} пізніше.",
       "onlyInPvMode": "План заряджання працює тільки в сонячному режимі.",
@@ -809,7 +790,6 @@
   "offline": {
     "configurationError": "Помилка під час запуску. Перевірте конфігурацію та перезапустіть.",
     "message": "Не підключено до сервера.",
-    "reload": "Перезавантажити?",
     "restart": "Перезапустіть",
     "restartNeeded": "Необхідно для застосування змін.",
     "restarting": "Сервер повернеться за мить."
@@ -929,12 +909,6 @@
       "exit": "Вийти з повноекранного режиму",
       "label": "Повноекранний"
     },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Деталі сітки",
-      "none": "жодного",
-      "price": "ціна"
-    },
     "hiddenFeatures": {
       "label": "Експериментальний",
       "value": "Показати експериментальні функції інтерфейсу."
@@ -993,10 +967,5 @@
     "lineErrorLink": "Лінія {0}",
     "restartButton": "Перезапустити",
     "title": "Помилка запуску"
-  },
-  "vehicleSettings": {
-    "cancel": "Скасувати",
-    "template": "Виробник",
-    "test": "Тест"
   }
 }

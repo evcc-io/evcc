@@ -16,7 +16,6 @@
     "legendBottomSubline": "ameddig eléri {soc}-ot.",
     "legendMiddleName": "Jármű töltésének priorizálása",
     "legendMiddleSubline": "amikor az otthoni akkumulátor {soc} felett van.",
-    "legendTitle": "Hogyan használjuk fel a napenergiát?",
     "legendTopAutostart": "Automatikusan indul",
     "legendTopName": "Energiatárolóval támogatott töltés",
     "legendTopSubline": "amikor az otthoni akkumulátor {soc} felett van.",
@@ -97,7 +96,6 @@
       "range": "Hatótáv",
       "singlePhase": "Egyfázisú",
       "soc": "Töltöttség",
-      "socLimit": "Limit",
       "solarForecast": "Napsütés előrejelzés",
       "temp": "Hőmérséklet",
       "topic": "Téma",
@@ -397,7 +395,6 @@
       "maximumPhasesHelp": "Hány fázissal tud ez a jármű tölteni? A szükséges minimális szoláris többlet és a tervezett időtartam kiszámításához használják.",
       "minimumCurrent": "Minimum áram",
       "minimumCurrentHelp": "Csak akkor menj 6A alá, ha tudod, hogy mit csinálsz.",
-      "offline": "Általános jármű",
       "online": "Járművek online API-val",
       "priority": "Prioritás",
       "priorityHelp": "A magasabb prioritás azt jelenti, hogy ez a jármű előnyben részesíti a napenergia-többlet elérését.",
@@ -603,8 +600,6 @@
     },
     "heatingStatus": {
       "charging": "Fűtés…",
-      "cheapEnergyCharging": "Fűtés olcsó energiával: {price} (limit {limit})",
-      "cleanEnergyCharging": "Fűtés tiszta energiával: {co2} (limit {limit})",
       "connected": "Készenlét.",
       "vehicleLimit": "Fűtés limit",
       "waitForVehicle": "Üzemkész. Fűtésre várakozás…"
@@ -770,7 +765,6 @@
   "offline": {
     "configurationError": "Hiba az indítás során. Ellenőrizd a konfigurációd és indítsd újra.",
     "message": "Nem csatlakozik a szerverhez.",
-    "reload": "Újratöltés?",
     "restart": "Újraindítás",
     "restartNeeded": "A módosítások végrehajtásához szükséges.",
     "restarting": "A szerver egy pillanat múlva elérhető lesz."

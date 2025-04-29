@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "когато над {soc}",
       "full": "при {soc}.",
-      "low": "при донякъде заредена батерия",
-      "medium": "при наполовина заредена батерия",
       "never": "само при наличие на излишък"
     },
     "capacity": "{energy} от {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "докато достигне {soc}.",
     "legendMiddleName": "Приоритизиране на зареждането на превозното средство",
     "legendMiddleSubline": "когато домашната батерия е над {soc}.",
-    "legendTitle": "Как да се използва енергията от фотоволтаиците?",
     "legendTopAutostart": "автоматично стартиране",
     "legendTopName": "зареждане използвайки батерия",
     "legendTopSubline": "когато домашната батерия е над {soc}.",
@@ -74,7 +71,6 @@
       "powerRange": "Мощност",
       "range": "Обхват",
       "soc": "Състояние на заряда",
-      "socLimit": "Лимит",
       "temp": "Температура",
       "topic": "Тема",
       "url": "URL",
@@ -247,7 +243,6 @@
       "cancel": "Отмени",
       "delete": "Изтрий автомобил",
       "generic": "Други интеграции",
-      "offline": "Автомобил без свързаност",
       "online": "Автомобил с онлайн свързаност",
       "save": "Запази",
       "scooter": "Скутер",
@@ -288,15 +283,9 @@
         "total": "всички времена"
       },
       "periodLabel": "Период:",
-      "priceFeedIn": "{feedInPrice} feed-in",
-      "priceGrid": "{gridPrice} мрежа",
       "priceTitle": "Цена",
       "referenceGrid": "Мрежа",
       "referenceLabel": "Референтни данни:",
-      "savingsComparedToGrid": "сравнено с мрежата",
-      "savingsTitle": "Спестявате",
-      "savingsTotalEnergy": "{total} kWh заредени",
-      "since": "от {since}",
       "tabTitle": "Моите данни"
     },
     "sponsor": {

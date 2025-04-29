@@ -3,8 +3,6 @@
     "batteryLevel": "Nivell de bateria",
     "bufferStart": {
       "full": "quan gairebé ple",
-      "low": "quan una mica ple",
-      "medium": "quan mig ple",
       "never": "només amb prous excedents"
     },
     "capacity": "{energy} de {total}",
@@ -14,7 +12,6 @@
     "legendBottomSubline": "no utilitzat per carregar",
     "legendMiddleName": "primer, el vehicle",
     "legendMiddleSubline": "segón, la casa",
-    "legendTitle": "¿Com s'ha d'utilitzar l'energia?",
     "legendTopAutostart": "s'inicia automaticament",
     "legendTopName": "càrrega soportada per bateria",
     "legendTopSubline": "sensa interrupcions",
@@ -40,13 +37,7 @@
       "percentGrid": "{grid} kWh xarxa",
       "percentSelf": "{self} kWh solar",
       "percentTitle": "Energia solar",
-      "priceFeedIn": "{feedInPrice} excedent",
-      "priceGrid": "{gridPrice} xarxa",
       "priceTitle": "Preu de l'energia",
-      "savingsComparedToGrid": "comparat amb la xarxa",
-      "savingsTitle": "Estalvi",
-      "savingsTotalEnergy": "{total} kWh carregats",
-      "since": "desde {since}",
       "tabTitle": "Les meves dades"
     },
     "sponsor": {
@@ -85,8 +76,7 @@
     "github": "GitHub",
     "login": "Login de vehicle",
     "needHelp": "Necessites ajuda?",
-    "sessions": "Processos de càrrega",
-    "settings": "Paràmetres"
+    "sessions": "Processos de càrrega"
   },
   "help": {
     "discussionsButton": "Debats en GitHub",
@@ -240,8 +230,7 @@
     "modalTitle": "Notificacions"
   },
   "offline": {
-    "message": "No connectat amb servidor.",
-    "reload": "Actualitzar?"
+    "message": "No connectat amb servidor."
   },
   "session": {
     "cancel": "Cancelar",
@@ -333,10 +322,5 @@
     "lineErrorLink": "Línia {0}",
     "restartButton": "Reiniciar",
     "title": "Error a l'inici"
-  },
-  "vehicleSettings": {
-    "cancel": "Cancel·lar",
-    "template": "Fabricant",
-    "test": "Prova"
   }
 }

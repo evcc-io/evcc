@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "ko je nad {soc}.",
       "full": "ko je na {soc}.",
-      "low": "ko je nekoliko poln",
-      "medium": "ko je napol poln",
       "never": "samo z dovolj presežka."
     },
     "capacity": "{energy} od {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "dokler ne doseže {soc}.",
     "legendMiddleName": "Prioritetno polnjenje vozil",
     "legendMiddleSubline": "ko je domača baterija nad {soc}.",
-    "legendTitle": "Kako naj se uporablja sončna energija?",
     "legendTopAutostart": "Samodejni zagon",
     "legendTopName": "Polnjenje vozila, ki ga podpira baterija",
     "legendTopSubline": "ko je domača baterija nad {soc}.",
@@ -93,7 +90,6 @@
       "range": "Doseg",
       "singlePhase": "Enofazni",
       "soc": "Polnjenje",
-      "socLimit": "Omejitev",
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
@@ -318,10 +314,6 @@
       "system": "Sistem",
       "vehicles": "Vozila"
     },
-    "site": {
-      "cancel": "Prekliči",
-      "save": "Shrani"
-    },
     "sponsor": {
       "addToken": "Vnesite žeton",
       "changeToken": "Spremeni žeton",
@@ -363,7 +355,6 @@
       "cancel": "Prekliči",
       "delete": "Izbriši",
       "generic": "Druge integracije",
-      "offline": "Generično vozilo",
       "online": "Vozila s spletnim API-jem",
       "save": "Shrani",
       "scooter": "Skuter",
@@ -404,15 +395,9 @@
         "total": "ves čas"
       },
       "periodLabel": "Obdobje:",
-      "priceFeedIn": "{feedInPrice} omrežje",
-      "priceGrid": "{gridPrice} omrežje",
       "priceTitle": "Cena energije",
       "referenceGrid": "omrežje",
       "referenceLabel": "Referenčni podatki:",
-      "savingsComparedToGrid": "v primerjavi z omrežjem",
-      "savingsTitle": "Prihranki",
-      "savingsTotalEnergy": "{total} kWh zaračunanih",
-      "since": "od {since}",
       "tabTitle": "Moji podatki"
     },
     "sponsor": {
@@ -484,8 +469,7 @@
     "logout": "Odjava",
     "nativeSettings": "Zamenjaj strežnik",
     "needHelp": "Potrebuješ pomoč?",
-    "sessions": "Seje polnjenja",
-    "settings": "Nastavitve"
+    "sessions": "Seje polnjenja"
   },
   "help": {
     "discussionsButton": "GitHub razprave",
@@ -573,8 +557,6 @@
     },
     "heatingStatus": {
       "charging": "Gretje…",
-      "cheapEnergyCharging": "Gretje s poceni energijo: {price} (limit {limit})",
-      "cleanEnergyCharging": "Gretje s čisto energijo: {co2} (limit {limit})",
       "vehicleLimit": "Omejitev ogrevanja",
       "waitForVehicle": "Pripravljen. Čakam na grelec…"
     },
@@ -651,7 +633,6 @@
       "descriptionEnergy": "Do kdaj želite da se vozilo napolni za {targetEnergy}?",
       "descriptionSoc": "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?",
       "inactiveLabel": "Ciljni čas",
-      "modalTitle": "Nastavite ciljni čas",
       "nextPlan": "Naslednji načrt",
       "notReachableInTime": "Cilj bo dosežen {overrun} pozneje.",
       "onlyInPvMode": "Načrt polnjenja deluje samo v solarnem načinu.",
@@ -714,7 +695,6 @@
       "disconnectRequired": "Seja prekinjena. Ponovno se povežite.",
       "disconnected": "Odklopljen.",
       "finished": "Končano.",
-      "guard": "Zaščita preklopa je aktivna za {remaining}.",
       "minCharge": "Minimalno polnjenje na {soc}.",
       "pvDisable": "Premalo presežka. Prekinitev polnjenja se bo izvedla kmalu.",
       "pvEnable": "Na voljo so presežki. Začetek polnjenja se bo izvedel kmalu.",
@@ -739,7 +719,6 @@
   "offline": {
     "configurationError": "Napaka med zagonom. Preverite konfiguracijo in znova zaženite.",
     "message": "Ni povezave s strežnikom.",
-    "reload": "Ponovno naloži?",
     "restart": "Ponovni zagon",
     "restartNeeded": "Potrebno za uveljavitev sprememb.",
     "restarting": "Strežnik bo kmalu nazaj."
@@ -859,12 +838,6 @@
       "exit": "Izhod iz celozaslonskega načina",
       "label": "Celozaslonski način"
     },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Podatki o omrežju",
-      "none": "brez",
-      "price": "cena"
-    },
     "hiddenFeatures": {
       "label": "Eksperimentalno",
       "value": "Prikaži eksperimentalne funkcije uporabniškega vmesnika."
@@ -923,10 +896,5 @@
     "lineErrorLink": "vrstica {0}",
     "restartButton": "Ponovni zagon",
     "title": "Napaka pri zagonu"
-  },
-  "vehicleSettings": {
-    "cancel": "Prekliči",
-    "template": "Proizvajalec",
-    "test": "Test"
   }
 }

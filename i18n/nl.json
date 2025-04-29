@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "indien boven {soc}.",
       "full": "wanneer op {soc}",
-      "low": "indien beetje vol",
-      "medium": "indien half vol",
       "never": "enkel bij voldoende overschot."
     },
     "capacity": "{energy} van {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
     "legendMiddleSubline": "wanneer de thuisaccu boven {soc} is.",
-    "legendTitle": "Hoe moet zonne-energie gebruikt worden?",
     "legendTopAutostart": "Start automatisch",
     "legendTopName": "Batterij-ondersteund opladen",
     "legendTopSubline": "wanneer de thuisaccu boven {soc} is.",
@@ -99,7 +96,6 @@
       "range": "Actieradius",
       "singlePhase": "Monofase",
       "soc": "Laden",
-      "socLimit": "Limiet",
       "solarForecast": "Voorspelling van zonne-energie",
       "temp": "Temperatuur",
       "topic": "Onderwerp",
@@ -367,10 +363,6 @@
       "system": "Systeem",
       "vehicles": "Voertuigen"
     },
-    "site": {
-      "cancel": "Annuleren",
-      "save": "Opslaan"
-    },
     "sponsor": {
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Met hoeveel fasen kan dit voertuig laden? Wordt gebruikt om de minimale duur van zonneoverschot en plan te berekenen",
       "minimumCurrent": "Minimale stroomsterkte",
       "minimumCurrentHelp": "Stel alleen lager in dan 6A waneer je weet wat je doet",
-      "offline": "Algemeen voertuig",
       "online": "Voertuig met online API",
       "priority": "Prioriteit",
       "priorityHelp": "Hogere prioriteit betekent dat dit voertuig met voorrang toegang heeft tot zonneoverschot.",
@@ -466,15 +457,9 @@
         "total": "aller tijden"
       },
       "periodLabel": "Periode:",
-      "priceFeedIn": "{feedInPrice} injectie",
-      "priceGrid": "{gridPrice} net",
       "priceTitle": "Energieprijs",
       "referenceGrid": "net",
       "referenceLabel": "Referentiedata:",
-      "savingsComparedToGrid": "in vergelijking met netafname",
-      "savingsTitle": "Besparing",
-      "savingsTotalEnergy": "{total} kWh geladen",
-      "since": "sinds {since}",
       "tabTitle": "Mijn data"
     },
     "sponsor": {
@@ -546,13 +531,7 @@
     "logout": "Uitloggen",
     "nativeSettings": "Andere server",
     "needHelp": "Hulp nodig?",
-    "sessions": "Laadsessies",
-    "settings": "Instellingen",
-    "theme": {
-      "auto": "Design: systeem",
-      "dark": "Design: donker",
-      "light": "Design: licht"
-    }
+    "sessions": "Laadsessies"
   },
   "help": {
     "discussionsButton": "GitHub discussies",
@@ -646,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Bezig met verwarmen...",
-      "cheapEnergyCharging": "Verwarmen met goedkope energie: {price} (limiet {limit})",
-      "cleanEnergyCharging": "Verwarmen met schone energie: {co2} (limiet {limit})",
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
       "waitForVehicle": "Klaar. Wachten op voertuigverwarming"
@@ -727,7 +704,6 @@
       "descriptionSoc": "Wanneer moet het voertuig geladen zijn naar {targetSoc}?",
       "goalReached": "Doel al bereikt",
       "inactiveLabel": "Ingestelde tijd",
-      "modalTitle": "Stel tijd in",
       "nextPlan": "Volgende schema",
       "notReachableInTime": "Laaddoel zal {overrun} later bereikt zijn.",
       "onlyInPvMode": "Laadplan werkt alleen in PV modus",
@@ -814,7 +790,6 @@
   "offline": {
     "configurationError": "Fout tijdens opstarten. Controleer de configuratie en start opnieuw.",
     "message": "Niet verbonden met een server.",
-    "reload": "Verversen?",
     "restart": "Herstart",
     "restartNeeded": "Benodigd om aanpassingen door te voeren.",
     "restarting": "Server is binnenkort weer beschikbaar."
@@ -847,12 +822,8 @@
     "title": "Oplaadsessie"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "⌀ Vermogen",
     "avgPrice": "⌀ Prijs",
-    "avgPriceTitleByGroup": "⌀ Prijs {byGroup}",
-    "byGroupLoadpoint": "per laadpunt",
-    "byGroupVehicle": "per voertuig",
     "chargeDuration": "Duur",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
@@ -895,10 +866,6 @@
     "date": "Start",
     "downloadCsv": "Download als CSV",
     "energy": "Geladen",
-    "energyGroupedTitle": "Geladen energie {energy}",
-    "energyGroupedTitleByGroup": "Energie {byGroup}",
-    "energySubTitle": "{energy} totaal",
-    "energyTitle": "{percent} zonne-energie",
     "filter": {
       "allLoadpoints": "alle oplaadpunten",
       "allVehicles": "alle voertuigen",
@@ -915,12 +882,6 @@
       "none": "Totaal",
       "vehicle": "Voertuig"
     },
-    "groupedCo2TitleByGroup": "CO₂-Hoeveelheid {byGroup}",
-    "groupedPriceTitleByGroup": "Kosten {byGroup}",
-    "historyCo2SubTitle": "{value} totaal",
-    "historyCo2Title": "⌀ {value} CO₂-Uitstoot",
-    "historyPriceSubTitle": "{value} totaal",
-    "historyPriceTitle": "⌀ {value} Laadprijs",
     "loadpoint": "Oplaadpunt",
     "noData": "Geen oplaadsessies deze maand",
     "overview": "Overzicht",
@@ -933,8 +894,6 @@
     "reallyDelete": "Wilt u deze sessie echt verwijderen?",
     "showIndividualEntries": "Toon individuele sessies",
     "solar": "Zon",
-    "solarTitle": "Jaarlijks zonne-aandeel",
-    "solarTitleByGroup": "Zonne-aandeel {byGroup}",
     "title": "Oplaadsessies",
     "total": "Totaal",
     "type": {
@@ -949,12 +908,6 @@
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
       "label": "Volledig scherm"
-    },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Grid detail",
-      "none": "geen",
-      "price": "prijs"
     },
     "hiddenFeatures": {
       "label": "Experimenteel",
@@ -1014,10 +967,5 @@
     "lineErrorLink": "lijn {0}",
     "restartButton": "Herstart",
     "title": "Start Error"
-  },
-  "vehicleSettings": {
-    "cancel": "Annuleer",
-    "template": "Fabrikant",
-    "test": "Test"
   }
 }

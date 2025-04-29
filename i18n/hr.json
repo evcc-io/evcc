@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "kada je iznad {soc}.",
       "full": "kad je na {soc}.",
-      "low": "kad je donekle pun",
-      "medium": "kad je napola pun",
       "never": "samo s dovoljno viška."
     },
     "capacity": "{energy} od {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "dok ne dosegne {soc} napunjenosti.",
     "legendMiddleName": "Prioritet punjenju vozila",
     "legendMiddleSubline": "kada je kućna baterija iznad {soc}.",
-    "legendTitle": "Kako bi se trebala koristiti solarna energija?",
     "legendTopAutostart": "Počni automatski",
     "legendTopName": "Punjenje vozila iz baterije",
     "legendTopSubline": "kada je kućna baterija iznad {soc}.",
@@ -92,7 +89,6 @@
       "range": "Doseg",
       "singlePhase": "Jedna faza",
       "soc": "Napunjenost",
-      "socLimit": "Ograničenje",
       "temp": "Temperatura",
       "topic": "Naslov",
       "url": "URL",
@@ -323,7 +319,6 @@
       "cancel": "Odustani",
       "delete": "Obriši",
       "generic": "Druge integracije",
-      "offline": "Opće vozilo",
       "online": "Vozilo s internetskim API sučeljem",
       "save": "Spremi",
       "scooter": "Skuter",
@@ -364,15 +359,9 @@
         "total": "sveukupno"
       },
       "periodLabel": "Razdoblje:",
-      "priceFeedIn": "{feedInPrice} za predaju u mrežu",
-      "priceGrid": "{gridPrice} iz mreže",
       "priceTitle": "Cijena energije",
       "referenceGrid": "mreža",
       "referenceLabel": "Referentni podaci:",
-      "savingsComparedToGrid": "u usporedbi s mrežom",
-      "savingsTitle": "Ušteda",
-      "savingsTotalEnergy": "{total} kWh napojeno",
-      "since": "od {since}",
       "tabTitle": "Moji podaci"
     },
     "sponsor": {
@@ -398,7 +387,6 @@
     },
     "version": {
       "availableLong": "dostupna je nova verzija",
-      "availableShort": "instalirati",
       "modalCancel": "Odustani",
       "modalDownload": "Preuzmi",
       "modalInstalledVersion": "Instalirana verzija",
@@ -419,8 +407,7 @@
     "logout": "Odjava",
     "nativeSettings": "Promjena poslužitelja",
     "needHelp": "Trebate pomoć?",
-    "sessions": "Postupci punjenja",
-    "settings": "Postavke"
+    "sessions": "Postupci punjenja"
   },
   "help": {
     "discussionsButton": "GitHub rasprave",
@@ -507,8 +494,6 @@
     },
     "heatingStatus": {
       "charging": "Grijanje…",
-      "cheapEnergyCharging": "Grijanje s jeftinom energijom: {price} (granica {limit})",
-      "cleanEnergyCharging": "Grijanje sa čistom energijom: {co2} (granica {limit})",
       "waitForVehicle": "Spremno. Čeka se na grijač…"
     },
     "loadpoint": {
@@ -583,7 +568,6 @@
       "descriptionEnergy": "Do kada bi {targetEnergy} trebalo napojiti vozilo?",
       "descriptionSoc": "Kada bi se vozilo moralo napuniti na {targetSoc}?",
       "inactiveLabel": "Ciljano vrijeme",
-      "modalTitle": "Postavi ciljano vrijeme",
       "nextPlan": "Sljedeći plan",
       "notReachableInTime": "Cilj će se postići {overrun} kasnije.",
       "onlyInPvMode": "Plan punjenja radi samo u solarnom modusu.",
@@ -669,7 +653,6 @@
   "offline": {
     "configurationError": "Greška pri pokretanju. Provjerite postavke i ponovno pokrenite.",
     "message": "Ne postoji veza s poslužiteljam.",
-    "reload": "Ponovo učitati?",
     "restart": "Ponovno pokreni",
     "restartNeeded": "Nužno za primjenu promjena.",
     "restarting": "Poslužitelj će biti dostupan za koji trenutak."
@@ -702,12 +685,8 @@
     "title": "Postupak punjenja"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "⌀ snaga",
     "avgPrice": "⌀ cijena",
-    "avgPriceTitleByGroup": "⌀ cijena {byGroup}",
-    "byGroupLoadpoint": "po punjaču",
-    "byGroupVehicle": "po vozilu",
     "chargeDuration": "Trajanje",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
@@ -750,10 +729,6 @@
     "date": "Početak",
     "downloadCsv": "Preuzmi kao CSV",
     "energy": "Napunjeno",
-    "energyGroupedTitle": "Isporučena energija {energy}",
-    "energyGroupedTitleByGroup": "Energija {byGroup}",
-    "energySubTitle": "ukupno {energy}",
-    "energyTitle": "{percent} solarne energije",
     "filter": {
       "allLoadpoints": "sva mjesta napajanja",
       "allVehicles": "sva vozila",
@@ -770,12 +745,6 @@
       "none": "Ukupno",
       "vehicle": "Vozilo"
     },
-    "groupedCo2TitleByGroup": "CO₂- količina {byGroup}",
-    "groupedPriceTitleByGroup": "Ukupni trošak {byGroup}",
-    "historyCo2SubTitle": "ukupno {value}",
-    "historyCo2Title": "⌀ {value} CO₂ - onečišćenje",
-    "historyPriceSubTitle": "ukupno {value}",
-    "historyPriceTitle": "⌀ {value} cijena punjenja",
     "loadpoint": "Mjesto punjenja",
     "noData": "U ovom mjesecu nema sesija napajanja.",
     "overview": "Pregled",
@@ -788,8 +757,6 @@
     "reallyDelete": "Stvarno želiš izbrisati ovu sesiju?",
     "showIndividualEntries": "Prikaži pojedine zapise",
     "solar": "Solarno",
-    "solarTitle": "Udio solara tokom godine",
-    "solarTitleByGroup": "Solar {byGroup}",
     "title": "Postupci punjenja",
     "total": "Ukupno",
     "type": {
@@ -804,12 +771,6 @@
       "enter": "Puni zaslon",
       "exit": "Izlaz iz punog zaslona",
       "label": "Puni zaslon"
-    },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Detalji mreže",
-      "none": "ništa",
-      "price": "cijena"
     },
     "hiddenFeatures": {
       "label": "Eksperimentalno",
@@ -867,10 +828,5 @@
     "lineErrorLink": "{0}. retku",
     "restartButton": "Pokreni ponovo",
     "title": "Pogreška pri pokretanju"
-  },
-  "vehicleSettings": {
-    "cancel": "Odustani",
-    "template": "Proizvođač",
-    "test": "Test"
   }
 }

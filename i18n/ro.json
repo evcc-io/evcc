@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "cand e peste {soc}",
       "full": "cand atinge starea de incarcare",
-      "low": "cand este destul de plin",
-      "medium": "cand este pe jumatate plin",
       "never": "numai cand exista surplus suficient"
     },
     "capacity": "{energy} din {total}",
@@ -17,7 +15,6 @@
     "legendBottomSubline": "neutilizat pentru incarcare",
     "legendMiddleName": "in primul rand vehiculul",
     "legendMiddleSubline": "in al doilea rand casa",
-    "legendTitle": "Cum ar trebui utilizata energia solara?",
     "legendTopAutostart": "porneste automat",
     "legendTopName": "Incarcare ajutata de baterie",
     "legendTopSubline": "fara intreruperi",
@@ -41,8 +38,7 @@
       "phaseVoltages": "Voltaj L1, L2, L3",
       "power": "Putere",
       "range": "Autonomie",
-      "soc": "Stare de încărcare",
-      "socLimit": "Limită"
+      "soc": "Stare de încărcare"
     },
     "form": {
       "example": "Exemplu",
@@ -74,10 +70,6 @@
       "titleAdd": "Adauga SmartMeter",
       "titleEdit": "Editeaza SmartMeter"
     },
-    "site": {
-      "cancel": "Anuleaza",
-      "save": "Salveaza"
-    },
     "validation": {
       "failed": "esuat",
       "label": "Stare",
@@ -90,7 +82,6 @@
       "cancel": "Anulare",
       "delete": "Sterge",
       "generic": "Alte integrari",
-      "offline": "Masina generica",
       "online": "Masini cu API oline",
       "save": "Salveaza",
       "scooter": "Scuter",
@@ -130,15 +121,9 @@
         "total": "de la inceput"
       },
       "periodLabel": "Perioada:",
-      "priceFeedIn": "{feedInPrice} trimis in rețea",
-      "priceGrid": "{gridPrice} rețea",
       "priceTitle": "Preț Energie",
       "referenceGrid": "bransament",
       "referenceLabel": "Date de referinta",
-      "savingsComparedToGrid": "comparat cu rețeaua",
-      "savingsTitle": "Economii",
-      "savingsTotalEnergy": "{total} kWh încărcati",
-      "since": "de la {since}",
       "tabTitle": "Datele mele"
     },
     "sponsor": {
@@ -177,8 +162,7 @@
     "github": "GitHub",
     "login": "Login Masina",
     "needHelp": "Ai nevoie de Ajutor ?",
-    "sessions": "Sesiuni de Incărcare",
-    "settings": "Configurare"
+    "sessions": "Sesiuni de Incărcare"
   },
   "help": {
     "discussionsButton": "Discutii GitHub",
@@ -230,8 +214,6 @@
     },
     "heatingStatus": {
       "charging": "Incalzeste...",
-      "cheapEnergyCharging": "Incalzire cu energie ieftina: {price} (limit {limit})",
-      "cleanEnergyCharging": "Incalzire cu energie ieftina: {co2} (limit {limit})",
       "waitForVehicle": "Pregatit. Astept dupa incalzitor…"
     },
     "loadpoint": {
@@ -296,7 +278,6 @@
       "descriptionEnergy": "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?",
       "descriptionSoc": "Când ar trebui vehiculul să fie încărcat la {targetSoc}?",
       "inactiveLabel": "Timp dorit",
-      "modalTitle": "Programare ora dorită",
       "notReachableInTime": "Telul nu a fost atins la timp. Estimare: {endTime}.",
       "onlyInPvMode": "Planul de incarcare merge doar in mod Solar.",
       "planDuration": "Timp de încărcare",
@@ -349,7 +330,6 @@
       "climating": "Preconditionare detectata.",
       "connected": "Conectat.",
       "disconnected": "Deconectat.",
-      "guard": "Incarcarea incepe in {remaining}…",
       "minCharge": "Incarcare minima {soc}.",
       "pvDisable": "Surplus insuficient FV. Pauza in {remaining}…",
       "pvEnable": "Surplus FV disponibil. Pornesc în {remaining}…",
@@ -368,8 +348,7 @@
     "modalTitle": "Notificări"
   },
   "offline": {
-    "message": "Nu se poate conecta la server.",
-    "reload": "Reîncarcă?"
+    "message": "Nu se poate conecta la server."
   },
   "session": {
     "cancel": "Anulează",
@@ -421,12 +400,6 @@
     "vehicle": "Vehicul"
   },
   "settings": {
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Detalii rețea",
-      "none": "nimic",
-      "price": "preț"
-    },
     "hiddenFeatures": {
       "label": "Experimentală",
       "value": "Arată caracteristice experimentale."
@@ -478,10 +451,5 @@
     "lineErrorLink": "linia {0}",
     "restartButton": "Restart",
     "title": "Eroare la pornire încărcare"
-  },
-  "vehicleSettings": {
-    "cancel": "Anulați",
-    "template": "Producător",
-    "test": "Test"
   }
 }

@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "kun ylittää {soc}.",
       "full": "kun {soc}.",
-      "low": "jos jonkin verran täynnä",
-      "medium": "kun puolillaan",
       "never": "ainoastaan kun riittävästi ylijäämää."
     },
     "capacity": "{energy} / {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "kunnes saavutetaan {soc}.",
     "legendMiddleName": "Priorisoi ajoneuvon lataus",
     "legendMiddleSubline": "kun kodin akku on yli {soc}.",
-    "legendTitle": "Kuinka aurinkoenergiaa tulisi käyttää?",
     "legendTopAutostart": "Aloita automaattisesti",
     "legendTopName": "Akulla tuettu ajoneuvon lataus",
     "legendTopSubline": "kun kodin akku on yli {soc}.",
@@ -99,7 +96,6 @@
       "range": "Toimintasäde",
       "singlePhase": "Yksivaiheinen",
       "soc": "Lataus",
-      "socLimit": "Raja",
       "solarForecast": "Aurinkosääennuste",
       "temp": "Lämpötila",
       "topic": "Aihe",
@@ -382,7 +378,6 @@
       "cancel": "Peruuta",
       "delete": "Poista",
       "generic": "Muut integraatiot",
-      "offline": "Yleinen ajoneuvo",
       "online": "Ajoneuvot, joissa API-käyttöliittymä",
       "save": "Tallenna",
       "scooter": "Skootteri",
@@ -423,15 +418,9 @@
         "total": "kaikki"
       },
       "periodLabel": "Jakso:",
-      "priceFeedIn": "{feedInPrice} verkkoon myynti",
-      "priceGrid": "{gridPrice} verkosta osto",
       "priceTitle": "Energian hinta",
       "referenceGrid": "sähköverkko",
       "referenceLabel": "Vertailutieto:",
-      "savingsComparedToGrid": "Verrattuna verkkoon",
-      "savingsTitle": "Säästöt",
-      "savingsTotalEnergy": "ladattuun {total} kWh",
-      "since": "alkaen {since}",
       "tabTitle": "Tietoni"
     },
     "sponsor": {
@@ -503,8 +492,7 @@
     "logout": "Kirjaudu ulos",
     "nativeSettings": "Vaihda palvelin",
     "needHelp": "Tarvitsetko apua?",
-    "sessions": "Lataustapahtumat",
-    "settings": "Asetukset"
+    "sessions": "Lataustapahtumat"
   },
   "help": {
     "discussionsButton": "GitHub keskustelut",
@@ -592,8 +580,6 @@
     },
     "heatingStatus": {
       "charging": "Lämmitys...",
-      "cheapEnergyCharging": "Lataa halvalla energialla: {price} (raja {limit})",
-      "cleanEnergyCharging": "Lämmitä puhtaalla energialla: {co2} (raja {limit})",
       "connected": "Valmiustila.",
       "vehicleLimit": "Lämmittimen rajoitin",
       "waitForVehicle": "Valmiina. Odottaa lämmitintä..."
@@ -671,7 +657,6 @@
       "descriptionEnergy": "Mihin mennessä {targetEnergy} tulisi ladata autoon?",
       "descriptionSoc": "Milloin ajoneuvon tulee olla ladattu {targetSoc}?",
       "inactiveLabel": "Tavoiteaika",
-      "modalTitle": "Aseta tavoiteaika",
       "nextPlan": "Seuraava suunnitelma",
       "notReachableInTime": "Tavoite saavutetaan {overrun} myöhemmin.",
       "onlyInPvMode": "Lataussuunnitelma toimii ainoastaan aurinkoenergiatilassa.",
@@ -758,7 +743,6 @@
   "offline": {
     "configurationError": "Virhe käynnistyksessä. Tarkista määritykset ja käynnistä uudelleen.",
     "message": "Ei yhteyttä serveriin",
-    "reload": "Lataa uudelleen?",
     "restart": "Käynnistä uudelleen",
     "restartNeeded": "Tarvitaan muutosten käyttöönottamiseksi.",
     "restarting": "Palvelin tulee takaisin hetken kuluttua."
@@ -878,12 +862,6 @@
       "exit": "Poistu kokonäyttötilasta",
       "label": "Kokonäyttö"
     },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Verkon tiedot",
-      "none": "ei mitään",
-      "price": "hinta"
-    },
     "hiddenFeatures": {
       "label": "Kokeellinen",
       "value": "Näytä käyttöliittymässä kokeelliset ominaisuudet"
@@ -942,10 +920,5 @@
     "lineErrorLink": "rivi {0}",
     "restartButton": "Käynnistä uudelleen",
     "title": "Virhe käynnistyksessä"
-  },
-  "vehicleSettings": {
-    "cancel": "Peruuta",
-    "template": "Valmistaja",
-    "test": "Testi"
   }
 }
