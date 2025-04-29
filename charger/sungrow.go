@@ -128,9 +128,7 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 	switch s := binary.BigEndian.Uint16(b); s {
 	case 1: // Idle
 		return api.StatusA, nil
-	case
-		2, // Standby
-		6: // Completed
+	case 2: // Standby
 		return api.StatusB, nil
 	case 3: // Charging
 		wb.enabled = true
@@ -140,6 +138,9 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 5: // SuspendedEV
 		wb.enabled = true
+		return api.StatusB, nil
+	case 6: // Completed
+		wb.enabled = false
 		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
