@@ -13,11 +13,18 @@ params:
     default: user
     advanced: true
   - name: battery
+    example: ess0
+    help:
+      de: steuerbare Batterie Komponente
+      en: controllable battery component
     usages: ["battery"]	
     advanced: true
   - name: watchdog
     type: duration
     default: 60s
+    help:
+      de: abgestimmt auf das API-Timeout
+      en: adjusted to the API timout
     usages: ["battery"]	
     advanced: true	
   - name: maxacpower
