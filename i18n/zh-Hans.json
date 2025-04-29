@@ -20,41 +20,16 @@
     "note": "注意:这些设置仅影响太阳能模式.充电行为会相应调整."
   },
   "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
     "form": {
       "example": "示例",
       "optional": "可选"
     },
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
     "main": {
       "addVehicle": "添加车辆",
       "edit": "编辑",
       "title": "配置",
       "vehicles": "我的车辆"
     },
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "失败",
       "label": "状态",
@@ -150,7 +125,7 @@
   "header": {
     "about": "关于",
     "blog": "博客",
-    "docs": " 文档",
+    "docs": "文档",
     "github": "GitHub",
     "login": "车辆登录",
     "needHelp": "需要帮助?",
@@ -175,8 +150,6 @@
     "restartDescription": "试过关机再开?",
     "secondaryActions": "仍然无法解决您的问题?这里有一些更严厉的选择."
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "arrivalTab": "抵达",
@@ -200,7 +173,6 @@
       "pvProduction": "生产",
       "selfConsumption": "内耗"
     },
-    "heatingStatus": {},
     "loadpoint": {
       "avgPrice": "⌀ 价格",
       "charged": "已充",
@@ -212,11 +184,9 @@
       "solar": "太阳能"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "充电货币",
       "default": "默认",
       "disclaimerHint": "笔记:",
-      "limitSoc": {},
       "maxCurrent": {
         "label": "最大电流"
       },
@@ -324,7 +294,6 @@
     "message": "没有连接到服务器.",
     "reload": "重新加载?"
   },
-  "passwordModal": {},
   "session": {
     "cancel": "取消",
     "co2": "CO₂",
@@ -343,7 +312,6 @@
     "avgPower": "⌀ 能源",
     "avgPrice": "⌀ 价格",
     "chargeDuration": "持续时间",
-    "chartTitle": {},
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "能源 (kWh)",
@@ -366,21 +334,16 @@
       "allVehicles": "全部车辆",
       "filter": "过滤"
     },
-    "group": {},
-    "groupBy": {},
     "loadpoint": "充电点数",
     "noData": "这个月不充电.",
-    "period": {},
     "price": "总价",
     "reallyDelete": "你真的要删除这个会话吗?",
     "solar": "太阳能",
     "title": "充电周期",
     "total": "总计",
-    "type": {},
     "vehicle": "车辆"
   },
   "settings": {
-    "fullscreen": {},
     "hiddenFeatures": {
       "label": "实验",
       "value": "显示实验性 UI 功能."

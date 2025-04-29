@@ -28,8 +28,6 @@
       "titleAdd": "adăugați contorul de baterie",
       "titleEdit": "Editați contorul de baterie."
     },
-    "circuits": {},
-    "control": {},
     "deviceValue": {
       "capacity": "Capacitatea",
       "chargeStatus": "Stare",
@@ -46,18 +44,14 @@
       "soc": "Stare de încărcare",
       "socLimit": "Limită"
     },
-    "eebus": {},
     "form": {
       "example": "Exemplu",
       "optional": "optional"
     },
-    "general": {},
     "grid": {
       "titleAdd": "Adăugați Contorul de Grilă",
       "titleEdit": "Editați Contorul de bransament"
     },
-    "hems": {},
-    "influx": {},
     "main": {
       "addLoadpoint": "Adăugați punct de încărcare",
       "addPvBattery": "Adăugați solar sau baterie",
@@ -66,9 +60,8 @@
       "title": "Configuratie",
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
-      "yaml": "Configurat în evcc.yaml. Nu poate fi editat în interfața "
+      "yaml": "Configurat în evcc.yaml. Nu poate fi editat în interfața"
     },
-    "messaging": {},
     "meter": {
       "cancel": "Anulare",
       "delete": "șterge",
@@ -77,27 +70,14 @@
       "titleChoice": "Ce vrei să adaugi?",
       "validateSave": "Valideaza si salveaza"
     },
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
     "pv": {
       "titleAdd": "Adauga SmartMeter",
       "titleEdit": "Editeaza SmartMeter"
     },
-    "section": {},
     "site": {
       "cancel": "Anuleaza",
       "save": "Salveaza"
     },
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "esuat",
       "label": "Stare",
@@ -215,11 +195,9 @@
       "modalTitle": "Esti sigur ca vrei sa dai restart?"
     },
     "restartButton": "Restart",
-    "restartDescription": "Ai incercat sa inchizi si sa deschizi din nou? ",
+    "restartDescription": "Ai incercat sa inchizi si sa deschizi din nou?",
     "secondaryActions": "Inca nu ati rezolvat problema? Iata niste alte optiuni"
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "active": "Activ",
@@ -270,7 +248,6 @@
       "solar": "Solar"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "Curent încărcare",
       "default": "default",
       "disclaimerHint": "Nota:",
@@ -394,7 +371,6 @@
     "message": "Nu se poate conecta la server.",
     "reload": "Reîncarcă?"
   },
-  "passwordModal": {},
   "session": {
     "cancel": "Anulează",
     "co2": "CO₂",
@@ -413,7 +389,6 @@
     "avgPower": "⌀ Putere",
     "avgPrice": "⌀ Pret",
     "chargeDuration": "Durata",
-    "chartTitle": {},
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "Energie (kWh)",
@@ -436,21 +411,16 @@
       "allVehicles": "toate masinile",
       "filter": "Filtru"
     },
-    "group": {},
-    "groupBy": {},
     "loadpoint": "Punct încărcare",
     "noData": "Nu exista sesiuni de incarcare luna aceasta.",
-    "period": {},
     "price": "Σ Pret",
     "reallyDelete": "Esti sigur că dorești să ștergi această sesiune?",
     "solar": "Solar",
     "title": "Sesiuni încărcare",
     "total": "Total",
-    "type": {},
     "vehicle": "Vehicul"
   },
   "settings": {
-    "fullscreen": {},
     "gridDetails": {
       "co2": "CO₂",
       "label": "Detalii rețea",

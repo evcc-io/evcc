@@ -55,7 +55,7 @@
       "title": "Řízení zátěže"
     },
     "control": {
-      "description": "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte. ",
+      "description": "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte.",
       "descriptionInterval": "Aktualizační cyklus regulační smyčky v sekundách. Určuje, jak často evcc čte data z měřičů, upravuje nabíjecí výkon a aktualizuje uživatelské rozhraní. Krátké intervaly (< 30s) mohou způsobit oscilace a nežádoucí chování.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
@@ -441,7 +441,7 @@
       "greenEnergySub1": "nabito s evcc",
       "greenEnergySub2": "od října 2022",
       "greenShare": "Solární sdílení",
-      "greenShareSub1": "energie dodaná ",
+      "greenShareSub1": "energie dodaná",
       "greenShareSub2": "solární, a bateriové úložiště",
       "power": "Dobíjecí energie",
       "powerSub1": "{activeClients} z {totalClients} účastníků",
@@ -735,7 +735,7 @@
       "setTargetTime": "žádný",
       "targetIsAboveLimit": "Nastavený nabíjecí strop {limit} bude během tohoto opakování ignorován",
       "targetIsAboveVehicleLimit": "Limit vozidla je nižší než cíl nabíjení.",
-      "targetIsInThePast": "Nastav čas v budoucnosti, Márty ;) ",
+      "targetIsInThePast": "Nastav čas v budoucnosti, Márty ;)",
       "targetIsTooFarInTheFuture": "Upravíme plán, jakmile budeme znát více o budoucnosti",
       "title": "Cílový čas",
       "today": "dnes",

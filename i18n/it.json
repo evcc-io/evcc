@@ -519,7 +519,7 @@
   },
   "loginModal": {
     "cancel": "Annulla",
-    "error": "Login fallito:",
+    "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
     "invalid": "Password errata.",
@@ -740,7 +740,7 @@
   "passwordModal": {
     "description": "Imposta una password per proteggere la configurazione. L'uso della interfaccia principale è consentito anche senza login",
     "empty": "La password non deve essere vuota",
-    "error": "Errore:",
+    "error": "Errore: ",
     "labelCurrent": "Password attuale",
     "labelNew": "Nuova password",
     "labelRepeat": "Ripeti la password",

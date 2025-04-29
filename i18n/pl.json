@@ -122,7 +122,6 @@
       "titleAdd": "Dodaj licznik sieci",
       "titleEdit": "Edytuj licznik sieci"
     },
-    "hems": {},
     "influx": {
       "labelBucket": "Bucket",
       "labelDatabase": "Baza danych",
@@ -167,26 +166,19 @@
       "labelPort": "Port"
     },
     "options": {
-      "boolean": {},
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
-      },
-      "schema": {}
+      }
     },
     "pv": {
       "titleAdd": "Dodaj licznik energii słonecznej",
       "titleEdit": "Edytuj licznik energii słonecznej"
     },
-    "section": {},
     "site": {
       "cancel": "Anulować",
       "save": "Zapisz"
     },
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "nie udało się",
       "label": "Status",
@@ -313,8 +305,6 @@
     "restartDescription": "Próbowałeś go wyłączyć i włączyć ponownie?",
     "secondaryActions": "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "active": "Aktywny",
@@ -367,7 +357,6 @@
       "solar": "Słoneczna"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "Prąd Ładowania",
       "default": "domyślny",
       "disclaimerHint": "Uwaga:",
@@ -461,7 +450,7 @@
       "notReachable": "Samochód nie był osiągalny. Spróbuj ponownie uruchomić evcc.",
       "targetSoc": "Ograniczenie",
       "temp": "Temp.",
-      "tempLimit": " Ograniczenie temp.",
+      "tempLimit": "Ograniczenie temp.",
       "unknown": "Pojazd gościa",
       "vehicleSoc": "Bateria"
     },
@@ -493,7 +482,6 @@
     "message": "Brak połączenia z serwerem.",
     "reload": "Przeładować?"
   },
-  "passwordModal": {},
   "session": {
     "cancel": "Anuluj",
     "co2": "CO₂",
@@ -537,22 +525,17 @@
       "allVehicles": "wszystkie pojazdy",
       "filter": "Filtrować"
     },
-    "group": {},
-    "groupBy": {},
     "loadpoint": "Ładowarka",
     "noData": "Brak sesji ładowania w tym miesiącu.",
     "overview": "Przegląd",
-    "period": {},
     "price": "Koszt",
     "reallyDelete": "Czy na pewno chcesz usunąć tę sesję?",
     "solar": "Słoneczna",
     "title": "Sesje ładowania",
     "total": "Totalny",
-    "type": {},
     "vehicle": "Pojazd"
   },
   "settings": {
-    "fullscreen": {},
     "gridDetails": {
       "co2": "CO₂",
       "label": "Szczegóły sieci",

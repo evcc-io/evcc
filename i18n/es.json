@@ -36,7 +36,7 @@
     },
     "control": {
       "description": "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo.",
-      "descriptionInterval": " Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados.",
+      "descriptionInterval": "Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados.",
       "descriptionResidualPower": "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica",
       "labelInterval": "Intervalo de actualización",
       "labelResidualPower": "Fuerza residual",
@@ -444,7 +444,7 @@
     "loadpoint": {
       "avgPrice": "Precio ⌀",
       "charged": "Cargado",
-      "co2": "CO₂ ⌀ ",
+      "co2": "CO₂ ⌀",
       "duration": "Duración",
       "fallbackName": "Punto de carga",
       "power": "Potencia",

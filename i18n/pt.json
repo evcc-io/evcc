@@ -37,7 +37,7 @@
     },
     "charge": {
       "titleAdd": "Adicionar Contador",
-      "titleEdit": "Editar Contador "
+      "titleEdit": "Editar Contador"
     },
     "charger": {
       "chargers": "Carregadores de Veículos Eléctricos",
@@ -365,7 +365,7 @@
       "restartRequiredDescription": "Por favor reinicie para aplicar as alterações.",
       "restartRequiredMessage": "Configuração alterada.",
       "restartingDescription": "Espere por favor...",
-      "restartingMessage": " evcc a reiniciar"
+      "restartingMessage": "evcc a reiniciar"
     },
     "tariffs": {
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
@@ -490,7 +490,7 @@
   "forecast": {
     "co2": {
       "average": "Média",
-      "lowestHour": "Horário mais \"Verde\" ",
+      "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
     "modalTitle": "Previsões",
@@ -639,7 +639,7 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Carga rápida da bateria de casa.",
-        "label": "Boost bateria ",
+        "label": "Boost bateria",
         "mode": "Disponível apenas nos modos solar e min+solar.",
         "once": "Boost ativo para esta sessão de carga."
       },
@@ -896,7 +896,7 @@
     "loadpoint": "Posto de Carregamento",
     "noData": "Nenhuma sessão de carregamento este mês.",
     "odometer": "Quilometragem",
-    "overview": " Vista geral",
+    "overview": "Vista geral",
     "period": {
       "month": "Mês",
       "total": "Total",

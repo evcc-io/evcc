@@ -569,7 +569,7 @@
   },
   "loginModal": {
     "cancel": "Annuler",
-    "error": "Connection échouée:",
+    "error": "Connection échouée: ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
     "invalid": "Mot de passe invalide.",
@@ -620,12 +620,12 @@
       "selfConsumption": "Consommation propre"
     },
     "heatingStatus": {
-      "charging": "Chauffage… ",
+      "charging": "Chauffage…",
       "cheapEnergyCharging": "Chauffage bon marché : {price} (limite {limit})",
       "cleanEnergyCharging": "Chauffage propre : {co2} (limite {limit})",
       "connected": "En attente.",
       "vehicleLimit": "Limite de chauffage",
-      "waitForVehicle": "Prêt. En attente du chauffage… "
+      "waitForVehicle": "Prêt. En attente du chauffage…"
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
@@ -643,7 +643,7 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Chargement rapide de la batterie domestique.",
-        "label": "Boost Batterie ",
+        "label": "Boost Batterie",
         "mode": "Uniquement disponible en mode solaire et min+solaire ».",
         "once": "Boost actif pour cette session de charge."
       },
@@ -797,7 +797,7 @@
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
     "empty": "Le mot de passe ne doit pas être vide",
-    "error": "Erreur:",
+    "error": "Erreur: ",
     "labelCurrent": "Mot de passe actuel",
     "labelNew": "Nouveau mot de passe",
     "labelRepeat": "Répétez le mot de passe",
