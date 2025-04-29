@@ -10,29 +10,35 @@ requirements:
 params:
   - name: user
     required: true
+    help:
+      de: Registrieren auf https://app.developer.viessmann.com
+      en: Register at https://app.developer.viessmann.com
   - name: password
     required: true
+    help:
+      de: Für den konfigurierten Viessmann Account.
+      en: For the configured user. 
   - name: clientid
     required: true
     description:
       de: ClientID
       en: ClientID
     help:
-      de: https://app.developer.viessmann.com
-      en: https://app.developer.viessmann.com
-  - name: installation_id
-    required: true
-    description:
-      de: InstallationID
-      en: InstallationID
-    help:
-      de: https://docs.evcc.io/docs/devices/heating#viessmann
-      en: https://docs.evcc.io/docs/devices/heating#viessmann
+      de: Konfigurieren in https://app.developer.viessmann.com
+      en: Configure at https://app.developer.viessmann.com
   - name: gateway_serial
     required: true
     description:
       de: Gateway Serial
       en: Gateway Serial
+    help:
+      de: Seriennummer des VitoConnect moduls: VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer
+      en: VitoConnect serial number: VitoCare App -> Settings -> Communication module -> Serial number
+  - name: installation_id
+    required: true
+    description:
+      de: InstallationID
+      en: InstallationID
     help:
       de: https://docs.evcc.io/docs/devices/heating#viessmann
       en: https://docs.evcc.io/docs/devices/heating#viessmann
