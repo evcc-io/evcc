@@ -3,8 +3,6 @@
     "batteryLevel": "电池等级",
     "bufferStart": {
       "full": "当快满的时候",
-      "low": "当有点满的时候",
-      "medium": "半满时",
       "never": "只要有足够的剩余"
     },
     "capacity": "{energy} / {total}",
@@ -12,49 +10,22 @@
     "legendBottomSubline": "不用充电",
     "legendMiddleName": "交通工具优先",
     "legendMiddleSubline": "家用其次",
-    "legendTitle": "太阳能应该如何利用?",
     "legendTopAutostart": "自动开启",
     "legendTopName": "电池支持充电",
     "legendTopSubline": "勿打扰",
-    "modalTitle": "电池配置",
-    "note": "注意:这些设置仅影响太阳能模式.充电行为会相应调整."
+    "modalTitle": "电池配置"
   },
   "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
     "form": {
       "example": "示例",
       "optional": "可选"
     },
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
     "main": {
       "addVehicle": "添加车辆",
       "edit": "编辑",
       "title": "配置",
       "vehicles": "我的车辆"
     },
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "失败",
       "label": "状态",
@@ -67,7 +38,6 @@
       "cancel": "取消",
       "delete": "移除车辆",
       "generic": "其他集成",
-      "offline": "通用车辆",
       "online": "具有在线API的车辆",
       "save": "保存",
       "scooter": "小型摩托车",
@@ -107,15 +77,9 @@
         "total": "整天"
       },
       "periodLabel": "周期:",
-      "priceFeedIn": "{feedInPrice} 冲入",
-      "priceGrid": "{gridPrice} 电网",
       "priceTitle": "电力价格",
       "referenceGrid": "电网",
       "referenceLabel": "参考数据:",
-      "savingsComparedToGrid": "和电网比较",
-      "savingsTitle": "节省",
-      "savingsTotalEnergy": "{total} kWh 已充",
-      "since": "从 {since}",
       "tabTitle": "我的数据"
     },
     "sponsor": {
@@ -150,12 +114,11 @@
   "header": {
     "about": "关于",
     "blog": "博客",
-    "docs": " 文档",
+    "docs": "文档",
     "github": "GitHub",
     "login": "车辆登录",
     "needHelp": "需要帮助?",
-    "sessions": "充电期",
-    "settings": "设置"
+    "sessions": "充电期"
   },
   "help": {
     "discussionsButton": "GitHub 讨论",
@@ -175,8 +138,6 @@
     "restartDescription": "试过关机再开?",
     "secondaryActions": "仍然无法解决您的问题?这里有一些更严厉的选择."
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "arrivalTab": "抵达",
@@ -200,7 +161,6 @@
       "pvProduction": "生产",
       "selfConsumption": "内耗"
     },
-    "heatingStatus": {},
     "loadpoint": {
       "avgPrice": "⌀ 价格",
       "charged": "已充",
@@ -212,11 +172,9 @@
       "solar": "太阳能"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "充电货币",
       "default": "默认",
       "disclaimerHint": "笔记:",
-      "limitSoc": {},
       "maxCurrent": {
         "label": "最大电流"
       },
@@ -302,7 +260,6 @@
       "climating": "检测到预处理.",
       "connected": "已连接.",
       "disconnected": "已断开",
-      "guard": "“正在为{remaining}切换保护.",
       "minCharge": "最低收费为 {soc}.",
       "pvDisable": "盈余不足. 在{remaining}中暂停…",
       "pvEnable": "有盈余. 从 {remaining}开始…",
@@ -321,10 +278,8 @@
     "modalTitle": "通知"
   },
   "offline": {
-    "message": "没有连接到服务器.",
-    "reload": "重新加载?"
+    "message": "没有连接到服务器."
   },
-  "passwordModal": {},
   "session": {
     "cancel": "取消",
     "co2": "CO₂",
@@ -343,7 +298,6 @@
     "avgPower": "⌀ 能源",
     "avgPrice": "⌀ 价格",
     "chargeDuration": "持续时间",
-    "chartTitle": {},
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "能源 (kWh)",
@@ -366,21 +320,16 @@
       "allVehicles": "全部车辆",
       "filter": "过滤"
     },
-    "group": {},
-    "groupBy": {},
     "loadpoint": "充电点数",
     "noData": "这个月不充电.",
-    "period": {},
     "price": "总价",
     "reallyDelete": "你真的要删除这个会话吗?",
     "solar": "太阳能",
     "title": "充电周期",
     "total": "总计",
-    "type": {},
     "vehicle": "车辆"
   },
   "settings": {
-    "fullscreen": {},
     "hiddenFeatures": {
       "label": "实验",
       "value": "显示实验性 UI 功能."

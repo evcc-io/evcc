@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "quando acima {soc}.",
       "full": "quando estiver a {soc}.",
-      "low": "quando um pouco cheio",
-      "medium": "quando meio cheio",
       "never": "apenas com excedente de produção suficiente."
     },
     "capacity": "{energy} de {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "até atingir {soc}.",
     "legendMiddleName": "“Dar prioridade ao carregamento do veículo”",
     "legendMiddleSubline": "quando a bateria doméstica está acima de {soc}.",
-    "legendTitle": "Como a energia solar deve ser usada?",
     "legendTopAutostart": "Iniciar automaticamente",
     "legendTopName": "Carregamento de veículos com a bateria",
     "legendTopSubline": "quando a bateria da casa está acima de {soc}.",
@@ -37,7 +34,7 @@
     },
     "charge": {
       "titleAdd": "Adicionar Contador",
-      "titleEdit": "Editar Contador "
+      "titleEdit": "Editar Contador"
     },
     "charger": {
       "chargers": "Carregadores de Veículos Eléctricos",
@@ -99,7 +96,6 @@
       "range": "Autonomia",
       "singlePhase": "Monofásico",
       "soc": "Carga",
-      "socLimit": "Limitação do SoC",
       "solarForecast": "Previsão solar",
       "temp": "Temperatura",
       "topic": "Topic",
@@ -365,7 +361,7 @@
       "restartRequiredDescription": "Por favor reinicie para aplicar as alterações.",
       "restartRequiredMessage": "Configuração alterada.",
       "restartingDescription": "Espere por favor...",
-      "restartingMessage": " evcc a reiniciar"
+      "restartingMessage": "evcc a reiniciar"
     },
     "tariffs": {
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
@@ -399,7 +395,6 @@
       "maximumPhasesHelp": "Com quantas fases pode carregar este veículo? A informação é utilizada para calcular o excedente solar mínimo necessário e a duração do plano.",
       "minimumCurrent": "Corrente mínima",
       "minimumCurrentHelp": "Somente ir abaixo de 6A se souber o que está a fazer.",
-      "offline": "Veículo genérico",
       "online": "Veículos com API online",
       "priority": "Prioridade",
       "priorityHelp": "Uma prioridade mais elevada significa que este veículo tem acesso preferencial ao excedente solar.",
@@ -442,15 +437,9 @@
         "total": "total"
       },
       "periodLabel": "Período:",
-      "priceFeedIn": "{feedInPrice} alimentação",
-      "priceGrid": "{gridPrice} rede",
       "priceTitle": "Preço da energia",
       "referenceGrid": "Rede",
       "referenceLabel": "Dados de referência:",
-      "savingsComparedToGrid": "em relação a rede",
-      "savingsTitle": "Poupança",
-      "savingsTotalEnergy": "{total} kWh carregado",
-      "since": "desde {since}",
       "tabTitle": "Os meus dados"
     },
     "sponsor": {
@@ -490,7 +479,7 @@
   "forecast": {
     "co2": {
       "average": "Média",
-      "lowestHour": "Horário mais \"Verde\" ",
+      "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
     "modalTitle": "Previsões",
@@ -522,13 +511,7 @@
     "logout": "Sair do sistema",
     "nativeSettings": "Mudar o servidor",
     "needHelp": "Precisa de ajuda?",
-    "sessions": "Sessões de carregamento",
-    "settings": "Configuração",
-    "theme": {
-      "auto": "Design: Sistema",
-      "dark": "Design: Escuro",
-      "light": "Design: Claro"
-    }
+    "sessions": "Sessões de carregamento"
   },
   "help": {
     "discussionsButton": "Discussões no GitHub",
@@ -617,8 +600,6 @@
     },
     "heatingStatus": {
       "charging": "Aquecendo...",
-      "cheapEnergyCharging": "Aquecimento com energia barata: {price} (limite {limit})",
-      "cleanEnergyCharging": "Aquecimento com energia limpa: {co2} (limite {limit})",
       "connected": "Standby.",
       "vehicleLimit": "Limite do aquecedor",
       "waitForVehicle": "Pronto. À espera do aquecedor..."
@@ -639,7 +620,7 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Carga rápida da bateria de casa.",
-        "label": "Boost bateria ",
+        "label": "Boost bateria",
         "mode": "Disponível apenas nos modos solar e min+solar.",
         "once": "Boost ativo para esta sessão de carga."
       },
@@ -697,11 +678,9 @@
       "descriptionSoc": "Quando deve o veículo ser carregado até {targetSoc}?",
       "goalReached": "Objetivo já atingido",
       "inactiveLabel": "Objetivo",
-      "modalTitle": "Definir hora-alvo",
       "nextPlan": "Próximo plano",
       "notReachableInTime": "O objetivo será atingido {overrun} mais tarde.",
       "onlyInPvMode": "O plano de carregamento só funciona no modo solar.",
-      "planDescription": "Entrar um tempo de partida, e evcc irá carregar o veículo o mais rentável ou ambientalmente amigável possível.",
       "planDuration": "Tempo de carga",
       "planPeriodLabel": "Período",
       "planPeriodValue": "{start} até {end}",
@@ -709,7 +688,6 @@
       "preview": "pré-visualizar",
       "priceLimit": "limite de preço {preço}",
       "remove": "Apagar",
-      "setPlan": "Defina um plano de carregamento",
       "setTargetTime": "nenhum",
       "targetIsAboveLimit": "O limite de carregamento configurado de {limit} será ignorado durante este período.",
       "targetIsAboveVehicleLimit": "O limite do veículo está abaixo do objetivo de carregamento.",
@@ -770,7 +748,6 @@
       "targetChargeActive": "Plano de carregamento ativo. Fim estimado em {duration}.",
       "targetChargePlanned": "O plano de carregamento começa em {duration}.",
       "targetChargeWaitForVehicle": "Plano de carregamento pronto. À espera do veículo...",
-      "unknown": "",
       "vehicleLimit": "Limite dos veículos",
       "vehicleLimitReached": "Limite de veículo atingido.",
       "waitForVehicle": "Pronto. À espera do veículo...",
@@ -787,7 +764,6 @@
   "offline": {
     "configurationError": "Erro durante a inicialização. Verifique a sua configuração e reinicie.",
     "message": "Não conectado a nenhum servidor.",
-    "reload": "Iniciar de novo?",
     "restart": "Reiniciar",
     "restartNeeded": "Necessário para aplicar as alterações.",
     "restarting": "Servidor a reiniciar."
@@ -820,12 +796,8 @@
     "title": "Sessão de carga"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "Potência",
     "avgPrice": "Preço",
-    "avgPriceTitleByGroup": "⌀ Preço {byGroup}",
-    "byGroupLoadpoint": "por ponto de carregamento",
-    "byGroupVehicle": "por veículo",
     "chargeDuration": "Duração",
     "chartTitle": {
       "avgCo2ByGroup": "CO₂ {byGroup}",
@@ -868,10 +840,6 @@
     "date": "Início",
     "downloadCsv": "Download como CSV",
     "energy": "Carregado",
-    "energyGroupedTitle": "Energia carregada {energy}",
-    "energyGroupedTitleByGroup": "Energia {byGroup}",
-    "energySubTitle": "{energy} total",
-    "energyTitle": "{percent} Energia Solar",
     "filter": {
       "allLoadpoints": "todos os postos de carregamento",
       "allVehicles": "todos os veículos",
@@ -888,16 +856,9 @@
       "none": "Total",
       "vehicle": "Veiculo"
     },
-    "groupedCo2TitleByGroup": "Quantidade de CO₂ {byGroup}",
-    "groupedPriceTitleByGroup": "Custo total {byGroup}",
-    "historyCo2SubTitle": "{value} total",
-    "historyCo2Title": "⌀ {value} Emissões de CO₂",
-    "historyPriceSubTitle": "{value} total",
-    "historyPriceTitle": "⌀ {value} Preço de carregamento",
     "loadpoint": "Posto de Carregamento",
     "noData": "Nenhuma sessão de carregamento este mês.",
-    "odometer": "Quilometragem",
-    "overview": " Vista geral",
+    "overview": "Vista geral",
     "period": {
       "month": "Mês",
       "total": "Total",
@@ -907,8 +868,6 @@
     "reallyDelete": "Quer mesmo apagar esta sessão?",
     "showIndividualEntries": "Mostrar sessões individuais",
     "solar": "Solar",
-    "solarTitle": "“Parte de energia solar ao longo de um ano”",
-    "solarTitleByGroup": "“Parte solar {byGroup}”",
     "title": "Sessões de carregamento",
     "total": "Total",
     "type": {
@@ -923,12 +882,6 @@
       "enter": "Entrar em tela cheia",
       "exit": "Sair da tela cheia",
       "label": "Tela cheia"
-    },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Detalhes da rede",
-      "none": "sem",
-      "price": "preço"
     },
     "hiddenFeatures": {
       "label": "Experimental",
@@ -988,10 +941,5 @@
     "lineErrorLink": "linha {0}",
     "restartButton": "Reiniciar",
     "title": "Erro ao iniciar"
-  },
-  "vehicleSettings": {
-    "cancel": "Cancelar",
-    "template": "Fabricante",
-    "test": "Teste"
   }
 }

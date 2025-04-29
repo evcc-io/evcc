@@ -305,7 +305,6 @@
     },
     "mqtt": {
       "authentication": "Authentifizierung",
-      "brokerLabel": "Server",
       "description": "Verbinde evcc mit einem MQTT-Broker, um Daten mit anderen Systemen in deinem Netzwerk auszutauschen.",
       "descriptionClientId": "Autor der Nachrichten. Wenn leer, wird `evcc-[rand]` verwendet.",
       "descriptionTopic": "Leer lassen, um das Publizieren zu deaktivieren.",
@@ -775,7 +774,6 @@
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
-      "unknown": "",
       "vehicleLimit": "Fahrzeuglimit",
       "vehicleLimitReached": "Fahrzeuglimit erreicht.",
       "waitForVehicle": "Ladebereit. Warte auf Fahrzeug …",

@@ -3,8 +3,6 @@
     "batteryLevel": "Nivell de bateria",
     "bufferStart": {
       "full": "quan gairebé ple",
-      "low": "quan una mica ple",
-      "medium": "quan mig ple",
       "never": "només amb prous excedents"
     },
     "capacity": "{energy} de {total}",
@@ -14,42 +12,10 @@
     "legendBottomSubline": "no utilitzat per carregar",
     "legendMiddleName": "primer, el vehicle",
     "legendMiddleSubline": "segón, la casa",
-    "legendTitle": "¿Com s'ha d'utilitzar l'energia?",
     "legendTopAutostart": "s'inicia automaticament",
     "legendTopName": "càrrega soportada per bateria",
     "legendTopSubline": "sensa interrupcions",
     "modalTitle": "Configuració bateria"
-  },
-  "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
-    "form": {},
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
-    "main": {},
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
-    "validation": {},
-    "vehicle": {}
   },
   "footer": {
     "community": {
@@ -71,14 +37,7 @@
       "percentGrid": "{grid} kWh xarxa",
       "percentSelf": "{self} kWh solar",
       "percentTitle": "Energia solar",
-      "period": {},
-      "priceFeedIn": "{feedInPrice} excedent",
-      "priceGrid": "{gridPrice} xarxa",
       "priceTitle": "Preu de l'energia",
-      "savingsComparedToGrid": "comparat amb la xarxa",
-      "savingsTitle": "Estalvi",
-      "savingsTotalEnergy": "{total} kWh carregats",
-      "since": "desde {since}",
       "tabTitle": "Les meves dades"
     },
     "sponsor": {
@@ -117,8 +76,7 @@
     "github": "GitHub",
     "login": "Login de vehicle",
     "needHelp": "Necessites ajuda?",
-    "sessions": "Processos de càrrega",
-    "settings": "Paràmetres"
+    "sessions": "Processos de càrrega"
   },
   "help": {
     "discussionsButton": "Debats en GitHub",
@@ -138,8 +96,6 @@
     "restartDescription": "¿Has provat d'apagar i tornar a engegar?",
     "secondaryActions": "¿Segeixes sense poder resoldre el teu problema? Aquí tens altres opcions més contundents."
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "arrivalTab": "Arribades",
@@ -163,11 +119,10 @@
       "pvProduction": "Producció",
       "selfConsumption": "Autoconsum"
     },
-    "heatingStatus": {},
     "loadpoint": {
       "avgPrice": "Preu ⌀",
       "charged": "Carregat",
-      "co2": "CO₂ ⌀ ",
+      "co2": "CO₂ ⌀",
       "duration": "Duració",
       "fallbackName": "Punt de càrrega",
       "power": "Potència",
@@ -175,12 +130,10 @@
       "solar": "Solar"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "Corrent de càrrega",
       "default": "defecte",
-      "limitSoc": {},
       "maxCurrent": {
-        "label": "Corrent de carrega màxima "
+        "label": "Corrent de carrega màxima"
       },
       "minCurrent": {
         "label": "Corriente de carrega mínima"
@@ -277,10 +230,8 @@
     "modalTitle": "Notificacions"
   },
   "offline": {
-    "message": "No connectat amb servidor.",
-    "reload": "Actualitzar?"
+    "message": "No connectat amb servidor."
   },
-  "passwordModal": {},
   "session": {
     "cancel": "Cancelar",
     "co2": "CO₂",
@@ -297,7 +248,6 @@
   },
   "sessions": {
     "avgPrice": "Preu ⌀",
-    "chartTitle": {},
     "co2": "CO₂",
     "csv": {
       "chargedenergy": "Energia (kWh)",
@@ -313,20 +263,14 @@
     "date": "Període",
     "downloadCsv": "Descarregar com a CSV",
     "energy": "Carregada",
-    "filter": {},
-    "group": {},
-    "groupBy": {},
     "loadpoint": "Punt de recàrrega",
-    "period": {},
     "price": "Preu",
     "reallyDelete": "Realment vols esborrar aquesta sessió?",
     "solar": "Solar",
     "title": "Sessions de càrrega",
-    "type": {},
     "vehicle": "Vehicle"
   },
   "settings": {
-    "fullscreen": {},
     "hiddenFeatures": {
       "label": "En proves",
       "value": "Mostra les característiques experimentals de la interfície d'usuari."
@@ -378,10 +322,5 @@
     "lineErrorLink": "Línia {0}",
     "restartButton": "Reiniciar",
     "title": "Error a l'inici"
-  },
-  "vehicleSettings": {
-    "cancel": "Cancel·lar",
-    "template": "Fabricant",
-    "test": "Prova"
   }
 }

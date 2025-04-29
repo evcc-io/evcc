@@ -96,7 +96,6 @@
       "range": "Autonomie",
       "singlePhase": "Eephaseg",
       "soc": "Luedstand",
-      "socLimit": "SoC Limitt",
       "solarForecast": "PV-Previsioun",
       "temp": "Temperatur",
       "topic": "Sujet",
@@ -400,7 +399,6 @@
       "maximumPhasesHelp": "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss an an der Planung verwennt.",
       "minimumCurrent": "Minimale Stroum",
       "minimumCurrentHelp": "Nëmmen ënner 6A goen, wann s du weess, wat s du mëss.",
-      "offline": "Genereschen Auto",
       "online": "Autoe mat online API",
       "priority": "Prioritéit",
       "priorityHelp": "Méi héich Prioritéit bedeit, datt dëst Gefier Prioritéit zu anere Gefierer huet .",
@@ -443,15 +441,9 @@
         "total": "gesamt"
       },
       "periodLabel": "Zäitraum:",
-      "priceFeedIn": "{feedInPrice} fidderen",
-      "priceGrid": "{gridPrice} Stroumnetz",
       "priceTitle": "Energiepräis",
       "referenceGrid": "Netz",
       "referenceLabel": "Referenzdaten:",
-      "savingsComparedToGrid": "verglach mam Stroumnetz",
-      "savingsTitle": "Spueren",
-      "savingsTotalEnergy": "{total} kWh gelueden",
-      "since": "zënter {since}",
       "tabTitle": "Meng Daten"
     },
     "sponsor": {
@@ -523,13 +515,7 @@
     "logout": "Ofmellen",
     "nativeSettings": "Server änneren",
     "needHelp": "Brauchs du Hëllef?",
-    "sessions": "Opluedsessiounen",
-    "settings": "Astellungen",
-    "theme": {
-      "auto": "Design: System",
-      "dark": "Design: donkel",
-      "light": "Design: Liicht"
-    }
+    "sessions": "Opluedsessiounen"
   },
   "help": {
     "discussionsButton": "GitHub Diskussiounen",
@@ -696,7 +682,6 @@
       "descriptionSoc": "Wéini soll d'Gefier op {targetSoc} opgeluede ginn?",
       "goalReached": "Luedzil schonns erreecht",
       "inactiveLabel": "Zilzäit",
-      "modalTitle": "Zielzäit setzen",
       "nextPlan": "Nächst Planifikatioun",
       "notReachableInTime": "Zilzäit gëtt {overrun} spéider erreecht.",
       "onlyInPvMode": "Luedplanifikatioun ass nëmmen am PV-Modus aktiv.",
@@ -767,7 +752,6 @@
       "targetChargeActive": "Luedplanung aktiv. Ageschate Schluss an {duration}.",
       "targetChargePlanned": "Luedpladung fänkt un an {time} un.",
       "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier...",
-      "unknown": "",
       "vehicleLimit": "Limitt vum Gefier",
       "vehicleLimitReached": "Limitt vum Gefier erreecht.",
       "waitForVehicle": "Prett. Waarden op d'Gefier ...",
@@ -784,7 +768,6 @@
   "offline": {
     "configurationError": "Feeler beim Starten. Iwwerpréif deng Konfiguratioun a start nei.",
     "message": "Keng Verbindung mam Server.",
-    "reload": "Reload?",
     "restart": "Neistart",
     "restartNeeded": "Noutwendeg fir Ännerungen z'applizéieren.",
     "restarting": "Server ass geschwënn erëm verfügbar."
@@ -817,12 +800,8 @@
     "title": "Charging Sessioun"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "⌀ Leeschtung",
     "avgPrice": "⌀ Präis",
-    "avgPriceTitleByGroup": "⌀ Luedpräis {byGroup}",
-    "byGroupLoadpoint": "pro Luedpunkt",
-    "byGroupVehicle": "pro Gefier",
     "chargeDuration": "Oplueddauer",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
@@ -865,10 +844,6 @@
     "date": "Ufank",
     "downloadCsv": "Als CSV eroflueden",
     "energy": "Opgelueden",
-    "energyGroupedTitle": "Opgeluedene Stroum {energy}",
-    "energyGroupedTitleByGroup": "Quantitéit Stroum {byGroup}",
-    "energySubTitle": "{energy} gesamt",
-    "energyTitle": "{percent} Sonnenenergie",
     "filter": {
       "allLoadpoints": "All Luedstatiounen",
       "allVehicles": "All Gefierer",
@@ -885,12 +860,6 @@
       "none": "Insgesamt",
       "vehicle": "Gefier"
     },
-    "groupedCo2TitleByGroup": "CO₂-Quantitéit {byGroup}",
-    "groupedPriceTitleByGroup": "Käschten {byGroup}",
-    "historyCo2SubTitle": "{value} insgesamt",
-    "historyCo2Title": "⌀ {value} CO₂-Emissiounen",
-    "historyPriceSubTitle": "{value} insgesamt",
-    "historyPriceTitle": "⌀ {value} Luedpräis",
     "loadpoint": "Luedstatioun",
     "noData": "Nach keng Opluedsessiounen fir dëse Mount.",
     "overview": "Iwwersiicht",
@@ -903,8 +872,6 @@
     "reallyDelete": "Wëlls du dës Sessioun wierklech läschen?",
     "showIndividualEntries": "Eenzel Luedsessiounen uweisen",
     "solar": "Sonn",
-    "solarTitle": "Sonnenundeel iwwert d'Joer",
-    "solarTitleByGroup": "Sonnenundeel {byGroup}",
     "title": "Opluedsessiounen",
     "total": "Total",
     "type": {

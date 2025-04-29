@@ -3,57 +3,28 @@
     "batteryLevel": "مستوى البطارية",
     "bufferStart": {
       "full": "عندما أوشكت على الامتلاء",
-      "low": "عندما تكون ممتلئة إلى حد ما",
-      "medium": "عندما نصف ممتلئ",
       "never": "فقط مع فائض كافٍ"
     },
     "legendBottomName": "أولوية المنزل",
     "legendBottomSubline": "لا تستخدم للشحن",
     "legendMiddleName": "السيارة أولا",
     "legendMiddleSubline": "المنزل الثاني",
-    "legendTitle": "كيف يجب استخدام الطاقة الشمسية?",
     "legendTopAutostart": "يبدأ تلقائيًا",
     "legendTopName": "بطارية تدعم الشحن",
     "legendTopSubline": "بدون انقطاع",
-    "modalTitle": "إعدادات البطارية",
-    "note": "ملحوظة: تؤثر هذه الإعدادات فقط على الوضع الشمسي. يتم تعديل سلوك الشحن وفقًا لذلك."
+    "modalTitle": "إعدادات البطارية"
   },
   "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
     "form": {
       "example": "مثال",
       "optional": "اختياري"
     },
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
     "main": {
       "addVehicle": "اضف عربة",
       "edit": "عدّل",
       "title": "الإعدادات",
       "vehicles": "عرباتي"
     },
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "أخفق",
       "label": "الحالة",
@@ -82,62 +53,7 @@
     },
     "savings": {
       "footerLong": "{percent} من الطاقة الشمسية",
-      "footerShort": "{percent} شمسي\"",
-      "period": {}
-    },
-    "sponsor": {},
-    "telemetry": {},
-    "version": {}
-  },
-  "header": {},
-  "help": {
-    "restart": {}
-  },
-  "log": {},
-  "loginModal": {},
-  "main": {
-    "chargingPlan": {},
-    "energyflow": {},
-    "heatingStatus": {},
-    "loadpoint": {},
-    "loadpointSettings": {
-      "batteryBoost": {},
-      "limitSoc": {},
-      "maxCurrent": {},
-      "minCurrent": {},
-      "minSoc": {},
-      "phasesConfigured": {}
-    },
-    "mode": {},
-    "provider": {},
-    "targetCharge": {},
-    "targetChargePlan": {},
-    "targetEnergy": {},
-    "vehicle": {},
-    "vehicleStatus": {}
-  },
-  "notifications": {},
-  "offline": {},
-  "passwordModal": {},
-  "session": {},
-  "sessions": {
-    "chartTitle": {},
-    "csv": {},
-    "filter": {},
-    "group": {},
-    "groupBy": {},
-    "period": {},
-    "type": {}
-  },
-  "settings": {
-    "fullscreen": {},
-    "hiddenFeatures": {},
-    "language": {},
-    "sponsorToken": {},
-    "telemetry": {},
-    "theme": {},
-    "unit": {}
-  },
-  "smartCost": {},
-  "startupError": {}
+      "footerShort": "{percent} شمسي\""
+    }
+  }
 }

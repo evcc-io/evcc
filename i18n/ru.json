@@ -3,8 +3,6 @@
     "batteryLevel": "Уровень заряда батареи",
     "bufferStart": {
       "full": "когда почти полная",
-      "low": "когда около полная",
-      "medium": "когда на половину полная",
       "never": "только при достаточном избытке"
     },
     "capacity": "{energy} из {total}",
@@ -16,50 +14,22 @@
     "legendBottomSubline": "не используется для зарядки",
     "legendMiddleName": "сначала автомобиль",
     "legendMiddleSubline": "дом вторым",
-    "legendTitle": "Как должна использоваться солнечная энергия?",
     "legendTopAutostart": "запускается автоматически",
     "legendTopName": "зарядка с поддержкой от аккумулятора",
     "legendTopSubline": "без перебоев",
     "modalTitle": "Настройки батареи"
   },
   "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
     "form": {
       "example": "Пример",
       "optional": "опционально"
     },
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
     "main": {
       "addVehicle": "Добавить транспортное средство",
       "edit": "редактировать",
       "title": "Конфигурация",
       "vehicles": "Мои транспортные средства"
-    },
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
-    "validation": {},
-    "vehicle": {}
+    }
   },
   "footer": {
     "community": {
@@ -81,14 +51,7 @@
       "percentGrid": "{self} кВт/ч из сети",
       "percentSelf": "{self} кВт/ч солнечной",
       "percentTitle": "Солнечная энергия",
-      "period": {},
-      "priceFeedIn": "{feedInPrice} в сеть",
-      "priceGrid": "{gridPrice} из сети",
       "priceTitle": "Цена электроэнергии",
-      "savingsComparedToGrid": "в сравнении с потреблением из сети",
-      "savingsTitle": "Сэкономлено",
-      "savingsTotalEnergy": "{total} кВт/ч заряжено",
-      "since": "c {since}",
       "tabTitle": "Мои данные"
     },
     "sponsor": {
@@ -125,16 +88,9 @@
     "blog": "Блог",
     "docs": "Документация",
     "github": "GitHub",
-    "sessions": "Сеансы зарядки",
-    "settings": "Настройки"
+    "sessions": "Сеансы зарядки"
   },
-  "help": {
-    "restart": {}
-  },
-  "log": {},
-  "loginModal": {},
   "main": {
-    "chargingPlan": {},
     "energyflow": {
       "battery": "Батарея",
       "batteryCharge": "Батарея заряжается",
@@ -147,7 +103,6 @@
       "pvProduction": "Генерация",
       "selfConsumption": "Собственное потребление"
     },
-    "heatingStatus": {},
     "loadpoint": {
       "charged": "Заряжено",
       "duration": "Длительность",
@@ -155,11 +110,9 @@
       "power": "Мощность"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "Ток зарядки",
       "default": "по умолчанию",
       "disclaimerHint": "Заметка:",
-      "limitSoc": {},
       "maxCurrent": {
         "label": "Макс. ток"
       },
@@ -194,14 +147,12 @@
       "activate": "Активировать",
       "descriptionSoc": "Когда транспортное средство следует зарядить до {targetSoc}?",
       "inactiveLabel": "Запланированное время",
-      "modalTitle": "Установить запланированное время",
       "setTargetTime": "ни одного",
       "targetIsInThePast": "Выбери время в будущем.",
       "title": "Запланированное время",
       "today": "сегодня",
       "tomorrow": "завтра"
     },
-    "targetChargePlan": {},
     "targetEnergy": {
       "label": "Лимит",
       "noLimit": "ни одного"
@@ -236,10 +187,8 @@
     "modalTitle": "Уведомления"
   },
   "offline": {
-    "message": "Не подключено к серверу.",
-    "reload": "Перезагрузить?"
+    "message": "Не подключено к серверу."
   },
-  "passwordModal": {},
   "session": {
     "cancel": "Скасувати",
     "delete": "Видалити",
@@ -250,7 +199,6 @@
     "started": "Розпочато"
   },
   "sessions": {
-    "chartTitle": {},
     "csv": {
       "chargedenergy": "Электроэнергия (кВт/ч)",
       "created": "Создано",
@@ -263,23 +211,15 @@
     "date": "Период",
     "downloadCsv": "Загрузить CSV",
     "energy": "Заряжено",
-    "filter": {},
-    "group": {},
-    "groupBy": {},
     "loadpoint": "Зарядная станция",
-    "period": {},
     "title": "Сессии зарядки",
-    "type": {},
     "vehicle": "Транспортное средство"
   },
   "settings": {
-    "fullscreen": {},
-    "hiddenFeatures": {},
     "language": {
       "auto": "Автоматически",
       "label": "Язык"
     },
-    "sponsorToken": {},
     "telemetry": {
       "label": "Телеметрия"
     },
@@ -296,7 +236,6 @@
       "mi": "мили"
     }
   },
-  "smartCost": {},
   "startupError": {
     "configFile": "Используемый конфигурационный файл:",
     "configuration": "Конфигурация",

@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "kai virš {soc}.",
       "full": "kai {soc}.",
-      "low": "kai nevisai pilnas",
-      "medium": "kai puspilnis",
       "never": "tik su pakankamu pertekliumi."
     },
     "capacity": "{energy} iš {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "kol pasieks {soc}.",
     "legendMiddleName": "Prioritetas automobilio įkrovimui",
     "legendMiddleSubline": "kai namo kaupiklis yra virš {soc}.",
-    "legendTitle": "Kaip naudoti saulės energiją?",
     "legendTopAutostart": "Startuoti automatiškai",
     "legendTopName": "Automobilio įkrovimas su kaupiklio pagalba",
     "legendTopSubline": "kai kaupiklis yra virš {soc}.",
@@ -99,7 +96,6 @@
       "range": "Nuvažiuojamas atstumas",
       "singlePhase": "Vienfazis",
       "soc": "Įkrova",
-      "socLimit": "Limitas",
       "solarForecast": "Saulės prognozė",
       "temp": "Temperatūra",
       "topic": "Tema",
@@ -367,10 +363,6 @@
       "system": "Sistema",
       "vehicles": "Automobiliai"
     },
-    "site": {
-      "cancel": "Atšaukti",
-      "save": "Išsaugoti"
-    },
     "sponsor": {
       "addToken": "Įveskite tokeną",
       "changeToken": "Pakeisti tokeną",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Kiek fazių įkrovimui gali panaudoti šis automobilis? Naudojama norint apskaičiuoti reikiamą minimalų saulės energijos perteklių ir planuoti trukmę.",
       "minimumCurrent": "Minimali srovė",
       "minimumCurrentHelp": "Ne mažiau 6A. Nebent tiksliai žinote, ką darote.",
-      "offline": "Tipinis automobilis",
       "online": "Automobiliai su internetiniu API",
       "priority": "Pirmumas",
       "priorityHelp": "Didesnis prioritetas reiškia, kad šiam automobiliui suteikiama pirmenybė saulės energijos pertekliui.",
@@ -466,15 +457,9 @@
         "total": "Nuo pradžios"
       },
       "periodLabel": "Laikotarpis:",
-      "priceFeedIn": "{feedInPrice} eksporto",
-      "priceGrid": "{gridPrice} tinklo",
       "priceTitle": "Energijos Kaina",
       "referenceGrid": "tinklas",
       "referenceLabel": "Atskaitos duomenys:",
-      "savingsComparedToGrid": "palyginus su tinklu",
-      "savingsTitle": "Sutaupyta",
-      "savingsTotalEnergy": "{total} kWh įkrauta",
-      "since": "nuo {since}",
       "tabTitle": "Mano"
     },
     "sponsor": {
@@ -542,17 +527,11 @@
     "blog": "Tinklaraštis",
     "docs": "Dokumentacija (Vokiečių k.)",
     "github": "GitHub",
-    "login": " Automobilių prisijungimai",
+    "login": "Automobilių prisijungimai",
     "logout": "Atsijungti",
     "nativeSettings": "Pakeisti Serverį",
     "needHelp": "Reikia Pagalbos?",
-    "sessions": "Įkrovimo sesijos ",
-    "settings": "Nustatymai",
-    "theme": {
-      "auto": "Dizainas: sistemos",
-      "dark": "Dizainas: tamsus",
-      "light": "Dizainas: šviesus"
-    }
+    "sessions": "Įkrovimo sesijos"
   },
   "help": {
     "discussionsButton": "GitHub diskusijos",
@@ -646,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Šildoma…",
-      "cheapEnergyCharging": "Šildoma pigia energija: {price} (limitas {limit})",
-      "cleanEnergyCharging": "Šildoma švaria energija: {co2} (limitas {limit})",
       "connected": "Budėjimo režimas.",
       "vehicleLimit": "Šildymo limitas",
       "waitForVehicle": "Paruošta. Laukiame šildytuvo…"
@@ -727,12 +704,9 @@
       "descriptionSoc": "Kada automobilis turėtų būti įkrautas iki {targetSoc}?",
       "goalReached": "Tikslas jau pasiektas",
       "inactiveLabel": "Suplanuotas laikas",
-      "modalTitle": "Nustatyti įkrovimo pabaigos laiką",
       "nextPlan": "Kitas planas",
-      "noActivePlan": "Nėra Aktyvaus Plano",
       "notReachableInTime": "Tikslas bus pasiektas {overrun} vėliau.",
       "onlyInPvMode": "Įkrovimo planas veikia tik nustatyme Saulė.",
-      "planDescription": "Įveskite išvykimo laiką ir evcc įkraus automobilį kiek įmanoma ekonomiškiau arba ekologiškiau.",
       "planDuration": "Įkrovimo laikas",
       "planPeriodLabel": "Periodas",
       "planPeriodValue": "{start} iki {end}",
@@ -740,7 +714,6 @@
       "preview": "Peržvelgti",
       "priceLimit": "kainos limitas {price}",
       "remove": "Panaikinti",
-      "setPlan": "Nustatyti įkrovimo planą",
       "setTargetTime": "nesuplanuotas",
       "targetIsAboveLimit": "Sukonfigūruotas įkrovimo limitas {limit} šiuo periodu bus ignoruojamas.",
       "targetIsAboveVehicleLimit": "Automobilyje nustatytas limitas yra mažesnis už įkrovimo tikslą.",
@@ -801,7 +774,6 @@
       "targetChargeActive": "Įkrovimo planas aktyvuotas. Numatoma pabaiga už {duration}.",
       "targetChargePlanned": "Suplanuotas įkrovimas prasidės už {duration}.",
       "targetChargeWaitForVehicle": "Įkrovimas pagal planą leidžiamas. Laukiama automobilio...",
-      "unknown": "",
       "vehicleLimit": "Automobilyje nustatytas limitas",
       "vehicleLimitReached": "Automobilyje nustatytas limitas pasiektas.",
       "waitForVehicle": "Paruošta. Laukiama automobilio...",
@@ -818,7 +790,6 @@
   "offline": {
     "configurationError": "Klaida startuojant. Patikrinkite konfigūraciją ir restartuokite.",
     "message": "Nėra ryšio su serveriu.",
-    "reload": "Perkrauti?",
     "restart": "Restartuoti",
     "restartNeeded": "Būtina, kad pakeitimai įsigaliotų.",
     "restarting": "Serveris netrukus vėl veiks."
@@ -851,12 +822,8 @@
     "title": "Įkrovimo sesija"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "⌀ Galia",
     "avgPrice": "⌀ Kaina",
-    "avgPriceTitleByGroup": "⌀ Kaina {byGroup}",
-    "byGroupLoadpoint": "pagal įkroviklį",
-    "byGroupVehicle": "pagal automobilį",
     "chargeDuration": "Trukmė",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
@@ -899,10 +866,6 @@
     "date": "Pradžia",
     "downloadCsv": "Atsisiųsti CSV failą",
     "energy": "Įkrauta",
-    "energyGroupedTitle": "Įkrauta Energija {energy}",
-    "energyGroupedTitleByGroup": "Energija {byGroup}",
-    "energySubTitle": "{energy} viso",
-    "energyTitle": "{percent} Saulės Energija",
     "filter": {
       "allLoadpoints": "visi įkrovikliai",
       "allVehicles": "visi automobiliai",
@@ -919,12 +882,6 @@
       "none": "Suma",
       "vehicle": "Automobilis"
     },
-    "groupedCo2TitleByGroup": "CO₂-Kiekis {byGroup}",
-    "groupedPriceTitleByGroup": "Bendra kaina {byGroup}",
-    "historyCo2SubTitle": "{value} viso",
-    "historyCo2Title": "⌀ {value} CO₂-Emisija",
-    "historyPriceSubTitle": "{value} viso",
-    "historyPriceTitle": "⌀ {value} Įkrovimo Kaina",
     "loadpoint": "Įkroviklis",
     "noData": "Šį mėnesį įkrovimų nebuvo.",
     "overview": "Apžvalga",
@@ -937,8 +894,6 @@
     "reallyDelete": "Ar tikrai norite ištrinti šią įkrovimo sesiją?",
     "showIndividualEntries": "Rodyti individualias sesijas",
     "solar": "Saulės",
-    "solarTitle": "Saulės dalis per metus",
-    "solarTitleByGroup": "Saulės {byGroup}",
     "title": "Įkrovimo Sesijos",
     "total": "Suma",
     "type": {
@@ -953,12 +908,6 @@
       "enter": "Įjungti visą ekraną",
       "exit": "Išjungti visą ekraną",
       "label": "Visas ekranas"
-    },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Tinklas detaliau",
-      "none": "nėra",
-      "price": "kaina"
     },
     "hiddenFeatures": {
       "label": "Eksperimentinė",
@@ -1018,10 +967,5 @@
     "lineErrorLink": "eilutė {0}",
     "restartButton": "Restartuoti",
     "title": "Klaida startuojant"
-  },
-  "vehicleSettings": {
-    "cancel": "Atšaukti",
-    "template": "Gamintojas",
-    "test": "Testuoti"
   }
 }

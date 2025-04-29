@@ -16,7 +16,6 @@
     "legendBottomSubline": "{soc} seviyesine ulaşana kadar.",
     "legendMiddleName": "Aracın doldurulmasına öncelik ver",
     "legendMiddleSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTitle": "Güneş enerjisi nasıl kullanılsın?",
     "legendTopAutostart": "Otomatik olarak başla",
     "legendTopName": "Batarya destekli araç doldurma",
     "legendTopSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
@@ -97,7 +96,6 @@
       "range": "Menzil",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
-      "socLimit": "Doluluk Sınırlaması",
       "solarForecast": "Güneş tahmini",
       "temp": "Isı",
       "topic": "Konu",
@@ -417,7 +415,6 @@
       "maximumPhasesHelp": "“Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.”",
       "minimumCurrent": "“Asgari akım”",
       "minimumCurrentHelp": "“Yalnızca ne yaptığını biliyorsan 6A'in altına in.”",
-      "offline": "Genel Araç",
       "online": "Çevrimiçi API'ye sahip araçlar",
       "priority": "“Öncelik”",
       "priorityHelp": "“Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.”",
@@ -628,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Isıtılıyor…",
-      "cheapEnergyCharging": "Ucuz enerji ile ısıtılıyor: {price} (sınır {limit})",
-      "cleanEnergyCharging": "Temiz enerji ile ısıtılıyor: {co2} (sınır {limit})",
       "connected": "“Beklemede.\"",
       "vehicleLimit": "“Isıtıcı sınırlaması”",
       "waitForVehicle": "Hazır. Isıtıcı bekleniyor…"
@@ -779,10 +774,8 @@
       "targetChargeActive": "Doldurma planı yürürlükte. Tahmini bitiş süresi {duration} içerisinde.",
       "targetChargePlanned": "Doldurma planı {duration} içerisinde başlayacak.",
       "targetChargeWaitForVehicle": "Doldurma planı hazır. Araç bekleniyor…",
-      "unknown": "",
       "vehicleLimit": "Araç sınırı",
       "vehicleLimitReached": "Araç sınırına ulaşıldı.",
-      "vehicleTargetReached": "Araç sınırı {soc} ulaşıldı.",
       "waitForVehicle": "Doldurmaya hazır. Araç bekleniyor…",
       "welcome": "Bağlantıyı onaylamak için kısa ilk dolum."
     },
@@ -797,7 +790,6 @@
   "offline": {
     "configurationError": "Başlatma sırasında hata oluştu. Yapılandırmanı gözden geçir ve yeniden başlat.",
     "message": "Ana makineye bağlantı yok.",
-    "reload": "Tekrar yüklensin mi?",
     "restart": "Yeniden başlat",
     "restartNeeded": "Değişiklikleri uygulamak için gerekli.",
     "restarting": "Sunucu birazdan dönecek."

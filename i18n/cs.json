@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "když je nad {soc}.",
       "full": "když je na {soc}.",
-      "low": "když dost plná",
-      "medium": "když je z poloviny plná",
       "never": "pouze když je dost přebytků."
     },
     "capacity": "{energy} z {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "dokud nedosáhne hodnoty {soc}.",
     "legendMiddleName": "Upřednostnit nabíjení vozidla",
     "legendMiddleSubline": "když je domácí baterie nad hodnotou {soc}.",
-    "legendTitle": "Jak má být použita solární energie?",
     "legendTopAutostart": "Spustit automaticky",
     "legendTopName": "Nabíjení vozidla s podporou baterie",
     "legendTopSubline": "pokud je domácí baterie nad hodnotou {soc}.",
@@ -55,7 +52,7 @@
       "title": "Řízení zátěže"
     },
     "control": {
-      "description": "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte. ",
+      "description": "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte.",
       "descriptionInterval": "Aktualizační cyklus regulační smyčky v sekundách. Určuje, jak často evcc čte data z měřičů, upravuje nabíjecí výkon a aktualizuje uživatelské rozhraní. Krátké intervaly (< 30s) mohou způsobit oscilace a nežádoucí chování.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
@@ -99,7 +96,6 @@
       "range": "Rozsah",
       "singlePhase": "Jednofázové",
       "soc": "Nabití",
-      "socLimit": "Strop",
       "solarForecast": "Solární předpověď",
       "temp": "Teplota",
       "topic": "Téma",
@@ -367,10 +363,6 @@
       "system": "System",
       "vehicles": "Vozidla"
     },
-    "site": {
-      "cancel": "Zrušit",
-      "save": "Uložit"
-    },
     "sponsor": {
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Kolik fází může toto vozidlo využít pro nabíjení? Používá se k výpočtu požadovaného minimálního solárního přebytku a doby plánování.",
       "minimumCurrent": "Minimální proud",
       "minimumCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
-      "offline": "Základní vozidlo",
       "online": "Vozidlo s online API",
       "priority": "Priorita",
       "priorityHelp": "Vyšší priorita znamená, že toto vozidlo má přednostní přístup k solárnímu přebytku.",
@@ -441,7 +432,7 @@
       "greenEnergySub1": "nabito s evcc",
       "greenEnergySub2": "od října 2022",
       "greenShare": "Solární sdílení",
-      "greenShareSub1": "energie dodaná ",
+      "greenShareSub1": "energie dodaná",
       "greenShareSub2": "solární, a bateriové úložiště",
       "power": "Dobíjecí energie",
       "powerSub1": "{activeClients} z {totalClients} účastníků",
@@ -466,15 +457,9 @@
         "total": "celkem"
       },
       "periodLabel": "Opakování:",
-      "priceFeedIn": "{feedInPrice} přebytky",
-      "priceGrid": "{gridPrice} síť",
       "priceTitle": "Ceny energií",
       "referenceGrid": "síť",
       "referenceLabel": "Referenční data:",
-      "savingsComparedToGrid": "srovnání se sítí",
-      "savingsTitle": "Úspory",
-      "savingsTotalEnergy": "{total} kWh dobito",
-      "since": "od {since}",
       "tabTitle": "Moje údaje"
     },
     "sponsor": {
@@ -546,8 +531,7 @@
     "logout": "Odhlásit se",
     "nativeSettings": "Změna serveru",
     "needHelp": "Potřebujete poradit?",
-    "sessions": "Průběhy nabíjení",
-    "settings": "Nastavení"
+    "sessions": "Průběhy nabíjení"
   },
   "help": {
     "discussionsButton": "GitHub diskuse",
@@ -641,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Vyhřívání...",
-      "cheapEnergyCharging": "Vyhřívání levnou energií: {price} (limit {limit})",
-      "cleanEnergyCharging": "Vyhřívání čistou energií: {co2} (limit {limit})",
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
       "waitForVehicle": "Připraveno. Čekání na topení..."
@@ -735,7 +717,7 @@
       "setTargetTime": "žádný",
       "targetIsAboveLimit": "Nastavený nabíjecí strop {limit} bude během tohoto opakování ignorován",
       "targetIsAboveVehicleLimit": "Limit vozidla je nižší než cíl nabíjení.",
-      "targetIsInThePast": "Nastav čas v budoucnosti, Márty ;) ",
+      "targetIsInThePast": "Nastav čas v budoucnosti, Márty ;)",
       "targetIsTooFarInTheFuture": "Upravíme plán, jakmile budeme znát více o budoucnosti",
       "title": "Cílový čas",
       "today": "dnes",
@@ -792,7 +774,6 @@
       "targetChargeActive": "Plán nabíjení je aktivní. Odhadovaný čas dokončení: {duration}.",
       "targetChargePlanned": "Plán nabíjení začne za {duration}.",
       "targetChargeWaitForVehicle": "Plán nabíjení připraven. Čeká se na vozidlo…",
-      "unknown": "",
       "vehicleLimit": "Limit vozidla",
       "vehicleLimitReached": "Limit vozidla dosažen.",
       "waitForVehicle": "Připraveno. Čekám na vozidlo...",
@@ -809,7 +790,6 @@
   "offline": {
     "configurationError": "Chyba při spuštění. Zkontrolujte konfiguraci a restartujte.",
     "message": "Nepřipojeno na server.",
-    "reload": "Obnovit?",
     "restart": "Restart",
     "restartNeeded": "Požadováno pro aplikaci změn.",
     "restarting": "Server bude brzy opět k dispozici."

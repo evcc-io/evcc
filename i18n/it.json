@@ -16,7 +16,6 @@
     "legendBottomSubline": "fino al {soc}.",
     "legendMiddleName": "Priorità alla carica del veicolo",
     "legendMiddleSubline": "quando la batteria supera il {soc}.",
-    "legendTitle": "“Come dovrebbe essere utilizzata l’energia solare?”",
     "legendTopAutostart": "Parti automaticamente",
     "legendTopName": "Ricarica del veicolo assistita dalla batteria",
     "legendTopSubline": "quando la batteria supera il {soc}.",
@@ -90,7 +89,6 @@
       "range": "Intervallo",
       "singlePhase": "Singola fase",
       "soc": "Carica",
-      "socLimit": "Limite",
       "temp": "Temperatura",
       "topic": "Argomento",
       "url": "URL",
@@ -356,7 +354,6 @@
       "cancel": "Annulla",
       "delete": "Cancella",
       "generic": "Altre integrazioni",
-      "offline": "Veicolo generico",
       "online": "Veicoli con API online",
       "save": "Salva",
       "scooter": "Scooter",
@@ -397,15 +394,9 @@
         "total": "tutto il tempo"
       },
       "periodLabel": "Periodo:",
-      "priceFeedIn": "{feedInPrice} feed-in",
-      "priceGrid": "{gridPrice} rete",
       "priceTitle": "Prezzo energia",
       "referenceGrid": "rete",
       "referenceLabel": "Dati di riferimento:",
-      "savingsComparedToGrid": "rispetto alla rete",
-      "savingsTitle": "Risparmio",
-      "savingsTotalEnergy": "{total} kWh totali caricati",
-      "since": "da {since}",
       "tabTitle": "I miei dati"
     },
     "sponsor": {
@@ -476,13 +467,7 @@
     "logout": "Logout",
     "nativeSettings": "Cambia Server",
     "needHelp": "Hai bisogno di aiuto?",
-    "sessions": "Sessioni di ricarica",
-    "settings": "Impostazioni",
-    "theme": {
-      "auto": "Design: sistema",
-      "dark": "Design: scuro",
-      "light": "Design: luce"
-    }
+    "sessions": "Sessioni di ricarica"
   },
   "help": {
     "discussionsButton": "Discussioni su GitHub",
@@ -519,7 +504,7 @@
   },
   "loginModal": {
     "cancel": "Annulla",
-    "error": "Login fallito:",
+    "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
     "invalid": "Password errata.",
@@ -645,7 +630,6 @@
       "descriptionEnergy": "Fino a quando dovrebbero essere {targetEnergy} caricati nel veicolo?",
       "descriptionSoc": "Quando dovrebbe essere caricato il veicolo al {targetSoc}?",
       "inactiveLabel": "Tempo target",
-      "modalTitle": "Imposta orario target",
       "nextPlan": "Prossimo piano",
       "notReachableInTime": "L'obiettivo sarà raggiunto con un ritardo di {overrun}.",
       "onlyInPvMode": "Il piano di ricarica funziona solo in modalità Solare.",
@@ -716,7 +700,6 @@
       "targetChargeActive": "Piano di ricarica attivo. Fine prevista tra {duration}.",
       "targetChargePlanned": "Il piano di ricarica inizia tra {duration}.",
       "targetChargeWaitForVehicle": "Piano di ricarica pronto. In attesa del veicolo...",
-      "unknown": "",
       "vehicleLimit": "Limite del veicolo",
       "vehicleLimitReached": "Limite del veicolo raggiunto.",
       "waitForVehicle": "Pronto. In attesa del veicolo...",
@@ -733,7 +716,6 @@
   "offline": {
     "configurationError": "Errore durante l'avvio. Controlla la configurazione e riavvia.",
     "message": "Non connesso a un server.",
-    "reload": "Ricaricare?",
     "restart": "Riavvia",
     "restartNeeded": "Necessario per applicare le modifiche",
     "restarting": "I server ritorneranno presto"
@@ -741,7 +723,7 @@
   "passwordModal": {
     "description": "Imposta una password per proteggere la configurazione. L'uso della interfaccia principale è consentito anche senza login",
     "empty": "La password non deve essere vuota",
-    "error": "Errore:",
+    "error": "Errore: ",
     "labelCurrent": "Password attuale",
     "labelNew": "Nuova password",
     "labelRepeat": "Ripeti la password",
@@ -853,12 +835,6 @@
       "exit": "Uscire dallo schermo intero",
       "label": "Schermo intero"
     },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Dettagli rete",
-      "none": "nessuno",
-      "price": "prezzo"
-    },
     "hiddenFeatures": {
       "label": "Sperimentale",
       "value": "Mostra caratteristiche sperimentali della UI"
@@ -915,10 +891,5 @@
     "lineErrorLink": "linea {0}",
     "restartButton": "Ricomincia",
     "title": "Errore di avvio"
-  },
-  "vehicleSettings": {
-    "cancel": "Cancella",
-    "template": "Produttore",
-    "test": "Test"
   }
 }

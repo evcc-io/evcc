@@ -3,8 +3,6 @@
     "batteryLevel": "Ladenivå",
     "bufferStart": {
       "full": "når det er nesten fullt",
-      "low": "når det er noe fullt",
-      "medium": "når det er halvfullt",
       "never": "bare med nok PV-overskudd"
     },
     "capacity": "{energy} av {total}",
@@ -14,48 +12,22 @@
     "legendBottomSubline": "ikke bruk til lading",
     "legendMiddleName": "kjøretøy først",
     "legendMiddleSubline": "hjemme etterpå",
-    "legendTitle": "Hvordan skal solenergien brukes?",
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "uten avbrudd",
     "modalTitle": "Batteriinnstillinger"
   },
   "config": {
-    "battery": {},
-    "circuits": {},
-    "control": {},
-    "deviceValue": {},
-    "eebus": {},
     "form": {
       "example": "Eksempel",
       "optional": "valgfritt"
     },
-    "general": {},
-    "grid": {},
-    "hems": {},
-    "influx": {},
     "main": {
       "addVehicle": "Legg til kjøretøy",
       "edit": "rediger",
       "title": "Oppsett",
       "vehicles": "Mine kjøretøy"
     },
-    "messaging": {},
-    "meter": {},
-    "modbusproxy": {},
-    "mqtt": {},
-    "network": {},
-    "options": {
-      "boolean": {},
-      "endianness": {},
-      "schema": {}
-    },
-    "pv": {},
-    "section": {},
-    "sponsor": {},
-    "system": {},
-    "tariffs": {},
-    "title": {},
     "validation": {
       "failed": "mislykket",
       "label": "Status",
@@ -68,7 +40,6 @@
       "cancel": "Avbryt",
       "delete": "Slett kjøretøy",
       "generic": "Andre integreringer",
-      "offline": "Generisk kjøretøy",
       "online": "Kjøretøy med nettbasert API",
       "save": "Lagre",
       "scooter": "Scooter",
@@ -98,14 +69,7 @@
       "percentGrid": "{self} kWh lysnett",
       "percentSelf": "{self} kWt sol",
       "percentTitle": "Solenergi",
-      "period": {},
-      "priceFeedIn": "{feedInPrice} subsidiering",
-      "priceGrid": "{gridPrice} lysnett",
       "priceTitle": "Kraftpris",
-      "savingsComparedToGrid": "sammenlignet med lysnett",
-      "savingsTitle": "Besparelser",
-      "savingsTotalEnergy": "{total} kWh ladet",
-      "since": "siden {since}",
       "tabTitle": "Mine data"
     },
     "sponsor": {
@@ -144,13 +108,7 @@
     "github": "GitHub",
     "login": "Kjøretøysinnlogginger",
     "needHelp": "Trenger du hjelp?",
-    "sessions": "Ladeøkter",
-    "settings": "Innstillinger",
-    "theme": {
-      "auto": "Design: system",
-      "dark": "Design: mørkt",
-      "light": "Design: lyst"
-    }
+    "sessions": "Ladeøkter"
   },
   "help": {
     "discussionsButton": "GitHub-diskusjoner",
@@ -170,8 +128,6 @@
     "restartDescription": "Prøvd å slå av og på igjen?",
     "secondaryActions": "Vedvarer problemet? Her har du mer drastiske tiltak."
   },
-  "log": {},
-  "loginModal": {},
   "main": {
     "chargingPlan": {
       "arrivalTab": "Ankomst",
@@ -195,7 +151,6 @@
       "pvProduction": "Produksjon",
       "selfConsumption": "Eget forbruk"
     },
-    "heatingStatus": {},
     "loadpoint": {
       "avgPrice": "⌀-pris",
       "charged": "Oppladet",
@@ -207,11 +162,9 @@
       "solar": "Solenergi"
     },
     "loadpointSettings": {
-      "batteryBoost": {},
       "currents": "Ladestrøm",
       "default": "forvalg",
       "disclaimerHint": "Merknad:",
-      "limitSoc": {},
       "maxCurrent": {
         "label": "Maks. ladestrøm"
       },
@@ -250,7 +203,6 @@
       "descriptionEnergy": "Når skal {targetEnergy} være på kjøretøyet?",
       "descriptionSoc": "Når skal kjøretøyet lades til {targetSoc}?",
       "inactiveLabel": "Stopptidspunkt",
-      "modalTitle": "Sett mål-tid",
       "onlyInPvMode": "Ladeplan fungerer kun i solcellemodus.",
       "planDuration": "Ladetid",
       "planPeriodLabel": "Periode",
@@ -304,7 +256,6 @@
       "targetChargeActive": "Målladning aktiv ...",
       "targetChargePlanned": "Mållading starter på {time}.",
       "targetChargeWaitForVehicle": "Mållading klar. Venter på kjøretøy...",
-      "unknown": "ukjent",
       "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
       "waitForVehicle": "Klar. Venter på kjøretøy..."
     },
@@ -315,10 +266,8 @@
     "modalTitle": "Merknader"
   },
   "offline": {
-    "message": "Ikke koblet til en server.",
-    "reload": "Last inn igjen?"
+    "message": "Ikke koblet til en server."
   },
-  "passwordModal": {},
   "session": {
     "cancel": "Avbryt",
     "co2": "CO₂",
@@ -337,7 +286,6 @@
     "avgPower": "⌀-effekt",
     "avgPrice": "⌀-pris",
     "chargeDuration": "Varighet",
-    "chartTitle": {},
     "co2": "⌀-CO₂",
     "csv": {
       "chargedenergy": "Energi (kWh)",
@@ -360,21 +308,16 @@
       "allVehicles": "alle kjøretøy",
       "filter": "Filter"
     },
-    "group": {},
-    "groupBy": {},
     "loadpoint": "Ladepunkt",
     "noData": "Ingen ladeøkter denne måneden.",
-    "period": {},
     "price": "Σ-pris",
     "reallyDelete": "Slett denne økten?",
     "solar": "Solenergi",
     "title": "Ladeøkter",
     "total": "Totalt",
-    "type": {},
     "vehicle": "Kjøretøy"
   },
   "settings": {
-    "fullscreen": {},
     "hiddenFeatures": {
       "label": "Eksperimentelt",
       "value": "Vis eksperimentelle grensesnittsfunksjoner."
@@ -426,10 +369,5 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Omstart",
     "title": "Oppstartsfeil"
-  },
-  "vehicleSettings": {
-    "cancel": "Avbryt",
-    "template": "Fabrikant",
-    "test": "Test"
   }
 }

@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "lorsque chargé à plus que {soc}.",
       "full": "quand chargé à {soc}.",
-      "low": "quand partiellement pleine",
-      "medium": "quand à moitié pleine",
       "never": "seulement quand surplus suffisant."
     },
     "capacity": "{energy} sur {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "Jusqu'à ce que le {soc} soit atteint.",
     "legendMiddleName": "Priorité chargement du véhicule",
     "legendMiddleSubline": "lorsque la batterie maison est au-dessus du {soc}",
-    "legendTitle": "Comment l'énergie solaire doit-elle être utilisée?",
     "legendTopAutostart": "Démarrer automatiquement",
     "legendTopName": "Recharge soutenue par la batterie",
     "legendTopSubline": "lorsque la batterie maison est au-dessus du {soc}.",
@@ -99,7 +96,6 @@
       "range": "Autonomie",
       "singlePhase": "Monophasé",
       "soc": "Charge",
-      "socLimit": "Limite",
       "solarForecast": "Prévision solaire",
       "temp": "Température",
       "topic": "Sujet",
@@ -347,10 +343,6 @@
       "system": "Système",
       "vehicles": "Véhicules"
     },
-    "site": {
-      "cancel": "Annuler",
-      "save": "Enregistrer"
-    },
     "sponsor": {
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
@@ -403,7 +395,6 @@
       "maximumPhasesHelp": "Combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan.",
       "minimumCurrent": "Courant minimum",
       "minimumCurrentHelp": "Ne descends en dessous de 6A que si tu sais ce que tu fais.",
-      "offline": "Véhicule générique",
       "online": "Véhicules avec API en ligne",
       "priority": "Priorité",
       "priorityHelp": "Une priorité plus élevée signifie que ce véhicule bénéficie d'un accès privilégié au surplus solaire.",
@@ -446,15 +437,9 @@
         "total": "tout"
       },
       "periodLabel": "Période :",
-      "priceFeedIn": "{feedInPrice} injection",
-      "priceGrid": "{gridPrice} réseau",
       "priceTitle": "Prix de l'énergie",
       "referenceGrid": "réseau",
       "referenceLabel": "Données de référence :",
-      "savingsComparedToGrid": "par rapport au réseau",
-      "savingsTitle": "Économies",
-      "savingsTotalEnergy": "{total} kWh chargés",
-      "since": "depuis {since}",
       "tabTitle": "Mes données"
     },
     "sponsor": {
@@ -526,13 +511,7 @@
     "logout": "Se déconnecter",
     "nativeSettings": "Changer de serveur",
     "needHelp": "Besoin d'aide?",
-    "sessions": "Sessions de recharge",
-    "settings": "Réglages",
-    "theme": {
-      "auto": "Désign: Système",
-      "dark": "Désign: Foncé",
-      "light": "Désign: Lumière"
-    }
+    "sessions": "Sessions de recharge"
   },
   "help": {
     "discussionsButton": "Discussions GitHub",
@@ -569,7 +548,7 @@
   },
   "loginModal": {
     "cancel": "Annuler",
-    "error": "Connection échouée:",
+    "error": "Connection échouée: ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
     "invalid": "Mot de passe invalide.",
@@ -620,12 +599,10 @@
       "selfConsumption": "Consommation propre"
     },
     "heatingStatus": {
-      "charging": "Chauffage… ",
-      "cheapEnergyCharging": "Chauffage bon marché : {price} (limite {limit})",
-      "cleanEnergyCharging": "Chauffage propre : {co2} (limite {limit})",
+      "charging": "Chauffage…",
       "connected": "En attente.",
       "vehicleLimit": "Limite de chauffage",
-      "waitForVehicle": "Prêt. En attente du chauffage… "
+      "waitForVehicle": "Prêt. En attente du chauffage…"
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
@@ -643,7 +620,7 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Chargement rapide de la batterie domestique.",
-        "label": "Boost Batterie ",
+        "label": "Boost Batterie",
         "mode": "Uniquement disponible en mode solaire et min+solaire ».",
         "once": "Boost actif pour cette session de charge."
       },
@@ -701,7 +678,6 @@
       "descriptionSoc": "Quand le véhicule doit-il être chargé à {targetSoc}?",
       "goalReached": "Objectif déjà atteint",
       "inactiveLabel": "Temps visé",
-      "modalTitle": "Définir l'heure cible",
       "nextPlan": "Prochain planning",
       "notReachableInTime": "L’objectif sera atteint avec un retard de {overrun}.",
       "onlyInPvMode": "Le plan de recharge ne fonctionne qu’en mode solaire.",
@@ -772,7 +748,6 @@
       "targetChargeActive": "Plan de charge actif. Fin estimée dans {duration}.",
       "targetChargePlanned": "Le plan de charge démarre dans {duration}.",
       "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule...",
-      "unknown": "-",
       "vehicleLimit": "Limit du véhicule",
       "vehicleLimitReached": "Limite du véhicule atteinte.",
       "waitForVehicle": "Prêt à charger. Attente du véhicule…",
@@ -789,7 +764,6 @@
   "offline": {
     "configurationError": "Erreur lors du démarrage. Vérifiez votre configuration et redémarrez.",
     "message": "Pas de connexion au serveur.",
-    "reload": "Recharger?",
     "restart": "Redémarrer",
     "restartNeeded": "Nécessaire afin de prendre en compte les modifications.",
     "restarting": "Le serveur se à nouveau disponible dans quelques instants."
@@ -797,7 +771,7 @@
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
     "empty": "Le mot de passe ne doit pas être vide",
-    "error": "Erreur:",
+    "error": "Erreur: ",
     "labelCurrent": "Mot de passe actuel",
     "labelNew": "Nouveau mot de passe",
     "labelRepeat": "Répétez le mot de passe",
@@ -822,12 +796,8 @@
     "title": "Session de charge"
   },
   "sessions": {
-    "avgCo2TitleByGroup": "⌀ CO₂ {byGroup}",
     "avgPower": "Puissance ⌀",
     "avgPrice": "Prix ⌀",
-    "avgPriceTitleByGroup": "⌀ Prix {byGroup}",
-    "byGroupLoadpoint": "par borne de recharge",
-    "byGroupVehicle": "par véhicule",
     "chargeDuration": "Durée",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
@@ -870,10 +840,6 @@
     "date": "Début session",
     "downloadCsv": "Télécharger au format CSV",
     "energy": "Chargé",
-    "energyGroupedTitle": "Énergie chargée {energy}",
-    "energyGroupedTitleByGroup": "Énergie {byGroup}",
-    "energySubTitle": "{energy} totale",
-    "energyTitle": "{percent} d'énergie solaire",
     "filter": {
       "allLoadpoints": "tous les points de chargement",
       "allVehicles": "tous les véhicules",
@@ -890,12 +856,6 @@
       "none": "Total",
       "vehicle": "Véhicule"
     },
-    "groupedCo2TitleByGroup": "Quantitée de CO₂ {byGroup}",
-    "groupedPriceTitleByGroup": "Coût total {byGroup}",
-    "historyCo2SubTitle": "{value} totale",
-    "historyCo2Title": "⌀ {value} émissions de CO₂",
-    "historyPriceSubTitle": "{value} totale",
-    "historyPriceTitle": "⌀ {value} Prix de la charge",
     "loadpoint": "Point de chargement",
     "noData": "Pas de session de charge ce mois-ci",
     "overview": "Aperçu",
@@ -908,8 +868,6 @@
     "reallyDelete": "Voulez-vous vraiment supprimer cette session?",
     "showIndividualEntries": "Afficher les sessions individuelles",
     "solar": "Solaire",
-    "solarTitle": "Part d'énergie solaire sur une année",
-    "solarTitleByGroup": "Part solaire {byGroup}",
     "title": "Sessions de charge",
     "total": "Total",
     "type": {
@@ -983,10 +941,5 @@
     "lineErrorLink": "Ligne {0}",
     "restartButton": "Redémarrer",
     "title": "Erreur au démarrage"
-  },
-  "vehicleSettings": {
-    "cancel": "Annuler",
-    "template": "Fabricant",
-    "test": "Test"
   }
 }

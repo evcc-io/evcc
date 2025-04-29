@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "når den er over {soc}.",
       "full": "når den er på {soc}.",
-      "low": "en smule fyldt",
-      "medium": "halv fyldt",
       "never": "kun med nok overskud."
     },
     "capacity": "{energy} af {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "Indtil der opnås {soc}.",
     "legendMiddleName": "Prioriter opladning af køretøj",
     "legendMiddleSubline": "Når husbatteriet er over {soc}.",
-    "legendTitle": "Hvordan skal solenergi benyttes?",
     "legendTopAutostart": "Starter automatisk",
     "legendTopName": "Batteri-understøttet opladning af køretøj",
     "legendTopSubline": "når husbatteriet er over {soc}.",
@@ -99,7 +96,6 @@
       "range": "Rækkevidde",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
-      "socLimit": "Begrænsning",
       "solarForecast": "Sol prognose",
       "temp": "Temperatur",
       "topic": "Emne",
@@ -367,10 +363,6 @@
       "system": "System",
       "vehicles": "Køretøjer"
     },
-    "site": {
-      "cancel": "Afbryd",
-      "save": "Gem"
-    },
     "sponsor": {
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
       "minimumCurrent": "Minimal strømstyrke",
       "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
-      "offline": "Generisk køretøj",
       "online": "Køretøj med online API",
       "priority": "Prioritet",
       "priorityHelp": "Højere prioritet betyder, at dette køretøj får fortrin til soloverskud.",
@@ -466,15 +457,9 @@
         "total": "hele tiden"
       },
       "periodLabel": "Periode:",
-      "priceFeedIn": "{feedInPrice} net tarif",
-      "priceGrid": "{gridPrice} Elnet",
       "priceTitle": "Energipris",
       "referenceGrid": "elnet",
       "referenceLabel": "Referencedata:",
-      "savingsComparedToGrid": "Sammenlignet med nettet",
-      "savingsTitle": "Opsparing",
-      "savingsTotalEnergy": "{total} kWh opladet",
-      "since": "siden {siden}",
       "tabTitle": "Mine data"
     },
     "sponsor": {
@@ -546,8 +531,7 @@
     "logout": "Log ud",
     "nativeSettings": "Skift server",
     "needHelp": "Brug for hjælp?",
-    "sessions": "Opladnings sessioner",
-    "settings": "Indstillinger"
+    "sessions": "Opladnings sessioner"
   },
   "help": {
     "discussionsButton": "GitHub diskussioner",
@@ -641,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Opvarmer...",
-      "cheapEnergyCharging": "Opvarmer med billig energi: {price} (limit {limit})",
-      "cleanEnergyCharging": "Opvarmer med CO2 neutral energi: {co2} (limit {limit})",
       "connected": "Standby",
       "vehicleLimit": "Opvarmning begrænsning",
       "waitForVehicle": "Klar. Venter på varmelegeme..."
@@ -722,12 +704,9 @@
       "descriptionSoc": "Hvornår skal køretøjet være opladet til {targetSoc}?",
       "goalReached": "Mål er allerede nået",
       "inactiveLabel": "Planlagt tid",
-      "modalTitle": "Sæt måltid",
       "nextPlan": "Næste plan",
-      "noActivePlan": "Ingen aktiv plan",
       "notReachableInTime": "Målet vil blive nået {overrun} senere.",
       "onlyInPvMode": "Opladningsplan virker kun i solar mode",
-      "planDescription": "Angiv et afgangstidpunkt og evcc vil oplade køretøjet så billigt og miljøvenligt som muligt",
       "planDuration": "Opladningstid",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} til {end}",
@@ -735,7 +714,6 @@
       "preview": "forhåndsvising",
       "priceLimit": "pris grænse på {price}",
       "remove": "Fjern",
-      "setPlan": "Angiv en ladeplan",
       "setTargetTime": "ingen",
       "targetIsAboveLimit": "Den indstillede opladningsgrænse på {limit} ignoreres i denne periode\"",
       "targetIsAboveVehicleLimit": "Køretøjets begrænsning er under opladningsmålet",
@@ -796,7 +774,6 @@
       "targetChargeActive": "Opladningsplan er aktiv. Forventes afsluttet om {duration}.",
       "targetChargePlanned": "Opladningsplan starter om {duration}.",
       "targetChargeWaitForVehicle": "Plan for opladning er klar. Venter på køretøj...",
-      "unknown": "",
       "vehicleLimit": "Køretøjets grænse",
       "vehicleLimitReached": "Køretøjets grænse er nået.",
       "waitForVehicle": "Parat. Venter på køretøj ...",
@@ -813,7 +790,6 @@
   "offline": {
     "configurationError": "Fejl under opstart. Tjek din konfiguration og genstart.",
     "message": "Ikke forbundet til en server.",
-    "reload": "Genindlæs?",
     "restart": "Genstart",
     "restartNeeded": "Påkrævet for at anvende ændringer.",
     "restarting": "Serveren kommer tilbage om et øjeblik."
@@ -821,7 +797,7 @@
   "passwordModal": {
     "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på",
     "empty": "Adgangskode må ikke være tomt",
-    "error": "Fejl:",
+    "error": "Fejl: ",
     "labelCurrent": "Nuværende adgangskode",
     "labelNew": "Ny adgangskode",
     "labelRepeat": "Gentag adgangskoden",
@@ -991,10 +967,5 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Genstart",
     "title": "Fejl ved opstart"
-  },
-  "vehicleSettings": {
-    "cancel": "Afbryd",
-    "template": "Producent",
-    "test": "Test"
   }
 }

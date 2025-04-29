@@ -4,8 +4,6 @@
     "bufferStart": {
       "above": "när den är över {soc}.",
       "full": "när det är {soc}.",
-      "low": "när det är något fullt",
-      "medium": "när det är halvfullt",
       "never": "bara med tillräckligt sol-överskott."
     },
     "capacity": "{energy} av {total}",
@@ -18,7 +16,6 @@
     "legendBottomSubline": "tills den når {soc}.",
     "legendMiddleName": "Prioritera laddning av fordon",
     "legendMiddleSubline": "när hemmabatteriet är över {soc}.",
-    "legendTitle": "Hur ska solenergin användas?",
     "legendTopAutostart": "Startar automatiskt",
     "legendTopName": "Fordonsladdning med batteristöd",
     "legendTopSubline": "när hemmabatteriet är över {soc}.",
@@ -99,7 +96,6 @@
       "range": "Räckvidd",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
-      "socLimit": "SoC gräns",
       "solarForecast": "Solprognos",
       "temp": "Temperatur",
       "topic": "Ämne",
@@ -182,7 +178,7 @@
       "chargerError": "Konfigurering av laddare krävs.",
       "chargerLabel": "Laddare",
       "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Använder mellan 6 och 16 A ",
+      "chargerPower11kwHelp": "Använder mellan 6 och 16 A",
       "chargerPower22kw": "22 kW",
       "chargerPower22kwHelp": "Använder mellan 6 till 32 A",
       "chargerPowerCustom": "annan",
@@ -233,7 +229,7 @@
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
       "thresholdDisableHelpPositive": "Sluta ladda när mer än {power} under {delay} används från elnätet.",
-      "thresholdDisableHelpZero": "Sluta när minimum laddningseffekt inte kan uppfyllas under {delay}. ",
+      "thresholdDisableHelpZero": "Sluta när minimum laddningseffekt inte kan uppfyllas under {delay}.",
       "thresholdDisableLabel": "Koppla bort elnätet",
       "thresholdEnableDelayLabel": "Slå på fördröjning",
       "thresholdEnableHelpInvalid": "Ange ett negativt värde.",
@@ -367,10 +363,6 @@
       "system": "System",
       "vehicles": "Fordon"
     },
-    "site": {
-      "cancel": "Avbryt",
-      "save": "Spara"
-    },
     "sponsor": {
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
@@ -423,7 +415,6 @@
       "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
       "minimumCurrent": "Minimi ström",
       "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
-      "offline": "Generiskt fordon",
       "online": "Fordon med online API",
       "priority": "Prioritet",
       "priorityHelp": "Högre prioritet betyder att detta fordon får förtur till solöverskott.",
@@ -466,15 +457,9 @@
         "total": "totalt"
       },
       "periodLabel": "Period:",
-      "priceFeedIn": "{feedInPrice} inmatning",
-      "priceGrid": "{gridPrice} Nätet",
       "priceTitle": "Energipris",
       "referenceGrid": "nät",
       "referenceLabel": "Referensdata:",
-      "savingsComparedToGrid": "jämfört med nätet",
-      "savingsTitle": "Sparande",
-      "savingsTotalEnergy": "{total} kWh laddad",
-      "since": "sedan {since}",
       "tabTitle": "Mina uppgifter"
     },
     "sponsor": {
@@ -546,8 +531,7 @@
     "logout": "Logga ut",
     "nativeSettings": "Byt server",
     "needHelp": "Behöver du hjälp?",
-    "sessions": "Laddningar",
-    "settings": "Inställningar"
+    "sessions": "Laddningar"
   },
   "help": {
     "discussionsButton": "GitHub diskussioner",
@@ -584,7 +568,7 @@
   },
   "loginModal": {
     "cancel": "Avbryt",
-    "error": "Inloggning misslyckades:",
+    "error": "Inloggning misslyckades: ",
     "iframeHint": "Öppna evcc på en ny flik.",
     "iframeIssue": "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP.",
     "invalid": "Ogiltigt lösenord.",
@@ -641,8 +625,6 @@
     },
     "heatingStatus": {
       "charging": "Värmer...",
-      "cheapEnergyCharging": "Värmer med billig energi: {price} (limit {limit})",
-      "cleanEnergyCharging": "Värmer med CO2-neutral energi: {co2} (limit {limit})",
       "connected": "Standby",
       "vehicleLimit": "Värmarbegränsning",
       "waitForVehicle": "Redo, väntar på värmare..."
@@ -722,12 +704,9 @@
       "descriptionSoc": "När ska fordonet vara laddat till {targetSoc}?",
       "goalReached": "Målet är uppnått",
       "inactiveLabel": "Mål-tid",
-      "modalTitle": "Ange måltid",
       "nextPlan": "Nästa plan",
-      "noActivePlan": "Ingen aktiv prenumeration",
       "notReachableInTime": "Laddmål kommer att nås {endTime} senare.",
       "onlyInPvMode": "Laddplan fungerar enbart i sol-läge.",
-      "planDescription": "Ange din avgångstid och evcc kommer att ladda så kostnadseffektivt och miljövänligt som möjligt.",
       "planDuration": "Laddtid",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} till {end}",
@@ -735,7 +714,6 @@
       "preview": "Förhandsvisning",
       "priceLimit": "prisgränsen {price}",
       "remove": "Ta bort",
-      "setPlan": "Laddplan",
       "setTargetTime": "ingen",
       "targetIsAboveLimit": "Konfigurerat laddmål {limit} kommer ignoreras denna tidsperiod.",
       "targetIsAboveVehicleLimit": "Fordonets laddgräns är under målet.",
@@ -796,7 +774,6 @@
       "targetChargeActive": "Laddplan aktiv. Beräknas vara klar om {duration}.",
       "targetChargePlanned": "Laddplan startar om {duration}.",
       "targetChargeWaitForVehicle": "Laddare beredd. Väntar på fordon...",
-      "unknown": "",
       "vehicleLimit": "Fordonsgräns",
       "vehicleLimitReached": "Fordonets gräns nådd.",
       "waitForVehicle": "Redo. Väntar på fordon...",
@@ -813,7 +790,6 @@
   "offline": {
     "configurationError": "Fel under uppstart. Kontrollera din konfiguration och starta om.",
     "message": "Inte ansluten till en server.",
-    "reload": "Ladda igen?",
     "restart": "Omstart",
     "restartNeeded": "Krävs för att spara ändringar.",
     "restarting": "Servern är strax tillbaka."
@@ -821,7 +797,7 @@
   "passwordModal": {
     "description": "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in.",
     "empty": "Lösenordet får inte vara tomt",
-    "error": "Fel:",
+    "error": "Fel: ",
     "labelCurrent": "Nuvarande lösenord",
     "labelNew": "Nytt lösenord",
     "labelRepeat": "Upprepa lösenord",
@@ -933,12 +909,6 @@
       "exit": "Lämna helskärmsläge",
       "label": "Helskärmsläge"
     },
-    "gridDetails": {
-      "co2": "CO₂",
-      "label": "Detaljer om rutnätet",
-      "none": "ingen",
-      "price": "pris"
-    },
     "hiddenFeatures": {
       "label": "Experimentella",
       "value": "Visa experimentella UI-funktioner."
@@ -997,10 +967,5 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Starta om",
     "title": "Startfel"
-  },
-  "vehicleSettings": {
-    "cancel": "Avbryt",
-    "template": "Tillverkare",
-    "test": "Test"
   }
 }
