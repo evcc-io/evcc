@@ -13,7 +13,6 @@ params:
     default: user
     advanced: true
   - name: battery
-    default: ess0
     usages: ["battery"]	
     advanced: true
   - name: watchdog
