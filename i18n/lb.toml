@@ -280,6 +280,10 @@ battery = "Hausbatterie derbäi fügen"
 ext = "Externen Zieler derbäi fügen"
 pv = "Sonnen-Zieler derbäi fügen"
 
+[config.modbus]
+connection = "Modbus Verbindung"
+connectionValueTcpip = "Netzwierk"
+
 [config.modbusproxy]
 description = "Erlaabt méi Clienten Zougank zu engem eenzegen Modbus Apparat ze hunn."
 title = "Modbus-Proxy"
@@ -973,8 +977,3 @@ lineError = "An {0} gouf ee Feeler fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
-
-
-[config.modbus]
-connection = "Modbus Verbindung"
-connectionValueTcpip = "Netzwierk"
