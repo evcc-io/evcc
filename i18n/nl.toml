@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Batterij-niveau"
+batteryLevel = "Batterijniveau"
 capacity = "{energy} van {total}"
 control = "Batterijsturing"
 discharge = "Voorkom ontladen in de snelle modus en bij gepland laden."
@@ -48,6 +48,7 @@ switchsockets = "schakelbare stopcontacten"
 template = "Fabrikant"
 titleAdd = "Voeg Lader toe"
 titleEdit = "Editeer Lader"
+heatingdevices = Warmtepompen
 
 [config.circuits]
 description = "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen."
@@ -124,6 +125,7 @@ titleEdit = "Externe meter bewerken"
 deprecated = "verouderd"
 example = "Voorbeeld"
 optional = "optioneel"
+danger = "Gevaar"
 
 [config.general]
 cancel = "Annuleren"
@@ -141,6 +143,7 @@ showAdvancedSettings = "Toon geavanceerde instellingen"
 telemetry = "Telemetrie"
 title = "Titel"
 validateSave = "Valideren & opslaan"
+templateLoading = "Laden..."
 
 [config.grid]
 title = "Netmeter"
@@ -240,6 +243,7 @@ vehicleHelpAutoDetection = "Selecteert automatisch het meest aannemelijke voertu
 vehicleHelpDefault = "Ga er altijd vanuit dat dit voertuig hier aan het opladen is. Automatische detectie uitgeschakeld. Handmatige aanpassen is mogelijk."
 vehicleLabel = "Standaard voertuig"
 vehiclesTitle = "Voertuigen"
+pollIntervalDanger = Het voertuig vaak bevragen kan de accu sneller ontladen. Sommige autofabrikanten kunnen mogelijk actief het laden voorkomen in dit geval. Niet aangeraden! Gebruik dit alleen wanneer je je bewust bent van de risico's.
 
 [config.main]
 addAdditional = "Extra meter toevoegen"
@@ -391,6 +395,19 @@ template = "Fabrikant"
 titleAdd = "Voertuig toevoegen"
 titleEdit = "Voertuig bewerken"
 validateSave = "Valideren & opslaan"
+identifiers = RFID identificatiegegevens
+chargingSettings = "Laadinstellingen"
+identifiersHelp = Lijst van RFIDs om het voertuig te identificeren. Een RFID per regel. De huidige RFID kan gevonden worden op de overzichtspagina, bij het respectievelijke laadstation
+defaultMode = Standaardmodus
+defaultModeHelp = "Laadmodus bij het aansluiten van een voertuig."
+priority = "Prioriteit"
+minimumCurrentHelp = Stel alleen lager in dan 6A waneer je weet wat je doet
+minimumCurrent = Minimale stroomsterkte
+maximumCurrent = Maximale stroomsterkte
+maximumCurrentHelp = Moet hoger zijn dan de minimale stroomsterkte
+maximumPhases = Maximaal aantal fases
+priorityHelp = "Hogere prioriteit betekent dat dit voertuig met voorrang toegang heeft tot zonneoverschot."
+maximumPhasesHelp = Met hoeveel fasen kan dit voertuig laden? Wordt gebruikt om de minimale duur van zonneoverschot en plan te berekenen
 
 [footer]
 
@@ -581,6 +598,11 @@ titleTargetCharge = "Vertrek"
 unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 update = "Toepassen"
 weekdays = "Dagen"
+preconditionOptionNo = nee
+preconditionShort = Laat
+preconditionDescription = Laad(duur) voor vertrek voor accu preconditionering
+preconditionOptionAll = alles
+preconditionLong = Laat Opladen
 
 [main.energyflow]
 battery = "Batterij"
@@ -598,6 +620,7 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
+pv = PV-systeem
 
 [main.heatingStatus]
 charging = "Bezig met verwarmen..."
@@ -619,6 +642,7 @@ remaining = "Resterend"
 remoteDisabledHard = "{source}: uitgeschakeld"
 remoteDisabledSoft = "{source}: adaptief PV-laden uitgeschakeld"
 solar = "Zon"
+finished = Eindtijd
 
 [main.loadpointSettings]
 batteryUsage = "Thuisbatterij"
@@ -701,6 +725,7 @@ tomorrow = "morgen"
 update = "Updaten"
 vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
 vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
+goalReached = Doel al bereikt
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
@@ -969,3 +994,29 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.devices]
+auxMeter = "Slimme verbruiker"
+batteryStorage = Thuisaccu
+solarSystem = "PV systeem"
+
+[config.modbus]
+baudrate = Baud rate
+comset = ComSet
+connection = Modbusverbinding
+connectionHintSerial = Het apparaat is direct verbonden met evcc via een RS485 interface
+connectionHintTcpip = Het apparaat is aanspreekbaar vanuit evcc via LAN/WiFi
+connectionValueSerial = Serieel / USB
+protocolHintTcp = Apparaat heeft ingebouwde LAN/WiFi-ondersteuning of is verbonden via een RS485 naar Ethernet-adapter met protocolvertaling
+protocolValueRtu = RTU
+protocolValueTcp = TCP
+connectionValueTcpip = Netwerk
+device = Apparaatnaam
+hostHint = Voorbeeld: 192.0.2.2
+host = IP-adres of hostnaam
+protocol = Modbusprotocol
+protocolHintRtu = Verbinding via een RS485 naar Ethernet-adapter zonder protocolvertaling
+deviceHint = Voorbeeld: /dev/ttyUSB0
+id = Modbus ID
+port = Poort
