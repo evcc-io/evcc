@@ -20,21 +20,30 @@ params:
     help:
       de: https://app.developer.viessmann.com
       en: https://app.developer.viessmann.com
-  - name: installation_id # TODO guide user on how to get this value
+  - name: installation_id
     required: true
     description:
       de: InstallationID
       en: InstallationID
-  - name: gateway_serial # TODO guide user on how to get this value
+    help:
+      de: https://docs.evcc.io/docs/devices/heating#viessmann
+      en: https://docs.evcc.io/docs/devices/heating#viessmann
+  - name: gateway_serial
     required: true
     description:
       de: Gateway Serial
       en: Gateway Serial
-  - name: device_id # TODO guide user on how to get this value
+    help:
+      de: https://docs.evcc.io/docs/devices/heating#viessmann
+      en: https://docs.evcc.io/docs/devices/heating#viessmann
+  - name: device_id
     required: true
     description:
       de: Device ID
       en: Device ID
+    help:
+      de: https://docs.evcc.io/docs/devices/heating#viessmann
+      en: https://docs.evcc.io/docs/devices/heating#viessmann
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
