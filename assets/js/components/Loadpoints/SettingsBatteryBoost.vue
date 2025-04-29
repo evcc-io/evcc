@@ -37,14 +37,16 @@
 	</div>
 </template>
 
-<script>
-import formatter from "../../mixins/formatter.js";
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
+import formatter from "@/mixins/formatter";
+import { CHARGE_MODE } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	mixins: [formatter],
 	props: {
-		formId: Function,
-		mode: String,
+		formId: { type: Function as PropType<(s: string) => string>, default: (s: string) => s },
+		mode: String as PropType<CHARGE_MODE>,
 		batteryBoost: Boolean,
 	},
 	emits: ["batteryboost-updated"],
@@ -55,7 +57,7 @@ export default {
 	},
 	computed: {
 		disabled() {
-			return ["off", "now"].includes(this.mode);
+			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
 	},
 	watch: {
@@ -68,5 +70,5 @@ export default {
 			this.$emit("batteryboost-updated", this.selectedEnabled);
 		},
 	},
-};
+});
 </script>

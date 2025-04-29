@@ -12,8 +12,8 @@ import { Bar } from "vue-chartjs";
 import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import colors from "../../colors";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import colors from "@/colors";
 import { GROUPS, PERIODS } from "./types";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);

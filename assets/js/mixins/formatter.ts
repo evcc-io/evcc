@@ -96,8 +96,8 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms: number) {
-			return `${this.fmtNumber(gramms, 0)} g`;
+		fmtCo2Short(gramms?: number) {
+			return gramms ? `${this.fmtNumber(gramms, 0)} g` : "?";
 		},
 		fmtCo2Medium(gramms: number) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;

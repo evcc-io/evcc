@@ -72,14 +72,14 @@ import Preview from "./Preview.vue";
 import PlanStaticSettings from "./PlanStaticSettings.vue";
 import RepeatingSettings from "./PlansRepeatingSettings.vue";
 import Warnings from "./Warnings.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api from "../../api.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import deepEqual from "../../utils/deepEqual.js";
-import convertRates from "../../utils/convertRates";
+import deepEqual from "@/utils/deepEqual";
+import convertRates from "@/utils/convertRates";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, PartialBy, Timeout, SelectOption, CURRENCY } from "../../types/evcc";
+import type { Vehicle, PartialBy, Timeout, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -87,8 +87,7 @@ import type {
 	StaticSocPlan,
 	StaticEnergyPlan,
 	PlanResponse,
-} from "./types.js";
-import type { Forecast } from "../../utils/forecast.ts";
+} from "./types";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",

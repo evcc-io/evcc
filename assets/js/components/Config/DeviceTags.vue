@@ -25,7 +25,7 @@
 	</div>
 </template>
 <script>
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 

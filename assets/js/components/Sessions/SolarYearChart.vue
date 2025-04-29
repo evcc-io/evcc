@@ -13,8 +13,8 @@
 import { Radar } from "vue-chartjs";
 import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
-import formatter from "../../mixins/formatter";
-import colors, { dimColor } from "../../colors";
+import formatter from "@/mixins/formatter";
+import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);

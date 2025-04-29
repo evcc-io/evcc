@@ -60,9 +60,9 @@
 </template>
 
 <script lang="ts">
-import { distanceUnit } from "../../units.js";
-import formatter from "../../mixins/formatter.js";
-import type { SelectOption } from "../../types/evcc";
+import { distanceUnit } from "@/units";
+import formatter from "@/mixins/formatter";
+import type { SelectOption } from "@/types/evcc";
 import { defineComponent } from "vue";
 
 export default defineComponent({
