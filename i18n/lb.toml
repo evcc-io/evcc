@@ -239,7 +239,7 @@ thresholdEnableHelpZero = "Starten, wann déi minimal Luedleeschtung fir {delay}
 thresholdEnableLabel = "Netzstroum aschalten"
 titleAdd = "Luedpunkt derbäi fügen"
 titleEdit = "Luedpunkt beaarbechten"
-titleExample = "Garage, Carport, etc."
+titleExample = "Garage, Carport, asw."
 titleLabel = "Titel"
 vehicleAutoDetection = "automatesch Erkennung"
 vehicleHelpAutoDetection = "Automatesch dat plausibelst Gefier auswielen. Manuell Iwwersteierung méiglech."
@@ -272,13 +272,17 @@ delete = "Läschen"
 save = "Späicheren"
 template = "Hiersteller"
 titleChoice = "Wat wëlls du derbäi setzen?"
-validateSave = "Überpréiwen & späicheren"
+validateSave = "Iwwerpréiwen & späicheren"
 
 [config.meter.option]
 aux = "Intelligente Verbraucher derbäi fügen"
 battery = "Hausbatterie derbäi fügen"
 ext = "Externen Zieler derbäi fügen"
 pv = "Sonnen-Zieler derbäi fügen"
+
+[config.modbus]
+connection = "Modbus Verbindung"
+connectionValueTcpip = "Netzwierk"
 
 [config.modbusproxy]
 description = "Erlaabt méi Clienten Zougank zu engem eenzegen Modbus Apparat ze hunn."
