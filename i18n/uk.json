@@ -793,7 +793,6 @@
       "targetChargeActive": "Запланований заряд активний. Орієнтовний фініш через {duration}.",
       "targetChargePlanned": "Запланована зарядка починається о {duration}.",
       "targetChargeWaitForVehicle": "Запланований заряд готовий. В очікуванні транспортного засобу...",
-      "unknown": "",
       "vehicleLimit": "Ліміт транспортного засобу",
       "vehicleLimitReached": "Ліміт транспортного засобу досягнуто.",
       "waitForVehicle": "Готовий. В очікуванні транспортного засобу...",

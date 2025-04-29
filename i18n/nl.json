@@ -798,7 +798,6 @@
       "targetChargeActive": "Laadplan actief. Geschatte beëindiging over {duration}.",
       "targetChargePlanned": "Laadplan begint over {duration}.",
       "targetChargeWaitForVehicle": "Laadplan gereed. Wachten op voertuig...",
-      "unknown": "",
       "vehicleLimit": "Voertuiglimiet",
       "vehicleLimitReached": "Voertuiglimiet bereikt.",
       "waitForVehicle": "Klaar. Wachten op voertuig...",

@@ -792,7 +792,6 @@
       "targetChargeActive": "Plán nabíjení je aktivní. Odhadovaný čas dokončení: {duration}.",
       "targetChargePlanned": "Plán nabíjení začne za {duration}.",
       "targetChargeWaitForVehicle": "Plán nabíjení připraven. Čeká se na vozidlo…",
-      "unknown": "",
       "vehicleLimit": "Limit vozidla",
       "vehicleLimitReached": "Limit vozidla dosažen.",
       "waitForVehicle": "Připraveno. Čekám na vozidlo...",

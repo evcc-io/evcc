@@ -796,7 +796,6 @@
       "targetChargeActive": "Laddplan aktiv. Beräknas vara klar om {duration}.",
       "targetChargePlanned": "Laddplan startar om {duration}.",
       "targetChargeWaitForVehicle": "Laddare beredd. Väntar på fordon...",
-      "unknown": "",
       "vehicleLimit": "Fordonsgräns",
       "vehicleLimitReached": "Fordonets gräns nådd.",
       "waitForVehicle": "Redo. Väntar på fordon...",

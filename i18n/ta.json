@@ -562,7 +562,6 @@
       "targetChargeActive": "சார்சிங் பிளான் செயலில். மதிப்பிடப்பட்ட பூச்சு {duration}.",
       "targetChargePlanned": "சார்சிங் திட்டம் {duration} இல் தொடங்குகிறது.",
       "targetChargeWaitForVehicle": "திட்டம் தயாராக உள்ளது. வாகனத்திற்காக காத்திருக்கிறது ...",
-      "unknown": "",
       "vehicleLimit": "வாகன வரம்பு",
       "vehicleLimitReached": "வாகன வரம்பு எட்டப்பட்டது.",
       "waitForVehicle": "ஆயத்தம். வாகனத்திற்காக காத்திருக்கிறது…",

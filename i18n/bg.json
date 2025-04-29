@@ -571,7 +571,6 @@
       "targetChargeActive": "Планът за зареждане е активен. Очаквано завършване след {duration}.",
       "targetChargePlanned": "Планът за таксуване започва в {duration}",
       "targetChargeWaitForVehicle": "Планът за зареждане е готов. Очаква се превозното средство…",
-      "unknown": "",
       "vehicleLimit": "Лимит на превозното средство",
       "vehicleLimitReached": "Достигнат е лимитът на превозното средство.",
       "waitForVehicle": "Готов. Очакване на превозното средство…",

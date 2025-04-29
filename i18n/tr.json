@@ -779,7 +779,6 @@
       "targetChargeActive": "Doldurma planı yürürlükte. Tahmini bitiş süresi {duration} içerisinde.",
       "targetChargePlanned": "Doldurma planı {duration} içerisinde başlayacak.",
       "targetChargeWaitForVehicle": "Doldurma planı hazır. Araç bekleniyor…",
-      "unknown": "",
       "vehicleLimit": "Araç sınırı",
       "vehicleLimitReached": "Araç sınırına ulaşıldı.",
       "vehicleTargetReached": "Araç sınırı {soc} ulaşıldı.",

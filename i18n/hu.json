@@ -754,7 +754,6 @@
       "targetChargeActive": "Töltési terv aktív. Becsült befejezés {duration}.",
       "targetChargePlanned": "A töltési tervezet ekkor keződik: {duration}.",
       "targetChargeWaitForVehicle": "Töltési terv üzemkész. Járműre várakozás…",
-      "unknown": "",
       "vehicleLimit": "Jármű limi.",
       "vehicleLimitReached": "Jármű limit elérve.",
       "waitForVehicle": "Üzemkész. Járműre várakozás…",

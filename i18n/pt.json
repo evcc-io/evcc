@@ -770,7 +770,6 @@
       "targetChargeActive": "Plano de carregamento ativo. Fim estimado em {duration}.",
       "targetChargePlanned": "O plano de carregamento começa em {duration}.",
       "targetChargeWaitForVehicle": "Plano de carregamento pronto. À espera do veículo...",
-      "unknown": "",
       "vehicleLimit": "Limite dos veículos",
       "vehicleLimitReached": "Limite de veículo atingido.",
       "waitForVehicle": "Pronto. À espera do veículo...",

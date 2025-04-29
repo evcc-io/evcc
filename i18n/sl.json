@@ -723,7 +723,6 @@
       "targetChargeActive": "Ciljno polnjenje je aktivno, predviden konec {duration}.",
       "targetChargePlanned": "Ciljno polnjenje se začne ob {time}.",
       "targetChargeWaitForVehicle": "Ciljno polnjenje je pripravljeno. Čakam na vozilo ...",
-      "unknown": "",
       "vehicleLimit": "Omejitev vozila",
       "vehicleLimitReached": "Omejitev vozila dosežena.",
       "waitForVehicle": "Pripravljen. Čakam na vozilo...",
