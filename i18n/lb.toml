@@ -239,7 +239,7 @@ thresholdEnableHelpZero = "Starten, wann déi minimal Luedleeschtung fir {delay}
 thresholdEnableLabel = "Netzstroum aschalten"
 titleAdd = "Luedpunkt derbäi fügen"
 titleEdit = "Luedpunkt beaarbechten"
-titleExample = "Garage, Carport, etc."
+titleExample = "Garage, Carport, asw."
 titleLabel = "Titel"
 vehicleAutoDetection = "automatesch Erkennung"
 vehicleHelpAutoDetection = "Automatesch dat plausibelst Gefier auswielen. Manuell Iwwersteierung méiglech."
@@ -272,7 +272,7 @@ delete = "Läschen"
 save = "Späicheren"
 template = "Hiersteller"
 titleChoice = "Wat wëlls du derbäi setzen?"
-validateSave = "Überpréiwen & späicheren"
+validateSave = "Iwwerpréiwen & späicheren"
 
 [config.meter.option]
 aux = "Intelligente Verbraucher derbäi fügen"
@@ -973,3 +973,8 @@ lineError = "An {0} gouf ee Feeler fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
+
+
+[config.modbus]
+connection = "Modbus Verbindung"
+connectionValueTcpip = "Netzwierk"
