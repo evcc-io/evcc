@@ -1,0 +1,26 @@
+template: plugchoice
+products:
+  - brand: Plugchoice
+group: generic
+capabilities: ["rfid"]
+params:
+  - name: token
+    required: true
+    help:
+      de: API Token
+      en: API Token
+  - name: chargerUUID
+    required: true
+    help:
+      de: UUID des Ladepunkts
+      en: Charger UUID
+  - name: connectorID
+    required: true
+    help:
+      de: Anschluss-ID (üblicherweise 1)
+      en: Connector ID (usually 1)
+render: |
+  type: plugchoice
+  token: {{ .token }}
+  chargerUUID: {{ .chargerUUID }}
+  connectorID: {{ .connectorID }}
