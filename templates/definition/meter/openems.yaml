@@ -30,7 +30,7 @@ params:
     default: 60s
     help:
       de: abgestimmt auf das API-Timeout
-      en: adjusted to the API timout
+      en: adjusted to the API timeout
     usages: ["battery"]
     advanced: true
   - name: maxacpower
