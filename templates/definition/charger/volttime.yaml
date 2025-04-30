@@ -9,13 +9,11 @@ params:
     help:
       de: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
       en: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
-      nl: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
   - name: serial_number
     required: true
     help:
       de: Seriennummer (z. B. 1008621)
       en: Serial number (e.g. 1008621)
-      nl: Serienummer (bijv. 1008621)
 render: |
   type: plugchoice
   token: {{ .token }}
