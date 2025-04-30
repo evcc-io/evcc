@@ -2,17 +2,17 @@ package plugchoice
 
 // ChargerData represents a charger from the API
 type ChargerData struct {
-	UUID            string `json:"uuid"`
-	ID              int    `json:"id"`
-	Identity        string `json:"identity"`
-	Reference       string `json:"reference"`
+	UUID             string `json:"uuid"`
+	ID               int    `json:"id"`
+	Identity         string `json:"identity"`
+	Reference        string `json:"reference"`
 	ConnectionStatus string `json:"connection_status"`
-	Status          string `json:"status"`
-	Error           string `json:"error"`
-	ErrorInfo       any    `json:"error_info"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
-	Model           struct {
+	Status           string `json:"status"`
+	Error            string `json:"error"`
+	ErrorInfo        any    `json:"error_info"`
+	CreatedAt        string `json:"created_at"`
+	UpdatedAt        string `json:"updated_at"`
+	Model            struct {
 		Vendor string `json:"vendor"`
 		Name   string `json:"name"`
 	} `json:"model"`
@@ -21,9 +21,9 @@ type ChargerData struct {
 
 // ChargerListResponse is the response from the /chargers endpoint
 type ChargerListResponse struct {
-	Data       []ChargerData `json:"data"`
-	Links      Links         `json:"links"`
-	Meta       Meta          `json:"meta"`
+	Data  []ChargerData `json:"data"`
+	Links Links         `json:"links"`
+	Meta  Meta          `json:"meta"`
 }
 
 // Links contains pagination links
@@ -36,13 +36,13 @@ type Links struct {
 
 // Meta contains pagination metadata
 type Meta struct {
-	CurrentPage int `json:"current_page"`
-	From        int `json:"from"`
-	LastPage    int `json:"last_page"`
+	CurrentPage int    `json:"current_page"`
+	From        int    `json:"from"`
+	LastPage    int    `json:"last_page"`
 	Path        string `json:"path"`
-	PerPage     int `json:"per_page"`
-	To          int `json:"to"`
-	Total       int `json:"total"`
+	PerPage     int    `json:"per_page"`
+	To          int    `json:"to"`
+	Total       int    `json:"total"`
 }
 
 // StatusResponse is the connector status response
