@@ -158,22 +158,16 @@ func init() {
 	registry.AddCtx("kathrein", NewKathreinFromConfig)
 }
 
-// NewKathreinromConfig creates a Kathrein charger from generic config
+// NewKathreinFromConfig creates a Kathrein charger from generic config
 func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{
-			ID: 0,
-		},
+	var cc modbus.TcpSettings
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
 	wb, err := NewKathrein(ctx, cc.URI, cc.ID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
