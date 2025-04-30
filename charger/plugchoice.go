@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/plugchoice"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -21,27 +22,8 @@ type PlugChoice struct {
 	chargerUUID string
 	connectorID int
 	enabled     bool
-	statusG     util.Cacheable[plugChoiceStatusResponse]
-	powerG      util.Cacheable[plugChoicePowerResponse]
-}
-
-// plugChoiceStatusResponse is the connector status response
-type plugChoiceStatusResponse struct {
-	Data struct {
-		Connectors []struct {
-			ConnectorID int    `json:"connector_id"`
-			Status      string `json:"status"`
-		} `json:"connectors"`
-	} `json:"data"`
-}
-
-// plugChoicePowerResponse is the power usage response
-type plugChoicePowerResponse struct {
-	Timestamp string `json:"timestamp"`
-	KW        string `json:"kW"`
-	L1        string `json:"L1"`
-	L2        string `json:"L2"`
-	L3        string `json:"L3"`
+	statusG     util.Cacheable[plugchoice.StatusResponse]
+	powerG      util.Cacheable[plugchoice.PowerResponse]
 }
 
 func init() {
@@ -92,16 +74,16 @@ func NewPlugChoice(uri, chargerUUID string, connectorID int, token string, cache
 	}
 
 	// setup cached status values
-	c.statusG = util.ResettableCached(func() (plugChoiceStatusResponse, error) {
-		var res plugChoiceStatusResponse
+	c.statusG = util.ResettableCached(func() (plugchoice.StatusResponse, error) {
+		var res plugchoice.StatusResponse
 		uri := fmt.Sprintf("%s/api/v3/chargers/%s", c.uri, c.chargerUUID)
 		err := c.GetJSON(uri, &res)
 		return res, err
 	}, cache)
 
 	// setup cached power values
-	c.powerG = util.ResettableCached(func() (plugChoicePowerResponse, error) {
-		var res plugChoicePowerResponse
+	c.powerG = util.ResettableCached(func() (plugchoice.PowerResponse, error) {
+		var res plugchoice.PowerResponse
 		uri := fmt.Sprintf("%s/api/v3/chargers/%s/connectors/%d/power-usage", c.uri, c.chargerUUID, c.connectorID)
 		err := c.GetJSON(uri, &res)
 		return res, err
@@ -122,13 +104,13 @@ func (c *PlugChoice) Status() (api.ChargeStatus, error) {
 		if connector.ConnectorID == c.connectorID {
 			// Map the status codes as per specifications
 			switch status := connector.Status; status {
-			case "Available":
+			case plugchoice.StatusAvailable:
 				return api.StatusA, nil
-			case "Unavailable", "Faulted":
+			case plugchoice.StatusUnavailable, plugchoice.StatusFaulted:
 				return api.StatusE, nil // Using StatusE for error conditions
-			case "Preparing", "SuspendedEVSE", "SuspendedEV", "Finishing":
+			case plugchoice.StatusPreparing, plugchoice.StatusSuspendedEVSE, plugchoice.StatusSuspendedEV, plugchoice.StatusFinishing:
 				return api.StatusB, nil
-			case "Charging":
+			case plugchoice.StatusCharging:
 				return api.StatusC, nil
 			default:
 				return api.StatusNone, fmt.Errorf("unknown status: %s", status)
@@ -151,9 +133,9 @@ func (c *PlugChoice) Enabled() (bool, error) {
 		if connector.ConnectorID == c.connectorID {
 			// Check status for enabled state
 			switch status := connector.Status; status {
-			case "Charging", "SuspendedEV":
+			case plugchoice.StatusCharging, plugchoice.StatusSuspendedEV:
 				return true, nil
-			case "SuspendedEVSE":
+			case plugchoice.StatusSuspendedEVSE:
 				return false, nil
 			default:
 				return c.enabled, nil
@@ -168,13 +150,12 @@ func (c *PlugChoice) Enabled() (bool, error) {
 func (c *PlugChoice) Enable(enable bool) error {
 	var current int64
 	if enable {
-		current = 16 // TODO: dynamisch?
+		current = 16 // default to 16A when enabling
 	}
 
 	err := c.MaxCurrent(current)
 	if err == nil {
 		c.enabled = enable
-
 		// Reset cache to ensure fresh data
 		c.statusG.Reset()
 		c.powerG.Reset()
@@ -227,14 +208,6 @@ func (c *PlugChoice) CurrentPower() (float64, error) {
 
 	return kw * 1000, nil // Convert kW to W
 }
-
-//var _ api.ChargeRater = (*PlugChoice)(nil)
-
-//// ChargedEnergy implements the api.ChargeRater interface
-//func (c *PlugChoice) ChargedEnergy() (float64, error) {
-//	// Return a random number between 0 and 100 kWh as per requirements
-//	return rand.Float64() * 100, nil
-//}
 
 var _ api.PhaseCurrents = (*PlugChoice)(nil)
 
