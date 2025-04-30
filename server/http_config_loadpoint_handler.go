@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -46,6 +47,20 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	}
 }
 
+// Hilfsfunktion: Struct zu map[string]any
+func structToMap(s any) map[string]any {
+	res := make(map[string]any)
+	v := reflect.ValueOf(s)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		res[t.Field(i).Name] = v.Field(i).Interface()
+	}
+	return res
+}
+
 func loadpointConfig(dev config.Device[loadpoint.API]) map[string]any {
 	lp := dev.Instance()
 
@@ -60,29 +75,14 @@ func loadpointConfig(dev config.Device[loadpoint.API]) map[string]any {
 		"name": dev.Config().Name,
 	}
 
-	// StaticConfig
-	static := getLoadpointStaticConfig(lp)
-	res["charger"] = static.Charger
-	res["meter"] = static.Meter
-	res["circuit"] = static.Circuit
-	res["vehicle"] = static.Vehicle
-
-	// DynamicConfig
-	dyn := getLoadpointDynamicConfig(lp)
-	res["title"] = dyn.Title
-	res["defaultMode"] = dyn.DefaultMode
-	res["priority"] = dyn.Priority
-	res["phasesConfigured"] = dyn.PhasesConfigured
-	res["minCurrent"] = dyn.MinCurrent
-	res["maxCurrent"] = dyn.MaxCurrent
-	res["smartCostLimit"] = dyn.SmartCostLimit
-	res["planEnergy"] = dyn.PlanEnergy
-	res["planTime"] = dyn.PlanTime
-	res["planPrecondition"] = dyn.PlanPrecondition
-	res["limitEnergy"] = dyn.LimitEnergy
-	res["limitSoc"] = dyn.LimitSoc
-	res["thresholds"] = dyn.Thresholds
-	res["soc"] = dyn.Soc
+	// StaticConfig generisch
+	for k, v := range structToMap(getLoadpointStaticConfig(lp)) {
+		res[k] = v
+	}
+	// DynamicConfig generisch
+	for k, v := range structToMap(getLoadpointDynamicConfig(lp)) {
+		res[k] = v
+	}
 
 	// Zusätzliche Felder aus YAML (Other)
 	for k, v := range dev.Config().Other {
