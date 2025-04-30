@@ -130,6 +130,8 @@
     },
     "general": {
       "cancel": "Cancel",
+      "customHelp": "Define your custom device behaviour using evcc's plugin system.",
+      "customOption": "Custom Plugin",
       "delete": "Delete",
       "docsLink": "See documentation.",
       "experimental": "Experimental",

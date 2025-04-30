@@ -2,6 +2,7 @@
 	<GenericModal
 		id="vehicleModal"
 		:title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
+		:size="modalSize"
 		data-testid="vehicle-modal"
 		@open="open"
 		@closed="closed"
@@ -46,6 +47,7 @@
 						>
 							{{ option.name }}
 						</option>
+						<option value="custom">{{ $t("config.general.customOption") }}</option>
 					</optgroup>
 				</select>
 				<input
@@ -56,140 +58,150 @@
 					class="form-control w-100"
 				/>
 			</FormRow>
-			<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
-			<Markdown v-if="description" :markdown="description" class="my-4" />
-			<PropertyEntry
-				v-for="param in normalParams"
-				:id="`vehicleParam${param.Name}`"
-				:key="param.Name"
-				v-bind="param"
-				v-model="values[param.Name]"
-			/>
+			<div v-if="values.type === 'custom'">
+				<p>
+					<span>{{ $t("config.general.customHelp") + " " }}</span>
+					<a :href="docsLink" target="_blank">
+						{{ $t("config.general.docsLink") }}
+					</a>
+				</p>
+				<YamlEditorContainer v-model="values.yaml" />
+			</div>
+			<div v-else>
+				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
+				<Markdown v-if="description" :markdown="description" class="my-4" />
+				<PropertyEntry
+					v-for="param in normalParams"
+					:id="`vehicleParam${param.Name}`"
+					:key="param.Name"
+					v-bind="param"
+					v-model="values[param.Name]"
+				/>
 
-			<PropertyCollapsible>
-				<template v-if="advancedParams.length" #advanced>
-					<PropertyEntry
-						v-for="param in advancedParams"
-						:id="`vehicleParam${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						v-model="values[param.Name]"
-					/>
-				</template>
-				<template #more>
-					<h6 class="mt-3">{{ $t("config.vehicle.chargingSettings") }}</h6>
-					<FormRow
-						id="vehicleParamMode"
-						:label="$t('config.vehicle.defaultMode')"
-						:help="$t('config.vehicle.defaultModeHelp')"
-					>
-						<PropertyField
+				<PropertyCollapsible>
+					<template v-if="advancedParams.length" #advanced>
+						<PropertyEntry
+							v-for="param in advancedParams"
+							:id="`vehicleParam${param.Name}`"
+							:key="param.Name"
+							v-bind="param"
+							v-model="values[param.Name]"
+						/>
+					</template>
+					<template #more>
+						<h6 class="mt-3">{{ $t("config.vehicle.chargingSettings") }}</h6>
+						<FormRow
 							id="vehicleParamMode"
-							v-model="values.mode"
-							type="Choice"
-							class="w-100"
-							:choice="[
-								{ key: 'off', name: $t('main.mode.off') },
-								{ key: 'pv', name: $t('main.mode.pv') },
-								{ key: 'minpv', name: $t('main.mode.minpv') },
-								{ key: 'now', name: $t('main.mode.now') },
-							]"
-						/>
-					</FormRow>
-					<FormRow
-						id="vehicleParamPhases"
-						:label="$t('config.vehicle.maximumPhases')"
-						:help="$t('config.vehicle.maximumPhasesHelp')"
-					>
-						<SelectGroup
+							:label="$t('config.vehicle.defaultMode')"
+							:help="$t('config.vehicle.defaultModeHelp')"
+						>
+							<PropertyField
+								id="vehicleParamMode"
+								v-model="values.mode"
+								type="Choice"
+								class="w-100"
+								:choice="[
+									{ key: 'off', name: $t('main.mode.off') },
+									{ key: 'pv', name: $t('main.mode.pv') },
+									{ key: 'minpv', name: $t('main.mode.minpv') },
+									{ key: 'now', name: $t('main.mode.now') },
+								]"
+							/>
+						</FormRow>
+						<FormRow
 							id="vehicleParamPhases"
-							v-model="values.phases"
-							class="w-100"
-							:options="[
-								{ name: '1-phase', value: '1' },
-								{ name: '2-phases', value: '2' },
-								{ name: '3-phases', value: undefined },
-							]"
-							equal-width
-							transparent
-						/>
-					</FormRow>
-					<div class="row mb-3">
-						<FormRow
-							id="vehicleParamMinCurrent"
-							:label="$t('config.vehicle.minimumCurrent')"
-							class="col-sm-6 mb-sm-0"
-							:help="
-								values.minCurrent && values.minCurrent < 6
-									? $t('config.vehicle.minimumCurrentHelp')
-									: null
-							"
+							:label="$t('config.vehicle.maximumPhases')"
+							:help="$t('config.vehicle.maximumPhasesHelp')"
 						>
-							<PropertyField
+							<SelectGroup
+								id="vehicleParamPhases"
+								v-model="values.phases"
+								class="w-100"
+								:options="[
+									{ name: '1-phase', value: '1' },
+									{ name: '2-phases', value: '2' },
+									{ name: '3-phases', value: undefined },
+								]"
+								equal-width
+								transparent
+							/>
+						</FormRow>
+						<div class="row mb-3">
+							<FormRow
 								id="vehicleParamMinCurrent"
-								v-model="values.minCurrent"
-								type="Float"
-								unit="A"
-								size="w-25 w-min-200"
-								class="me-2"
-							/>
-						</FormRow>
+								:label="$t('config.vehicle.minimumCurrent')"
+								class="col-sm-6 mb-sm-0"
+								:help="
+									values.minCurrent && values.minCurrent < 6
+										? $t('config.vehicle.minimumCurrentHelp')
+										: null
+								"
+							>
+								<PropertyField
+									id="vehicleParamMinCurrent"
+									v-model="values.minCurrent"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+								/>
+							</FormRow>
+							<FormRow
+								id="vehicleParamMaxCurrent"
+								:label="$t('config.vehicle.maximumCurrent')"
+								class="col-sm-6 mb-sm-0"
+								:help="
+									values.minCurrent &&
+									values.maxCurrent &&
+									values.maxCurrent < values.minCurrent
+										? $t('config.vehicle.maximumCurrentHelp')
+										: null
+								"
+							>
+								<PropertyField
+									id="vehicleParamMaxCurrent"
+									v-model="values.maxCurrent"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+								/>
+							</FormRow>
+						</div>
+
 						<FormRow
-							id="vehicleParamMaxCurrent"
-							:label="$t('config.vehicle.maximumCurrent')"
-							class="col-sm-6 mb-sm-0"
-							:help="
-								values.minCurrent &&
-								values.maxCurrent &&
-								values.maxCurrent < values.minCurrent
-									? $t('config.vehicle.maximumCurrentHelp')
-									: null
-							"
+							id="vehicleParamPriority"
+							:label="$t('config.vehicle.priority')"
+							:help="$t('config.vehicle.priorityHelp')"
 						>
 							<PropertyField
-								id="vehicleParamMaxCurrent"
-								v-model="values.maxCurrent"
-								type="Float"
-								unit="A"
-								size="w-25 w-min-200"
+								id="vehicleParamPriority"
+								v-model="values.priority"
+								type="Choice"
+								size="w-100"
+								class="me-2"
+								:choice="priorityOptions"
+								required
+							/>
+						</FormRow>
+
+						<FormRow
+							id="vehicleParamIdentifiers"
+							:label="$t('config.vehicle.identifiers')"
+							:help="$t('config.vehicle.identifiersHelp')"
+						>
+							<PropertyField
+								id="vehicleParamIdentifiers"
+								v-model="values.identifiers"
+								type="List"
+								property="identifiers"
+								size="w-100"
 								class="me-2"
 							/>
 						</FormRow>
-					</div>
-
-					<FormRow
-						id="vehicleParamPriority"
-						:label="$t('config.vehicle.priority')"
-						:help="$t('config.vehicle.priorityHelp')"
-					>
-						<PropertyField
-							id="vehicleParamPriority"
-							v-model="values.priority"
-							type="Choice"
-							size="w-100"
-							class="me-2"
-							:choice="priorityOptions"
-							required
-						/>
-					</FormRow>
-
-					<FormRow
-						id="vehicleParamIdentifiers"
-						:label="$t('config.vehicle.identifiers')"
-						:help="$t('config.vehicle.identifiersHelp')"
-					>
-						<PropertyField
-							id="vehicleParamIdentifiers"
-							v-model="values.identifiers"
-							type="List"
-							property="identifiers"
-							size="w-100"
-							class="me-2"
-						/>
-					</FormRow>
-				</template>
-			</PropertyCollapsible>
-
+					</template>
+				</PropertyCollapsible>
+			</div>
 			<TestResult
 				v-if="templateName"
 				:success="testSuccess"
@@ -248,8 +260,11 @@ import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
+import YamlEditorContainer from "./YamlEditorContainer.vue";
+import { docsPrefix } from "@/i18n";
 import api from "@/api";
 import test from "./mixins/test";
+import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
 const initialValues = { type: "template", icon: "car" };
 
@@ -270,6 +285,7 @@ export default {
 		PropertyCollapsible,
 		PropertyEntry,
 		Markdown,
+		YamlEditorContainer,
 	},
 	mixins: [test],
 	props: {
@@ -342,6 +358,9 @@ export default {
 		isNew() {
 			return this.id === undefined;
 		},
+		modalSize() {
+			return this.values.type === "custom" ? "xl" : undefined;
+		},
 		isDeletable() {
 			return !this.isNew;
 		},
@@ -351,6 +370,9 @@ export default {
 			result[0].key = undefined;
 			result[10].name = "10 (highest)";
 			return result;
+		},
+		docsLink() {
+			return `${docsPrefix()}/docs/devices/plugins#vehicle`;
 		},
 	},
 	watch: {
@@ -498,6 +520,10 @@ export default {
 		},
 		templateChanged() {
 			this.reset();
+			if (this.templateName === "custom") {
+				this.values.type = "custom";
+				this.values.yaml = defaultYaml;
+			}
 		},
 	},
 };
