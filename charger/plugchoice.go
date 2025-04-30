@@ -28,18 +28,21 @@ type PlugChoice struct {
 
 // plugChoiceStatusResponse is the connector status response
 type plugChoiceStatusResponse struct {
-	Connectors []struct {
-		ConnectorID int    `json:"connector_id"`
-		Status      string `json:"status"`
-	} `json:"connectors"`
+	Data struct {
+		Connectors []struct {
+			ConnectorID int    `json:"connector_id"`
+			Status      string `json:"status"`
+		} `json:"connectors"`
+	} `json:"data"`
 }
 
 // plugChoicePowerResponse is the power usage response
 type plugChoicePowerResponse struct {
-	KW string `json:"kW"`
-	L1 string `json:"L1"`
-	L2 string `json:"L2"`
-	L3 string `json:"L3"`
+	Timestamp string `json:"timestamp"`
+	KW        string `json:"kW"`
+	L1        string `json:"L1"`
+	L2        string `json:"L2"`
+	L3        string `json:"L3"`
 }
 
 func init() {
@@ -116,7 +119,7 @@ func (c *PlugChoice) Status() (api.ChargeStatus, error) {
 	}
 
 	// Find the connector with the specified connectorID
-	for _, connector := range res.Connectors {
+	for _, connector := range res.Data.Connectors {
 		if connector.ConnectorID == c.connectorID {
 			// Map the status codes as per specifications
 			switch status := connector.Status; status {
