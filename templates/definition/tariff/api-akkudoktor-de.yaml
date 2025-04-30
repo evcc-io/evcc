@@ -1,5 +1,4 @@
 template: api.akkudoktor.net
-deprecated: true
 products:
   - brand: Akkudoktor API
 requirements:
@@ -91,9 +90,9 @@ render: |
     uri: "https://api.akkudoktor.net/forecast?\
       lat={{ .lat }}\
       &lon={{ .lon }}\
-      &tilt={{ .dec }}\
+      &tilt={{ if or (eq .dec "0") (eq .dec "0.0") }}0.001{{ else }}{{ .dec }}{{ end }}\
       &power={{ mulf .kwp 1000 }}\
-      &azimuth={{ .az }}\
+      &azimuth={{ if or (eq .az "0") (eq .az "0.0") }}0.001{{ else }}{{ .az }}{{ end }}\
       &powerInverter={{ mulf .ac 1000 }}\
       &inverterEfficiency={{ divf .efficiency 100 }}\
       &cellCoEff={{ mulf .alphatemp 100 }}\
