@@ -200,18 +200,11 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 }
 
 func (c *Easee) waitForOptionalState() {
-	if !c.optionalStatePresent() {
-		timeout := time.After(3 * time.Second)
-		for {
-			select {
-			case <-time.Tick(500 * time.Millisecond):
-				if c.optionalStatePresent() {
-					return
-				}
-			case <-timeout:
-				return
-			}
-		}
+    for i := 0; i < 30; i++ {
+        if c.optionalStatePresent() {
+    	    return
+        }
+        time.Sleep(100 * time.Millisecond)
 	}
 }
 
