@@ -1,7 +1,7 @@
 import { mount, config } from "@vue/test-utils";
 import { beforeAll, describe, expect, test } from "vitest";
 import Preview from "./Preview.vue";
-import type { Slot } from "./types";
+import type { Slot } from "@/types/evcc";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 config.global.mocks["$t"] = (a: any) => a;
@@ -13,14 +13,14 @@ describe("basics", () => {
 		{
 			start: new Date("2023-01-11T11:00:00+01:00"),
 			end: new Date("2023-01-22T00:00:00+01:00"),
-			price: 0.4,
+			value: 0.4,
 		},
 	];
 	const PLAN = [
 		{
 			start: new Date("2023-01-11T12:00:00+01:00"),
 			end: new Date("2023-01-11T13:00:00+01:00"),
-			price: 0.2,
+			value: 0.2,
 		},
 	];
 
@@ -75,8 +75,8 @@ describe("basics", () => {
 		expect(result[3].charging).eq(false);
 	});
 
-	test("all slots have the same fixed price", () => {
-		result.forEach((slot) => expect(slot.price).eq(0.4));
+	test("all slots have the same fixed value", () => {
+		result.forEach((slot) => expect(slot.value).eq(0.4));
 	});
 });
 
@@ -87,24 +87,24 @@ describe("zoned tariffs", () => {
 		{
 			start: new Date("2023-01-11T11:00:00+01:00"),
 			end: new Date("2023-01-11T12:00:00+01:00"),
-			price: 0.2,
+			value: 0.2,
 		},
 		{
 			start: new Date("2023-01-11T12:00:00+01:00"),
 			end: new Date("2023-01-22T00:00:00+01:00"),
-			price: 0.4,
+			value: 0.4,
 		},
 	];
 	const PLAN = [
 		{
 			start: new Date("2023-01-11T11:30:00+01:00"),
 			end: new Date("2023-01-11T13:00:00+01:00"),
-			price: 0.3,
+			value: 0.3,
 		},
 		{
 			start: new Date("2023-01-11T14:30:00+01:00"),
 			end: new Date("2023-01-11T16:00:00+01:00"),
-			price: 0.2,
+			value: 0.2,
 		},
 	];
 
@@ -134,7 +134,7 @@ describe("zoned tariffs", () => {
 
 	test("first slot is cheap, others are expensive", () => {
 		const [first, ...others] = result;
-		expect(first.price).eq(0.2);
-		others.forEach((slot) => expect(slot.price).eq(0.4));
+		expect(first.value).eq(0.2);
+		others.forEach((slot) => expect(slot.value).eq(0.4));
 	});
 });

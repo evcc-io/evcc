@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -33,16 +33,16 @@ test.describe("pv meter", async () => {
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await expect(page.getByTestId("pv")).toContainText("PV North");
 
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
-    await expect(meterModal).toBeVisible();
+    await expectModalVisible(meterModal);
     await meterModal.getByLabel("Power (W)").fill("6000");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
 
     const pv = page.getByTestId("pv");
     await expect(pv).toBeVisible(1);
@@ -58,8 +58,9 @@ test.describe("pv meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
-
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
     // restart and check again
@@ -83,7 +84,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await expect(page.getByTestId("pv")).toContainText("North Roof");
 
@@ -96,7 +97,9 @@ test.describe("pv meter", async () => {
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
     // restart and check again

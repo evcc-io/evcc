@@ -53,6 +53,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
+	github.com/jarcoal/httpmock v1.3.0
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
@@ -218,6 +219,6 @@ tool (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250403111054-69e330ffbd07
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250424165527-29ee278b3a1b
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0

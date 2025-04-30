@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -29,7 +29,7 @@ test.describe("aux meter", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power (W)").fill("1200");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
 
     // check
     await expect(page.getByTestId("aux")).toBeVisible(1);
@@ -48,6 +48,7 @@ test.describe("aux meter", async () => {
     // delete
     await page.goto("/#/config");
     await page.getByTestId("aux").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByTestId("aux")).toHaveCount(0);
 

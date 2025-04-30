@@ -1,38 +1,5 @@
+import type { TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
 import deepCopy from "./deepClone";
-
-export interface TimeseriesEntry {
-	val: number;
-	ts: string;
-}
-
-export interface PriceSlot {
-	start: string;
-	end: string;
-	price: number;
-}
-
-export function isPriceSlot(obj?: TimeseriesEntry | PriceSlot): obj is PriceSlot {
-	return (obj as PriceSlot).start !== undefined;
-}
-
-export interface EnergyByDay {
-	energy: number;
-	complete: boolean;
-}
-
-export interface SolarDetails {
-	scale?: number;
-	today?: EnergyByDay;
-	tomorrow?: EnergyByDay;
-	dayAfterTomorrow?: EnergyByDay;
-	timeseries?: TimeseriesEntry[];
-}
-
-export interface Forecast {
-	grid?: PriceSlot[];
-	co2?: PriceSlot[];
-	solar?: SolarDetails;
-}
 
 export enum ForecastType {
 	Solar = "solar",
@@ -81,7 +48,7 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
 	if (!solar?.scale) return solar;
 
 	const { scale } = solar;
-	let result = deepCopy(solar);
+	const result = deepCopy(solar);
 
 	if (result.today) result.today.energy *= scale;
 	if (result.tomorrow) result.tomorrow.energy *= scale;

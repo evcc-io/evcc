@@ -1,4 +1,4 @@
-import { CURRENCY, type Rate } from "assets/js/types/evcc";
+import { CURRENCY, type Rate } from "@/types/evcc";
 import Preview from "./Preview.vue";
 import type { StoryFn } from "@storybook/vue3";
 
@@ -10,7 +10,7 @@ function createDate(hoursFromNow: number) {
 	return result;
 }
 
-function createRate(price: number, hoursFromNow: number, durationHours = 1): Rate {
+function createRate(value: number, hoursFromNow: number, durationHours = 1): Rate {
 	const start = new Date(now.getTime());
 	start.setHours(start.getHours() + hoursFromNow);
 	start.setMinutes(0);
@@ -21,7 +21,7 @@ function createRate(price: number, hoursFromNow: number, durationHours = 1): Rat
 	end.setMinutes(0);
 	end.setSeconds(0);
 	end.setMilliseconds(0);
-	return { start, end, price };
+	return { start, end, value };
 }
 
 // Scenario data
@@ -30,7 +30,7 @@ const co2Data = {
 		545, 518, 545, 518, 0, 545, 527, 527, 536, 518, 400, 336, 336, 339, 344, 336, 336, 336, 372,
 		400, 555, 555, 545, 555, 564, 545, 555, 545, 536, 545, 527, 536, 518, 545, 509, 336, 336,
 		336,
-	].map((price, i) => createRate(price, i)),
+	].map((value, i) => createRate(value, i)),
 	duration: 8695,
 	plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
 	smartCostType: "co2",
@@ -72,7 +72,7 @@ const unknownData = {
 const dynamicData = {
 	rates: [
 		0.12, 0.15, 0, -0.05, -0.11, -0.24, -0.08, 0.12, 0.25, 0.29, 0.22, 0.31, 0.31, 0.33,
-	].map((price, i) => createRate(price, i)),
+	].map((value, i) => createRate(value, i)),
 	duration: 8695,
 	plan: [createRate(0.23, 2, 5)],
 	smartCostType: "price",

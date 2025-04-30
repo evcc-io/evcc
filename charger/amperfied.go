@@ -299,7 +299,7 @@ func (wb *Amperfied) Voltages() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*Amperfied)(nil)
 
-// identify implements the api.Identifier interface
+// Identify implements the api.Identifier interface
 func (wb *Amperfied) Identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegRfidUID, 6)
 	if err != nil {

@@ -82,47 +82,53 @@
 	</div>
 </template>
 
-<script>
-import formatter from "../../mixins/formatter.js";
+<script lang="ts">
+import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
-import { CO2_TYPE } from "../../units.js";
-import api, { allowClientError } from "../../api.js";
+import { CO2_TYPE } from "@/units";
+import api, { allowClientError } from "@/api";
+import convertRates from "@/utils/convertRates";
+import type { PropType } from "vue";
+import type { Tariff, CURRENCY, Rate, SelectOption, Slot } from "@/types/evcc";
 
 export default {
 	name: "SmartCostLimit",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
-		smartCostLimit: Number,
+		smartCostLimit: {
+			type: [Number, null] as PropType<number | null>,
+			required: true,
+		},
 		smartCostType: String,
 		tariffGrid: Number,
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		loadpointId: Number,
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
 	},
 	data() {
 		return {
-			selectedSmartCostLimit: null,
-			tariff: null,
-			startTime: null,
-			activeIndex: null,
+			selectedSmartCostLimit: null as number | null,
+			tariff: null as Tariff | null,
+			startTime: null as Date | null,
+			activeIndex: null as number | null,
 			applyToAllVisible: false,
 		};
 	},
 	computed: {
-		isCo2() {
+		isCo2(): boolean {
 			return this.smartCostType === CO2_TYPE;
 		},
-		costOptions() {
+		costOptions(): SelectOption<number>[] {
 			const { max } = this.costRange(this.totalSlots);
 
-			const values = [];
+			const values = [] as number[];
 			const stepSize = this.optionStepSize;
 			for (let i = 1; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
-				if (value > max + stepSize) break;
-				values.push(this.roundLimit(value));
+				if (max !== undefined && value > max + stepSize) break;
+				values.push(this.roundLimit(value) as number);
 			}
 			// add special entry if currently selected value is not in the scale
 			const selected = this.selectedSmartCostLimit;
@@ -140,7 +146,7 @@ export default {
 			const stepSize = this.optionStepSize;
 			// always show some negative values for price
 			const start = this.isCo2 ? 0 : stepSize * -11;
-			const minValue = Math.min(start, min);
+			const minValue = min !== undefined ? Math.min(start, min) : start;
 			return Math.floor(minValue / stepSize) * stepSize;
 		},
 		optionStepSize() {
@@ -148,6 +154,9 @@ export default {
 				return 1;
 			}
 			const { min, max } = this.costRange(this.totalSlots);
+			if (min === undefined || max === undefined) {
+				return 1;
+			}
 
 			const baseSteps = [0.001, 0.002, 0.005];
 			const range = max - Math.min(0, min);
@@ -159,11 +168,11 @@ export default {
 			}
 			return 1;
 		},
-		slots() {
-			const result = [];
-			if (!this.tariff?.rates) return result;
+		slots(): Slot[] {
+			const result: Slot[] = [];
+			if (!this.tariff?.rates || !this.startTime) return result;
 
-			const rates = this.convertDates(this.tariff.rates);
+			const { rates } = this.tariff;
 			const oneHour = 60 * 60 * 1000;
 
 			for (let i = 0; i < 42; i++) {
@@ -177,17 +186,19 @@ export default {
 				const endHour = end.getHours();
 				const day = this.weekdayShort(start);
 				// TODO: handle multiple matching time slots
-				const price = this.findSlotInRange(start, end, rates)?.price;
+				const value = this.findRateInRange(start, end, rates)?.value;
 				const charging =
-					price <= this.selectedSmartCostLimit && this.selectedSmartCostLimit !== null;
-				const selectable = price !== undefined;
-				result.push({ day, price, startHour, endHour, charging, selectable });
+					this.selectedSmartCostLimit !== null &&
+					value !== undefined &&
+					value <= this.selectedSmartCostLimit;
+				const selectable = value !== undefined;
+				result.push({ day, value, startHour, endHour, charging, selectable });
 			}
 
 			return result;
 		},
 		totalSlots() {
-			return this.slots.filter((s) => s.price !== undefined);
+			return this.slots.filter((s) => s.value !== undefined);
 		},
 		chargingSlots() {
 			return this.totalSlots.filter((s) => s.charging);
@@ -198,8 +209,8 @@ export default {
 		chargingCostRange() {
 			return this.fmtCostRange(this.costRange(this.chargingSlots));
 		},
-		activeSlot() {
-			return this.slots[this.activeIndex];
+		activeSlot(): Slot | null {
+			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
@@ -210,14 +221,14 @@ export default {
 			return null;
 		},
 		activeSlotCost() {
-			const price = this.activeSlot?.price;
-			if (price === undefined) {
+			const value = this.activeSlot?.value;
+			if (value === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
 			if (this.isCo2) {
-				return this.fmtCo2Medium(price);
+				return this.fmtCo2Medium(value);
 			}
-			return this.fmtPricePerKWh(price, this.currency);
+			return this.fmtPricePerKWh(value, this.currency);
 		},
 		title() {
 			return this.$t(`smartCost.${this.isCo2 ? "clean" : "cheap"}Title`);
@@ -245,10 +256,10 @@ export default {
 		this.selectedSmartCostLimit = this.roundLimit(this.smartCostLimit);
 	},
 	methods: {
-		roundLimit(limit) {
+		roundLimit(limit: number | null): number | null {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
 		},
-		fmtSmartCostLimit(limit) {
+		fmtSmartCostLimit(limit: number | null): string {
 			if (limit === null) {
 				return this.$t("smartCost.none");
 			}
@@ -258,45 +269,38 @@ export default {
 		},
 		async updateTariff() {
 			try {
-				const tariffRes = await api.get(`tariff/planner`, allowClientError);
-				if (tariffRes.status === 200) {
-					this.tariff = tariffRes.data.result;
+				const res = await api.get(`tariff/planner`, allowClientError);
+				if (res.status === 200) {
+					this.tariff = {
+						rates: convertRates(res.data.result.rates),
+						lastUpdate: new Date(),
+					};
 					this.startTime = new Date();
 				}
 			} catch (e) {
 				console.error(e);
 			}
 		},
-		convertDates(list) {
-			if (!list?.length) {
-				return [];
-			}
-			return list.map((item) => {
-				return {
-					start: new Date(item.start),
-					end: new Date(item.end),
-					price: item.price,
-				};
-			});
-		},
-		findSlotInRange(start, end, slots) {
-			return slots.find((s) => {
-				if (s.start.getTime() < start.getTime()) {
-					return s.end.getTime() > start.getTime();
+		findRateInRange(start: Date, end: Date, rates: Rate[]) {
+			return rates.find((r) => {
+				if (r.start.getTime() < start.getTime()) {
+					return r.end.getTime() > start.getTime();
 				}
-				return s.start.getTime() < end.getTime();
+				return r.start.getTime() < end.getTime();
 			});
 		},
-		costRange(slots) {
-			let min = undefined;
-			let max = undefined;
+		costRange(slots: Slot[]): { min: number | undefined; max: number | undefined } {
+			let min = undefined as number | undefined;
+			let max = undefined as number | undefined;
 			slots.forEach((slot) => {
-				min = min === undefined ? slot.price : Math.min(min, slot.price);
-				max = max === undefined ? slot.price : Math.max(max, slot.price);
+				if (slot.value === undefined) return;
+				min = min === undefined ? slot.value : Math.min(min, slot.value);
+				max = max === undefined ? slot.value : Math.max(max, slot.value);
 			});
 			return { min, max };
 		},
-		fmtCostRange({ min, max }) {
+		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
+			if (min === undefined || max === undefined) return "";
 			const fmtMin = this.isCo2
 				? this.fmtCo2Short(min)
 				: this.fmtPricePerKWh(min, this.currency, true);
@@ -305,21 +309,22 @@ export default {
 				: this.fmtPricePerKWh(max, this.currency, true);
 			return `${fmtMin} – ${fmtMax}`;
 		},
-		slotHovered(index) {
+		slotHovered(index: number) {
 			this.activeIndex = index;
 		},
-		slotSelected(index) {
-			const price = this.slots[index].price;
-			if (price !== undefined) {
+		slotSelected(index: number) {
+			const value = this.slots[index].value;
+			if (value !== undefined) {
 				// 3 decimal precision
-				const priceRounded = Math.ceil(price * 1000) / 1000;
-				this.saveSmartCostLimit(priceRounded);
+				const valueRounded = Math.ceil(value * 1000) / 1000;
+				this.saveSmartCostLimit(`${valueRounded}`);
 			}
 		},
-		changeSmartCostLimit($event) {
-			this.saveSmartCostLimit($event.target.value);
+		changeSmartCostLimit($event: Event) {
+			const value = ($event.target as HTMLSelectElement).value;
+			this.saveSmartCostLimit(value);
 		},
-		async saveSmartCostLimit(limit) {
+		async saveSmartCostLimit(limit: string) {
 			const url = this.isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
 				: "batterygridchargelimit";

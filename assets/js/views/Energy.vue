@@ -47,14 +47,15 @@ import Chart from "../components/Forecast/Chart.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
-import { ForecastType, type PriceSlot, type SolarDetails } from "../utils/forecast";
 import formatter from "../mixins/formatter.ts";
 import store from "../store.ts";
+import type { ForecastSlot, SolarDetails } from "../components/Forecast/types.ts";
+import { ForecastType } from "../utils/forecast.ts";
 
 interface Forecast {
-	grid?: PriceSlot[];
+	grid?: ForecastSlot[];
 	solar?: SolarDetails;
-	co2?: PriceSlot[];
+	co2?: ForecastSlot[];
 }
 
 export default defineComponent({

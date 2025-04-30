@@ -25,8 +25,8 @@
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
 import Navigation from "./Navigation.vue";
-import collector from "../../mixins/collector.js";
-import store from "../../store.js";
+import collector from "@/mixins/collector";
+import store from "@/store";
 
 export default {
 	name: "TopHeader",

@@ -22,8 +22,8 @@
 <script>
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import { distanceUnit } from "../../units.js";
-import formatter from "../../mixins/formatter.js";
+import { distanceUnit } from "@/units";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "LimitSocSelect",

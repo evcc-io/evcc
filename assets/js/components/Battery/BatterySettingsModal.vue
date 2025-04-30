@@ -242,7 +242,7 @@
 			</div>
 		</div>
 		<SmartCostLimit
-			v-if="modalVisible"
+			v-if="isModalVisible"
 			v-show="gridTabActive"
 			v-bind="smartCostLimitProps"
 			:possible="gridChargePossible"
@@ -250,29 +250,31 @@
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api from "../../api.js";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
+import smartCostAvailable from "@/utils/smartCostAvailable";
+import { defineComponent, type PropType } from "vue";
+import type { Battery, SelectOption } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "BatterySettingsModal",
 	components: { SmartCostLimit, CustomSelect, GenericModal },
 	mixins: [formatter, collector],
 	props: {
-		bufferSoc: Number,
-		prioritySoc: Number,
-		batterySoc: Number,
-		bufferStartSoc: Number,
+		bufferSoc: { type: Number, default: 100 },
+		prioritySoc: { type: Number, default: 0 },
+		batterySoc: { type: Number, default: 0 },
+		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
-		battery: { type: Array, default: () => [] },
+		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostType: String,
 		tariffGrid: Number,
@@ -342,7 +344,7 @@ export default {
 			});
 			return options;
 		},
-		bufferStartOption() {
+		bufferStartOption(): SelectOption<number> | undefined {
 			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
 		},
 		selectedBufferStartName() {
@@ -435,11 +437,11 @@ export default {
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		changeBufferStart($event) {
-			this.setBufferStartSoc(parseInt($event.target.value, 10));
+		changeBufferStart($event: Event) {
+			this.setBufferStartSoc(parseInt(($event.target as HTMLInputElement).value, 10));
 		},
-		changePrioritySoc($event) {
-			const soc = parseInt($event.target.value, 10);
+		changePrioritySoc($event: Event) {
+			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
 			if (soc > (this.bufferSoc || 100)) {
 				this.saveBufferSoc(soc);
 				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
@@ -455,18 +457,18 @@ export default {
 			const nextIndex = index === 0 ? options.length - 1 : index - 1;
 			this.setBufferStartSoc(options[nextIndex]);
 		},
-		async setBufferStartSoc(soc) {
+		async setBufferStartSoc(soc: number) {
 			this.selectedBufferStartSoc = soc;
 			await this.saveBufferStartSoc(this.selectedBufferStartSoc);
 		},
-		async changeBufferSoc($event) {
-			const soc = parseInt($event.target.value, 10);
+		async changeBufferSoc($event: Event) {
+			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
 			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 				await this.setBufferStartSoc(soc);
 			}
 			await this.saveBufferSoc(soc);
 		},
-		async savePrioritySoc(soc) {
+		async savePrioritySoc(soc: number) {
 			this.selectedPrioritySoc = soc;
 			try {
 				await api.post(`prioritysoc/${encodeURIComponent(soc)}`);
@@ -474,7 +476,7 @@ export default {
 				console.error(err);
 			}
 		},
-		async saveBufferSoc(soc) {
+		async saveBufferSoc(soc: number) {
 			this.selectedBufferSoc = soc;
 			try {
 				await api.post(`buffersoc/${encodeURIComponent(soc)}`);
@@ -482,36 +484,38 @@ export default {
 				console.error(err);
 			}
 		},
-		async saveBufferStartSoc(soc) {
+		async saveBufferStartSoc(soc: number) {
 			try {
 				await api.post(`bufferstartsoc/${encodeURIComponent(soc)}`);
 			} catch (err) {
 				console.error(err);
 			}
 		},
-		iconStyle(height) {
+		iconStyle(height: number) {
 			let scale = 1;
 			if (height <= 10) scale = 0.75;
 			if (height <= 5) scale = 0;
 			return { transform: `scale(${scale})` };
 		},
-		fmtSoc(soc) {
+		fmtSoc(soc: number) {
 			return this.fmtPercentage(soc);
 		},
-		async changeDischargeControl(e) {
+		async changeDischargeControl(e: Event) {
 			try {
-				await api.post(`batterydischargecontrol/${e.target.checked ? "true" : "false"}`);
+				await api.post(
+					`batterydischargecontrol/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
 			} catch (err) {
 				console.error(err);
 			}
 		},
-		getBufferStartName(value) {
+		getBufferStartName(value: number) {
 			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
 			const soc = this.fmtSoc(value);
 			return this.$t(`batterySettings.bufferStart.${key}`, { soc });
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
@@ -551,18 +555,20 @@ export default {
 	transform: translateY(-50%);
 }
 .batterySoc {
-	border-radius: 0.5rem;
-	left: 0.5rem;
-	right: 0.5rem;
-	height: 0.5rem;
-	opacity: 0.5;
+	--size: 0.7rem;
+	border-radius: var(--size);
+	left: 1rem;
+	right: 1rem;
+	height: var(--size);
+	opacity: 0.8;
 }
 
 .bufferStartIndicator {
+	--size: 0.7rem;
 	display: flex;
 	justify-content: space-between;
-	left: 0;
-	right: 0;
+	left: calc(-1 * var(--size) / 4);
+	right: calc(-1 * var(--size) / 4);
 }
 .bufferStartIndicator--hidden {
 	opacity: 0;
@@ -570,15 +576,15 @@ export default {
 }
 .bufferStartIndicator__left,
 .bufferStartIndicator__right {
-	height: 0.5rem;
-	width: 0.5rem;
+	height: var(--size);
+	width: var(--size);
 	background-color: var(--evcc-box);
 }
 .bufferStartIndicator__left {
-	border-radius: 0 0.5rem 0.5rem 0;
+	border-radius: 0 var(--size) var(--size) 0;
 }
 .bufferStartIndicator__right {
-	border-radius: 0.5rem 0 0 0.5rem;
+	border-radius: var(--size) 0 0 var(--size);
 }
 .progress {
 	flex: 1;

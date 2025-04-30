@@ -103,7 +103,7 @@ render: |
           | {
               start: (($time - 3600) | todateiso8601),
               end: ($time | todateiso8601),
-              price: (
+              value: (
                 kwp
                 * ($h.global_tilted_irradiance[$i] / 1000)
                 * (1 + ( alphatemp *
@@ -111,7 +111,7 @@ render: |
                         ( ($h.temperature_2m[$i]
                             + ($h.temperature_2m[$i-1] // $h.temperature_2m[$i])
                           ) / 2)
-                        + ($h.global_tilted_irradiance[$i] / 800.0) * rossmodel - 25.0
+                        + $h.global_tilted_irradiance[$i] * rossmodel - 25.0
                       )
                     ))
                 * (1 - calculate_damping($time;

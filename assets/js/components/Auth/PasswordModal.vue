@@ -85,13 +85,14 @@
 	</GenericModal>
 </template>
 
-<script type="js">
+<script type="ts">
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "../Helper/FormRow.vue";
-import api from "../../api.js";
-import { updateAuthStatus, isConfigured } from "./auth.js";
+import api from "@/api";
+import { updateAuthStatus, isConfigured } from "./auth";
+import  { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "PasswordModal",
 	components: { FormRow, GenericModal },
 	data: () => {
@@ -173,5 +174,5 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>

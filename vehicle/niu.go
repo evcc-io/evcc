@@ -154,3 +154,17 @@ func (v *Niu) Range() (int64, error) {
 	res, err := v.apiG()
 	return res.Data.EstimatedMileage, err
 }
+
+var _ api.VehicleOdometer = (*Niu)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Niu) Odometer() (float64, error) {
+	var res niu.Response
+
+	req, err := v.request(niu.ApiURI + "/motoinfo/overallTally?sn=" + v.serial)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res.Data.TotalMileage, err
+}

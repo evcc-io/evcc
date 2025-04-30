@@ -15,7 +15,7 @@ var (
 	//go:embed dist
 	web embed.FS
 
-	//go:embed i18n/*.toml
+	//go:embed i18n/*.json
 	i18n embed.FS
 )
 

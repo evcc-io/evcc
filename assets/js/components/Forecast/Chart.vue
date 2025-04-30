@@ -33,16 +33,11 @@ import {
 import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.ts";
-import colors, { lighterColor } from "../../colors.ts";
-import {
-	highestSlotIndexByDay,
-	ForecastType,
-	type PriceSlot,
-	type SolarDetails,
-	type TimeseriesEntry,
-} from "../../utils/forecast.ts";
-import type { CURRENCY } from "assets/js/types/evcc.ts";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import colors, { lighterColor } from "@/colors";
+import type { CURRENCY } from "@/types/evcc";
+import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
+import type { ForecastSlot, SolarDetails, TimeseriesEntry } from "./types";
 
 registerChartComponents([
 	BarController,
@@ -63,9 +58,9 @@ export default defineComponent({
 	components: { Bar },
 	mixins: [formatter],
 	props: {
-		grid: { type: Array as PropType<PriceSlot[]> },
+		grid: { type: Array as PropType<ForecastSlot[]> },
 		solar: { type: Object as PropType<SolarDetails> },
-		co2: { type: Array as PropType<PriceSlot[]> },
+		co2: { type: Array as PropType<ForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
 	},
@@ -174,7 +169,7 @@ export default defineComponent({
 				datasets.push({
 					label: ForecastType.Price,
 					data: this.gridSlots.map((slot, index) => ({
-						y: slot.price,
+						y: slot.value,
 						x: new Date(slot.start),
 						highlight:
 							active &&
@@ -202,7 +197,7 @@ export default defineComponent({
 								? this.selectedIndex === index
 								: index === this.maxCo2Index || index === this.minCo2Index);
 						return {
-							y: slot.price,
+							y: slot.value,
 							x: new Date(slot.start),
 							highlight: dataActive,
 							active: dataActive,
@@ -422,7 +417,7 @@ export default defineComponent({
 			now.setMilliseconds(0);
 			this.startDate = now;
 		},
-		filterSlots(slots: PriceSlot[] = []) {
+		filterSlots(slots: ForecastSlot[] = []) {
 			return slots.filter(
 				(slot) =>
 					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
@@ -462,7 +457,7 @@ export default defineComponent({
 				}, 100);
 			}
 		},
-		yMax(slots: PriceSlot[] = []): number | undefined {
+		yMax(slots: ForecastSlot[] = []): number | undefined {
 			const value = this.maxValue(slots);
 			return value ? value * 1.15 : undefined;
 		},
@@ -472,18 +467,18 @@ export default defineComponent({
 			// use scale and unscaled to determine max scale
 			return Math.max(maxValue * scale, maxValue) * 1.15;
 		},
-		maxIndex(slots: PriceSlot[] = []) {
+		maxIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((max, slot, index) => {
-				return slot.price > slots[max].price ? index : max;
+				return slot.value > slots[max].value ? index : max;
 			}, 0);
 		},
-		minIndex(slots: PriceSlot[] = []) {
+		minIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((min, slot, index) => {
-				return slot.price < slots[min].price ? index : min;
+				return slot.value < slots[min].value ? index : min;
 			}, 0);
 		},
-		maxValue(slots: PriceSlot[] = []) {
-			return slots[this.maxIndex(slots)]?.price || null;
+		maxValue(slots: ForecastSlot[] = []) {
+			return slots[this.maxIndex(slots)]?.value || null;
 		},
 		maxEntryValue(entries: TimeseriesEntry[] = []) {
 			return entries[this.maxEntryIndex(entries)]?.val || null;

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { isMqttReachable } from "./mqtt";
 
 const CONFIG = "config-grid-only.evcc.yaml";
 
@@ -25,6 +26,11 @@ const VALID_USERNAME = "rw";
 const VALID_PASSWORD = "readwrite";
 
 test.describe("mqtt", async () => {
+  test.skip(
+    async () => !(await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD)),
+    `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
+  );
+
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
     await expect(page.getByTestId("mqtt")).toContainText(["Configured", "no"].join(""));
@@ -33,6 +39,7 @@ test.describe("mqtt", async () => {
   test("mqtt via ui", async ({ page }) => {
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("mqtt-modal");
+    await expectModalVisible(modal);
 
     // setup with invalid broker
     await modal.getByLabel("Broker").fill(INVALID_BROKER);
@@ -42,7 +49,7 @@ test.describe("mqtt", async () => {
     await modal.getByLabel("Password").fill(VALID_PASSWORD);
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
 
     // restart button appears
     const restartButton = await page
@@ -61,6 +68,7 @@ test.describe("mqtt", async () => {
     await expect(page.getByTestId("fatal-error")).toContainText("failed configuring mqtt");
 
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
     await expect(modal.getByLabel("Broker")).toHaveValue(INVALID_BROKER);
     await expect(modal.getByLabel("Topic")).toHaveValue(VALID_TOPIC); // whitespace has been trimmed
     await expect(modal.getByLabel("Client ID")).toHaveValue(VALID_CLIENT_ID);

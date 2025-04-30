@@ -203,16 +203,16 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 import Sponsor from "./Sponsor.vue";
 import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import co2Reference from "./co2Reference.js";
-import settings from "../../settings.js";
-import api, { allowClientError } from "../../api.js";
-import { docsPrefix } from "../../i18n.js";
+import co2Reference from "./co2Reference";
+import settings from "@/settings";
+import api, { allowClientError } from "@/api";
+import { docsPrefix } from "@/i18n";
 
 export default {
 	name: "Savings",
@@ -325,7 +325,7 @@ export default {
 				const { rates } = res.data.result;
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
-						return acc + slot.price;
+						return acc + slot.value;
 					}, 0) / rates.length;
 			} catch (e) {
 				this.referenceGrid = undefined;

@@ -21,7 +21,7 @@
 					<span v-else>{{ $t("main.targetChargePlan.priceLabel") }}</span>
 				</div>
 				<div class="value text-primary">
-					{{ fmtAvgPrice }}
+					{{ fmtAvgValue }}
 				</div>
 			</div>
 		</div>
@@ -36,11 +36,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter from "../../mixins/formatter.js";
-import { CO2_TYPE } from "../../units.js";
+import formatter from "@/mixins/formatter";
+import { CO2_TYPE } from "@/units";
 import TariffChart from "../Tariff/TariffChart.vue";
-import type { CURRENCY, Rate } from "assets/js/types/evcc.js";
-import type { Slot } from "./types.js";
+import type { CURRENCY, Rate, Slot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
@@ -87,29 +86,29 @@ export default defineComponent({
 		hasTariff(): boolean {
 			return (this.rates?.length || 0) > 1;
 		},
-		avgPrice(): number | undefined {
+		avgValue(): number | undefined {
 			let hourSum = 0;
-			let priceSum = 0;
+			let valueSum = 0;
 			this.convertDates(this.plan).forEach((slot) => {
 				const hours = (slot.end.getTime() - slot.start.getTime()) / 3600000;
-				if (slot.price) {
+				if (slot.value) {
 					hourSum += hours;
-					priceSum += hours * slot.price;
+					valueSum += hours * slot.value;
 				}
 			});
-			return hourSum ? priceSum / hourSum : undefined;
+			return hourSum ? valueSum / hourSum : undefined;
 		},
-		fmtAvgPrice(): string {
+		fmtAvgValue(): string {
 			if (this.duration === 0) {
 				return "—";
 			}
-			const price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
-			if (price === undefined) {
+			const value = this.activeSlot ? this.activeSlot.value : this.avgValue;
+			if (value === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
 			return this.isCo2
-				? this.fmtCo2Medium(price)
-				: this.fmtPricePerKWh(price, this.currency);
+				? this.fmtCo2Medium(value)
+				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex ? this.slots[this.activeIndex] : null;
@@ -122,10 +121,8 @@ export default defineComponent({
 			}
 			return null;
 		},
-		targetHourOffset(): number | null {
-			if (!this.targetTime) {
-				return null;
-			}
+		targetHourOffset(): number | undefined {
+			if (!this.targetTime) return;
 			const start = new Date(this.startTime);
 			start.setMinutes(0);
 			start.setSeconds(0);
@@ -155,7 +152,7 @@ export default defineComponent({
 				const day = this.weekdayShort(start);
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
-				const price = this.findSlotInRange(start, end, rates)?.price;
+				const value = this.findSlotInRange(start, end, rates)?.value;
 				const isTarget =
 					this.targetTime && start <= this.targetTime && end > this.targetTime;
 				const charging = this.findSlotInRange(start, end, plan) != null;
@@ -167,7 +164,7 @@ export default defineComponent({
 					this.targetTime < this.endTime;
 				result.push({
 					day,
-					price,
+					value,
 					startHour,
 					endHour,
 					charging,
@@ -193,7 +190,7 @@ export default defineComponent({
 				return {
 					start: new Date(item.start),
 					end: new Date(item.end),
-					price: item.price,
+					value: item.value,
 				};
 			});
 		},

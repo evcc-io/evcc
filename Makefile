@@ -60,9 +60,6 @@ lint-ui::
 test-ui::
 	npm test
 
-toml::
-	go run packaging/toml.go
-
 test::
 	@echo "Running testsuite"
 	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...

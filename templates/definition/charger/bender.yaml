@@ -18,6 +18,12 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON ChargeControl
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You 500
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4Business 700
   - brand: Webasto
     description:
       generic: Live
