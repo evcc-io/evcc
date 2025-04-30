@@ -142,30 +142,40 @@ func (c *PlugChoice) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *PlugChoice) Enabled() (bool, error) {
-	res, err := c.powerG.Get()
+	res, err := c.statusG.Get()
 	if err != nil {
 		return false, err
 	}
 
-	// Check if there is power - use that as enabled indicator
-	kw, err := strconv.ParseFloat(res.KW, 64)
-	if err != nil {
-		return false, fmt.Errorf("error parsing power: %w", err)
+	// Find the connector with the specified connectorID
+	for _, connector := range res.Data.Connectors {
+		if connector.ConnectorID == c.connectorID {
+			// Check status for enabled state
+			switch status := connector.Status; status {
+			case "Charging", "SuspendedEV":
+				return true, nil
+			case "SuspendedEVSE":
+				return false, nil
+			default:
+				return c.enabled, nil
+			}
+		}
 	}
 
-	return c.enabled && kw > 0, nil
+	return false, fmt.Errorf("connector with ID %d not found", c.connectorID)
 }
 
 // Enable implements the api.Charger interface
 func (c *PlugChoice) Enable(enable bool) error {
 	var current int64
 	if enable {
-		current = 16 // default to 16A when enabling
+		current = 16 // TODO: dynamisch?
 	}
 
 	err := c.MaxCurrent(current)
 	if err == nil {
 		c.enabled = enable
+
 		// Reset cache to ensure fresh data
 		c.statusG.Reset()
 		c.powerG.Reset()
