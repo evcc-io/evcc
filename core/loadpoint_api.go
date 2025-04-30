@@ -253,11 +253,6 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 
 	lp.Lock()
 	lp.setPhasesConfigured(phases)
-
-	// apply immediately if not 1p3p
-	if !lp.hasPhaseSwitching() {
-		lp.setPhases(phases)
-	}
 	lp.Unlock()
 
 	lp.requestUpdate()
