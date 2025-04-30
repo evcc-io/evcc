@@ -34,7 +34,8 @@ func init() {
 func NewPlugChoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI         string
-		ChargerUUID string
+		ChargerUUID string // kept for backward compatibility
+		Identity    string
 		ConnectorID int
 		Token       string
 		Cache       time.Duration
@@ -48,29 +49,52 @@ func NewPlugChoiceFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewPlugChoice(cc.URI, cc.ChargerUUID, cc.ConnectorID, cc.Token, cc.Cache)
+	// If both are provided, Identity takes precedence
+	if cc.Identity != "" || cc.ChargerUUID != "" {
+		return NewPlugChoice(cc.URI, cc.ChargerUUID, cc.Identity, cc.ConnectorID, cc.Token, cc.Cache)
+	}
+
+	return nil, fmt.Errorf("either identity or chargerUUID must be provided")
 }
 
 // NewPlugChoice creates a PlugChoice charger
-func NewPlugChoice(uri, chargerUUID string, connectorID int, token string, cache time.Duration) (api.Charger, error) {
+func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("plugchoice")
-
-	c := &PlugChoice{
-		Helper:      request.NewHelper(log),
-		log:         log,
-		uri:         strings.TrimRight(uri, "/"),
-		chargerUUID: chargerUUID,
-		connectorID: connectorID,
-	}
+	helper := request.NewHelper(log)
+	uri = strings.TrimRight(uri, "/")
 
 	// Set up authentication if provided
 	if token != "" {
-		c.Client.Transport = &transport.Decorator{
+		helper.Client.Transport = &transport.Decorator{
 			Decorator: transport.DecorateHeaders(map[string]string{
 				"Authorization": "Bearer " + token,
 			}),
-			Base: c.Client.Transport,
+			Base: helper.Client.Transport,
 		}
+	}
+
+	// If identity is provided but no UUID, try to find the UUID
+	if chargerUUID == "" && identity != "" {
+		var err error
+		log.TRACE.Printf("looking up UUID for charger with identity: %s", identity)
+		chargerUUID, err = plugchoice.FindChargerUUIDByIdentity(log, helper, uri, identity)
+		if err != nil {
+			return nil, fmt.Errorf("error finding charger UUID: %w", err)
+		}
+		log.TRACE.Printf("found UUID %s for identity %s", chargerUUID, identity)
+	}
+
+	// If we still don't have a UUID, return an error
+	if chargerUUID == "" {
+		return nil, fmt.Errorf("either chargerUUID or identity must be provided")
+	}
+
+	c := &PlugChoice{
+		Helper:      helper,
+		log:         log,
+		uri:         uri,
+		chargerUUID: chargerUUID,
+		connectorID: connectorID,
 	}
 
 	// setup cached status values
@@ -201,6 +225,11 @@ func (c *PlugChoice) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
+	// Handle the case where power value is "-"
+	if res.KW == "-" {
+		return 0, nil
+	}
+
 	kw, err := strconv.ParseFloat(res.KW, 64)
 	if err != nil {
 		return 0, fmt.Errorf("error parsing power: %w", err)
@@ -218,19 +247,31 @@ func (c *PlugChoice) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	l1, err := strconv.ParseFloat(res.L1, 64)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("error parsing L1 current: %w", err)
+	// Helper function to parse current values, handling "-" as 0
+	parsePhaseValue := func(val string, phase string) (float64, error) {
+		if val == "-" {
+			return 0, nil
+		}
+		result, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing %s current: %w", phase, err)
+		}
+		return result, nil
 	}
 
-	l2, err := strconv.ParseFloat(res.L2, 64)
+	l1, err := parsePhaseValue(res.L1, "L1")
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("error parsing L2 current: %w", err)
+		return 0, 0, 0, err
 	}
 
-	l3, err := strconv.ParseFloat(res.L3, 64)
+	l2, err := parsePhaseValue(res.L2, "L2")
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("error parsing L3 current: %w", err)
+		return 0, 0, 0, err
+	}
+
+	l3, err := parsePhaseValue(res.L3, "L3")
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
 	return l1, l2, l3, nil
