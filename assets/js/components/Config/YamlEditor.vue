@@ -27,8 +27,8 @@
 import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
 import { cleanYaml } from "@/utils/cleanYaml.js";
 // don't bundle monaco-editor but ensure that it get updated regularly
-import { dependencies } from "../../../../package.json";
-const monacoVersion = dependencies["monaco-editor"];
+import { packages } from "../../../../package-lock.json";
+const monacoVersion = packages["node_modules/monaco-editor"].version;
 
 const $html = document.querySelector("html");
 export default {
