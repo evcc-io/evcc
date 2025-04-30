@@ -1,15 +1,9 @@
 template: plugchoice
 products:
   - brand: Plugchoice
-description: PlugChoice charger
 group: generic
 capabilities: ["rfid"]
 params:
-  - name: uri
-    default: https://app.plugchoice.com
-    help:
-      de: API-Basis-URL
-      en: API base URL
   - name: token
     required: true
     help:
@@ -21,15 +15,13 @@ params:
       de: UUID des Ladepunkts
       en: Charger UUID
   - name: connectorID
+    required: true
     default: 1
     help:
       de: Anschluss-ID (üblicherweise 1)
       en: Connector ID (usually 1)
 render: |
   type: plugchoice
-  uri: {{ .uri }}
   token: {{ .token }}
   chargerUUID: {{ .chargerUUID }}
-  {{- if ne .connectorID 1 }}
   connectorID: {{ .connectorID }}
-  {{- end }}
