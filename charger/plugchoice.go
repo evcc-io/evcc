@@ -2,7 +2,6 @@ package charger
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -229,13 +228,13 @@ func (c *PlugChoice) CurrentPower() (float64, error) {
 	return kw * 1000, nil // Convert kW to W
 }
 
-var _ api.ChargeRater = (*PlugChoice)(nil)
+//var _ api.ChargeRater = (*PlugChoice)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *PlugChoice) ChargedEnergy() (float64, error) {
-	// Return a random number between 0 and 100 kWh as per requirements
-	return rand.Float64() * 100, nil
-}
+//// ChargedEnergy implements the api.ChargeRater interface
+//func (c *PlugChoice) ChargedEnergy() (float64, error) {
+//	// Return a random number between 0 and 100 kWh as per requirements
+//	return rand.Float64() * 100, nil
+//}
 
 var _ api.PhaseCurrents = (*PlugChoice)(nil)
 
