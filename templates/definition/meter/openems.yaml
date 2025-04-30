@@ -3,6 +3,12 @@ products:
   - brand: OpenEMS
   - brand: FENECON
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich.
+    en: |
+      A commercial license is required for FEMS FENECON systems for active battery control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,7 +23,7 @@ params:
     help:
       de: steuerbare Batterie Komponente
       en: controllable battery component
-    usages: ["battery"]	
+    usages: ["battery"]
     advanced: true
   - name: watchdog
     type: duration
@@ -25,8 +31,8 @@ params:
     help:
       de: abgestimmt auf das API-Timeout
       en: adjusted to the API timout
-    usages: ["battery"]	
-    advanced: true	
+    usages: ["battery"]
+    advanced: true
   - name: maxacpower
   - name: capacity
     advanced: true
@@ -79,7 +85,7 @@ render: |
           method: POST
           headers:
           - content-type: application/json
-          body: '{"value":0}'		  
+          body: '{"value":0}'
       - case: 2 # hold
         set:
           source: http
