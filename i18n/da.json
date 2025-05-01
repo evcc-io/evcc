@@ -8,7 +8,7 @@
     },
     "capacity": "{energy} af {total}",
     "control": "Batteri indstillinger",
-    "discharge": "Forhindrer afladning ved planlagt opladning og i hurtig mode",
+    "discharge": "Forhindrer afladning ved planlagt opladning og i hurtig mode.",
     "disclaimerHint": "OBS:",
     "disclaimerText": "Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende.",
     "gridChargeTab": "Opladning fra elnettet",
@@ -40,7 +40,7 @@
       "chargers": "EV opladere",
       "generic": "Generisk integration",
       "heatingdevices": "Varmeenheder",
-      "ocppHelp": "Kopier denne adresse til opladerens konfiguration",
+      "ocppHelp": "Kopier denne adresse til opladerens konfiguration.",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
@@ -182,18 +182,18 @@
       "chargerPower22kw": "22 kW",
       "chargerPower22kwHelp": "Benytter en strømstyrke mellem 6 og 32 A.",
       "chargerPowerCustom": "andre",
-      "chargerPowerCustomHelp": "Definer strømstyrke interval",
+      "chargerPowerCustomHelp": "Definer strømstyrke interval.",
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Lader",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
-      "defaultModeHelp": "Opladningstilstand når køretøjet forbindes",
+      "defaultModeHelp": "Opladningstilstand når køretøjet forbindes.",
       "defaultModeHelpKeep": "Gemmer den senest valgte opladningstilstand.",
       "defaultModeLabel": "Standardtilstand",
       "delete": "Slet",
-      "electricalSubtitle": "Ved tvivl, spørg din elektriker",
+      "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
-      "energyMeterHelp": "Ekstra måler, hvis opladeren ikke har en integreret",
+      "energyMeterHelp": "Ekstra måler, hvis opladeren ikke har en integreret.",
       "energyMeterLabel": "Energi måler",
       "estimateLabel": "Interpoler opladningsniveauet mellem API-opdateringer",
       "maxCurrentHelp": "Skal være større end minimum strømstyrken.",
@@ -211,7 +211,7 @@
       "pollIntervalHelp": "Tid mellem køretøjets API-opdateringer. Korte intervaller kan dræne køretøjets batteri.",
       "pollIntervalLabel": "Opdateringsinterval",
       "pollModeAlways": "altid",
-      "pollModeAlwaysHelp": "Hent altid status opdateringer med jævne mellemrum",
+      "pollModeAlwaysHelp": "Hent status opdateringer med jævne mellemrum.",
       "pollModeCharging": "Oplader",
       "pollModeChargingHelp": "Hent kun køretøjets status når der lades.",
       "pollModeConnected": "forbundet",
@@ -227,12 +227,12 @@
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
-      "thresholdDisableHelpInvalid": "Brug en positiv værdi",
+      "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
       "thresholdDisableHelpPositive": "Stop opladningen, når der bruges mere end {power} fra elnettet i {delay}.",
       "thresholdDisableHelpZero": "Stop, når den minimale opladningseffekt ikke kan opfyldes i {delay}.",
       "thresholdDisableLabel": "Deaktiver strøm fra elnettet",
       "thresholdEnableDelayLabel": "Aktiver forsinkelse",
-      "thresholdEnableHelpInvalid": "Brug en negativ værdi",
+      "thresholdEnableHelpInvalid": "Brug en negativ værdi.",
       "thresholdEnableHelpNegative": "Start opladning, når {surplus} overskud er tilgængelig i {delay}.",
       "thresholdEnableHelpZero": "Start, når mindste overskud af opladningsstrøm er tilgængelig i {delay}.",
       "thresholdEnableLabel": "Brug elnettet",
@@ -241,7 +241,7 @@
       "titleExample": "Garage, Carport osv.",
       "titleLabel": "Titel",
       "vehicleAutoDetection": "Automatisk registrering",
-      "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge",
+      "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
       "vehicleHelpDefault": "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig.",
       "vehicleLabel": "Standard køretøj",
       "vehiclesTitle": "Køretøjer"
@@ -259,7 +259,7 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
-      "yaml": "Enheder fra evcc.yaml kan ikke ændres her"
+      "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
     "messaging": {
       "description": "Modtag beskeder om dine opladningssessioner.",
@@ -372,15 +372,15 @@
       "labelToken": "Sponsor token",
       "title": "Sponsorat",
       "tokenRequired": "Du skal konfigurere et sponsortoken, før du kan oprette denne enhed.",
-      "tokenRequiredLearnMore": "Lær mere",
+      "tokenRequiredLearnMore": "Lær mere.",
       "trialToken": "Test token"
     },
     "system": {
       "logs": "Log",
       "restart": "Genstart",
-      "restartRequiredDescription": "Genstart for at se effekten",
-      "restartRequiredMessage": "Konfiguration er ændret",
-      "restartingDescription": "Vent venligst...",
+      "restartRequiredDescription": "Genstart for at se effekten.",
+      "restartRequiredMessage": "Konfiguration er ændret.",
+      "restartingDescription": "Vent venligst…",
       "restartingMessage": "Genstarter evcc."
     },
     "tariffs": {
@@ -388,14 +388,14 @@
       "title": "Tariffer"
     },
     "title": {
-      "description": "Vises på hovedskærm og på browserfane",
+      "description": "Vises på hovedskærm og på browserfane.",
       "label": "Titel",
       "title": "Rediger titel"
     },
     "validation": {
       "failed": "mislykkedes",
       "label": "Status",
-      "running": "validering",
+      "running": "validering…",
       "success": "succes",
       "unknown": "ukendt",
       "validate": "validerer"
@@ -404,13 +404,13 @@
       "cancel": "Annuller",
       "chargingSettings": "Opladnings indstillinger",
       "defaultMode": "Standardtilstand",
-      "defaultModeHelp": "Opladnings tilstand når køretøj forbindes",
+      "defaultModeHelp": "Opladnings tilstand når køretøj forbindes.",
       "delete": "Slet",
       "generic": "Andre integrationer",
       "identifiers": "RFID identifikatorer",
       "identifiersHelp": "Liste over RFID-strenge til at identificere køretøjet. En indtastning pr. linje. Den aktuelle identifikator kan findes på det respektive ladepunkt på oversigtssiden.",
       "maximumCurrent": "Maksimal strømstyrke",
-      "maximumCurrentHelp": "Skal være højere end minimal strømstyrke",
+      "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
       "maximumPhases": "Maksimal antal faser",
       "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
       "minimumCurrent": "Minimal strømstyrke",
@@ -436,7 +436,7 @@
       "greenShareSub2": "sol, og batteriopbevaring",
       "power": "Opladningsstrøm",
       "powerSub1": "{activeClients} af {totalClients} deltagere",
-      "powerSub2": "oplader ...",
+      "powerSub2": "oplader…",
       "tabTitle": "Live fællesskab"
     },
     "savings": {
@@ -492,7 +492,7 @@
       "modalTitle": "Ny version tilgængelig",
       "modalUpdate": "Installere",
       "modalUpdateNow": "Installer nu",
-      "modalUpdateStarted": "Starter den nye version af evcc...",
+      "modalUpdateStarted": "Starter den nye version af evcc…",
       "modalUpdateStatusStart": "Installation startede:"
     }
   },
@@ -539,7 +539,7 @@
     "issueButton": "Meld en fejl",
     "issueDescription": "Fundet en mærkelig eller forkert adfærd?",
     "logsButton": "Se logfil",
-    "logsDescription": "Check log for fejl",
+    "logsDescription": "Check log for fejl.",
     "modalTitle": "Brug for hjælp?",
     "primaryActions": "Noget fungerer ikke, som det skulle? Disse er gode steder at få hjælp.",
     "restart": {
@@ -559,7 +559,7 @@
     "download": "Hent hele log filen",
     "levelLabel": "Filtrer på log niveau",
     "nAreas": "{count} områder",
-    "noResults": "Ingen matchende logposter",
+    "noResults": "Ingen matchende logposter.",
     "search": "Søg",
     "selectAll": "vælg alt",
     "showAll": "Vis alle poster",
@@ -571,10 +571,10 @@
     "error": "Login mislykkedes: ",
     "iframeHint": "Åbn evcc i en ny fane.",
     "iframeIssue": "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP.",
-    "invalid": "Ugyldig adgangskode",
+    "invalid": "Ugyldig adgangskode.",
     "login": "Log på",
     "password": "Adgangskode",
-    "reset": "Nulstil adgangskode",
+    "reset": "Nulstil adgangskode?",
     "title": "Godkendelse"
   },
   "main": {
@@ -624,10 +624,10 @@
       "selfConsumption": "Eget forbrug"
     },
     "heatingStatus": {
-      "charging": "Opvarmer...",
-      "connected": "Standby",
+      "charging": "Opvarmer…",
+      "connected": "Standby.",
       "vehicleLimit": "Opvarmning begrænsning",
-      "waitForVehicle": "Klar. Venter på varmelegeme..."
+      "waitForVehicle": "Klar. Venter på varmelegeme…"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -645,17 +645,17 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hurtig opladning fra husbatteriet",
+        "description": "Hurtig opladning fra husbatteriet.",
         "label": "Batteri boost",
-        "mode": "Kun tilgængelig i solar og min+solar mode",
-        "once": "Boost er aktiveret for denne opladning"
+        "mode": "Kun tilgængelig i solar og min+solar mode.",
+        "once": "Boost er aktiveret for denne opladning."
       },
       "batteryUsage": "Husbatteri",
       "currents": "Ladestrøm",
       "default": "standard",
       "disclaimerHint": "Bemærk:",
       "limitSoc": {
-        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet",
+        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet.",
         "label": "standard opladningsgrænse"
       },
       "maxCurrent": {
@@ -665,13 +665,13 @@
         "label": "Min. Nuværende"
       },
       "minSoc": {
-        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage",
+        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage.",
         "label": "Min. opladning %"
       },
-      "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau",
+      "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {
         "label": "Faser",
-        "no1p3pSupport": "Hvordan er din oplader forbundet",
+        "no1p3pSupport": "Hvordan er din oplader forbundet?",
         "phases_0": "automatisk skift",
         "phases_1": "1 fase",
         "phases_1_hint": "({min} til {max})",
@@ -706,7 +706,7 @@
       "inactiveLabel": "Planlagt tid",
       "nextPlan": "Næste plan",
       "notReachableInTime": "Målet vil blive nået {overrun} senere.",
-      "onlyInPvMode": "Opladningsplan virker kun i solar mode",
+      "onlyInPvMode": "Opladningsplan virker kun i solar mode.",
       "planDuration": "Opladningstid",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} til {end}",
@@ -715,8 +715,8 @@
       "priceLimit": "pris grænse på {price}",
       "remove": "Fjern",
       "setTargetTime": "ingen",
-      "targetIsAboveLimit": "Den indstillede opladningsgrænse på {limit} ignoreres i denne periode\"",
-      "targetIsAboveVehicleLimit": "Køretøjets begrænsning er under opladningsmålet",
+      "targetIsAboveLimit": "Den indstillede opladningsgrænse på {limit} ignoreres i denne periode.",
+      "targetIsAboveVehicleLimit": "Køretøjets begrænsning er under opladningsmålet.",
       "targetIsInThePast": "Vælg et tidspunkt i fremtiden, Marty.",
       "targetIsTooFarInTheFuture": "Vi justerer planen så snart vi ved mere om fremtiden.",
       "title": "Planlagt tid",
@@ -740,30 +740,30 @@
     "vehicle": {
       "addVehicle": "Tilføj køretøj",
       "changeVehicle": "Ændre køretøj",
-      "detectionActive": "Detektering af køretøj ...",
+      "detectionActive": "Detektering af køretøj…",
       "fallbackName": "Køretøj",
       "moreActions": "Flere handlinger",
       "none": "Intet køretøj",
       "notReachable": "Ingen kontakt til køretøj. Prøv at genstarte evcc.",
       "targetSoc": "Begrænsning",
-      "temp": "Temp",
+      "temp": "Temp.",
       "tempLimit": "Temp. grænse",
       "unknown": "Gæstekøretøj",
       "vehicleSoc": "Oplader"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Venter på godkendelse.",
-      "batteryBoost": "Boost fra batteri er aktiv",
-      "charging": "Oplader...",
+      "batteryBoost": "Boost fra batteri er aktiv.",
+      "charging": "Oplader…",
       "cheapEnergyCharging": "Billig energi er tilgængelig.",
       "cheapEnergyNextStart": "Billig energi i {duration}.",
-      "cheapEnergySet": "Prisgrænse fastsat",
+      "cheapEnergySet": "Prisgrænse fastsat.",
       "cleanEnergyCharging": "Grøn energi er tilgængelig.",
       "cleanEnergyNextStart": "Grøn energi i {duration}.",
       "cleanEnergySet": "CO₂ grænse fastsat.",
       "climating": "Forkonditionering registreret.",
       "connected": "Forbundet.",
-      "disconnectRequired": "Opladning afbrudt, Prøv at forbinde igen",
+      "disconnectRequired": "Opladning afbrudt, Prøv at forbinde igen.",
       "disconnected": "Afbrudt.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
@@ -773,10 +773,10 @@
       "scale3p": "Øger snart til 3-faset opladning.",
       "targetChargeActive": "Opladningsplan er aktiv. Forventes afsluttet om {duration}.",
       "targetChargePlanned": "Opladningsplan starter om {duration}.",
-      "targetChargeWaitForVehicle": "Plan for opladning er klar. Venter på køretøj...",
+      "targetChargeWaitForVehicle": "Plan for opladning er klar. Venter på køretøj…",
       "vehicleLimit": "Køretøjets grænse",
       "vehicleLimitReached": "Køretøjets grænse er nået.",
-      "waitForVehicle": "Parat. Venter på køretøj ...",
+      "waitForVehicle": "Parat. Venter på køretøj…",
       "welcome": "Kort indledende opladning for at bekræfte forbindelsen."
     },
     "vehicles": "Parkering",
@@ -795,7 +795,7 @@
     "restarting": "Serveren kommer tilbage om et øjeblik."
   },
   "passwordModal": {
-    "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på",
+    "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på.",
     "empty": "Adgangskode må ikke være tomt",
     "error": "Fejl: ",
     "labelCurrent": "Nuværende adgangskode",
@@ -911,7 +911,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentielle UI funktioner"
+      "value": "Vis eksperimentelle brugergrænsefladefunktioner."
     },
     "language": {
       "auto": "Automatisk",
@@ -941,20 +941,20 @@
   "smartCost": {
     "activeHours": "{charging} af {total}",
     "activeHoursLabel": "Aktive timer",
-    "applyToAll": "Anvendes overalt",
-    "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet",
+    "applyToAll": "Anvendes overalt?",
+    "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
     "cheapTitle": "Billig opladning fra elnettet",
     "cleanTitle": "Grøn opladning fra elnettet",
     "co2Label": "CO₂ udledning",
     "co2Limit": "CO₂ grænse",
-    "loadpointDescription": "Aktiverer midlertidig hurtig ladning i solcelle tilstand",
+    "loadpointDescription": "Aktiverer midlertidig hurtig-opladning i solcelle tilstand.",
     "modalTitle": "Smart opladning fra elnettet",
     "none": "ingen",
     "priceLabel": "Energi pris",
     "priceLimit": "Pris grænse",
     "resetAction": "Fjern begrænsning",
     "resetWarning": "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?",
-    "saved": "Gemt"
+    "saved": "Gemt."
   },
   "startupError": {
     "configFile": "Konfigurationsfil brugt:",
