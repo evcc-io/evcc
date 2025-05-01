@@ -368,24 +368,20 @@ export default defineComponent({
 						},
 					},
 					yForecast: {
-						display: false,
+						...this.yScaleOptions(ForecastType.Solar),
 						min: 0,
 						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
 						beginAtZero: true,
 					},
-					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
+					yCo2: {
+						...this.yScaleOptions(ForecastType.Co2),
+						min: 0,
+						max: this.yMax(this.co2Slots),
+					},
 					yPrice: {
-						display: true,
+						...this.yScaleOptions(ForecastType.Price),
 						suggestedMin: 0,
 						max: this.yMax(this.gridSlots),
-						ticks: { display: false },
-						border: { display: false },
-						grid: {
-							// @ts-expect-error no-explicit-any
-							lineWidth: (context) => {
-								return context.tick?.value === 0 ? 1 : 0;
-							},
-						},
 					},
 				},
 			};
@@ -499,6 +495,23 @@ export default defineComponent({
 			return entries.reduce((max, entry, index) => {
 				return entry.val > entries[max].val ? index : max;
 			}, 0);
+		},
+		yScaleOptions(type: ForecastType) {
+			return type === this.selected
+				? {
+						display: true,
+						ticks: { display: false },
+						border: { display: false },
+						grid: {
+							display: true,
+							color: colors.border,
+							// @ts-expect-error no-explicit-any
+							lineWidth: (context) => {
+								return context.tick?.value === 0 ? 1 : 0;
+							},
+						},
+					}
+				: { display: false };
 		},
 	},
 });
