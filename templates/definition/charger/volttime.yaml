@@ -2,7 +2,18 @@ template: volttime
 products:
   - brand: Volt Time
     description:
-      generic: Source, Source 2, Source 2s, One
+      generic: Source
+  - brand: Volt Time
+    description:
+      generic: Source 2
+  - brand: Volt Time
+    description:
+      generic: Source 2s
+  - brand: Volt Time
+    description:
+      generic: One
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: token
     required: true
