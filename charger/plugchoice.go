@@ -35,13 +35,14 @@ import (
 // Plugchoice charger implementation
 type Plugchoice struct {
 	*request.Helper
-	log       *util.Logger
-	uri       string
-	uuid      string
-	connector int
-	enabled   bool
-	statusG   util.Cacheable[plugchoice.StatusResponse]
-	powerG    util.Cacheable[plugchoice.PowerResponse]
+	log         *util.Logger
+	uri         string
+	uuid        string
+	connector   int
+	enabled     bool
+	lastCurrent int64
+	statusG     util.Cacheable[plugchoice.StatusResponse]
+	powerG      util.Cacheable[plugchoice.PowerResponse]
 }
 
 func init() {
@@ -194,7 +195,7 @@ func (c *Plugchoice) Enabled() (bool, error) {
 func (c *Plugchoice) Enable(enable bool) error {
 	var current int64
 	if enable {
-		current = 16 // default to 16A when enabling
+		current = c.lastCurrent
 	}
 
 	err := c.MaxCurrent(current)
@@ -228,6 +229,7 @@ func (c *Plugchoice) MaxCurrent(current int64) error {
 
 	_, err = c.DoBody(req)
 	if err == nil {
+		c.lastCurrent = current
 		// Reset cache to ensure fresh data after changing current
 		c.statusG.Reset()
 		c.powerG.Reset()
