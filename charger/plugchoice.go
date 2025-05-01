@@ -202,9 +202,7 @@ func (c *Plugchoice) Enable(enable bool) error {
 	err := c.MaxCurrent(current)
 	if err == nil {
 		c.enabled = enable
-		// Reset cache to ensure fresh data
-		c.statusG.Reset()
-		c.powerG.Reset()
+		c.resetCaches()
 	}
 
 	return err
@@ -231,9 +229,7 @@ func (c *Plugchoice) MaxCurrent(current int64) error {
 	_, err = c.DoBody(req)
 	if err == nil {
 		c.lastCurrent = current
-		// Reset cache to ensure fresh data after changing current
-		c.statusG.Reset()
-		c.powerG.Reset()
+		c.resetCaches()
 	}
 
 	return err
@@ -303,4 +299,10 @@ func (c *Plugchoice) Currents() (float64, float64, float64, error) {
 	}
 
 	return l1, l2, l3, nil
+}
+
+// Helper for resetting caches - to prevent stale data
+func (c *Plugchoice) resetCaches() {
+	c.statusG.Reset()
+	c.powerG.Reset()
 }
