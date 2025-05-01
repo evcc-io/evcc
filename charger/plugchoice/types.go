@@ -11,7 +11,7 @@ type ChargerData struct {
 	ConnectionStatus string                    `json:"connection_status"`
 	Status           core.ChargePointStatus    `json:"status"`
 	Error            core.ChargePointErrorCode `json:"error"`
-	ErrorInfo        any                       `json:"error_info"`
+	ErrorInfo        string                    `json:"error_info"`
 	CreatedAt        string                    `json:"created_at"`
 	UpdatedAt        string                    `json:"updated_at"`
 	Model            struct {
@@ -59,7 +59,7 @@ type Connector struct {
 	ConnectorID int                       `json:"connector_id"`
 	Status      core.ChargePointStatus    `json:"status"`
 	Error       core.ChargePointErrorCode `json:"error"`
-	ErrorInfo   any                       `json:"error_info"`
+	ErrorInfo   string                    `json:"error_info"`
 	MaxAmperage int                       `json:"max_amperage"`
 	CreatedAt   string                    `json:"created_at"`
 	UpdatedAt   string                    `json:"updated_at"`
