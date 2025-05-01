@@ -200,12 +200,13 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 }
 
 func (c *Easee) waitForOptionalState() {
-    for i := 0; i < 30; i++ {
-        if c.optionalStatePresent() {
-    	    return
-        }
-        time.Sleep(100 * time.Millisecond)
+	for i := 0; i < 30; i++ {
+		if c.optionalStatePresent() {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
+	c.log.WARN.Println("did not receive full state from cloud")
 }
 
 // check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
