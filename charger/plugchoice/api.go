@@ -12,14 +12,12 @@ import (
 func FindChargerUUIDByIdentity(log *util.Logger, client *request.Helper, baseURI string, identity string) (string, error) {
 	baseURI = baseURI + "/api/v3/chargers"
 
-	log.TRACE.Printf("searching for charger with identity %s", identity)
-
 	for page := 1; page < 10; page++ {
 		uri := fmt.Sprintf("%s?page=%d", baseURI, page)
 
 		var res ChargerListResponse
 		if err := client.GetJSON(uri, &res); err != nil {
-			return "", fmt.Errorf("error fetching chargers list: %w", err)
+			return "", fmt.Errorf("fetching chargers: %w", err)
 		}
 
 		// Search for the identity in this page
