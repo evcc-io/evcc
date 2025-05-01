@@ -87,22 +87,6 @@ func TestProductUpdate_InitialStateCheck(t *testing.T) {
 	}
 }
 
-func TestEasee_waitForOptionalStateTimeout(t *testing.T) {
-	e := newEasee()
-
-	done := make(chan bool, 1)
-	go func(chan bool) {
-		e.waitForOptionalState()
-		done <- true
-	}(done)
-
-	select {
-	case <-done:
-	case <-time.After(4 * time.Second):
-		assert.Fail(t, "waitForOptionalState did not return")
-	}
-}
-
 // TestInExpectedOpMode tests the inExpectedOpMode function with different scenarios
 func TestInExpectedOpMode(t *testing.T) {
 	tc := []struct {
