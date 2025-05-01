@@ -1,17 +1,19 @@
 package plugchoice
 
+import "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+
 // ChargerData represents a charger from the API
 type ChargerData struct {
-	UUID             string `json:"uuid"`
-	ID               int    `json:"id"`
-	Identity         string `json:"identity"`
-	Reference        string `json:"reference"`
-	ConnectionStatus string `json:"connection_status"`
-	Status           string `json:"status"`
-	Error            string `json:"error"`
-	ErrorInfo        any    `json:"error_info"`
-	CreatedAt        string `json:"created_at"`
-	UpdatedAt        string `json:"updated_at"`
+	UUID             string                    `json:"uuid"`
+	ID               int                       `json:"id"`
+	Identity         string                    `json:"identity"`
+	Reference        string                    `json:"reference"`
+	ConnectionStatus string                    `json:"connection_status"`
+	Status           core.ChargePointStatus    `json:"status"`
+	Error            core.ChargePointErrorCode `json:"error"`
+	ErrorInfo        any                       `json:"error_info"`
+	CreatedAt        string                    `json:"created_at"`
+	UpdatedAt        string                    `json:"updated_at"`
 	Model            struct {
 		Vendor string `json:"vendor"`
 		Name   string `json:"name"`
@@ -52,15 +54,15 @@ type StatusResponse struct {
 
 // Connector represents a charging connector
 type Connector struct {
-	ID          int    `json:"id"`
-	ChargerID   int    `json:"charger_id"`
-	ConnectorID int    `json:"connector_id"`
-	Status      string `json:"status"`
-	Error       string `json:"error"`
-	ErrorInfo   any    `json:"error_info"`
-	MaxAmperage int    `json:"max_amperage"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID          int                       `json:"id"`
+	ChargerID   int                       `json:"charger_id"`
+	ConnectorID int                       `json:"connector_id"`
+	Status      core.ChargePointStatus    `json:"status"`
+	Error       core.ChargePointErrorCode `json:"error"`
+	ErrorInfo   any                       `json:"error_info"`
+	MaxAmperage int                       `json:"max_amperage"`
+	CreatedAt   string                    `json:"created_at"`
+	UpdatedAt   string                    `json:"updated_at"`
 }
 
 // PowerResponse is the power usage response

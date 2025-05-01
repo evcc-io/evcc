@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 )
 
 // Plugchoice charger implementation
@@ -149,13 +150,13 @@ func (c *Plugchoice) Status() (api.ChargeStatus, error) {
 		if connector.ConnectorID == c.connector {
 			// Map the status codes as per specifications
 			switch status := connector.Status; status {
-			case plugchoice.StatusAvailable:
+			case core.ChargePointStatusAvailable:
 				return api.StatusA, nil
-			case plugchoice.StatusUnavailable, plugchoice.StatusFaulted:
+			case core.ChargePointStatusUnavailable, core.ChargePointStatusFaulted:
 				return api.StatusE, nil // Using StatusE for error conditions
-			case plugchoice.StatusPreparing, plugchoice.StatusSuspendedEVSE, plugchoice.StatusSuspendedEV, plugchoice.StatusFinishing:
+			case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE, core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
 				return api.StatusB, nil
-			case plugchoice.StatusCharging:
+			case core.ChargePointStatusCharging:
 				return api.StatusC, nil
 			default:
 				return api.StatusNone, fmt.Errorf("unknown status: %s", status)
@@ -178,9 +179,9 @@ func (c *Plugchoice) Enabled() (bool, error) {
 		if connector.ConnectorID == c.connector {
 			// Check status for enabled state
 			switch status := connector.Status; status {
-			case plugchoice.StatusCharging, plugchoice.StatusSuspendedEV:
+			case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
 				return true, nil
-			case plugchoice.StatusSuspendedEVSE:
+			case core.ChargePointStatusSuspendedEVSE:
 				return false, nil
 			default:
 				return c.enabled, nil
