@@ -326,7 +326,7 @@ export default defineComponent({
 						type: "timeseries",
 						display: true,
 						time: { unit: "day" },
-						border: { display: true },
+						border: { display: false },
 						grid: {
 							display: true,
 							color: colors.border,
@@ -374,7 +374,19 @@ export default defineComponent({
 						beginAtZero: true,
 					},
 					yCo2: { display: false, min: 0, max: this.yMax(this.co2Slots) },
-					yPrice: { display: false, min: 0, max: this.yMax(this.gridSlots) },
+					yPrice: {
+						display: true,
+						suggestedMin: 0,
+						max: this.yMax(this.gridSlots),
+						ticks: { display: false },
+						border: { display: false },
+						grid: {
+							// @ts-expect-error no-explicit-any
+							lineWidth: (context) => {
+								return context.tick?.value === 0 ? 1 : 0;
+							},
+						},
+					},
 				},
 			};
 		},
