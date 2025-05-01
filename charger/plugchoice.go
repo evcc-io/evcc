@@ -32,35 +32,35 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-// PlugChoice charger implementation
-type PlugChoice struct {
+// Plugchoice charger implementation
+type Plugchoice struct {
 	*request.Helper
-	log         *util.Logger
-	uri         string
-	chargerUUID string
-	connectorID int
-	enabled     bool
-	statusG     util.Cacheable[plugchoice.StatusResponse]
-	powerG      util.Cacheable[plugchoice.PowerResponse]
+	log       *util.Logger
+	uri       string
+	uuid      string
+	connector int
+	enabled   bool
+	statusG   util.Cacheable[plugchoice.StatusResponse]
+	powerG    util.Cacheable[plugchoice.PowerResponse]
 }
 
 func init() {
-	registry.Add("plugchoice", NewPlugChoiceFromConfig)
+	registry.Add("plugchoice", NewPlugchoiceFromConfig)
 }
 
-// NewPlugChoiceFromConfig creates a PlugChoice charger from generic config
-func NewPlugChoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewPlugchoiceFromConfig creates a Plugchoice charger from generic config
+func NewPlugchoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI         string
-		ChargerUUID string // kept for backward compatibility
-		Identity    string
-		ConnectorID int
-		Token       string
-		Cache       time.Duration
+		URI       string
+		UUID      string // kept for backward compatibility
+		Identity  string
+		Connector int
+		Token     string
+		Cache     time.Duration
 	}{
-		URI:         "https://app.plugchoice.com",
-		ConnectorID: 1,
-		Cache:       time.Second,
+		URI:       "https://app.plugchoice.com",
+		Connector: 1,
+		Cache:     time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -68,15 +68,15 @@ func NewPlugChoiceFromConfig(other map[string]interface{}) (api.Charger, error) 
 	}
 
 	// If both are provided, Identity takes precedence
-	if cc.Identity != "" || cc.ChargerUUID != "" {
-		return NewPlugChoice(cc.URI, cc.ChargerUUID, cc.Identity, cc.ConnectorID, cc.Token, cc.Cache)
+	if cc.Identity != "" || cc.UUID != "" {
+		return NewPlugchoice(cc.URI, cc.UUID, cc.Identity, cc.Connector, cc.Token, cc.Cache)
 	}
 
-	return nil, fmt.Errorf("either identity or chargerUUID must be provided")
+	return nil, fmt.Errorf("either identity or uuid must be provided")
 }
 
-// NewPlugChoice creates a PlugChoice charger
-func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token string, cache time.Duration) (api.Charger, error) {
+// NewPlugchoice creates a Plugchoice charger
+func NewPlugchoice(uri, uuid, identity string, connector int, token string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("plugchoice")
 	helper := request.NewHelper(log)
 	uri = strings.TrimRight(uri, "/")
@@ -92,35 +92,35 @@ func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token str
 	}
 
 	// If identity is provided but no UUID, try to find the UUID
-	if chargerUUID == "" && identity != "" {
+	if uuid == "" && identity != "" {
 		var err error
-		chargerUUID, err = plugchoice.FindChargerUUIDByIdentity(log, helper, uri, identity)
+		uuid, err = plugchoice.FindUUIDByIdentity(log, helper, uri, identity)
 		if err != nil {
 			return nil, fmt.Errorf("error finding charger UUID: %w", err)
 		}
 	}
 
 	// If we still don't have a UUID, return an error
-	if chargerUUID == "" {
-		return nil, fmt.Errorf("either chargerUUID or identity must be provided")
+	if uuid == "" {
+		return nil, fmt.Errorf("either uuid or identity must be provided")
 	}
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	c := &PlugChoice{
-		Helper:      helper,
-		log:         log,
-		uri:         uri,
-		chargerUUID: chargerUUID,
-		connectorID: connectorID,
+	c := &Plugchoice{
+		Helper:    helper,
+		log:       log,
+		uri:       uri,
+		uuid:      uuid,
+		connector: connector,
 	}
 
 	// setup cached status values
 	c.statusG = util.ResettableCached(func() (plugchoice.StatusResponse, error) {
 		var res plugchoice.StatusResponse
-		uri := fmt.Sprintf("%s/api/v3/chargers/%s", c.uri, c.chargerUUID)
+		uri := fmt.Sprintf("%s/api/v3/chargers/%s", c.uri, c.uuid)
 		err := c.GetJSON(uri, &res)
 		return res, err
 	}, cache)
@@ -128,7 +128,7 @@ func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token str
 	// setup cached power values
 	c.powerG = util.ResettableCached(func() (plugchoice.PowerResponse, error) {
 		var res plugchoice.PowerResponse
-		uri := fmt.Sprintf("%s/api/v3/chargers/%s/connectors/%d/power-usage", c.uri, c.chargerUUID, c.connectorID)
+		uri := fmt.Sprintf("%s/api/v3/chargers/%s/connectors/%d/power-usage", c.uri, c.uuid, c.connector)
 		err := c.GetJSON(uri, &res)
 		return res, err
 	}, cache)
@@ -137,15 +137,15 @@ func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token str
 }
 
 // Status implements the api.Charger interface
-func (c *PlugChoice) Status() (api.ChargeStatus, error) {
+func (c *Plugchoice) Status() (api.ChargeStatus, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	// Find the connector with the specified connectorID
+	// Find the connector with the specified connector
 	for _, connector := range res.Data.Connectors {
-		if connector.ConnectorID == c.connectorID {
+		if connector.ConnectorID == c.connector {
 			// Map the status codes as per specifications
 			switch status := connector.Status; status {
 			case plugchoice.StatusAvailable:
@@ -162,19 +162,19 @@ func (c *PlugChoice) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	return api.StatusNone, fmt.Errorf("connector with ID %d not found", c.connectorID)
+	return api.StatusNone, fmt.Errorf("connector with ID %d not found", c.connector)
 }
 
 // Enabled implements the api.Charger interface
-func (c *PlugChoice) Enabled() (bool, error) {
+func (c *Plugchoice) Enabled() (bool, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
 		return false, err
 	}
 
-	// Find the connector with the specified connectorID
+	// Find the connector with the specified connector
 	for _, connector := range res.Data.Connectors {
-		if connector.ConnectorID == c.connectorID {
+		if connector.ConnectorID == c.connector {
 			// Check status for enabled state
 			switch status := connector.Status; status {
 			case plugchoice.StatusCharging, plugchoice.StatusSuspendedEV:
@@ -187,11 +187,11 @@ func (c *PlugChoice) Enabled() (bool, error) {
 		}
 	}
 
-	return false, fmt.Errorf("connector with ID %d not found", c.connectorID)
+	return false, fmt.Errorf("connector with ID %d not found", c.connector)
 }
 
 // Enable implements the api.Charger interface
-func (c *PlugChoice) Enable(enable bool) error {
+func (c *Plugchoice) Enable(enable bool) error {
 	var current int64
 	if enable {
 		current = 16 // default to 16A when enabling
@@ -209,18 +209,18 @@ func (c *PlugChoice) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (c *PlugChoice) MaxCurrent(current int64) error {
+func (c *Plugchoice) MaxCurrent(current int64) error {
 	type chargeLimit struct {
-		ConnectorID int   `json:"connector_id"`
-		Limit       int64 `json:"limit"`
+		Connector int   `json:"connector_id"`
+		Limit     int64 `json:"limit"`
 	}
 
 	data := chargeLimit{
-		ConnectorID: c.connectorID,
-		Limit:       current,
+		Connector: c.connector,
+		Limit:     current,
 	}
 
-	uri := fmt.Sprintf("%s/api/v3/chargers/%s/actions/charge-limit", c.uri, c.chargerUUID)
+	uri := fmt.Sprintf("%s/api/v3/chargers/%s/actions/charge-limit", c.uri, c.uuid)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
@@ -236,10 +236,15 @@ func (c *PlugChoice) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Meter = (*PlugChoice)(nil)
+var _ api.Meter = (*Plugchoice)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (c *PlugChoice) CurrentPower() (float64, error) {
+func (c *Plugchoice) CurrentPower() (float64, error) {
+	// Should be zero if not enabled
+	if !c.enabled {
+		return 0, nil
+	}
+
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, err
@@ -258,10 +263,10 @@ func (c *PlugChoice) CurrentPower() (float64, error) {
 	return kw * 1000, nil // Convert kW to W
 }
 
-var _ api.PhaseCurrents = (*PlugChoice)(nil)
+var _ api.PhaseCurrents = (*Plugchoice)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (c *PlugChoice) Currents() (float64, float64, float64, error) {
+func (c *Plugchoice) Currents() (float64, float64, float64, error) {
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, 0, 0, err

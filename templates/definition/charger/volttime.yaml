@@ -18,4 +18,4 @@ render: |
   type: plugchoice
   token: {{ .token }}
   identity: VT_{{ .serial_number }}
-  connectorID: 1
+  connector: 1

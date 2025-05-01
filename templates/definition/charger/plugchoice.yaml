@@ -33,7 +33,7 @@ params:
     help:
       de: Identity des Ladepunkts (z.B. AA123456)
       en: Charger identity (e.g. AA123456)
-  - name: connectorID
+  - name: connector
     required: true
     default: 1
     help:
@@ -43,4 +43,4 @@ render: |
   type: plugchoice
   token: {{ .token }}
   identity: {{ .identity }}
-  connectorID: {{ .connectorID }}
+  connector: {{ .connector }}
