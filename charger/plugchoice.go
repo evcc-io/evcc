@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2025 andig
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"fmt"
 	"net/http"
@@ -11,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/charger/plugchoice"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
@@ -76,17 +94,19 @@ func NewPlugChoice(uri, chargerUUID, identity string, connectorID int, token str
 	// If identity is provided but no UUID, try to find the UUID
 	if chargerUUID == "" && identity != "" {
 		var err error
-		log.TRACE.Printf("looking up UUID for charger with identity: %s", identity)
 		chargerUUID, err = plugchoice.FindChargerUUIDByIdentity(log, helper, uri, identity)
 		if err != nil {
 			return nil, fmt.Errorf("error finding charger UUID: %w", err)
 		}
-		log.TRACE.Printf("found UUID %s for identity %s", chargerUUID, identity)
 	}
 
 	// If we still don't have a UUID, return an error
 	if chargerUUID == "" {
 		return nil, fmt.Errorf("either chargerUUID or identity must be provided")
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	c := &PlugChoice{
@@ -232,7 +252,7 @@ func (c *PlugChoice) CurrentPower() (float64, error) {
 
 	kw, err := strconv.ParseFloat(res.KW, 64)
 	if err != nil {
-		return 0, fmt.Errorf("error parsing power: %w", err)
+		return 0, err
 	}
 
 	return kw * 1000, nil // Convert kW to W
@@ -252,11 +272,11 @@ func (c *PlugChoice) Currents() (float64, float64, float64, error) {
 		if val == "-" {
 			return 0, nil
 		}
-		result, err := strconv.ParseFloat(val, 64)
+		res, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			return 0, fmt.Errorf("error parsing %s current: %w", phase, err)
+			return 0, fmt.Errorf("parsing %s current: %w", phase, err)
 		}
-		return result, nil
+		return res, nil
 	}
 
 	l1, err := parsePhaseValue(res.L1, "L1")
