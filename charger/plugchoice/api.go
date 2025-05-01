@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 // FindUUIDByIdentity searches through all available chargers to find the UUID based on the identity
-func FindUUIDByIdentity(log *util.Logger, client *request.Helper, baseURI string, identity string) (string, error) {
+func FindUUIDByIdentity(client *request.Helper, baseURI string, identity string) (string, error) {
 	baseURI = baseURI + "/api/v3/chargers"
 
 	for page := 1; page < 10; page++ {

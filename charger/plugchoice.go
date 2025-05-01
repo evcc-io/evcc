@@ -36,14 +36,13 @@ import (
 // Plugchoice charger implementation
 type Plugchoice struct {
 	*request.Helper
-	log         *util.Logger
-	uri         string
-	uuid        string
-	connector   int
-	enabled     bool
-	lastCurrent int64
-	statusG     util.Cacheable[plugchoice.StatusResponse]
-	powerG      util.Cacheable[plugchoice.PowerResponse]
+	uri       string
+	uuid      string
+	connector int
+	enabled   bool
+	current   int64
+	statusG   util.Cacheable[plugchoice.StatusResponse]
+	powerG    util.Cacheable[plugchoice.PowerResponse]
 }
 
 func init() {
@@ -96,7 +95,7 @@ func NewPlugchoice(uri, uuid, identity string, connector int, token string, cach
 	// If identity is provided but no UUID, try to find the UUID
 	if uuid == "" && identity != "" {
 		var err error
-		uuid, err = plugchoice.FindUUIDByIdentity(log, helper, uri, identity)
+		uuid, err = plugchoice.FindUUIDByIdentity(helper, uri, identity)
 		if err != nil {
 			return nil, fmt.Errorf("error finding charger UUID: %w", err)
 		}
@@ -113,10 +112,10 @@ func NewPlugchoice(uri, uuid, identity string, connector int, token string, cach
 
 	c := &Plugchoice{
 		Helper:    helper,
-		log:       log,
 		uri:       uri,
 		uuid:      uuid,
 		connector: connector,
+		current:   6,
 	}
 
 	// setup cached status values
@@ -196,20 +195,18 @@ func (c *Plugchoice) Enabled() (bool, error) {
 func (c *Plugchoice) Enable(enable bool) error {
 	var current int64
 	if enable {
-		current = c.lastCurrent
+		current = c.current
 	}
 
-	err := c.MaxCurrent(current)
+	err := c.maxCurrent(current)
 	if err == nil {
 		c.enabled = enable
-		c.resetCaches()
 	}
 
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *Plugchoice) MaxCurrent(current int64) error {
+func (c *Plugchoice) maxCurrent(current int64) error {
 	type chargeLimit struct {
 		Connector int   `json:"connector_id"`
 		Limit     int64 `json:"limit"`
@@ -221,15 +218,22 @@ func (c *Plugchoice) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/api/v3/chargers/%s/actions/charge-limit", c.uri, c.uuid)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+	_, err := c.Do(req)
+	if err == nil {
+		c.statusG.Reset()
+		c.powerG.Reset()
 	}
 
-	_, err = c.DoBody(req)
+	return err
+}
+
+// MaxCurrent implements the api.Charger interface
+func (c *Plugchoice) MaxCurrent(current int64) error {
+	err := c.maxCurrent(current)
 	if err == nil {
-		c.lastCurrent = current
-		c.resetCaches()
+		c.current = current
 	}
 
 	return err
@@ -299,10 +303,4 @@ func (c *Plugchoice) Currents() (float64, float64, float64, error) {
 	}
 
 	return l1, l2, l3, nil
-}
-
-// Helper for resetting caches - to prevent stale data
-func (c *Plugchoice) resetCaches() {
-	c.statusG.Reset()
-	c.powerG.Reset()
 }
