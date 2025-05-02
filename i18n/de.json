@@ -130,6 +130,8 @@
     },
     "general": {
       "cancel": "Abbrechen",
+      "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
+      "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
       "experimental": "Experimentell",
@@ -154,6 +156,9 @@
     "hems": {
       "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "ändern"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",

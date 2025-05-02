@@ -130,8 +130,8 @@
     },
     "general": {
       "cancel": "Cancel",
-      "customHelp": "Define your custom device behaviour using evcc's plugin system.",
-      "customOption": "Custom Plugin",
+      "customHelp": "Create a user-defined device using evcc's plugin system.",
+      "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
       "experimental": "Experimental",
@@ -156,6 +156,9 @@
     "hems": {
       "description": "Connect evcc to another home energy management system.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "change"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",

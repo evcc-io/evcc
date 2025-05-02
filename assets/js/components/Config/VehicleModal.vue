@@ -307,8 +307,10 @@ export default {
 	computed: {
 		templateOptions() {
 			return {
-				online: this.products.filter((p) => !p.group && p.template !== "offline"),
-				generic: this.products.filter((p) => p.group === "generic"),
+				online: this.products.filter((p) => !p.group),
+				generic: this.products.filter(
+					(p) => p.group === "generic" && p.template !== "offline"
+				),
 				scooter: this.products.filter((p) => p.group === "scooter"),
 				offline: this.products.find((p) => p.template === "offline") || {},
 			};
