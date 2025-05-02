@@ -279,6 +279,17 @@
       "titleChoice": "Mit szeretnél hozzáadni?",
       "validateSave": "Ellenőrzés & mentés"
     },
+    "modbus": {
+      "connectionValueSerial": "Soros / USB",
+      "connectionValueTcpip": "Hálózat",
+      "device": "Eszköz neve",
+      "deviceHint": "Példa: /dev/ttyUSB0",
+      "host": "IP cím vagy hostnév",
+      "hostHint": "Példa: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Port",
+      "protocol": "Modbus protokoll"
+    },
     "modbusproxy": {
       "description": "Több kliens csatlakozásának engedélyezése egy Modbus eszközhöz.",
       "title": "Modbus Proxy"
