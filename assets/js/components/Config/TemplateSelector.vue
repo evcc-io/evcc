@@ -3,7 +3,7 @@
 		<select
 			v-if="isNew"
 			:id="`${deviceType}Template`"
-			ref="templateSelect"
+			ref="select"
 			v-model="localValue"
 			class="form-select w-100"
 			@change="changed"
@@ -95,6 +95,10 @@ export default defineComponent({
 	methods: {
 		changed() {
 			this.$emit("change");
+		},
+		getProductName() {
+			const select = this.$refs["select"] as HTMLSelectElement;
+			return select.options[select.selectedIndex].text;
 		},
 	},
 });

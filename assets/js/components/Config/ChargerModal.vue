@@ -12,6 +12,7 @@
 		<form ref="form" class="container mx-0 px-0">
 			<TemplateSelector
 				v-if="isNew"
+				ref="templateSelect"
 				v-model="templateName"
 				device-type="charger"
 				:is-new="isNew"
@@ -19,7 +20,6 @@
 				:groups="templateOptions"
 				@change="templateChanged"
 			/>
-			{{ templateName }}
 
 			<div v-if="values.type === 'custom'">
 				<p>
@@ -401,9 +401,7 @@ export default defineComponent({
 		async create() {
 			// persist selected template product
 			if (this.template && this.$refs["templateSelect"]) {
-				const select = this.$refs["templateSelect"] as HTMLSelectElement;
-				const name = select.options[select.selectedIndex].text;
-				this.values.deviceProduct = name;
+				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
 			}
 
 			if (this.test.isUnknown) {

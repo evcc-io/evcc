@@ -10,6 +10,7 @@
 		<form ref="form" class="container mx-0 px-0">
 			<TemplateSelector
 				v-if="isNew"
+				ref="templateSelect"
 				v-model="templateName"
 				device-type="vehicle"
 				:is-new="isNew"
@@ -448,12 +449,9 @@ export default defineComponent({
 		},
 		async create() {
 			// persist selected template product
-			if (this.template) {
-				const select = this.$refs["templateSelect"] as HTMLSelectElement;
-				const name = select.options[select.selectedIndex].text;
-				this.values.deviceProduct = name;
+			if (this.template && this.$refs["templateSelect"]) {
+				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
 			}
-
 			if (this.test.isUnknown) {
 				const success = await performTest(this.test, this.testVehicle, this.$refs["form"]);
 				if (!success) return;
