@@ -288,8 +288,7 @@ func (wb *MennekesCompact) phases1p3p(phases int) error {
 
 	// temporarily disable charger during phase switching
 	if en, err := wb.Enabled(); err == nil && en {
-		err := wb.Enable(false)
-		if err != nil {
+		if err := wb.Enable(false); err != nil {
 			return err
 		}
 
