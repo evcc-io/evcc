@@ -116,9 +116,6 @@ export default {
 			});
 			return sum / count;
 		},
-		activeSlot() {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
-		},
 	},
 	methods: {
 		hoverSlot(index: number | null) {
