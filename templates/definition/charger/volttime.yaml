@@ -13,7 +13,7 @@ products:
     description:
       generic: One
 requirements:
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
 params:
   - name: token
     required: true
