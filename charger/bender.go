@@ -153,19 +153,21 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		}
 	}
 
-	// check rfid
+	// check feature rfid
 	if _, err := wb.identify(); err == nil {
 		identify = wb.identify
 	}
 
+	// check feature mA
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
 		maxCurrentMillis = wb.maxCurrentMillis
 		wb.regCurr = bendRegHemsCurrentLimit10
+	}
 
-		if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
-			phases1p3p = wb.phases1p3p
-			getPhases = wb.getPhases
-		}
+	// check feature power control/1p3p
+	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
+		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
 	}
 
 	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
@@ -193,8 +195,11 @@ func (wb *BenderCC) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *BenderCC) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1)
+	if err != nil {
+		return false, err
+	}
 
-	return binary.BigEndian.Uint16(b) != 0, err
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -415,5 +420,8 @@ func (wb *BenderCC) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
 		fmt.Printf("\tUserID:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1); err == nil {
+		fmt.Printf("\tCurrent Limit:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }

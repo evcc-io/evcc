@@ -1,4 +1,5 @@
 template: api.akkudoktor.net
+deprecated: true
 products:
   - brand: Akkudoktor API
 requirements:
