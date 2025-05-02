@@ -145,11 +145,7 @@ func (p *Go) handleGetter() (any, error) {
 		return nil, err
 	}
 
-	setParam := func(param string, val any) error {
-		return p.setParam(vm, param, val)
-	}
-
-	if err := transformInputs(p.in, setParam); err != nil {
+	if err := transformInputs(p.in, p.setParam(vm)); err != nil {
 		return nil, err
 	}
 
@@ -162,9 +158,7 @@ func (p *Go) handleSetter(param string, val any) error {
 		return err
 	}
 
-	setParam := func(param string, val any) error {
-		return p.setParam(vm, param, val)
-	}
+	setParam := p.setParam(vm)
 
 	if err := transformInputs(p.in, setParam); err != nil {
 		return err
@@ -206,9 +200,11 @@ func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
 	return normalizeValue(v.Interface())
 }
 
-func (p *Go) setParam(vm *interp.Interpreter, param string, val any) error {
-	_, err := vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
-	return err
+func (p *Go) setParam(vm *interp.Interpreter) func(param string, val any) error {
+	return func(param string, val any) error {
+		_, err := vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
+		return err
+	}
 }
 
 var _ IntSetter = (*Go)(nil)
