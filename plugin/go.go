@@ -14,7 +14,7 @@ import (
 
 // Go implements Go request provider
 type Go struct {
-	vm     *interp.Interpreter
+	vm     func() (*interp.Interpreter, error)
 	script string
 	in     []inputTransformation
 	out    []outputTransformation
@@ -37,7 +37,7 @@ func NewGoPluginFromConfig(ctx context.Context, other map[string]interface{}) (P
 		return nil, err
 	}
 
-	vm, err := golang.RegisteredVM(cc.VM, "")
+	_, err := golang.RegisteredVM(cc.VM, "")
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,8 @@ func NewGoPluginFromConfig(ctx context.Context, other map[string]interface{}) (P
 	}
 
 	p := &Go{
-		vm:     vm,
+		// recreate VM on each invocation
+		vm:     func() (*interp.Interpreter, error) { return golang.RegisteredVM(cc.VM, "") },
 		script: cc.Script,
 		in:     in,
 		out:    out,
@@ -139,23 +140,41 @@ func (p *Go) BoolGetter() (func() (bool, error), error) {
 }
 
 func (p *Go) handleGetter() (any, error) {
-	if err := transformInputs(p.in, p.setParam); err != nil {
+	vm, err := p.vm()
+	if err != nil {
 		return nil, err
 	}
 
-	return p.evaluate()
+	setParam := func(param string, val any) error {
+		return p.setParam(vm, param, val)
+	}
+
+	if err := transformInputs(p.in, setParam); err != nil {
+		return nil, err
+	}
+
+	return p.evaluate(vm)
 }
 
 func (p *Go) handleSetter(param string, val any) error {
-	if err := transformInputs(p.in, p.setParam); err != nil {
+	vm, err := p.vm()
+	if err != nil {
 		return err
 	}
 
-	if err := p.setParam(param, val); err != nil {
+	setParam := func(param string, val any) error {
+		return p.setParam(vm, param, val)
+	}
+
+	if err := transformInputs(p.in, setParam); err != nil {
 		return err
 	}
 
-	vv, err := p.evaluate()
+	if err := setParam(param, val); err != nil {
+		return err
+	}
+
+	vv, err := p.evaluate(vm)
 	if err != nil {
 		return err
 	}
@@ -163,7 +182,7 @@ func (p *Go) handleSetter(param string, val any) error {
 	return transformOutputs(p.out, vv)
 }
 
-func (p *Go) evaluate() (res any, err error) {
+func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
@@ -171,7 +190,7 @@ func (p *Go) evaluate() (res any, err error) {
 		err = backoff.Permanent(err)
 	}()
 
-	v, err := p.vm.Eval(p.script)
+	v, err := vm.Eval(p.script)
 	if err != nil {
 		return nil, err
 	}
@@ -187,8 +206,8 @@ func (p *Go) evaluate() (res any, err error) {
 	return normalizeValue(v.Interface())
 }
 
-func (p *Go) setParam(param string, val any) error {
-	_, err := p.vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
+func (p *Go) setParam(vm *interp.Interpreter, param string, val any) error {
+	_, err := vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
 	return err
 }
 
