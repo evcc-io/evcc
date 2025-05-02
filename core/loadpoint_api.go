@@ -80,6 +80,8 @@ func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
 		return
 	}
 
+	lp.log.DEBUG.Println("set default vehicle ref:", ref)
+
 	lp.Lock()
 	defer lp.Unlock()
 	lp.VehicleRef = ref
