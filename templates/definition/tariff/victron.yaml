@@ -1,6 +1,8 @@
-template: forecast-victron
+template: victron
 products:
-  - brand: Victron-VRM
+  - brand: Victron
+    description:
+      generic: VRM Solar Forecast
 requirements:
   description:
     en: "[vrm.victronenergy.com](https://vrm.victronenergy.com) get the 2-days-forecast from your installation in VRM portal. You need a free user access token."
