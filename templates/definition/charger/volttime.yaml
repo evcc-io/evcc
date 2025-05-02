@@ -27,6 +27,6 @@ params:
       en: Serial number (e.g. 1008621)
 render: |
   type: plugchoice
-  token: {{ .token }}
-  identity: VT_{{ .serial_number }}
+  token: {{ .token }}  
+  identity: {{ if .serial_number }}VT_{{ .serial_number }}{{ end }}
   connector: 1
