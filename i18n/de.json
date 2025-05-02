@@ -273,6 +273,7 @@
     "meter": {
       "cancel": "Abbrechen",
       "delete": "Löschen",
+      "generic": "Generische Integrationen",
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
@@ -280,6 +281,7 @@
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
+      "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
       "validateSave": "Überprüfen & speichern"

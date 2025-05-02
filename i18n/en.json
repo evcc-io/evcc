@@ -273,6 +273,7 @@
     "meter": {
       "cancel": "Cancel",
       "delete": "Delete",
+      "generic": "Generic integrations",
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
@@ -280,6 +281,7 @@
         "pv": "Add solar meter"
       },
       "save": "Save",
+      "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
       "validateSave": "Validate & save"

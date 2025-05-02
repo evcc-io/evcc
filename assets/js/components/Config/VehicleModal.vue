@@ -8,56 +8,16 @@
 		@closed="closed"
 	>
 		<form ref="form" class="container mx-0 px-0">
-			<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
-				<select
-					v-if="isNew"
-					id="vehicleTemplate"
-					ref="templateSelect"
-					v-model="templateName"
-					class="form-select w-100"
-					@change="templateChanged"
-				>
-					<option :value="templateOptions.offline.template">
-						{{ templateOptions.offline.name }}
-					</option>
-					<option disabled>----------</option>
-					<optgroup :label="$t('config.vehicle.online')">
-						<option
-							v-for="option in templateOptions.online"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</optgroup>
-					<optgroup :label="$t('config.vehicle.scooter')">
-						<option
-							v-for="option in templateOptions.scooter"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</optgroup>
-					<optgroup :label="$t('config.vehicle.generic')">
-						<option
-							v-for="option in templateOptions.generic"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-						<option value="custom">{{ $t("config.general.customOption") }}</option>
-					</optgroup>
-				</select>
-				<input
-					v-else
-					type="text"
-					:value="productName"
-					disabled
-					class="form-control w-100"
-				/>
-			</FormRow>
+			<TemplateSelector
+				v-if="isNew"
+				v-model="templateName"
+				device-type="vehicle"
+				:is-new="isNew"
+				:product-name="productName"
+				:groups="templateOptions"
+				:primary-option="primaryOption"
+				@change="templateChanged"
+			/>
 			<div v-if="values.type === 'custom'">
 				<p>
 					<span>{{ $t("config.general.customHelp") + " " }}</span>
@@ -120,7 +80,7 @@
 								:options="[
 									{ name: '1-phase', value: '1' },
 									{ name: '2-phases', value: '2' },
-									{ name: '3-phases', value: undefined },
+									{ name: '3-phases', value: '' },
 								]"
 								equal-width
 								transparent
@@ -134,7 +94,7 @@
 								:help="
 									values.minCurrent && values.minCurrent < 6
 										? $t('config.vehicle.minimumCurrentHelp')
-										: null
+										: ''
 								"
 							>
 								<PropertyField
@@ -155,7 +115,7 @@
 									values.maxCurrent &&
 									values.maxCurrent < values.minCurrent
 										? $t('config.vehicle.maximumCurrentHelp')
-										: null
+										: ''
 								"
 							>
 								<PropertyField
@@ -202,18 +162,9 @@
 					</template>
 				</PropertyCollapsible>
 			</div>
-			<TestResult
-				v-if="templateName"
-				:success="testSuccess"
-				:failed="testFailed"
-				:unknown="testUnknown"
-				:running="testRunning"
-				:result="testResult"
-				:error="testError"
-				@test="testManually"
-			/>
+			<TestResult v-if="showActions" v-bind="test" @test="testManually" />
 
-			<div v-if="templateName" class="my-4 d-flex justify-content-between">
+			<div v-if="showActions" class="my-4 d-flex justify-content-between">
 				<button
 					v-if="isDeletable"
 					type="button"
@@ -233,7 +184,7 @@
 				<button
 					type="submit"
 					class="btn btn-primary"
-					:disabled="testRunning || saving"
+					:disabled="test.isRunning || saving"
 					@click.prevent="isNew ? create() : update()"
 				>
 					<span
@@ -243,7 +194,9 @@
 						aria-hidden="true"
 					></span>
 					{{
-						testUnknown ? $t("config.vehicle.validateSave") : $t("config.vehicle.save")
+						test.isUnknown
+							? $t("config.vehicle.validateSave")
+							: $t("config.vehicle.save")
 					}}
 				</button>
 			</div>
@@ -251,7 +204,8 @@
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
@@ -261,20 +215,38 @@ import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import YamlEditorContainer from "./YamlEditorContainer.vue";
+import TemplateSelector from "./TemplateSelector.vue";
 import { docsPrefix } from "@/i18n";
 import api from "@/api";
-import test from "./mixins/test";
+import { initialTestState, performTest } from "./utils/test";
+import {
+	handleError,
+	timeout,
+	ConfigType,
+	type DeviceValues,
+	type Template,
+	type Product,
+} from "./utils/deviceModal";
 import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
-const initialValues = { type: "template", icon: "car" };
+const initialValues = { type: ConfigType.Template, icon: "car" };
 
-function sleep(ms) {
+function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "phases", "mode"];
 
-export default {
+type VehicleDeviceValues = DeviceValues & {
+	identifiers: string[] | undefined;
+	minCurrent: number | undefined;
+	maxCurrent: number | undefined;
+	priority: number | undefined;
+	phases: number | undefined;
+	mode: string | undefined;
+};
+
+export default defineComponent({
 	name: "VehicleModal",
 	components: {
 		FormRow,
@@ -286,8 +258,8 @@ export default {
 		PropertyEntry,
 		Markdown,
 		YamlEditorContainer,
+		TemplateSelector,
 	},
-	mixins: [test],
 	props: {
 		id: Number,
 	},
@@ -295,25 +267,34 @@ export default {
 	data() {
 		return {
 			isModalVisible: false,
-			templates: [],
-			products: [],
-			templateName: null,
-			template: null,
+			templates: [] as Template[],
+			products: [] as Product[],
+			templateName: null as string | null,
+			template: null as Template | null,
 			saving: false,
 			loadingTemplate: false,
-			values: { ...initialValues },
+			values: { ...initialValues } as VehicleDeviceValues,
+			test: initialTestState(),
 		};
 	},
 	computed: {
 		templateOptions() {
-			return {
-				online: this.products.filter((p) => !p.group),
-				generic: this.products.filter(
-					(p) => p.group === "generic" && p.template !== "offline"
-				),
-				scooter: this.products.filter((p) => p.group === "scooter"),
-				offline: this.products.find((p) => p.template === "offline") || {},
-			};
+			return [
+				{
+					label: "online",
+					options: this.products.filter((p) => !p.group),
+				},
+				{
+					label: "scooter",
+					options: this.products.filter((p) => p.group === "scooter"),
+				},
+				{
+					label: "generic",
+					options: this.products.filter(
+						(p) => p.group === "generic" && p.template !== "offline"
+					),
+				},
+			];
 		},
 		templateParams() {
 			const params = (this.template?.Params || [])
@@ -329,7 +310,7 @@ export default {
 			// non-optional fields first
 			params.sort((a, b) => (a.Required ? -1 : 1) - (b.Required ? -1 : 1));
 			// always start with title and icon field
-			const order = { title: -2, icon: -1 };
+			const order: Record<string, number> = { title: -2, icon: -1 };
 			params.sort((a, b) => (order[a.Name] || 0) - (order[b.Name] || 0));
 
 			return params;
@@ -344,12 +325,12 @@ export default {
 			return this.template?.Requirements?.Description;
 		},
 		productName() {
-			return this.values.deviceProduct || this.templateName;
+			return this.values.deviceProduct || this.templateName || "";
 		},
 		apiData() {
 			const data = {
-				template: this.templateName,
 				...this.values,
+				template: this.templateName,
 			};
 			// trim and remove empty lines
 			if (Array.isArray(data.identifiers)) {
@@ -361,13 +342,16 @@ export default {
 			return this.id === undefined;
 		},
 		modalSize() {
-			return this.values.type === "custom" ? "xl" : undefined;
+			return this.values.type === ConfigType.Custom ? "xl" : undefined;
 		},
 		isDeletable() {
 			return !this.isNew;
 		},
 		priorityOptions() {
-			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			const result: { key: number | undefined; name: string }[] = Array.from(
+				{ length: 11 },
+				(_, i) => ({ key: i, name: `${i}` })
+			);
 			result[0].name = "0 (default)";
 			result[0].key = undefined;
 			result[10].name = "10 (highest)";
@@ -376,13 +360,19 @@ export default {
 		docsLink() {
 			return `${docsPrefix()}/docs/devices/plugins#vehicle`;
 		},
+		primaryOption() {
+			return this.products.find((p) => p.template === "offline");
+		},
+		showActions() {
+			return this.templateName || this.values.type === ConfigType.Custom;
+		},
 	},
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
 				this.reset();
 				this.templateName = "offline";
-				this.resetTest();
+				this.test = initialTestState();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -394,15 +384,15 @@ export default {
 		},
 		values: {
 			handler() {
-				this.resetTest();
+				this.test = initialTestState();
 			},
 			deep: true,
 		},
 	},
 	methods: {
 		reset() {
-			this.values = { ...initialValues };
-			this.resetTest();
+			this.values = { ...initialValues } as VehicleDeviceValues;
+			this.test = initialTestState();
 		},
 		async loadConfiguration() {
 			try {
@@ -459,13 +449,13 @@ export default {
 		async create() {
 			// persist selected template product
 			if (this.template) {
-				const select = this.$refs.templateSelect;
+				const select = this.$refs["templateSelect"] as HTMLSelectElement;
 				const name = select.options[select.selectedIndex].text;
 				this.values.deviceProduct = name;
 			}
 
-			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+			if (this.test.isUnknown) {
+				const success = await performTest(this.test, this.testVehicle, this.$refs["form"]);
 				if (!success) return;
 				await sleep(100);
 			}
@@ -475,23 +465,23 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				this.handleCreateError(e);
+				handleError(e, "create failed");
 			}
 			this.saving = false;
 		},
 		async testManually() {
-			await this.test(this.testVehicle);
+			await performTest(this.test, this.testVehicle, this.$refs["form"]);
 		},
 		async testVehicle() {
 			let url = "config/test/vehicle";
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			return await api.post(url, this.apiData, { timeout: this.testTimeout });
+			return await api.post(url, this.apiData, { timeout });
 		},
 		async update() {
-			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+			if (this.test.isUnknown) {
+				const success = await performTest(this.test, this.testVehicle, this.$refs["form"]);
 				if (!success) return;
 				await sleep(250);
 			}
@@ -501,7 +491,7 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				this.handleUpdateError(e);
+				handleError(e, "update failed");
 			}
 			this.saving = false;
 		},
@@ -511,7 +501,7 @@ export default {
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
-				this.handleRemoveError(e);
+				handleError(e, "remove failed");
 			}
 		},
 		open() {
@@ -522,13 +512,13 @@ export default {
 		},
 		templateChanged() {
 			this.reset();
-			if (this.templateName === "custom") {
-				this.values.type = "custom";
+			if (this.templateName === ConfigType.Custom) {
+				this.values.type = ConfigType.Custom;
 				this.values.yaml = defaultYaml;
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .container {
