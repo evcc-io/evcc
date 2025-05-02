@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -68,12 +69,7 @@ func NewPlugchoiceFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	// If both are provided, Identity takes precedence
-	if cc.Identity != "" || cc.UUID != "" {
-		return NewPlugchoice(cc.URI, cc.UUID, cc.Identity, cc.Connector, cc.Token, cc.Cache)
-	}
-
-	return nil, fmt.Errorf("either identity or uuid must be provided")
+	return NewPlugchoice(cc.URI, cc.UUID, cc.Identity, cc.Connector, cc.Token, cc.Cache)
 }
 
 // NewPlugchoice creates a Plugchoice charger
@@ -92,6 +88,11 @@ func NewPlugchoice(uri, uuid, identity string, connector int, token string, cach
 		}
 	}
 
+	// If both are provided, Identity takes precedence
+	if identity == "" && uuid == "" {
+		return nil, errors.New("either identity or uuid are required")
+	}
+
 	// If identity is provided but no UUID, try to find the UUID
 	if uuid == "" && identity != "" {
 		var err error
@@ -99,11 +100,6 @@ func NewPlugchoice(uri, uuid, identity string, connector int, token string, cach
 		if err != nil {
 			return nil, fmt.Errorf("error finding charger UUID: %w", err)
 		}
-	}
-
-	// If we still don't have a UUID, return an error
-	if uuid == "" {
-		return nil, fmt.Errorf("either uuid or identity must be provided")
 	}
 
 	if !sponsor.IsAuthorized() {
