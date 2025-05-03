@@ -63,6 +63,7 @@ export enum PHASES {
 export interface Sponsor {
 	name: string;
 	expiresAt: Date;
+	expiresSoon: boolean;
 }
 
 export interface Battery {

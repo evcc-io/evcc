@@ -10,7 +10,7 @@ const DURATION = 0.5;
 export default defineComponent({
 	name: "AnimatedNumber",
 	props: {
-		to: { type: Number, default: 0 },
+		to: { type: [String, Number], default: 0 },
 		format: { type: Function as PropType<(n: number) => string>, required: true },
 		duration: { type: Number, default: DURATION },
 	},
