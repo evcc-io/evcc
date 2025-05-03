@@ -131,7 +131,7 @@
     "general": {
       "cancel": "Atšaukti",
       "delete": "Ištrinti",
-      "docsLink": "Žiūrėkite dokumentaciją",
+      "docsLink": "Žiūrėkite dokumentaciją.",
       "experimental": "Eksperimentinis",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "off": "išjungta",
@@ -368,7 +368,7 @@
       "changeToken": "Pakeisti tokeną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų.",
       "descriptionToken": "Tokeną gaunate iš {url}. Taip pat siūlome bandomąjį tokeną testavimui.",
-      "error": "Sponsoriaus tokenas negaliojantis",
+      "error": "Sponsoriaus tokenas negalioja..",
       "labelToken": "Sponsoriaus tokenas",
       "title": "Rėmimas",
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo tokeną.",
@@ -378,10 +378,10 @@
     "system": {
       "logs": "Žurnalai",
       "restart": "Paleisti iš naujo",
-      "restartRequiredDescription": "Paleiskite iš naujo, kad įsigaliotų pakeitimai",
-      "restartRequiredMessage": "Nustatymai pasikeitė",
-      "restartingDescription": "Palaukite...",
-      "restartingMessage": "Paleidžiama iš naujo"
+      "restartRequiredDescription": "Paleiskite iš naujo, kad įsigaliotų pakeitimai.",
+      "restartRequiredMessage": "Nustatymai pasikeitė.",
+      "restartingDescription": "Palaukite…",
+      "restartingMessage": "Paleidžiama iš naujo."
     },
     "tariffs": {
       "description": "Nustatykite savo energijos tarifus, kad apskaičiuotumėte įkrovimo sesijų išlaidas.",
@@ -436,7 +436,7 @@
       "greenShareSub2": "energijos kaupikliai",
       "power": "Įkrovimo galia",
       "powerSub1": "{activeClients} iš {totalClients} dalyvių",
-      "powerSub2": "įkrauna...",
+      "powerSub2": "įkrauna…",
       "tabTitle": "Bendruomenės"
     },
     "savings": {
@@ -481,7 +481,7 @@
       "optIn": "Noriu prisidėti savo duomenimis.",
       "optInMoreDetails": "Daugiau informacijos rasite {0}.",
       "optInMoreDetailsLink": "čia",
-      "optInSponsorship": "(Gali tik rėmėjai.)"
+      "optInSponsorship": "Gali tik rėmėjai."
     },
     "version": {
       "availableLong": "yra naujesnė versija",
@@ -492,7 +492,7 @@
       "modalTitle": "Yra naujesnė versija",
       "modalUpdate": "Instaliuoti",
       "modalUpdateNow": "Instaliuoti dabar",
-      "modalUpdateStarted": "Startuoja nauja evcc versija...",
+      "modalUpdateStarted": "Startuoja nauja evcc versija…",
       "modalUpdateStatusStart": "Instaliavimas pradėtas:"
     }
   },
@@ -531,7 +531,7 @@
     "logout": "Atsijungti",
     "nativeSettings": "Pakeisti Serverį",
     "needHelp": "Reikia Pagalbos?",
-    "sessions": "Įkrovimo sesijos"
+    "sessions": "Įkrovimo Sesijos"
   },
   "help": {
     "discussionsButton": "GitHub diskusijos",
@@ -539,7 +539,7 @@
     "issueButton": "Pranešti apie klaidą",
     "issueDescription": "Pastebėjote keistą ar netinkamą veikimą?",
     "logsButton": "Peržiūrėti žurnalus",
-    "logsDescription": "Patikrinkite ar žurnaluose nėra klaidų",
+    "logsDescription": "Patikrinkite ar žurnaluose nėra klaidų.",
     "modalTitle": "Reikia pagalbos?",
     "primaryActions": "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia.",
     "restart": {
@@ -559,7 +559,7 @@
     "download": "Atsisiųsti visą žurnalą",
     "levelLabel": "Filtruoti pagal žurnalo lygį",
     "nAreas": "{count} sritys",
-    "noResults": "Nėra atitinkančių žurnalo įrašų",
+    "noResults": "Nėra atitinkančių žurnalo įrašų.",
     "search": "Ieškoti",
     "selectAll": "pasirinkti visus",
     "showAll": "Rodyti visus įrašus",
@@ -570,7 +570,7 @@
     "cancel": "Atšaukti",
     "error": "Prisijungti nepavyko: ",
     "iframeHint": "Atidaryti evcc naujame skirtuke.",
-    "iframeIssue": "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP",
+    "iframeIssue": "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP.",
     "invalid": "Neteisingas slaptažodis.",
     "login": "Prisijungti",
     "password": "Slaptažodis",
@@ -645,7 +645,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Greitas įkrovimas iš namų kaupiklio",
+        "description": "Greitas įkrovimas iš namų kaupiklio.",
         "label": "Kaupikliu paspartintas įkrovimas",
         "mode": "Galimas tik Saulė ir Min+Saulė režimuose.",
         "once": "Paspartinimas aktyvuotas šiai įkrovimo sesijai."
@@ -724,7 +724,7 @@
       "tomorrow": "rytoj",
       "update": "Atnaujinti",
       "vehicleCapacityDocs": "Išmokite, kaip tai sukonfigūruoti.",
-      "vehicleCapacityRequired": "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
+      "vehicleCapacityRequired": "Norint nuspėti įkrovimo trukmę, reikalinga automobilio baterijos talpa."
     },
     "targetChargePlan": {
       "chargeDuration": "Įkrovimo trukmė",
@@ -740,7 +740,7 @@
     "vehicle": {
       "addVehicle": "Pridėti automobilį",
       "changeVehicle": "Pakeisti automobilį",
-      "detectionActive": "Bandome atpažinti automobilį ...",
+      "detectionActive": "Bandome atpažinti automobilį…",
       "fallbackName": "Automobilis",
       "moreActions": "Daugiau veiksmų",
       "none": "Nėra automobilio",
@@ -754,11 +754,11 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Laukiama autorizacijos.",
       "batteryBoost": "Veikia paspartinimas kaupikliu.",
-      "charging": "Įkraunama...",
+      "charging": "Įkraunama…",
       "cheapEnergyCharging": "Šiuo metu energija yra pigi.",
       "cheapEnergyNextStart": "Pigi energija už {duration}.",
       "cheapEnergySet": "Kainos riba nustatyta.",
-      "cleanEnergyCharging": "Šiuo metu energija yra švari",
+      "cleanEnergyCharging": "Šiuo metu energija yra švari.",
       "cleanEnergyNextStart": "Švari energija už {duration}.",
       "cleanEnergySet": "CO₂ riba nustatyta.",
       "climating": "Aptiktas išankstinis kondicionavimas.",
@@ -773,10 +773,10 @@
       "scale3p": "Padidinimas į trifazį įkrovimą netrukus.",
       "targetChargeActive": "Įkrovimo planas aktyvuotas. Numatoma pabaiga už {duration}.",
       "targetChargePlanned": "Suplanuotas įkrovimas prasidės už {duration}.",
-      "targetChargeWaitForVehicle": "Įkrovimas pagal planą leidžiamas. Laukiama automobilio...",
+      "targetChargeWaitForVehicle": "Įkrovimas pagal planą leidžiamas. Laukiama automobilio…",
       "vehicleLimit": "Automobilyje nustatytas limitas",
       "vehicleLimitReached": "Automobilyje nustatytas limitas pasiektas.",
-      "waitForVehicle": "Paruošta. Laukiama automobilio...",
+      "waitForVehicle": "Paruošta. Laukiama automobilio…",
       "welcome": "Trumpas pirminis įkrovimas jungties patikrinimui."
     },
     "vehicles": "Autoparkas",
