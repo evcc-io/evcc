@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 
-type TestState = {
+export type TestState = {
 	isUnknown: boolean;
 	isSuccess: boolean;
 	isError: boolean;

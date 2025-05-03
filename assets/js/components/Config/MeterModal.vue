@@ -64,15 +64,7 @@
 					@change="templateChanged"
 				/>
 
-				<div v-if="values.type === 'custom'">
-					<p>
-						<span>{{ $t("config.general.customHelp") + " " }}</span>
-						<a :href="docsLink" target="_blank">
-							{{ $t("config.general.docsLink") }}
-						</a>
-					</p>
-					<YamlEditorContainer v-model="values.yaml" />
-				</div>
+				<YamlEntry v-if="values.type === 'custom'" v-model="values.yaml" type="meter" />
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -112,47 +104,15 @@
 					</PropertyCollapsible>
 				</div>
 
-				<TestResult v-if="showActions" v-bind="test" @test="testManually" />
-
-				<div v-if="showActions" class="my-4 d-flex justify-content-between">
-					<button
-						v-if="isDeletable"
-						type="button"
-						class="btn btn-link text-danger"
-						tabindex="0"
-						@click.prevent="remove"
-					>
-						{{ $t("config.general.delete") }}
-					</button>
-					<button
-						v-else
-						type="button"
-						class="btn btn-link text-muted"
-						data-bs-dismiss="modal"
-						tabindex="0"
-					>
-						{{ $t("config.general.cancel") }}
-					</button>
-					<button
-						type="submit"
-						class="btn btn-primary"
-						:disabled="test.isRunning || saving"
-						tabindex="0"
-						@click.prevent="isNew ? create() : update()"
-					>
-						<span
-							v-if="saving"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						{{
-							test.isUnknown
-								? $t("config.general.validateSave")
-								: $t("config.general.save")
-						}}
-					</button>
-				</div>
+				<DeviceModalActions
+					v-if="showActions"
+					:is-deletable="isDeletable"
+					:test-state="test"
+					:is-saving="saving"
+					@save="isNew ? create() : update()"
+					@remove="remove"
+					@test="testManually"
+				/>
 			</div>
 		</form>
 	</GenericModal>
@@ -163,17 +123,16 @@ import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import TestResult from "./TestResult.vue";
 import api from "@/api";
 import NewDeviceButton from "./NewDeviceButton.vue";
-import Modbus from "./Modbus.vue";
+import Modbus from "./DeviceModal/Modbus.vue";
+import DeviceModalActions from "./DeviceModal/Actions.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import PropertyField from "./PropertyField.vue";
-import TemplateSelector from "./TemplateSelector.vue";
-import YamlEditorContainer from "./YamlEditorContainer.vue";
+import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
-import { docsPrefix } from "@/i18n";
 import { initialTestState, performTest } from "./utils/test";
 import {
 	handleError,
@@ -184,7 +143,7 @@ import {
 	type Product,
 	type ModbusParam,
 	type ModbusCapability,
-} from "./utils/deviceModal";
+} from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
@@ -221,12 +180,12 @@ export default defineComponent({
 		PropertyField,
 		GenericModal,
 		Modbus,
-		TestResult,
 		NewDeviceButton,
 		PropertyCollapsible,
 		Markdown,
 		TemplateSelector,
-		YamlEditorContainer,
+		YamlEntry,
+		DeviceModalActions,
 	},
 	props: {
 		id: Number,
@@ -346,9 +305,6 @@ export default defineComponent({
 		},
 		modalSize() {
 			return this.values.type === ConfigType.Custom ? "xl" : undefined;
-		},
-		docsLink() {
-			return `${docsPrefix()}/docs/devices/meters`;
 		},
 		showActions() {
 			return this.templateName || this.values.type === ConfigType.Custom;

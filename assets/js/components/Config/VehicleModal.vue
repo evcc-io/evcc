@@ -19,15 +19,7 @@
 				:primary-option="primaryOption"
 				@change="templateChanged"
 			/>
-			<div v-if="values.type === 'custom'">
-				<p>
-					<span>{{ $t("config.general.customHelp") + " " }}</span>
-					<a :href="docsLink" target="_blank">
-						{{ $t("config.general.docsLink") }}
-					</a>
-				</p>
-				<YamlEditorContainer v-model="values.yaml" />
-			</div>
+			<YamlEntry v-if="values.type === 'custom'" v-model="values.yaml" type="vehicle" />
 			<div v-else>
 				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -163,44 +155,16 @@
 					</template>
 				</PropertyCollapsible>
 			</div>
-			<TestResult v-if="showActions" v-bind="test" @test="testManually" />
 
-			<div v-if="showActions" class="my-4 d-flex justify-content-between">
-				<button
-					v-if="isDeletable"
-					type="button"
-					class="btn btn-link text-danger"
-					@click.prevent="remove"
-				>
-					{{ $t("config.vehicle.delete") }}
-				</button>
-				<button
-					v-else
-					type="button"
-					class="btn btn-link text-muted"
-					data-bs-dismiss="modal"
-				>
-					{{ $t("config.vehicle.cancel") }}
-				</button>
-				<button
-					type="submit"
-					class="btn btn-primary"
-					:disabled="test.isRunning || saving"
-					@click.prevent="isNew ? create() : update()"
-				>
-					<span
-						v-if="saving"
-						class="spinner-border spinner-border-sm"
-						role="status"
-						aria-hidden="true"
-					></span>
-					{{
-						test.isUnknown
-							? $t("config.vehicle.validateSave")
-							: $t("config.vehicle.save")
-					}}
-				</button>
-			</div>
+			<DeviceModalActions
+				v-if="showActions"
+				:is-deletable="isDeletable"
+				:test-state="test"
+				:is-saving="saving"
+				@save="isNew ? create() : update()"
+				@remove="remove"
+				@test="testManually"
+			/>
 		</form>
 	</GenericModal>
 </template>
@@ -209,15 +173,14 @@
 import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import TestResult from "./TestResult.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-import YamlEditorContainer from "./YamlEditorContainer.vue";
-import TemplateSelector from "./TemplateSelector.vue";
-import { docsPrefix } from "@/i18n";
+import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import DeviceModalActions from "./DeviceModal/Actions.vue";
+import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import api from "@/api";
 import { initialTestState, performTest } from "./utils/test";
 import {
@@ -227,7 +190,7 @@ import {
 	type DeviceValues,
 	type Template,
 	type Product,
-} from "./utils/deviceModal";
+} from "./DeviceModal";
 import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, icon: "car" };
@@ -252,14 +215,14 @@ export default defineComponent({
 	components: {
 		FormRow,
 		PropertyField,
-		TestResult,
 		GenericModal,
 		SelectGroup,
 		PropertyCollapsible,
 		PropertyEntry,
 		Markdown,
-		YamlEditorContainer,
 		TemplateSelector,
+		DeviceModalActions,
+		YamlEntry,
 	},
 	props: {
 		id: Number,
@@ -357,9 +320,6 @@ export default defineComponent({
 			result[0].key = undefined;
 			result[10].name = "10 (highest)";
 			return result;
-		},
-		docsLink() {
-			return `${docsPrefix()}/docs/devices/plugins#vehicle`;
 		},
 		primaryOption() {
 			return this.products.find((p) => p.template === "offline");

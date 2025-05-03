@@ -161,10 +161,10 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import FormRow from "./FormRow.vue";
-import PropertyField from "./PropertyField.vue";
+import FormRow from "../FormRow.vue";
+import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
-import type { ModbusCapability } from "./utils/deviceModal";
+import type { ModbusCapability } from "./index";
 type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
 type ConnectionOption = "tcpip" | "serial";
 type ProtocolOption = "tcp" | "rtu";
