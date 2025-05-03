@@ -28,8 +28,11 @@ params:
     required: true
   - name: token
     description:
-      en: user access token - create in VRM
-      de: user access token - in VRM anlegen
+      en: API access token
+      de: API Zugriffstoken
+    help:
+      en: tokens can be created in VRM in Preferences->Integrations 
+      de: Token können im VRM erstellt werden unter Präferenzen->Integrationen
     required: true
   - name: interval
     default: 1h
