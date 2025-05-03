@@ -30,12 +30,12 @@ const icons = {
 export default defineComponent({
 	name: "MultiIcon",
 	props: {
-		count: { type: Number, default: -1 },
+		count: { type: Number, default: 1 },
 		size: { type: String, default: "s" },
 	},
 	computed: {
 		icon() {
-			return this.count < 1 || this.count > 9
+			return this.count > 9
 				? Plus
 				: icons[`_${this.count}` as keyof typeof icons];
 		},
