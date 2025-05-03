@@ -11,13 +11,10 @@ params:
     choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-  - name: subtype
-    choice: ["cgem24", "cgem24_e1"]
-    default: cgem24
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: {{ .subtype }}
+  model: cgem24
   power: Power
   energy: Import
   currents:
