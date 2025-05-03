@@ -35,9 +35,7 @@ export default defineComponent({
 	},
 	computed: {
 		icon() {
-			return this.count > 9
-				? Plus
-				: icons[`_${this.count}` as keyof typeof icons];
+			return this.count > 9 ? Plus : icons[`_${this.count}` as keyof typeof icons];
 		},
 	},
 });
