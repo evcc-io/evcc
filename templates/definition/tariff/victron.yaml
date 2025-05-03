@@ -31,7 +31,7 @@ params:
       en: API access token
       de: API Zugriffstoken
     help:
-      en: tokens can be created in VRM in Preferences->Integrations 
+      en: tokens can be created in VRM in Preferences->Integrations
       de: Token können im VRM erstellt werden unter Präferenzen->Integrationen
     required: true
   - name: interval
