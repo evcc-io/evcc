@@ -50,11 +50,9 @@ params:
   - name: device_id
     required: true
     description:
-      de: Device ID
-      en: Device ID
-    help:
-      de: siehe https://docs.evcc.io/docs/devices/heating#viessmann
-      en: see https://docs.evcc.io/docs/devices/heating#viessmann
+      de: Device ID - normalerweise `0`
+      en: Device ID - typically `0`
+    default: 0
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
