@@ -5,9 +5,16 @@ products:
       generic: VRM Solar Forecast
 requirements:
   description:
-    en: "[vrm.victronenergy.com](https://vrm.victronenergy.com) get the 2-days-forecast from your installation in VRM portal. You need a free user access token."
-    de: "[vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der 2-Tage-Prognose einer Installation im VRM-Portal. Es wird ein kostenloses User Access Token benoetigt."
-  evcc: ["skiptest"]
+    en: >-
+      [vrm.victronenergy.com](https://vrm.victronenergy.com) get the
+      2-days-forecast from your installation in VRM portal. You need a free user
+      access token.
+    de: >-
+      [vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der
+      2-Tage-Prognose einer Installation im VRM-Portal. Es wird ein kostenloses
+      User Access Token benoetigt.
+  evcc:
+    - skiptest
 group: solar
 params:
   - name: idsite
@@ -27,13 +34,21 @@ params:
   - name: interval
     default: 1h
     advanced: true
-render: |
+render: >
   {{- $n := now -}}
+
   {{- $start := $n | unixEpoch | int -}}
+
   {{- $end := add $start 172800 -}}
-  {{- $uri := printf "https://vrmapi.victronenergy.com/v2/installations/%s/stats?start=%d&end=%d&interval=hours&type=forecast" .idsite $start $end -}}
+
+  {{- $uri := printf
+  "https://vrmapi.victronenergy.com/v2/installations/%s/stats?start=%d&end=%d&interval=hours&type=forecast"
+  .idsite $start $end -}}
+
   type: custom
+
   tariff: solar
+
   forecast:
     source: http
     uri: "{{ $uri }}"
