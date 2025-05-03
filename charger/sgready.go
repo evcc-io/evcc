@@ -40,10 +40,10 @@ func init() {
 }
 
 const (
-	_ int64 = iota
-	Normal
-	Boost
-	Stop
+	_      int64 = iota
+	Dimm         // 1
+	Normal       // 2
+	Boost        // 3
 )
 
 //go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
@@ -123,8 +123,8 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Stop {
-		return api.StatusNone, errors.New("stop mode")
+	if mode == Dimm {
+		return api.StatusNone, errors.New("dimm mode")
 	}
 
 	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
