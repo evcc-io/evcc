@@ -7,6 +7,11 @@ group: heating
 requirements:
   # evcc: ["sponsorship"]
   evcc: ["skiptest"]
+  description:
+    de: |
+      Einmalige Warmwasserbereitung auf eine konfigurierbare Solltemperatur. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird. 
+    en: |
+      One-time hot water preparation to a configurable target temperature. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 params:
   - name: user
     required: true
