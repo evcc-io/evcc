@@ -17,7 +17,7 @@ params:
     required: true
     help:
       de: Für den konfigurierten Viessmann Account.
-      en: For the configured user. 
+      en: For the configured Viessmann account. 
   - name: clientid
     required: true
     description:
@@ -32,24 +32,24 @@ params:
       de: Gateway Serial
       en: Gateway Serial
     help:
-      de: Seriennummer des VitoConnect moduls: VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer
-      en: VitoConnect serial number: VitoCare App -> Settings -> Communication module -> Serial number
+      de: Seriennummer des VitoConnect modul (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: VitoConnect serial number (VitoCare App -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
     description:
       de: InstallationID
       en: InstallationID
     help:
-      de: https://docs.evcc.io/docs/devices/heating#viessmann
-      en: https://docs.evcc.io/docs/devices/heating#viessmann
+      de: siehe https://docs.evcc.io/docs/devices/heating#viessmann
+      en: see https://docs.evcc.io/docs/devices/heating#viessmann
   - name: device_id
     required: true
     description:
       de: Device ID
       en: Device ID
     help:
-      de: https://docs.evcc.io/docs/devices/heating#viessmann
-      en: https://docs.evcc.io/docs/devices/heating#viessmann
+      de: siehe https://docs.evcc.io/docs/devices/heating#viessmann
+      en: see https://docs.evcc.io/docs/devices/heating#viessmann
   - name: target_temperature
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C), max=60
