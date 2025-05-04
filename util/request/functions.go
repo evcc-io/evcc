@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/cenkalti/backoff/v4"
 )
@@ -42,7 +43,8 @@ var (
 
 // StatusError indicates unsuccessful http response
 type StatusError struct {
-	resp *http.Response
+	resp  *http.Response
+	inner error
 }
 
 func NewStatusError(resp *http.Response) *StatusError {
@@ -76,7 +78,17 @@ func (e *StatusError) HasStatus(codes ...int) bool {
 // ResponseError turns an HTTP status code into an error
 func ResponseError(resp *http.Response) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return &StatusError{resp: resp}
+		err := &StatusError{resp: resp}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if retryAfter := resp.Header.Get("retry-after"); retryAfter != "" {
+				if seconds, err := strconv.ParseInt(retryAfter, 10, 64); err == nil && seconds > 0 {
+					err.inner = &backoff.RetryAfter(seconds)
+				}
+			}
+		}
+
+		return backoff.Permanent(err)
 	}
 	return nil
 }
@@ -90,11 +102,7 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, backoff.Permanent(&StatusError{resp: resp})
-	}
-
-	return b, nil
+	return b, ResponseError(resp)
 }
 
 // New builds and executes HTTP request and returns the response
