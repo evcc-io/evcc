@@ -330,7 +330,6 @@ params:
     help:
       en: Maximum charge power for forced charging of the battery in watts.
       de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt.
-    default: 4200
     advanced: true
   - name: maxchargerate
     type: int
