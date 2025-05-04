@@ -36,26 +36,26 @@ params:
   - name: interval
     default: 1h
     advanced: true
-render: >
+render: |
   {{- $n := now -}}
   {{- $start := $n | unixEpoch | int -}}
   {{- $end := add $start 172800 -}}
+  {{- $uri := printf
+  "https://vrmapi.victronenergy.com/v2/installations/%s/stats?start=%d&end=%d&interval=hours&type=forecast"
+  .idsite $start $end -}}
 
   type: custom
   tariff: solar
   forecast:
     source: http
-    uri: >-
-      https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}
-      /stats?start={{ $start }}&end={{ $end }}
-      &interval=hours&type=forecast
+    uri: "{{ $uri }}"
     method: "GET"
     headers:
       - X-Authorization: "Token {{ .token }}"
     jq: |
       .records.solar_yield_forecast | map({
-          "start": ((.[0] / 1000) | todateiso8601),
-          "end":   (((.[0] + 3600000) / 1000 ) | todateiso8601),
-          "value": .[1]
-        }) | tostring
+         "start": ((.[0] / 1000) | todateiso8601),
+         "end":   (((.[0] + 3600000) / 1000 ) | todateiso8601),
+         "value": .[1]
+       }) | tostring
   interval: {{ .interval }}
