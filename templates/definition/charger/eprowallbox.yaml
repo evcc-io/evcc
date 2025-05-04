@@ -5,11 +5,10 @@ products:
       generic: eProWallbox
 capabilities: ["mA"]
 requirements:
-  description:
-  evcc: []
+  evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485"]
 render: |
   type: eprowallbox
   {{- include "modbus" . }}

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply, andig
+// Copyright (c) 2025 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -21,34 +21,29 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // eSolutions eProWallbox charger implementation
 type EProWallbox struct {
-	conn    *modbus.Connection
-	current uint32
-	log     *util.Logger
+	conn *modbus.Connection
+	log  *util.Logger
 }
 
 const (
-	eproRegSerial           = 40000 // Serial Number 8 registers (16 ASCII chars)
-	eproReg1ph3p            = 40017 // 1p/3p mode, 1 register, UINT16 (RO)
-	eproRegGeneralStatus    = 40101 // IEC 61851 Status, 1 register, UINT16
-	eproRegOCPPStatus       = 40102 // OCPP Status, 1 register, UINT16
-	eproRegUserCurrentLimit = 40103 // Current limit set by user (via app) in mA, 2 registers, UINT32
-	eproRegHwCurrentLimit   = 40018 // Current limit by HW (rotary switch) in mA, 2 registers, UINT32
-	eproRegOnOffInput       = 40406 // On/Off state, 1 registers, UINT16
-	eproRegCurrentLimit     = 40407 // in mA
-	// TODO: Fallback + Watchdog
-	eproRegL1Vac = 40604 // L1 voltage in V, 2 registers, Float32 (followed by L2, L3)
-	eproRegL1Iac = 40620 // L1 current in A, 2 registers, Float32 (followed by L2, L3)
+	eproRegStatus         = 40101 // IEC 61851 Status, 1 register, UINT16
+	eproRegEnable         = 40406 // On/Off state, 1 registers, UINT16
+	eproRegCurrentLimit   = 40407 // in mA
+	eproRegResetWatchdog  = 40502
+	eproRegVoltages       = 40604 // L1 voltage in V, 2 registers, Float32 (followed by L2, L3)
+	eproRegCurrents       = 40620 // L1 current in A, 2 registers, Float32 (followed by L2, L3)
+	eproRegPowers         = 40636 // L1 power in W, 2 registers, Float32 (followed by L2, L3)
+	eproRegActiveEnergies = 40658 // L1 energy in Wh, 2 registers, Float32 (followed by L2, L3)
 )
 
 func init() {
@@ -56,7 +51,7 @@ func init() {
 }
 
 // NewEProWallboxFromConfig creates a eProWallbox charger from generic config
-func NewEProWallboxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEProWallboxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -79,106 +74,71 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 	conn.Logger(log.TRACE)
 
 	wb := &EProWallbox{
-		conn:    conn,
-		current: 6000, // assume min current
-		log:     log,
+		conn: conn,
+		log:  log,
 	}
+
+	go wb.heartbeat(ctx)
+
 	return wb, err
 }
 
-func (wb *EProWallbox) getOCPPStatus() (core.ChargePointStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(eproRegOCPPStatus, 1)
+func (wb *EProWallbox) heartbeat(ctx context.Context) {
+	for tick := time.Tick(10 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
 
-	if err != nil {
-		return core.ChargePointStatusFaulted, err
-	}
-
-	s := binary.BigEndian.Uint16(b)
-	statusDecodeMap := map[uint16]core.ChargePointStatus{
-		0: core.ChargePointStatusAvailable,
-		1: core.ChargePointStatusPreparing,
-		2: core.ChargePointStatusCharging,
-		3: core.ChargePointStatusSuspendedEVSE,
-		4: core.ChargePointStatusSuspendedEV,
-		5: core.ChargePointStatusFinishing,
-		6: core.ChargePointStatusReserved,
-		7: core.ChargePointStatusUnavailable,
-		8: core.ChargePointStatusFaulted,
-	}
-
-	if status, ok := statusDecodeMap[s]; ok {
-		return status, nil
-	} else {
-		return core.ChargePointStatusFaulted, fmt.Errorf("invalid status value: %d", s)
+		b := make([]byte, 2)
+		binary.BigEndian.PutUint16(b, 0x5555)
+		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, 1, b); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
 	}
 }
 
 // Status implements the api.Charger interface
 func (wb *EProWallbox) Status() (api.ChargeStatus, error) {
-	ocppStatus, err := wb.getOCPPStatus()
+	b, err := wb.conn.ReadHoldingRegisters(eproRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	// Same decoding as for OCPP charger implementation
-	switch ocppStatus {
-	case
-		core.ChargePointStatusAvailable,   // "Available"
-		core.ChargePointStatusUnavailable: // "Unavailable"
+	s := binary.BigEndian.Uint16(b)
+
+	switch s {
+	case 0, 1: // A1, A2
 		return api.StatusA, nil
-	case
-		core.ChargePointStatusPreparing,     // "Preparing"
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
-		core.ChargePointStatusFinishing:     // "Finishing"
+	case 2, 3, 4, 6: // B1, B2, C1, D1
 		return api.StatusB, nil
-	case
-		core.ChargePointStatusCharging: // "Charging"
+	case 5, 7: // C2, D2
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", ocppStatus)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (wb *EProWallbox) Enabled() (bool, error) {
-	ocppStatus, err := wb.getOCPPStatus()
-
-	// try with OCPP status implementation
-	if err == nil {
-		switch ocppStatus {
-		case
-			core.ChargePointStatusSuspendedEVSE:
-			return false, nil
-		case
-			core.ChargePointStatusCharging,
-			core.ChargePointStatusSuspendedEV:
-			return true, nil
-		}
+	b, err := wb.conn.ReadHoldingRegisters(eproRegEnable, 1)
+	if err != nil {
+		return false, err
 	}
 
-	return true, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *EProWallbox) Enable(enable bool) error {
-	var current uint32
-
+	b := make([]byte, 2)
 	if enable {
-		current = wb.current
+		binary.BigEndian.PutUint16(b, 1)
 	}
 
-	return wb.setCurrent(current)
-}
+	_, err := wb.conn.WriteMultipleRegisters(eproRegEnable, 1, b)
 
-// setCurrent writes the current limit in mA
-func (wb *EProWallbox) setCurrent(current uint32) error {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, current)
-
-	// current is written independent of limit
-	// disabling charger results in 0A
-	_, err := wb.conn.WriteMultipleRegisters(eproRegCurrentLimit, 2, b)
 	return err
 }
 
@@ -191,19 +151,20 @@ var _ api.ChargerEx = (*EProWallbox)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *EProWallbox) MaxCurrentMillis(current float64) error {
-
-	wb.current = uint32(current * 1e3)
-
-	if (wb.current < 6000) || (wb.current > 32000) {
-		return fmt.Errorf("invalid current %d", wb.current)
+	if current < 6 {
+		return fmt.Errorf("invalid current %.5g", current)
 	}
-	return wb.setCurrent(wb.current)
-}
 
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(current*1e3))
+
+	_, err := wb.conn.WriteMultipleRegisters(eproRegCurrentLimit, 2, b)
+
+	return err
+}
 
 // getPhaseValues returns 3 sequential register values
 func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
-
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
@@ -211,138 +172,38 @@ func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, flo
 
 	var res [3]float64
 	for i := range res {
-		bits := binary.BigEndian.Uint32(b) // falls Big-Endian – sonst LittleEndian
-		res[i] = float64(math.Float32frombits(bits)) / divider
+		res[i] = rs485.RTUIeee754ToFloat64(b[2*i:]) / divider
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.Meter = (*EProWallbox)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *EProWallbox) CurrentPower() (float64, error) {
+	l1, l2, l3, err := wb.getPhaseValues(eproRegPowers, 1)
+	return l1 + l2 + l3, err
+}
+
+var _ api.MeterEnergy = (*EProWallbox)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *EProWallbox) TotalEnergy() (float64, error) {
+	l1, l2, l3, err := wb.getPhaseValues(eproRegActiveEnergies, 1000)
+	return l1 + l2 + l3, err
 }
 
 var _ api.PhaseCurrents = (*EProWallbox)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *EProWallbox) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(eproRegL1Iac, 1)
+	return wb.getPhaseValues(eproRegCurrents, 1)
 }
 
 var _ api.PhaseVoltages = (*EProWallbox)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *EProWallbox) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(eproRegL1Vac, 1)
-}
-
-var _ api.Diagnosis = (*EProWallbox)(nil)
-
-func (wb *EProWallbox) Diagnose() {
-
-	// use description from modbus communication map pdf from Free2Move
-	var decoderOcppStatus = map[uint16]string{
-		0: "Available (A)", 1: "Preparing (B)", 2: "Charging (C)",
-		3: "SuspendedEV (D)", 4: "SuspendedEVSE (E)", 5: "Finishing (F)",
-		6: "Reserved (G)", 7: "Unavailable (H)", 8: "Faulted (I)",
-	}
-
-	var decoderDeviceType = map[uint16]string{
-		0: "AC 1-phase",
-		1: "AC 3-phase",
-	}
-
-	var decoderGeneralStatus = map[uint16]string{
-		0: "A1", 1: "A2", 2: "B1", 3: "B2", 4: "C1", 5: "C2", 6: "D1", 7: "D2", 8: "E", 9: "F",
-	}
-
-	var decoderEnabledDisabled = map[uint16]string{0: "Disabled", 1: "Enabled"}
-
-	var decoderTempDerating = map[uint16]string{
-		0: "Disabled",
-		1: "Enabled (limits when temperature > 85°C)",
-	}
-
-	var decoderMeterUsed = map[uint16]string{0: "External", 1: "Internal"}
-
-	var decoderBaudRate = map[uint16]string{
-		0: "9600", 1: "19200", 2: "38400", 3: "57600", 4: "115200",
-	}
-
-	decode := func(m map[uint16]string, value uint16) string {
-		if decoded, ok := m[value]; ok {
-			return decoded
-		}
-		return fmt.Sprintf("Unknown (%d)", value)
-	}
-
-	readASCII := func(address, size uint16, label string) {
-		b, _ := wb.conn.ReadHoldingRegisters(address, size)
-		fmt.Printf("%-25s %s\n", label+":", string(b))
-	}
-
-	readUint16Dec := func(address uint16, label string, decoder map[uint16]string) {
-		b, _ := wb.conn.ReadHoldingRegisters(address, 1)
-		val := binary.BigEndian.Uint16(b)
-		if decoder != nil {
-			fmt.Printf("%-25s %s (%d)\n", label+":", decode(decoder, val), val)
-		} else {
-			fmt.Printf("%-25s %d\n", label+":", val)
-		}
-	}
-
-	readUint16 := func(address uint16, label string, unit string) {
-		b, _ := wb.conn.ReadHoldingRegisters(address, 1)
-		val := binary.BigEndian.Uint16(b)
-		if unit != "" {
-			fmt.Printf("%-25s %d %s\n", label+":", val, unit)
-		} else {
-			fmt.Printf("%-25s %d\n", label+":", val)
-		}
-	}
-
-	readUint32 := func(address uint16, label string, unit string) {
-		b, _ := wb.conn.ReadHoldingRegisters(address, 2)
-		val := binary.BigEndian.Uint32(b)
-		if unit != "" {
-			fmt.Printf("%-25s %d %s\n", label+":", val, unit)
-		} else {
-			fmt.Printf("%-25s %d\n", label+":", val)
-		}
-	}
-
-	fmt.Println("eProWallbox diagnostics:")
-
-	// Identification
-	readASCII(40000, 8, "Serial Number")
-	readASCII(40008, 4, "Software Version")
-	readASCII(40012, 4, "Modbus Version")
-
-	// Device Info
-	readUint16(40016, "HW Type", "")
-	readUint16Dec(40017, "Device Type", decoderDeviceType)
-	readUint32(40018, "HW Current Limit", "mA")
-
-	// Status
-	readUint16(40100, "Actual Error", "")
-	readUint16Dec(40101, "General Status", decoderGeneralStatus)
-	readUint16Dec(40102, "OCPP Status", decoderOcppStatus)
-	readUint32(40103, "User Current Limit", "mA")
-	readUint16Dec(40106, "Load Unbalance Limiting", decoderEnabledDisabled)
-	readUint16Dec(40107, "DPM Limiting", decoderEnabledDisabled)
-	readUint16Dec(40108, "Temp Derating Status", decoderTempDerating)
-
-	// Communication
-	readUint16(40200, "RTU Address", "")
-	readUint16(40201, "New RTU Address", "")
-	readUint16Dec(40210, "Baud Rate", decoderBaudRate)
-	readUint16Dec(40211, "New Baud Rate", decoderBaudRate)
-
-	// Config
-	readUint16Dec(40400, "DPM Enabled", decoderEnabledDisabled)
-	readUint16Dec(40401, "MID Meter Enabled", decoderEnabledDisabled)
-	readUint16Dec(40402, "Load Unbalance Enabled", decoderEnabledDisabled)
-	readUint32(40403, "Load Unbalance Current", "mA")
-	readUint16(40406, "On/Off Input", "")
-	readUint32(40407, "Current Limit", "mA")
-	readUint32(40409, "Fallback Current", "mA")
-	readUint16Dec(40411, "Meter Used", decoderMeterUsed)
-	readUint16(40412, "Watchdog Enabled", "")
-	readUint16(40413, "Watchdog Timer", "s")
+	return wb.getPhaseValues(eproRegVoltages, 1)
 }
