@@ -13,8 +13,7 @@ requirements:
       [vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der
       2-Tage-Prognose einer Installation im VRM-Portal. Es wird ein kostenloses
       User Access Token benoetigt.
-  evcc:
-    - skiptest
+  evcc: ["skiptest"]
 group: solar
 params:
   - name: idsite
