@@ -23,26 +23,15 @@
     "usageTab": "Χρήση μπαταρίας"
   },
   "config": {
-    "aux": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "battery": {
       "titleAdd": "Πρόσθεσε Μπαταρία",
       "titleEdit": "Eπεξεργασία Mπαταρίας"
     },
-    "charge": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "charger": {
       "chargers": "Φορτιστές οχημάτων",
       "generic": "Γενικές ενσωματώσεις",
-      "heatingdevices": "",
       "ocppHelp": "Αντιγράψτε αυτή τη διεύθυνση στη διαμόρφωση των φορτιστών σας.",
       "ocppLabel": "OCPP-Server URL",
-      "switchsockets": "",
       "template": "Κατασκευαστής",
       "titleAdd": "Προσθήκη Φορτιστή",
       "titleEdit": "Επεξεργασία Φορτιστή"
@@ -81,7 +70,6 @@
       "energy": "Ενέργεια",
       "feedinPrice": "Ταρίφα Feed-in",
       "gridPrice": "Τιμή δικτύου",
-      "heaterTempLimit": "",
       "hemsType": "Σύστημα",
       "identifier": "Αναγνωριστικό RFID",
       "no": "όχι",
@@ -96,7 +84,6 @@
       "range": "Αυτονομία",
       "singlePhase": "Μονοφασικό",
       "soc": "Κατάσταση φόρτισης",
-      "solarForecast": "",
       "temp": "Θερμοκρασία",
       "topic": "Topic",
       "url": "URL",
@@ -108,22 +95,11 @@
       "B": "B (συνδεδεμένο)",
       "C": "C (φορτίζει)"
     },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
-    },
     "eebus": {
       "description": "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus.",
       "title": "EEBus"
     },
-    "ext": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "form": {
-      "danger": "",
       "deprecated": "καταργήθηκε",
       "example": "Παράδειγμα",
       "optional": "προαιρετικό"
@@ -142,7 +118,6 @@
       "save": "Αποθήκευση",
       "showAdvancedSettings": "Εμφάνιση ρυθμίσεων για προχωρημένους",
       "telemetry": "Τηλεμετρία",
-      "templateLoading": "",
       "title": "Τίτλος",
       "validateSave": "Επικύρωση και αποθήκευση"
     },
@@ -175,7 +150,6 @@
       "addCharger": "Προσθήκη φορτιστή",
       "addMeter": "Προσθήκη αποκλειστικού μετρητή για το φορτιστή",
       "cancel": "Άκυρο",
-      "chargerError": "",
       "chargerLabel": "Φορτιστής",
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 16 Α.",
@@ -207,7 +181,6 @@
       "phasesAutomaticHelp": "Ο φορτιστής σας υποστηρίζει αυτόματη εναλλαγή μεταξύ φόρτισης 1 και 3 φάσεων. Στην οθόνη του μπορείτε να προσαρμόσετε αυτή τη λειτουργία επιλογής φάσεων κατά τη φόρτιση.",
       "phasesHelp": "Αριθμός φάσεων που είναι συνδεδεμένες στον φορτιστή.",
       "phasesLabel": "Φάσεις",
-      "pollIntervalDanger": "",
       "pollIntervalHelp": "Χρόνος μεταξύ των ενημερώσεων API του οχήματος. Τα μικρά διαστήματα ενδέχεται να ταλαιπωρήσουν τη μπαταρία του οχήματος.",
       "pollIntervalLabel": "Διάστημα ενημέρωσης",
       "pollModeAlways": "πάντοτε",
@@ -222,20 +195,7 @@
       "save": "Αποθήκευση",
       "showAllSettings": "Εμφάνιση όλων των ρυθμίσεων",
       "solarBehaviorCustomHelp": "Ορίστε το δικό σας εύρος ενεργοποίησης και απενεργοποίησης κατώτατων ορίων και καθυστερήσεων.",
-      "solarBehaviorDefaultHelp": "",
-      "solarBehaviorLabel": "",
       "solarModeCustom": "προσαρμοσμένo",
-      "solarModeMaximum": "",
-      "thresholdDisableDelayLabel": "",
-      "thresholdDisableHelpInvalid": "",
-      "thresholdDisableHelpPositive": "",
-      "thresholdDisableHelpZero": "",
-      "thresholdDisableLabel": "",
-      "thresholdEnableDelayLabel": "",
-      "thresholdEnableHelpInvalid": "",
-      "thresholdEnableHelpNegative": "",
-      "thresholdEnableHelpZero": "",
-      "thresholdEnableLabel": "",
       "titleAdd": "Προσθήκη Σημείου Φόρτισης",
       "titleEdit": "Επεξεργασία Σημείου Φόρτισης",
       "titleExample": "Γκαράζ, Υπόστεγο, κλπ.",
@@ -247,7 +207,6 @@
       "vehiclesTitle": "Οχήματα"
     },
     "main": {
-      "addAdditional": "",
       "addGrid": "Προσθήκη Μετρητή Δικτύου",
       "addLoadpoint": "Προσθήκη σημείου φόρτισης",
       "addPvBattery": "Προσθήκη Φ/Β ενέργειας ή μπαταρίας",
@@ -268,36 +227,10 @@
     "meter": {
       "cancel": "Ακύρωση",
       "delete": "Διαγραφή",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
       "save": "Αποθήκευση",
       "template": "Κατασκευαστής",
       "titleChoice": "Τι θέλετε να προσθέσετε;",
       "validateSave": "Επικύρωση & αποθήκευση"
-    },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Να επιτρέπεται σε πολλούς πελάτες να έχουν πρόσβαση σε μία συσκευή Modbus.",
@@ -354,7 +287,6 @@
       "titleEdit": "Επεξεργασία Μετρητή Φ/Β"
     },
     "section": {
-      "additionalMeter": "",
       "general": "Γενικά",
       "grid": "Δίκτυο ενέργειας",
       "integrations": "Ενσωματώσεις",
@@ -402,22 +334,9 @@
     },
     "vehicle": {
       "cancel": "Ακύρωση",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "Διαγραφή",
       "generic": "Άλλες ενσωματώσεις",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "Οχήματα με διαδικτυακό API",
-      "priority": "",
-      "priorityHelp": "",
       "save": "Αποθήκευση",
       "scooter": "Σκούτερ",
       "template": "Κατασκευαστής",
@@ -515,7 +434,6 @@
       "today": "Σήμερα",
       "tomorrow": "Αύριο"
     },
-    "solarAdjust": "",
     "type": {
       "co2": "CO₂",
       "price": "Τιμή",
@@ -588,11 +506,6 @@
       "modalTitle": "Πρόγραμμα Φόρτισης",
       "none": "κανένα",
       "planNumber": "Πρόγραμμα {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Αφαίρεση",
       "repeating": "επαναλαμβανόμενο",
       "repeatingPlans": "Επαναλαμβανόμενα προγράμματα",
@@ -618,15 +531,12 @@
       "homePower": "Κατανάλωση",
       "loadpoints": "Φορτιστής| Φορτιστής | {count} φορτιστές",
       "noEnergy": "Χωρίς δεδομένα μετρητή",
-      "pv": "",
       "pvExport": "Εξαγωγή προς δικτύο",
       "pvProduction": "Παραγωγή",
       "selfConsumption": "«Αυτοκατανάλωση»"
     },
     "heatingStatus": {
       "charging": "Θερμαίνεται…",
-      "connected": "",
-      "vehicleLimit": "",
       "waitForVehicle": "Έτοιμο. Αναμονή για θερμαντήρα..."
     },
     "loadpoint": {
@@ -635,7 +545,6 @@
       "co2": "⌀ CO₂",
       "duration": "Διάρκεια",
       "fallbackName": "Σημείο φόρτισης",
-      "finished": "",
       "power": "Ισχύς",
       "price": "Κόστος",
       "remaining": "Υπόλοιπο",
@@ -702,7 +611,6 @@
       "currentPlan": "ενεργό πρόγραμμα",
       "descriptionEnergy": "Μέχρι πότε θα πρέπει το {targetEnergy} να φορτίζει το όχημα;",
       "descriptionSoc": "Πότε πρέπει να φορτιστεί το όχημα μέχρι {targetSoc};",
-      "goalReached": "",
       "inactiveLabel": "Στόχευση ώρας",
       "nextPlan": "Επόμενο πρόγραμμα",
       "notReachableInTime": "Ο στόχος θα επιτευχθεί {overrun} αργότερα.",
@@ -952,8 +860,6 @@
     "none": "κανένα",
     "priceLabel": "Τιμή ενέργειας",
     "priceLimit": "Όριο τιμής",
-    "resetAction": "",
-    "resetWarning": "",
     "saved": "Αποθηκεύτηκε."
   },
   "startupError": {

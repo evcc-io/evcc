@@ -2,7 +2,6 @@
   "batterySettings": {
     "batteryLevel": "Уровень заряда батареи",
     "bufferStart": {
-      "above": "",
       "full": "когда почти полная",
       "never": "только при достаточном избытке"
     },
@@ -11,7 +10,6 @@
     "discharge": "Предотвратить разряд в быстром режиме и запланированной зарядке.",
     "disclaimerHint": "Примечание:",
     "disclaimerText": "Эти настройки влияют только на режим солнечной батареи. Поведение зарядки изменяется соответствующе.",
-    "gridChargeTab": "",
     "legendBottomName": "домашний приоритет",
     "legendBottomSubline": "не используется для зарядки",
     "legendMiddleName": "сначала автомобиль",
@@ -19,411 +17,18 @@
     "legendTopAutostart": "запускается автоматически",
     "legendTopName": "зарядка с поддержкой от аккумулятора",
     "legendTopSubline": "без перебоев",
-    "modalTitle": "Настройки батареи",
-    "usageTab": ""
+    "modalTitle": "Настройки батареи"
   },
   "config": {
-    "aux": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "battery": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "charge": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "charger": {
-      "chargers": "",
-      "generic": "",
-      "heatingdevices": "",
-      "ocppHelp": "",
-      "ocppLabel": "",
-      "switchsockets": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "circuits": {
-      "description": "",
-      "title": ""
-    },
-    "control": {
-      "description": "",
-      "descriptionInterval": "",
-      "descriptionResidualPower": "",
-      "labelInterval": "",
-      "labelResidualPower": "",
-      "title": ""
-    },
-    "deviceValue": {
-      "amount": "",
-      "broker": "",
-      "bucket": "",
-      "capacity": "",
-      "chargeStatus": "",
-      "chargeStatusA": "",
-      "chargeStatusB": "",
-      "chargeStatusC": "",
-      "chargeStatusE": "",
-      "chargeStatusF": "",
-      "chargedEnergy": "",
-      "co2": "",
-      "configured": "",
-      "controllable": "",
-      "currency": "",
-      "current": "",
-      "currentRange": "",
-      "enabled": "",
-      "energy": "",
-      "feedinPrice": "",
-      "gridPrice": "",
-      "heaterTempLimit": "",
-      "hemsType": "",
-      "identifier": "",
-      "no": "",
-      "odometer": "",
-      "org": "",
-      "phaseCurrents": "",
-      "phasePowers": "",
-      "phaseVoltages": "",
-      "phases1p3p": "",
-      "power": "",
-      "powerRange": "",
-      "range": "",
-      "singlePhase": "",
-      "soc": "",
-      "solarForecast": "",
-      "temp": "",
-      "topic": "",
-      "url": "",
-      "vehicleLimitSoc": "",
-      "yes": ""
-    },
-    "deviceValueChargeStatus": {
-      "A": "",
-      "B": "",
-      "C": ""
-    },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
-    },
-    "eebus": {
-      "description": "",
-      "title": ""
-    },
-    "ext": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "form": {
-      "danger": "",
-      "deprecated": "",
       "example": "Пример",
       "optional": "опционально"
     },
-    "general": {
-      "cancel": "",
-      "delete": "",
-      "docsLink": "",
-      "experimental": "",
-      "hideAdvancedSettings": "",
-      "off": "",
-      "on": "",
-      "password": "",
-      "readFromFile": "",
-      "remove": "",
-      "save": "",
-      "showAdvancedSettings": "",
-      "telemetry": "",
-      "templateLoading": "",
-      "title": "",
-      "validateSave": ""
-    },
-    "grid": {
-      "title": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "hems": {
-      "description": "",
-      "title": ""
-    },
-    "influx": {
-      "description": "",
-      "descriptionToken": "",
-      "labelBucket": "",
-      "labelCheckInsecure": "",
-      "labelDatabase": "",
-      "labelInsecure": "",
-      "labelOrg": "",
-      "labelPassword": "",
-      "labelToken": "",
-      "labelUrl": "",
-      "labelUser": "",
-      "title": "",
-      "v1Support": "",
-      "v2Support": ""
-    },
-    "loadpoint": {
-      "addCharger": "",
-      "addMeter": "",
-      "cancel": "",
-      "chargerError": "",
-      "chargerLabel": "",
-      "chargerPower11kw": "",
-      "chargerPower11kwHelp": "",
-      "chargerPower22kw": "",
-      "chargerPower22kwHelp": "",
-      "chargerPowerCustom": "",
-      "chargerPowerCustomHelp": "",
-      "chargerTypeLabel": "",
-      "chargingTitle": "",
-      "circuitLabel": "",
-      "circuitUnassigned": "",
-      "defaultModeHelp": "",
-      "defaultModeHelpKeep": "",
-      "defaultModeLabel": "",
-      "delete": "",
-      "electricalSubtitle": "",
-      "electricalTitle": "",
-      "energyMeterHelp": "",
-      "energyMeterLabel": "",
-      "estimateLabel": "",
-      "maxCurrentHelp": "",
-      "maxCurrentLabel": "",
-      "minCurrentHelp": "",
-      "minCurrentLabel": "",
-      "noVehicles": "",
-      "phases1p": "",
-      "phases3p": "",
-      "phasesAutomatic": "",
-      "phasesAutomaticHelp": "",
-      "phasesHelp": "",
-      "phasesLabel": "",
-      "pollIntervalDanger": "",
-      "pollIntervalHelp": "",
-      "pollIntervalLabel": "",
-      "pollModeAlways": "",
-      "pollModeAlwaysHelp": "",
-      "pollModeCharging": "",
-      "pollModeChargingHelp": "",
-      "pollModeConnected": "",
-      "pollModeConnectedHelp": "",
-      "pollModeLabel": "",
-      "priorityHelp": "",
-      "priorityLabel": "",
-      "save": "",
-      "showAllSettings": "",
-      "solarBehaviorCustomHelp": "",
-      "solarBehaviorDefaultHelp": "",
-      "solarBehaviorLabel": "",
-      "solarModeCustom": "",
-      "solarModeMaximum": "",
-      "thresholdDisableDelayLabel": "",
-      "thresholdDisableHelpInvalid": "",
-      "thresholdDisableHelpPositive": "",
-      "thresholdDisableHelpZero": "",
-      "thresholdDisableLabel": "",
-      "thresholdEnableDelayLabel": "",
-      "thresholdEnableHelpInvalid": "",
-      "thresholdEnableHelpNegative": "",
-      "thresholdEnableHelpZero": "",
-      "thresholdEnableLabel": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleExample": "",
-      "titleLabel": "",
-      "vehicleAutoDetection": "",
-      "vehicleHelpAutoDetection": "",
-      "vehicleHelpDefault": "",
-      "vehicleLabel": "",
-      "vehiclesTitle": ""
-    },
     "main": {
-      "addAdditional": "",
-      "addGrid": "",
-      "addLoadpoint": "",
-      "addPvBattery": "",
-      "addTariffs": "",
       "addVehicle": "Добавить транспортное средство",
-      "configured": "",
       "edit": "редактировать",
-      "name": "",
       "title": "Конфигурация",
-      "unconfigured": "",
-      "vehicles": "Мои транспортные средства",
-      "yaml": ""
-    },
-    "messaging": {
-      "description": "",
-      "title": ""
-    },
-    "meter": {
-      "cancel": "",
-      "delete": "",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
-      "save": "",
-      "template": "",
-      "titleChoice": "",
-      "validateSave": ""
-    },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
-    },
-    "modbusproxy": {
-      "description": "",
-      "title": ""
-    },
-    "mqtt": {
-      "authentication": "",
-      "description": "",
-      "descriptionClientId": "",
-      "descriptionTopic": "",
-      "labelBroker": "",
-      "labelCaCert": "",
-      "labelCheckInsecure": "",
-      "labelClientCert": "",
-      "labelClientId": "",
-      "labelClientKey": "",
-      "labelInsecure": "",
-      "labelPassword": "",
-      "labelTopic": "",
-      "labelUser": "",
-      "publishing": "",
-      "title": ""
-    },
-    "network": {
-      "descriptionHost": "",
-      "descriptionPort": "",
-      "descriptionSchema": "",
-      "labelHost": "",
-      "labelPort": "",
-      "labelSchema": "",
-      "title": ""
-    },
-    "options": {
-      "boolean": {
-        "no": "",
-        "yes": ""
-      },
-      "endianness": {
-        "big": "",
-        "little": ""
-      },
-      "schema": {
-        "http": "",
-        "https": ""
-      },
-      "status": {
-        "A": "",
-        "B": "",
-        "C": ""
-      }
-    },
-    "pv": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "section": {
-      "additionalMeter": "",
-      "general": "",
-      "grid": "",
-      "integrations": "",
-      "loadpoints": "",
-      "meter": "",
-      "system": "",
-      "vehicles": ""
-    },
-    "sponsor": {
-      "addToken": "",
-      "changeToken": "",
-      "description": "",
-      "descriptionToken": "",
-      "error": "",
-      "labelToken": "",
-      "title": "",
-      "tokenRequired": "",
-      "tokenRequiredLearnMore": "",
-      "trialToken": ""
-    },
-    "system": {
-      "logs": "",
-      "restart": "",
-      "restartRequiredDescription": "",
-      "restartRequiredMessage": "",
-      "restartingDescription": "",
-      "restartingMessage": ""
-    },
-    "tariffs": {
-      "description": "",
-      "title": ""
-    },
-    "title": {
-      "description": "",
-      "label": "",
-      "title": ""
-    },
-    "validation": {
-      "failed": "",
-      "label": "",
-      "running": "",
-      "success": "",
-      "unknown": "",
-      "validate": ""
-    },
-    "vehicle": {
-      "cancel": "",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
-      "delete": "",
-      "generic": "",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
-      "online": "",
-      "priority": "",
-      "priorityHelp": "",
-      "save": "",
-      "scooter": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "validateSave": ""
+      "vehicles": "Мои транспортные средства"
     }
   },
   "footer": {
@@ -440,42 +45,24 @@
       "tabTitle": "Данные комьюнити"
     },
     "savings": {
-      "co2Saved": "",
-      "co2Title": "",
-      "configurePriceCo2": "",
       "footerLong": "{percent} солнечной энергии",
       "footerShort": "{percent} солнечной",
       "modalTitle": "Обзор потребленной электроэнергии",
-      "moneySaved": "",
       "percentGrid": "{self} кВт/ч из сети",
       "percentSelf": "{self} кВт/ч солнечной",
       "percentTitle": "Солнечная энергия",
-      "period": {
-        "30d": "",
-        "365d": "",
-        "thisYear": "",
-        "total": ""
-      },
-      "periodLabel": "",
       "priceTitle": "Цена электроэнергии",
-      "referenceGrid": "",
-      "referenceLabel": "",
       "tabTitle": "Мои данные"
     },
     "sponsor": {
       "becomeSponsor": "Стать спонсором",
-      "becomeSponsorExtended": "",
       "confetti": "Готовы к конфети?",
       "confettiPromise": "Ты получишь стикеры или цифровое конфети",
       "sticker": "... или стикеры evcc?",
       "supportUs": "Наша миссия — сделать солнечную энергию нормой. Помоги evcc, заплатив столько, сколько считаешь нужным.",
       "thanks": "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc.",
       "titleNoSponsor": "Поддержать нас",
-      "titleSponsor": "Ты нас поддерживаешь",
-      "titleTrial": "",
-      "titleVictron": "",
-      "trial": "",
-      "victron": ""
+      "titleSponsor": "Ты нас поддерживаешь"
     },
     "telemetry": {
       "optIn": "Я хочу поделиться своими данными.",
@@ -496,168 +83,36 @@
       "modalUpdateStatusStart": "Установка начата:"
     }
   },
-  "forecast": {
-    "co2": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "modalTitle": "",
-    "price": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "solar": {
-      "dayAfterTomorrow": "",
-      "partly": "",
-      "remaining": "",
-      "today": "",
-      "tomorrow": ""
-    },
-    "solarAdjust": "",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    }
-  },
   "header": {
     "about": "О нас",
     "blog": "Блог",
     "docs": "Документация",
     "github": "GitHub",
-    "login": "",
-    "logout": "",
-    "nativeSettings": "",
-    "needHelp": "",
     "sessions": "Сеансы зарядки"
   },
-  "help": {
-    "discussionsButton": "",
-    "documentationButton": "",
-    "issueButton": "",
-    "issueDescription": "",
-    "logsButton": "",
-    "logsDescription": "",
-    "modalTitle": "",
-    "primaryActions": "",
-    "restart": {
-      "cancel": "",
-      "confirm": "",
-      "description": "",
-      "disclaimer": "",
-      "modalTitle": ""
-    },
-    "restartButton": "",
-    "restartDescription": "",
-    "secondaryActions": ""
-  },
-  "log": {
-    "areaLabel": "",
-    "areas": "",
-    "download": "",
-    "levelLabel": "",
-    "nAreas": "",
-    "noResults": "",
-    "search": "",
-    "selectAll": "",
-    "showAll": "",
-    "title": "",
-    "update": ""
-  },
-  "loginModal": {
-    "cancel": "",
-    "error": "",
-    "iframeHint": "",
-    "iframeIssue": "",
-    "invalid": "",
-    "login": "",
-    "password": "",
-    "reset": "",
-    "title": ""
-  },
   "main": {
-    "chargingPlan": {
-      "active": "",
-      "addRepeatingPlan": "",
-      "arrivalTab": "",
-      "day": "",
-      "departureTab": "",
-      "goal": "",
-      "modalTitle": "",
-      "none": "",
-      "planNumber": "",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
-      "remove": "",
-      "repeating": "",
-      "repeatingPlans": "",
-      "selectAll": "",
-      "time": "",
-      "title": "",
-      "titleMinSoc": "",
-      "titleTargetCharge": "",
-      "unsavedChanges": "",
-      "update": "",
-      "weekdays": ""
-    },
     "energyflow": {
       "battery": "Батарея",
       "batteryCharge": "Батарея заряжается",
       "batteryDischarge": "Батарея разряжается",
-      "batteryGridChargeActive": "",
-      "batteryGridChargeLimit": "",
-      "batteryHold": "",
-      "batteryTooltip": "",
-      "forecastTooltip": "",
       "gridImport": "Потребление из сети",
       "homePower": "Потребление",
       "loadpoints": "Зарядная станция | Зарядная станция | {count} зарядные станции",
       "noEnergy": "Нет данных счетчика",
-      "pv": "",
       "pvExport": "Экспорт в сеть",
       "pvProduction": "Генерация",
       "selfConsumption": "Собственное потребление"
     },
-    "heatingStatus": {
-      "charging": "",
-      "connected": "",
-      "vehicleLimit": "",
-      "waitForVehicle": ""
-    },
     "loadpoint": {
-      "avgPrice": "",
       "charged": "Заряжено",
-      "co2": "",
       "duration": "Длительность",
       "fallbackName": "Зарядная станция",
-      "finished": "",
-      "power": "Мощность",
-      "price": "",
-      "remaining": "",
-      "remoteDisabledHard": "",
-      "remoteDisabledSoft": "",
-      "solar": ""
+      "power": "Мощность"
     },
     "loadpointSettings": {
-      "batteryBoost": {
-        "description": "",
-        "label": "",
-        "mode": "",
-        "once": ""
-      },
-      "batteryUsage": "",
       "currents": "Ток зарядки",
       "default": "по умолчанию",
       "disclaimerHint": "Заметка:",
-      "limitSoc": {
-        "description": "",
-        "label": ""
-      },
       "maxCurrent": {
         "label": "Макс. ток"
       },
@@ -665,21 +120,16 @@
         "label": "Мин. ток"
       },
       "minSoc": {
-        "description": "",
         "label": "Мин. заряд %"
       },
-      "onlyForSocBasedCharging": "",
       "phasesConfigured": {
         "label": "Фазы",
-        "no1p3pSupport": "",
         "phases_0": "авто переключение",
         "phases_1": "1 фаза",
         "phases_1_hint": "({min} до {max})",
         "phases_3": "3 фазы",
         "phases_3_hint": "({min} до {max})"
       },
-      "smartCostCheap": "",
-      "smartCostClean": "",
       "title": "Настройки {0}",
       "vehicle": "Транспортное средство"
     },
@@ -687,85 +137,39 @@
       "minpv": "Мин+солн. эн",
       "now": "Быстро",
       "off": "Выкл",
-      "pv": "Солн. эн",
-      "smart": ""
+      "pv": "Солн. эн"
     },
     "provider": {
       "login": "войти",
       "logout": "выйти"
     },
-    "startConfiguration": "",
     "targetCharge": {
       "activate": "Активировать",
-      "co2Limit": "",
-      "costLimitIgnore": "",
-      "currentPlan": "",
-      "descriptionEnergy": "",
       "descriptionSoc": "Когда транспортное средство следует зарядить до {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Запланированное время",
-      "nextPlan": "",
-      "notReachableInTime": "",
-      "onlyInPvMode": "",
-      "planDuration": "",
-      "planPeriodLabel": "",
-      "planPeriodValue": "",
-      "planUnknown": "",
-      "preview": "",
-      "priceLimit": "",
-      "remove": "",
       "setTargetTime": "ни одного",
-      "targetIsAboveLimit": "",
-      "targetIsAboveVehicleLimit": "",
       "targetIsInThePast": "Выбери время в будущем.",
-      "targetIsTooFarInTheFuture": "",
       "title": "Запланированное время",
       "today": "сегодня",
-      "tomorrow": "завтра",
-      "update": "",
-      "vehicleCapacityDocs": "",
-      "vehicleCapacityRequired": ""
-    },
-    "targetChargePlan": {
-      "chargeDuration": "",
-      "co2Label": "",
-      "priceLabel": "",
-      "timeRange": "",
-      "unknownPrice": ""
+      "tomorrow": "завтра"
     },
     "targetEnergy": {
       "label": "Лимит",
       "noLimit": "ни одного"
     },
     "vehicle": {
-      "addVehicle": "",
       "changeVehicle": "Сменить транспортное средство",
       "detectionActive": "Определение транспортного средства...",
       "fallbackName": "Транспортное средство",
-      "moreActions": "",
       "none": "Нет транспортного средства",
-      "notReachable": "",
       "targetSoc": "Лимит",
-      "temp": "",
-      "tempLimit": "",
       "unknown": "Гостевое транспортное средство",
       "vehicleSoc": "Заряд"
     },
     "vehicleStatus": {
-      "awaitingAuthorization": "",
-      "batteryBoost": "",
       "charging": "Зарядка...",
-      "cheapEnergyCharging": "",
-      "cheapEnergyNextStart": "",
-      "cheapEnergySet": "",
-      "cleanEnergyCharging": "",
-      "cleanEnergyNextStart": "",
-      "cleanEnergySet": "",
-      "climating": "",
       "connected": "Подключено.",
-      "disconnectRequired": "",
       "disconnected": "Отключено.",
-      "finished": "",
       "minCharge": "Минимальная зарядка до {soc}.",
       "pvDisable": "Недостаточно избытка. Пауза через {remaining}...",
       "pvEnable": "Доступен избыток. Начинаю через {remaining}...",
@@ -774,153 +178,47 @@
       "targetChargeActive": "Плановая зарядка активна...",
       "targetChargePlanned": "Плановая зарядка начнется в {time}.",
       "targetChargeWaitForVehicle": "Плановая зарядка готова. Ожидаю транспортное средство...",
-      "vehicleLimit": "",
-      "vehicleLimitReached": "",
-      "waitForVehicle": "Готов. Ожидание транспортного средства...",
-      "welcome": ""
+      "waitForVehicle": "Готов. Ожидание транспортного средства..."
     },
-    "vehicles": "Парковка",
-    "welcome": ""
+    "vehicles": "Парковка"
   },
   "notifications": {
     "dismissAll": "Отклонить все",
-    "logs": "",
     "modalTitle": "Уведомления"
   },
   "offline": {
-    "configurationError": "",
-    "message": "Не подключено к серверу.",
-    "restart": "",
-    "restartNeeded": "",
-    "restarting": ""
-  },
-  "passwordModal": {
-    "description": "",
-    "empty": "",
-    "error": "",
-    "labelCurrent": "",
-    "labelNew": "",
-    "labelRepeat": "",
-    "newPassword": "",
-    "noMatch": "",
-    "titleNew": "",
-    "titleUpdate": "",
-    "updatePassword": ""
+    "message": "Не подключено к серверу."
   },
   "session": {
     "cancel": "Скасувати",
-    "co2": "",
-    "date": "",
     "delete": "Видалити",
     "finished": "Завершено",
-    "meter": "",
     "meterstart": "Початок лічильника",
     "meterstop": "Зупинка лічильника",
     "odometer": "Пробіг",
-    "price": "",
-    "started": "Розпочато",
-    "title": ""
+    "started": "Розпочато"
   },
   "sessions": {
-    "avgPower": "",
-    "avgPrice": "",
-    "chargeDuration": "",
-    "chartTitle": {
-      "avgCo2ByGroup": "",
-      "avgPriceByGroup": "",
-      "byGroupLoadpoint": "",
-      "byGroupVehicle": "",
-      "energy": "",
-      "energyGrouped": "",
-      "energyGroupedByGroup": "",
-      "energySubSolar": "",
-      "energySubTotal": "",
-      "groupedCo2ByGroup": "",
-      "groupedPriceByGroup": "",
-      "historyCo2": "",
-      "historyCo2Sub": "",
-      "historyPrice": "",
-      "historyPriceSub": "",
-      "solar": "",
-      "solarByGroup": ""
-    },
-    "co2": "",
     "csv": {
       "chargedenergy": "Электроэнергия (кВт/ч)",
-      "chargeduration": "",
-      "co2perkwh": "",
       "created": "Создано",
       "finished": "Закончено",
       "identifier": "Идентификатор",
       "loadpoint": "Зарядная станция",
-      "meterstart": "",
-      "meterstop": "",
       "odometer": "Пробег (км)",
-      "price": "",
-      "priceperkwh": "",
-      "solarpercentage": "",
       "vehicle": "Транспортное средство"
     },
-    "csvMonth": "",
-    "csvTotal": "",
     "date": "Период",
     "downloadCsv": "Загрузить CSV",
     "energy": "Заряжено",
-    "filter": {
-      "allLoadpoints": "",
-      "allVehicles": "",
-      "filter": ""
-    },
-    "group": {
-      "co2": "",
-      "grid": "",
-      "price": "",
-      "self": ""
-    },
-    "groupBy": {
-      "loadpoint": "",
-      "none": "",
-      "vehicle": ""
-    },
     "loadpoint": "Зарядная станция",
-    "noData": "",
-    "overview": "",
-    "period": {
-      "month": "",
-      "total": "",
-      "year": ""
-    },
-    "price": "",
-    "reallyDelete": "",
-    "showIndividualEntries": "",
-    "solar": "",
     "title": "Сессии зарядки",
-    "total": "",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    },
     "vehicle": "Транспортное средство"
   },
   "settings": {
-    "fullscreen": {
-      "enter": "",
-      "exit": "",
-      "label": ""
-    },
-    "hiddenFeatures": {
-      "label": "",
-      "value": ""
-    },
     "language": {
       "auto": "Автоматически",
       "label": "Язык"
-    },
-    "sponsorToken": {
-      "expires": "",
-      "getNew": "",
-      "hint": ""
     },
     "telemetry": {
       "label": "Телеметрия"
@@ -937,24 +235,6 @@
       "label": "Единицы измерения",
       "mi": "мили"
     }
-  },
-  "smartCost": {
-    "activeHours": "",
-    "activeHoursLabel": "",
-    "applyToAll": "",
-    "batteryDescription": "",
-    "cheapTitle": "",
-    "cleanTitle": "",
-    "co2Label": "",
-    "co2Limit": "",
-    "loadpointDescription": "",
-    "modalTitle": "",
-    "none": "",
-    "priceLabel": "",
-    "priceLimit": "",
-    "resetAction": "",
-    "resetWarning": "",
-    "saved": ""
   },
   "startupError": {
     "configFile": "Используемый конфигурационный файл:",

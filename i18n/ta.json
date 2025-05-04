@@ -23,29 +23,9 @@
     "usageTab": "பேட்டரி பயன்பாடு"
   },
   "config": {
-    "aux": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "battery": {
       "titleAdd": "பேட்டரியைச் சேர்க்கவும்",
       "titleEdit": "பேட்டரியைத் திருத்து"
-    },
-    "charge": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "charger": {
-      "chargers": "",
-      "generic": "",
-      "heatingdevices": "",
-      "ocppHelp": "",
-      "ocppLabel": "",
-      "switchsockets": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": ""
     },
     "circuits": {
       "description": "ஒரு சுற்றுடன் இணைக்கப்பட்ட அனைத்து ஏற்ற புள்ளிகளின் கூட்டுத்தொகையும் கட்டமைக்கப்பட்ட ஆற்றல் மற்றும் தற்போதைய வரம்புகளை மீறாது என்பதை உறுதி செய்கிறது. ஒரு படிநிலையை உருவாக்க சுற்றுகள் கூடு கட்டப்படலாம்.",
@@ -60,7 +40,6 @@
       "title": "கட்டுப்பாட்டு நடத்தை"
     },
     "deviceValue": {
-      "amount": "",
       "broker": "தரகர்",
       "bucket": "வாளி",
       "capacity": "திறன்",
@@ -81,56 +60,32 @@
       "energy": "ஆற்றல்",
       "feedinPrice": "ஃபீட்-இன் விலை",
       "gridPrice": "கட்டம் விலை",
-      "heaterTempLimit": "",
       "hemsType": "கணினி",
-      "identifier": "",
       "no": "இல்லை",
       "odometer": "ஓடோமீட்டர்",
       "org": "அமைப்பு",
       "phaseCurrents": "தற்போதைய எல் 1, எல் 2, எல் 3",
       "phasePowers": "பவர் எல் 1, இல்லை, எல்",
       "phaseVoltages": "மின்னழுத்தம் எல் 1, எல் 2, எல் 3",
-      "phases1p3p": "",
       "power": "ஆற்றல்",
       "powerRange": "ஆற்றல்",
       "range": "வரம்பு",
-      "singlePhase": "",
       "soc": "சொக்",
-      "solarForecast": "",
       "temp": "வெப்பநிலை",
       "topic": "தலைப்பு",
       "url": "முகவரி",
-      "vehicleLimitSoc": "",
       "yes": "ஆம்"
-    },
-    "deviceValueChargeStatus": {
-      "A": "",
-      "B": "",
-      "C": ""
-    },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
     },
     "eebus": {
       "description": "ஈ.வி.சி.சி மற்ற ஈபச் சாதனங்களுடன் தொடர்பு கொள்ள உதவும் உள்ளமைவு.",
       "title": "ஈபச்"
     },
-    "ext": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "form": {
-      "danger": "",
-      "deprecated": "",
       "example": "எடுத்துக்காட்டு",
       "optional": "விரும்பினால்"
     },
     "general": {
       "cancel": "ரத்துசெய்",
-      "delete": "",
       "docsLink": "ஆவணங்களைக் காண்க.",
       "experimental": "சோதனை",
       "hideAdvancedSettings": "மேம்பட்ட அமைப்புகளை மறைக்க",
@@ -142,9 +97,7 @@
       "save": "சேமி",
       "showAdvancedSettings": "மேம்பட்ட அமைப்புகளைக் காட்டு",
       "telemetry": "டெலிமெட்ரி",
-      "templateLoading": "",
-      "title": "தலைப்பு",
-      "validateSave": ""
+      "title": "தலைப்பு"
     },
     "grid": {
       "title": "கட்டம் மீட்டர்",
@@ -171,91 +124,12 @@
       "v1Support": "இன்ஃப்ளக்ச்.டி.பி 1.x க்கு உதவி தேவையா?",
       "v2Support": "UnfluxDB 2.x க்கு திரும்பவும்"
     },
-    "loadpoint": {
-      "addCharger": "",
-      "addMeter": "",
-      "cancel": "",
-      "chargerError": "",
-      "chargerLabel": "",
-      "chargerPower11kw": "",
-      "chargerPower11kwHelp": "",
-      "chargerPower22kw": "",
-      "chargerPower22kwHelp": "",
-      "chargerPowerCustom": "",
-      "chargerPowerCustomHelp": "",
-      "chargerTypeLabel": "",
-      "chargingTitle": "",
-      "circuitLabel": "",
-      "circuitUnassigned": "",
-      "defaultModeHelp": "",
-      "defaultModeHelpKeep": "",
-      "defaultModeLabel": "",
-      "delete": "",
-      "electricalSubtitle": "",
-      "electricalTitle": "",
-      "energyMeterHelp": "",
-      "energyMeterLabel": "",
-      "estimateLabel": "",
-      "maxCurrentHelp": "",
-      "maxCurrentLabel": "",
-      "minCurrentHelp": "",
-      "minCurrentLabel": "",
-      "noVehicles": "",
-      "phases1p": "",
-      "phases3p": "",
-      "phasesAutomatic": "",
-      "phasesAutomaticHelp": "",
-      "phasesHelp": "",
-      "phasesLabel": "",
-      "pollIntervalDanger": "",
-      "pollIntervalHelp": "",
-      "pollIntervalLabel": "",
-      "pollModeAlways": "",
-      "pollModeAlwaysHelp": "",
-      "pollModeCharging": "",
-      "pollModeChargingHelp": "",
-      "pollModeConnected": "",
-      "pollModeConnectedHelp": "",
-      "pollModeLabel": "",
-      "priorityHelp": "",
-      "priorityLabel": "",
-      "save": "",
-      "showAllSettings": "",
-      "solarBehaviorCustomHelp": "",
-      "solarBehaviorDefaultHelp": "",
-      "solarBehaviorLabel": "",
-      "solarModeCustom": "",
-      "solarModeMaximum": "",
-      "thresholdDisableDelayLabel": "",
-      "thresholdDisableHelpInvalid": "",
-      "thresholdDisableHelpPositive": "",
-      "thresholdDisableHelpZero": "",
-      "thresholdDisableLabel": "",
-      "thresholdEnableDelayLabel": "",
-      "thresholdEnableHelpInvalid": "",
-      "thresholdEnableHelpNegative": "",
-      "thresholdEnableHelpZero": "",
-      "thresholdEnableLabel": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleExample": "",
-      "titleLabel": "",
-      "vehicleAutoDetection": "",
-      "vehicleHelpAutoDetection": "",
-      "vehicleHelpDefault": "",
-      "vehicleLabel": "",
-      "vehiclesTitle": ""
-    },
     "main": {
-      "addAdditional": "",
-      "addGrid": "",
       "addLoadpoint": "சார்ச் புள்ளியைச் சேர்க்கவும்",
       "addPvBattery": "சூரிய அல்லது பேட்டரியைச் சேர்க்கவும்",
-      "addTariffs": "",
       "addVehicle": "வண்டி சேர்க்கவும்",
       "configured": "கட்டமைக்கப்பட்ட",
       "edit": "திருத்து",
-      "name": "",
       "title": "உள்ளமைவு",
       "unconfigured": "கட்டமைக்கப்படவில்லை",
       "vehicles": "என் வாகனங்கள்",
@@ -268,36 +142,10 @@
     "meter": {
       "cancel": "ரத்துசெய்",
       "delete": "நீக்கு",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
       "save": "சேமி",
       "template": "உற்பத்தியாளர்",
       "titleChoice": "நீங்கள் என்ன சேர்க்க விரும்புகிறீர்கள்?",
       "validateSave": "சரிபார்க்கவும் சேமிக்கவும்"
-    },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "பல வாடிக்கையாளர்களை ஒற்றை மோட்பச் சாதனத்தை அணுக அனுமதிக்கவும்.",
@@ -342,11 +190,6 @@
       "schema": {
         "http": "HTTP (மறைகுறியாக்கப்படாதது)",
         "https": "Https (குறியாக்கப்பட்டது)"
-      },
-      "status": {
-        "A": "",
-        "B": "",
-        "C": ""
       }
     },
     "pv": {
@@ -354,7 +197,6 @@
       "titleEdit": "சூரிய மீட்டரைத் திருத்தவும்"
     },
     "section": {
-      "additionalMeter": "",
       "general": "பொது",
       "grid": "கட்டம்",
       "integrations": "ஒருங்கிணைப்புகள்",
@@ -370,10 +212,7 @@
       "descriptionToken": "நீங்கள் {url இருந்து இலிருந்து கிள்ளாக்கைப் பெறுவீர்கள். சோதனைக்கு ஒரு சோதனை டோக்கனையும் நாங்கள் வழங்குகிறோம்.",
       "error": "ஒப்புரவாளர் கிள்ளாக்கு செல்லுபடியாகாது.",
       "labelToken": "ஒப்புரவாளர் கிள்ளாக்கு",
-      "title": "ச்பான்சர்சிப்",
-      "tokenRequired": "",
-      "tokenRequiredLearnMore": "",
-      "trialToken": ""
+      "title": "ச்பான்சர்சிப்"
     },
     "system": {
       "logs": "பதிவுகள்",
@@ -402,22 +241,9 @@
     },
     "vehicle": {
       "cancel": "ரத்துசெய்",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "நீக்கு",
       "generic": "பிற ஒருங்கிணைப்புகள்",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "நிகழ்நிலை பநிஇ கொண்ட வாகனங்கள்",
-      "priority": "",
-      "priorityHelp": "",
       "save": "சேமி",
       "scooter": "ச்கூட்டர்",
       "template": "உற்பத்தியாளர்",
@@ -496,32 +322,6 @@
       "modalUpdateStatusStart": "நிறுவல் தொடங்கியது:"
     }
   },
-  "forecast": {
-    "co2": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "modalTitle": "",
-    "price": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "solar": {
-      "dayAfterTomorrow": "",
-      "partly": "",
-      "remaining": "",
-      "today": "",
-      "tomorrow": ""
-    },
-    "solarAdjust": "",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    }
-  },
   "header": {
     "about": "பற்றி",
     "blog": "வலைப்பதிவு",
@@ -588,11 +388,6 @@
       "modalTitle": "Charging Plan",
       "none": "none",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
@@ -609,24 +404,18 @@
       "battery": "Battery",
       "batteryCharge": "Battery charging",
       "batteryDischarge": "Battery discharging",
-      "batteryGridChargeActive": "",
-      "batteryGridChargeLimit": "",
       "batteryHold": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
-      "forecastTooltip": "",
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| மின்னூட்டி | {count} chargers",
       "noEnergy": "No அளவி data",
-      "pv": "",
       "pvExport": "Grid export",
       "pvProduction": "Production",
       "selfConsumption": "Self-consumption"
     },
     "heatingStatus": {
       "charging": "Heating…",
-      "connected": "",
-      "vehicleLimit": "",
       "waitForVehicle": "Ready. Waiting க்கு heater…"
     },
     "loadpoint": {
@@ -635,7 +424,6 @@
       "co2": "⌀ CO₂",
       "duration": "Duration",
       "fallbackName": "Charging point",
-      "finished": "",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
@@ -694,7 +482,6 @@
       "login": "log in",
       "logout": "log out"
     },
-    "startConfiguration": "",
     "targetCharge": {
       "activate": "Activate",
       "co2Limit": "CO₂ limit of {co2}",
@@ -702,7 +489,6 @@
       "currentPlan": "Active plan",
       "descriptionEnergy": "Until when should {targetEnergy} be loaded into the vehicle?",
       "descriptionSoc": "When should the vehicle be charged பெறுநர் {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Target time",
       "nextPlan": "Next plan",
       "notReachableInTime": "Goal will be reached {overrun} later.",
@@ -779,8 +565,7 @@
       "waitForVehicle": "ஆயத்தம். வாகனத்திற்காக காத்திருக்கிறது…",
       "welcome": "இணைப்பை உறுதிப்படுத்த குறுகிய ஆரம்ப கட்டணம்."
     },
-    "vehicles": "Parking",
-    "welcome": ""
+    "vehicles": "Parking"
   },
   "notifications": {
     "dismissAll": "அனைத்தையும் நிராகரிக்கவும்",
@@ -952,8 +737,6 @@
     "none": "எதுவுமில்லை",
     "priceLabel": "ஆற்றல் விலை",
     "priceLimit": "விலை வரம்பு",
-    "resetAction": "",
-    "resetWarning": "",
     "saved": "சேமிக்கப்பட்டது."
   },
   "startupError": {
