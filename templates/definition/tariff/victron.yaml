@@ -19,11 +19,11 @@ group: solar
 params:
   - name: idsite
     description:
-      en: VRM-ID of the installation
-      de: VRM-ID der Installation
+      en: VRM Site ID of the installation
+      de: VRM-Installations-ID der Installation
     help:
-      en: VRM-ID is displayed as "VRM Site ID" in the intallation settings under "General"
-      de: VRM-ID wird in den Einstellungen der Installation unter "Allgemeines" als "VRM-Installations-ID" angezeigt
+      en: The VRM Site ID is displayed in the intallation settings under "General"
+      de: Die VRM-Installations-ID wird in den Einstellungen der Installation unter "Allgemeines" angezeigt
     example: 123456
     required: true
   - name: token
@@ -39,22 +39,17 @@ params:
     advanced: true
 render: >
   {{- $n := now -}}
-
   {{- $start := $n | unixEpoch | int -}}
-
   {{- $end := add $start 172800 -}}
 
-  {{- $uri := printf
-  "https://vrmapi.victronenergy.com/v2/installations/%s/stats?start=%d&end=%d&interval=hours&type=forecast"
-  .idsite $start $end -}}
-
   type: custom
-
   tariff: solar
-
   forecast:
     source: http
-    uri: "{{ $uri }}"
+    uri: >-
+      https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}
+      /stats?start={{ $start }}&end={{ $end }}
+      &interval=hours&type=forecast
     method: "GET"
     headers:
       - X-Authorization: "Token {{ .token }}"
