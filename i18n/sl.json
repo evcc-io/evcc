@@ -23,6 +23,11 @@
     "usageTab": "Poraba baterije"
   },
   "config": {
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "battery": {
       "titleAdd": "Dodaj baterijo",
       "titleEdit": "Uredi baterijo"
@@ -34,6 +39,7 @@
     "charger": {
       "chargers": "polnilnice za EV",
       "generic": "Splošne integracije",
+      "heatingdevices": "",
       "ocppHelp": "Kopirajte ta naslov v konfiguracijo vaše polnilnice.",
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
@@ -90,6 +96,7 @@
       "range": "Doseg",
       "singlePhase": "Enofazni",
       "soc": "Polnjenje",
+      "solarForecast": "",
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
@@ -101,11 +108,22 @@
       "B": "B (povezan)",
       "C": "C (polnjenje)"
     },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "solarSystem": ""
+    },
     "eebus": {
       "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "form": {
+      "danger": "",
       "deprecated": "deprecated",
       "example": "Primer",
       "optional": "neobvezno"
@@ -124,6 +142,7 @@
       "save": "Shrani",
       "showAdvancedSettings": "Prikaži napredne nastavitve",
       "telemetry": "Telemetrija",
+      "templateLoading": "",
       "title": "Ime",
       "validateSave": "Preveri in shrani"
     },
@@ -156,6 +175,7 @@
       "addCharger": "Dodaj polnilnik",
       "addMeter": "Dodaj namenski merilnik za polnilnico",
       "cancel": "Prekliči",
+      "chargerError": "",
       "chargerLabel": "Polnilnica",
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
@@ -187,6 +207,7 @@
       "phasesAutomaticHelp": "Vaš polnilnik podpira samodejno preklapljanje med 1- in 3-faznim polnjenjem. Na glavnem zaslonu lahko prilagodite obnašanje faze med polnjenjem.",
       "phasesHelp": "Število faz, povezanih s polnilnikom.",
       "phasesLabel": "Faze",
+      "pollIntervalDanger": "",
       "pollIntervalHelp": "Čas med posodobitvami API-ja vozila. Kratki intervali lahko izpraznijo akumulator vozila.",
       "pollIntervalLabel": "Interval posodabljanja",
       "pollModeAlways": "vedno",
@@ -226,6 +247,7 @@
       "vehiclesTitle": "Vozila"
     },
     "main": {
+      "addAdditional": "",
       "addGrid": "Dodaj števec električnega omrežja",
       "addLoadpoint": "Dodaj polnilno mesto",
       "addPvBattery": "Dodaj sončne celice ali baterijo",
@@ -246,10 +268,36 @@
     "meter": {
       "cancel": "Prekliči",
       "delete": "Izbriši",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "ext": "",
+        "pv": ""
+      },
       "save": "Shrani",
       "template": "Proizvajalec",
       "titleChoice": "Kaj želite dodati?",
       "validateSave": "Preveri in shrani"
+    },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Dovoli več odjemalcem dostop do ene naprave Modbus.",
@@ -306,6 +354,7 @@
       "titleEdit": "Uredi merilnik sončne energije"
     },
     "section": {
+      "additionalMeter": "",
       "general": "Splošno",
       "grid": "Omrežje",
       "integrations": "Integracije",
@@ -353,9 +402,22 @@
     },
     "vehicle": {
       "cancel": "Prekliči",
+      "chargingSettings": "",
+      "defaultMode": "",
+      "defaultModeHelp": "",
       "delete": "Izbriši",
       "generic": "Druge integracije",
+      "identifiers": "",
+      "identifiersHelp": "",
+      "maximumCurrent": "",
+      "maximumCurrentHelp": "",
+      "maximumPhases": "",
+      "maximumPhasesHelp": "",
+      "minimumCurrent": "",
+      "minimumCurrentHelp": "",
       "online": "Vozila s spletnim API-jem",
+      "priority": "",
+      "priorityHelp": "",
       "save": "Shrani",
       "scooter": "Skuter",
       "template": "Proizvajalec",
@@ -526,6 +588,11 @@
       "modalTitle": "Načrt polnjenja",
       "none": "brez",
       "planNumber": "Načrt {number}",
+      "preconditionDescription": "",
+      "preconditionLong": "",
+      "preconditionOptionAll": "",
+      "preconditionOptionNo": "",
+      "preconditionShort": "",
       "remove": "Odstrani",
       "repeating": "ponavljajoči",
       "repeatingPlans": "Ponavljajoči načrti",
@@ -551,12 +618,14 @@
       "homePower": "Poraba objekta",
       "loadpoints": "Polnilnica | Polnilnici | {count} polnilnih mest",
       "noEnergy": "Ni podatkov o merilniku",
+      "pv": "",
       "pvExport": "Izvoz v omrežje",
       "pvProduction": "Proizvodnja",
       "selfConsumption": "Samoporaba"
     },
     "heatingStatus": {
       "charging": "Gretje…",
+      "connected": "",
       "vehicleLimit": "Omejitev ogrevanja",
       "waitForVehicle": "Pripravljen. Čakam na grelec…"
     },
@@ -566,6 +635,7 @@
       "co2": "⌀ CO₂",
       "duration": "Trajanje",
       "fallbackName": "Polnilno mesto",
+      "finished": "",
       "power": "Moč",
       "price": "Cena",
       "remaining": "Preostalo",
@@ -632,6 +702,7 @@
       "currentPlan": "Aktivni načrt",
       "descriptionEnergy": "Do kdaj želite da se vozilo napolni za {targetEnergy}?",
       "descriptionSoc": "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?",
+      "goalReached": "",
       "inactiveLabel": "Ciljni čas",
       "nextPlan": "Naslednji načrt",
       "notReachableInTime": "Cilj bo dosežen {overrun} pozneje.",
