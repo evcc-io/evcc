@@ -1,20 +1,20 @@
-template: cg-em24
+template: cg-em24_e1
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM24
+      generic: EM24_E1
   - brand: Victron
     description:
-      generic: EM24
+      generic: EM24_E1
 params:
   - name: usage
     choice: ["grid", "charge"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["tcpip"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: cgem24
+  model: cgem24_e1
   power: Power
   energy: Import
   currents:
