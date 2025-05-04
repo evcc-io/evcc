@@ -9,32 +9,41 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { Doughnut } from "vue-chartjs";
-import { DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
+import {
+	DoughnutController,
+	ArcElement,
+	LinearScale,
+	Legend,
+	Tooltip,
+	type TooltipItem,
+} from "chart.js";
 import LegendList from "./LegendList.vue";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
-import { TYPES, GROUPS } from "./types";
+import { TYPES, GROUPS, type Session } from "./types";
+import { defineComponent, type PropType } from "vue";
+import { CURRENCY } from "@/types/evcc";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "CostGroupedChart",
 	components: { Doughnut, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
-		currency: { type: String, default: "EUR" },
-		costType: { type: String, default: TYPES.PRICE },
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
+		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
 	computed: {
 		chartData() {
 			console.log(`update ${this.costType} grouped data`);
-			const aggregatedData = {};
+			const aggregatedData: Record<string, number> = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
@@ -60,7 +69,7 @@ export default {
 		},
 		legends() {
 			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
-			const fmtShare = (value) => this.fmtPercentage((100 / total) * value, 1);
+			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
 			return this.chartData.labels.map((label, index) => ({
 				label: label,
 				color: this.chartData.datasets[0].backgroundColor[index],
@@ -89,7 +98,10 @@ export default {
 						axis: "r",
 						position: "center",
 						callbacks: {
-							label: (tooltipItem) => this.formatValue(tooltipItem.raw || 0),
+							label: (tooltipItem: TooltipItem<"doughnut">) =>
+								this.formatValue(
+									tooltipItem.dataset.data[tooltipItem.dataIndex] || 0
+								),
 							labelColor: tooltipLabelColor(false),
 						},
 					},
@@ -98,12 +110,12 @@ export default {
 		},
 	},
 	methods: {
-		formatValue(value) {
+		formatValue(value: number) {
 			if (this.costType === TYPES.PRICE) {
 				return this.fmtMoney(value, this.currency, true, true);
 			}
 			return this.fmtGrams(value);
 		},
 	},
-};
+});
 </script>

@@ -7,7 +7,8 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { Bar } from "vue-chartjs";
 import {
 	BarController,
@@ -18,12 +19,15 @@ import {
 	LineController,
 	LineElement,
 	Tooltip,
+	type TooltipItem,
 } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import LegendList from "./LegendList.vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
-import { TYPES, GROUPS, PERIODS } from "./types";
+import { TYPES, GROUPS, PERIODS, type Session } from "./types";
+import { CURRENCY } from "@/types/evcc";
+import type { Context } from "chartjs-plugin-datalabels";
 
 registerChartComponents([
 	BarController,
@@ -36,16 +40,16 @@ registerChartComponents([
 	Tooltip,
 ]);
 
-export default {
+export default defineComponent({
 	name: "CostHistoryChart",
 	components: { Bar, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.NONE },
-		costType: { type: String, default: TYPES.PRICE },
-		period: { type: String, default: PERIODS.TOTAL },
-		currency: { type: String, default: "EUR" },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
+		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
+		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
@@ -71,8 +75,13 @@ export default {
 		},
 		chartData() {
 			console.log("update cost history data");
-			const result = {};
-			const groups = new Set();
+			const result: Array<{
+				[key: string]: number;
+				totalCost: number;
+				totalKWh: number;
+				avgCost: number;
+			}> = [];
+			const groups: Set<string> = new Set();
 
 			if (this.sessions.length > 0) {
 				//const lastDay = new Date(this.year, this.month, 0);
@@ -138,7 +147,7 @@ export default {
 					backgroundColor,
 					label,
 					data: Object.values(result).map((index) => index[group] || 0),
-					borderRadius: (context) => {
+					borderRadius: (context: Context) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex];
@@ -161,7 +170,7 @@ export default {
 					this.costType === TYPES.PRICE
 						? this.$t("sessions.avgPrice")
 						: this.$t("sessions.co2"),
-				data: Object.values(result).map((index) => index.avgCost || null),
+				data: Object.values(result).map((index) => index.avgCost),
 				yAxisID: "y1",
 				tension: 0.25,
 				pointRadius: 0,
@@ -186,7 +195,7 @@ export default {
 					const items = dataset.data.filter((v) => v !== null);
 					const min = Math.min(...items);
 					const max = Math.max(...items);
-					const format = (value, withUnit) => {
+					const format = (value: number, withUnit: boolean) => {
 						return this.costType === TYPES.PRICE
 							? this.fmtPricePerKWh(value, this.currency, false, withUnit)
 							: withUnit
@@ -237,7 +246,7 @@ export default {
 							};
 						},
 						callbacks: {
-							title: (tooltipItem) => {
+							title: (tooltipItem: TooltipItem<"bar">) => {
 								const { label } = tooltipItem[0];
 								if (this.period === PERIODS.TOTAL) {
 									return label;
@@ -249,9 +258,9 @@ export default {
 									return this.fmtDayMonth(date);
 								}
 							},
-							label: (tooltipItem) => {
+							label: (tooltipItem: TooltipItem<"bar" | "line">) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.raw;
+								const value = tooltipItem.dataset.data[tooltipItem.dataIndex];
 
 								// line datasets have null values
 								if (tooltipItem.dataset.type === "line") {
@@ -276,7 +285,7 @@ export default {
 							},
 							labelColor: tooltipLabelColor(false),
 						},
-						itemSort(a, b) {
+						itemSort(a: TooltipItem<"bar">, b: TooltipItem<"bar">) {
 							return b.datasetIndex - a.datasetIndex;
 						},
 					},
@@ -288,7 +297,7 @@ export default {
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback(value) {
+							callback(value: number) {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
 									: this.getLabelForValue(value);
@@ -306,7 +315,7 @@ export default {
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value) =>
+							callback: (value: number) =>
 								this.costType === TYPES.PRICE
 									? this.fmtMoney(value, this.currency, false, true)
 									: this.fmtNumber(value / 1e3, 0),
@@ -332,7 +341,7 @@ export default {
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value) =>
+							callback: (value: number) =>
 								this.costType === TYPES.PRICE
 									? this.fmtPricePerKWh(value, this.currency, false, false)
 									: this.fmtNumber(value, 0),
@@ -344,5 +353,5 @@ export default {
 			};
 		},
 	},
-};
+});
 </script>

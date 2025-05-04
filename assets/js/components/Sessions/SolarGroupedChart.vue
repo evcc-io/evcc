@@ -9,30 +9,31 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
-import { GROUPS } from "./types";
+import { GROUPS, type Session } from "./types";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "SolarGroupedChart",
 	components: { PolarArea, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	computed: {
 		chartData() {
 			console.log("update solar grouped data");
-			const aggregatedData = {};
+			const aggregatedData: Record<string, { grid: number; self: number }> = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
@@ -96,9 +97,11 @@ export default {
 						position: "topBottomCenter",
 						callbacks: {
 							title: () => null,
-							label: (tooltipItem) => {
-								const { label, raw = 0 } = tooltipItem;
-								return label + ": " + this.fmtPercentage(raw, 1);
+							label: (tooltipItem: TooltipItem<"polarArea">) => {
+								const { label, dataset, dataIndex } = tooltipItem;
+								const d = dataset.data[dataIndex];
+
+								return label + ": " + this.fmtPercentage(d, 1);
 							},
 							labelColor: tooltipLabelColor(true),
 						},
@@ -119,5 +122,5 @@ export default {
 			};
 		},
 	},
-};
+});
 </script>

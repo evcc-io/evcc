@@ -1,4 +1,5 @@
 <template>
+	{{ sessions }}
 	<div v-if="chartData.labels.length > 1" class="row">
 		<div class="col-12 col-md-6 mb-3">
 			<PolarArea :data="chartData" :options="options" />
@@ -9,33 +10,35 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
-import { TYPES, GROUPS } from "./types";
 import LegendList from "./LegendList.vue";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY } from "@/types/evcc";
+import { TYPES, GROUPS, type Session } from "./types";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "AvgCostGroupedChart",
 	components: { PolarArea, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		currency: { type: String, default: "EUR" },
-		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		currency: { type: String as PropType<CURRENCY>, default: "EUR" },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMax: { type: Number, default: 0 },
-		costType: { type: String, default: TYPES.PRICE },
+		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
 	computed: {
 		chartData() {
 			console.log(`update ${this.costType} grouped data`);
-			const aggregatedData = {};
+			const aggregatedData: Record<string, { energy: number; cost: number }> = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
@@ -96,14 +99,16 @@ export default {
 						position: "topBottomCenter",
 						callbacks: {
 							title: () => null,
-							label: (tooltipItem) => {
-								const { label, raw = 0 } = tooltipItem;
+							label: (tooltipItem: TooltipItem<"polarArea">) => {
+								const { label, dataset, dataIndex } = tooltipItem;
+								const d = dataset.data[dataIndex];
+
 								return (
 									label +
 									": " +
 									(this.costType === TYPES.CO2
-										? this.fmtCo2Long(raw)
-										: this.fmtPricePerKWh(raw, this.currency))
+										? this.fmtCo2Long(d)
+										: this.fmtPricePerKWh(d, this.currency))
 								);
 							},
 							labelColor: tooltipLabelColor(true),
@@ -130,11 +135,11 @@ export default {
 		},
 	},
 	methods: {
-		formatValue(value) {
+		formatValue(value: number) {
 			return this.costType === TYPES.CO2
 				? this.fmtCo2Medium(value)
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 	},
-};
+});
 </script>

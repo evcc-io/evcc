@@ -93,12 +93,14 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import DateNavigatorButton from "./DateNavigatorButton.vue";
 import formatter from "@/mixins/formatter";
+import type { SelectOption } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "DateNavigator",
 	components: {
 		CustomSelect,
@@ -152,19 +154,19 @@ export default {
 			}
 			return yearMonths;
 		},
-		yearOptions() {
+		yearOptions(): SelectOption<number>[] {
 			const first = this.startDate;
 			const last = new Date();
 			const years = [];
 			for (let year = first.getFullYear(); year <= last.getFullYear(); year++) {
-				years.push({ name: year, value: year });
+				years.push({ name: year.toString(), value: year });
 			}
 			return years;
 		},
 		monthName() {
 			const date = new Date();
 			date.setMonth(this.month - 1, 1);
-			return this.fmtMonth(date);
+			return this.fmtMonth(date, false);
 		},
 		monthYearName() {
 			const date = new Date();
@@ -194,18 +196,18 @@ export default {
 		emitNextYear() {
 			this.$emit("update-date", { year: this.year + 1, month: undefined });
 		},
-		emitMonth(month) {
+		emitMonth(month: number) {
 			this.$emit("update-date", { year: this.year, month });
 		},
-		emitMonthYear(monthYear) {
+		emitMonthYear(monthYear: string) {
 			const [year, month] = monthYear.split("-");
 			this.$emit("update-date", { year: parseInt(year), month: parseInt(month) });
 		},
-		emitYear(year) {
+		emitYear(year: number) {
 			this.$emit("update-date", { year, month: undefined });
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
