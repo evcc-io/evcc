@@ -38,8 +38,8 @@
 <script>
 import Tile from "./Tile.vue";
 
-import formatter from "../../mixins/formatter.js";
-import communityApi from "./communityApi.js";
+import formatter from "@/mixins/formatter";
+import communityApi from "./communityApi";
 
 const UPDATE_INTERVAL_SECONDS = 10;
 

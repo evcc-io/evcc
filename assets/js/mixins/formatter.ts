@@ -57,7 +57,12 @@ export default defineComponent({
 				value = watt / 1_000_000;
 			}
 			if (d === undefined) {
-				d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || 0 === watt ? 1 : 0;
+				d =
+					POWER_UNIT.KW === unit ||
+					POWER_UNIT.MW === unit ||
+					(POWER_UNIT.W !== unit && 0 === watt)
+						? 1
+						: 0;
 			}
 			return `${new Intl.NumberFormat(this.$i18n?.locale, {
 				style: "decimal",
@@ -91,13 +96,13 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms: number) {
+		fmtCo2Short(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g`;
 		},
-		fmtCo2Medium(gramms: number) {
+		fmtCo2Medium(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
 		},
-		fmtCo2Long(gramms: number) {
+		fmtCo2Long(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
 		},
 		fmtNumberToLocale(val: number, pad = 0) {
@@ -134,6 +139,19 @@ export default defineComponent({
 				result += `\u202F${unit}`;
 			}
 			return result;
+		},
+		fmtDurationLong(seconds: number) {
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			if (!Intl.DurationFormat) {
+				// old browser fallback
+				return this.fmtDuration(seconds);
+			}
+			const hours = Math.floor(seconds / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+
+			// @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types, see https://github.com/microsoft/TypeScript/issues/60608
+			const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style: "long" });
+			return formatter.format({ minutes, hours });
 		},
 		fmtDayString(date: Date) {
 			const YY = `${date.getFullYear()}`;
@@ -195,6 +213,12 @@ export default defineComponent({
 			}).format(date);
 
 			return `${weekday} ${hour}`.trim();
+		},
+		fmtHourMinute(date: Date) {
+			return new Intl.DateTimeFormat(this.$i18n?.locale, {
+				hour: "numeric",
+				minute: "numeric",
+			}).format(date);
 		},
 		fmtFullDateTime(date: Date, short: boolean) {
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {

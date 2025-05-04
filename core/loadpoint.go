@@ -20,12 +20,14 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/telemetry"
 )
 
@@ -73,8 +75,9 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock       // mockable time
-	bus      evbus.Bus         // event bus
+	clock    clock.Clock // mockable time
+	bus      evbus.Bus   // event bus
+	site     site.API
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
 	lpChan   chan<- *Loadpoint // update requests
@@ -139,11 +142,12 @@ type Loadpoint struct {
 	socEstimator   *soc.Estimator
 
 	// charge planning
-	planner     *planner.Planner
-	planTime    time.Time // time goal
-	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
-	planSlotEnd time.Time // current plan slot end time
-	planActive  bool      // charge plan exists and has a currently active slot
+	planner          *planner.Planner
+	planTime         time.Time     // time goal
+	planPrecondition time.Duration // precondition duration
+	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
+	planSlotEnd      time.Time     // current plan slot end time
+	planActive       bool          // charge plan exists and has a currently active slot
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
@@ -307,7 +311,7 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" && lp.DefaultMode == api.ModeEmpty {
 		lp.setMode(api.ChargeMode(v))
 	}
-	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
+	if v, err := lp.settings.Int(keys.Priority); err == nil {
 		lp.setPriority(int(v))
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
@@ -341,8 +345,9 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, v)
+		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
 	}
 }
 
@@ -585,7 +590,8 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -656,6 +662,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
+	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -836,10 +843,17 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.offeredCurrent, current, lp.charging())
+		var actualCurrent float64
+		if lp.chargeCurrents != nil {
+			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+		} else if lp.charging() {
+			actualCurrent = lp.offeredCurrent
+		}
+
+		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases), lp.charging())
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
@@ -945,7 +959,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, id := lp.NextVehiclePlan()
+	_, _, _, id := lp.NextVehiclePlan()
 	return id > 1
 }
 
@@ -1314,8 +1328,16 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		return 0
 	}
 
-	// push demand to drain battery
-	delta := lp.EffectiveStepPower()
+	// push demand to drain battery (at least 100W)
+	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
+
+	if lp.coarseCurrent() {
+		// add effective step power to delta to make sure to step up to the next full amp
+		// just using lp.EffectiveStepPower() as delta is not enough because this will result
+		// in a too low current when there is a bit remaining grid consumption due to the accuracy
+		// of the battery controller
+		delta += lp.EffectiveStepPower()
+	}
 
 	// start boosting by setting maximum power
 	if boost == boostStart {
@@ -1330,7 +1352,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	res := batteryBoostPower + delta
+	res := batteryBoostPower + delta + lp.site.GetResidualPower()
 	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
 
 	return res
@@ -1461,7 +1483,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
-	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo())
+	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
 	if err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
@@ -1502,7 +1524,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 			return nil
-		}, bo()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}

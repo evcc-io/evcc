@@ -1,0 +1,971 @@
+{
+  "batterySettings": {
+    "batteryLevel": "Ladestand der Batterie",
+    "bufferStart": {
+      "above": "wenn über {soc}.",
+      "full": "wenn auf {soc}.",
+      "never": "nur mit genug PV-Überschuss."
+    },
+    "capacity": "{energy} von {total}",
+    "control": "Batteriesteuerung",
+    "discharge": "Verhindere Entladung im Schnell-Modus und bei geplantem Laden.",
+    "disclaimerHint": "Hinweis:",
+    "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
+    "gridChargeTab": "Netzladen",
+    "legendBottomName": "Priorisiere die Hausbatterie",
+    "legendBottomSubline": "bis sie {soc} erreicht hat.",
+    "legendMiddleName": "Priorisiere Fahrzeugladen,",
+    "legendMiddleSubline": "wenn Hausbatterie über {soc} ist.",
+    "legendTopAutostart": "Starte automatisch",
+    "legendTopName": "Batterieunterstütztes Fahrzeugladen",
+    "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
+    "modalTitle": "Hausbatterie",
+    "usageTab": "Batterienutzung"
+  },
+  "config": {
+    "aux": {
+      "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
+      "titleAdd": "Intelligenten Verbraucher hinzufügen",
+      "titleEdit": "Intelligenten Verbraucher bearbeiten"
+    },
+    "battery": {
+      "titleAdd": "Batterie hinzufügen",
+      "titleEdit": "Batterie bearbeiten"
+    },
+    "charge": {
+      "titleAdd": "Energiezähler hinzufügen",
+      "titleEdit": "Energiezähler bearbeiten"
+    },
+    "charger": {
+      "chargers": "Wallboxen",
+      "generic": "Generische Integrationen",
+      "heatingdevices": "Wärmeerzeuger",
+      "ocppHelp": "Kopiere diese Adresse in die Konfiguration der Wallbox.",
+      "ocppLabel": "OCPP-Server URL",
+      "switchsockets": "Schaltbare Steckdosen",
+      "template": "Hersteller",
+      "titleAdd": "Wallbox hinzufügen",
+      "titleEdit": "Wallbox bearbeiten"
+    },
+    "circuits": {
+      "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
+      "title": "Lastmanagement"
+    },
+    "control": {
+      "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
+      "descriptionInterval": "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen.",
+      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
+      "labelInterval": "Aktualisierungsintervall",
+      "labelResidualPower": "Residualleistung",
+      "title": "Regelverhalten"
+    },
+    "deviceValue": {
+      "amount": "Anzahl",
+      "broker": "Broker",
+      "bucket": "Bucket",
+      "capacity": "Kapazität",
+      "chargeStatus": "Status",
+      "chargeStatusA": "nicht verbunden",
+      "chargeStatusB": "verbunden",
+      "chargeStatusC": "lädt",
+      "chargeStatusE": "Keine Leistung",
+      "chargeStatusF": "Fehler",
+      "chargedEnergy": "Geladen",
+      "co2": "Netz-CO₂",
+      "configured": "Konfiguriert",
+      "controllable": "Steuerbar",
+      "currency": "Währung",
+      "current": "Strom",
+      "currentRange": "Strom",
+      "enabled": "Ladebereit",
+      "energy": "Energie",
+      "feedinPrice": "Einspeisevergütung",
+      "gridPrice": "Netzpreis",
+      "heaterTempLimit": "Heizungslimit",
+      "hemsType": "System",
+      "identifier": "RFID-Kennung",
+      "no": "Nein",
+      "odometer": "Kilometerstand",
+      "org": "Organisation",
+      "phaseCurrents": "Strom L1, L2, L3",
+      "phasePowers": "Leistung L1, L2, L3",
+      "phaseVoltages": "Spannung L1, L2, L3",
+      "phases1p3p": "Phasenumschaltung",
+      "power": "Leistung",
+      "powerRange": "Leistung",
+      "range": "Reichweite",
+      "singlePhase": "Einphasig",
+      "soc": "Ladestand",
+      "solarForecast": "PV-Vorhersage",
+      "temp": "Temperatur",
+      "topic": "Thema",
+      "url": "URL",
+      "vehicleLimitSoc": "Fahrzeuglimit",
+      "yes": "Ja"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A (nicht verbunden)",
+      "B": "B (verbunden)",
+      "C": "C (lädt)"
+    },
+    "devices": {
+      "auxMeter": "Smarter Verbraucher",
+      "batteryStorage": "Batterie",
+      "solarSystem": "PV-Anlage"
+    },
+    "eebus": {
+      "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
+      "title": "EEBus"
+    },
+    "ext": {
+      "description": "Kann für Lastmanagement oder Statistikzwecke verwendet werden.",
+      "titleAdd": "Zusätzlichen Zähler hinzufügen",
+      "titleEdit": "Zusätzlichen Zähler bearbeiten"
+    },
+    "form": {
+      "danger": "Achtung",
+      "deprecated": "veraltet",
+      "example": "Beispiel",
+      "optional": "optional"
+    },
+    "general": {
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "docsLink": "Siehe Dokumentation.",
+      "experimental": "Experimentell",
+      "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
+      "off": "aus",
+      "on": "an",
+      "password": "Passwort",
+      "readFromFile": "Aus Datei lesen",
+      "remove": "Entfernen",
+      "save": "Speichern",
+      "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
+      "telemetry": "Telemetrie",
+      "templateLoading": "Lade …",
+      "title": "Titel",
+      "validateSave": "Überprüfen & speichern"
+    },
+    "grid": {
+      "title": "Netzzähler",
+      "titleAdd": "Netzzähler hinzufügen",
+      "titleEdit": "Netzzähler bearbeiten"
+    },
+    "hems": {
+      "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
+      "title": "HEMS"
+    },
+    "influx": {
+      "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
+      "descriptionToken": "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du einen erstellst. https://docs.influxdata.com/influxdb/v2/admin/",
+      "labelBucket": "Bucket",
+      "labelCheckInsecure": "Erlaube unsichere Verbindungen",
+      "labelDatabase": "Datenbank",
+      "labelInsecure": "Zertifikatsüberprüfung",
+      "labelOrg": "Organisation",
+      "labelPassword": "Passwort",
+      "labelToken": "API-Token",
+      "labelUrl": "URL",
+      "labelUser": "Benutzer",
+      "title": "InfluxDB",
+      "v1Support": "Unterstützung für InfluxDB 1.x?",
+      "v2Support": "Zurück zu InfluxDB 2.x"
+    },
+    "loadpoint": {
+      "addCharger": "Wallbox hinzufügen",
+      "addMeter": "Zusätzlichen Zähler hinzufügen",
+      "cancel": "Abbrechen",
+      "chargerError": "Wallbox muss konfiguriert sein.",
+      "chargerLabel": "Wallbox",
+      "chargerPower11kw": "11 kW",
+      "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
+      "chargerPower22kw": "22 kW",
+      "chargerPower22kwHelp": "Verwendet einen Strombereich von 6 bis 32 A.",
+      "chargerPowerCustom": "andere",
+      "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
+      "chargerTypeLabel": "Ladetyp",
+      "chargingTitle": "Laden",
+      "circuitLabel": "Stromkreis",
+      "circuitUnassigned": "nicht zugewiesen",
+      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
+      "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
+      "defaultModeLabel": "Standard-Modus",
+      "delete": "Löschen",
+      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen",
+      "electricalTitle": "Elektrisch",
+      "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
+      "energyMeterLabel": "Energiezähler",
+      "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
+      "maxCurrentHelp": "Muss größer als der minimale Strom sein.",
+      "maxCurrentLabel": "Maximaler Strom",
+      "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
+      "minCurrentLabel": "Minimaler Strom",
+      "noVehicles": "Keine Fahrzeuge konfiguriert.",
+      "phases1p": "1-phasig",
+      "phases3p": "3-phasig",
+      "phasesAutomatic": "Automatische Phasen",
+      "phasesAutomaticHelp": "Deine Wallbox unterstützt automatisches Umschalten zwischen 1- und 3-phasigem Laden. In der Hauptansicht kannst du das Phasenverhalten während des Ladens anpassen.",
+      "phasesHelp": "Anzahl der an die Wallbox angeschlossenen Phasen.",
+      "phasesLabel": "Phasen",
+      "pollIntervalDanger": "Regelmäßiges Abfragen des Fahrzeuges kann dazu führen, dass die Fahrzeugbatterie entleert wird. Einige Fahrzeughersteller sperren das Laden in solchen Fällen auch aktiv. Nicht empfohlen! Verwende diese Einstellung nur, wenn du dir der Risiken bewusst bist.",
+      "pollIntervalHelp": "Zeit zwischen Fahrzeug-API-Updates. Kurze Intervalle können die Fahrzeugbatterie belasten.",
+      "pollIntervalLabel": "Update-Intervall",
+      "pollModeAlways": "immer",
+      "pollModeAlwaysHelp": "Statusabfragen immer in regelmäßigen Abständen durchführen.",
+      "pollModeCharging": "nur beim Laden",
+      "pollModeChargingHelp": "Fahrzeugstatus nur während des Ladens abfragen.",
+      "pollModeConnected": "wenn verbunden",
+      "pollModeConnectedHelp": "Fahrzeugstatus in regelmäßigen Abständen abfragen, wenn verbunden.",
+      "pollModeLabel": "Update-Verhalten",
+      "priorityHelp": "Ladepunkte mit höherer Priorität haben Vorrang beim PV-Überschuss.",
+      "priorityLabel": "Priorität",
+      "save": "Speichern",
+      "showAllSettings": "Alle Einstellungen anzeigen",
+      "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
+      "solarBehaviorDefaultHelp": "Nur mit PV-Überschuss laden. Start nach {enableDelay} Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
+      "solarBehaviorLabel": "PV-Verhalten",
+      "solarModeCustom": "eigenes",
+      "solarModeMaximum": "nur Sonne",
+      "thresholdDisableDelayLabel": "Ausschaltverzögerung",
+      "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
+      "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
+      "thresholdDisableHelpZero": "Stoppen, wenn minimale Ladeleistung für {delay} nicht erreicht werden kann.",
+      "thresholdDisableLabel": "Netzleistung ausschalten",
+      "thresholdEnableDelayLabel": "Einschaltverzögerung",
+      "thresholdEnableHelpInvalid": "Bitte verwende einen negativen Wert.",
+      "thresholdEnableHelpNegative": "Laden starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
+      "thresholdEnableHelpZero": "Starten, wenn minimale Ladeleistung für {delay} als Überschuss verfügbar ist.",
+      "thresholdEnableLabel": "Netzleistung einschalten",
+      "titleAdd": "Ladepunkt hinzufügen",
+      "titleEdit": "Ladepunkt bearbeiten",
+      "titleExample": "Garage, Carport, etc.",
+      "titleLabel": "Titel",
+      "vehicleAutoDetection": "automatische Erkennung",
+      "vehicleHelpAutoDetection": "Wählt automatisch das plausibelste Fahrzeug aus. Manuelle Übersteuerung möglich.",
+      "vehicleHelpDefault": "Nimmt immer an, dass dieses Fahrzeug hier lädt. Auto-Erkennung deaktiviert. Manuelle Übersteuerung möglich.",
+      "vehicleLabel": "Standard-Fahrzeug",
+      "vehiclesTitle": "Fahrzeuge"
+    },
+    "main": {
+      "addAdditional": "Zusätzlichen Zähler hinzufügen",
+      "addGrid": "Netzzähler hinzufügen",
+      "addLoadpoint": "Ladepunkt hinzufügen",
+      "addPvBattery": "PV oder Speicher hinzufügen",
+      "addTariffs": "Tarife hinzufügen",
+      "addVehicle": "Fahrzeug hinzufügen",
+      "configured": "konfiguriert",
+      "edit": "bearbeiten",
+      "name": "Name",
+      "title": "Konfiguration",
+      "unconfigured": "nicht konfiguriert",
+      "vehicles": "Meine Fahrzeuge",
+      "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
+    },
+    "messaging": {
+      "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",
+      "title": "Benachrichtigungen"
+    },
+    "meter": {
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "option": {
+        "aux": "Intelligenten Verbraucher hinzufügen",
+        "battery": "Hausbatterie hinzufügen",
+        "ext": "Zusätzlichen Zähler hinzufügen",
+        "pv": "PV-Anlage hinzufügen"
+      },
+      "save": "Speichern",
+      "template": "Hersteller",
+      "titleChoice": "Was möchtest du hinzufügen?",
+      "validateSave": "Überprüfen & speichern"
+    },
+    "modbus": {
+      "baudrate": "Baudrate",
+      "comset": "ComSet",
+      "connection": "Modbus Verbindung",
+      "connectionHintSerial": "Das Gerät ist direkt an evcc über eine RS485 Schnittstelle angeschlossen.",
+      "connectionHintTcpip": "Das Gerät ist von evcc aus über LAN/Wifi erreichbar.",
+      "connectionValueSerial": "Seriell / USB",
+      "connectionValueTcpip": "Netzwerk",
+      "device": "Gerätename",
+      "deviceHint": "Beispiel: /dev/ttyUSB0",
+      "host": "IP Adresse oder Hostname",
+      "hostHint": "Beispiel: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Port",
+      "protocol": "Modbus Protokoll",
+      "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
+      "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
+    "modbusproxy": {
+      "description": "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät.",
+      "title": "Modbus-Proxy"
+    },
+    "mqtt": {
+      "authentication": "Authentifizierung",
+      "description": "Verbinde evcc mit einem MQTT-Broker, um Daten mit anderen Systemen in deinem Netzwerk auszutauschen.",
+      "descriptionClientId": "Autor der Nachrichten. Wenn leer, wird `evcc-[rand]` verwendet.",
+      "descriptionTopic": "Leer lassen, um das Publizieren zu deaktivieren.",
+      "labelBroker": "Broker",
+      "labelCaCert": "Serverzertifikat (CA)",
+      "labelCheckInsecure": "Erlaube unsichere Verbindungen",
+      "labelClientCert": "Clientzertifikat",
+      "labelClientId": "Client ID",
+      "labelClientKey": "Client-Key",
+      "labelInsecure": "Zertifikatüberprüfung",
+      "labelPassword": "Passwort",
+      "labelTopic": "Thema",
+      "labelUser": "Benutzer",
+      "publishing": "Veröffentlichen",
+      "title": "MQTT"
+    },
+    "network": {
+      "descriptionHost": "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt.",
+      "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
+      "descriptionSchema": "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung.",
+      "labelHost": "Hostname",
+      "labelPort": "Port",
+      "labelSchema": "Schema",
+      "title": "Netzwerk"
+    },
+    "options": {
+      "boolean": {
+        "no": "nein",
+        "yes": "ja"
+      },
+      "endianness": {
+        "big": "big-endian",
+        "little": "little-endian"
+      },
+      "schema": {
+        "http": "HTTP (unverschlüsselt)",
+        "https": "HTTPS (verschlüsselt)"
+      },
+      "status": {
+        "A": "A (nicht verbunden)",
+        "B": "B (verbunden)",
+        "C": "C (lädt)"
+      }
+    },
+    "pv": {
+      "titleAdd": "PV-Anlage hinzufügen",
+      "titleEdit": "PV-Anlage bearbeiten"
+    },
+    "section": {
+      "additionalMeter": "Zusätzliche Zähler",
+      "general": "Allgemein",
+      "grid": "Netzanschluss",
+      "integrations": "Integrationen",
+      "loadpoints": "Ladepunkte",
+      "meter": "PV & Batterie",
+      "system": "System",
+      "vehicles": "Fahrzeuge"
+    },
+    "sponsor": {
+      "addToken": "Token eingeben",
+      "changeToken": "Token ändern",
+      "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
+      "descriptionToken": "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an.",
+      "error": "Das Sponsortoken ist ungültig.",
+      "labelToken": "Sponsortoken",
+      "title": "Sponsoring",
+      "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
+      "tokenRequiredLearnMore": "Mehr erfahren.",
+      "trialToken": "Testtoken"
+    },
+    "system": {
+      "logs": "Logs",
+      "restart": "Neu starten",
+      "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",
+      "restartRequiredMessage": "Konfiguration geändert.",
+      "restartingDescription": "Bitte warten …",
+      "restartingMessage": "evcc wird neu gestartet."
+    },
+    "tariffs": {
+      "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
+      "title": "Tarife"
+    },
+    "title": {
+      "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
+      "label": "Titel",
+      "title": "Titel bearbeiten"
+    },
+    "validation": {
+      "failed": "fehlgeschlagen",
+      "label": "Status",
+      "running": "prüfe …",
+      "success": "erfolgreich",
+      "unknown": "unbekannt",
+      "validate": "prüfen"
+    },
+    "vehicle": {
+      "cancel": "Abbrechen",
+      "chargingSettings": "Ladeeinstellungen",
+      "defaultMode": "Standard-Modus",
+      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
+      "delete": "Fahrzeug löschen",
+      "generic": "Weitere Integrationen",
+      "identifiers": "RFID-Kennungen",
+      "identifiersHelp": "Liste der RFID-Kennungen, um das Fahrzeug zu identifizieren. Ein Eintrag pro Zeile. Auf der Übersichtsseite siehst du die aktuelle RFID-Kennung am jeweiligen Ladepunkt.",
+      "maximumCurrent": "Maximaler Strom",
+      "maximumCurrentHelp": "Muss größer als der minimale Strom sein.",
+      "maximumPhases": "Maximale Phasen",
+      "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
+      "minimumCurrent": "Minimaler Strom",
+      "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
+      "online": "Fahrzeuge mit Schnittstelle",
+      "priority": "Priorität",
+      "priorityHelp": "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat.",
+      "save": "Speichern",
+      "scooter": "Elektroroller",
+      "template": "Hersteller",
+      "titleAdd": "Fahrzeug hinzufügen",
+      "titleEdit": "Fahrzeug bearbeiten",
+      "validateSave": "Prüfen & speichern"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "Sonne",
+      "greenEnergySub1": "über evcc geladen",
+      "greenEnergySub2": "seit Oktober 2022",
+      "greenShare": "Sonnenanteil",
+      "greenShareSub1": "Leistung bereitgestellt durch",
+      "greenShareSub2": "PV und Speicher",
+      "power": "Ladeleistung",
+      "powerSub1": "{activeClients} von {totalClients} Nutzern",
+      "powerSub2": "laden ...",
+      "tabTitle": "Live-Community"
+    },
+    "savings": {
+      "co2Saved": "{value} eingespart",
+      "co2Title": "CO₂ Emission",
+      "configurePriceCo2": "Preis und CO₂-Emissionen konfigurieren",
+      "footerLong": "{percent} Sonnenenergie",
+      "footerShort": "{percent} Sonne",
+      "modalTitle": "Auswertung Ladeenergie",
+      "moneySaved": "{value} gespart",
+      "percentGrid": "{grid} kWh Netz",
+      "percentSelf": "{self} kWh Sonne",
+      "percentTitle": "Sonnenenergie",
+      "period": {
+        "30d": "letzte 30 Tage",
+        "365d": "letzte 365 Tage",
+        "thisYear": "dieses Jahr",
+        "total": "gesamt"
+      },
+      "periodLabel": "Zeitraum:",
+      "priceTitle": "Energiepreis",
+      "referenceGrid": "Netz",
+      "referenceLabel": "Referenzdaten:",
+      "tabTitle": "Meine Daten"
+    },
+    "sponsor": {
+      "becomeSponsor": "Werde Sponsor",
+      "becomeSponsorExtended": "Unterstütze uns direkt. Es gibt auch Sticker.",
+      "confetti": "Lust auf Konfetti?",
+      "confettiPromise": "Es gibt auch Sticker und digitales Konfetti",
+      "sticker": "… oder evcc Sticker?",
+      "supportUs": "Unsere Mission: Sonne tanken zum Standard machen. Zusammen mit Ihrer finanziellen Unterstützung, können wir es ermöglichen.",
+      "thanks": "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln.",
+      "titleNoSponsor": "Unterstütze uns",
+      "titleSponsor": "Du bist Unterstützer",
+      "titleTrial": "Testmodus",
+      "titleVictron": "Unterstützt von Victron Energy",
+      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst.",
+      "victron": "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
+    },
+    "telemetry": {
+      "optIn": "Ich möchte meine Ladedaten teilen.",
+      "optInMoreDetails": "Mehr Details {0}.",
+      "optInMoreDetailsLink": "hier",
+      "optInSponsorship": "Sponsoring erforderlich."
+    },
+    "version": {
+      "availableLong": "neue Version verfügbar",
+      "modalCancel": "Abbrechen",
+      "modalDownload": "Download",
+      "modalInstalledVersion": "Installierte Version",
+      "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
+      "modalTitle": "Neue Version verfügbar",
+      "modalUpdate": "Installieren",
+      "modalUpdateNow": "Jetzt installieren",
+      "modalUpdateStarted": "Starte die neue Version von evcc ...",
+      "modalUpdateStatusStart": "Installation gestartet:"
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "Durchschnitt",
+      "lowestHour": "Sauberste Stunde",
+      "range": "Bereich"
+    },
+    "modalTitle": "Vorhersage",
+    "price": {
+      "average": "Durchschnitt",
+      "lowestHour": "Günstigste Stunde",
+      "range": "Bereich"
+    },
+    "solar": {
+      "dayAfterTomorrow": "Übermorgen",
+      "partly": "teilweise",
+      "remaining": "verbleibend",
+      "today": "Heute",
+      "tomorrow": "Morgen"
+    },
+    "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
+    "type": {
+      "co2": "CO₂",
+      "price": "Preis",
+      "solar": "Solar"
+    }
+  },
+  "header": {
+    "about": "Über",
+    "blog": "Blog",
+    "docs": "Dokumentation",
+    "github": "GitHub",
+    "login": "Fahrzeug-Logins",
+    "logout": "Abmelden",
+    "nativeSettings": "Server ändern",
+    "needHelp": "Hilfe benötigt?",
+    "sessions": "Ladevorgänge"
+  },
+  "help": {
+    "discussionsButton": "GitHub Discussions",
+    "documentationButton": "Dokumentation",
+    "issueButton": "Bug melden",
+    "issueDescription": "Komisches Verhalten gefunden?",
+    "logsButton": "Logs ansehen",
+    "logsDescription": "Überprüfe die Logs auf Fehler.",
+    "modalTitle": "Hilfe benötigt?",
+    "primaryActions": "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten.",
+    "restart": {
+      "cancel": "Abbrechen",
+      "confirm": "Ja, neu starten!",
+      "description": "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst.",
+      "disclaimer": "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden.",
+      "modalTitle": "Sicher, dass du neu starten möchtest?"
+    },
+    "restartButton": "Neu starten",
+    "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
+    "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
+  },
+  "log": {
+    "areaLabel": "Nach Bereich filtern",
+    "areas": "Alle Bereiche",
+    "download": "Komplettes Log herunterladen",
+    "levelLabel": "Nach Log-Level filtern",
+    "nAreas": "{count} Bereiche",
+    "noResults": "Keine passenden Einträge gefunden.",
+    "search": "Suchen",
+    "selectAll": "alle wählen",
+    "showAll": "Alle Einträge anzeigen",
+    "title": "Logs",
+    "update": "Aktualisieren"
+  },
+  "loginModal": {
+    "cancel": "Abbrechen",
+    "error": "Login fehlgeschlagen: ",
+    "iframeHint": "Öffne evcc in einem neuen Tab.",
+    "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
+    "invalid": "Passwort ist ungültig.",
+    "login": "Anmelden",
+    "password": "Passwort",
+    "reset": "Passwort zurücksetzen?",
+    "title": "Authentifizierung"
+  },
+  "main": {
+    "chargingPlan": {
+      "active": "Aktiv",
+      "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
+      "arrivalTab": "Ankunft",
+      "day": "Tag",
+      "departureTab": "Abfahrt",
+      "goal": "Ladeziel",
+      "modalTitle": "Ladeplanung",
+      "none": "keiner",
+      "planNumber": "Plan {number}",
+      "preconditionDescription": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+      "preconditionLong": "Spätes Laden",
+      "preconditionOptionAll": "alles",
+      "preconditionOptionNo": "nein",
+      "preconditionShort": "Spät",
+      "remove": "Entfernen",
+      "repeating": "wiederholend",
+      "repeatingPlans": "Wiederholende Pläne",
+      "selectAll": "Alle wählen",
+      "time": "Zeit",
+      "title": "Plan",
+      "titleMinSoc": "Min. Ladung",
+      "titleTargetCharge": "Abfahrt",
+      "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
+      "update": "Anwenden",
+      "weekdays": "Tage"
+    },
+    "energyflow": {
+      "battery": "Batterie",
+      "batteryCharge": "Batterie laden",
+      "batteryDischarge": "Batterie entladen",
+      "batteryGridChargeActive": "Netzladen aktiv",
+      "batteryGridChargeLimit": "Netzladen wenn",
+      "batteryHold": "Batterie (gesperrt)",
+      "batteryTooltip": "{energy} von {total} ({soc})",
+      "forecastTooltip": "Vorhersage: verbleibende PV-Produktion heute",
+      "gridImport": "Netzbezug",
+      "homePower": "Verbrauch",
+      "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
+      "noEnergy": "Keine Messwerte",
+      "pv": "Solaranlage",
+      "pvExport": "Einspeisung",
+      "pvProduction": "Erzeugung",
+      "selfConsumption": "Eigenverbrauch"
+    },
+    "heatingStatus": {
+      "charging": "Heize …",
+      "connected": "Standby.",
+      "vehicleLimit": "Heizungslimit",
+      "waitForVehicle": "Bereit. Warte auf Heizung …"
+    },
+    "loadpoint": {
+      "avgPrice": "⌀ Preis",
+      "charged": "Geladen",
+      "co2": "⌀ CO₂",
+      "duration": "Ladedauer",
+      "fallbackName": "Ladepunkt",
+      "finished": "Ladeende",
+      "power": "Leistung",
+      "price": "Kosten",
+      "remaining": "Restzeit",
+      "remoteDisabledHard": "{source}: Deaktiviert",
+      "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
+      "solar": "Sonne"
+    },
+    "loadpointSettings": {
+      "batteryBoost": {
+        "description": "Schnell aus Hausbatterie laden.",
+        "label": "Batterie Boost",
+        "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
+        "once": "Boost ist für diesen Ladevorgang aktiviert."
+      },
+      "batteryUsage": "Hausbatterie",
+      "currents": "Ladestrom",
+      "default": "default",
+      "disclaimerHint": "Hinweis:",
+      "limitSoc": {
+        "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
+        "label": "Standard Ladelimit"
+      },
+      "maxCurrent": {
+        "label": "Max. Ladestrom"
+      },
+      "minCurrent": {
+        "label": "Min. Ladestrom"
+      },
+      "minSoc": {
+        "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
+        "label": "Min. Ladung %"
+      },
+      "onlyForSocBasedCharging": "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar.",
+      "phasesConfigured": {
+        "label": "Phasen",
+        "no1p3pSupport": "Wie ist deine Wallbox angeschlossen?",
+        "phases_0": "automatischer Wechsel",
+        "phases_1": "1-phasig",
+        "phases_1_hint": "({min} bis {max})",
+        "phases_3": "3-phasig",
+        "phases_3_hint": "({min} bis {max})"
+      },
+      "smartCostCheap": "günstige Netzladung",
+      "smartCostClean": "Grünes Netzladen",
+      "title": "Einstellungen {0}",
+      "vehicle": "Fahrzeug"
+    },
+    "mode": {
+      "minpv": "Min+PV",
+      "now": "Schnell",
+      "off": "Aus",
+      "pv": "PV",
+      "smart": "Intelligent"
+    },
+    "provider": {
+      "login": "anmelden",
+      "logout": "abmelden"
+    },
+    "startConfiguration": "Konfiguration beginnen",
+    "targetCharge": {
+      "activate": "Aktivieren",
+      "co2Limit": "CO₂-Grenze von {co2}",
+      "costLimitIgnore": "Die eingestellte {limit} wird in diesem Zeitraum ignoriert.",
+      "currentPlan": "Aktiver Plan",
+      "descriptionEnergy": "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?",
+      "descriptionSoc": "Wann soll das Fahrzeug auf {targetSoc} geladen sein?",
+      "goalReached": "Ladeziel bereits erreicht",
+      "inactiveLabel": "Zielzeit",
+      "nextPlan": "Nächster Plan",
+      "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
+      "onlyInPvMode": "Ladeplanung ist nur im PV-Modus aktiv.",
+      "planDuration": "Ladedauer",
+      "planPeriodLabel": "Zeitraum",
+      "planPeriodValue": "{start} bis {end}",
+      "planUnknown": "noch unbekannt",
+      "preview": "Plan Vorschau",
+      "priceLimit": "Preisgrenze von {price}",
+      "remove": "Entfernen",
+      "setTargetTime": "keine",
+      "targetIsAboveLimit": "Das eingestellte Ladelimit von {limit} wird in diesem Zeitraum ignoriert.",
+      "targetIsAboveVehicleLimit": "Fahrzeuglimit ist kleiner als das Ladeziel.",
+      "targetIsInThePast": "Wähle einen Zeitpunkt in der Zukunft, Marty.",
+      "targetIsTooFarInTheFuture": "Wir passen den Plan an, sobald wir mehr über die Zukunft wissen.",
+      "title": "Zielzeit",
+      "today": "heute",
+      "tomorrow": "morgen",
+      "update": "Aktualisieren",
+      "vehicleCapacityDocs": "Erfahre, wie du sie konfigurierst.",
+      "vehicleCapacityRequired": "Die Batteriekapazität des Fahrzeugs wird benötigt, um die Ladedauer zu schätzen."
+    },
+    "targetChargePlan": {
+      "chargeDuration": "Ladedauer",
+      "co2Label": "CO₂-Emission ⌀",
+      "priceLabel": "Energiepreis",
+      "timeRange": "{day} {range} Uhr",
+      "unknownPrice": "noch unbekannt"
+    },
+    "targetEnergy": {
+      "label": "Ladelimit",
+      "noLimit": "keins"
+    },
+    "vehicle": {
+      "addVehicle": "Fahrzeug hinzufügen",
+      "changeVehicle": "Fahrzeug ändern",
+      "detectionActive": "Fahrzeugerkennung läuft …",
+      "fallbackName": "Fahrzeug",
+      "moreActions": "Weitere Aktionen",
+      "none": "Kein Fahrzeug",
+      "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
+      "targetSoc": "Ladelimit",
+      "temp": "Temperatur",
+      "tempLimit": "Zieltemp.",
+      "unknown": "Gastfahrzeug",
+      "vehicleSoc": "Ladestand"
+    },
+    "vehicleStatus": {
+      "awaitingAuthorization": "Warte auf Autorisierung.",
+      "batteryBoost": "Batterie Boost aktiv.",
+      "charging": "Ladevorgang aktiv …",
+      "cheapEnergyCharging": "Günstige Energie verfügbar.",
+      "cheapEnergyNextStart": "Günstige Energie in {duration}.",
+      "cheapEnergySet": "Preislimit gesetzt.",
+      "cleanEnergyCharging": "Saubere Energie verfügbar.",
+      "cleanEnergyNextStart": "Saubere Energie in {duration}.",
+      "cleanEnergySet": "CO₂-Limit gesetzt.",
+      "climating": "Vorklimatisierung erkannt.",
+      "connected": "Verbunden.",
+      "disconnectRequired": "Vorgang abgebrochen. Erneut verbinden.",
+      "disconnected": "Nicht verbunden.",
+      "finished": "Abgeschlossen.",
+      "minCharge": "Mindestladung bis {soc}.",
+      "pvDisable": "Zu wenig Überschuss. Ladung wird gleich pausiert.",
+      "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
+      "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
+      "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
+      "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
+      "targetChargePlanned": "Ladeplan startet in {duration}.",
+      "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
+      "vehicleLimit": "Fahrzeuglimit",
+      "vehicleLimitReached": "Fahrzeuglimit erreicht.",
+      "waitForVehicle": "Ladebereit. Warte auf Fahrzeug …",
+      "welcome": "Kurze initiale Ladung zur Bestätigung der Verbindung."
+    },
+    "vehicles": "Parkplatz",
+    "welcome": "Herzlich willkommen!"
+  },
+  "notifications": {
+    "dismissAll": "Meldungen entfernen",
+    "logs": "Vollständiges Log ansehen",
+    "modalTitle": "Meldungen"
+  },
+  "offline": {
+    "configurationError": "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu.",
+    "message": "Keine Verbindung zum Server.",
+    "restart": "Neustart",
+    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen",
+    "restarting": "Server ist gleich wieder verfügbar."
+  },
+  "passwordModal": {
+    "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",
+    "empty": "Passwort darf nicht leer sein",
+    "error": "Fehler: ",
+    "labelCurrent": "Aktuelles Passwort",
+    "labelNew": "Neues Passwort",
+    "labelRepeat": "Neues Passwort wiederholen",
+    "newPassword": "Passwort setzen",
+    "noMatch": "Passwörter stimmen nicht überein",
+    "titleNew": "Administrator Passwort setzen",
+    "titleUpdate": "Administrator Passwort ändern",
+    "updatePassword": "Passwort ändern"
+  },
+  "session": {
+    "cancel": "Abbrechen",
+    "co2": "CO₂",
+    "date": "Zeitraum",
+    "delete": "Löschen",
+    "finished": "Endzeit",
+    "meter": "Zählerstand",
+    "meterstart": "Anfangszählerstand",
+    "meterstop": "Endzählerstand",
+    "odometer": "Kilometerstand",
+    "price": "Preis",
+    "started": "Startzeit",
+    "title": "Ladevorgang"
+  },
+  "sessions": {
+    "avgPower": "⌀ Leistung",
+    "avgPrice": "⌀ Preis",
+    "chargeDuration": "Ladedauer",
+    "chartTitle": {
+      "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
+      "avgPriceByGroup": "⌀ Preis {byGroup}",
+      "byGroupLoadpoint": "je Ladepunkt",
+      "byGroupVehicle": "je Fahrzeug",
+      "energy": "Geladene Energie",
+      "energyGrouped": "Sonnen- vs. Netzenergie",
+      "energyGroupedByGroup": "Energie {byGroup}",
+      "energySubSolar": "{value} Sonne",
+      "energySubTotal": "{value} gesamt",
+      "groupedCo2ByGroup": "CO₂-Menge {byGroup}",
+      "groupedPriceByGroup": "Kosten {byGroup}",
+      "historyCo2": "CO₂-Emissionen",
+      "historyCo2Sub": "{value} gesamt",
+      "historyPrice": "Ladekosten",
+      "historyPriceSub": "{value} gesamt",
+      "solar": "Sonnenanteil über das Jahr",
+      "solarByGroup": "Sonnenanteil {byGroup}"
+    },
+    "co2": "⌀ CO₂",
+    "csv": {
+      "chargedenergy": "Energie (kWh)",
+      "chargeduration": "Ladedauer",
+      "co2perkwh": "CO₂/kWh",
+      "created": "Startzeit",
+      "finished": "Endzeit",
+      "identifier": "Kennung",
+      "loadpoint": "Ladepunkt",
+      "meterstart": "Anfangszählerstand (kWh)",
+      "meterstop": "Endzählerstand (kWh)",
+      "odometer": "Kilometerstand (km)",
+      "price": "Preis",
+      "priceperkwh": "Preis/kWh",
+      "solarpercentage": "Sonne (%)",
+      "vehicle": "Fahrzeug"
+    },
+    "csvMonth": "Download {month} CSV",
+    "csvTotal": "Gesamte CSV herunterladen",
+    "date": "Anfang",
+    "downloadCsv": "Als CSV herunterladen",
+    "energy": "Geladen",
+    "filter": {
+      "allLoadpoints": "Alle Ladepunkte",
+      "allVehicles": "Alle Fahrzeuge",
+      "filter": "Filtern"
+    },
+    "group": {
+      "co2": "Emissionen",
+      "grid": "Netz",
+      "price": "Preis",
+      "self": "Sonne"
+    },
+    "groupBy": {
+      "loadpoint": "Ladepunkt",
+      "none": "Gesamt",
+      "vehicle": "Fahrzeug"
+    },
+    "loadpoint": "Ladepunkt",
+    "noData": "Noch keine Ladevorgänge in diesem Monat.",
+    "overview": "Übersicht",
+    "period": {
+      "month": "Monat",
+      "total": "Gesamt",
+      "year": "Jahr"
+    },
+    "price": "Kosten",
+    "reallyDelete": "Möchtest du diesen Ladevorgang wirklich löschen?",
+    "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
+    "solar": "Sonne",
+    "title": "Ladevorgänge",
+    "total": "Insgesamt",
+    "type": {
+      "co2": "CO₂",
+      "price": "Preis",
+      "solar": "Sonne"
+    },
+    "vehicle": "Fahrzeug"
+  },
+  "settings": {
+    "fullscreen": {
+      "enter": "Vollbild starten",
+      "exit": "Vollbild beenden",
+      "label": "Vollbild"
+    },
+    "hiddenFeatures": {
+      "label": "Experimentell",
+      "value": "Experimentelle UI-Funktionen zeigen."
+    },
+    "language": {
+      "auto": "Automatisch",
+      "label": "Sprache"
+    },
+    "sponsorToken": {
+      "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
+      "getNew": "Hol dir ein Neues",
+      "hint": "Hinweis: Wir werden das zukünftig automatisieren."
+    },
+    "telemetry": {
+      "label": "Telemetrie"
+    },
+    "theme": {
+      "auto": "System",
+      "dark": "Dunkel",
+      "label": "Design",
+      "light": "Hell"
+    },
+    "title": "Darstellung",
+    "unit": {
+      "km": "Kilometer",
+      "label": "Einheit",
+      "mi": "Meilen"
+    }
+  },
+  "smartCost": {
+    "activeHours": "{charging} von {total}",
+    "activeHoursLabel": "Aktive Stunden",
+    "applyToAll": "Überall anwenden?",
+    "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
+    "cheapTitle": "Günstiges Netzladen",
+    "cleanTitle": "Sauberes Netzladen",
+    "co2Label": "CO₂-Emission",
+    "co2Limit": "CO₂-Grenze",
+    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
+    "modalTitle": "Smartes Netzladen",
+    "none": "keine",
+    "priceLabel": "Energiepreis",
+    "priceLimit": "Preisgrenze",
+    "resetAction": "Grenze löschen",
+    "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
+    "saved": "Gepeichert."
+  },
+  "startupError": {
+    "configFile": "Verwendete Konfigurationsdatei:",
+    "configuration": "Konfiguration",
+    "description": "Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht weiterhelfen, suche in unseren {0} nach einer Lösung.",
+    "discussions": "GitHub Diskussionen",
+    "fixAndRestart": "Behebe das Problem und starte den Server neu.",
+    "hint": "Hinweis: Ein weiterer Grund könnte ein fehlerhaftes Gerät (Wechselrichter, Zähler, …) sein. Überprüfe deine Netzwerkverbindungen.",
+    "lineError": "In {0} wurde ein Fehler gefunden.",
+    "lineErrorLink": "Zeile {0}",
+    "restartButton": "Neu starten",
+    "title": "Fehler beim Starten"
+  }
+}

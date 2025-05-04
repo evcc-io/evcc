@@ -2,11 +2,11 @@
 	<FormRow
 		v-if="showConnectionOptions"
 		id="modbusTcpIp"
-		label="Modbus Connection"
+		:label="$t('config.modbus.connection')"
 		:help="
 			connection === 'tcpip'
-				? 'The device is addressable from evcc via LAN/Wifi.'
-				: 'The device is diretly connected to evcc via a RS485 interface.'
+				? $t('config.modbus.connectionHintTcpip')
+				: $t('config.modbus.connectionHintSerial')
 		"
 	>
 		<div class="btn-group" role="group">
@@ -20,7 +20,9 @@
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusTcpIp">Network</label>
+			<label class="btn btn-outline-primary" for="modbusTcpIp">
+				{{ $t("config.modbus.connectionValueTcpip") }}
+			</label>
 			<input
 				id="modbusSerial"
 				v-model="connection"
@@ -31,10 +33,12 @@
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusSerial">Serial / USB</label>
+			<label class="btn btn-outline-primary" for="modbusSerial">
+				{{ $t("config.modbus.connectionValueSerial") }}
+			</label>
 		</div>
 	</FormRow>
-	<FormRow id="modbusId" label="Modbus ID">
+	<FormRow id="modbusId" :label="$t('config.modbus.id')">
 		<PropertyField
 			id="modbusId"
 			property="id"
@@ -46,7 +50,11 @@
 		/>
 	</FormRow>
 	<div v-if="connection === 'tcpip'">
-		<FormRow id="modbusHost" label="IP address or hostname" help="Example: 192.0.2.2">
+		<FormRow
+			id="modbusHost"
+			:label="$t('config.modbus.host')"
+			:help="$t('config.modbus.hostHint')"
+		>
 			<PropertyField
 				id="modbusHost"
 				property="host"
@@ -57,7 +65,7 @@
 				@change="$emit('update:host', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusPort" label="Port">
+		<FormRow id="modbusPort" :label="$t('config.modbus.port')">
 			<PropertyField
 				id="modbusPort"
 				property="port"
@@ -71,11 +79,11 @@
 		<FormRow
 			v-if="showProtocolOptions"
 			id="modbusTcp"
-			label="Modbus Protocol"
+			:label="$t('config.modbus.protocol')"
 			:help="
 				protocol === 'tcp'
-					? 'Device has native LAN/Wifi support or is connected through a RS485 to Ethernet adapter with protocol translation.'
-					: 'Connection through a RS485 to Ethernet adapter without protocol translation.'
+					? $t('config.modbus.protocolHintTcp')
+					: $t('config.modbus.protocolHintRtu')
 			"
 		>
 			<div class="btn-group" role="group">
@@ -89,7 +97,9 @@
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusTcp">TCP</label>
+				<label class="btn btn-outline-primary" for="modbusTcp">
+					{{ $t("config.modbus.protocolValueTcp") }}
+				</label>
 				<input
 					id="modbusRtu"
 					v-model="protocol"
@@ -100,12 +110,18 @@
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusRtu">RTU</label>
+				<label class="btn btn-outline-primary" for="modbusRtu">
+					{{ $t("config.modbus.protocolValueRtu") }}
+				</label>
 			</div>
 		</FormRow>
 	</div>
 	<div v-else>
-		<FormRow id="modbusDevice" label="Device name" help="Example: /dev/ttyUSB0">
+		<FormRow
+			id="modbusDevice"
+			:label="$t('config.modbus.device')"
+			:help="$t('config.modbus.deviceHint')"
+		>
 			<PropertyField
 				id="modbusDevice"
 				property="device"
@@ -116,7 +132,7 @@
 				@change="$emit('update:device', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusBaudrate" label="Baudrate">
+		<FormRow id="modbusBaudrate" :label="$t('config.modbus.baudrate')">
 			<PropertyField
 				id="modbusBaudrate"
 				property="baudrate"
@@ -128,7 +144,7 @@
 				@change="$emit('update:baudrate', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusComset" label="ComSet">
+		<FormRow id="modbusComset" :label="$t('config.modbus.comset')">
 			<PropertyField
 				id="modbusComset"
 				property="comset"
@@ -203,7 +219,7 @@ export default defineComponent({
 			return this.connection === "tcpip" && this.capabilities.includes("rs485");
 		},
 		comsetOptions() {
-			return ["8N1", "8E1"].map((v) => {
+			return ["8N1", "8E1", "8N2"].map((v) => {
 				return { key: v, name: v };
 			});
 		},

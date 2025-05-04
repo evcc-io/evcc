@@ -1,4 +1,5 @@
 template: api.akkudoktor.net
+deprecated: true
 products:
   - brand: Akkudoktor API
 requirements:
@@ -80,7 +81,7 @@ params:
     example: "10,0,10,15"
     advanced: true
   - name: interval
-    default: 1h
+    default: 2h
     advanced: true
 render: |
   type: custom

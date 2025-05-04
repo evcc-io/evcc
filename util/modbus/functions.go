@@ -7,7 +7,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
+
+func Backoff() *backoff.ExponentialBackOff {
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
+}
 
 // decodeMask converts a bit mask in decimal or hex format to uint64
 func decodeMask(mask string) (uint64, error) {

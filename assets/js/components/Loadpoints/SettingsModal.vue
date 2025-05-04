@@ -29,6 +29,7 @@
 								v-if="isModalVisible"
 								v-bind="smartCostLimitProps"
 								:possible="smartCostAvailable"
+								:smartCostLimit="smartCostLimit"
 								class="mt-2"
 							/>
 							<LoadpointSettingsBatteryBoost
@@ -155,23 +156,21 @@
 	</Teleport>
 </template>
 
-<script>
-import collector from "../../mixins/collector.js";
-import formatter from "../../mixins/formatter.js";
+<script lang="ts">
+import collector from "@/mixins/collector";
+import formatter from "@/mixins/formatter";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
+import smartCostAvailable from "@/utils/smartCostAvailable";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
+import { defineComponent, type PropType } from "vue";
+import { PHASES } from "@/types/evcc";
 
 const V = 230;
 
-const PHASES_AUTO = 0;
-const PHASES_1 = 1;
-const PHASES_3 = 3;
-
-const range = (start, stop, step = -1) =>
+const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
 
-const insertSorted = (arr, num) => {
+const insertSorted = (arr: number[], num: number) => {
 	const uniqueSet = new Set(arr);
 	uniqueSet.add(num);
 	return [...uniqueSet].sort((a, b) => b - a);
@@ -180,23 +179,25 @@ const insertSorted = (arr, num) => {
 // TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
 const MAX_CURRENT = 64;
 
-export default {
+const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
+
+export default defineComponent({
 	name: "LoadpointSettingsModal",
 	components: { SmartCostLimit, LoadpointSettingsBatteryBoost: SettingsBatteryBoost },
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
-		phasesConfigured: Number,
+		phasesConfigured: { type: Number, default: 0 },
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
 		batteryBoost: Boolean,
 		batteryBoostAvailable: Boolean,
 		mode: String,
 		minSoc: Number,
-		maxCurrent: Number,
-		minCurrent: Number,
+		maxCurrent: { type: Number, default: 0 },
+		minCurrent: { type: Number, default: 0 },
 		title: String,
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
@@ -223,20 +224,20 @@ export default {
 			}
 			if (this.chargerPhases1p3p) {
 				// automatic switching
-				return [PHASES_AUTO, PHASES_3, PHASES_1];
+				return [AUTO, THREE_PHASES, ONE_PHASE];
 			}
 			// 1p or 3p possible
-			return [PHASES_3, PHASES_1];
+			return [THREE_PHASES, ONE_PHASE];
 		},
 		batteryBoostProps() {
 			return this.collectProps(SettingsBatteryBoost);
 		},
 		maxPower() {
 			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === PHASES_AUTO) {
-					return this.maxPowerPhases(3);
+				if (this.phasesConfigured === AUTO) {
+					return this.maxPowerPhases(THREE_PHASES);
 				}
-				if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
+				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
 					return this.maxPowerPhases(this.phasesConfigured);
 				}
 			}
@@ -244,10 +245,10 @@ export default {
 		},
 		minPower() {
 			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === PHASES_AUTO) {
-					return this.minPowerPhases(1);
+				if (this.phasesConfigured === AUTO) {
+					return this.minPowerPhases(ONE_PHASE);
 				}
-				if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
+				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
 					return this.minPowerPhases(this.phasesConfigured);
 				}
 			}
@@ -285,26 +286,23 @@ export default {
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
-		minSoc(value) {
-			this.selectedMinSoc = value;
-		},
 	},
 	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
+		this.$refs["modal"]?.addEventListener("show.bs.modal", this.modalVisible);
+		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
+		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
-		maxPowerPhases(phases) {
+		maxPowerPhases(phases: PHASES) {
 			return this.fmtW(this.maxCurrent * V * phases);
 		},
-		minPowerPhases(phases) {
+		minPowerPhases(phases: PHASES) {
 			return this.fmtW(this.minCurrent * V * phases);
 		},
-		formId(name) {
+		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
 		},
 		changeMaxCurrent() {
@@ -316,8 +314,8 @@ export default {
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOption(value, isDefault) {
-			let name = `${this.fmtNumber(value)} A`;
+		currentOption(value: number, isDefault: boolean) {
+			let name = `${this.fmtNumber(value, 0)} A`;
 			if (isDefault) {
 				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}
@@ -329,11 +327,11 @@ export default {
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		changeBatteryBoost(boost) {
+		changeBatteryBoost(boost: boolean) {
 			this.$emit("batteryboost-updated", boost);
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .container {

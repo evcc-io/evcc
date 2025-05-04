@@ -1,8 +1,8 @@
 import { reactive, watch } from "vue";
-import api from "../../api.js";
-import store from "../../store.js";
+import api from "@/api";
+import store from "@/store";
 import Modal from "bootstrap/js/dist/modal";
-import { isSystemError } from "../../utils/fatal.js";
+import { isSystemError } from "@/utils/fatal.js";
 
 const auth = reactive({
 	configured: true,
@@ -99,7 +99,7 @@ function debounedUpdateAuthStatus() {
 	clearTimeout(timeoutId);
 	timeoutId = setTimeout(() => {
 		updateAuthStatus();
-	}, 500);
+	}, 500) as unknown as number;
 }
 
 // update auth status on reconnect or server restart

@@ -18,9 +18,10 @@ import (
 
 type Solcast struct {
 	*request.Helper
-	log  *util.Logger
-	site string
-	data *util.Monitor[api.Rates]
+	log    *util.Logger
+	site   string
+	fromTo FromTo
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -34,6 +35,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Site     string
 		Token    string
 		Interval time.Duration
+		FromTo   `mapstructure:",squash"`
 	}{
 		Interval: 3 * time.Hour,
 	}
@@ -56,6 +58,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		site:   cc.Site,
 		Helper: request.NewHelper(log),
+		fromTo: cc.FromTo,
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
@@ -71,8 +74,16 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
-	// don't exceed 10 requests per 24h
 	for ; true; <-time.Tick(interval) {
+		// ensure we don't run when not needed, but execute once at startup
+		select {
+		case <-t.data.Done():
+			if !t.fromTo.IsActive(time.Now().Hour()) {
+				continue
+			}
+		default:
+		}
+
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
@@ -80,7 +91,6 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}

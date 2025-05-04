@@ -18,6 +18,16 @@ params:
       en: Solcast API Token
       de: Solcast API Token
     required: true
+  - name: from
+    help:
+      en: Start time of data retrieval, specified in full hours, e.g. "6"
+      de: Startzeit der Datenabrufe, Angabe in vollen Stunden, z.B "6"
+    advanced: true
+  - name: to
+    help:
+      en: End time of data retrieval, specified in full hours, e.g. "20"
+      de: Endzeit der Datenabrufe, Angabe in vollen Stunden, z.B "20"
+    advanced: true
   - name: interval
     default: 3h
     advanced: true

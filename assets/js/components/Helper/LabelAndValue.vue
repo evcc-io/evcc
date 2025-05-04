@@ -6,7 +6,11 @@
 		<slot>
 			<h3 class="value m-0" :class="valueClass">
 				<slot name="value">
-					<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
+					<AnimatedNumber
+						v-if="valueFmt && typeof value === 'number'"
+						:to="value"
+						:format="valueFmt"
+					/>
 					<span v-else>{{ value }}</span>
 					<div v-if="extraValue != null" class="extraValue text-nowrap">
 						{{ extraValue || "&nbsp;" }}
@@ -17,16 +21,17 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
 
-export default {
+export default defineComponent({
 	name: "LabelAndValue",
 	components: { AnimatedNumber },
 	props: {
 		label: String,
 		value: [Number, String],
-		valueFmt: Function,
+		valueFmt: Function as PropType<(n: number) => string>,
 		extraValue: String,
 		align: { type: String, default: "center" },
 	},
@@ -38,7 +43,7 @@ export default {
 			return `justify-content-${this.align}`;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .root {
