@@ -23,9 +23,29 @@
     "usageTab": "Използване на батерията"
   },
   "config": {
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "battery": {
       "titleAdd": "Добави батерия",
       "titleEdit": "Редактиране на батерията"
+    },
+    "charge": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "charger": {
+      "chargers": "",
+      "generic": "",
+      "heatingdevices": "",
+      "ocppHelp": "",
+      "ocppLabel": "",
+      "switchsockets": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "circuits": {
       "description": "Гарантира, че сумата от всички точки на натоварване, свързани към една верига, не надвишава конфигурираните граници на мощност и ток. Веригите могат да бъдат вложени, за да се изгради йерархия.",
@@ -40,6 +60,7 @@
       "title": "Поведение на управление"
     },
     "deviceValue": {
+      "amount": "",
       "broker": "Брокер",
       "bucket": "Кофа",
       "capacity": "Капацитет",
@@ -60,32 +81,56 @@
       "energy": "Енергия",
       "feedinPrice": "Цена за изкупуване",
       "gridPrice": "Цена на мрежата",
+      "heaterTempLimit": "",
       "hemsType": "Система",
+      "identifier": "",
       "no": "не",
       "odometer": "одометър",
       "org": "Организация",
       "phaseCurrents": "Текущ L1, L2, L3",
       "phasePowers": "Мощност L1, L2, L3",
       "phaseVoltages": "Напрежение L1, L2, L3",
+      "phases1p3p": "",
       "power": "Мощност",
       "powerRange": "Мощност",
       "range": "Обхват",
+      "singlePhase": "",
       "soc": "Състояние на заряда",
+      "solarForecast": "",
       "temp": "Температура",
       "topic": "Тема",
       "url": "URL",
+      "vehicleLimitSoc": "",
       "yes": "да"
+    },
+    "deviceValueChargeStatus": {
+      "A": "",
+      "B": "",
+      "C": ""
+    },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "solarSystem": ""
     },
     "eebus": {
       "description": "Основна конфигурация за комуникация с други EEBus устройства.",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "form": {
+      "danger": "",
+      "deprecated": "",
       "example": "Пример",
       "optional": "незадължителен"
     },
     "general": {
       "cancel": "Отказ",
+      "delete": "",
       "docsLink": "Виж документацията.",
       "experimental": "Експериментален",
       "hideAdvancedSettings": "Скрий разширените настройки",
@@ -97,7 +142,9 @@
       "save": "Запази",
       "showAdvancedSettings": "Покажи разширените настройки",
       "telemetry": "Телеметрия",
-      "title": "Заглавие"
+      "templateLoading": "",
+      "title": "Заглавие",
+      "validateSave": ""
     },
     "grid": {
       "title": "Мрежов измервателен уред",
@@ -124,12 +171,91 @@
       "v1Support": "Нуждаете се от поддръжка за InfluxDB 1.x?",
       "v2Support": "Назад към InfluxDB 2.x"
     },
+    "loadpoint": {
+      "addCharger": "",
+      "addMeter": "",
+      "cancel": "",
+      "chargerError": "",
+      "chargerLabel": "",
+      "chargerPower11kw": "",
+      "chargerPower11kwHelp": "",
+      "chargerPower22kw": "",
+      "chargerPower22kwHelp": "",
+      "chargerPowerCustom": "",
+      "chargerPowerCustomHelp": "",
+      "chargerTypeLabel": "",
+      "chargingTitle": "",
+      "circuitLabel": "",
+      "circuitUnassigned": "",
+      "defaultModeHelp": "",
+      "defaultModeHelpKeep": "",
+      "defaultModeLabel": "",
+      "delete": "",
+      "electricalSubtitle": "",
+      "electricalTitle": "",
+      "energyMeterHelp": "",
+      "energyMeterLabel": "",
+      "estimateLabel": "",
+      "maxCurrentHelp": "",
+      "maxCurrentLabel": "",
+      "minCurrentHelp": "",
+      "minCurrentLabel": "",
+      "noVehicles": "",
+      "phases1p": "",
+      "phases3p": "",
+      "phasesAutomatic": "",
+      "phasesAutomaticHelp": "",
+      "phasesHelp": "",
+      "phasesLabel": "",
+      "pollIntervalDanger": "",
+      "pollIntervalHelp": "",
+      "pollIntervalLabel": "",
+      "pollModeAlways": "",
+      "pollModeAlwaysHelp": "",
+      "pollModeCharging": "",
+      "pollModeChargingHelp": "",
+      "pollModeConnected": "",
+      "pollModeConnectedHelp": "",
+      "pollModeLabel": "",
+      "priorityHelp": "",
+      "priorityLabel": "",
+      "save": "",
+      "showAllSettings": "",
+      "solarBehaviorCustomHelp": "",
+      "solarBehaviorDefaultHelp": "",
+      "solarBehaviorLabel": "",
+      "solarModeCustom": "",
+      "solarModeMaximum": "",
+      "thresholdDisableDelayLabel": "",
+      "thresholdDisableHelpInvalid": "",
+      "thresholdDisableHelpPositive": "",
+      "thresholdDisableHelpZero": "",
+      "thresholdDisableLabel": "",
+      "thresholdEnableDelayLabel": "",
+      "thresholdEnableHelpInvalid": "",
+      "thresholdEnableHelpNegative": "",
+      "thresholdEnableHelpZero": "",
+      "thresholdEnableLabel": "",
+      "titleAdd": "",
+      "titleEdit": "",
+      "titleExample": "",
+      "titleLabel": "",
+      "vehicleAutoDetection": "",
+      "vehicleHelpAutoDetection": "",
+      "vehicleHelpDefault": "",
+      "vehicleLabel": "",
+      "vehiclesTitle": ""
+    },
     "main": {
+      "addAdditional": "",
+      "addGrid": "",
       "addLoadpoint": "Добави зарядна точка",
       "addPvBattery": "Добави соларен панел или батерия",
+      "addTariffs": "",
       "addVehicle": "Добави автомобил",
       "configured": "Конфигуриран",
       "edit": "редактирай",
+      "name": "",
       "title": "Конфигурация",
       "unconfigured": "не е конфигуриран",
       "vehicles": "Моите Автомобили",
@@ -142,10 +268,36 @@
     "meter": {
       "cancel": "Отказ",
       "delete": "Изтрий",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "ext": "",
+        "pv": ""
+      },
       "save": "Запази",
       "template": "Производител",
       "titleChoice": "Какво искате да добавите?",
       "validateSave": "Валидирай и запази"
+    },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Позволете на няколко клиента да имат достъп до едно Modbus устройство.",
@@ -190,6 +342,11 @@
       "schema": {
         "http": "HTTP (некриптиран)",
         "https": "HTTPS (криптиран)"
+      },
+      "status": {
+        "A": "",
+        "B": "",
+        "C": ""
       }
     },
     "pv": {
@@ -197,6 +354,7 @@
       "titleEdit": "Редактиране на соларен метър"
     },
     "section": {
+      "additionalMeter": "",
       "general": "Общи",
       "grid": "Мрежова връзка",
       "integrations": "Интеграции",
@@ -212,7 +370,10 @@
       "descriptionToken": "Получавате токена от {url}. Ние също предлагаме пробен токен за тестване.",
       "error": "Спонсорският токен не е валиден.",
       "labelToken": "Спонсорски токен",
-      "title": "Спонсорство"
+      "title": "Спонсорство",
+      "tokenRequired": "",
+      "tokenRequiredLearnMore": "",
+      "trialToken": ""
     },
     "system": {
       "logs": "Логове",
@@ -241,9 +402,22 @@
     },
     "vehicle": {
       "cancel": "Отмени",
+      "chargingSettings": "",
+      "defaultMode": "",
+      "defaultModeHelp": "",
       "delete": "Изтрий автомобил",
       "generic": "Други интеграции",
+      "identifiers": "",
+      "identifiersHelp": "",
+      "maximumCurrent": "",
+      "maximumCurrentHelp": "",
+      "maximumPhases": "",
+      "maximumPhasesHelp": "",
+      "minimumCurrent": "",
+      "minimumCurrentHelp": "",
       "online": "Автомобил с онлайн свързаност",
+      "priority": "",
+      "priorityHelp": "",
       "save": "Запази",
       "scooter": "Скутер",
       "template": "Производител",
@@ -322,6 +496,32 @@
       "modalUpdateStatusStart": "Инсталацията започна:"
     }
   },
+  "forecast": {
+    "co2": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "modalTitle": "",
+    "price": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "solar": {
+      "dayAfterTomorrow": "",
+      "partly": "",
+      "remaining": "",
+      "today": "",
+      "tomorrow": ""
+    },
+    "solarAdjust": "",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    }
+  },
   "header": {
     "about": "Относно",
     "blog": "Блог",
@@ -388,6 +588,11 @@
       "modalTitle": "План за зареждане",
       "none": "няма",
       "planNumber": "План {number}",
+      "preconditionDescription": "",
+      "preconditionLong": "",
+      "preconditionOptionAll": "",
+      "preconditionOptionNo": "",
+      "preconditionShort": "",
       "remove": "Премахване",
       "repeating": "повтарящ се",
       "repeatingPlans": "Повтарящи се планове",
@@ -404,18 +609,24 @@
       "battery": "Батерия",
       "batteryCharge": "Зареждане на батерията",
       "batteryDischarge": "Разреждане на батерията",
+      "batteryGridChargeActive": "",
+      "batteryGridChargeLimit": "",
       "batteryHold": "Батерия (заключена)",
       "batteryTooltip": "{energy} от {total} ({soc})",
+      "forecastTooltip": "",
       "gridImport": "Използвана енергия от мрежата",
       "homePower": "Потребление",
       "loadpoints": "Зарядно устройство | Зарядно устройство | {count} зарядни устройства",
       "noEnergy": "Няма данни от измервателния уред",
+      "pv": "",
       "pvExport": "Енергия, която се подава в електрическата мрежа",
       "pvProduction": "Производство",
       "selfConsumption": "Самопотребление"
     },
     "heatingStatus": {
       "charging": "Загряване…",
+      "connected": "",
+      "vehicleLimit": "",
       "waitForVehicle": "Готово. Чака се нагревателят …"
     },
     "loadpoint": {
@@ -424,6 +635,7 @@
       "co2": "⌀ CO₂",
       "duration": "Продължителност на зареждането",
       "fallbackName": "Зарядна точка",
+      "finished": "",
       "power": "Мощност",
       "price": "Цена",
       "remaining": "Оставащо време",
@@ -482,6 +694,7 @@
       "login": "Вход",
       "logout": "Изход"
     },
+    "startConfiguration": "",
     "targetCharge": {
       "activate": "Активиране",
       "co2Limit": "Лимит на CO₂ от {co2}",
@@ -489,6 +702,7 @@
       "currentPlan": "Активен план",
       "descriptionEnergy": "До кога трябва да бъде заредена {targetEnergy} в превозното средство?",
       "descriptionSoc": "Кога трябва да бъде заредено превозното средство до {targetSoc}?",
+      "goalReached": "",
       "inactiveLabel": "Целево време",
       "nextPlan": "Следващ план",
       "notReachableInTime": "Целта ще бъде постигната {overrun} по-късно.",
@@ -565,7 +779,8 @@
       "waitForVehicle": "Готов. Очакване на превозното средство…",
       "welcome": "Кратко първоначално зареждане за потвърждаване на връзката."
     },
-    "vehicles": "Паркиране"
+    "vehicles": "Паркиране",
+    "welcome": ""
   },
   "notifications": {
     "dismissAll": "Отхвърли всички",
@@ -737,6 +952,8 @@
     "none": "Няма",
     "priceLabel": "Цена на енергията",
     "priceLimit": "Граница на цената",
+    "resetAction": "",
+    "resetWarning": "",
     "saved": "Запазено."
   },
   "startupError": {
