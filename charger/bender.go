@@ -153,11 +153,6 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 		}
 	}
 
-	// check feature rfid
-	if _, err := wb.identify(); err == nil {
-		identify = wb.identify
-	}
-
 	// check feature mA
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
 		maxCurrentMillis = wb.maxCurrentMillis
@@ -168,6 +163,11 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
+	}
+
+	// check feature rfid
+	if _, err := wb.identify(); err == nil {
+		identify = wb.identify
 	}
 
 	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
