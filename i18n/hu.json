@@ -280,11 +280,6 @@
       "validateSave": "Ellenőrzés & mentés"
     },
     "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
       "connectionValueSerial": "Soros / USB",
       "connectionValueTcpip": "Hálózat",
       "device": "Eszköz neve",
@@ -293,11 +288,7 @@
       "hostHint": "Példa: 192.0.2.2",
       "id": "Modbus ID",
       "port": "Port",
-      "protocol": "Modbus protokoll",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
+      "protocol": "Modbus protokoll"
     },
     "modbusproxy": {
       "description": "Több kliens csatlakozásának engedélyezése egy Modbus eszközhöz.",
@@ -588,11 +579,6 @@
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
       "planNumber": "Terv {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Törlés",
       "repeating": "ismétlődő",
       "repeatingPlans": "Ismétlődő tervek",

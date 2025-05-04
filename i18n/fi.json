@@ -108,11 +108,6 @@
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
     },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
-    },
     "eebus": {
       "description": "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa.",
       "title": "EEBus"
@@ -142,7 +137,6 @@
       "save": "Tallenna",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
       "telemetry": "Telemetria",
-      "templateLoading": "",
       "title": "Otsikko",
       "validateSave": "Vahvista ja tallenna"
     },
@@ -279,26 +273,6 @@
       "titleChoice": "Mitä haluat lisätä?",
       "validateSave": "Vahvista ja tallenna"
     },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
-    },
     "modbusproxy": {
       "description": "Salli useiden asiakkaiden käyttää yhtä Modbus-laitetta.",
       "title": "Modbus Proxy"
@@ -402,22 +376,9 @@
     },
     "vehicle": {
       "cancel": "Peruuta",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "Poista",
       "generic": "Muut integraatiot",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "Ajoneuvot, joissa API-käyttöliittymä",
-      "priority": "",
-      "priorityHelp": "",
       "save": "Tallenna",
       "scooter": "Skootteri",
       "template": "Valmistaja",
@@ -588,11 +549,6 @@
       "modalTitle": "Lataussuunnitelma",
       "none": "ei mitään",
       "planNumber": "Suunnitelma {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Poista",
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
@@ -618,7 +574,6 @@
       "homePower": "Kodin sähkönkulutus",
       "loadpoints": "Latauslaite| Latauslaite | {count} latauslaitetta",
       "noEnergy": "Ei mittarin tietoja",
-      "pv": "",
       "pvExport": "Sähköverkkoon vienti",
       "pvProduction": "Tuotanto",
       "selfConsumption": "Tuotannon kulutus"
@@ -635,7 +590,6 @@
       "co2": "⌀ CO₂",
       "duration": "Kesto",
       "fallbackName": "Latauspiste",
-      "finished": "",
       "power": "Teho",
       "price": "Kustannus",
       "remaining": "Jäljellä",
@@ -702,7 +656,6 @@
       "currentPlan": "Aktiivinen suunnitelma",
       "descriptionEnergy": "Mihin mennessä {targetEnergy} tulisi ladata autoon?",
       "descriptionSoc": "Milloin ajoneuvon tulee olla ladattu {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Tavoiteaika",
       "nextPlan": "Seuraava suunnitelma",
       "notReachableInTime": "Tavoite saavutetaan {overrun} myöhemmin.",
