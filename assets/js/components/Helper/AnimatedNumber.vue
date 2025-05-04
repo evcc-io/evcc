@@ -2,20 +2,21 @@
 	<span />
 </template>
 
-<script>
+<script lang="ts">
 import { CountUp } from "countup.js";
+import { defineComponent, type PropType } from "vue";
 const DURATION = 0.5;
 
-export default {
+export default defineComponent({
 	name: "AnimatedNumber",
 	props: {
 		to: { type: Number, default: 0 },
-		format: { type: Function, required: true },
+		format: { type: Function as PropType<(n: number) => string>, required: true },
 		duration: { type: Number, default: DURATION },
 	},
 	data() {
 		return {
-			instance: null,
+			instance: null as CountUp | null,
 		};
 	},
 	watch: {
@@ -46,5 +47,5 @@ export default {
 			this.instance?.update(this.to);
 		},
 	},
-};
+});
 </script>

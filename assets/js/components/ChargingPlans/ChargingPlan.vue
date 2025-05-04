@@ -108,14 +108,14 @@ import LabelAndValue from "../Helper/LabelAndValue.vue";
 import PlansSettings from "./PlansSettings.vue";
 import Arrival from "./Arrival.vue";
 
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api from "../../api.js";
-import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
+import { optionStep, fmtEnergy } from "@/utils/energyOptions";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Timeout, Vehicle } from "assets/js/types/evcc.js";
-import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types.js";
-import type { Forecast } from "../../utils/forecast.ts";
+import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
+import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types";
+import type { Forecast } from "@/types/evcc.ts";
 const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({

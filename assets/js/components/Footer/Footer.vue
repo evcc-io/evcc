@@ -9,18 +9,19 @@
 	</footer>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/filled/testtube";
 
 import Version from "./Version.vue";
 import Savings from "../Savings/Savings.vue";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Footer",
 	components: { Version, Savings },
 	props: {
 		version: Object,
 		savings: Object,
 	},
-};
+});
 </script>

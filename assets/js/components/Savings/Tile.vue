@@ -39,7 +39,7 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "SavingsTile",

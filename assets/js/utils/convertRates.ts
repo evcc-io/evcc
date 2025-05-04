@@ -1,5 +1,5 @@
 import type { Rate } from "../types/evcc";
-import type { ForecastSlot } from "./forecast";
+import type { ForecastSlot } from "../components/Forecast/types";
 
 function convertRate(slot: ForecastSlot): Rate {
 	return {

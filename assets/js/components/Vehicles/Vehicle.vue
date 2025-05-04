@@ -68,8 +68,8 @@
 </template>
 
 <script>
-import collector from "../../mixins/collector.js";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
+import collector from "@/mixins/collector";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import Title from "./Title.vue";
 import Soc from "./Soc.vue";
@@ -77,7 +77,7 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "../../units.js";
+import { distanceUnit, distanceValue } from "@/units";
 
 export default {
 	name: "Vehicle",

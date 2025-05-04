@@ -82,8 +82,8 @@
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
-import store from "../../store";
-import api from "../../api";
+import store from "@/store";
+import api from "@/api";
 
 export default {
 	name: "ControlModal",

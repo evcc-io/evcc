@@ -60,7 +60,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "PreconditionSelect",

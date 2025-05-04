@@ -96,13 +96,13 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms: number) {
+		fmtCo2Short(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g`;
 		},
-		fmtCo2Medium(gramms: number) {
+		fmtCo2Medium(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
 		},
-		fmtCo2Long(gramms: number) {
+		fmtCo2Long(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
 		},
 		fmtNumberToLocale(val: number, pad = 0) {

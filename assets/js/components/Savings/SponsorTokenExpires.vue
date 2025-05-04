@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 import { TRIAL } from "./Sponsor.vue";
 
 export default {

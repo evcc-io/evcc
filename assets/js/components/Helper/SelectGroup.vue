@@ -2,7 +2,7 @@
 	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="group">
 		<button
 			v-for="(option, i) in options"
-			:id="i === 0 ? id : null"
+			:id="i === 0 ? id : undefined"
 			:key="option.value"
 			type="button"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
@@ -17,19 +17,22 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import type { SelectOption } from "@/types/evcc";
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "SelectGroup",
 	props: {
 		id: String,
-		options: Array,
+		options: Array as PropType<SelectOption<string>[]>,
 		modelValue: [Number, String, Boolean],
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,
 	},
 	emits: ["update:modelValue"],
-};
+});
 </script>
 
 <style scoped>

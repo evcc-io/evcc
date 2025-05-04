@@ -36,10 +36,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter from "../../mixins/formatter.js";
-import { CO2_TYPE } from "../../units.js";
+import formatter from "@/mixins/formatter";
+import { CO2_TYPE } from "@/units";
 import TariffChart from "../Tariff/TariffChart.vue";
-import type { CURRENCY, Rate, Slot } from "../../types/evcc.js";
+import type { CURRENCY, Rate, Slot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
@@ -111,7 +111,7 @@ export default defineComponent({
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
 		},
 		activeSlotName(): string | null {
 			if (this.activeSlot) {

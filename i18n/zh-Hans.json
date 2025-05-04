@@ -1,0 +1,385 @@
+{
+  "batterySettings": {
+    "batteryLevel": "电池等级",
+    "bufferStart": {
+      "full": "当快满的时候",
+      "never": "只要有足够的剩余"
+    },
+    "capacity": "{energy} / {total}",
+    "legendBottomName": "家庭优先",
+    "legendBottomSubline": "不用充电",
+    "legendMiddleName": "交通工具优先",
+    "legendMiddleSubline": "家用其次",
+    "legendTopAutostart": "自动开启",
+    "legendTopName": "电池支持充电",
+    "legendTopSubline": "勿打扰",
+    "modalTitle": "电池配置"
+  },
+  "config": {
+    "form": {
+      "example": "示例",
+      "optional": "可选"
+    },
+    "main": {
+      "addVehicle": "添加车辆",
+      "edit": "编辑",
+      "title": "配置",
+      "vehicles": "我的车辆"
+    },
+    "validation": {
+      "failed": "失败",
+      "label": "状态",
+      "running": "验证中...",
+      "success": "成功",
+      "unknown": "未知",
+      "validate": "验证"
+    },
+    "vehicle": {
+      "cancel": "取消",
+      "delete": "移除车辆",
+      "generic": "其他集成",
+      "online": "具有在线API的车辆",
+      "save": "保存",
+      "scooter": "小型摩托车",
+      "template": "制造商",
+      "titleAdd": "添加车辆",
+      "titleEdit": "编辑车辆",
+      "validateSave": "校验和保存"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "太阳能",
+      "greenEnergySub1": "用evcc充电",
+      "greenEnergySub2": "自 2022 年 10 月起",
+      "greenShare": "太阳能分享",
+      "greenShareSub1": "电力被提供",
+      "greenShareSub2": "太阳能和电池存储",
+      "power": "充电电源",
+      "powerSub1": "{activeClients} of {totalClients} 参与者",
+      "powerSub2": "充电中...",
+      "tabTitle": "Live社区"
+    },
+    "savings": {
+      "co2Saved": "节省 {value}",
+      "co2Title": "CO₂ 排放",
+      "configurePriceCo2": "学习怎样配置价格和CO₂数据.",
+      "footerLong": "{percent} 太阳能",
+      "footerShort": "{percent} 太阳能",
+      "modalTitle": "充电概览",
+      "moneySaved": "节省 {value}",
+      "percentGrid": "{grid} kWh 电网",
+      "percentSelf": "{self} kWh 太阳能",
+      "percentTitle": "太阳能",
+      "period": {
+        "30d": "过去 30 天",
+        "365d": "过去 365 天",
+        "total": "整天"
+      },
+      "periodLabel": "周期:",
+      "priceTitle": "电力价格",
+      "referenceGrid": "电网",
+      "referenceLabel": "参考数据:",
+      "tabTitle": "我的数据"
+    },
+    "sponsor": {
+      "becomeSponsor": "成为赞助商",
+      "confetti": "准备好庆祝了吗?",
+      "confettiPromise": "你会得到贴纸和数字纸屑",
+      "sticker": "… 或者 evcc 贴纸?",
+      "supportUs": "我们的使命是让太阳能成为常态。通过支付对您有价值的东西来帮助 evcc",
+      "thanks": "谢谢你, {sponsor}! 您的贡献有助于进一步发展evcc",
+      "titleNoSponsor": "支持我们",
+      "titleSponsor": "你是支持者"
+    },
+    "telemetry": {
+      "optIn": "我想贡献我的数据",
+      "optInMoreDetails": "更多细节 {0}.",
+      "optInMoreDetailsLink": "这里",
+      "optInSponsorship": "需要赞助."
+    },
+    "version": {
+      "availableLong": "新版本可用",
+      "modalCancel": "取消",
+      "modalDownload": "下载",
+      "modalInstalledVersion": "已经安装版本",
+      "modalNoReleaseNotes": "没有可用的发行说明. 有关新版本的更多信息:",
+      "modalTitle": "新版本可用",
+      "modalUpdate": "安装",
+      "modalUpdateNow": "现在安装",
+      "modalUpdateStarted": "启动新版本的evcc...",
+      "modalUpdateStatusStart": "安装已开始:"
+    }
+  },
+  "header": {
+    "about": "关于",
+    "blog": "博客",
+    "docs": "文档",
+    "github": "GitHub",
+    "login": "车辆登录",
+    "needHelp": "需要帮助?",
+    "sessions": "充电期"
+  },
+  "help": {
+    "discussionsButton": "GitHub 讨论",
+    "documentationButton": "文档",
+    "issueButton": "报告 bug",
+    "issueDescription": "发现奇怪或错误的行为?",
+    "modalTitle": "需要帮助?",
+    "primaryActions": "有些东西没有按照它应该的方式工作 ?这些都是获得帮助的好地方.",
+    "restart": {
+      "cancel": "取消",
+      "confirm": "是, 重启!",
+      "description": "在正常情况下,没有必要重新启动.如果您需要定期重新启动 evcc,请考虑提交错误.",
+      "disclaimer": "注意: evcc 将终止并依靠操作系统重新启动服务.",
+      "modalTitle": "你确定要重启吗?"
+    },
+    "restartButton": "重启",
+    "restartDescription": "试过关机再开?",
+    "secondaryActions": "仍然无法解决您的问题?这里有一些更严厉的选择."
+  },
+  "main": {
+    "chargingPlan": {
+      "arrivalTab": "抵达",
+      "departureTab": "离开",
+      "modalTitle": "充电计划",
+      "none": "无",
+      "title": "计划",
+      "titleMinSoc": "平均充电",
+      "titleTargetCharge": "离开"
+    },
+    "energyflow": {
+      "battery": "电池",
+      "batteryCharge": "电池充电",
+      "batteryDischarge": "电池放电",
+      "batteryTooltip": "{energy} / {total} ({soc})",
+      "gridImport": "电网使用",
+      "homePower": "消耗",
+      "loadpoints": "充电器| 充电器 | {count} 充电器",
+      "noEnergy": "无仪表数据",
+      "pvExport": "电网导出",
+      "pvProduction": "生产",
+      "selfConsumption": "内耗"
+    },
+    "loadpoint": {
+      "avgPrice": "⌀ 价格",
+      "charged": "已充",
+      "co2": "⌀ CO₂",
+      "duration": "时长",
+      "fallbackName": "充电积分",
+      "power": "电力",
+      "price": "Σ 价格",
+      "solar": "太阳能"
+    },
+    "loadpointSettings": {
+      "currents": "充电货币",
+      "default": "默认",
+      "disclaimerHint": "笔记:",
+      "maxCurrent": {
+        "label": "最大电流"
+      },
+      "minCurrent": {
+        "label": "最小电流"
+      },
+      "minSoc": {
+        "description": "在太阳能模式下，车辆‘快速’充电至 {0}. 然后继续利用太阳能剩余电量.即使在黑暗的日子里，也可确保最小行驶里程.",
+        "label": "最小充电 %"
+      },
+      "phasesConfigured": {
+        "label": "阶段",
+        "phases_0": "自动切换",
+        "phases_1": "阶段1",
+        "phases_1_hint": "({min} -> {max})",
+        "phases_3": "阶段3",
+        "phases_3_hint": "({min} -> {max})"
+      },
+      "title": "设置 {0}",
+      "vehicle": "车辆"
+    },
+    "mode": {
+      "minpv": "最小太阳能",
+      "now": "快",
+      "off": "关",
+      "pv": "太阳能"
+    },
+    "provider": {
+      "login": "登录",
+      "logout": "注销"
+    },
+    "targetCharge": {
+      "activate": "激活",
+      "co2Limit": "{co2} 的 CO2 限值",
+      "costLimitIgnore": "在此期间配置的{limit}将被忽略",
+      "descriptionEnergy": "{targetEnergy} 应该什么时候装载到车辆上?",
+      "descriptionSoc": "什么时候应该向车辆收取{targetSoc}的费用?",
+      "inactiveLabel": "目标时间",
+      "onlyInPvMode": "充电计划仅适用于太阳能模式.",
+      "planDuration": "充电时间",
+      "planPeriodLabel": "时期",
+      "planPeriodValue": "{start} - {end}",
+      "planUnknown": "还不知道",
+      "priceLimit": "价格限制 {price}",
+      "setTargetTime": "无",
+      "targetIsInThePast": "选择将来的时间,马蒂.",
+      "targetIsTooFarInTheFuture": "一旦我们对未来有了更多的了解,我们就会调整计划.",
+      "title": "目标时间",
+      "today": "今天",
+      "tomorrow": "明天",
+      "update": "更新",
+      "vehicleCapacityDocs": "了解如何配置它.",
+      "vehicleCapacityRequired": "需要车辆电池容量来估计充电时间."
+    },
+    "targetChargePlan": {
+      "chargeDuration": "充电时间",
+      "co2Label": "二氧化碳排放 ⌀",
+      "priceLabel": "能源价格",
+      "timeRange": "{day} {range} h",
+      "unknownPrice": "仍然未知"
+    },
+    "targetEnergy": {
+      "label": "限制",
+      "noLimit": "无"
+    },
+    "vehicle": {
+      "addVehicle": "添加车辆",
+      "changeVehicle": "更换车辆",
+      "detectionActive": "检查车辆…",
+      "fallbackName": "车辆",
+      "moreActions": "更多操作",
+      "none": "没有车辆",
+      "targetSoc": "限制",
+      "temp": "临时.",
+      "tempLimit": "临时限制",
+      "unknown": "来访车辆",
+      "vehicleSoc": "充电"
+    },
+    "vehicleStatus": {
+      "charging": "充电中…",
+      "cheapEnergyCharging": "收取廉价能源: {price} (限制 {limit})",
+      "cleanEnergyCharging": "充电清洁能源: {co2} (限制 {limit})",
+      "climating": "检测到预处理.",
+      "connected": "已连接.",
+      "disconnected": "已断开",
+      "minCharge": "最低收费为 {soc}.",
+      "pvDisable": "盈余不足. 在{remaining}中暂停…",
+      "pvEnable": "有盈余. 从 {remaining}开始…",
+      "scale1p": "在{remaining}中减少到1相充电…",
+      "scale3p": "在{remaining}中增加到三相充电…",
+      "targetChargeActive": "目标充电激活…",
+      "targetChargePlanned": "目标充电从 {time}开始.",
+      "targetChargeWaitForVehicle": "目标充电准备就绪. 等车…",
+      "vehicleLimitReached": "达到车辆限制 {soc} .",
+      "waitForVehicle": "准备好了. 等车…"
+    },
+    "vehicles": "停车中"
+  },
+  "notifications": {
+    "dismissAll": "全部解除",
+    "modalTitle": "通知"
+  },
+  "offline": {
+    "message": "没有连接到服务器."
+  },
+  "session": {
+    "cancel": "取消",
+    "co2": "CO₂",
+    "date": "相",
+    "delete": "删除",
+    "finished": "完成",
+    "meter": "计量",
+    "meterstart": "计量开始",
+    "meterstop": "计量结束",
+    "odometer": "里程",
+    "price": "价格",
+    "started": "开始",
+    "title": "充电会话"
+  },
+  "sessions": {
+    "avgPower": "⌀ 能源",
+    "avgPrice": "⌀ 价格",
+    "chargeDuration": "持续时间",
+    "co2": "⌀ CO₂",
+    "csv": {
+      "chargedenergy": "能源 (kWh)",
+      "created": "已创建",
+      "finished": "已完成",
+      "identifier": "标识",
+      "loadpoint": "充电积分",
+      "meterstart": "计量开始(kWh)",
+      "meterstop": "计量结束(kWh)",
+      "odometer": "里程 (km)",
+      "vehicle": "车辆"
+    },
+    "csvMonth": "下载 {month} CSV文件",
+    "csvTotal": "下载总计 CSV 文件",
+    "date": "开始",
+    "downloadCsv": "下载为 CSV",
+    "energy": "已充",
+    "filter": {
+      "allLoadpoints": "全部充电积分",
+      "allVehicles": "全部车辆",
+      "filter": "过滤"
+    },
+    "loadpoint": "充电点数",
+    "noData": "这个月不充电.",
+    "price": "总价",
+    "reallyDelete": "你真的要删除这个会话吗?",
+    "solar": "太阳能",
+    "title": "充电周期",
+    "total": "总计",
+    "vehicle": "车辆"
+  },
+  "settings": {
+    "hiddenFeatures": {
+      "label": "实验",
+      "value": "显示实验性 UI 功能."
+    },
+    "language": {
+      "auto": "自动化",
+      "label": "语言"
+    },
+    "sponsorToken": {
+      "expires": "您赞助令牌过期 {inXDays}. {getNewToken} 并更新您的配置文件.",
+      "getNew": "拿一个新的",
+      "hint": "注意：我们将来会自动化."
+    },
+    "telemetry": {
+      "label": "遥测"
+    },
+    "theme": {
+      "auto": "系统",
+      "dark": "暗黑",
+      "label": "设计",
+      "light": "浅色模式"
+    },
+    "title": "设置",
+    "unit": {
+      "km": "km",
+      "label": "单位",
+      "mi": "英里"
+    }
+  },
+  "smartCost": {
+    "activeHours": "{charging} / {total}",
+    "activeHoursLabel": "运行小时",
+    "co2Label": "CO₂ 排放",
+    "co2Limit": "CO₂ 限制",
+    "loadpointDescription": "在太阳能模式下实现临时快速充电.",
+    "modalTitle": "智能电网充电",
+    "none": "无",
+    "priceLabel": "电价",
+    "priceLimit": "限价"
+  },
+  "startupError": {
+    "configFile": "使用的配置文件:",
+    "configuration": "配置",
+    "description": "请检查您的配置文件. 如果错误消息没有帮助, 请查看 {0}.",
+    "discussions": "GitHub 讨论",
+    "fixAndRestart": "请修复问题和重启服务器.",
+    "hint": "注意:也可能是您的设备有故障(逆变器，仪表等).检查您的网络连接.",
+    "lineError": "{0}错误.",
+    "lineErrorLink": "行 {0}",
+    "restartButton": "重启",
+    "title": "启动错误"
+  }
+}

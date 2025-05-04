@@ -43,10 +43,10 @@ render: |
   getmode:
     source: go
     script: |
-      res := 1 // 0/0 Normal
+      res := 2 // 0/0 Normal
       switch {
-      case SG1 == "1" && SG4 == "0": res = 3 // 1/0 Frostschutz
-      case SG4 == "1": res = 2 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
+      case SG1 == "1" && SG4 == "0": res = 1 // 1/0 Frostschutz
+      case SG4 == "1": res = 3 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
       }
       res
     in:
@@ -65,7 +65,7 @@ render: |
   setmode:
     source: switch
     switch:
-    - case: 1 # normal
+    - case: 2 # normal
       set:
         source: sequence
         set:
@@ -85,7 +85,7 @@ render: |
             - authorization: Bearer {{ .token}}
           body: >
             { "value" : "0xxxxxxxxxxxxxx" }
-    - case: 2 # boost
+    - case: 3 # boost
       set:
         source: http
         uri: http://{{ .host }}/api/boiler/hpin4opt 
@@ -95,7 +95,7 @@ render: |
           - authorization: Bearer {{ .token}}
         body: >
           { "value" : "1xxxxxxxxxxx" }
-    - case: 3 # dimm
+    - case: 1 # dimm
       set:
         source: sequence
         set:

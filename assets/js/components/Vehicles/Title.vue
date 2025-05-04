@@ -55,11 +55,11 @@
 import "@h2d2/shopicons/es/regular/cablecharge";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import Modal from "bootstrap/js/dist/modal";
-import VehicleIcon from "../VehicleIcon/index.js";
+import VehicleIcon from "../VehicleIcon";
 import Options from "./Options.vue";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
-import collector from "../../mixins/collector.js";
+import collector from "@/mixins/collector";
 
 export default {
 	name: "VehicleTitle",
