@@ -23,9 +23,29 @@
     "usageTab": "Uso de la batería"
   },
   "config": {
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "battery": {
       "titleAdd": "Añadir batería",
       "titleEdit": "Editar batería"
+    },
+    "charge": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "charger": {
+      "chargers": "",
+      "generic": "",
+      "heatingdevices": "",
+      "ocppHelp": "",
+      "ocppLabel": "",
+      "switchsockets": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "circuits": {
       "description": "Se asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites actuales. Los circuitos pueden ser anidados para construir una jerarquía",
@@ -40,6 +60,7 @@
       "title": "Controlar la conducta"
     },
     "deviceValue": {
+      "amount": "",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacidad",
@@ -60,32 +81,56 @@
       "energy": "Energía",
       "feedinPrice": "Precio de entrada",
       "gridPrice": "Precio de red",
+      "heaterTempLimit": "",
       "hemsType": "Sistema",
+      "identifier": "",
       "no": "no",
       "odometer": "Cuentakilómetros",
       "org": "Organización",
       "phaseCurrents": "Actual L1, L2, L3",
       "phasePowers": "Potencia L1, L2, L3",
       "phaseVoltages": "Voltaje L1, L2, L3",
+      "phases1p3p": "",
       "power": "Potencia",
       "powerRange": "Potencia",
       "range": "Alcance",
+      "singlePhase": "",
       "soc": "SoC",
+      "solarForecast": "",
       "temp": "Temperatura",
       "topic": "Tema",
       "url": "URL",
+      "vehicleLimitSoc": "",
       "yes": "sí"
+    },
+    "deviceValueChargeStatus": {
+      "A": "",
+      "B": "",
+      "C": ""
+    },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "solarSystem": ""
     },
     "eebus": {
       "description": "Configuración que permite a evcc comunicarse con otros dispositivos EEBus",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "form": {
+      "danger": "",
+      "deprecated": "",
       "example": "Ejemplo",
       "optional": "opcional"
     },
     "general": {
       "cancel": "Cancelar",
+      "delete": "",
       "docsLink": "Ver documentación.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar configuración avanzada",
@@ -97,7 +142,9 @@
       "save": "Guardar",
       "showAdvancedSettings": "Mostrar configuración avanzada",
       "telemetry": "Telemetría",
-      "title": "Título"
+      "templateLoading": "",
+      "title": "Título",
+      "validateSave": ""
     },
     "grid": {
       "title": "Contador de red",
@@ -124,12 +171,91 @@
       "v1Support": "¿Necesitas soporte para InfluxDB 1.x?",
       "v2Support": "Volver a InfluxDB 2.x"
     },
+    "loadpoint": {
+      "addCharger": "",
+      "addMeter": "",
+      "cancel": "",
+      "chargerError": "",
+      "chargerLabel": "",
+      "chargerPower11kw": "",
+      "chargerPower11kwHelp": "",
+      "chargerPower22kw": "",
+      "chargerPower22kwHelp": "",
+      "chargerPowerCustom": "",
+      "chargerPowerCustomHelp": "",
+      "chargerTypeLabel": "",
+      "chargingTitle": "",
+      "circuitLabel": "",
+      "circuitUnassigned": "",
+      "defaultModeHelp": "",
+      "defaultModeHelpKeep": "",
+      "defaultModeLabel": "",
+      "delete": "",
+      "electricalSubtitle": "",
+      "electricalTitle": "",
+      "energyMeterHelp": "",
+      "energyMeterLabel": "",
+      "estimateLabel": "",
+      "maxCurrentHelp": "",
+      "maxCurrentLabel": "",
+      "minCurrentHelp": "",
+      "minCurrentLabel": "",
+      "noVehicles": "",
+      "phases1p": "",
+      "phases3p": "",
+      "phasesAutomatic": "",
+      "phasesAutomaticHelp": "",
+      "phasesHelp": "",
+      "phasesLabel": "",
+      "pollIntervalDanger": "",
+      "pollIntervalHelp": "",
+      "pollIntervalLabel": "",
+      "pollModeAlways": "",
+      "pollModeAlwaysHelp": "",
+      "pollModeCharging": "",
+      "pollModeChargingHelp": "",
+      "pollModeConnected": "",
+      "pollModeConnectedHelp": "",
+      "pollModeLabel": "",
+      "priorityHelp": "",
+      "priorityLabel": "",
+      "save": "",
+      "showAllSettings": "",
+      "solarBehaviorCustomHelp": "",
+      "solarBehaviorDefaultHelp": "",
+      "solarBehaviorLabel": "",
+      "solarModeCustom": "",
+      "solarModeMaximum": "",
+      "thresholdDisableDelayLabel": "",
+      "thresholdDisableHelpInvalid": "",
+      "thresholdDisableHelpPositive": "",
+      "thresholdDisableHelpZero": "",
+      "thresholdDisableLabel": "",
+      "thresholdEnableDelayLabel": "",
+      "thresholdEnableHelpInvalid": "",
+      "thresholdEnableHelpNegative": "",
+      "thresholdEnableHelpZero": "",
+      "thresholdEnableLabel": "",
+      "titleAdd": "",
+      "titleEdit": "",
+      "titleExample": "",
+      "titleLabel": "",
+      "vehicleAutoDetection": "",
+      "vehicleHelpAutoDetection": "",
+      "vehicleHelpDefault": "",
+      "vehicleLabel": "",
+      "vehiclesTitle": ""
+    },
     "main": {
+      "addAdditional": "",
+      "addGrid": "",
       "addLoadpoint": "Añadir un punto de carga",
       "addPvBattery": "Añadir solar o batería",
+      "addTariffs": "",
       "addVehicle": "Añadir un vehículo",
       "configured": "configurado",
       "edit": "editar",
+      "name": "",
       "title": "Configuración",
       "unconfigured": "no configurado",
       "vehicles": "Mis vehículos",
@@ -142,10 +268,36 @@
     "meter": {
       "cancel": "Cancelar",
       "delete": "Borrar",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "ext": "",
+        "pv": ""
+      },
       "save": "Guardar",
       "template": "Fabricante",
       "titleChoice": "¿Qué quieres añadir?",
       "validateSave": "Validar y guardar"
+    },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Permite que varios clientes accedan a un único dispositivo Modbus",
@@ -190,6 +342,11 @@
       "schema": {
         "http": "HTTP (sin cifrar)",
         "https": "HTTPS (cifrado)"
+      },
+      "status": {
+        "A": "",
+        "B": "",
+        "C": ""
       }
     },
     "pv": {
@@ -197,6 +354,7 @@
       "titleEdit": "Editar contador solar"
     },
     "section": {
+      "additionalMeter": "",
       "general": "General",
       "grid": "Red eléctrica",
       "integrations": "Integraciones",
@@ -212,7 +370,10 @@
       "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar",
       "error": "El token de patrocinador no es válido",
       "labelToken": "Token del patrocinador",
-      "title": "Patrocinio"
+      "title": "Patrocinio",
+      "tokenRequired": "",
+      "tokenRequiredLearnMore": "",
+      "trialToken": ""
     },
     "system": {
       "logs": "Registros",
@@ -241,9 +402,22 @@
     },
     "vehicle": {
       "cancel": "Cancelar",
+      "chargingSettings": "",
+      "defaultMode": "",
+      "defaultModeHelp": "",
       "delete": "Borrar",
       "generic": "Otras integraciones",
+      "identifiers": "",
+      "identifiersHelp": "",
+      "maximumCurrent": "",
+      "maximumCurrentHelp": "",
+      "maximumPhases": "",
+      "maximumPhasesHelp": "",
+      "minimumCurrent": "",
+      "minimumCurrentHelp": "",
       "online": "Vehículos con API en línea",
+      "priority": "",
+      "priorityHelp": "",
       "save": "Guardar",
       "scooter": "Escúter",
       "template": "Fabricante",
@@ -322,6 +496,32 @@
       "modalUpdateStatusStart": "Instalación iniciada:"
     }
   },
+  "forecast": {
+    "co2": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "modalTitle": "",
+    "price": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "solar": {
+      "dayAfterTomorrow": "",
+      "partly": "",
+      "remaining": "",
+      "today": "",
+      "tomorrow": ""
+    },
+    "solarAdjust": "",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    }
+  },
   "header": {
     "about": "Sobre",
     "blog": "Blog",
@@ -388,6 +588,11 @@
       "modalTitle": "Plan de carga",
       "none": "ninguno",
       "planNumber": "Plan {number}",
+      "preconditionDescription": "",
+      "preconditionLong": "",
+      "preconditionOptionAll": "",
+      "preconditionOptionNo": "",
+      "preconditionShort": "",
       "remove": "Quitar",
       "repeating": "repitiendo",
       "repeatingPlans": "Planes recurrentes",
@@ -404,18 +609,24 @@
       "battery": "Batería",
       "batteryCharge": "Cargar la batería",
       "batteryDischarge": "Descargar la batería",
+      "batteryGridChargeActive": "",
+      "batteryGridChargeLimit": "",
       "batteryHold": "Batería (bloqueada)",
       "batteryTooltip": "{energy} de {total} ({soc})",
+      "forecastTooltip": "",
       "gridImport": "Consumo de red",
       "homePower": "Consumo",
       "loadpoints": "Punto de carga | Punto de carga | {count} Puntos de carga",
       "noEnergy": "Sin lecturas",
+      "pv": "",
       "pvExport": "Excedente",
       "pvProduction": "Producción",
       "selfConsumption": "Autoconsumo"
     },
     "heatingStatus": {
       "charging": "Calefacción...",
+      "connected": "",
+      "vehicleLimit": "",
       "waitForVehicle": "Listo. Esperando a que se caliente..."
     },
     "loadpoint": {
@@ -424,6 +635,7 @@
       "co2": "CO₂ ⌀",
       "duration": "Duración",
       "fallbackName": "Punto de carga",
+      "finished": "",
       "power": "Potencia",
       "price": "Precio",
       "remaining": "Tiempo restante",
@@ -482,6 +694,7 @@
       "login": "iniciar sesión",
       "logout": "cerrar sesión"
     },
+    "startConfiguration": "",
     "targetCharge": {
       "activate": "Activar",
       "co2Limit": "Límite de CO₂ del {co2}",
@@ -489,6 +702,7 @@
       "currentPlan": "Plan activo",
       "descriptionEnergy": "¿Hasta cuándo deben haberse cargado {targetEnergy} al vehículo?",
       "descriptionSoc": "¿Hasta cuándo debe haberse cargarse el vehículo al {targetSoc}?",
+      "goalReached": "",
       "inactiveLabel": "Tiempo objetivo",
       "nextPlan": "Próximo plan",
       "notReachableInTime": "El objetivo se alcanzará {overrun} más tarde",
@@ -565,7 +779,8 @@
       "waitForVehicle": "Listo para cargar. Esperando vehículo.",
       "welcome": "Breve carga inicial para confirmar la conexión."
     },
-    "vehicles": "Estacionamiento"
+    "vehicles": "Estacionamiento",
+    "welcome": ""
   },
   "notifications": {
     "dismissAll": "Eliminar notificaciones",
@@ -737,6 +952,8 @@
     "none": "ninguno",
     "priceLabel": "Precio de la energía",
     "priceLimit": "Límite de precio",
+    "resetAction": "",
+    "resetWarning": "",
     "saved": "Guardado."
   },
   "startupError": {
