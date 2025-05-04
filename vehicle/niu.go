@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -104,33 +105,23 @@ func (v *Niu) tokenRefresh() error {
 	return nil
 }
 
-// request implements the Niu web request
-func (v *Niu) request(uri string) (*http.Request, error) {
+func (v *Niu) newRequest(method, uri string, body io.Reader) (*http.Request, error) {
 	if err := v.tokenRefresh(); err != nil {
 		return nil, err
 	}
-
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	req, err := request.New(method, uri, body, map[string]string{
 		"token": v.token.AccessToken,
 	})
-
 	return req, err
 }
 
+func (v *Niu) request(uri string) (*http.Request, error) {
+	return v.newRequest(http.MethodGet, uri, nil)
+}
+
 func (v *Niu) post(uri string) (*http.Request, error) {
-	if err := v.tokenRefresh(); err != nil {
-		return nil, err
-	}
-
-	data := url.Values{
-		"sn": {v.serial},
-	}
-
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"token": v.token.AccessToken,
-	})
-
-	return req, err
+	data := url.Values{"sn": {v.serial}}
+	return v.newRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
 }
 
 // batteryAPI provides battery api response
