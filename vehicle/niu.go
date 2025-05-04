@@ -95,15 +95,38 @@ func (v *Niu) login() error {
 	return err
 }
 
-// request implements the Niu web request
-func (v *Niu) request(uri string) (*http.Request, error) {
+func (v *Niu) tokenRefresh() error {
 	if v.token.AccessToken == "" || time.Until(v.token.Expiry) < time.Minute {
 		if err := v.login(); err != nil {
-			return nil, err
+			return err
 		}
+	}
+	return nil
+}
+
+// request implements the Niu web request
+func (v *Niu) request(uri string) (*http.Request, error) {
+	if err := v.tokenRefresh(); err != nil {
+		return nil, err
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"token": v.token.AccessToken,
+	})
+
+	return req, err
+}
+
+func (v *Niu) post(uri string) (*http.Request, error) {
+	if err := v.tokenRefresh(); err != nil {
+		return nil, err
+	}
+
+	data := url.Values{
+		"sn": {v.serial},
+	}
+
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"token": v.token.AccessToken,
 	})
 
@@ -161,7 +184,7 @@ var _ api.VehicleOdometer = (*Niu)(nil)
 func (v *Niu) Odometer() (float64, error) {
 	var res niu.Response
 
-	req, err := v.request(niu.ApiURI + "/motoinfo/overallTally?sn=" + v.serial)
+	req, err := v.post(niu.ApiURI + "/motoinfo/overallTally")
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
