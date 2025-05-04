@@ -60,6 +60,13 @@ params:
     required: true
     default: 45
     type: int
+  - name: watchdog
+    description:
+      de: Wie häufig soll neu getriggert werden?
+      en: How often should we retrigger?
+    type: duration
+    default: 3600s
+    advanced: true
 render: |
   type: sgready
   getmode:
@@ -75,40 +82,15 @@ render: |
     # false -> oneTimeCharge is disabled -> normal mode -> 1
     # true -> oneTimeCharge is enabled -> boost mode -> 2
   setmode:
-    source: switch
-    switch:
-    - case: 1 # normal
-      set:
-        source: http
-        uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
-        method: POST 
-        headers:  
-          - content-type: application/json
-        auth:
-          source: viessmann
-          user: {{ .user }}
-          password: {{ .password }}
-          clientid: {{ .clientid }}
-        body: >
-          { }
-    - case: 2 # boost
-      set:
-        source: sequence
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
         set:
-        - source: http
-          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
-          method: POST
-          headers:  
-            - content-type: application/json
-          auth:
-            source: viessmann
-            user: {{ .user }}
-            password: {{ .password }}
-            clientid: {{ .clientid }}
-          body: >
-            {"temperature": {{.target_temperature}}}
-        - source: http
-          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          source: http
+          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
           method: POST 
           headers:  
             - content-type: application/json
@@ -119,3 +101,31 @@ render: |
             clientid: {{ .clientid }}
           body: >
             { }
+      - case: 2 # boost
+        set:
+          source: sequence
+          set:
+          - source: http
+            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
+            method: POST
+            headers:  
+              - content-type: application/json
+            auth:
+              source: viessmann
+              user: {{ .user }}
+              password: {{ .password }}
+              clientid: {{ .clientid }}
+            body: >
+              {"temperature": {{.target_temperature}}}
+          - source: http
+            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+            method: POST 
+            headers:  
+              - content-type: application/json
+            auth:
+              source: viessmann
+              user: {{ .user }}
+              password: {{ .password }}
+              clientid: {{ .clientid }}
+            body: >
+              { }
