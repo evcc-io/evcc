@@ -80,21 +80,29 @@ func init() {
 
 // NewBenderCCFromConfig creates a BenderCC charger from generic config
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		ForcemAControl     bool
+		Force1p3p          bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 255,
+		},
+		ForcemAControl: false,
+		Force1p3p:      false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewBenderCC(ctx, cc.URI, cc.ID)
+	return NewBenderCC(ctx, cc.URI, cc.ID, cc.ForcemAControl, cc.Force1p3p)
 }
 
 // NewBenderCC creates BenderCC charger
 //
 //go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
-func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewBenderCC(ctx context.Context, uri string, id uint8, forcemacontrol bool, force1p3p bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -159,13 +167,19 @@ func NewBenderCC(ctx context.Context, uri string, id uint8) (api.Charger, error)
 	}
 
 	// check feature mA
-	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
+	if forcemacontrol || func() bool {
+		_, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1)
+		return err == nil
+	}() {
 		maxCurrentMillis = wb.maxCurrentMillis
 		wb.regCurr = bendRegHemsCurrentLimit10
 	}
 
 	// check feature power control/1p3p
-	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
+	if force1p3p || func() bool {
+		_, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1)
+		return err == nil
+	}() {
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
 	}
