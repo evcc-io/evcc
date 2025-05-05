@@ -37,8 +37,7 @@ params:
     default: 1h
     advanced: true
 render: |
-  {{- $n := now -}}
-  {{- $start := $n | unixEpoch | int -}}
+  {{- $start := now | unixEpoch | int -}}
   {{- $end := add $start 172800 -}}
   type: custom
   tariff: solar
