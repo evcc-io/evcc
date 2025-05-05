@@ -314,7 +314,7 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			const params = this.socBasedPlanning ? { precondition: plan.precondition } : undefined;
+			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
 				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });
