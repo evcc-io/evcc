@@ -80,6 +80,8 @@ func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
 		return
 	}
 
+	lp.log.DEBUG.Println("set default vehicle ref:", ref)
+
 	lp.Lock()
 	defer lp.Unlock()
 	lp.VehicleRef = ref
@@ -253,11 +255,6 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 
 	lp.Lock()
 	lp.setPhasesConfigured(phases)
-
-	// apply immediately if not 1p3p
-	if !lp.hasPhaseSwitching() {
-		lp.setPhases(phases)
-	}
 	lp.Unlock()
 
 	lp.requestUpdate()
@@ -687,20 +684,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	}
 
 	return nil
-}
-
-// GetMinPower returns the min loadpoint power for a single phase
-func (lp *Loadpoint) GetMinPower() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return Voltage * lp.effectiveMinCurrent()
-}
-
-// GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
-func (lp *Loadpoint) GetMaxPower() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 
 // IsFastChargingActive indicates if fast charging with maximum power is active

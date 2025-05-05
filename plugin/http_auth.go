@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
@@ -19,7 +20,7 @@ type Auth struct {
 	Other  map[string]any `mapstructure:",remain"`
 }
 
-func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.RoundTripper, error) {
+func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundTripper) (http.RoundTripper, error) {
 	switch strings.ToLower(p.Type) {
 	case "digest":
 		return digest.NewTransport(p.User, p.Password, base), nil
@@ -28,6 +29,10 @@ func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.Roun
 		return transport.BasicAuth(p.User, p.Password, base), nil
 
 	case "bearer":
+		if p.Token == "" && p.Password != "" {
+			p.Token = p.Password
+			log.WARN.Println("using password for bearer auth is deprecated, use token instead")
+		}
 		return transport.BearerAuth(p.Token, base), nil
 
 	default:

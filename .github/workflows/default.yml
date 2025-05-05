@@ -39,9 +39,6 @@ jobs:
       - name: Docs
         run: make docs
 
-      - name: Toml
-        run: make toml
-
       - name: Porcelain
         run: make porcelain
 

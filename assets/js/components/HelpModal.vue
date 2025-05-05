@@ -138,8 +138,8 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import { docsPrefix } from "../i18n.js";
-import { performRestart } from "../restart.js";
+import { docsPrefix } from "../i18n";
+import { performRestart } from "../restart";
 import { isLoggedIn, openLoginModal } from "./Auth/auth";
 
 export default {

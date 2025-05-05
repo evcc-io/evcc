@@ -257,12 +257,12 @@ import "@h2d2/shopicons/es/regular/home";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api from "../../api.js";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
+import smartCostAvailable from "@/utils/smartCostAvailable";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, SelectOption } from "assets/js/types/evcc.js";
+import type { Battery, SelectOption } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BatterySettingsModal",

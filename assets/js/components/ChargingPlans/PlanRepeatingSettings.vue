@@ -166,12 +166,12 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
-import { distanceUnit } from "../../units.js";
+import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
-import formatter from "../../mixins/formatter.js";
-import deepEqual from "../../utils/deepEqual.js";
+import formatter from "@/mixins/formatter";
+import deepEqual from "@/utils/deepEqual";
 import PreconditionSelect from "./PreconditionSelect.vue";
-import type { SelectOption } from "../../types/evcc";
+import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({

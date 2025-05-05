@@ -30,10 +30,10 @@
 
 <script lang="ts">
 import PlanRepeatingSettings from "./PlanRepeatingSettings.vue";
-import deepEqual from "../../utils/deepEqual.js";
-import formatter from "../../mixins/formatter.js";
+import deepEqual from "@/utils/deepEqual";
+import formatter from "@/mixins/formatter";
 import { defineComponent, type PropType } from "vue";
-import type { RepeatingPlan } from "./types.js";
+import type { RepeatingPlan } from "./types";
 
 const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5];
 const DEFAULT_TARGET_TIME = "07:00";

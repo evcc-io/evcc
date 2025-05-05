@@ -9,7 +9,7 @@
 					<component :is="`shopicon-regular-${icon}`" v-else></component>
 				</span>
 				<div class="d-block flex-grow-1 ms-3 text-truncate">
-					<span v-if="!$slots.expanded">{{ name }}</span>
+					<span v-if="!$slots['expanded']">{{ name }}</span>
 					<button
 						v-else
 						class="btn-neutral d-flex align-items-baseline flex-shrink-1 flex-grow-1"
@@ -42,7 +42,11 @@
 							v-if="detailsIcon === 'forecast'"
 							class="ms-2 me-1 d-inline-block"
 						/>
-						<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+						<AnimatedNumber
+							v-if="details !== undefined && !isNaN(details)"
+							:to="details"
+							:format="detailsFmt!"
+						/>
 					</div>
 					<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
 						<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
@@ -51,31 +55,32 @@
 			</div>
 		</div>
 		<div
-			v-if="$slots.expanded"
+			v-if="$slots['expanded']"
 			class="expandable ms-2"
 			:class="{ 'expandable--open': expanded }"
 		>
 			<slot name="expanded" />
 		</div>
-		<div v-if="$slots.subline" class="ms-4 ps-3 mb-2">
+		<div v-if="$slots['subline']" class="ms-4 ps-3 mb-2">
 			<slot name="subline" />
 		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/arrowdropdown";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import BatteryIcon from "./BatteryIcon.vue";
-import formatter from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import ForecastIcon from "../MaterialIcon/Forecast.vue";
+import { defineComponent, type PropType } from "vue";
 
-export default {
+export default defineComponent({
 	name: "EnergyflowEntry",
 	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon },
 	mixins: [formatter],
@@ -83,20 +88,23 @@ export default {
 		name: { type: String },
 		icon: { type: String },
 		iconProps: { type: Object, default: () => ({}) },
-		power: { type: Number },
-		powerTooltip: { type: Array },
-		powerUnit: { type: String },
+		power: { type: Number, default: 0 },
+		powerTooltip: { type: Array as PropType<string[]> },
+		powerUnit: { type: String as PropType<POWER_UNIT> },
 		details: { type: Number },
 		detailsIcon: { type: String },
-		detailsFmt: { type: Function },
-		detailsTooltip: { type: Array },
+		detailsFmt: { type: Function as PropType<(n: number) => string> },
+		detailsTooltip: { type: Array as PropType<string[]> },
 		detailsClickable: { type: Boolean },
 		detailsInactive: { type: Boolean },
 		expanded: { type: Boolean, default: false },
 	},
 	emits: ["details-clicked", "toggle"],
 	data() {
-		return { powerTooltipInstance: null, detailsTooltipInstance: null };
+		return {
+			powerTooltipInstance: null as Tooltip | null,
+			detailsTooltipInstance: null as Tooltip | null,
+		};
 	},
 	computed: {
 		active() {
@@ -123,7 +131,7 @@ export default {
 		powerInKw(newVal, oldVal) {
 			// force update if unit changes but not the value
 			if (newVal !== oldVal) {
-				this.$refs.powerNumber.forceUpdate();
+				(this.$refs["powerNumber"] as any).forceUpdate();
 			}
 		},
 	},
@@ -132,29 +140,29 @@ export default {
 		this.updateDetailsTooltip();
 	},
 	methods: {
-		kw(watt) {
+		kw(watt: number) {
 			return this.fmtW(watt, this.powerUnit);
 		},
 		updatePowerTooltip() {
 			this.powerTooltipInstance = this.updateTooltip(
 				this.powerTooltipInstance,
-				this.powerTooltip,
-				this.$refs.power
+				this.$refs["power"],
+				this.powerTooltip
 			);
 		},
 		updateDetailsTooltip() {
 			this.detailsTooltipInstance = this.updateTooltip(
 				this.detailsTooltipInstance,
-				this.detailsTooltip,
-				this.$refs.details
+				this.$refs["details"],
+				this.detailsTooltip
 			);
 		},
-		updateTooltip(instance, content, ref) {
+		updateTooltip(instance: Tooltip | null, ref: any, content?: string[]) {
 			if (!Array.isArray(content) || !content.length) {
 				if (instance) {
 					instance.dispose();
 				}
-				return;
+				return null;
 			}
 			let newInstance = instance;
 			if (!newInstance) {
@@ -164,12 +172,12 @@ export default {
 			newInstance.setContent({ ".tooltip-inner": html });
 			return newInstance;
 		},
-		powerClicked($event) {
+		powerClicked($event: Event) {
 			if (this.powerTooltip) {
 				$event.stopPropagation();
 			}
 		},
-		detailsClicked($event) {
+		detailsClicked($event: Event) {
 			if (this.detailsClickable || this.detailsTooltip) {
 				$event.stopPropagation();
 			}
@@ -179,12 +187,12 @@ export default {
 			// hide tooltip, chrome needs a timeout
 			setTimeout(() => this.detailsTooltipInstance?.hide(), 10);
 		},
-		toggle($event) {
+		toggle($event: Event) {
 			$event.stopPropagation();
 			this.$emit("toggle");
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .entry {

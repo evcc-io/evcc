@@ -88,7 +88,7 @@
 <script type="ts">
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "../Helper/FormRow.vue";
-import api from "../../api.js";
+import api from "@/api";
 import { updateAuthStatus, isConfigured } from "./auth";
 import  { defineComponent } from "vue";
 

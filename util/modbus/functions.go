@@ -13,7 +13,7 @@ import (
 )
 
 func Backoff() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(5*time.Second))
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
 }
 
 // decodeMask converts a bit mask in decimal or hex format to uint64

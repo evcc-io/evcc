@@ -22,7 +22,7 @@ func init() {
 }
 
 func getUserAgent() string {
-	evccVersion := "0.203.2+unknown"
+	evccVersion := util.Version
 	graphqlClientVersion := "0.13.2+unknown"
 
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -54,7 +54,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		HomeID  string
 		Timeout time.Duration
 	}{
-		Timeout: time.Minute,
+		Timeout: 2 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
