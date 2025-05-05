@@ -36,14 +36,15 @@ type EProWallbox struct {
 }
 
 const (
-	eproRegStatus         = 40101 // IEC 61851 Status, 1 register, UINT16
-	eproRegEnable         = 40406 // On/Off state, 1 registers, UINT16
-	eproRegCurrentLimit   = 40407 // in mA
+	eproRegStatus         = 40101  // IEC 61851 Status, 1 register, UINT16
+	eproRegEnable         = 40406  // On/Off state, 1 registers, UINT16
+	eproRegCurrentLimit   = 40407  // in mA
 	eproRegResetWatchdog  = 40502
-	eproRegVoltages       = 40604 // L1 voltage in V, 2 registers, Float32 (followed by L2, L3)
-	eproRegCurrents       = 40620 // L1 current in A, 2 registers, Float32 (followed by L2, L3)
-	eproRegPowers         = 40636 // L1 power in W, 2 registers, Float32 (followed by L2, L3)
-	eproRegActiveEnergies = 40658 // L1 energy in Wh, 2 registers, Float32 (followed by L2, L3)
+	eproRegVoltages       = 40604  // L1 voltage in V, 2 registers, Float32 (followed by L2, L3)
+	eproRegCurrents       = 40620  // L1 current in A, 2 registers, Float32 (followed by L2, L3)
+	eproRegPowers         = 40636  // L1 power in W, 2 registers, Float32 (followed by L2, L3)
+	eproRegActiveEnergies = 40658  // L1 energy in Wh, 2 registers, Float32 (followed by L2, L3)
+	eproWatchdogMagicWord = 0x5555 // Pattern to trigger watchdog reset
 )
 
 func init() {
@@ -93,7 +94,7 @@ func (wb *EProWallbox) heartbeat(ctx context.Context) {
 
 		b := make([]byte, 2)
 		binary.BigEndian.PutUint16(b, 0x5555)
-		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, 1, b); err != nil {
+		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, eproWatchdogMagicWord, b); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -172,7 +173,7 @@ func (wb *EProWallbox) getPhaseValues(reg uint16, divider float64) (float64, flo
 
 	var res [3]float64
 	for i := range res {
-		res[i] = rs485.RTUIeee754ToFloat64(b[2*i:]) / divider
+		res[i] = rs485.RTUIeee754ToFloat64(b[4*i:]) / divider
 	}
 
 	return res[0], res[1], res[2], nil
