@@ -29,5 +29,5 @@ render: |
       type: basic
       user: admin
       password: {{ .password }}
-    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000\u00ff.{7}(....)"
+    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000.{8}(....)"
     decode: int32
