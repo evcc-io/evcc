@@ -93,8 +93,8 @@ func (wb *EProWallbox) heartbeat(ctx context.Context) {
 		}
 
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, 0x5555)
-		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, eproWatchdogMagicWord, b); err != nil {
+		binary.BigEndian.PutUint16(b, eproWatchdogMagicWord)
+		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, 1, b); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
