@@ -35,12 +35,12 @@ builds:
           - -tags=release,timetzdata
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats: zip
     files:
       - evcc.dist.yaml
     name_template: >-
