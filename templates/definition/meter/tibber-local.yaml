@@ -3,13 +3,23 @@ products:
   - brand: Tibber
     description:
       generic: Pulse Local
+requirements:
+  description:
+    de: |
+      Erfordert Aktivierung des lokalen Web Frontends auf dem Tibber Pulse.
+      Siehe https://github.com/marq24/ha-tibber-pulse-local?tab=readme-ov-file#preparation-enabling-the-web-frontend-of-the-tibber-pulse-bridge-required
+    en: |
+      Requires activation of the local web frontend on the Tibber Pulse.
+      See https://github.com/marq24/ha-tibber-pulse-local?tab=readme-ov-file#preparation-enabling-the-web-frontend-of-the-tibber-pulse-bridge-required
 params:
   - name: usage
     choice: ["grid"]
   - name: host
+    required: true
   - name: password
     mask: true
     required: true
+# SML protocol, see https://www.stefan-weigert.de/php_loader/sml.php
 render: |
   type: custom
   power:
@@ -19,5 +29,5 @@ render: |
       type: basic
       user: admin
       password: {{ .password }}
-    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000.{8}(....)"
+    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000\u00ff.{7}(....)"
     decode: int32
