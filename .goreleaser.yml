@@ -43,12 +43,12 @@ env:
   - CGO_ENABLED=0
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats: zip
     files:
       - evcc.dist.yaml
     name_template: >-
