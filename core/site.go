@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
@@ -103,14 +104,16 @@ type Site struct {
 	pvEnergy    map[string]*meterEnergy
 
 	// cached state
-	gridPower       float64         // Grid power
-	pvPower         float64         // PV power
-	excessDCPower   float64         // PV excess DC charge power (hybrid only)
-	auxPower        float64         // Aux power
-	batteryPower    float64         // Battery power (charge negative, discharge positive)
-	batterySoc      float64         // Battery soc
-	batteryCapacity float64         // Battery capacity
-	batteryMode     api.BatteryMode // Battery mode (runtime only, not persisted)
+	gridPower                float64         // Grid power
+	pvPower                  float64         // PV power
+	excessDCPower            float64         // PV excess DC charge power (hybrid only)
+	auxPower                 float64         // Aux power
+	batteryPower             float64         // Battery power (charge negative, discharge positive)
+	batterySoc               float64         // Battery soc
+	batteryCapacity          float64         // Battery capacity
+	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time       // Battery mode timer for external control
 }
 
 // MetersConfig contains the site's meter configuration
@@ -494,7 +497,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
 			}
 			return f, err
-		}, bo())
+		}, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
@@ -721,7 +724,7 @@ func (site *Site) updateGridMeter() error {
 
 	var mm measurement
 
-	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo()); err == nil {
+	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
@@ -913,14 +916,7 @@ func (site *Site) update(lp updater) {
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-
-	if batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate); batteryMode != api.BatteryUnknown {
-		if err := site.applyBatteryMode(batteryMode); err == nil {
-			site.SetBatteryMode(batteryMode)
-		} else {
-			site.log.ERROR.Println("battery mode:", err)
-		}
-	}
+	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -1026,7 +1022,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 			}
 		}(id)
 
-		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
 

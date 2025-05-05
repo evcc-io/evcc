@@ -72,7 +72,7 @@
 <script>
 import Tooltip from "bootstrap/js/dist/tooltip";
 import "@h2d2/shopicons/es/regular/clock";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "VehicleSoc",

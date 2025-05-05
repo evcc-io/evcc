@@ -1,0 +1,14 @@
+template: eprowallbox
+products:
+  - brand: Free2Move
+    description:
+      generic: eProWallbox
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: eprowallbox
+  {{- include "modbus" . }}

@@ -42,18 +42,15 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource, vccapikey string) *AP
 }
 
 func (v *API) Vehicles() ([]string, error) {
-	type Vehicle struct {
-		ID string
-	}
 	var res struct {
-		Vehicles []Vehicle
+		Vehicles []Vehicle `json:"data"`
 	}
 
-	uri := fmt.Sprintf("%s/extended-vehicle/v1/vehicles", ApiURL)
+	uri := fmt.Sprintf("%s/connected-vehicle/v2/vehicles", ApiURL)
 	err := v.GetJSON(uri, &res)
 
 	return lo.Map(res.Vehicles, func(v Vehicle, _ int) string {
-		return v.ID
+		return v.VIN
 	}), err
 }
 

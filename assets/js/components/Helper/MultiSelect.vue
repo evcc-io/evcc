@@ -48,15 +48,18 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Dropdown from "bootstrap/js/dist/dropdown";
-import deepEqual from "../../utils/deepEqual.js";
-export default {
+import deepEqual from "@/utils/deepEqual";
+import { defineComponent, type PropType } from "vue";
+import type { SelectOption } from "@/types/evcc";
+
+export default defineComponent({
 	name: "MultiSelect",
 	props: {
 		id: String,
-		value: { type: Array, default: () => [] },
-		options: { type: Array, default: () => [] },
+		value: { type: Array as PropType<string[] | number[]>, default: () => [] },
+		options: { type: Array as PropType<SelectOption<string | number>[]>, default: () => [] },
 		selectAllLabel: String,
 	},
 	emits: ["open", "update:modelValue"],
@@ -76,12 +79,12 @@ export default {
 	watch: {
 		options: {
 			immediate: true,
-			handler(newOptions) {
+			handler(newOptions: SelectOption<string>[]) {
 				this.internalValue = this.internalValue.filter((value) =>
 					newOptions.some((option) => option.value === value)
 				);
 				this.$nextTick(() => {
-					Dropdown.getOrCreateInstance(this.$refs.dropdown).update();
+					Dropdown.getOrCreateInstance(this.$refs["dropdown"] as HTMLElement).update();
 				});
 			},
 		},
@@ -91,16 +94,16 @@ export default {
 		},
 	},
 	mounted() {
-		this.$refs.dropdown.addEventListener("show.bs.dropdown", this.open);
+		this.$refs["dropdown"]?.addEventListener("show.bs.dropdown", this.open);
 	},
 	unmounted() {
-		this.$refs.dropdown?.removeEventListener("show.bs.dropdown", this.open);
+		this.$refs["dropdown"]?.removeEventListener("show.bs.dropdown", this.open);
 	},
 	methods: {
 		open() {
 			this.$emit("open");
 		},
-		formId(name) {
+		formId(name: string | number) {
 			return `${this.id}-${name}`;
 		},
 		toggleCheckAll() {
@@ -111,5 +114,5 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>

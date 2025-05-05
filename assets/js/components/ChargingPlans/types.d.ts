@@ -1,4 +1,4 @@
-import type { Rate } from "assets/js/types/evcc";
+import type { Rate } from "@/types/evcc";
 
 export interface RepeatingPlan {
 	weekdays: number[];
@@ -6,6 +6,7 @@ export interface RepeatingPlan {
 	tz: string; // timezone like "Europe/Berlin"
 	soc: number;
 	active: boolean;
+	precondition: number;
 }
 
 export interface PlanWrapper {
@@ -26,9 +27,11 @@ export type StaticPlan = StaticSocPlan | StaticEnergyPlan;
 export interface StaticSocPlan {
 	soc: number;
 	time: Date;
+	precondition: number;
 }
 
 export interface StaticEnergyPlan {
 	energy: number;
 	time: Date;
+	precondition: number;
 }

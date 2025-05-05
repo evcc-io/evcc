@@ -248,7 +248,7 @@ import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-import api from "../../api";
+import api from "@/api";
 import test from "./mixins/test";
 
 const initialValues = { type: "template", icon: "car" };

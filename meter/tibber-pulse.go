@@ -3,7 +3,9 @@ package meter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -19,6 +21,29 @@ func init() {
 	registry.AddCtx("tibber-pulse", NewTibberFromConfig)
 }
 
+func getUserAgent() string {
+	evccVersion := util.Version
+	graphqlClientVersion := "0.13.2+unknown"
+
+	if info, ok := debug.ReadBuildInfo(); ok {
+		evccVersion = baseVersion(info.Main.Version)
+		for _, dep := range info.Deps {
+			if dep.Path == "github.com/hasura/go-graphql-client" {
+				graphqlClientVersion = baseVersion(dep.Version)
+			}
+		}
+	}
+
+	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", evccVersion, graphqlClientVersion)
+}
+
+func baseVersion(v string) string {
+	if i := strings.IndexAny(v, "-+"); i != -1 {
+		return v[:i]
+	}
+	return v
+}
+
 type Tibber struct {
 	data *util.Monitor[tibber.LiveMeasurement]
 }
@@ -29,7 +54,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		HomeID  string
 		Timeout time.Duration
 	}{
-		Timeout: time.Minute,
+		Timeout: 2 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -78,7 +103,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 				Transport: &transport.Decorator{
 					Base: http.DefaultTransport,
 					Decorator: transport.DecorateHeaders(map[string]string{
-						"User-Agent": "go-graphql-client/0.9.0",
+						"User-Agent": getUserAgent(),
 					}),
 				},
 			},
@@ -88,7 +113,8 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}).
 		WithRetryTimeout(0).
 		WithRetryDelay(5 * time.Second).
-		WithTimeout(request.Timeout).
+		WithWriteTimeout(request.Timeout).
+		WithReadTimeout(90 * time.Second).
 		WithLog(log.TRACE.Println).
 		OnError(func(_ *graphql.SubscriptionClient, err error) error {
 			// exit the subscription client due to unauthorized error

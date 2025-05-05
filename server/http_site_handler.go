@@ -57,8 +57,8 @@ func indexHandler() http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version":     Version,
-			"Commit":      Commit,
+			"Version":     util.Version,
+			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
@@ -193,6 +193,28 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 		}
 
 		jsonResult(w, val)
+	}
+}
+
+// updateBatteryMode sets the external battery mode
+func updateBatteryMode(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		var val api.BatteryMode
+
+		if r.Method != http.MethodDelete {
+			s, err := api.BatteryModeString(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = s
+		}
+
+		site.SetBatteryModeExternal(val)
+
+		jsonResult(w, site.GetBatteryModeExternal())
 	}
 }
 

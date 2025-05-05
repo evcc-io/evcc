@@ -1,0 +1,35 @@
+template: cg-em24_e1
+products:
+  - brand: Carlo Gavazzi
+    description:
+      generic: EM24_E1
+  - brand: Victron
+    description:
+      generic: EM24_E1
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: cgem24_e1
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- if eq .usage "grid" }}
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  {{- end }}
