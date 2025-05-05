@@ -19,9 +19,9 @@ params:
   - name: capacity
     advanced: true
   - name: host
-    deprecate: true
+    deprecated: true
   - name: port
-    deprecate: true
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
