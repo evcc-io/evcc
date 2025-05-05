@@ -1,0 +1,23 @@
+template: tibber-local
+products:
+  - brand: Tibber
+    description:
+      generic: Pulse Local
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: password
+    mask: true
+    required: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/data.json?node_id=1
+    auth:
+      type: basic
+      user: admin
+      password: {{ .password }}
+    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000.{8}(....)"
+    decode: int32
