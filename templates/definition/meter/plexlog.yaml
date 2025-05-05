@@ -18,6 +18,10 @@ params:
     port: 503
   - name: capacity
     advanced: true
+  - name: host
+    deprecate: true
+  - name: port
+    deprecate: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
