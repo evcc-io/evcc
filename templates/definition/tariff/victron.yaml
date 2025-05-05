@@ -21,7 +21,7 @@ params:
       en: VRM Site ID of the installation
       de: VRM-Installations-ID der Installation
     help:
-      en: The VRM Site ID is displayed in the intallation settings under "General"
+      en: The VRM Site ID is displayed in the installation settings under "General"
       de: Die VRM-Installations-ID wird in den Einstellungen der Installation unter "Allgemeines" angezeigt
     example: 123456
     required: true
