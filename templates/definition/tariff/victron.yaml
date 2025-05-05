@@ -40,15 +40,11 @@ render: |
   {{- $n := now -}}
   {{- $start := $n | unixEpoch | int -}}
   {{- $end := add $start 172800 -}}
-  {{- $uri := printf
-  "https://vrmapi.victronenergy.com/v2/installations/%s/stats?start=%d&end=%d&interval=hours&type=forecast"
-  .idsite $start $end -}}
-
   type: custom
   tariff: solar
   forecast:
     source: http
-    uri: "{{ $uri }}"
+    uri: "https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/stats?start={{ $start }}&end={{ $end }}&interval=hours&type=forecast"
     method: "GET"
     headers:
       - X-Authorization: "Token {{ .token }}"
