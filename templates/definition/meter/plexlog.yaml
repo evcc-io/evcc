@@ -38,6 +38,15 @@ render: |
         type: input
         decode: int32
       timeout: 30s
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      register:
+        address: 37 # Batterie Leistung
+        type: input
+        decode: int32
+      scale: -1
+      timeout: 30s
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
