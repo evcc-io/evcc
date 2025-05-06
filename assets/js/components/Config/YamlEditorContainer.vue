@@ -36,9 +36,16 @@ export default {
 	watch: {
 		modelValue: {
 			handler(newVal) {
-				this.localValue = newVal;
+				if (this.localValue !== newVal) {
+					this.localValue = newVal;
+				}
 			},
 			immediate: true,
+		},
+		localValue: {
+			handler(newVal) {
+				this.$emit("update:modelValue", newVal);
+			},
 		},
 	},
 };

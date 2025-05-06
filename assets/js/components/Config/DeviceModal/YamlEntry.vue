@@ -6,10 +6,7 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<YamlEditorContainer
-			:modelValue="modelValue"
-			@update:model-value="$emit('update:modelValue', $event)"
-		/>
+		<YamlEditorContainer v-model="localValue" />
 	</div>
 </template>
 
@@ -33,9 +30,29 @@ export default defineComponent({
 		},
 	},
 	emits: ["update:modelValue"],
+	data() {
+		return {
+			localValue: this.modelValue,
+		};
+	},
 	computed: {
 		docsLink() {
 			return `${docsPrefix()}/docs/devices/plugins#${this.type}`;
+		},
+	},
+	watch: {
+		modelValue: {
+			handler(newVal) {
+				if (this.localValue !== newVal) {
+					this.localValue = newVal;
+				}
+			},
+			immediate: true,
+		},
+		localValue: {
+			handler(newVal) {
+				this.$emit("update:modelValue", newVal);
+			},
 		},
 	},
 });

@@ -294,8 +294,10 @@ export default defineComponent({
 		apiData() {
 			const data = {
 				...this.values,
-				template: this.templateName,
 			};
+			if (this.values.type === ConfigType.Template) {
+				data.template = this.templateName;
+			}
 			// trim and remove empty lines
 			if (Array.isArray(data.identifiers)) {
 				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);
