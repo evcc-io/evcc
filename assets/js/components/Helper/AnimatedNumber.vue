@@ -5,6 +5,7 @@
 <script lang="ts">
 import { CountUp } from "countup.js";
 import { defineComponent, type PropType } from "vue";
+import type { Timeout } from "@/types/evcc";
 const DURATION = 0.5;
 
 export default defineComponent({
@@ -17,7 +18,7 @@ export default defineComponent({
 	data() {
 		return {
 			instance: null as CountUp | null,
-			timeout: null as NodeJS.Timeout | null,
+			timeout: null as Timeout | null,
 		};
 	},
 	watch: {
