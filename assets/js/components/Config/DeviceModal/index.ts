@@ -65,62 +65,56 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
 		});
 }
 
-export function testDevice(deviceType: DeviceType, id: number | undefined, data: any) {
-	let url = `config/test/${deviceType}`;
-	if (id !== undefined) {
-		url += `/merge/${id}`;
-	}
-	return api.post(url, data, { timeout });
-}
-
-export function updateDevice(deviceType: DeviceType, id: number, data: any) {
-	return api.put(`config/devices/${deviceType}/${id}`, data);
-}
-
-export function removeDevice(deviceType: DeviceType, id: number) {
-	return api.delete(`config/devices/${deviceType}/${id}`);
-}
-
-export async function loadDeviceConfig(deviceType: DeviceType, id: number) {
-	const response = await api.get(`config/devices/${deviceType}/${id}`);
-	return response.data.result;
-}
-
-export async function loadProducts(deviceType: DeviceType, lang?: string, usage?: string) {
-	const params: Record<string, string | undefined> = { lang };
-	if (usage) {
-		params["usage"] = usage;
-	}
-	const response = await api.get(`config/products/${deviceType}`, { params });
-	return response.data.result;
-}
-
-export async function loadTemplate(deviceType: DeviceType, templateName: string, lang?: string) {
-	if (!templateName) return null;
-
-	const opts = {
-		params: {
-			lang,
-			name: templateName,
-		},
-	};
-	const response = await api.get(`config/templates/${deviceType}`, opts);
-	return response.data.result;
-}
-
-/**
- * Creates a set of device-specific utility functions for a given device type
- * This allows components to use the functions without repeatedly specifying the device type
- */
 export function createDeviceUtils(deviceType: DeviceType) {
-	// Return object with device-specific utility functions
+	function test(id: number | undefined, data: any) {
+		let url = `config/test/${deviceType}`;
+		if (id !== undefined) {
+			url += `/merge/${id}`;
+		}
+		return api.post(url, data, { timeout });
+	}
+
+	function update(id: number, data: any) {
+		return api.put(`config/devices/${deviceType}/${id}`, data);
+	}
+
+	function remove(id: number) {
+		return api.delete(`config/devices/${deviceType}/${id}`);
+	}
+
+	async function load(id: number) {
+		const response = await api.get(`config/devices/${deviceType}/${id}`);
+		return response.data.result;
+	}
+
+	async function loadProducts(lang?: string, usage?: string) {
+		const params: Record<string, string | undefined> = { lang };
+		if (usage) {
+			params["usage"] = usage;
+		}
+		const response = await api.get(`config/products/${deviceType}`, { params });
+		return response.data.result;
+	}
+
+	async function loadTemplate(templateName: string, lang?: string) {
+		if (!templateName) return null;
+
+		const opts = {
+			params: {
+				lang,
+				name: templateName,
+			},
+		};
+		const response = await api.get(`config/templates/${deviceType}`, opts);
+		return response.data.result;
+	}
+
 	return {
-		test: (id: number | undefined, data: any) => testDevice(deviceType, id, data),
-		update: (id: number, data: any) => updateDevice(deviceType, id, data),
-		remove: (id: number) => removeDevice(deviceType, id),
-		load: (id: number) => loadDeviceConfig(deviceType, id),
-		loadProducts: (lang?: string, usage?: string) => loadProducts(deviceType, lang, usage),
-		loadTemplate: (templateName: string, lang?: string) =>
-			loadTemplate(deviceType, templateName, lang),
+		test,
+		update,
+		remove,
+		load,
+		loadProducts,
+		loadTemplate,
 	};
 }
