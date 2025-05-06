@@ -122,9 +122,7 @@ func (v *Niu) get(uri string) (*http.Request, error) {
 }
 
 func (v *Niu) post(uri string) (*http.Request, error) {
-	data := url.Values{
-		"sn": {v.serial},
-	}
+	data := url.Values{"sn": {v.serial}}
 	return v.newRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
 }
 
