@@ -181,7 +181,6 @@ import Markdown from "./Markdown.vue";
 import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
 import DeviceModalActions from "./DeviceModal/Actions.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
-import api from "@/api";
 import { initialTestState, performTest } from "./utils/test";
 import {
 	handleError,
@@ -407,8 +406,8 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await api.post("config/devices/vehicle", this.apiData);
-				this.$emit("vehicle-changed");
+				const { name } = await device.create(this.apiData);
+				this.$emit("vehicle-changed", name);
 				this.closed();
 			} catch (e) {
 				handleError(e, "create failed");

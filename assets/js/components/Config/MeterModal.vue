@@ -123,7 +123,6 @@ import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import api from "@/api";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./DeviceModal/Modbus.vue";
 import DeviceModalActions from "./DeviceModal/Actions.vue";
@@ -407,8 +406,7 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				const response = await api.post("config/devices/meter", this.apiData);
-				const { name } = response.data.result;
+				const { name } = await device.create(this.apiData);
 				this.$emit("added", this.meterType, name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {

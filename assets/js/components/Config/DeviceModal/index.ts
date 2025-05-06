@@ -87,6 +87,11 @@ export function createDeviceUtils(deviceType: DeviceType) {
 		return response.data.result;
 	}
 
+	async function create(data: any) {
+		const response = await api.post(`config/devices/${deviceType}`, data);
+		return response.data.result;
+	}
+
 	async function loadProducts(lang?: string, usage?: string) {
 		const params: Record<string, string | undefined> = { lang };
 		if (usage) {
@@ -114,6 +119,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
 		update,
 		remove,
 		load,
+		create,
 		loadProducts,
 		loadTemplate,
 	};

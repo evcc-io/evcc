@@ -90,7 +90,6 @@ import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import api from "@/api";
 import Modbus from "./DeviceModal/Modbus.vue";
 import DeviceModalActions from "./DeviceModal/Actions.vue";
 import GenericModal from "../Helper/GenericModal.vue";
@@ -358,8 +357,7 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				const response = await api.post("config/devices/charger", this.apiData);
-				const { name } = response.data.result;
+				const { name } = await device.create(this.apiData);
 				this.$emit("added", name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
