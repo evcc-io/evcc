@@ -45,10 +45,10 @@ env:
 archives:
   - ids:
       - evcc
-    formats: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        formats: zip
+        formats: [zip]
     files:
       - evcc.dist.yaml
     name_template: >-
