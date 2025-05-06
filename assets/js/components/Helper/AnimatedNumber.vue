@@ -17,11 +17,12 @@ export default defineComponent({
 	data() {
 		return {
 			instance: null as CountUp | null,
+			timeout: null as NodeJS.Timeout | null,
 		};
 	},
 	watch: {
 		to(value) {
-			this.instance?.update(value);
+			this.update(value);
 		},
 	},
 	mounted() {
@@ -44,7 +45,17 @@ export default defineComponent({
 	methods: {
 		forceUpdate() {
 			this.instance?.reset();
-			this.instance?.update(this.to);
+			this.update(this.to);
+		},
+		update(value: number) {
+			// debounced to avoid rendering issues
+			// @see https://github.com/inorganik/countUp.js/issues/330#issuecomment-2697595198
+			if (this.timeout !== null) {
+				clearTimeout(this.timeout);
+			}
+			this.timeout = setTimeout(() => {
+				this.instance?.update(value);
+			}, 100);
 		},
 	},
 });
