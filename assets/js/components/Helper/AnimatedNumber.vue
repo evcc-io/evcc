@@ -41,6 +41,9 @@ export default defineComponent({
 	},
 	unmounted() {
 		this.instance = null;
+		if (this.timeout !== null) {
+			clearTimeout(this.timeout);
+		}
 	},
 	methods: {
 		forceUpdate() {
