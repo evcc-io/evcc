@@ -1,0 +1,56 @@
+template: victron
+products:
+  - brand: Victron
+    description:
+      generic: VRM Solar Forecast
+requirements:
+  description:
+    en: >-
+      [vrm.victronenergy.com](https://vrm.victronenergy.com) get the
+      2-days-forecast from your installation in VRM portal. You need a free user
+      access token.
+    de: >-
+      [vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der
+      2-Tage-Prognose einer Installation im VRM-Portal. Es wird ein kostenloses
+      User Access Token benoetigt.
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: idsite
+    description:
+      en: VRM Site ID of the installation
+      de: VRM-Installations-ID der Installation
+    help:
+      en: The VRM Site ID is displayed in the installation settings under "General"
+      de: Die VRM-Installations-ID wird in den Einstellungen der Installation unter "Allgemeines" angezeigt
+    example: 123456
+    required: true
+  - name: token
+    description:
+      en: API access token
+      de: API Zugriffstoken
+    help:
+      en: Tokens can be created in VRM in Preferences->Integrations
+      de: Token können im VRM erstellt werden unter Präferenzen->Integrationen
+    required: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  {{- $start := now | unixEpoch | int -}}
+  {{- $end := add $start 172800 -}}
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    uri: "https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/stats?start={{ $start }}&end={{ $end }}&interval=hours&type=forecast"
+    method: "GET"
+    headers:
+      - X-Authorization: "Token {{ .token }}"
+    jq: |
+      .records.solar_yield_forecast | map({
+         "start": ((.[0] / 1000) | todateiso8601),
+         "end":   (((.[0] + 3600000) / 1000 ) | todateiso8601),
+         "value": .[1]
+       }) | tostring
+  interval: {{ .interval }}

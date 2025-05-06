@@ -255,8 +255,10 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewEnergy(plan: StaticEnergyPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
+			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`
+				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,
+				params
 			);
 		},
 		async apiFetchPlan(
