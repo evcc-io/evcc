@@ -292,15 +292,15 @@ export default defineComponent({
 			return this.values.deviceProduct || this.templateName || "";
 		},
 		apiData() {
-			const data = {
+			const data: Record<string, any> = {
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template) {
-				data.template = this.templateName;
+				data["template"] = this.templateName;
 			}
 			// trim and remove empty lines
-			if (Array.isArray(data.identifiers)) {
-				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);
+			if (Array.isArray(data["identifiers"])) {
+				data["identifiers"] = data["identifiers"].map((i) => i.trim()).filter((i) => i);
 			}
 			return data;
 		},

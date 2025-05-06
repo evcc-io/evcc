@@ -1,12 +1,14 @@
 title: green Honda
 icon: car
 capacity: 50 # kWh
-type: custom
+
+## required attributes
+
 soc: # state of charge
   source: const
   value: 42 # %
 
-## optional parameters
+## optional attributes (read-only)
 
 #limitsoc: # in-vehicle charge limit
 #  source: const
@@ -27,14 +29,14 @@ soc: # state of charge
 #  source: const
 #  value: "2030-01-01T00:00:00Z"
 
-## optional commands
+## optional attributes (writeable)
 
 #wakeup: # wake up vehicle
 #    source: js
-#    script: <add script here>
+#    script: console.log(wakeup);
 #chargeenable: # start/stop charging
 #    source: js
-#    script: <add script here>
+#    script: console.log(chargeenable);
 #maxcurrent: # set max charge current
 #    source: js
-#    script: <add script here>
+#    script: console.log(maxcurrent);

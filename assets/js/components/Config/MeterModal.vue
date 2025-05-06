@@ -288,14 +288,15 @@ export default defineComponent({
 			return this.values.deviceProduct || this.templateName || "";
 		},
 		apiData() {
-			// Return a combined object with correct types
-			return {
+			const data: Record<string, any> = {
 				...this.modbusDefaults,
 				...this.values,
-				// Make sure this usage value overrides any in values
-				usage: this.meterType || undefined,
-				template: this.templateName,
 			};
+			if (this.values.type === ConfigType.Template) {
+				data["template"] = this.templateName;
+				data["usage"] = this.meterType || undefined;
+			}
+			return data;
 		},
 		isNew() {
 			return this.id === undefined;

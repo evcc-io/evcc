@@ -257,11 +257,14 @@ export default defineComponent({
 			return requirements?.EVCC?.includes("sponsorship") && !this.isSponsor;
 		},
 		apiData() {
-			return {
+			const data: Record<string, any> = {
 				...this.modbusDefaults,
 				...this.values,
-				template: this.templateName,
 			};
+			if (this.values.type === ConfigType.Template) {
+				data["template"] = this.templateName;
+			}
+			return data;
 		},
 		isNew() {
 			return this.id === undefined;
