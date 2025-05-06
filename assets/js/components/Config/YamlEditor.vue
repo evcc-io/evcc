@@ -51,6 +51,9 @@ export default {
 				wordWrap: "off",
 				wrappingStrategy: "advanced",
 				overviewRulerLanes: 0,
+				scrollbar: {
+					alwaysConsumeMouseWheel: false,
+				},
 			},
 			active: true,
 			pasteDisposable: null,

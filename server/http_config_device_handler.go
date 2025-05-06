@@ -548,7 +548,6 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		delete(req.Other, "yaml")
-		delete(req.Other, "type")
 	}
 
 	var instance any

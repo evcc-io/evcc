@@ -30,6 +30,9 @@ func (r registry[T]) AddCtx(name string, factory factoryFunc[T]) {
 }
 
 func (r registry[T]) Get(name string) (factoryFunc[T], error) {
+	if name == "" {
+		return nil, fmt.Errorf("field is missing")
+	}
 	factory, exists := r.data[name]
 	if !exists {
 		return nil, fmt.Errorf("invalid %s type: %s", r.typ, name)
