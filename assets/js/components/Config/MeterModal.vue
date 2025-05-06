@@ -136,17 +136,19 @@ import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { initialTestState, performTest } from "./utils/test";
 import {
 	handleError,
-	timeout,
 	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
 	type ModbusParam,
 	type ModbusCapability,
+	applyDefaultsFromTemplate,
+	createDeviceUtils,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
+const device = createDeviceUtils("meter");
 
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -352,7 +354,7 @@ export default defineComponent({
 		},
 		async loadConfiguration() {
 			try {
-				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
+				const meter = await device.load(this.id as number);
 				this.values = meter.config;
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
@@ -360,7 +362,7 @@ export default defineComponent({
 				this.values.deviceTitle = meter.deviceTitle;
 				this.values.deviceIcon = meter.deviceIcon;
 				this.values.deviceProduct = meter.deviceProduct;
-				this.applyDefaultsFromTemplate();
+				applyDefaultsFromTemplate(this.template, this.values);
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
@@ -371,13 +373,7 @@ export default defineComponent({
 				return;
 			}
 			try {
-				const opts = {
-					params: {
-						usage: this.meterType,
-						lang: this.$i18n?.locale,
-					},
-				};
-				this.products = (await api.get("config/products/meter", opts)).data.result;
+				this.products = await device.loadProducts(this.$i18n?.locale, this.meterType);
 			} catch (e) {
 				console.error(e);
 			}
@@ -387,27 +383,12 @@ export default defineComponent({
 			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
-				const opts = {
-					params: {
-						lang: this.$i18n?.locale,
-						name: this.templateName,
-					},
-				};
-				const result = await api.get("config/templates/meter", opts);
-				this.template = result.data.result;
-				this.applyDefaultsFromTemplate();
+				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
+				applyDefaultsFromTemplate(this.template, this.values);
 			} catch (e) {
 				console.error(e);
 			}
 			this.loadingTemplate = false;
-		},
-		applyDefaultsFromTemplate() {
-			const params = this.template?.Params || [];
-			params
-				.filter((p) => p.Default && !this.values[p.Name])
-				.forEach((p) => {
-					this.values[p.Name] = p.Default;
-				});
 		},
 		async create() {
 			// persist selected template product
@@ -439,11 +420,7 @@ export default defineComponent({
 			await performTest(this.test, this.testMeter, this.$refs["form"] as HTMLFormElement);
 		},
 		async testMeter() {
-			let url = "config/test/meter";
-			if (!this.isNew) {
-				url += `/merge/${this.id}`;
-			}
-			return await api.post(url, this.apiData, { timeout });
+			return device.test(this.id, this.apiData);
 		},
 		async update() {
 			if (this.test.isUnknown) {
@@ -457,7 +434,7 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				await device.update(this.id as number, this.apiData);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
@@ -467,7 +444,7 @@ export default defineComponent({
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/meter/${this.id}`);
+				await device.remove(this.id as number);
 				this.$emit("removed", this.meterType, this.name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {

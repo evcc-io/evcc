@@ -46,8 +46,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import FormRow from "../FormRow.vue";
-
-type DeviceType = "charger" | "meter" | "vehicle";
+import type { DeviceType } from "@/types/evcc";
 
 export interface TemplateOption {
 	name: string;

@@ -101,17 +101,19 @@ import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
 import {
 	handleError,
-	timeout,
 	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
 	type ModbusParam,
 	type ModbusCapability,
+	applyDefaultsFromTemplate,
+	createDeviceUtils,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/charger.yaml?raw";
 
 const initialValues = { type: ConfigType.Template };
+const device = createDeviceUtils("charger");
 
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -305,13 +307,13 @@ export default defineComponent({
 		},
 		async loadConfiguration() {
 			try {
-				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
+				const charger = await device.load(this.id as number);
 				this.values = charger.config;
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = charger.type;
 				this.values.deviceProduct = charger.deviceProduct;
-				this.applyDefaultsFromTemplate();
+				applyDefaultsFromTemplate(this.template, this.values);
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
@@ -322,8 +324,7 @@ export default defineComponent({
 				return;
 			}
 			try {
-				const opts = { params: { lang: this.$i18n?.locale } };
-				this.products = (await api.get("config/products/charger", opts)).data.result;
+				this.products = await device.loadProducts(this.$i18n?.locale);
 			} catch (e) {
 				console.error(e);
 			}
@@ -333,27 +334,12 @@ export default defineComponent({
 			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
-				const opts = {
-					params: {
-						lang: this.$i18n?.locale,
-						name: this.templateName,
-					},
-				};
-				const result = await api.get("config/templates/charger", opts);
-				this.template = result.data.result;
-				this.applyDefaultsFromTemplate();
+				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
+				applyDefaultsFromTemplate(this.template, this.values);
 			} catch (e) {
 				console.error(e);
 			}
 			this.loadingTemplate = false;
-		},
-		applyDefaultsFromTemplate() {
-			const params = this.template?.Params || [];
-			params
-				.filter((p) => p.Default && !this.values[p.Name])
-				.forEach((p) => {
-					this.values[p.Name] = p.Default;
-				});
 		},
 		async create() {
 			// persist selected template product
@@ -385,11 +371,7 @@ export default defineComponent({
 			await performTest(this.test, this.testCharger, this.$refs["form"] as HTMLFormElement);
 		},
 		async testCharger() {
-			let url = "config/test/charger";
-			if (!this.isNew) {
-				url += `/merge/${this.id}`;
-			}
-			return await api.post(url, this.apiData, { timeout });
+			return device.test(this.id, this.apiData);
 		},
 		async update() {
 			if (this.test.isUnknown) {
@@ -403,7 +385,7 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/charger/${this.id}`, this.apiData);
+				await device.update(this.id as number, this.apiData);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
@@ -413,7 +395,7 @@ export default defineComponent({
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/charger/${this.id}`);
+				await device.remove(this.id as number);
 				this.$emit("removed", this.name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {

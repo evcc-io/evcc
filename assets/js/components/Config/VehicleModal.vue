@@ -185,15 +185,17 @@ import api from "@/api";
 import { initialTestState, performTest } from "./utils/test";
 import {
 	handleError,
-	timeout,
 	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
+	applyDefaultsFromTemplate,
+	createDeviceUtils,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, icon: "car" };
+const device = createDeviceUtils("vehicle");
 
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -359,13 +361,13 @@ export default defineComponent({
 		},
 		async loadConfiguration() {
 			try {
-				const vehicle = (await api.get(`config/devices/vehicle/${this.id}`)).data.result;
+				const vehicle = await device.load(this.id as number);
 				this.values = vehicle.config;
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = vehicle.type;
 				this.values.deviceProduct = vehicle.deviceProduct;
-				this.applyDefaultsFromTemplate();
+				applyDefaultsFromTemplate(this.template, this.values);
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
@@ -376,8 +378,7 @@ export default defineComponent({
 				return;
 			}
 			try {
-				const opts = { params: { lang: this.$i18n?.locale } };
-				this.products = (await api.get("config/products/vehicle", opts)).data.result;
+				this.products = await device.loadProducts(this.$i18n?.locale);
 			} catch (e) {
 				console.error(e);
 			}
@@ -387,27 +388,12 @@ export default defineComponent({
 			if (!this.templateName) return;
 			this.loadingTemplate = true;
 			try {
-				const opts = {
-					params: {
-						lang: this.$i18n?.locale,
-						name: this.templateName,
-					},
-				};
-				const result = await api.get("config/templates/vehicle", opts);
-				this.template = result.data.result;
-				this.applyDefaultsFromTemplate();
+				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
+				applyDefaultsFromTemplate(this.template, this.values);
 			} catch (e) {
 				console.error(e);
 			}
 			this.loadingTemplate = false;
-		},
-		applyDefaultsFromTemplate() {
-			const params = this.template?.Params || [];
-			params
-				.filter((p) => p.Default && !this.values[p.Name])
-				.forEach((p) => {
-					this.values[p.Name] = p.Default;
-				});
 		},
 		async create() {
 			// persist selected template product
@@ -433,11 +419,7 @@ export default defineComponent({
 			await performTest(this.test, this.testVehicle, this.$refs["form"]);
 		},
 		async testVehicle() {
-			let url = "config/test/vehicle";
-			if (!this.isNew) {
-				url += `/merge/${this.id}`;
-			}
-			return await api.post(url, this.apiData, { timeout });
+			return device.test(this.id, this.apiData);
 		},
 		async update() {
 			if (this.test.isUnknown) {
@@ -447,7 +429,7 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
+				await device.update(this.id as number, this.apiData);
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
@@ -457,7 +439,7 @@ export default defineComponent({
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/vehicle/${this.id}`);
+				await device.remove(this.id as number);
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
