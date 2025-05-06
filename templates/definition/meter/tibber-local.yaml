@@ -19,6 +19,15 @@ params:
   - name: password
     mask: true
     required: true
+  - name: scale
+    advanced: true
+    default: 1
+    description:
+      de: Skalierungsfaktor
+      en: Scale factor
+    help:
+      de: Multipliziere Rohwert mit diesem Faktor
+      en: Multiply by this value
 # SML protocol, see https://www.stefan-weigert.de/php_loader/sml.php
 render: |
   type: custom
@@ -29,5 +38,8 @@ render: |
       type: basic
       user: admin
       password: {{ .password }}
-    regex: "\u0077\u0007\u0001\u0000\u0010\u0007\u0000.{8}(....)"
+    regex: "\u0077\u0007\u0001\u0000[\u0001\u000f\u0010]\u0007\u0000.{8}(....)"
     decode: int32
+    {{- if .scale }}
+    scale: {{ .scale }}
+    {{- end }}
