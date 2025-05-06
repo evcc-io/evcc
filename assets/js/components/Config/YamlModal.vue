@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open">
+	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -9,7 +9,12 @@
 		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
 			<div class="editor-container">
-				<YamlEditorContainer v-model="yaml" :errorLine="errorLine" :removeKey="removeKey" />
+				<YamlEditorContainer
+					v-model="yaml"
+					:errorLine="errorLine"
+					:removeKey="removeKey"
+					:hidden="!modalVisible"
+				/>
 			</div>
 
 			<div class="mt-4 d-flex justify-content-between">
@@ -65,6 +70,7 @@ export default {
 			errorLine: undefined,
 			yaml: "",
 			serverYaml: "",
+			modalVisible: false,
 		};
 	},
 	computed: {
@@ -85,7 +91,11 @@ export default {
 		},
 		async open() {
 			this.reset();
+			this.modalVisible = true;
 			await this.load();
+		},
+		close() {
+			this.modalVisible = false;
 		},
 		async load() {
 			try {

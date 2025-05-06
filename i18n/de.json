@@ -113,6 +113,9 @@
       "batteryStorage": "Batterie",
       "solarSystem": "PV-Anlage"
     },
+    "editor": {
+      "loading": "Lade YAML-Editor …"
+    },
     "eebus": {
       "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
       "title": "EEBus"

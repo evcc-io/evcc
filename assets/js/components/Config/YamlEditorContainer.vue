@@ -1,6 +1,7 @@
 <template>
 	<div class="editor-container" :style="{ height: computedHeight }">
 		<YamlEditor
+			v-if="!hidden"
 			v-model="localValue"
 			class="editor"
 			:errorLine="errorLine"
@@ -19,6 +20,7 @@ export default {
 		modelValue: String,
 		errorLine: Number,
 		removeKey: String,
+		hidden: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data() {

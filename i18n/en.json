@@ -113,6 +113,9 @@
       "batteryStorage": "Battery storage",
       "solarSystem": "Solar system"
     },
+    "editor": {
+      "loading": "Loading YAML editor…"
+    },
     "eebus": {
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
       "title": "EEBus"
