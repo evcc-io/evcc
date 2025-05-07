@@ -129,7 +129,11 @@ func (t *Octopus) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
-			if t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
+			// This checks whether:
+			// - a Payment Method is set on the Result
+			// - a Payment Method filter is set
+			// - the Payment Method in the Result matches the Payment Method filter
+			if r.PaymentMethod != "" && t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
 				// A Payment Method filter is set, and this Tariff entry does not match our filter.
 				continue
 			}
