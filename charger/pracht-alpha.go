@@ -55,6 +55,7 @@ func NewPrachtAlphaFromConfig(ctx context.Context, other map[string]interface{})
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`
+		Meter           bool
 		Timeout         time.Duration
 	}{
 		Connector: 1,
@@ -67,7 +68,16 @@ func NewPrachtAlphaFromConfig(ctx context.Context, other map[string]interface{})
 		return nil, err
 	}
 
-	return NewPrachtAlpha(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout, cc.Connector)
+	wb, err := NewPrachtAlpha(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout, cc.Connector)
+	if err != nil {
+		return nil, err
+	}
+
+	var power, energy func() (float64, error)
+	if cc.Meter {
+	}
+
+	return decoratePractAlpha(wb, power, energy), nil
 }
 
 // NewPrachtAlpha creates PrachtAlpha charger

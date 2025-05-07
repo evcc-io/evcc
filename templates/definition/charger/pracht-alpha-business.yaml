@@ -1,0 +1,21 @@
+template: pracht-alpha-business
+products:
+  - brand: Pracht
+    description:
+      generic: Alpha XT Business
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    comset: 8N1
+    id: 1
+  - name: connector
+  - name: timeout
+render: |
+  type: pracht-alpha
+  {{- include "modbus" . }}
+  connector: {{ .connector }}
+  timeout: {{ .timeout }}
+  meter: true
