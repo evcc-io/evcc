@@ -89,11 +89,11 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 	}
 
 	// keep-alive
-	go func() {
-		for range time.Tick(30 * time.Second) {
-			_, _ = wb.status()
+	go heartbeat(ctx, func() {
+		if _, err := wb.status(); err != nil {
+			log.ERROR.Println("heartbeat:", err)
 		}
-	}()
+	}, 30*time.Second)
 
 	return wb, err
 }

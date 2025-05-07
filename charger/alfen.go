@@ -90,7 +90,7 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		conn: conn,
 	}
 
-	go wb.heartbeat(ctx)
+	go heartbeat(ctx, wb.heartbeat, 25*time.Second)
 
 	_, v2, v3, err := wb.Voltages()
 
@@ -109,24 +109,16 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	return decorateAlfen(wb, phasesS, phasesG), err
 }
 
-func (wb *Alfen) heartbeat(ctx context.Context) {
-	for tick := time.Tick(25 * time.Second); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
+func (wb *Alfen) heartbeat() {
+	wb.mu.Lock()
+	var curr float64
+	if wb.enabled {
+		curr = wb.curr
+	}
+	wb.mu.Unlock()
 
-		wb.mu.Lock()
-		var curr float64
-		if wb.enabled {
-			curr = wb.curr
-		}
-		wb.mu.Unlock()
-
-		if err := wb.setCurrent(curr); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
+	if err := wb.setCurrent(curr); err != nil {
+		wb.log.ERROR.Println("heartbeat:", err)
 	}
 }
 

@@ -32,7 +32,6 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
-	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
 	wakeup  bool
@@ -89,7 +88,6 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
-		log:     log,
 		conn:    conn,
 		current: 60, // assume min current
 	}
@@ -108,24 +106,14 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b) / 4; u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond)
+		go heartbeat(ctx, func() {
+			if _, err := wb.Status(); err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
+		}, time.Duration(u)*time.Millisecond)
 	}
 
 	return wb, nil
-}
-
-func (wb *HeidelbergEC) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.Status(); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {

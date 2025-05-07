@@ -125,30 +125,22 @@ func NewDelta(ctx context.Context, uri, device, comset string, baudrate int, pro
 			return nil, fmt.Errorf("failsafe timeout: %w", err)
 		}
 		if u := encoding.Uint16(b); u > 0 {
-			go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+			go heartbeat(ctx, wb.heartbeat, time.Duration(u)*time.Second/2)
 		}
 	}
 
 	return wb, nil
 }
 
-func (wb *Delta) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		wb.mu.Lock()
-		var curr float64
-		if wb.enabled {
-			curr = wb.curr
-		}
-		wb.mu.Unlock()
-		if err := wb.setCurrent(curr); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
+func (wb *Delta) heartbeat() {
+	wb.mu.Lock()
+	var curr float64
+	if wb.enabled {
+		curr = wb.curr
+	}
+	wb.mu.Unlock()
+	if err := wb.setCurrent(curr); err != nil {
+		wb.log.ERROR.Println("heartbeat:", err)
 	}
 }
 
@@ -285,13 +277,10 @@ func (wb *Delta) Enable(enable bool) error {
 
 // setCurrent writes the current limit in A
 func (wb *Delta) setCurrent(current float64) error {
-	activePhases := 3
-	if wb.lp != nil {
-		activePhases = wb.lp.ActivePhases()
-	}
+	phases := activePhases(wb.lp)
 
 	b := make([]byte, 4)
-	encoding.PutUint32(b, uint32(math.Trunc(230.0*current*float64(activePhases))))
+	encoding.PutUint32(b, uint32(math.Trunc(230.0*current*float64(phases))))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2, b)
 

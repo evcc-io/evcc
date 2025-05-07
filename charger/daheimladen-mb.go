@@ -31,7 +31,6 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
@@ -83,7 +82,6 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, e
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLadenMB{
-		log:  log,
 		conn: conn,
 		curr: 60, // assume min current
 	}
@@ -103,24 +101,14 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, e
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go heartbeat(ctx, func() {
+			if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
+		}, time.Duration(u)*time.Second/2)
 	}
 
 	return wb, err
-}
-
-func (wb *DaheimLadenMB) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 func (wb *DaheimLadenMB) setCurrent(current uint16) error {

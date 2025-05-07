@@ -31,7 +31,6 @@ const (
 
 // Dadapower charger implementation
 type Dadapower struct {
-	log       *util.Logger
 	conn      *modbus.Connection
 	regOffset uint16
 }
@@ -66,7 +65,6 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 	conn.Logger(log.TRACE)
 
 	wb := &Dadapower{
-		log:  log,
 		conn: conn,
 	}
 
@@ -80,23 +78,13 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 		wb.regOffset = (uint16(id) - 1) * 1000
 	}
 
-	go wb.heartbeat(ctx)
+	go heartbeat(ctx, func() {
+		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
+			log.ERROR.Println("heartbeat:", err)
+		}
+	}, time.Minute)
 
 	return wb, nil
-}
-
-func (wb *Dadapower) heartbeat(ctx context.Context) {
-	for tick := time.Tick(time.Minute); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 // Status implements the api.Charger interface

@@ -32,7 +32,6 @@ import (
 // eSolutions eProWallbox charger implementation
 type EProWallbox struct {
 	conn *modbus.Connection
-	log  *util.Logger
 }
 
 const (
@@ -75,28 +74,15 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 
 	wb := &EProWallbox{
 		conn: conn,
-		log:  log,
 	}
 
-	go wb.heartbeat(ctx)
+	go heartbeat(ctx, func() {
+		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, 1, []byte{0x55, 0x55}); err != nil {
+			log.ERROR.Println("heartbeat:", err)
+		}
+	}, 10*time.Second)
 
 	return wb, err
-}
-
-func (wb *EProWallbox) heartbeat(ctx context.Context) {
-	for tick := time.Tick(10 * time.Second); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, 0x5555)
-		if _, err := wb.conn.WriteMultipleRegisters(eproRegResetWatchdog, 1, b); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 // Status implements the api.Charger interface

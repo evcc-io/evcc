@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
 // ensureCharger extracts ID from list of IDs returned from `list` function
@@ -86,4 +87,14 @@ func heartbeat(ctx context.Context, fun func(), timeout time.Duration) {
 			return
 		}
 	}
+}
+
+func activePhases(lp loadpoint.API) int {
+	phases := 3
+	if lp != nil {
+		if p := lp.ActivePhases(); p != 0 {
+			phases = lp.ActivePhases()
+		}
+	}
+	return phases
 }
