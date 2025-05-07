@@ -1,0 +1,20 @@
+template: zaptec2
+products:
+  - brand: Zaptec
+    description:
+      generic: Go2
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: id
+    help:
+      de: Wallbox ID
+      en: Charger ID
+  - name: user
+  - name: password
+render: |
+  type: zaptec2
+  id: {{ .id }}
+  user: {{ .user }}
+  password: '{{ .password }}'
