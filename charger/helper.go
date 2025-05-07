@@ -2,8 +2,10 @@ package charger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 )
@@ -67,4 +69,21 @@ func verifyEnabled(c api.Charger, enabled bool) (bool, error) {
 
 	// always treat charging as enabled
 	return status == api.StatusC, err
+}
+
+func heartbeat(ctx context.Context, fun func(), timeout time.Duration) {
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+
+	// start immediately
+	fun()
+
+	for {
+		select {
+		case <-ticker.C:
+			fun()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
