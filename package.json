@@ -22,6 +22,7 @@
     "@playwright/test": "^1.46.1",
     "@popperjs/core": "^2.11.5",
     "@types/bootstrap": "^5.2.10",
+    "@types/canvas-confetti": "^1.9.0",
     "@unhead/vue": "^1.8.9",
     "@vitejs/plugin-legacy": "^6.0.1",
     "@vitejs/plugin-vue": "^5.0.4",
