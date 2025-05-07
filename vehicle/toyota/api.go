@@ -22,6 +22,7 @@ const (
 	VehicleGuidPath          = "v2/vehicle/guid"
 	RemoteElectricStatusPath = "v1/global/remote/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
+	ClientRefKey             = "3e0b15f6c9c87fbd"
 )
 
 type API struct {
@@ -47,7 +48,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	}
 
 	// create HMAC digest for x-client-ref header
-	h := hmac.New(sha256.New, []byte(util.FormattedVersion()))
+	h := hmac.New(sha256.New, []byte(ClientRefKey))
 	h.Write([]byte(v.identity.uuid))
 	v.clientRef = hex.EncodeToString(h.Sum(nil))
 
@@ -62,7 +63,7 @@ func (v *API) Vehicles() ([]string, error) {
 		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
-		"x-appversion": util.FormattedVersion(),
+		"x-appversion": ClientRefKey,
 	})
 	var resp Vehicles
 	if err == nil {
@@ -83,7 +84,7 @@ func (v *API) Status(vin string) (Status, error) {
 		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
-		"x-appversion": util.FormattedVersion(),
+		"x-appversion": ClientRefKey,
 		"vin":          vin,
 	})
 	var status Status
