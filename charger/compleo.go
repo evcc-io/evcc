@@ -106,14 +106,16 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 		power: 3 * 230 * 6, // assume min power
 	}
 
-	// keep-alive
+	// heartbeat
 	go func() {
 		for range time.Tick(30 * time.Second) {
-			_, _ = wb.status()
+			if _, err := wb.status(); err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
 		}
 	}()
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *Compleo) status() (byte, error) {
