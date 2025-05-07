@@ -123,7 +123,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	if timeout < time.Second {
 		timeout = time.Second
 	}
-	go wb.heartbeat(ctx, timeout)
+	go heartbeat(ctx, func(){
 
 	return decorateVestel(wb, phasesS, phasesG), err
 }

@@ -59,23 +59,13 @@ func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWB
 		return res, err
 	}, cache)
 
-	go wb.heartbeat(ctx, log)
-
-	return wb, nil
-}
-
-func (wb *OpenWBPro) heartbeat(ctx context.Context, log *util.Logger) {
-	for tick := time.Tick(30 * time.Second); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+	go heartbeat(ctx, func() {
 		if _, err := wb.statusG.Get(); err != nil {
 			log.ERROR.Printf("heartbeat: %v", err)
 		}
-	}
+	}, 30*time.Second)
+
+	return wb, nil
 }
 
 func (wb *OpenWBPro) set(payload string) error {

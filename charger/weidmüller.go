@@ -102,7 +102,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 	}
 
 	// failsafe
-	go wb.heartbeat(ctx, wmHeartbeatInterval)
+	go heartbeat(ctx, func(){
 
 	// check presence of energy meter
 	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {

@@ -161,7 +161,11 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go heartbeat(ctx, func() {
+			if _, err := wb.Enabled(); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		}, time.Duration(u)*time.Second/2)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
@@ -190,20 +194,6 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	}
 
 	return wb, err
-}
-
-func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.Enabled(); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 func (wb *Keba) isConnected() (bool, error) {

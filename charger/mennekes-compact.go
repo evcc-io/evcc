@@ -119,23 +119,13 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	}
 
 	// failsafe
-	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
-
-	return decorateMennekesCompact(wb, phasesS), err
-}
-
-func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
+	go heartbeat(ctx, func() {
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
-	}
+	}, mennekesHeartbeatInterval)
+
+	return decorateMennekesCompact(wb, phasesS), err
 }
 
 // Status implements the api.Charger interface

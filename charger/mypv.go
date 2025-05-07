@@ -107,7 +107,7 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 		regTemp: elwaTemp[tempSource-1],
 	}
 
-	go wb.heartbeat(ctx, 30*time.Second)
+	go heartbeat(ctx, wb.heartbeat, 30*time.Second)
 
 	return wb, nil
 }
@@ -126,22 +126,14 @@ func (wb *MyPv) Features() []api.Feature {
 	return []api.Feature{api.IntegratedDevice, api.Heating}
 }
 
-func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
+func (wb *MyPv) heartbeat() {
+	if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
+		enabled, err := wb.Enabled()
+		if err == nil && enabled {
+			err = wb.setPower(power)
 		}
-
-		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
-			enabled, err := wb.Enabled()
-			if err == nil && enabled {
-				err = wb.setPower(power)
-			}
-			if err != nil {
-				wb.log.ERROR.Println("heartbeat:", err)
-			}
+		if err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
 }

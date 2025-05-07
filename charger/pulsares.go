@@ -121,7 +121,7 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 	}
 
 	if t > 0 {
-		go wb.heartbeat(ctx, t/2)
+		go heartbeat(ctx, func(){
 	}
 
 	return wb, err

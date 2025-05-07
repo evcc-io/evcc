@@ -109,24 +109,14 @@ func NewSchneiderV3(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
 	if u := encoding.Uint16(b); u != 2 {
-		go wb.heartbeat(ctx, 2*time.Second)
+		go heartbeat(ctx, func() {
+			if _, err := wb.conn.WriteSingleRegister(schneiderRegLifebit, 1); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		}, 2*time.Second)
 	}
 
 	return wb, nil
-}
-
-func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.conn.WriteSingleRegister(schneiderRegLifebit, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 // Status implements the api.Charger interface

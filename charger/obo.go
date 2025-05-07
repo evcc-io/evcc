@@ -64,7 +64,11 @@ func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
+		go heartbeat(ctx, func() {
+			if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		}, time.Duration(u)*time.Second/2)
 	}
 
 	// lightshow
@@ -81,20 +85,6 @@ func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto
 	// time.Sleep(10 * time.Second)
 
 	return wb, nil
-}
-
-func (wb *Obo) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 // Status implements the api.Charger interface
