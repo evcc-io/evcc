@@ -314,7 +314,8 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
-	if err := util.DecodeOther(r, &res); err != nil {
+
+	if err := json.NewDecoder(r).Decode(&res); err != nil {
 		return configReq{}, err
 	}
 
