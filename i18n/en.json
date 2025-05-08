@@ -931,6 +931,11 @@
       "label": "Design",
       "light": "light"
     },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Time format"
+    },
     "title": "User Interface",
     "unit": {
       "km": "km",

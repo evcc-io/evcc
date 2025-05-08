@@ -42,6 +42,21 @@
 				equal-width
 			/>
 		</FormRow>
+		<FormRow id="settingsTimeFormat" :label="$t('settings.time.label')">
+			<SelectGroup
+				id="settingsTimeFormat"
+				v-model="timeFormat"
+				class="w-75"
+				transparent
+				:options="
+					TIME_FORMATS.map((value) => ({
+						value,
+						name: $t(`settings.time.${value}h`),
+					}))
+				"
+				equal-width
+			/>
+		</FormRow>
 		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
 			<TelemetrySettings :sponsorActive="sponsor && !!sponsor.name" class="mt-1 mb-0" />
 		</FormRow>
@@ -82,11 +97,14 @@ import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "@/i18n";
 import { getThemePreference, setThemePreference, THEMES } from "@/theme";
-import { getUnits, setUnits, UNITS } from "@/units";
+import { getUnits, setUnits, UNITS, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
 import type { Sponsor } from "@/types/evcc";
+
+const TIME_12H = "12";
+const TIME_24H = "24";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
@@ -99,10 +117,12 @@ export default defineComponent({
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
 			unit: getUnits(),
+			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
 			THEMES,
 			UNITS,
+			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},
 	computed: {
@@ -125,6 +145,9 @@ export default defineComponent({
 	watch: {
 		unit(value) {
 			setUnits(value);
+		},
+		timeFormat(value) {
+			set12hFormat(value === TIME_12H);
 		},
 		theme(value) {
 			setThemePreference(value);
