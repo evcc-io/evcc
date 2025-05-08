@@ -86,7 +86,6 @@ func mbheaders(includeAuthServerHeader bool, region string) map[string]string {
 		"Content-Type":    "application/json",
 		"Accept-Language": "en-GB",
 		"Accept":          "*/*",
-		"x-dev":           "1",
 	}
 
 	switch region {
