@@ -1,28 +1,10 @@
 package charger
 
-// LICENSE
-
-// Copyright (c) 2022 andig
-
-// This module is NOT covered by the MIT license. All rights reserved.
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -31,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -41,11 +22,13 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log      *util.Logger
-	statusG  util.Cacheable[zaptec.StateResponse]
-	id       string
-	enabled  bool
-	priority bool
+	log            *util.Logger
+	statusG        util.Cacheable[zaptec.StateResponse]
+	id             string
+	installationId string
+	enabled        bool
+	priority       bool
+	version        int // 4 = zaptec go 2
 }
 
 func init() {
@@ -128,23 +111,36 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Base:   c.Transport,
 	}
 
-	c.id, err = ensureCharger(c.id, c.chargers)
-
+	selectedCharger, err := c.chargers()
+	if err != nil {
+		return nil, err
+	}
+	c.id = selectedCharger.Id
+	c.installationId = selectedCharger.InstallationId
+	c.version = selectedCharger.DeviceType
 	return c, err
 }
 
-func (c *Zaptec) chargers() ([]string, error) {
+func (c *Zaptec) chargers() (*zaptec.Charger, error) {
 	var res zaptec.ChargersResponse
 
 	uri := fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
 	err := c.GetJSON(uri, &res)
-	if err == nil {
-		return lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
-			return c.Id
-		}), nil
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, err
+	if len(res.Data) == 0 {
+		return nil, fmt.Errorf("no chargers found")
+	}
+	if c.id == "" {
+		return &res.Data[0], nil
+	}
+	for _, charger := range res.Data {
+		if charger.Id == c.id {
+			return &charger, nil
+		}
+	}
+	return nil, fmt.Errorf("no chargers found")
 }
 
 // Status implements the api.Charger interface
@@ -275,6 +271,27 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
+	const ZaptecGo2 = 4
+	if c.version == ZaptecGo2 {
+		phaseCurrent := 32 // 32A will be limited to installation max current
+		noPower := 0
+		data := zaptec.UpdateInstallation{
+			AvailableCurrentPhase1: &phaseCurrent,
+			AvailableCurrentPhase2: &phaseCurrent,
+			AvailableCurrentPhase3: &phaseCurrent,
+		}
+		if phases == 1 {
+			data = zaptec.UpdateInstallation{
+				AvailableCurrentPhase1: &phaseCurrent,
+				AvailableCurrentPhase2: &noPower,
+				AvailableCurrentPhase3: &noPower,
+			}
+		}
+
+		c.log.DEBUG.Printf("zaptec: zaptec2 go - set phases to %d, max current %d", phases, phaseCurrent)
+		return c.installationUpdate(data)
+	}
+
 	res, err := c.statusG.Get()
 
 	if err == nil {
@@ -316,18 +333,14 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-var _ api.Diagnosis = (*Zaptec)(nil)
+func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
+	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.installationId)
 
-// Diagnosis implements the api.ChargePhases interface
-func (c *Zaptec) Diagnose() {
-	res, _ := c.statusG.Get()
-
-	// sort for printing
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].StateId < res[j].StateId
-	})
-
-	for _, k := range res {
-		fmt.Printf("%d. %s %s\n", k.StateId, k.StateId, k)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = c.DoBody(req)
+		c.statusG.Reset()
 	}
+
+	return err
 }

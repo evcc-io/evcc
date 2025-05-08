@@ -78,6 +78,12 @@ type Update struct {
 	MeterValueInterval   *int `json:"meterValueInterval,omitempty"`
 }
 
+type UpdateInstallation struct {
+	AvailableCurrentPhase1 *int `json:"availableCurrentPhase1,omitempty"`
+	AvailableCurrentPhase2 *int `json:"availableCurrentPhase2,omitempty"`
+	AvailableCurrentPhase3 *int `json:"availableCurrentPhase3,omitempty"`
+}
+
 type SessionPriority struct {
 	PrioritizedPhases *int `json:"prioritizedPhases,omitempty"`
 }
