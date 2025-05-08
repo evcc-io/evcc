@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -28,6 +31,7 @@ const (
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
+	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
 }
 
@@ -306,4 +310,29 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 		return nil
 	}
+}
+
+func decodeDeviceConfig(r io.Reader) (configReq, error) {
+	var res configReq
+	if err := util.DecodeOther(r, &res); err != nil {
+		return configReq{}, err
+	}
+
+	if res.Yaml == "" {
+		// TODO decide remove @naltatis
+		// if strings.EqualFold(res.Type, "custom") {
+		// 	return configReq{}, errors.New("invalid config: custom type requires yaml")
+		// }
+		return res, nil
+	}
+
+	if len(res.Other) != 0 {
+		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
+	}
+
+	if err := yaml.NewDecoder(strings.NewReader(res.Yaml)).Decode(&res.Other); err != nil && err != io.EOF {
+		return configReq{}, err
+	}
+
+	return res, nil
 }

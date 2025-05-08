@@ -1,12 +1,9 @@
 package server
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -21,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -246,8 +242,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -322,8 +318,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -531,23 +527,10 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
-	}
-	// @andig: this is a proof of concept to allow testing custom devices. we need a general solution for this
-	if req.Type == "custom" {
-		if yamlStr, ok := req.Other["yaml"].(string); ok {
-			if err := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr))).Decode(&req.Other); err != nil && err != io.EOF {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-		} else {
-			jsonError(w, http.StatusBadRequest, errors.New("yaml content missing or invalid"))
-			return
-		}
-		delete(req.Other, "yaml")
 	}
 
 	var instance any
