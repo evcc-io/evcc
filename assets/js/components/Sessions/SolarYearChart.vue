@@ -9,23 +9,32 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { Radar } from "vue-chartjs";
-import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import {
+	RadialLinearScale,
+	PointElement,
+	LineElement,
+	Filler,
+	Tooltip,
+	type TooltipItem,
+} from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
+import type { Legend, PERIODS, Session } from "./types";
 
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "SolarYearChart",
 	components: { Radar, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		period: { type: String, default: "total" },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		period: { type: String as PropType<PERIODS>, default: "total" },
 	},
 	computed: {
 		firstDay() {
@@ -43,14 +52,14 @@ export default {
 		chartData() {
 			console.log("update solar month data");
 
-			if (!this.sessions.length > 0) return { labels: [], datasets: [] };
+			if (this.sessions.length > 0) return { labels: [], datasets: [] };
 
 			const firstYear = this.firstDay.getFullYear();
 			const lastYear = this.lastDay.getFullYear();
 
-			const result = {};
+			const result: Record<string, Record<string, { self?: number; grid?: number }>> = {};
 
-			const years = [];
+			const years: string[] = [];
 
 			// initialize result for years and months
 			for (let year = lastYear; year >= firstYear; year--) {
@@ -107,7 +116,7 @@ export default {
 				datasets,
 			};
 		},
-		legends() {
+		legends(): Legend[] {
 			if (this.period === "total") {
 				return this.chartData.datasets.map((dataset) => {
 					const label = dataset.label;
@@ -150,8 +159,8 @@ export default {
 						axis: "xy",
 						position: "topBottomCenter",
 						callbacks: {
-							label: (tooltipItem) => {
-								const value = tooltipItem.raw || 0;
+							label: (tooltipItem: TooltipItem<"radar">) => {
+								const value = tooltipItem.dataset.data[tooltipItem.dataIndex] || 0;
 								const datasetLabel = tooltipItem.dataset.label || "";
 								return datasetLabel + ": " + this.fmtPercentage(value, 1);
 							},
@@ -169,7 +178,7 @@ export default {
 							color: colors.muted,
 							backdropColor: colors.background,
 							font: { size: 10 },
-							callback: (value) => this.fmtPercentage(value, 0),
+							callback: (value: number) => this.fmtPercentage(value, 0),
 						},
 						angleLines: { display: false },
 						grid: { color: colors.border },
@@ -178,5 +187,5 @@ export default {
 			};
 		},
 	},
-};
+});
 </script>
