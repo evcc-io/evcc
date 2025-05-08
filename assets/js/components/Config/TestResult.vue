@@ -1,5 +1,5 @@
 <template>
-	<div class="test-result my-4 p-4">
+	<div class="test-result my-4 p-4" data-testid="test-result">
 		<div class="d-flex justify-content-between align-items-center">
 			<strong>
 				<span>{{ $t("config.validation.label") }}: </span>

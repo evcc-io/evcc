@@ -384,7 +384,7 @@ export default defineComponent({
 		},
 		async loadTemplate() {
 			this.template = null;
-			if (!this.templateName) return;
+			if (!this.templateName || this.templateName === ConfigType.Custom) return;
 			this.loadingTemplate = true;
 			try {
 				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
@@ -451,9 +451,10 @@ export default defineComponent({
 		closed() {
 			this.isModalVisible = false;
 		},
-		templateChanged() {
+		templateChanged(e: Event) {
+			const value = (e.target as HTMLSelectElement).value;
 			this.reset();
-			if (this.templateName === ConfigType.Custom) {
+			if (value === ConfigType.Custom) {
 				this.values.type = ConfigType.Custom;
 				this.values.yaml = defaultYaml;
 			}

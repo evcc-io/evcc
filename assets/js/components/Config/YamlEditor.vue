@@ -7,6 +7,7 @@
 		:theme="theme"
 		:options="options"
 		:value="modelValue"
+		data-testid="yaml-editor"
 		@update:value="$emit('update:modelValue', $event)"
 		@mount="ready"
 	>
@@ -17,6 +18,7 @@
 				:rows="lines"
 				:value="modelValue"
 				:disabled="disabled"
+				data-testid="yaml-editor-fallback"
 				@input="$emit('update:modelValue', $event.target.value)"
 			/>
 		</template>

@@ -92,8 +92,8 @@ export default defineComponent({
 		this.localValue = this.modelValue;
 	},
 	methods: {
-		changed() {
-			this.$emit("change");
+		changed(e: Event) {
+			this.$emit("change", e);
 		},
 		getProductName() {
 			const select = this.$refs["select"] as HTMLSelectElement;

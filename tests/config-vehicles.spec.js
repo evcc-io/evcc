@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import {
+  editorClear,
+  editorType,
+  enableExperimental,
+  expectModalHidden,
+  expectModalVisible,
+} from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -187,5 +193,40 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+  });
+
+  test("user-defined vehicle", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY);
+
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    await page.getByTestId("add-vehicle").click();
+    const modal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(modal);
+
+    await modal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const editor = modal.getByTestId("yaml-editor");
+    await expect(editor).toContainText("title: green Honda");
+
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "title: blue Honda",
+      "capacity: 12.3",
+      "soc:",
+      "  source: const",
+      "value: 42",
+    ]);
+
+    const restResult = modal.getByTestId("test-result");
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: successful");
+    await expect(restResult).toContainText(["Capacity", "12.3 kWh"].join(""));
+    await expect(restResult).toContainText(["Charge", "42.0%"].join(""));
+
+    // TODO: add save, restart, change delete roundtrip
   });
 });
