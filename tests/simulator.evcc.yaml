@@ -1,7 +1,78 @@
-interval: 0.25s
+# open evcc at http://evcc.local:7070
+
+sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJldmNjLmlvIiwic3ViIjoidGJhZWhsZXIiLCJleHAiOjMwNDIzNjM2MDAsImlhdCI6MTc0NjM2MzYwMCwic3JjIjoiZ2gifQ._1pVZsl3oBYIPR6nJcNJ9n0m2V6XW5nNrKQuiSWZ_jI
+
+network:
+  schema: http
+  host: localhost # .local suffix announces the hostname on MDNS
+  port: 7070
+
+log: debug
+levels:
+  cache: error
+
+# unique installation id
+plant: de601d8c0f40adac1366b6c2fd9403690f8c6e539784c07589ac49c238247c83
+
+interval: 45s # control cycle interval
+
+meters:
+  - type: template
+    template: huawei-sun2000
+    id: 1
+    host: 192.168.1.130
+    port: 502
+    usage: grid
+    modbus: tcpip
+    timeout: 30s
+    storageunit: 1
+    name: grid
+
+  - type: template
+    template: huawei-sun2000
+    id: 1
+    host: 192.168.1.130
+    port: 502
+    usage: pv
+    modbus: tcpip
+    timeout: 15s
+    storageunit: 1
+    name: pv
+
+  - type: template
+    template: huawei-sun2000
+    id: 1
+    host: 192.168.1.130
+    port: 502
+    usage: battery
+    modbus: tcpip
+    timeout: 15s
+    storageunit: 1
+    name: battery
+
+vehicles:
+  - type: template
+    template: vw
+    user: tbaehler@gmx.ch
+    password: LcM*RzBZ-9Um
+    vin: WVGZZZE2ZNP504418
+    title: VW Id. 5
+    icon: car
+    capacity: 77
+    phases: 3
+    mode: pv
+    maxCurrent: 16
+    cache: 15m
+    timeout: 10s
+    name: vw
+
+loadpoints:
+  - title: Carport
+    charger: zaptec
+    vehicle: vw
 
 site:
-  title: evcc Simulator
+  title: Home
   meters:
     grid: grid
     pv:
@@ -9,93 +80,9 @@ site:
     battery:
       - battery
 
-meters:
-  - name: grid
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.grid.power
-  - name: pv
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.pv.power
-  - name: battery
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.battery.power
-    soc:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.battery.soc
-  - name: lp0meter
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].power
-    energy:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].energy
-
-loadpoints:
-  - title: Carport
-    charger: charger
-    meter: lp0meter
-    mode: pv
-    soc:
-      estimate: false
-    vehicle: golf
-
 chargers:
-  - name: charger
-    type: custom
-    enable:
-      source: js
-      script: |
-        false
-    enabled:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].enabled
-    status:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].status
-    maxcurrent:
-      source: js
-      script: |
-        16
-
-vehicles:
-  - name: golf
-    title: blauer e-Golf
-    type: custom
-    soc:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .vehicles[0].soc
-    range:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .vehicles[0].range
-    capacity: 20
-  - name: honda
+  - name: zaptec
     type: template
-    template: offline
-    title: grüner Honda e
-    capacity: 28.5
-
-tariffs:
-  currency: EUR
-  grid:
-    type: fixed
-    price: 0.4 # EUR/kWh
-    zones:
-      - hours: 1-6
-        price: 0.2
+    template: zaptec
+    user: thomas@xn--bhler-gra.ch
+    password: 6J*_BNMnPpGm
