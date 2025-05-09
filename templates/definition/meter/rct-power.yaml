@@ -24,6 +24,7 @@ params:
     advanced: true
     default: 30s
   - name: maxchargepower
+    default: 4200
 render: |
   type: rct
   uri: {{ .host }}
