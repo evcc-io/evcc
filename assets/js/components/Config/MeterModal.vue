@@ -129,7 +129,7 @@ import DeviceModalActions from "./DeviceModal/Actions.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import PropertyField from "./PropertyField.vue";
-import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { initialTestState, performTest } from "./utils/test";
@@ -241,7 +241,10 @@ export default defineComponent({
 			return [
 				{
 					label: "generic",
-					options: this.products.filter((p) => p.group === "generic"),
+					options: [
+						...this.products.filter((p) => p.group === "generic"),
+						customTemplateOption(this.$t("config.general.customOption")),
+					],
 				},
 				{
 					label: "specific",

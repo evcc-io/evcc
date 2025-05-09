@@ -8,13 +8,6 @@
 			class="form-select w-100"
 			@change="changed"
 		>
-			<template v-if="primaryOption">
-				<option :value="primaryOption.template">
-					{{ primaryOption.name }}
-				</option>
-				<option disabled>----------</option>
-			</template>
-
 			<template v-for="group in groups" :key="group.label">
 				<optgroup
 					v-if="group.options?.length"
@@ -29,9 +22,6 @@
 					</option>
 				</optgroup>
 			</template>
-
-			<option disabled>----------</option>
-			<option value="custom">{{ $t("config.general.customOption") }}</option>
 		</select>
 		<input
 			v-else
@@ -101,4 +91,8 @@ export default defineComponent({
 		},
 	},
 });
+
+export function customTemplateOption(name: string) {
+	return { template: "custom", name };
+}
 </script>

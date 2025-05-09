@@ -178,7 +178,7 @@ import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import DeviceModalActions from "./DeviceModal/Actions.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
@@ -246,6 +246,13 @@ export default defineComponent({
 		templateOptions() {
 			return [
 				{
+					label: "primary",
+					options: [
+						...this.products.filter((p) => p.template === "offline"),
+						customTemplateOption(this.$t("config.general.customOption")),
+					],
+				},
+				{
 					label: "online",
 					options: this.products.filter((p) => !p.group),
 				},
@@ -299,6 +306,10 @@ export default defineComponent({
 			if (this.values.type === ConfigType.Template) {
 				data["template"] = this.templateName;
 			}
+			// remove icon if custom
+			if (this.values.type === ConfigType.Custom) {
+				delete data["icon"];
+			}
 			// trim and remove empty lines
 			if (Array.isArray(data["identifiers"])) {
 				data["identifiers"] = data["identifiers"].map((i) => i.trim()).filter((i) => i);
@@ -323,9 +334,6 @@ export default defineComponent({
 			result[0].key = undefined;
 			result[10].name = "10 (highest)";
 			return result;
-		},
-		primaryOption() {
-			return this.products.find((p) => p.template === "offline");
 		},
 		showActions() {
 			return this.templateName || this.values.type === ConfigType.Custom;

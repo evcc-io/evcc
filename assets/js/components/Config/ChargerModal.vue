@@ -95,7 +95,7 @@ import DeviceModalActions from "./DeviceModal/Actions.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
-import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
 import {
@@ -180,35 +180,26 @@ export default defineComponent({
 		modalSize() {
 			return this.values.type === ConfigType.Custom ? "xl" : undefined;
 		},
-		genericOptions() {
-			return this.products.filter((p) => p.group === "generic");
-		},
-		chargerOptions() {
-			return this.products.filter((p) => !p.group);
-		},
-		switchSocketOptions() {
-			return this.products.filter((p) => p.group === "switchsockets");
-		},
-		heatingdevicesOptions() {
-			return this.products.filter((p) => p.group === "heating");
-		},
 		templateOptions() {
 			return [
 				{
 					label: "generic",
-					options: this.genericOptions,
+					options: [
+						...this.products.filter((p) => p.group === "generic"),
+						customTemplateOption(this.$t("config.general.customOption")),
+					],
 				},
 				{
 					label: "chargers",
-					options: this.chargerOptions,
+					options: this.products.filter((p) => !p.group),
 				},
 				{
 					label: "switchsockets",
-					options: this.switchSocketOptions,
+					options: this.products.filter((p) => p.group === "switchsockets"),
 				},
 				{
 					label: "heatingdevices",
-					options: this.heatingdevicesOptions,
+					options: this.products.filter((p) => p.group === "heating"),
 				},
 			];
 		},

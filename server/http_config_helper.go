@@ -320,11 +320,11 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	}
 
 	if res.Yaml == "" {
-		// TODO decide remove @naltatis
-		// if strings.EqualFold(res.Type, "custom") {
-		// 	return configReq{}, errors.New("invalid config: custom type requires yaml")
-		// }
 		return res, nil
+	}
+
+	if !strings.EqualFold(res.Type, "custom") {
+		return configReq{}, errors.New("invalid config: yaml only allowed for custom type")
 	}
 
 	if len(res.Other) != 0 {
