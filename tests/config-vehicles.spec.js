@@ -18,6 +18,8 @@ test.afterEach(async () => {
   await stop();
 });
 
+const GENERIC_VEHICLE = "Generic vehicle (without API)";
+
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
     await start(CONFIG_GRID_ONLY);
@@ -30,7 +32,7 @@ test.describe("vehicles", async () => {
 
     // create #1
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -38,7 +40,7 @@ test.describe("vehicles", async () => {
 
     // create #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -85,12 +87,12 @@ test.describe("vehicles", async () => {
 
     // create #1 & #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByLabel("car").click();
     await vehicleModal.getByLabel("van").check();
@@ -118,7 +120,7 @@ test.describe("vehicles", async () => {
 
     // create #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -137,7 +139,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await expect(vehicleModal.getByLabel("Title")).toBeVisible();
     await expect(vehicleModal.getByLabel("Car")).toBeVisible(); // icon
     await expect(vehicleModal.getByLabel("Battery capacity")).toBeVisible();
@@ -175,7 +177,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");

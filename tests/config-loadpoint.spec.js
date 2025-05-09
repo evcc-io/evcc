@@ -49,7 +49,7 @@ async function addVehicle(page, title) {
   await page.getByRole("button", { name: "Add vehicle" }).click();
   const modal = page.getByTestId("vehicle-modal");
   await expectModalVisible(modal);
-  await modal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+  await modal.getByLabel("Manufacturer").selectOption("Generic vehicle (without API)");
   await modal.getByLabel("Title").fill(title);
   await modal.getByRole("button", { name: "Validate & save" }).click();
   await expectModalHidden(modal);
