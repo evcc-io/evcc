@@ -106,7 +106,7 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			dc["config"] = params
 		}
 	}
-	if (dc["config"] == nil) {
+	if dc["config"] == nil {
 		// add title if available
 		config := make(map[string]any)
 		if title, ok := conf.Other["title"].(string); ok {
