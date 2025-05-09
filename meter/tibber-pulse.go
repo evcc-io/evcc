@@ -54,7 +54,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		HomeID  string
 		Timeout time.Duration
 	}{
-		Timeout: time.Minute,
+		Timeout: 2 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

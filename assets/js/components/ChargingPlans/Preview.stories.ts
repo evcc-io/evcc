@@ -1,4 +1,4 @@
-import { CURRENCY, type Rate } from "../../types/evcc.js";
+import { CURRENCY, type Rate } from "@/types/evcc";
 import Preview from "./Preview.vue";
 import type { StoryFn } from "@storybook/vue3";
 

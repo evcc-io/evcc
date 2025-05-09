@@ -1,0 +1,877 @@
+{
+  "batterySettings": {
+    "batteryLevel": "Ποσοστό Μπαταρίας",
+    "bufferStart": {
+      "above": "όταν είναι πάνω από {soc}",
+      "full": "όταν είναι {soc}.",
+      "never": "μόνο με αρκετό πλεόνασμα."
+    },
+    "capacity": "{energy} από {total}",
+    "control": "Έλεγχος Μπαταρίας",
+    "discharge": "Αποτροπή εκφόρτισης σε γρήγορη λειτουργία και προγραμματισμένη φόρτιση.",
+    "disclaimerHint": "Σημείωση:",
+    "disclaimerText": "Αυτές οι ρυθμίσεις επηρεάζουν μόνο την ηλιακή Φ/Β λειτουργία. Η συμπεριφορά φόρτισης προσαρμόζεται ανάλογα.",
+    "gridChargeTab": "Φόρτιση δικτύου",
+    "legendBottomName": "Προτεραιότητα στη φόρτιση της οικιακής μπαταρίας",
+    "legendBottomSubline": "μέχρι να φτάσει {soc}.",
+    "legendMiddleName": "Προτεραιότητα στη φόρτιση οχήματος",
+    "legendMiddleSubline": "όταν η οικιακή μπαταρία είναι πάνω από {soc}.",
+    "legendTopAutostart": "Ξεκινά αυτόματα",
+    "legendTopName": "Φόρτιση οχήματος μέσω μπαταρίας",
+    "legendTopSubline": "όταν η οικιακή μπαταρία είναι πάνω από {soc}.",
+    "modalTitle": "Οικιακή Μπαταρία",
+    "usageTab": "Χρήση μπαταρίας"
+  },
+  "config": {
+    "battery": {
+      "titleAdd": "Πρόσθεσε Μπαταρία",
+      "titleEdit": "Eπεξεργασία Mπαταρίας"
+    },
+    "charger": {
+      "chargers": "Φορτιστές οχημάτων",
+      "generic": "Γενικές ενσωματώσεις",
+      "ocppHelp": "Αντιγράψτε αυτή τη διεύθυνση στη διαμόρφωση των φορτιστών σας.",
+      "ocppLabel": "OCPP-Server URL",
+      "template": "Κατασκευαστής",
+      "titleAdd": "Προσθήκη Φορτιστή",
+      "titleEdit": "Επεξεργασία Φορτιστή"
+    },
+    "circuits": {
+      "description": "Διασφαλίζει ότι το άθροισμα όλων των σημείων φόρτισης που είναι συνδεδεμένα σε ένα κύκλωμα δεν υπερβαίνει τα οριζόμενα όρια ισχύος και έντασης ρεύματος. Τα κυκλώματα μπορούν να είναι σε ένθετες δομές για τη δημιουργία μιας ιεραρχίας.",
+      "title": "Διαχείριση Φορτίου"
+    },
+    "control": {
+      "description": "Συνήθως οι προεπιλεγμένες τιμές αρκούν. Αλλάξτε τις μόνο εάν γνωρίζετε τι κάνετε.",
+      "descriptionInterval": "Έλεγχος του κύκλου ενημέρωσης βρόχου σε δευτερόλεπτα. Καθορίζει πόσο συχνά το evcc διαβάζει τα δεδομένα του μετρητή, προσαρμόζει την ισχύ φόρτισης και ενημερώνει τη διεπαφή χρήστη. Μικρά διαστήματα (< 30 δευτερόλεπτα) μπορεί να προκαλέσουν ταλαντώσεις και ανεπιθύμητη συμπεριφορά.",
+      "descriptionResidualPower": "Μετατοπίζει το σημείο λειτουργίας του βρόχου ελέγχου. Εάν έχετε οικιακή μπαταρία, συνιστάται να ορίσετε μια τιμή 100 W. Με αυτόν τον τρόπο η μπαταρία θα έχει μικρότερη προτεραιότητα σε σχέση με τη χρήση δικτύου.",
+      "labelInterval": "Διάστημα ενημέρωσης",
+      "labelResidualPower": "Υπολειπόμενη ισχύς",
+      "title": "Έλεγχος συμπεριφοράς"
+    },
+    "deviceValue": {
+      "amount": "Ποσό",
+      "broker": "Broker",
+      "bucket": "Bucket",
+      "capacity": "Χωρητικότητα",
+      "chargeStatus": "Κατάσταση",
+      "chargeStatusA": "μη συνδεδεμένο",
+      "chargeStatusB": "συνδεδεμένο",
+      "chargeStatusC": "φορτίζει",
+      "chargeStatusE": "χωρίς ισχύ",
+      "chargeStatusF": "σφάλμα",
+      "chargedEnergy": "Φορτισμένο",
+      "co2": "CO₂ Δικτύου",
+      "configured": "Ρυθμίστηκε",
+      "controllable": "«Ελεγχόμενο»",
+      "currency": "Νόμισμα",
+      "current": "Ένταση",
+      "currentRange": "Ένταση",
+      "enabled": "Ενεργοποιημένο",
+      "energy": "Ενέργεια",
+      "feedinPrice": "Ταρίφα Feed-in",
+      "gridPrice": "Τιμή δικτύου",
+      "hemsType": "Σύστημα",
+      "identifier": "Αναγνωριστικό RFID",
+      "no": "όχι",
+      "odometer": "Οδόμετρο",
+      "org": "Οργανισμός",
+      "phaseCurrents": "Ένταση L1, L2, L3",
+      "phasePowers": "Ισχύς L1, L2, L3",
+      "phaseVoltages": "Τάση L1, L2, L3",
+      "phases1p3p": "Eναλλαγή φάσεων",
+      "power": "Ισχύς",
+      "powerRange": "Ισχύς",
+      "range": "Αυτονομία",
+      "singlePhase": "Μονοφασικό",
+      "soc": "Κατάσταση φόρτισης",
+      "temp": "Θερμοκρασία",
+      "topic": "Topic",
+      "url": "URL",
+      "vehicleLimitSoc": "Όριο οχήματος",
+      "yes": "ναι"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A (δεν είναι συνδεδεμένο)",
+      "B": "B (συνδεδεμένο)",
+      "C": "C (φορτίζει)"
+    },
+    "eebus": {
+      "description": "Διαμόρφωση που επιτρέπει στο evcc να επικοινωνεί με άλλες συσκευές EEBus.",
+      "title": "EEBus"
+    },
+    "form": {
+      "deprecated": "καταργήθηκε",
+      "example": "Παράδειγμα",
+      "optional": "προαιρετικό"
+    },
+    "general": {
+      "cancel": "Ακύρωση",
+      "delete": "Διαγραφή",
+      "docsLink": "Δείτε την τεκμηρίωση.",
+      "experimental": "Πειραματικό",
+      "hideAdvancedSettings": "Απόκρυψη ρυθμίσεων για προχωρημένους",
+      "off": "κλειστό",
+      "on": "ανοιχτό",
+      "password": "Κωδικός",
+      "readFromFile": "Ανάγνωση από αρχείο",
+      "remove": "Αφαίρεση",
+      "save": "Αποθήκευση",
+      "showAdvancedSettings": "Εμφάνιση ρυθμίσεων για προχωρημένους",
+      "telemetry": "Τηλεμετρία",
+      "title": "Τίτλος",
+      "validateSave": "Επικύρωση και αποθήκευση"
+    },
+    "grid": {
+      "title": "Μετρητής δικτύου",
+      "titleAdd": "Προσθήκη Μετρητή Δικτύου",
+      "titleEdit": "Επεξεργασία Μετρητή Δικτύου"
+    },
+    "hems": {
+      "description": "Συνδέστε το evcc σε άλλο οικιακό σύστημα διαχείρισης ενέργειας.",
+      "title": "HEMS"
+    },
+    "influx": {
+      "description": "Γράφει δεδομένα χρέωσης και άλλες μετρήσεις στην InfluxDB. Χρησιμοποιήστε το Grafana ή άλλα εργαλεία για οπτικοποίηση των δεδομένων.",
+      "descriptionToken": "Ελέγξτε την τεκμηρίωση της InfluxDB για να μάθετε πώς να δημιουργήσετε κάποιο. https://docs.influxdata.com/influxdb/v2/admin/",
+      "labelBucket": "Bucket",
+      "labelCheckInsecure": "Να επιτρέπονται τα self-signed πιστοποιητικά",
+      "labelDatabase": "Βάση δεδομένων",
+      "labelInsecure": "Επικύρωση πιστοποιητικού",
+      "labelOrg": "Οργανισμός",
+      "labelPassword": "Κωδικός",
+      "labelToken": "API Token",
+      "labelUrl": "URL",
+      "labelUser": "Χρήστης",
+      "title": "InfluxDB",
+      "v1Support": "Με υποστήριξη για την InfluxDB 1.x;",
+      "v2Support": "Επιστροφή σε InfluxDB 2.x"
+    },
+    "loadpoint": {
+      "addCharger": "Προσθήκη φορτιστή",
+      "addMeter": "Προσθήκη αποκλειστικού μετρητή για το φορτιστή",
+      "cancel": "Άκυρο",
+      "chargerLabel": "Φορτιστής",
+      "chargerPower11kw": "11 kW",
+      "chargerPower11kwHelp": "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 16 Α.",
+      "chargerPower22kw": "22 kW",
+      "chargerPower22kwHelp": "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 32 A.",
+      "chargerPowerCustom": "άλλο",
+      "chargerPowerCustomHelp": "Ορίστε ένα προσαρμοσμένο εύρος έντασης ρεύματος.",
+      "chargerTypeLabel": "Τύπος φορτιστή",
+      "chargingTitle": "Φορτίζει",
+      "circuitLabel": "Κύκλωμα",
+      "circuitUnassigned": "μη εκχωρημένο",
+      "defaultModeHelp": "Λειτουργία φόρτισης όταν συνδεθεί το όχημα.",
+      "defaultModeHelpKeep": "Διατηρεί τον τελευταίο επιλεγμένο τρόπο φόρτισης.",
+      "defaultModeLabel": "Προεπιλεγμένη λειτουργία",
+      "delete": "Διαγραφή",
+      "electricalSubtitle": "Όταν έχετε αμφιβολίες, ρωτήστε τον ηλεκτρολόγο σας.",
+      "electricalTitle": "Ηλεκτρολογικό",
+      "energyMeterHelp": "Πρόσθετος μετρητής εάν ο φορτιστής δεν έχει ενσωματωμένο.",
+      "energyMeterLabel": "Μετρητής ενέργειας",
+      "estimateLabel": "Παρεμβολή επιπέδου φόρτισης μεταξύ ενημερώσεων API",
+      "maxCurrentHelp": "Πρέπει να είναι μεγαλύτερο από την ελάχιστη ένταση.",
+      "maxCurrentLabel": "Μέγιστη ένταση",
+      "minCurrentHelp": "Πηγαίνετε κάτω από 6A μόνο εάν ξέρετε τι κάνετε.",
+      "minCurrentLabel": "Ελάχιστη ένταση",
+      "noVehicles": "Δεν έχουν προστεθεί οχήματα.",
+      "phases1p": "μονοφασικό",
+      "phases3p": "τριφασικό",
+      "phasesAutomatic": "Αυτόματα οι φάσεις",
+      "phasesAutomaticHelp": "Ο φορτιστής σας υποστηρίζει αυτόματη εναλλαγή μεταξύ φόρτισης 1 και 3 φάσεων. Στην οθόνη του μπορείτε να προσαρμόσετε αυτή τη λειτουργία επιλογής φάσεων κατά τη φόρτιση.",
+      "phasesHelp": "Αριθμός φάσεων που είναι συνδεδεμένες στον φορτιστή.",
+      "phasesLabel": "Φάσεις",
+      "pollIntervalHelp": "Χρόνος μεταξύ των ενημερώσεων API του οχήματος. Τα μικρά διαστήματα ενδέχεται να ταλαιπωρήσουν τη μπαταρία του οχήματος.",
+      "pollIntervalLabel": "Διάστημα ενημέρωσης",
+      "pollModeAlways": "πάντοτε",
+      "pollModeAlwaysHelp": "Να ζητά πάντα ενημερώσεις κατάστασης σε τακτά χρονικά διαστήματα.",
+      "pollModeCharging": "φορτίζει",
+      "pollModeChargingHelp": "Να ζητά ενημερώσεις κατάστασης οχήματος μόνο κατά τη φόρτιση.",
+      "pollModeConnected": "συνδεδεμένο",
+      "pollModeConnectedHelp": "Ενημέρωση της κατάστασης του οχήματος σε τακτά χρονικά διαστήματα όταν είναι συνδεδεμένο.",
+      "pollModeLabel": "Συμπεριφορά ενημέρωσης",
+      "priorityHelp": "Τα σημεία φόρτισης μεγαλύτερης προτεραιότητας έχουν προτιμότερη πρόσβαση σε ηλιακό πλεόνασμα.",
+      "priorityLabel": "Προτεραιότητα",
+      "save": "Αποθήκευση",
+      "showAllSettings": "Εμφάνιση όλων των ρυθμίσεων",
+      "solarBehaviorCustomHelp": "Ορίστε το δικό σας εύρος ενεργοποίησης και απενεργοποίησης κατώτατων ορίων και καθυστερήσεων.",
+      "solarModeCustom": "προσαρμοσμένo",
+      "titleAdd": "Προσθήκη Σημείου Φόρτισης",
+      "titleEdit": "Επεξεργασία Σημείου Φόρτισης",
+      "titleExample": "Γκαράζ, Υπόστεγο, κλπ.",
+      "titleLabel": "Τίτλος",
+      "vehicleAutoDetection": "αυτόματος εντοπισμός",
+      "vehicleHelpAutoDetection": "Επιλέγει αυτόματα το πιο πιθανό όχημα. Είναι δυνατή και η χειροκίνητη επιλογή.",
+      "vehicleHelpDefault": "Υποθέτει ότι πάντα θα φορτίζει εδώ αυτό το όχημα. Η αυτόματη ανίχνευση είναι απενεργοποιημένη. Είναι δυνατή η χειροκίνητη επιλογή.",
+      "vehicleLabel": "Προεπιλεγμένο όχημα",
+      "vehiclesTitle": "Οχήματα"
+    },
+    "main": {
+      "addGrid": "Προσθήκη Μετρητή Δικτύου",
+      "addLoadpoint": "Προσθήκη σημείου φόρτισης",
+      "addPvBattery": "Προσθήκη Φ/Β ενέργειας ή μπαταρίας",
+      "addTariffs": "Προσθήκη τιμολογίων",
+      "addVehicle": "Προσθήκη οχήματος",
+      "configured": "ρυθμίστηκε",
+      "edit": "επεξεργασία",
+      "name": "Όνομα",
+      "title": "Διαμόρφωση",
+      "unconfigured": "δεν έχει ρυθμιστεί",
+      "vehicles": "Τα Οχήματά μου",
+      "yaml": "Συσκευή που έχει οριστεί στο evcc.yaml δεν είναι προς επεξεργασία από εδώ."
+    },
+    "messaging": {
+      "description": "Λάβετε μηνύματα σχετικά με τις συνεδρίες φόρτισης.",
+      "title": "Ειδοποιήσεις"
+    },
+    "meter": {
+      "cancel": "Ακύρωση",
+      "delete": "Διαγραφή",
+      "save": "Αποθήκευση",
+      "template": "Κατασκευαστής",
+      "titleChoice": "Τι θέλετε να προσθέσετε;",
+      "validateSave": "Επικύρωση & αποθήκευση"
+    },
+    "modbusproxy": {
+      "description": "Να επιτρέπεται σε πολλούς πελάτες να έχουν πρόσβαση σε μία συσκευή Modbus.",
+      "title": "Modbus Proxy"
+    },
+    "mqtt": {
+      "authentication": "Έλεγχος ταυτότητας",
+      "description": "Συνδεθείτε σε ένα MQTT broker για ανταλλάγη δεδομένων με άλλα συστήματα στο δίκτυό σας.",
+      "descriptionClientId": "Αποστολέας των μηνυμάτων. Εάν μείνει κενό θα γίνει χρήση του `evcc-[τυχαίο]`.",
+      "descriptionTopic": "Αφήστε το κενό για να απενεργοποιήσετε δημοσιεύσεις.",
+      "labelBroker": "Broker",
+      "labelCaCert": "Server certificate (CA)",
+      "labelCheckInsecure": "Να επιτρέπονται τα πιστοποιητικά self-signed",
+      "labelClientCert": "Πιστοποιητικό πελάτη",
+      "labelClientId": "ID πελάτη",
+      "labelClientKey": "Κλειδί πελάτη",
+      "labelInsecure": "Επικύρωση πιστοποιητικού",
+      "labelPassword": "Κωδικός",
+      "labelTopic": "Topic",
+      "labelUser": "Χρήστης",
+      "publishing": "Δημοσιεύσεις",
+      "title": "MQTT"
+    },
+    "network": {
+      "descriptionHost": "Κάντε χρήση του επιθέματος .local για να μπορεί να γίνει χρήση του mDNS. Σχετικό για την ανακάλυψη της εφαρμογής για κινητά και ορισμένων φορτιστών OCPP.",
+      "descriptionPort": "Θύρα για τη διεπαφή ιστού (web-UI) και το API. Θα χρειαστεί να ενημερώσετε τη διεύθυνση URL του προγράμματος περιήγησής σας, εάν το αλλάξετε.",
+      "descriptionSchema": "Επηρεάζει μόνο τον τρόπο δημιουργίας των διευθύνσεων URL. Η επιλογή HTTPS δεν θα ενεργοποιήσει την κρυπτογράφηση.",
+      "labelHost": "Hostname",
+      "labelPort": "Θύρα",
+      "labelSchema": "Σχήμα",
+      "title": "Δίκτυο"
+    },
+    "options": {
+      "boolean": {
+        "no": "όχι",
+        "yes": "ναι"
+      },
+      "endianness": {
+        "big": "big-endian",
+        "little": "little-endian"
+      },
+      "schema": {
+        "http": "HTTP (χωρίς κρυπτογράφηση)",
+        "https": "HTTPS (με κρυπτογράφηση)"
+      },
+      "status": {
+        "A": "A (δεν είναι συνδεδεμένο)",
+        "B": "B (συνδεδεμένο)",
+        "C": "C (φορτίζει)"
+      }
+    },
+    "pv": {
+      "titleAdd": "Προσθήκη Μετρητή Φ/Β",
+      "titleEdit": "Επεξεργασία Μετρητή Φ/Β"
+    },
+    "section": {
+      "general": "Γενικά",
+      "grid": "Δίκτυο ενέργειας",
+      "integrations": "Ενσωματώσεις",
+      "loadpoints": "Σημεία φόρτισης",
+      "meter": "Φ/Β και μπαταρία",
+      "system": "Σύστημα",
+      "vehicles": "Οχήματα"
+    },
+    "sponsor": {
+      "addToken": "Εισαγάγετε το token",
+      "changeToken": "Αλλαγή του token",
+      "description": "Το μοντέλο χορηγίας μας βοηθά να διατηρήσουμε το έργο και να δημιουργήσουμε με βιώσιμο τρόπο νέες και συναρπαστικές λειτουργίες. Ως χορηγός έχετε πρόσβαση σε όλες τις εφαρμογές φορτιστή.",
+      "descriptionToken": "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή.",
+      "error": "Το sponsor token δεν είναι έγκυρο .",
+      "labelToken": "Sponsor token",
+      "title": "Χορηγία",
+      "tokenRequired": "Πρέπει να εισάγετε ένα sponsor token για να μπορέσετε να δημιουργήσετε αυτή τη συσκευή.",
+      "tokenRequiredLearnMore": "Μάθετε περισσότερα.",
+      "trialToken": "Δοκιμαστικό token"
+    },
+    "system": {
+      "logs": "Καταγραφές",
+      "restart": "Επανεκκίνηση",
+      "restartRequiredDescription": "Παρακαλώ επανεκκινήστε για να δείτε το αποτέλεσμα.",
+      "restartRequiredMessage": "Άλλαξε η διαμόρφωση.",
+      "restartingDescription": "Παρακαλώ περιμένετε...",
+      "restartingMessage": "Επανεκκίνηση του evcc."
+    },
+    "tariffs": {
+      "description": "Καθορίστε ενεργειακά τιμολόγια για να υπολογίσετε το κόστος κάθε φόρτισης.",
+      "title": "Τιμολόγια"
+    },
+    "title": {
+      "description": "Προβάλλεται στην κεντρική οθόνη και στον φυλλομετρητή",
+      "label": "Τίτλος",
+      "title": "Επεξεργασία Τίτλου"
+    },
+    "validation": {
+      "failed": "απέτυχε",
+      "label": "Κατάσταση",
+      "running": "επικύρωση...",
+      "success": "επιτυχία",
+      "unknown": "απροσδιόριστο",
+      "validate": "επικύρωση"
+    },
+    "vehicle": {
+      "cancel": "Ακύρωση",
+      "delete": "Διαγραφή",
+      "generic": "Άλλες ενσωματώσεις",
+      "online": "Οχήματα με διαδικτυακό API",
+      "save": "Αποθήκευση",
+      "scooter": "Σκούτερ",
+      "template": "Κατασκευαστής",
+      "titleAdd": "Προσθήκη Οχήματος",
+      "titleEdit": "Επεξεργασία Οχήματος",
+      "validateSave": "Επικύρωση και αποθήκευση"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "Φ/Β",
+      "greenEnergySub1": "φόρτιση με το evcc",
+      "greenEnergySub2": "από τον Οκτώβριο του 2022",
+      "greenShare": "Μερίδιο Φ/Β",
+      "greenShareSub1": "παροχή ισχύος από",
+      "greenShareSub2": "Φ/Β και απόθεμα μπαταρίας",
+      "power": "Ισχύς φόρτισης",
+      "powerSub1": "{activeClients} από {totalClients} συμμετέχοντες",
+      "powerSub2": "φορτίζει...",
+      "tabTitle": "Κοινότητα live"
+    },
+    "savings": {
+      "co2Saved": "{value} αποθηκεύτηκε",
+      "co2Title": "Εκπομπές CO₂",
+      "configurePriceCo2": "Μάθετε πώς να διαμορφώνετε δεδομένα τιμής και CO₂.",
+      "footerLong": "{percent} ενέργεια Φ/Β",
+      "footerShort": "{percent} Φ/Β",
+      "modalTitle": "Επισκόπηση Ενέργειας Φόρτισης",
+      "moneySaved": "εξοικονομήθηκαν {value}",
+      "percentGrid": "{grid} kWh δικτύου",
+      "percentSelf": "{self} kWh Φ/Β",
+      "percentTitle": "Ηλιακή Φ/Β Ενέργεια",
+      "period": {
+        "30d": "Τελευταίες 30 ημέρες",
+        "365d": "τελευταίες 365 ημέρες",
+        "thisYear": "φέτος",
+        "total": "από πάντα"
+      },
+      "periodLabel": "Περίοδος:",
+      "priceTitle": "Τιμή ενέργειας",
+      "referenceGrid": "δίκτυο",
+      "referenceLabel": "Δεδομένα αναφοράς:",
+      "tabTitle": "Τα δεδομένα μου"
+    },
+    "sponsor": {
+      "becomeSponsor": "Γίνετε χορηγός",
+      "becomeSponsorExtended": "Υποστηρίξτε μας με άμεσο τρόπο και λάβετε αυτοκόλλητα.",
+      "confetti": "«Είστε έτοιμοι για κομφετί;»",
+      "confettiPromise": "Παίρνετε αυτοκόλλητα και ψηφιακό κομφετί",
+      "sticker": "… ή αυτοκόλλητα evcc;",
+      "supportUs": "Η αποστολή μας είναι να κάνουμε κανόνα την ηλιακή φόρτιση. Βοηθήστε το evcc δίνοντας ότι νομίζετε οτι αξίζει για εσάς.",
+      "thanks": "Ευχαριστούμε, {χορηγός}! Η συνεισφορά σας βοηθά στην περαιτέρω ανάπτυξη του evcc.",
+      "titleNoSponsor": "Στηρίξτε μας",
+      "titleSponsor": "Είστε υποστηρικτής",
+      "titleTrial": "Δοκιμαστική λειτουργία",
+      "titleVictron": "Χορηγία της Victron Energy",
+      "trial": "Είστε σε δοκιμαστική λειτουργία και μπορείτε να κάνετε χρήση όλων των δυνατοτήτων. Εξετάστε το ενδεχόμενο να το στηρίξετε μέσω χορηγίας.",
+      "victron": "Χρησιμοποιείτε το evcc με συσκευές Victron Energy και έχετε πρόσβαση σε όλες τις δυνατότητες."
+    },
+    "telemetry": {
+      "optIn": "Θέλω να συνεισφέρω τα δεδομένα μου.",
+      "optInMoreDetails": "Περισσότερες λεπτομέρειες {0}.",
+      "optInMoreDetailsLink": "εδώ",
+      "optInSponsorship": "Απαιτείται χορηγία."
+    },
+    "version": {
+      "availableLong": "διαθέσιμη νέα έκδοση",
+      "modalCancel": "Ακύρωση",
+      "modalDownload": "Λήψη",
+      "modalInstalledVersion": "Εγκατεστημένη έκδοση",
+      "modalNoReleaseNotes": "Δεν υπάρχουν διαθέσιμες σημειώσεις έκδοσης. Περισσότερες πληροφορίες σχετικά με τη νέα έκδοση:",
+      "modalTitle": "Διατίθεται νέα έκδοση",
+      "modalUpdate": "Εγκατάσταση",
+      "modalUpdateNow": "Εγκατάσταση τώρα",
+      "modalUpdateStarted": "Εκκίνηση της νέας έκδοσης του evcc…",
+      "modalUpdateStatusStart": "Ξεκίνησε η εγκατάσταση:"
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "Μέσος όρος",
+      "lowestHour": "«Πιο καθαρή ώρα»",
+      "range": "'Εύρος"
+    },
+    "modalTitle": "Πρόγνωση",
+    "price": {
+      "average": "Μέσος όρος",
+      "lowestHour": "Πιο φθηνή ώρα",
+      "range": "'Εύρος"
+    },
+    "solar": {
+      "dayAfterTomorrow": "Μεθαύριο",
+      "partly": "μερικώς",
+      "remaining": "Απομένει",
+      "today": "Σήμερα",
+      "tomorrow": "Αύριο"
+    },
+    "type": {
+      "co2": "CO₂",
+      "price": "Τιμή",
+      "solar": "Ηλιακή"
+    }
+  },
+  "header": {
+    "about": "Σχετικά",
+    "blog": "Blog",
+    "docs": "Τεκμηρίωση",
+    "github": "GitHub",
+    "login": "Συνδέσεις οχημάτων",
+    "logout": "Αποσύνδεση",
+    "nativeSettings": "Αλλαγή διακομιστή",
+    "needHelp": "Χρειάζεστε βοήθεια;",
+    "sessions": "Συνεδρίες φόρτισης"
+  },
+  "help": {
+    "discussionsButton": "Συζητήσεις GitHub",
+    "documentationButton": "Τεκμηρίωση",
+    "issueButton": "Αναφορά σφάλματος",
+    "issueDescription": "Βρήκατε μια παράξενη ή λάθος συμπεριφορά;",
+    "logsButton": "Προβολή αρχείων καταγραφής",
+    "logsDescription": "Ελέγξτε τα αρχεία καταγραφής για σφάλματα.",
+    "modalTitle": "Χρειάζεστε βοήθεια;",
+    "primaryActions": "Κάτι δεν λειτουργεί όπως θα έπρεπε; Αυτά είναι καλά μέρη για να λάβετε βοήθεια.",
+    "restart": {
+      "cancel": "Ακύρωση",
+      "confirm": "Ναι, επανεκκίνηση!",
+      "description": "Υπό κανονικές συνθήκες η επανεκκίνηση δε θα πρέπει να είναι απαραίτητη. Εξετάστε το ενδεχόμενο να αναφέρετε σφάλμα εάν χρειάζεται να κάνετε επανεκκίνηση του evcc σε τακτική βάση.",
+      "disclaimer": "Σημείωση: το evcc θα τερματιστεί και θα βασιστεί στο λειτουργικό σύστημα για την επανεκκίνηση της υπηρεσίας.",
+      "modalTitle": "Είστε βέβαιοι ότι θέλετε να κάνετε επανεκκίνηση;"
+    },
+    "restartButton": "Επανεκκίνηση",
+    "restartDescription": "Δοκιμάσατε να το απενεργοποιήσετε και να το ενεργοποιήσετε ξανά;",
+    "secondaryActions": "Ακόμα δε μπορείτε να λύσετε το πρόβλημά σας; Ακολουθούν ορισμένες πιο σοβαρές επιλογές."
+  },
+  "log": {
+    "areaLabel": "Φίλτρο τομέα",
+    "areas": "Όλοι οι τομείς",
+    "download": "Λήψη πλήρους αρχείου καταγραφής",
+    "levelLabel": "Φίλτρο επιπέδου αρχείου καταγραφής",
+    "nAreas": "{count} τομείς",
+    "noResults": "Δεν υπάρχουν αντίστοιχες εγγραφές στο ημερολόγιο.",
+    "search": "Αναζήτηση",
+    "selectAll": "επιλογή όλων",
+    "showAll": "Εμφάνιση όλων των καταχωρήσεων",
+    "title": "Καταγραφές",
+    "update": "Αυτόματη ενημέρωση"
+  },
+  "loginModal": {
+    "cancel": "Άκυρο",
+    "error": "Η σύνδεση απέτυχε: ",
+    "iframeHint": "Ανοίξτε το evcc σε νέα καρτέλα.",
+    "iframeIssue": "Ο κωδικός πρόσβασής είναι σωστός, αλλά το πρόγραμμα περιήγησής φαίνεται να έχει χάσει το cookie ελέγχου ταυτότητας. Αυτό μπορεί να συμβεί εάν εκτελέσετε το evcc σε ένα iframe μέσω HTTP.",
+    "invalid": "Ο κωδικός πρόσβασης δεν είναι έγκυρος.",
+    "login": "Σύνδεση",
+    "password": "Κωδικός",
+    "reset": "Επαναφορά κωδικού πρόσβασης;",
+    "title": "Πιστοποίηση"
+  },
+  "main": {
+    "chargingPlan": {
+      "active": "Ενεργό",
+      "addRepeatingPlan": "Προσθήκη επαναλαμβανόμενου προγράμματος",
+      "arrivalTab": "Άφιξη",
+      "day": "Ημέρα",
+      "departureTab": "Αναχώρηση",
+      "goal": "Επιθυμητή φόρτιση",
+      "modalTitle": "Πρόγραμμα Φόρτισης",
+      "none": "κανένα",
+      "planNumber": "Πρόγραμμα {number}",
+      "remove": "Αφαίρεση",
+      "repeating": "επαναλαμβανόμενο",
+      "repeatingPlans": "Επαναλαμβανόμενα προγράμματα",
+      "selectAll": "Επιλογή όλων",
+      "time": "Ώρα",
+      "title": "Πρόγραμμα",
+      "titleMinSoc": "Ελάχιστη φόρτιση",
+      "titleTargetCharge": "Αναχώρηση",
+      "unsavedChanges": "Υπάρχουν μη αποθηκευμένες αλλαγές. Υποβολή τώρα;",
+      "update": "Υποβολή",
+      "weekdays": "Ημέρες"
+    },
+    "energyflow": {
+      "battery": "Μπαταρία",
+      "batteryCharge": "Φόρτιση μπαταρίας",
+      "batteryDischarge": "Αποφόρτιση μπαταρίας",
+      "batteryGridChargeActive": "ενεργή φόρτιση από το δίκτυο",
+      "batteryGridChargeLimit": "φόρτιση από το δίκτυο όταν",
+      "batteryHold": "Μπαταρία (κλειδωμένο)",
+      "batteryTooltip": "{energy} από {total} ({soc})",
+      "forecastTooltip": "πρόβλεψη: εναπομένουσα ηλιακή παραγωγή σήμερα",
+      "gridImport": "Χρήση δικτύου",
+      "homePower": "Κατανάλωση",
+      "loadpoints": "Φορτιστής| Φορτιστής | {count} φορτιστές",
+      "noEnergy": "Χωρίς δεδομένα μετρητή",
+      "pvExport": "Εξαγωγή προς δικτύο",
+      "pvProduction": "Παραγωγή",
+      "selfConsumption": "«Αυτοκατανάλωση»"
+    },
+    "heatingStatus": {
+      "charging": "Θερμαίνεται…",
+      "waitForVehicle": "Έτοιμο. Αναμονή για θερμαντήρα..."
+    },
+    "loadpoint": {
+      "avgPrice": "⌀ Τιμή",
+      "charged": "Φορτίστηκε",
+      "co2": "⌀ CO₂",
+      "duration": "Διάρκεια",
+      "fallbackName": "Σημείο φόρτισης",
+      "power": "Ισχύς",
+      "price": "Κόστος",
+      "remaining": "Υπόλοιπο",
+      "remoteDisabledHard": "{source}: απενεργοποιημένο",
+      "remoteDisabledSoft": "{source}: απενεργοποιημένη προσαρμοζόμενη ηλιακή Φ/Β φόρτιση",
+      "solar": "Φ/Β"
+    },
+    "loadpointSettings": {
+      "batteryBoost": {
+        "description": "Γρήγορη φόρτιση από οικιακή μπαταρία.",
+        "label": "Ενίσχυση από μπαταρία",
+        "mode": "Διαθέσιμο μόνο σε λειτουργία Φ/Β ή Ελαχ+Φ/Β.",
+        "once": "Ενεργή ενίσχυση για αυτή τη συνεδρία φόρτισης."
+      },
+      "batteryUsage": "Οικιακή Μπαταρία",
+      "currents": "Ένταση φόρτισης",
+      "default": "προεπιλογή",
+      "disclaimerHint": "Σημείωση:",
+      "limitSoc": {
+        "description": "Όριο φόρτισης που χρησιμοποιείται όταν αυτό το όχημα είναι συνδεδεμένο.",
+        "label": "Προεπιλεγμένο όριο"
+      },
+      "maxCurrent": {
+        "label": "Μέγιστη Ένταση"
+      },
+      "minCurrent": {
+        "label": "Ελάχιστη Ένταση"
+      },
+      "minSoc": {
+        "description": "Το όχημα φορτίζεται (γρήγορα) μέχρι {0} σε λειτουργία ηλιακής Φ/Β ενέργειας. Μετά συνεχίζει μόνο με το πλεόνασμα Φ/Β ενέργειας. Χρήσιμο για να εξασφαλίσει μια ελάχιστη εμβέλεια ακόμη και για πιο συννεφιασμένες ημέρες.",
+        "label": "Ελ. % φόρτισης"
+      },
+      "onlyForSocBasedCharging": "Αυτές οι επιλογές είναι διαθέσιμες μόνο για οχήματα με γνωστό επίπεδο φόρτισης.",
+      "phasesConfigured": {
+        "label": "Φάσεις",
+        "no1p3pSupport": "Πώς είναι συνδεδεμένος ο φορτιστής σας;",
+        "phases_0": "αυτόματη εναλλαγή",
+        "phases_1": "1 φάση",
+        "phases_1_hint": "({min} έως {max})",
+        "phases_3": "3 φάσεις",
+        "phases_3_hint": "({min} έως {max})"
+      },
+      "smartCostCheap": "Φτηνή φόρτιση δικτύου",
+      "smartCostClean": "Περιβαλλοντική φόρτιση δικτύου",
+      "title": "Ρυθμίσεις {0}",
+      "vehicle": "Όχημα"
+    },
+    "mode": {
+      "minpv": "Ελαχ+Φ/Β",
+      "now": "Ταχύ",
+      "off": "Κλειστό",
+      "pv": "Φ/Β",
+      "smart": "Έξυπνο"
+    },
+    "provider": {
+      "login": "σύνδεση",
+      "logout": "αποσύνδεση"
+    },
+    "startConfiguration": "Ας ξεκινήσουμε τη διαμόρφωση",
+    "targetCharge": {
+      "activate": "Ενεργοποίηση",
+      "co2Limit": "Όριο CO₂ από {co2}",
+      "costLimitIgnore": "Το διαμορφωμένο {limit} θα αγνοηθεί κατά τη διάρκεια αυτής της περιόδου.",
+      "currentPlan": "ενεργό πρόγραμμα",
+      "descriptionEnergy": "Μέχρι πότε θα πρέπει το {targetEnergy} να φορτίζει το όχημα;",
+      "descriptionSoc": "Πότε πρέπει να φορτιστεί το όχημα μέχρι {targetSoc};",
+      "inactiveLabel": "Στόχευση ώρας",
+      "nextPlan": "Επόμενο πρόγραμμα",
+      "notReachableInTime": "Ο στόχος θα επιτευχθεί {overrun} αργότερα.",
+      "onlyInPvMode": "Το πρόγραμμα φόρτισης λειτουργεί μόνο σε ηλιακή Φ/Β λειτουργία.",
+      "planDuration": "Χρόνος φόρτισης",
+      "planPeriodLabel": "Περίοδος",
+      "planPeriodValue": "{start} έως {end}",
+      "planUnknown": "δεν είναι γνωστό ακόμα",
+      "preview": "Προεπισκόπηση προγράμματος",
+      "priceLimit": "όριο τιμής του {price}",
+      "remove": "Αφαίρεση",
+      "setTargetTime": "κανένα",
+      "targetIsAboveLimit": "Το οριζόμενο όριο φόρτισης {limit} θα αγνοηθεί κατά τη διάρκεια αυτής της περιόδου.",
+      "targetIsAboveVehicleLimit": "Το όριο του οχήματος είναι χαμηλότερο από το στόχο φόρτισης.",
+      "targetIsInThePast": "Διάλεξε μια στιγμή στο μέλλον, Marty.",
+      "targetIsTooFarInTheFuture": "Θα αναπροσαρμόσουμε το πρόγραμμα μόλις μάθουμε περισσότερα για το μέλλον.",
+      "title": "Στόχευση ώρας",
+      "today": "σήμερα",
+      "tomorrow": "αύριο",
+      "update": "Ενημέρωση",
+      "vehicleCapacityDocs": "Μάθετε πώς να το ρυθμίσετε.",
+      "vehicleCapacityRequired": "Απαιτείται η χωρητικότητα της μπαταρίας του οχήματος για την εκτίμηση του χρόνου φόρτισης."
+    },
+    "targetChargePlan": {
+      "chargeDuration": "Χρόνος φόρτισης",
+      "co2Label": "εκπομπές CO2 ⌀",
+      "priceLabel": "Τιμή ενέργειας",
+      "timeRange": "{day} {range} ω",
+      "unknownPrice": "άγνωστο ακόμα"
+    },
+    "targetEnergy": {
+      "label": "Όριο",
+      "noLimit": "κανένα"
+    },
+    "vehicle": {
+      "addVehicle": "Προσθήκη οχήματος",
+      "changeVehicle": "Αλλαγή οχήματος",
+      "detectionActive": "Προσδιορισμός οχήματος...",
+      "fallbackName": "Όχημα",
+      "moreActions": "Περισσότερες ενέργειες",
+      "none": "Κανένα όχημα",
+      "notReachable": "Το όχημα δεν ήταν ανιχνεύσιμο. Δοκιμάστε να επανεκκινήσετε το evcc.",
+      "targetSoc": "Όριο",
+      "temp": "Θερμ.",
+      "tempLimit": "Θερμ. όριο",
+      "unknown": "Όχημα επισκέπτη",
+      "vehicleSoc": "Φορτισμένο"
+    },
+    "vehicleStatus": {
+      "awaitingAuthorization": "Αναμονή για εξουσιοδότηση.",
+      "batteryBoost": "Ενεργή ενίσχυση από μπαταρία.",
+      "charging": "Φορτίζει...",
+      "cheapEnergyCharging": "Διαθέσιμη φτηνή ενέργεια.",
+      "cheapEnergyNextStart": "Φτηνή ενέργεια σε {duration}.",
+      "cheapEnergySet": "Ορίστηκε το όριο τιμής.",
+      "cleanEnergyCharging": "Διαθέσιμη καθαρή ενέργεια.",
+      "cleanEnergyNextStart": "Πράσινη ενέργεια σε {duration}.",
+      "cleanEnergySet": "Ορίστηκε το όριο CO₂.",
+      "climating": "Εντοπίστηκε προκλιματισμός.",
+      "connected": "Συνδέθηκε.",
+      "disconnectRequired": "Η συνεδρία τερματίστηκε. Συνδεθείτε ξανά.",
+      "disconnected": "Αποσυνδεδεμένο.",
+      "finished": "Τελείωσε.",
+      "minCharge": "Ελάχιστη φόρτιση μέχρι {soc}.",
+      "pvDisable": "Δεν υπάρχει αρκετό πλεόνασμα. Σε λίγο θα σταματήσει.",
+      "pvEnable": "Διαθέσιμο πλεόνασμα. Θα ξεκινήσει σύντομα.",
+      "scale1p": "Σε λίγο θα γίνει μετάπτωση σε μονοφασική φόρτιση.",
+      "scale3p": "Σε λίγο θα γίνει επαύξηση σε τριφασική φόρτιση",
+      "targetChargeActive": "Ενεργό πρόγραμμα φόρτισης. Εκτίμηση ολοκλήρωσης σε {duration}.",
+      "targetChargePlanned": "Το πρόγραμμα θα ξεκινήσει τη φόρτιση σε {duration}.",
+      "targetChargeWaitForVehicle": "Είναι σε ετοιμότητα το πρόγραμμα φόρτισης. Αναμονή για το όχημα...",
+      "vehicleLimit": "Όριο οχήματος",
+      "vehicleLimitReached": "Έχει φτάσει στο όριο του οχήματος.",
+      "waitForVehicle": "Έτοιμο. Αναμονή για όχημα...",
+      "welcome": "Σύντομη αρχική φόρτιση για επιβεβαίωση της σύνδεσης."
+    },
+    "vehicles": "Στάθμευση",
+    "welcome": "Γεια σας!"
+  },
+  "notifications": {
+    "dismissAll": "Απόρριψη όλων",
+    "logs": "Προβολή πλήρους καταγραφής",
+    "modalTitle": "Ειδοποιήσεις"
+  },
+  "offline": {
+    "configurationError": "Σφάλμα κατά την εκκίνηση. Ελέγξτε τις ρυθμίσεις παραμέτρων και επανεκκινήστε.",
+    "message": "Χωρίς σύνδεση με διακομιστή.",
+    "restart": "Επανεκκίνηση",
+    "restartNeeded": "Απαιτείται για την εφαρμογή των αλλαγών.",
+    "restarting": "Ο διακομιστής θα είναι διαθέσιμος σε λίγο."
+  },
+  "passwordModal": {
+    "description": "Ορίστε έναν κωδικό πρόσβασης για την προστασία των ρυθμίσεων διαμόρφωσης. Η χρήση της κύριας οθόνης εξακολουθεί να είναι δυνατή χωρίς σύνδεση.",
+    "empty": "Ο κωδικός πρόσβασης δεν πρέπει να είναι κενός",
+    "error": "Σφάλμα: ",
+    "labelCurrent": "Τρέχων κωδικός",
+    "labelNew": "Νέος κωδικός",
+    "labelRepeat": "Επανάληψη κωδικού",
+    "newPassword": "Δημιουργία κωδικού",
+    "noMatch": "Οι κωδικοι δεν ταιριάζουν",
+    "titleNew": "Ορισμός Κωδικού Διαχειριστή",
+    "titleUpdate": "Ενημέρωση Κωδικού Διαχειριστή",
+    "updatePassword": "Ενημέρωση κωδικού"
+  },
+  "session": {
+    "cancel": "Άκυρο",
+    "co2": "CO₂",
+    "date": "Περίοδος",
+    "delete": "Διαγραφή",
+    "finished": "Τελείωσε",
+    "meter": "Μετρητής",
+    "meterstart": "Αρχή μετρητή",
+    "meterstop": "Τέλος μετρητή",
+    "odometer": "Οδόμετρο",
+    "price": "Τιμή",
+    "started": "Ξεκίνησε",
+    "title": "Συνεδρία φόρτισης"
+  },
+  "sessions": {
+    "avgPower": "⌀ Ισχύς",
+    "avgPrice": "⌀ Τιμή",
+    "chargeDuration": "Διάρκεια",
+    "chartTitle": {
+      "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
+      "avgPriceByGroup": "⌀ Τιμή {byGroup}",
+      "byGroupLoadpoint": "κατά Σημείο Φόρτισης",
+      "byGroupVehicle": "κατά Όχημα",
+      "energy": "Φορτισμένη Ενέργεια",
+      "energyGrouped": "Ηλιακή Φ/Β vs. Ενέργειας Δικτύου",
+      "energyGroupedByGroup": "Ενέργεια {byGroup}",
+      "energySubSolar": "{value} ηλιακή",
+      "energySubTotal": "{value} σύνολο",
+      "groupedCo2ByGroup": "Ποσότητα CO₂ {byGroup}",
+      "groupedPriceByGroup": "Συνολικό Κόστος {byGroup}",
+      "historyCo2": "Εκπομπές CO₂",
+      "historyCo2Sub": "{value} σύνολο",
+      "historyPrice": "Κόστη Φορτίσεων",
+      "historyPriceSub": "{value} σύνολο",
+      "solar": "Ηλιακό Μερίδιο σε Ετήσια βάση",
+      "solarByGroup": "Ηλιακό Μερίδιο {byGroup}"
+    },
+    "co2": "⌀ CO₂",
+    "csv": {
+      "chargedenergy": "Ενέργεια (kWh)",
+      "chargeduration": "Διάρκεια",
+      "co2perkwh": "CO₂/kWh",
+      "created": "Δημιουργήθηκε",
+      "finished": "Τελείωσε",
+      "identifier": "Αναγνωριστικό",
+      "loadpoint": "Σημείο φόρτισης",
+      "meterstart": "Εκκίνηση μετρητή (kWh)",
+      "meterstop": "Τέλος μετρητή (kWh)",
+      "odometer": "Οδόμετρο (χλμ)",
+      "price": "Τιμή",
+      "priceperkwh": "Τιμή/kWh",
+      "solarpercentage": "Φ/Β (%)",
+      "vehicle": "Όχημα"
+    },
+    "csvMonth": "Λήψη CSV {month}",
+    "csvTotal": "Λήψη CSV συνόλων",
+    "date": "Ξεκίνησε",
+    "downloadCsv": "Λήψη ως CSV",
+    "energy": "Φόρτιση",
+    "filter": {
+      "allLoadpoints": "όλα τα σημεία φόρτισης",
+      "allVehicles": "όλα τα οχήματα",
+      "filter": "Φίλτρο"
+    },
+    "group": {
+      "co2": "Εκπομπές",
+      "grid": "Δίκτυο",
+      "price": "Τιμή",
+      "self": "Φ/Β"
+    },
+    "groupBy": {
+      "loadpoint": "Σημείο φόρτισης",
+      "none": "Σύνολο",
+      "vehicle": "Όχημα"
+    },
+    "loadpoint": "Σημείο φόρτισης",
+    "noData": "Δεν υπάρχουν συνεδρίες φόρτισης αυτό το μήνα.",
+    "overview": "Επισκόπηση",
+    "period": {
+      "month": "Μήνας",
+      "total": "Σύνολο",
+      "year": "Έτος"
+    },
+    "price": "Κόστος",
+    "reallyDelete": "Θέλετε πραγματικά να διαγράψετε αυτή τη συνεδρία;",
+    "showIndividualEntries": "Εμφάνιση μεμονωμένων συνεδριών",
+    "solar": "Φ/Β",
+    "title": "Συνεδρίες φόρτισης",
+    "total": "Σύνολο",
+    "type": {
+      "co2": "CO₂",
+      "price": "Τιμή",
+      "solar": "Φ/Β"
+    },
+    "vehicle": "Όχημα"
+  },
+  "settings": {
+    "fullscreen": {
+      "enter": "Μετάπτωση σε πλήρη οθόνη",
+      "exit": "Έξοδος από πλήρη οθόνη",
+      "label": "Πλήρης οθόνη"
+    },
+    "hiddenFeatures": {
+      "label": "Πειραματικό",
+      "value": "Εμφάνιση πειραματικών δυνατοτήτων διεπαφής χρήστη."
+    },
+    "language": {
+      "auto": "Αυτόματο",
+      "label": "Γλώσσα"
+    },
+    "sponsorToken": {
+      "expires": "Το sponsor token λήγει {inXDays}. {getNewToken} και κάντε εδώ μία ενημέρωση.",
+      "getNew": "Πάρτε ένα φρέσκο",
+      "hint": "Σημείωση: Θα το αυτοματοποιήσουμε στο μέλλον."
+    },
+    "telemetry": {
+      "label": "Τηλεμετρία"
+    },
+    "theme": {
+      "auto": "συστήματος",
+      "dark": "σκοτεινό",
+      "label": "Σχέδιο προβολής",
+      "light": "φωτεινό"
+    },
+    "title": "Διεπαφή χρήστη",
+    "unit": {
+      "km": "χλμ",
+      "label": "Μονάδες",
+      "mi": "μίλια"
+    }
+  },
+  "smartCost": {
+    "activeHours": "{charging} από {total}",
+    "activeHoursLabel": "Ενεργές ώρες",
+    "applyToAll": "Εφαρμογή παντού;",
+    "batteryDescription": "Φορτίζει την οικιακή μπαταρία με ενέργεια από το δίκτυο.",
+    "cheapTitle": "Φτηνή φόρτιση δικτύου",
+    "cleanTitle": "Φόρτιση δικτύου πράσινης ενέργειας",
+    "co2Label": "εκπομπές CO₂",
+    "co2Limit": "Όριο CO₂",
+    "loadpointDescription": "Επιτρέπει την προσωρινή γρήγορη φόρτιση σε λειτουργία ηλιακής Φ/Β ενέργειας.",
+    "modalTitle": "Έξυπνη φόρτιση δικτύου",
+    "none": "κανένα",
+    "priceLabel": "Τιμή ενέργειας",
+    "priceLimit": "Όριο τιμής",
+    "saved": "Αποθηκεύτηκε."
+  },
+  "startupError": {
+    "configFile": "Αρχείο διαμόρφωσης που χρησιμοποιείται:",
+    "configuration": "Διαμόρφωση",
+    "description": "Ελέγξτε το αρχείο διαμόρφωσής. Εάν το μήνυμα σφάλματος δεν βοηθά, ελέγξτε το {0}.",
+    "discussions": "GitHub Discussions",
+    "fixAndRestart": "Διορθώστε το πρόβλημα και επανεκκινήστε το διακομιστή.",
+    "hint": "Σημείωση: Μπορεί επίσης να έχετε μια ελαττωματική συσκευή (μετατροπέας, μετρητής, ...). Ελέγξτε τις συνδέσεις δικτύου σας.",
+    "lineError": "Σφάλμα στο {0}.",
+    "lineErrorLink": "γραμμή {0}",
+    "restartButton": "Επανεκκίνηση",
+    "title": "Σφάλμα εκκίνησης"
+  }
+}

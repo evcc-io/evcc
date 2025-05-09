@@ -1,0 +1,47 @@
+template: plugchoice
+products:
+  - brand: Plugchoice
+group: generic
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    en: |
+      Chargers connected through Plugchoice can leverage its OCPP proxy functionality to establish a connection to other backoffices while maintaining full control through EVCC. This allows seamless management of Plugchoice-registered chargers directly from EVCC.
+
+      For improved meter readings, it is recommended to configure the following settings in the Plugchoice portal under the configuration tab:
+
+      - Set `MeterValueSampleInterval` to 10 seconds (or another interval according to your preference).
+      - Set `MeterValuesSampledData` to `Energy.Active.Import.Register,Current.Offered,Current.Import,Voltage`.
+
+      These adjustments enable more frequent and detailed reporting of charging data to EVCC.
+    de: |
+      Über Plugchoice angeschlossene Ladegeräte können die OCPP-Proxy-Funktionalität nutzen, um eine Verbindung zu anderen Backoffices herzustellen und gleichzeitig die volle Kontrolle über EVCC zu behalten. Dies ermöglicht eine nahtlose Verwaltung der bei Plugchoice registrierten Ladegeräte direkt vom EVCC aus.
+
+      Für eine optimierte Zählerablesung empfehlen wir, die folgenden Einstellungen im Plugchoice-Portal unter `Konfiguration` zu konfigurieren:
+
+      – Stellen Sie `MeterValueSampleInterval` auf 10 Sekunden (oder ein anderes Intervall Ihrer Wahl) ein.
+      – Stellen Sie `MeterValuesSampledData` auf `Energy.Active.Import.Register,Current.Offered,Current.Import,Voltage` ein.
+
+      Diese Anpassungen ermöglichen eine häufigere und detailliertere Meldung der Ladedaten an EVCC.
+params:
+  - name: token
+    required: true
+    help:
+      de: API Token
+      en: API Token
+  - name: identity
+    required: true
+    help:
+      de: Identity des Ladepunkts (z.B. AA123456)
+      en: Charger identity (e.g. AA123456)
+  - name: connector
+    required: true
+    default: 1
+    help:
+      de: Anschluss-ID (üblicherweise 1)
+      en: Connector ID (usually 1)
+render: |
+  type: plugchoice
+  token: {{ .token }}
+  identity: {{ .identity }}
+  connector: {{ .connector }}

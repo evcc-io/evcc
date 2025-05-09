@@ -83,13 +83,13 @@
 </template>
 
 <script lang="ts">
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
-import { CO2_TYPE } from "../../units.js";
-import api, { allowClientError } from "../../api.js";
-import convertRates from "../../utils/convertRates";
+import { CO2_TYPE } from "@/units";
+import api, { allowClientError } from "@/api";
+import convertRates from "@/utils/convertRates";
 import type { PropType } from "vue";
-import type { Tariff, CURRENCY, Rate, SelectOption, Slot } from "../../types/evcc";
+import type { Tariff, CURRENCY, Rate, SelectOption, Slot } from "@/types/evcc";
 
 export default {
 	name: "SmartCostLimit",

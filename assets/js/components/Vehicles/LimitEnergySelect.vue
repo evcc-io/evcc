@@ -36,8 +36,8 @@
 <script>
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import formatter from "../../mixins/formatter.js";
-import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "../../utils/energyOptions.js";
+import formatter from "@/mixins/formatter";
+import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions";
 
 export default {
 	name: "LimitEnergySelect",

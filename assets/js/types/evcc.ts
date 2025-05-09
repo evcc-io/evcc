@@ -1,4 +1,5 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
+import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
 declare global {
 	interface Window {
@@ -6,15 +7,37 @@ declare global {
 	}
 }
 
+export interface FatalError {
+	error: any;
+	class?: any;
+}
+
 export interface State {
 	offline: boolean;
 	startup?: boolean;
 	loadpoints: [];
-	forecast?: any;
+	forecast?: Forecast;
 	currency?: CURRENCY;
-	fatal?: {
-		error: any;
-	};
+	fatal?: FatalError;
+}
+export interface LoadpointCompact {
+	icon: string;
+	title: string;
+	charging: boolean;
+	soc?: number;
+	power: number;
+	heating?: boolean;
+}
+
+export interface LoadpointCompact {
+	icon: string;
+	title: string;
+	charging: boolean;
+	soc?: number;
+	power: number;
+	heating?: boolean;
+	chargePower: number;
+	connected: boolean;
 }
 
 export enum CURRENCY {
@@ -22,6 +45,26 @@ export enum CURRENCY {
 	USD = "USD",
 	DKK = "DKK",
 }
+
+export enum CHARGE_MODE {
+	OFF = "off",
+	NOW = "now",
+	MINPV = "minpv",
+	PV = "pv",
+}
+
+export enum PHASES {
+	AUTO = 0,
+	ONE_PHASE = 1,
+	TWO_PHASES = 2,
+	THREE_PHASES = 3,
+}
+
+export interface Sponsor {
+	name: string;
+	expiresAt: Date;
+}
+
 export interface Battery {
 	power: number;
 	soc: number;
@@ -37,6 +80,8 @@ export interface Vehicle {
 	plan?: StaticPlan;
 	repeatingPlans: RepeatingPlan[];
 	title: string;
+	features?: string[];
+	capacity?: number;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;
@@ -62,6 +107,13 @@ export interface Slot {
 	warning?: boolean | null;
 	isTarget?: boolean | null;
 	selectable?: boolean | null;
+}
+
+export interface Forecast {
+	grid?: ForecastSlot[];
+	co2?: ForecastSlot[];
+	solar?: SolarDetails;
+	planner?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {

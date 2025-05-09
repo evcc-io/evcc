@@ -56,8 +56,8 @@
 import type { PropType } from "vue";
 import "@h2d2/shopicons/es/regular/arrowright";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
-import formatter from "../../mixins/formatter.js";
-import type { Slot } from "../../types/evcc.ts";
+import formatter from "@/mixins/formatter";
+import type { Slot } from "@/types/evcc";
 
 const BAR_WIDTH = 20;
 
@@ -115,9 +115,6 @@ export default {
 				}
 			});
 			return sum / count;
-		},
-		activeSlot() {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
 		},
 	},
 	methods: {

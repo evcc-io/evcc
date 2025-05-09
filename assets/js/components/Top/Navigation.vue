@@ -130,11 +130,11 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
-import collector from "../../mixins/collector.js";
+import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import baseAPI from "./baseapi.js";
-import { isApp, sendToApp } from "../../utils/native.js";
-import { isUserConfigError } from "../../utils/fatal.js";
+import baseAPI from "./baseapi";
+import { isApp, sendToApp } from "@/utils/native";
+import { isUserConfigError } from "@/utils/fatal";
 
 export default {
 	name: "TopNavigation",
