@@ -37,10 +37,10 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity       `mapstructure:",squash"`
-		Uri, Usage     string
-		MinSoc, MaxSoc int
-		Cache          time.Duration
+		capacity                       `mapstructure:",squash"`
+		Uri, Usage                     string
+		MinSoc, MaxSoc, MaxChargePower int
+		Cache                          time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -53,11 +53,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.Cache, cc.capacity.Decorator())
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.MaxChargePower, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepower int, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -133,7 +133,7 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc int, cache ti
 					return err
 				}
 
-				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-10_000))); err != nil {
+				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-maxchargepower))); err != nil {
 					return err
 				}
 
