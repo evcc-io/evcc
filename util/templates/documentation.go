@@ -50,7 +50,9 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 				panic(err)
 			}
 
-			modbusData := make(map[string]interface{})
+			modbusData := map[string]interface{}{
+				"ProductBrand": product.Brand,
+			}
 			t.ModbusValues(RenderModeDocs, modbusData)
 
 			out := new(bytes.Buffer)
