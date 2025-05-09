@@ -328,8 +328,9 @@ params:
       en: Maximum charge power (W)
       de: Maximale Ladeleistung (W)
     help:
-      en: Power limit for grid charging.
-      de: Leistungslimit für Netzladung.
+      en: Maximum charge power for forced charging of the battery in watts.
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt.
+    advanced: true
   - name: maxchargerate
     type: int
     usages: ["battery"]
@@ -337,9 +338,10 @@ params:
       en: Maximum charge power (%)
       de: Maximale Ladeleistung (%)
     help:
-      en: Power limit for grid charging.
-      de: Leistungslimit für Netzladung.
+      en: Maximum charge power for forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
+      de: Maximale Leistung für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
+    advanced: true
 
 presets:
   vehicle-base:

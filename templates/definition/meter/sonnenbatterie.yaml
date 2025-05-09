@@ -10,11 +10,11 @@ requirements:
     de: |
       Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
       Als Betriebsart der sonnenBatterie werden die beiden Modi "Eigenverbrauch" (Standard) und "Time-of-use" unterstützt. Der Modus kann über den Parameter `defaultmode` an die Konfiguration der sonnenBatterie angepasst werden.
-      Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `chargepower` angepasst werden.
+      Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `maxchargepower` angepasst werden.
     en: |
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
       The two operating modes supported for the sonnenBatterie are “self-consumption” (default) and “time-of-use”. The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
-      The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `chargepower` parameter.
+      The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `maxchargepower` parameter.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -24,6 +24,8 @@ params:
     default: 8080
   - name: capacity
     advanced: true
+  - name: maxchargepower
+    default: 3300
   - name: token
     required: false
     help:
@@ -41,12 +43,7 @@ params:
       en: Default mode for active battery control
     usages: ["battery"]
   - name: chargepower
-    default: 3300
-    advanced: true
-    help:
-      de: Ladeleistung für Netzladen in W
-      en: Charging power for grid charging in W
-    usages: ["battery"]
+    deprecated: true
 render: |
   type: custom
   power:
@@ -129,7 +126,7 @@ render: |
           - content-type: application/json
           - Auth-Token: {{ .token }}
         - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/charge/{{ .chargepower }}
+          uri: http://{{ .host }}/api/v2/setpoint/charge/{{ .maxchargepower }}
           insecure: true
           method: POST
           headers:
