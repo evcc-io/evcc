@@ -61,7 +61,7 @@ func plugin[T any](typ string, ctx context.Context, config *Config) (T, error) {
 		return zero, nil
 	}
 
-	if typ == "" {
+	if config.Source == "" {
 		return zero, errors.New("missing plugin source")
 	}
 
