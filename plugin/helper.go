@@ -12,21 +12,19 @@ import (
 )
 
 // setFormattedValue formats a message template or returns the value formatted as %v if the message template is empty
-func _setFormattedValue(message, param string, v interface{}) (string, error) {
-	if message == "" {
-		return fmt.Sprintf("%v", v), nil
-	}
-
-	return util.ReplaceFormatted(message, map[string]interface{}{
-		param: v,
-	})
-}
-
-// setFormattedValue with pipeline support
+// a given pipeline is processed afterwards
 func setFormattedValue(message, param string, v interface{}, pipeline *pipeline.Pipeline) (string, error) {
-	payload, err := _setFormattedValue(message, param, v)
-	if err != nil {
-		return "", err
+	var payload string
+	if message == "" {
+		payload = fmt.Sprintf("%v", v)
+	} else {
+		var err error
+		payload, err = util.ReplaceFormatted(message, map[string]interface{}{
+			param: v,
+		})
+		if err != nil {
+			return "", err
+		}
 	}
 	if pipeline != nil {
 		processed_payload, err := pipeline.Process([]byte(payload))
