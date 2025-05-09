@@ -60,6 +60,10 @@ func plugin[T any](typ string, ctx context.Context, config *Config) (T, error) {
 		return zero, nil
 	}
 
+	if typ == "" {
+		return zero, fmt.Errorf("missing plugin source")
+	}
+
 	factory, err := registry.Get(config.Source)
 	if err != nil {
 		return zero, err
