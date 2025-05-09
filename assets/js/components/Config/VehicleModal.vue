@@ -16,7 +16,6 @@
 				:is-new="isNew"
 				:product-name="productName"
 				:groups="templateOptions"
-				:primary-option="primaryOption"
 				@change="templateChanged"
 			/>
 			<YamlEntry v-if="values.type === 'custom'" v-model="values.yaml" type="vehicle" />

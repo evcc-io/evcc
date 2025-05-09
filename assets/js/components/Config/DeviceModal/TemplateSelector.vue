@@ -62,7 +62,6 @@ export default defineComponent({
 		modelValue: String as PropType<string | null>,
 		productName: String,
 		groups: Array as PropType<TemplateGroup[]>,
-		primaryOption: Object as PropType<PrimaryOption>,
 	},
 	emits: ["update:modelValue", "change"],
 	data() {
