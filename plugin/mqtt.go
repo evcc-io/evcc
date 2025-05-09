@@ -125,7 +125,7 @@ var _ IntSetter = (*Mqtt)(nil)
 // IntSetter publishes topic with parameter replaced by int value
 func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 	return func(v int64) error {
-		payload, err := setFormattedValue(m.payload, param, v)
+		payload, err := setFormattedValue(m.payload, param, v, m.pipeline)
 		if err != nil {
 			return err
 		}
@@ -140,7 +140,7 @@ var _ FloatSetter = (*Mqtt)(nil)
 // FloatSetter publishes topic with parameter replaced by float value
 func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
 	return func(v float64) error {
-		payload, err := setFormattedValue(m.payload, param, v)
+		payload, err := setFormattedValue(m.payload, param, v, m.pipeline)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ var _ BoolSetter = (*Mqtt)(nil)
 // BoolSetter invokes script with parameter replaced by bool value
 func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
 	return func(v bool) error {
-		payload, err := setFormattedValue(m.payload, param, v)
+		payload, err := setFormattedValue(m.payload, param, v, m.pipeline)
 		if err != nil {
 			return err
 		}
@@ -170,7 +170,7 @@ var _ StringSetter = (*Mqtt)(nil)
 // StringSetter invokes script with parameter replaced by string value
 func (m *Mqtt) StringSetter(param string) (func(string) error, error) {
 	return func(v string) error {
-		payload, err := setFormattedValue(m.payload, param, v)
+		payload, err := setFormattedValue(m.payload, param, v, m.pipeline)
 		if err != nil {
 			return err
 		}

@@ -8,10 +8,11 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/plugin/pipeline"
 )
 
 // setFormattedValue formats a message template or returns the value formatted as %v if the message template is empty
-func setFormattedValue(message, param string, v interface{}) (string, error) {
+func _setFormattedValue(message, param string, v interface{}) (string, error) {
 	if message == "" {
 		return fmt.Sprintf("%v", v), nil
 	}
@@ -19,6 +20,24 @@ func setFormattedValue(message, param string, v interface{}) (string, error) {
 	return util.ReplaceFormatted(message, map[string]interface{}{
 		param: v,
 	})
+}
+
+// setFormattedValue with pipeline support
+func setFormattedValue(message, param string, v interface{}, pipeline *pipeline.Pipeline) (string, error) {
+	payload, err := _setFormattedValue(message, param, v)
+	if err != nil {
+		return "", err
+	}
+	if pipeline != nil {
+		processed_payload, err := pipeline.Process([]byte(payload))
+		if err != nil {
+			return "", err
+		}
+		
+		payload = string(processed_payload)
+	}
+
+	return payload, nil
 }
 
 // knownErrors maps string responses to known error codes

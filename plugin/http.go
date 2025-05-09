@@ -75,7 +75,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 	p.getter = defaultGetters(p, cc.Scale)
 
 	if cc.Auth.Type != "" || cc.Auth.Source != "" {
-		transport, err := cc.Auth.Transport(ctx, log, p.Client.Transport)
+		transport, err := cc.Auth.Transport(ctx, p.Client.Transport)
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +170,7 @@ var _ Getters = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		url, err := setFormattedValue(p.url, "", "")
+		url, err := setFormattedValue(p.url, "", "", p.pipeline)
 		if err != nil {
 			return "", err
 		}
@@ -186,12 +186,12 @@ func (p *HTTP) StringGetter() (func() (string, error), error) {
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
-	url, err := setFormattedValue(p.url, param, val)
+	url, err := setFormattedValue(p.url, param, val, p.pipeline)
 	if err != nil {
 		return err
 	}
 
-	body, err := setFormattedValue(p.body, param, val)
+	body, err := setFormattedValue(p.body, param, val, p.pipeline)
 	if err != nil {
 		return err
 	}
