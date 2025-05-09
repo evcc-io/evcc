@@ -10,6 +10,9 @@ comset: "{{ .comset }}" # Kommunikationsparameter für den Adapter
 {{- if .rs485tcpip }}
 
 # RS485 via TCP/IP (Modbus RTU)
+{{- if  eq .ProductBrand "Deye" }}
+# Some Solarman data loggers support running as Modbus bridge. To connect to them use [pysolarman](https://github.com/jmccrohan/pysolarmanv5) in proxy mode
+{{- end }}
 modbus: rs485tcpip
 id: {{ .id }}
 host: {{ .host }} # Hostname
