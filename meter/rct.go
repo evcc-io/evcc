@@ -37,12 +37,14 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity                       `mapstructure:",squash"`
-		Uri, Usage                     string
-		MinSoc, MaxSoc, MaxChargePower int
-		Cache                          time.Duration
+		capacity       `mapstructure:",squash"`
+		Uri, Usage     string
+		MinSoc, MaxSoc int
+		MaxChargePower int
+		Cache          time.Duration
 	}{
-		Cache: 30 * time.Second,
+		MaxChargePower: 10000,
+		Cache:          30 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
