@@ -23,6 +23,7 @@ params:
   - name: cache
     advanced: true
     default: 30s
+  - name: maxchargepower
 render: |
   type: rct
   uri: {{ .host }}
@@ -31,3 +32,4 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
+  maxchargepower: {{ .maxchargepower }}
