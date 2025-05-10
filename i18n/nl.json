@@ -34,7 +34,7 @@
     },
     "charge": {
       "titleAdd": "Voeg Lader Meter toe",
-      "titleEdit": "Editeer Lader Meter"
+      "titleEdit": "Bewerk Lader Meter"
     },
     "charger": {
       "chargers": "EV laders",
@@ -637,7 +637,7 @@
       "fallbackName": "Laadpunt",
       "finished": "Eindtijd",
       "power": "Vermogen",
-      "price": "Kost",
+      "price": "Kosten",
       "remaining": "Resterend",
       "remoteDisabledHard": "{source}: uitgeschakeld",
       "remoteDisabledSoft": "{source}: adaptief PV-laden uitgeschakeld",
@@ -836,7 +836,7 @@
       "energySubSolar": "{value} zon",
       "energySubTotal": "{value} totaal",
       "groupedCo2ByGroup": "CO₂-Hoeveelheid {byGroup}",
-      "groupedPriceByGroup": "Totale Kost {byGroup}",
+      "groupedPriceByGroup": "Totale Kosten {byGroup}",
       "historyCo2": "CO₂-Uitstoot",
       "historyCo2Sub": "{value} totaal",
       "historyPrice": "Oplaadkosten",
@@ -890,7 +890,7 @@
       "total": "Totaal",
       "year": "Jaar"
     },
-    "price": "Kost",
+    "price": "Kosten",
     "reallyDelete": "Wilt u deze sessie echt verwijderen?",
     "showIndividualEntries": "Toon individuele sessies",
     "solar": "Zon",
@@ -930,6 +930,11 @@
       "dark": "donker",
       "label": "Ontwerp",
       "light": "licht"
+    },
+    "time": {
+      "12h": "12u",
+      "24h": "24u",
+      "label": "Tijdnotatie"
     },
     "title": "Gebruikersinterface",
     "unit": {
