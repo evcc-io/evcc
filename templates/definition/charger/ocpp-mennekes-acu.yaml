@@ -5,7 +5,10 @@ products:
       generic: eMobility Gateway (ACU)
   - brand: Mennekes
     description:
-      generic: Smart, Smart T (ACU)
+      generic: Smart (ACU)
+  - brand: Mennekes
+    description:
+      generic: Smart T (ACU)
 capabilities: ["rfid"]
 requirements:
   description:
