@@ -1,11 +1,15 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
+	"golang.org/x/oauth2"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -25,7 +29,7 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		VIN         string
 		VccApiKey   string
 		Credentials ClientCredentials
-		Tokens      Tokens
+		RedirectUri string
 		Cache       time.Duration
 	}{
 		Cache: interval,
@@ -35,21 +39,17 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey, cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
 
-	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret)
-
-	token, err := cc.Tokens.Token()
+	// create oauth2 config
+	config := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	authorizer, err := auth.NewOauth(ctx, *config)
 	if err != nil {
 		return nil, err
 	}
 
-	ts, err := connected.NewIdentity(log, oc, token)
-	if err != nil {
-		return nil, err
-	}
-
-	api := connected.NewAPI(log, ts, cc.VccApiKey)
+	api := connected.NewAPI(log, cc.VccApiKey, authorizer)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 

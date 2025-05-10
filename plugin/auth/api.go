@@ -1,7 +1,9 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Authorizer interface {
-	Transport(base http.RoundTripper) (http.RoundTripper, error)
+	Transport(base http.RoundTripper) http.RoundTripper
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -293,7 +292,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}()
 
 	// allow web access for vehicles
-	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
+	configureAuth(httpd.Router())
 
 	auth := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
