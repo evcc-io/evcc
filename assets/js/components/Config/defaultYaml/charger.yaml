@@ -1,0 +1,77 @@
+## required attributes
+
+status: # charger status [A..F]
+  source: const
+  value: "A"
+enabled: # is charging enabled?
+  source: const
+  value: true
+enable: # enable/disable charging
+  source: js
+  script: console.log(enable)
+maxcurrent: # set maximum charge current in A
+  source: js
+  script: console.log(maxcurrent) #
+
+## optional attributes (read-only)
+
+#power: # charge power in W
+#  source: const
+#  value: 11000
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#identify: # current RFID identifier
+#  source: const
+#  value: "1234567890"
+#soc: # state of charge in %
+#  source: const
+#  value: 75
+#phases: # number of physical phases (1..3)
+#  source: const
+#  value: 3
+#powers: # phase powers in W
+#  - source: const
+#    value: 3600
+#  - source: const
+#    value: 3700
+#  - source: const
+#    value: 3800
+#currents: # phase currents in A
+#  - source: const
+#    value: 16.0
+#  - source: const
+#    value: 16.1
+#  - source: const
+#    value: 16.2
+#voltages: # phase voltages in V
+#  - source: const
+#    value: 230.1
+#  - source: const
+#    value: 230.2
+#  - source: const
+#    value: 230.3
+#temp: # current temperature in °C (heating)
+#  source: const
+#  value: 45.5
+#templimit: # temperature limit in °C (heating)
+#  source: const
+#  value: 60
+#getmode: # SG-Ready mode (heat pump)
+#  source: const
+#  value: 1
+
+## optional attributes (writeable)
+
+#maxcurrentmilis: # set maximum charge current in A with decimal precision
+#  source: js
+#  script: console.log(maxcurrentmilis);
+#phases1p3p: # switch phases (requires 'tos: true')
+#  source: js
+#  script: console.log(phases1p3p);
+#wakeup: # wake up vehicle
+#  source: js
+#  script: console.log(wakeup);
+#setmode: # change SG-Ready mode (1: normal, 2: boost, 3: stop)
+#  source: js
+#  script: console.log(setmode);
