@@ -255,6 +255,7 @@
       "addVehicle": "Fahrzeug hinzufügen",
       "configured": "konfiguriert",
       "edit": "bearbeiten",
+      "loadpointRequired": "Mindestens ein Ladepunkt muss konfiguriert werden.",
       "name": "Name",
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
