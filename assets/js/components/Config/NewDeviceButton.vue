@@ -1,5 +1,5 @@
 <template>
-	<li class="root">
+	<li class="root" :class="{ attention }">
 		<button
 			class="d-flex align-items-center justify-content-center p-3"
 			tabindex="0"
@@ -18,6 +18,7 @@ export default {
 	name: "NewDeviceButton",
 	props: {
 		title: String,
+		attention: Boolean,
 	},
 	emits: ["click"],
 };
@@ -49,5 +50,26 @@ button {
 }
 button:focus {
 	outline: none;
+}
+.attention {
+	animation: wiggle 3s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+}
+
+@keyframes wiggle {
+	0%,
+	100% {
+		transform: rotate(0deg);
+	}
+	5%,
+	15% {
+		transform: rotate(-2deg);
+	}
+	10%,
+	20% {
+		transform: rotate(2deg);
+	}
+	25% {
+		transform: rotate(0deg);
+	}
 }
 </style>
