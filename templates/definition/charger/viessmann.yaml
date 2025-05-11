@@ -60,13 +60,6 @@ params:
     required: true
     default: 45
     type: int
-  - name: watchdog
-    description:
-      de: Wie häufig soll neu getriggert werden?
-      en: How often should we retrigger?
-    type: duration
-    default: 3600s
-    advanced: true
 render: |
   type: sgready
   getmode:
@@ -83,7 +76,7 @@ render: |
     # true -> oneTimeCharge is enabled -> boost mode -> 2
   setmode:
     source: watchdog
-    timeout: {{ .watchdog }} # re-write at timeout/2
+    timeout: 3600s # re-write at timeout/2
     set:
       source: switch
       switch:
