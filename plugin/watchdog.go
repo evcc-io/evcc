@@ -2,9 +2,9 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -15,7 +15,7 @@ type watchdogPlugin struct {
 	mu      sync.Mutex
 	ctx     context.Context
 	log     *util.Logger
-	reset   *string
+	reset   []string
 	initial *string
 	set     Config
 	timeout time.Duration
@@ -29,7 +29,7 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
-		Reset   *string
+		Reset   []string
 		Initial *string
 		Set     Config
 		Timeout time.Duration
@@ -102,8 +102,7 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 
 	reset := make([]int64, 0, 0)
 	if o.reset != nil {
-		resetValues := strings.Split(*o.reset, ",")
-		for _, v := range resetValues {
+		for _, v := range o.reset {
 			val, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				return nil, err
@@ -137,8 +136,7 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 
 	reset := make([]float64, 0, 0)
 	if o.reset != nil {
-		resetValues := strings.Split(*o.reset, ",")
-		for _, v := range resetValues {
+		for _, v := range o.reset {
 			val, err := strconv.ParseFloat(v, 64)
 			if err != nil {
 				return nil, err
@@ -170,9 +168,11 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	reset := make([]bool, 0, 0)
-	if o.reset != nil {
-		val, err := strconv.ParseBool(*o.reset)
+	reset := make([]bool, 0, 1)
+	if len(o.reset) > 1 {
+		return nil, fmt.Errorf("more than one boolean reset value")
+	} else if len(o.reset) == 1 {
+		val, err := strconv.ParseBool(o.reset[0])
 		if err != nil {
 			return nil, err
 		}
