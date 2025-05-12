@@ -175,7 +175,7 @@
       "addCharger": "Adicionar Carregador",
       "addMeter": "Adicionar um Contador de Carregador dedicado",
       "cancel": "Cancelar",
-      "chargerError": "É necessário configurar um Carregador EV",
+      "chargerError": "É necessário configurar um Carregador EV.",
       "chargerLabel": "Carregador",
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
@@ -279,6 +279,26 @@
       "titleChoice": "O que quer adicionar?",
       "validateSave": "Validar e guardar"
     },
+    "modbus": {
+      "baudrate": "Baud rate",
+      "comset": "ComSet",
+      "connection": "Ligação Modbus",
+      "connectionHintSerial": "O dispositivo está ligado diretamente ao evcc via RS485.",
+      "connectionHintTcpip": "O dispositivo está acessível ao evcc via LAN/WIFI.",
+      "connectionValueSerial": "Serial / USB",
+      "connectionValueTcpip": "Rede Informática",
+      "device": "Nome do dispositivo",
+      "deviceHint": "Exemplo: /dev/ttyUSB0",
+      "host": "Endereço IP ou hostname",
+      "hostHint": "Exemplo: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Porta",
+      "protocol": "Protocolo Modbus",
+      "protocolHintRtu": "Ligação através de adaptador RS485 / Ethernet sem tradução de protocolo.",
+      "protocolHintTcp": "O dispositivo tem suporte LAN/WIFI nativo ou está ligado a um adaptador RS485 / Ethernet com tradução de protocolo.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
     "modbusproxy": {
       "description": "Permitir que vários clientes acedam ao mesmo dispositivo Modbus.",
       "title": "Modbus Proxy"
@@ -360,8 +380,8 @@
       "restart": "Reiniciar",
       "restartRequiredDescription": "Por favor reinicie para aplicar as alterações.",
       "restartRequiredMessage": "Configuração alterada.",
-      "restartingDescription": "Espere por favor...",
-      "restartingMessage": "evcc a reiniciar"
+      "restartingDescription": "Espere por favor…",
+      "restartingMessage": "evcc a reiniciar."
     },
     "tariffs": {
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
@@ -375,7 +395,7 @@
     "validation": {
       "failed": "falhou",
       "label": "Status",
-      "running": "a validar...",
+      "running": "a validar…",
       "success": "concluído com sucesso",
       "unknown": "desconhecido",
       "validate": "validar"
@@ -416,7 +436,7 @@
       "greenShareSub2": "solar e bateria doméstica",
       "power": "Energia de carga",
       "powerSub1": "{activeClients} de {totalClients} utilizadores",
-      "powerSub2": "a carregar...",
+      "powerSub2": "a carregar…",
       "tabTitle": "Comunidade em tempo real"
     },
     "savings": {
@@ -472,7 +492,7 @@
       "modalTitle": "Nova versão disponível",
       "modalUpdate": "Instalar",
       "modalUpdateNow": "Instalar agora",
-      "modalUpdateStarted": "Iniciando a nova versão do evcc...",
+      "modalUpdateStarted": "Iniciando a nova versão do evcc…",
       "modalUpdateStatusStart": "Instalação iniciada:"
     }
   },
@@ -568,6 +588,11 @@
       "modalTitle": "Plano de carga",
       "none": "nenhum",
       "planNumber": "Plano {número}",
+      "preconditionDescription": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
+      "preconditionLong": "Carga tardia",
+      "preconditionOptionAll": "tudo",
+      "preconditionOptionNo": "não",
+      "preconditionShort": "Tarde",
       "remove": "Apagar",
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
@@ -599,10 +624,10 @@
       "selfConsumption": "Autoconsumo"
     },
     "heatingStatus": {
-      "charging": "Aquecendo...",
+      "charging": "A aquecer…",
       "connected": "Standby.",
       "vehicleLimit": "Limite do aquecedor",
-      "waitForVehicle": "Pronto. À espera do aquecedor..."
+      "waitForVehicle": "Pronto. À espera do aquecedor…"
     },
     "loadpoint": {
       "avgPrice": "Preço",
@@ -610,6 +635,7 @@
       "co2": "CO₂",
       "duration": "Duração",
       "fallbackName": "Posto de Carregamento",
+      "finished": "Tempo de finalização",
       "power": "Potência",
       "price": "Custo",
       "remaining": "Tempo restante",
@@ -714,7 +740,7 @@
     "vehicle": {
       "addVehicle": "Adicionar veículo",
       "changeVehicle": "Trocar veículo",
-      "detectionActive": "A detectar veículo...",
+      "detectionActive": "A detectar veículo…",
       "fallbackName": "Veículo",
       "moreActions": "Mais ações",
       "none": "Nenhum veículo",
@@ -728,7 +754,7 @@
     "vehicleStatus": {
       "awaitingAuthorization": "À espera de autorização.",
       "batteryBoost": "Boost da bateria ativo.",
-      "charging": "A carregar...",
+      "charging": "A carregar…",
       "cheapEnergyCharging": "Energia barata disponível.",
       "cheapEnergyNextStart": "Energia barata em {duration}.",
       "cheapEnergySet": "Limite de preço definido.",
@@ -740,17 +766,17 @@
       "disconnectRequired": "Sessão terminada. Por favor, volte a ligar-se.",
       "disconnected": "Desligado.",
       "finished": "Concluído.",
-      "minCharge": "Recarga mínima até {soc}",
+      "minCharge": "Recarga mínima até {soc}.",
       "pvDisable": "Excedente insuficiente. Pausa em breve.",
       "pvEnable": "Excesso disponível. Carregamento em breve.",
       "scale1p": "Reduzindo para carregamento monofásico em breve.",
       "scale3p": "Aumentando para carregamento trifásico em breve.",
       "targetChargeActive": "Plano de carregamento ativo. Fim estimado em {duration}.",
       "targetChargePlanned": "O plano de carregamento começa em {duration}.",
-      "targetChargeWaitForVehicle": "Plano de carregamento pronto. À espera do veículo...",
+      "targetChargeWaitForVehicle": "Plano de carregamento pronto. A aguardar veículo…",
       "vehicleLimit": "Limite dos veículos",
       "vehicleLimitReached": "Limite de veículo atingido.",
-      "waitForVehicle": "Pronto. À espera do veículo...",
+      "waitForVehicle": "Pronto. A aguardar veículo…",
       "welcome": "Carga inicial curta para confirmar a ligação."
     },
     "vehicles": "Estacionamento",
