@@ -74,8 +74,9 @@ render: |
               method: PUT
               uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C06
               body: '55' # slave mode
+      # run the watchdog only on the charging power request to avoid making unnecessary mode changes
       - source: watchdog
-        timeout: 30s # 3 minutes without setting a value will stop all charging
+        timeout: 30s # 3 minutes without setting a value will stop all charging, 30s was chosen to account for api instability
         reset: 1,2
         set:
           source: switch
