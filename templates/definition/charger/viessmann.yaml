@@ -34,7 +34,7 @@ params:
   - name: gateway_serial
     required: true
     description:
-      de: Gateway Serial
+      de: Gateway Serialnummer
       en: Gateway Serial
     help:
       de: Seriennummer des VitoConnect modul (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
