@@ -98,10 +98,6 @@ render: |
                   - source: http
                     method: PUT
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
-                    {{- if .maxchargepower }}
-                    body: '{{ .maxchargepower }}'
-                    {{ else }}
-                    body: '99000' # as fast as possible
-                    {{- end }}
+                    body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
