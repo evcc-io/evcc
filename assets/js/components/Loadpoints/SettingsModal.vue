@@ -167,17 +167,15 @@ import { PHASES } from "@/types/evcc";
 
 const V = 230;
 
-const range = (start: number, stop: number, step = -1) =>
-	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
+const range = (start: number, end: number) => {
+	return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+};
 
 const insertSorted = (arr: number[], num: number) => {
 	const uniqueSet = new Set(arr);
 	uniqueSet.add(num);
 	return [...uniqueSet].sort((a, b) => b - a);
 };
-
-// TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
-const MAX_CURRENT = 64;
 
 const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
 
@@ -196,6 +194,8 @@ export default defineComponent({
 		minSoc: Number,
 		maxCurrent: { type: Number, default: 0 },
 		minCurrent: { type: Number, default: 0 },
+		minPhysicalCurrent: Number,
+		maxPhysicalCurrent: Number,
 		title: String,
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String,
@@ -254,17 +254,19 @@ export default defineComponent({
 			}
 			return this.fmtW(this.minCurrent * V * this.phasesConfigured);
 		},
+		currentOptions() {
+			const low = [0.125, 0.25, 0.5, 1, 2, 3, 4, 5]; // mostly heating
+			const regular = range(6, 64); // ac charging
+			const high = [75, 100, 150, 200, 250, 300, 400, 500, 600]; // dc charging
+			return [...low, ...regular, ...high].filter(this.isInRange);
+		},
 		minCurrentOptions() {
-			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
-			// ensure that current value is always included
-			const opt2 = insertSorted(opt1, this.minCurrent);
-			return opt2.map((value) => this.currentOption(value, value === 6));
+			const opt1 = this.currentOptions.filter((value) => value <= this.maxCurrent);
+			return insertSorted(opt1, this.minCurrent).map(this.currentOption);
 		},
 		maxCurrentOptions() {
-			const opt1 = range(MAX_CURRENT, Math.ceil(this.minCurrent));
-			// ensure that current value is always included
-			const opt2 = insertSorted(opt1, this.maxCurrent);
-			return opt2.map((value) => this.currentOption(value, value === 16));
+			const opt1 = this.currentOptions.filter((value) => value >= this.minCurrent);
+			return insertSorted(opt1, this.maxCurrent).map(this.currentOption);
 		},
 		smartCostLimitProps() {
 			return this.collectProps(SmartCostLimit);
@@ -314,11 +316,9 @@ export default defineComponent({
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOption(value: number, isDefault: boolean) {
-			let name = `${this.fmtNumber(value, 0)} A`;
-			if (isDefault) {
-				name += ` (${this.$t("main.loadpointSettings.default")})`;
-			}
+		currentOption(value: number) {
+			const digits = value < 1 ? undefined : 0;
+			const name = `${this.fmtNumber(value, digits)} A`;
 			return { value, name };
 		},
 		modalVisible() {
@@ -329,6 +329,11 @@ export default defineComponent({
 		},
 		changeBatteryBoost(boost: boolean) {
 			this.$emit("batteryboost-updated", boost);
+		},
+		isInRange(value: number) {
+			const min = this.minPhysicalCurrent ?? 0;
+			const max = this.maxPhysicalCurrent ?? 64;
+			return min <= value && value <= max;
 		},
 	},
 });
