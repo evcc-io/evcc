@@ -738,36 +738,32 @@ func (lp *Loadpoint) SetPhysicalCurrentRange(min, max *float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if min != nil && max != nil {
-		if *min > *max {
-			return fmt.Errorf("min physical current must be smaller or equal than max physical current: %.1fA", *max)
-		}
+	if min != nil && max != nil && *min > *max {
+		return fmt.Errorf("min physical current must be smaller or equal than max physical current: %.1fA", *max)
 	}
 
 	lp.log.DEBUG.Println("set physical current range:", printPtr("%.1f", min), printPtr("%.1f", max))
 	lp.setMinPhysicalCurrent(min)
 	lp.setMaxPhysicalCurrent(max)
 
-	if min != nil {
-		if lp.minCurrent < *min {
-			lp.log.DEBUG.Println("adjust min current to comply with min physical current:", *min)
-			lp.setMinCurrent(*min)
-		}
-		if lp.maxCurrent < *min {
-			lp.log.DEBUG.Println("adjust max current to comply with min physical current:", *min)
-			lp.setMaxCurrent(*min)
-		}
+	// adjust to min limit
+	if min != nil && lp.minCurrent < *min {
+		lp.log.DEBUG.Println("adjust min current to comply with min physical current:", *min)
+		lp.setMinCurrent(*min)
+	}
+	if min != nil && lp.maxCurrent < *min {
+		lp.log.DEBUG.Println("adjust max current to comply with min physical current:", *min)
+		lp.setMaxCurrent(*min)
 	}
 
-	if max != nil {
-		if lp.maxCurrent > *max {
-			lp.log.DEBUG.Println("adjust max current to comply with max physical current:", *max)
-			lp.setMaxCurrent(*max)
-		}
-		if lp.minCurrent > *max {
-			lp.log.DEBUG.Println("adjust min current to comply with max physical current:", *max)
-			lp.setMinCurrent(*max)
-		}
+	// adjust to max limit
+	if max != nil && lp.maxCurrent > *max {
+		lp.log.DEBUG.Println("adjust max current to comply with max physical current:", *max)
+		lp.setMaxCurrent(*max)
+	}
+	if max != nil && lp.minCurrent > *max {
+		lp.log.DEBUG.Println("adjust min current to comply with max physical current:", *max)
+		lp.setMinCurrent(*max)
 	}
 
 	return nil
