@@ -11,6 +11,7 @@ params:
     choice: ["rs485", "tcpip"]
     id: 247
   - name: capacity
+    type: float
     advanced: true
   # battery control
   - name: minsoc
