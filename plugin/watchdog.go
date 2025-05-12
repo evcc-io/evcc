@@ -2,7 +2,9 @@ package plugin
 
 import (
 	"context"
+	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,7 +66,7 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogPlugin, set func(T) error, reset *T) func(T) error {
+func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	return func(val T) error {
 		o.mu.Lock()
 
@@ -75,7 +77,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset *T) func(T
 		}
 
 		// start wdt on non-reset value
-		if reset == nil || val != *reset {
+		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
 
@@ -98,13 +100,16 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	var reset *int64
+	reset := make([]int64, 0, 0)
 	if o.reset != nil {
-		val, err := strconv.ParseInt(*o.reset, 10, 64)
-		if err != nil {
-			return nil, err
+		resetValues := strings.Split(*o.reset, ",")
+		for _, v := range resetValues {
+			val, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			reset = append(reset, val)
 		}
-		reset = &val
 	}
 
 	res := setter(o, set, reset)
@@ -130,13 +135,16 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		return nil, err
 	}
 
-	var reset *float64
+	reset := make([]float64, 0, 0)
 	if o.reset != nil {
-		val, err := strconv.ParseFloat(*o.reset, 64)
-		if err != nil {
-			return nil, err
+		resetValues := strings.Split(*o.reset, ",")
+		for _, v := range resetValues {
+			val, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return nil, err
+			}
+			reset = append(reset, val)
 		}
-		reset = &val
 	}
 
 	res := setter(o, set, reset)
@@ -162,13 +170,13 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	var reset *bool
+	reset := make([]bool, 0, 0)
 	if o.reset != nil {
 		val, err := strconv.ParseBool(*o.reset)
 		if err != nil {
 			return nil, err
 		}
-		reset = &val
+		reset = append(reset, val)
 	}
 
 	res := setter(o, set, reset)
