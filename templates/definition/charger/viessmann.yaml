@@ -76,7 +76,7 @@ render: |
     # true -> oneTimeCharge is enabled -> boost mode -> 2
   setmode:
     source: watchdog
-    timeout: 60m # re-write at timeout/2
+    timeout: 30m # re-write at timeout/2
     reset: 1 # reset watchdog on normal
     set:
       source: switch
