@@ -16,7 +16,6 @@ requirements:
       Phase switching is only available with the Solar variant and must be enabled by the user:
       1) Home -> disable Load Balancing (Monitoring Mode)
       2) Configuration -> Hardware - Phase switch / Relais 2 (enable phase switching)
-      
   evcc: ["sponsorship"]
 params:
   - name: host
