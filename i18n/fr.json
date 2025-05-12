@@ -255,6 +255,7 @@
       "addVehicle": "Ajouter un véhicule",
       "configured": "configuré",
       "edit": "éditer",
+      "loadpointRequired": "Au moins un point de charge doit être configuré.",
       "name": "Nom",
       "title": "Configuration",
       "unconfigured": "non configuré",
@@ -278,6 +279,26 @@
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
       "validateSave": "Valider et enregistrer"
+    },
+    "modbus": {
+      "baudrate": "Débit en bauds",
+      "comset": "ComSet",
+      "connection": "Connections Modbus",
+      "connectionHintSerial": "Cet appareil est directement connecté à evcc via une interface RS485.",
+      "connectionHintTcpip": "Cet appareil est atteignable depuis evcc via LAN/Wifi.",
+      "connectionValueSerial": "Série / USB",
+      "connectionValueTcpip": "Réseau",
+      "device": "Nom de l’appareil",
+      "deviceHint": "Exemple : /dev/ttyUSB0",
+      "host": "Adresse IP ou nom d’hôte",
+      "hostHint": "Exemple : 192.0.2.2",
+      "id": "ID Modbus",
+      "port": "Port",
+      "protocol": "Protocole Modbus",
+      "protocolHintRtu": "Connexion via un adaptateur RS485 vers Ethernet sans traduction de protocole.",
+      "protocolHintTcp": "L'appareil dispose d'un support LAN/Wifi natif ou est connecté via un adaptateur RS485 vers Ethernet avec traduction de protocole.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Autoriser plusieurs clients à accéder à un appareil Modbus unique.",
@@ -568,6 +589,11 @@
       "modalTitle": "Planification de la charge",
       "none": "aucune",
       "planNumber": "Planning {number}",
+      "preconditionDescription": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
+      "preconditionLong": "Chargement tardif",
+      "preconditionOptionAll": "tous",
+      "preconditionOptionNo": "non",
+      "preconditionShort": "Tardif",
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",
@@ -610,6 +636,7 @@
       "co2": "CO₂ ⌀",
       "duration": "Durée",
       "fallbackName": "Point de chargement",
+      "finished": "Heure de fin",
       "power": "Puissance",
       "price": "Prix",
       "remaining": "Temps restant",
@@ -904,6 +931,11 @@
       "dark": "sombre",
       "label": "Thème",
       "light": "clair"
+    },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Format d’heure"
     },
     "title": "Interface utilisateur",
     "unit": {

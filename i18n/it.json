@@ -23,6 +23,9 @@
     "usageTab": "Uso della batteria"
   },
   "config": {
+    "aux": {
+      "titleAdd": "Aggiungi consumatore autoregolato"
+    },
     "battery": {
       "titleAdd": "Aggiungi Batteria",
       "titleEdit": "Modifica Batteria"
@@ -89,6 +92,7 @@
       "range": "Intervallo",
       "singlePhase": "Singola fase",
       "soc": "Carica",
+      "solarForecast": "Previsioni solari",
       "temp": "Temperatura",
       "topic": "Argomento",
       "url": "URL",
@@ -104,7 +108,11 @@
       "description": "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "Può essere utilizzato per la gestione del carico o per le statistiche."
+    },
     "form": {
+      "danger": "Pericolo",
       "deprecated": "deprecato",
       "example": "Esempio",
       "optional": "facoltativo"
@@ -123,6 +131,7 @@
       "save": "Salva",
       "showAdvancedSettings": "Mostra impostazioni avanzate",
       "telemetry": "Telemetria",
+      "templateLoading": "Caricamento...",
       "title": "Titolo",
       "validateSave": "Conferma e salva"
     },
@@ -155,6 +164,7 @@
       "addCharger": "Aggiungi caricabatterie",
       "addMeter": "Aggiungi un contatore dedicato per il caricabatterie",
       "cancel": "Annulla",
+      "chargerError": "È necessario configurare un caricatore.",
       "chargerLabel": "Caricabatterie",
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16A",
@@ -245,10 +255,27 @@
     "meter": {
       "cancel": "Annulla",
       "delete": "Elimina",
+      "option": {
+        "aux": "Aggiungi un consumatore autoregolato"
+      },
       "save": "Salva",
       "template": "Produttore",
       "titleChoice": "Cosa vuoi aggiungere?",
       "validateSave": "Conferma e salva"
+    },
+    "modbus": {
+      "connectionHintSerial": "Il dispositivo è collegato direttamente a evcc tramite un'interfaccia RS485.",
+      "connectionValueSerial": "Seriale / USB",
+      "connectionValueTcpip": "Rete",
+      "device": "Nome del dispositivo",
+      "deviceHint": "Esempio: /dev/ttyUSB0",
+      "host": "Indirizzo IP o hostname",
+      "hostHint": "Esempio: 192.0.2.2",
+      "port": "Porta",
+      "protocol": "Protocollo Modbus",
+      "protocolHintTcp": "Il dispositivo è dotato di supporto LAN/Wifi nativo o è collegato tramite un adattatore da RS485 a Ethernet con traduzione di protocollo.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Permetti a più client di accedere ad un singolo dispositivo Modbus",
@@ -352,8 +379,12 @@
     },
     "vehicle": {
       "cancel": "Annulla",
+      "chargingSettings": "Impostazioni di carica",
+      "defaultMode": "Modalità predefinita",
       "delete": "Cancella",
       "generic": "Altre integrazioni",
+      "identifiers": "Identificatori RFID",
+      "maximumCurrent": "Corrente massima",
       "online": "Veicoli con API online",
       "save": "Salva",
       "scooter": "Scooter",
