@@ -415,10 +415,14 @@ test.describe("loadpoint", async () => {
     ).toBeVisible();
   });
 
-  test("physical current, default 11kW", async ({ page }) => {
+  test("physical current", async ({ page }) => {
     await start(CONFIG_EMPTY);
     await page.goto("/#/config");
     await enableExperimental(page);
+
+    /**
+     * 6A to 16A (default 11kW)
+     */
 
     // add loadpoint, add charger
     await newLoadpoint(page, "Carport");
@@ -463,5 +467,36 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(settingsModal);
     await expect(max).toHaveValue("14");
     await expect(min).toHaveValue("8");
+
+    /**
+     * range 0.5A to 10A (e.g. heating)
+     */
+
+    await page.goto("/#/config");
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await lpModal.getByTestId("chargerPower-other").click();
+    await lpModal.getByLabel("Minimum current").fill("0.5");
+    await lpModal.getByLabel("Maximum current").fill("10");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // restart
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+
+    // check loadpoint settings
+    await page.goto("/");
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(settingsModal);
+    await expect(max).toHaveValue("10"); // adjusted max
+    await expect(min).toHaveValue("8"); // kept min
+
+    // check range
+    await expect(max.locator("option[value='11']")).toHaveCount(0);
+    await expect(max.locator("option[value='10']")).toHaveCount(1);
+    await expect(min.locator("option[value='1']")).toHaveCount(1);
+    await expect(min.locator("option[value='0.5']")).toHaveCount(1);
+    await expect(min.locator("option[value='0.25']")).toHaveCount(0);
   });
 });
