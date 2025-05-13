@@ -35,11 +35,11 @@ const (
 	BffUriNORAM                = "https://bff.amap-prod.mobilesdk.mercedes-benz.com"
 	WidgetUriNORAM             = "https://widget.amap-prod.mobilesdk.mercedes-benz.com"
 	IdUri                      = "https://id.mercedes-benz.com"
-	RisApplicationVersionEMEA  = "1.52.0"
+	RisApplicationVersionEMEA  = "1.55.0"
 	RisSdkVersionEMEA          = "2.160.1"
-	RisApplicationVersionAPAC  = "1.52.0"
+	RisApplicationVersionAPAC  = "1.55.0"
 	RisSdkVersionAPAC          = "2.160.1"
-	RisApplicationVersionNORAM = "3.52.0"
+	RisApplicationVersionNORAM = "3.55.0"
 	RisSdkVersionNORAM         = "2.160.1"
 	RisOsVersion               = "17.3"
 	RisOsName                  = "ios"
@@ -86,7 +86,6 @@ func mbheaders(includeAuthServerHeader bool, region string) map[string]string {
 		"Content-Type":    "application/json",
 		"Accept-Language": "en-GB",
 		"Accept":          "*/*",
-		"x-dev":           "1",
 	}
 
 	switch region {

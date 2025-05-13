@@ -10,7 +10,7 @@
     "control": "Batteriinställningar",
     "discharge": "Förhindra urladdning i snabbt läge och vid schemalagd laddning.",
     "disclaimerHint": "OBS:",
-    "disclaimerText": "Inställningarna gäller enbart sol-läge. Laddning justeras därefter",
+    "disclaimerText": "Inställningarna gäller enbart sol-läge. Laddning justeras därefter.",
     "gridChargeTab": "Laddning från nätet",
     "legendBottomName": "Prioritera laddning av hemmabatteri",
     "legendBottomSubline": "tills den når {soc}.",
@@ -40,7 +40,7 @@
       "chargers": "Elbilsladdare",
       "generic": "Generisk integration",
       "heatingdevices": "Värmeenheter",
-      "ocppHelp": "Kopiera in denna adress i din laddkonfiguration",
+      "ocppHelp": "Kopiera in denna adress i din laddkonfiguration.",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
@@ -152,7 +152,7 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
-      "description": "Anslut evcc till annat energistyrningssystem i hemmet",
+      "description": "Anslut evcc till annat energistyrningssystem i hemmet.",
       "title": "HEMS"
     },
     "influx": {
@@ -178,11 +178,11 @@
       "chargerError": "Konfigurering av laddare krävs.",
       "chargerLabel": "Laddare",
       "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Använder mellan 6 och 16 A",
+      "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
       "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Använder mellan 6 till 32 A",
+      "chargerPower22kwHelp": "Använder mellan 6 till 32 A.",
       "chargerPowerCustom": "annan",
-      "chargerPowerCustomHelp": "Ange strömintervall",
+      "chargerPowerCustomHelp": "Ange strömintervall.",
       "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Laddar",
       "circuitLabel": "Krets",
@@ -196,11 +196,11 @@
       "energyMeterHelp": "Extern mätare (Om laddaren inte har en integrerad mätare).",
       "energyMeterLabel": "Energimätare",
       "estimateLabel": "Interpolera laddningsnivå mellan API uppdateringar",
-      "maxCurrentHelp": "Måste vara högre än minimi strömstyrka",
+      "maxCurrentHelp": "Måste vara högre än minimi strömstyrka.",
       "maxCurrentLabel": "Maximal strömstyrka",
       "minCurrentHelp": "Ange endast under 6 A om du vet vad du gör.",
       "minCurrentLabel": "Minimum strömstyrka",
-      "noVehicles": "Inga fordon är konfigurerade",
+      "noVehicles": "Inga fordon är konfigurerade.",
       "phases1p": "1-fas",
       "phases3p": "3-fas",
       "phasesAutomatic": "Automatisk fasväljare",
@@ -255,6 +255,7 @@
       "addVehicle": "Lägg till fordon",
       "configured": "konfigurerad",
       "edit": "ändra",
+      "loadpointRequired": "Minst en laddpunkt måste konfigureras.",
       "name": "Namn",
       "title": "Inställningar",
       "unconfigured": "ej konfigurerad",
@@ -283,7 +284,7 @@
       "baudrate": "Baud rate",
       "comset": "ComSet",
       "connection": "Modbus förbindelse",
-      "connectionHintSerial": "Enheten är direkt förbunden till evcc via RS485 interface",
+      "connectionHintSerial": "Enheten är direkt förbunden till evcc via RS485 interface.",
       "connectionHintTcpip": "Enheten kan adresseras via LAN/Wifi.",
       "connectionValueSerial": "Seriell / USB",
       "connectionValueTcpip": "Nätverk",
@@ -380,7 +381,7 @@
       "restart": "Omstart",
       "restartRequiredDescription": "Starta om för att de nya inställningarna ska börja gälla.",
       "restartRequiredMessage": "Inställningar ändrade.",
-      "restartingDescription": "Vänligen vänta...",
+      "restartingDescription": "Vänligen vänta…",
       "restartingMessage": "Startar om evcc."
     },
     "tariffs": {
@@ -395,7 +396,7 @@
     "validation": {
       "failed": "misslyckades",
       "label": "Status",
-      "running": "validerar...",
+      "running": "validerar…",
       "success": "lyckades",
       "unknown": "okänd",
       "validate": "validerar"
@@ -436,13 +437,13 @@
       "greenShareSub2": "sol och batteri",
       "power": "Laddeffekt",
       "powerSub1": "{activeClients} av {totalClients} deltagare",
-      "powerSub2": "laddar...",
+      "powerSub2": "laddar…",
       "tabTitle": "Live community"
     },
     "savings": {
       "co2Saved": "{value} sparad",
       "co2Title": "CO₂ utsläpp",
-      "configurePriceCo2": "Konfigurera pris och CO₂-utsläpp",
+      "configurePriceCo2": "Konfigurera pris och CO₂-utsläpp.",
       "footerLong": "{percent} solenergi",
       "footerShort": "{percent} sol",
       "modalTitle": "Översikt laddning",
@@ -492,7 +493,7 @@
       "modalTitle": "Ny version finns tillgänglig",
       "modalUpdate": "Installera",
       "modalUpdateNow": "Installera nu",
-      "modalUpdateStarted": "Starta den nya versionen av evcc...",
+      "modalUpdateStarted": "Starta den nya versionen av evcc…",
       "modalUpdateStatusStart": "Installationen har börjat:"
     }
   },
@@ -539,7 +540,7 @@
     "issueButton": "Rapportera fel",
     "issueDescription": "Hittat ett konstigt eller felaktigt beteende?",
     "logsButton": "Se loggar",
-    "logsDescription": "Felsök loggar",
+    "logsDescription": "Felsök loggar.",
     "modalTitle": "Behöver du hjälp?",
     "primaryActions": "Fungerar det inte som tänkt? Här finns mycket hjälp att hitta.",
     "restart": {
@@ -624,10 +625,10 @@
       "selfConsumption": "Egenförbrukning"
     },
     "heatingStatus": {
-      "charging": "Värmer...",
-      "connected": "Standby",
+      "charging": "Värmer…",
+      "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
-      "waitForVehicle": "Redo, väntar på värmare..."
+      "waitForVehicle": "Redo, väntar på värmare…"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -645,7 +646,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Snabbladdning från hembatteri",
+        "description": "Snabbladdning från hembatteri.",
         "label": "Batteri Boost",
         "mode": "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge.",
         "once": "Boost är aktiverat för denna laddning."
@@ -668,7 +669,7 @@
         "description": "Fordonet laddas i sol-läge „snabbt” till {0} och sedan med endast solel. Användbart för att alltid ha en minsta räckvidd tillgänglig .",
         "label": "Min. laddning %"
       },
-      "onlyForSocBasedCharging": "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå",
+      "onlyForSocBasedCharging": "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå.",
       "phasesConfigured": {
         "label": "Faser",
         "no1p3pSupport": "Hur är din laddbox ansluten?",
@@ -740,7 +741,7 @@
     "vehicle": {
       "addVehicle": "Lägg till fordon",
       "changeVehicle": "Byt fordon",
-      "detectionActive": "Detekterar fordon...",
+      "detectionActive": "Detekterar fordon…",
       "fallbackName": "Fordon",
       "moreActions": "Fler åtgärder",
       "none": "Inget fordon",
@@ -754,7 +755,7 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Väntar på godkännande.",
       "batteryBoost": "Batteriboost är aktiv.",
-      "charging": "Laddar...",
+      "charging": "Laddar…",
       "cheapEnergyCharging": "Billig energi är tillgänglig.",
       "cheapEnergyNextStart": "Billig energi om {duration}.",
       "cheapEnergySet": "Prisgräns sparad.",
@@ -773,10 +774,10 @@
       "scale3p": "Ökar till 3-fas-laddning strax.",
       "targetChargeActive": "Laddplan aktiv. Beräknas vara klar om {duration}.",
       "targetChargePlanned": "Laddplan startar om {duration}.",
-      "targetChargeWaitForVehicle": "Laddare beredd. Väntar på fordon...",
+      "targetChargeWaitForVehicle": "Laddare beredd. Väntar på fordon…",
       "vehicleLimit": "Fordonsgräns",
       "vehicleLimitReached": "Fordonets gräns nådd.",
-      "waitForVehicle": "Redo. Väntar på fordon...",
+      "waitForVehicle": "Redo. Väntar på fordon…",
       "welcome": "Kort inledande laddning för att kontrollera förbindelsen."
     },
     "vehicles": "Parkering",
@@ -883,7 +884,7 @@
       "vehicle": "Fordon"
     },
     "loadpoint": "Laddplats",
-    "noData": "Inga laddningar denna månad",
+    "noData": "Inga laddningar denna månad.",
     "overview": "Överblick",
     "period": {
       "month": "Månad",
@@ -931,6 +932,11 @@
       "label": "Design",
       "light": "ljus"
     },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Tidsformat"
+    },
     "title": "Användargränssnitt",
     "unit": {
       "km": "km",
@@ -947,7 +953,7 @@
     "cleanTitle": "Laddar grön el från nätet",
     "co2Label": "CO₂ utsläpp",
     "co2Limit": "CO₂ gräns",
-    "loadpointDescription": "Ladda när priset är lågt (sol-läge)",
+    "loadpointDescription": "Aktiverar tillfällig snabbladdning i sol-läge.",
     "modalTitle": "Smartladdning elnät",
     "none": "ingen",
     "priceLabel": "Energipris",

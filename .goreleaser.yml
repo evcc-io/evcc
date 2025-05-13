@@ -43,12 +43,12 @@ env:
   - CGO_ENABLED=0
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - evcc.dist.yaml
     name_template: >-
@@ -80,7 +80,7 @@ nfpms:
 
     homepage: https://evcc.io
     description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
+    maintainer: info@evcc.io
     license: MIT
     vendor: evcc.io
 
@@ -106,7 +106,7 @@ brews:
       name: homebrew-tap
     commit_author:
       name: andig
-      email: cpuidle@gmx.de
+      email: info@evcc.io
     directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"

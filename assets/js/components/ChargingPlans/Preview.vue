@@ -111,7 +111,7 @@ export default defineComponent({
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
 		},
 		activeSlotName(): string | null {
 			if (this.activeSlot) {

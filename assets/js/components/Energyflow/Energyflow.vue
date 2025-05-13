@@ -527,12 +527,11 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		forecastFmt(value: number) {
-			if (value === null) {
-				return "";
-			}
+			if (typeof value !== "number") return "";
 			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
 		},
 		kw(watt: number) {
+			if (typeof watt !== "number") return "";
 			return this.fmtW(watt, this.powerUnit);
 		},
 		toggleDetails() {

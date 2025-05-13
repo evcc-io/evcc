@@ -199,7 +199,7 @@
       "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
-      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen",
+      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrisch",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
@@ -263,6 +263,7 @@
       "addVehicle": "Fahrzeug hinzufügen",
       "configured": "konfiguriert",
       "edit": "bearbeiten",
+      "loadpointRequired": "Mindestens ein Ladepunkt muss konfiguriert werden.",
       "name": "Name",
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
@@ -802,7 +803,7 @@
     "configurationError": "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu.",
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
-    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen",
+    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
     "restarting": "Server ist gleich wieder verfügbar."
   },
   "passwordModal": {
@@ -941,6 +942,11 @@
       "dark": "Dunkel",
       "label": "Design",
       "light": "Hell"
+    },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Zeitformat"
     },
     "title": "Darstellung",
     "unit": {

@@ -75,7 +75,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 	p.getter = defaultGetters(p, cc.Scale)
 
 	if cc.Auth.Type != "" || cc.Auth.Source != "" {
-		transport, err := cc.Auth.Transport(ctx, p.Client.Transport)
+		transport, err := cc.Auth.Transport(ctx, log, p.Client.Transport)
 		if err != nil {
 			return nil, err
 		}

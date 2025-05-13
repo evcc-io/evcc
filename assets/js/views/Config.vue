@@ -33,6 +33,13 @@
 
 				<div v-if="$hiddenFeatures()">
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<p
+						v-if="loadpointsRequired"
+						class="text-muted my-4"
+						data-testid="loadpoint-required"
+					>
+						{{ $t("config.main.loadpointRequired") }}
+					</p>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
@@ -59,6 +66,7 @@
 						<NewDeviceButton
 							data-testid="add-loadpoint"
 							:title="$t('config.main.addLoadpoint')"
+							:attention="loadpointsRequired"
 							@click="newLoadpoint"
 						/>
 					</ul>
@@ -486,6 +494,9 @@ export default {
 		};
 	},
 	computed: {
+		loadpointsRequired() {
+			return this.loadpoints.length === 0;
+		},
 		fatalClass() {
 			return store.state?.fatal?.class;
 		},
