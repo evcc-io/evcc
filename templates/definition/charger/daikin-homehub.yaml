@@ -55,9 +55,6 @@ render: |
             type: writeholding
             encoding: int16
     - case: 1 # dimm
-      set:
-        source: const
-        value: 1
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
