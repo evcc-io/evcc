@@ -191,7 +191,7 @@
       "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
-      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen",
+      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrisch",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
@@ -792,7 +792,7 @@
     "configurationError": "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu.",
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
-    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen",
+    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
     "restarting": "Server ist gleich wieder verfügbar."
   },
   "passwordModal": {
