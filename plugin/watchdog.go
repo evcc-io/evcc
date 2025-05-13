@@ -100,7 +100,7 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	reset := make([]int64, 0, 0)
+	var reset []int64
 	if o.reset != nil {
 		for _, v := range o.reset {
 			val, err := strconv.ParseInt(v, 10, 64)
@@ -134,7 +134,7 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		return nil, err
 	}
 
-	reset := make([]float64, 0, 0)
+	var reset []float64
 	if o.reset != nil {
 		for _, v := range o.reset {
 			val, err := strconv.ParseFloat(v, 64)
@@ -168,7 +168,7 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	reset := make([]bool, 0, 1)
+	var reset []bool
 	if len(o.reset) > 1 {
 		return nil, fmt.Errorf("more than one boolean reset value")
 	} else if len(o.reset) == 1 {
