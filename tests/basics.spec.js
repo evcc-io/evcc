@@ -80,4 +80,19 @@ test.describe("loadpoint settings", async () => {
     await expect(page.getByText("~ 3.7 kW")).toBeVisible();
     await expect(page.getByText("~ 1.4 kW")).toBeVisible();
   });
+
+  test("min/max current", async ({ page }) => {
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    const max = page.getByLabel("Max. current");
+    const min = page.getByLabel("Min. current");
+    await expect(max).toHaveValue("16");
+    await expect(min).toHaveValue("6");
+
+    // default option range, no physical current limit
+    await expect(max.locator("option[value='100']")).toHaveCount(0); // not selectable by default
+    await expect(max.locator("option[value='64']")).toHaveCount(1);
+    await expect(max.locator("option[value='32']")).toHaveCount(1);
+    await expect(min.locator("option[value='5']")).toHaveCount(1);
+    await expect(min.locator("option[value='0.125']")).toHaveCount(1);
+  });
 });

@@ -414,4 +414,54 @@ test.describe("loadpoint", async () => {
       lpModal.getByRole("button", { name: "Add dedicated charger meter" })
     ).toBeVisible();
   });
+
+  test("physical current, default 11kW", async ({ page }) => {
+    await start(CONFIG_EMPTY);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // add loadpoint, add charger
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // restart
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+
+    // go do main ui (/) and open loadpoint settings modal
+    await page.goto("/");
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    const settingsModal = page.getByTestId("loadpoint-settings-modal");
+    await expectModalVisible(settingsModal);
+    const max = settingsModal.getByLabel("Max. current");
+    const min = settingsModal.getByLabel("Min. current");
+    await expect(max).toHaveValue("16");
+    await expect(min).toHaveValue("6");
+
+    // no out of range values
+    await expect(max.locator("option[value='32']")).toHaveCount(0);
+    await expect(min.locator("option[value='5']")).toHaveCount(0);
+
+    // avoid overlap by reducing options
+    await expect(max.locator("option[value='7']")).toHaveCount(1);
+    await expect(min.locator("option[value='15']")).toHaveCount(1);
+    await max.selectOption("14 A");
+    await min.selectOption("8 A");
+    await expect(max.locator("option[value='7']")).toHaveCount(0);
+    await expect(min.locator("option[value='15']")).toHaveCount(0);
+
+    await settingsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settingsModal);
+
+    await page.reload();
+
+    // check persistance
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(settingsModal);
+    await expect(max).toHaveValue("14");
+    await expect(min).toHaveValue("8");
+  });
 });
