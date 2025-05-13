@@ -1,0 +1,570 @@
+{
+  "batterySettings": {
+    "batteryLevel": "Poziom baterii",
+    "bufferStart": {
+      "above": "kiedy powyżej {soc}.",
+      "full": "kiedy na {soc}.",
+      "never": "tylko z wystarczającą nadwyżką."
+    },
+    "capacity": "{energy} z {total}",
+    "control": "Kontrola baterii",
+    "discharge": "Zapobiegaj rozładowaniu w trybie szybkim i planowemu ładowaniu.",
+    "disclaimerHint": "Uwaga:",
+    "disclaimerText": "te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany.",
+    "gridChargeTab": "Ładowanie z sieci",
+    "legendBottomName": "Daj priorytet ładowaniu akumulatora domowego",
+    "legendBottomSubline": "aż osiągnie {soc}.",
+    "legendMiddleName": "Ustaw priorytet ładowaniu pojazdów",
+    "legendMiddleSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
+    "legendTopAutostart": "Rozpocznij automatycznie",
+    "legendTopName": "Ładowanie pojazdu z wykorzystaniem akumulatora",
+    "legendTopSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
+    "modalTitle": "Bateria domowa",
+    "usageTab": "Użycie baterii"
+  },
+  "config": {
+    "battery": {
+      "titleAdd": "Dodaj baterię",
+      "titleEdit": "Edytuj baterię"
+    },
+    "charge": {
+      "titleAdd": "Dodaj licznik ładowania",
+      "titleEdit": "Edytuj licznik ładowania"
+    },
+    "charger": {
+      "chargers": "ładowarki EV",
+      "generic": "Ogólne integracje",
+      "ocppHelp": "Skopiuj ten adres do konfiguracji Twojej ładowarki",
+      "switchsockets": "Przełączalne gniazdka",
+      "template": "Producent",
+      "titleAdd": "Dodaj ładowarkę",
+      "titleEdit": "Edytuj ładowarkę"
+    },
+    "circuits": {
+      "description": "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
+      "title": "Zarządzanie obciążeniem"
+    },
+    "control": {
+      "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
+      "labelInterval": "Interwał aktualizacji",
+      "labelResidualPower": "Moc resztkowa",
+      "title": "Kontrola zachowania"
+    },
+    "deviceValue": {
+      "amount": "Ilość",
+      "broker": "Broker",
+      "bucket": "Bucket",
+      "capacity": "Pojemność",
+      "chargeStatus": "Status",
+      "chargeStatusA": "nie połączony",
+      "chargeStatusB": "połączony",
+      "chargeStatusC": "ładowanie",
+      "chargeStatusE": "brak zasilania",
+      "chargeStatusF": "błąd",
+      "chargedEnergy": "Naładowany",
+      "configured": "Skonfigurowany",
+      "currency": "Waluta",
+      "current": "Prąd",
+      "currentRange": "Aktualne",
+      "enabled": "Włączony",
+      "energy": "Energia",
+      "feedinPrice": "Cena sprzedaży energii do sieci",
+      "hemsType": "System",
+      "no": "nie",
+      "odometer": "Drogomierz",
+      "phaseCurrents": "Prąd L1, L2, L3",
+      "phasePowers": "Moc L1, L2, L3",
+      "phaseVoltages": "Napięcie L1, L2, L3",
+      "power": "Moc",
+      "powerRange": "Zasilanie",
+      "range": "Zasięg",
+      "soc": "Stan naładowania",
+      "temp": "Temperatura",
+      "url": "URL",
+      "vehicleLimitSoc": "Limit pojazdu",
+      "yes": "tak"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A (nie połączony)",
+      "B": "B (połączony)",
+      "C": "C (ładowanie)"
+    },
+    "eebus": {
+      "title": "EEBus"
+    },
+    "form": {
+      "example": "Przykład",
+      "optional": "opcjonalny"
+    },
+    "general": {
+      "cancel": "Anulować",
+      "delete": "Usuń",
+      "docsLink": "Zobacz dokumentacje",
+      "experimental": "Eksperymentalny",
+      "hideAdvancedSettings": "Schowaj ustawienia zaawansowane",
+      "off": "wyłączony",
+      "on": "włączony",
+      "password": "Hasło",
+      "readFromFile": "Przeczytaj z pliku",
+      "remove": "Usuń",
+      "save": "Zapisz",
+      "showAdvancedSettings": "Pokaż ustawienia zaawansowane",
+      "telemetry": "Telemetria",
+      "title": "Tytuł",
+      "validateSave": "Zatwierdź i zapisz"
+    },
+    "grid": {
+      "titleAdd": "Dodaj licznik sieci",
+      "titleEdit": "Edytuj licznik sieci"
+    },
+    "influx": {
+      "labelBucket": "Bucket",
+      "labelDatabase": "Baza danych",
+      "labelPassword": "Hasło",
+      "labelToken": "API Token",
+      "labelUrl": "URL",
+      "title": "InfluxDB"
+    },
+    "loadpoint": {
+      "addCharger": "Dodaj ładowarkę"
+    },
+    "main": {
+      "addLoadpoint": "Dodaj ładowarkę",
+      "addPvBattery": "Dodaj licznik energii słonecznej lub baterii",
+      "addVehicle": "Dodaj pojazd",
+      "edit": "edytować",
+      "title": "Konfiguracja",
+      "unconfigured": "nie skonfigurowane",
+      "vehicles": "Moje pojazdy",
+      "yaml": "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
+    },
+    "messaging": {
+      "description": "Otrzymuj wiadomości o sesjach ładowania."
+    },
+    "meter": {
+      "cancel": "Anulować",
+      "delete": "Usuwać",
+      "save": "Zapisz",
+      "template": "Producent",
+      "titleChoice": "Co chcesz dodać?",
+      "validateSave": "Sprawdź i zapisz"
+    },
+    "modbusproxy": {
+      "title": "Modbus Proxy"
+    },
+    "mqtt": {
+      "labelClientId": "Client ID",
+      "labelPassword": "Hasło",
+      "title": "MQTT"
+    },
+    "network": {
+      "labelPort": "Port"
+    },
+    "options": {
+      "endianness": {
+        "big": "big-endian",
+        "little": "little-endian"
+      }
+    },
+    "pv": {
+      "titleAdd": "Dodaj licznik energii słonecznej",
+      "titleEdit": "Edytuj licznik energii słonecznej"
+    },
+    "validation": {
+      "failed": "nie udało się",
+      "label": "Status",
+      "running": "weryfikacja…",
+      "success": "udany",
+      "unknown": "nieznany",
+      "validate": "zweryfikować"
+    },
+    "vehicle": {
+      "cancel": "Anulować",
+      "delete": "Usuń.",
+      "generic": "Inne integracje",
+      "online": "Pojazdy z API online",
+      "save": "Zapisz",
+      "scooter": "Skuter",
+      "template": "Producent",
+      "titleAdd": "Dodaj samochód",
+      "titleEdit": "Edytuj pojazd",
+      "validateSave": "Sprawdź i zapisz"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "Energia słoneczna",
+      "greenEnergySub1": "naładowany z evcc",
+      "greenEnergySub2": "od Października 2022",
+      "greenShare": "Energii słonecznej",
+      "greenShareSub1": "zasilanie jest dostarczone przez",
+      "greenShareSub2": "słońce i domowe akumulatory energii",
+      "power": "Moc ładowania",
+      "powerSub1": "{activeClients} z {totalClients} uczestników",
+      "powerSub2": "ładuje się...",
+      "tabTitle": "Dane społeczności"
+    },
+    "savings": {
+      "co2Saved": "{value} zaoszczędziło",
+      "co2Title": "CO₂ Emisje",
+      "configurePriceCo2": "Dowiedz się, jak skonfigurować dane dotyczące cen i emisji CO₂.",
+      "footerLong": "{percent} energii słonecznej",
+      "footerShort": "{percent} słońce",
+      "modalTitle": "Przegląd energii ładowania",
+      "moneySaved": "{value} zaoszczędzone",
+      "percentGrid": "{grid} kWh sieć",
+      "percentSelf": "{self} kWh słońce",
+      "percentTitle": "Energia Słoneczna",
+      "period": {
+        "30d": "ostatnie 30 dni",
+        "365d": "ostatnie 365 dni",
+        "total": "cały czas"
+      },
+      "periodLabel": "Okres:",
+      "priceTitle": "Cena Energii",
+      "referenceGrid": "sieć",
+      "referenceLabel": "Dane referencyjne:",
+      "tabTitle": "Moje dane"
+    },
+    "sponsor": {
+      "becomeSponsor": "Zostań sponsorem",
+      "confetti": "Gotowy na konfetti?",
+      "confettiPromise": "Będą naklejki i cyfrowe konfetti",
+      "sticker": "… lub naklejki evcc?",
+      "supportUs": "Nasza misja: Spraw, aby ładowanie słoneczne stało się standardem. Pomóż evcc, płacąc tyle, ile jest to dla Ciebie warte.",
+      "thanks": "Dzięki za wsparcie, {sponsor}! Pomaga nam to w dalszym rozwoju.",
+      "titleNoSponsor": "Wesprzyj nas",
+      "titleSponsor": "Jesteś sponsorem"
+    },
+    "telemetry": {
+      "optIn": "Chcę udostępnić swoje dane.",
+      "optInMoreDetails": "Więcej szczegółów {0}.",
+      "optInMoreDetailsLink": "tutaj",
+      "optInSponsorship": "Wymagany sponsoring."
+    },
+    "version": {
+      "availableLong": "nowa wersja dostępna",
+      "modalCancel": "Anuluj",
+      "modalDownload": "Pobierz",
+      "modalInstalledVersion": "Zainstalowana wersja",
+      "modalNoReleaseNotes": "Brak dostępnych notatek. Więcej informacji o nowej wersji:",
+      "modalTitle": "Nowa wersja dostępna",
+      "modalUpdate": "Instaluj",
+      "modalUpdateNow": "Instaluj teraz",
+      "modalUpdateStarted": "Nowa wersja evcc uruchomi się...",
+      "modalUpdateStatusStart": "Instalacja rozpoczęta:"
+    }
+  },
+  "header": {
+    "about": "O evcc",
+    "blog": "Blog",
+    "docs": "Dokumentacja",
+    "github": "GitHub",
+    "login": "Dane logowania pojazdu",
+    "nativeSettings": "Zmień serwer",
+    "needHelp": "Potrzebuję Pomocy?",
+    "sessions": "Sesje ładowania"
+  },
+  "help": {
+    "discussionsButton": "Dyskusje na GitHub'ie",
+    "documentationButton": "Dokumentacja",
+    "issueButton": "Zgłoś błąd",
+    "issueDescription": "Znalazłeś dziwne lub niewłaściwe zachowanie?",
+    "modalTitle": "Potrzebuję pomocy?",
+    "primaryActions": "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzyskać pomoc.",
+    "restart": {
+      "cancel": "Anulować",
+      "confirm": "Tak, uruchom ponownie!",
+      "description": "Normalne ponowne uruchamianie nie powinno być konieczne. Rozważ zgłoszenie błędu, jeśli chcesz regularnie restartować evcc.",
+      "disclaimer": "Uwaga: evcc zakończy działanie i będzie polegać na systemie operacyjnym w celu ponownego uruchomienia evcc.",
+      "modalTitle": "Czy na pewno chcesz uruchomić ponownie?"
+    },
+    "restartButton": "Uruchom ponownie",
+    "restartDescription": "Próbowałeś go wyłączyć i włączyć ponownie?",
+    "secondaryActions": "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
+  },
+  "main": {
+    "chargingPlan": {
+      "active": "Aktywny",
+      "arrivalTab": "Przyjazd",
+      "day": "Dzień",
+      "departureTab": "Wyjazd",
+      "goal": "Cel ładowania",
+      "modalTitle": "Plan ładowania",
+      "none": "nic",
+      "remove": "Wyjąć",
+      "time": "Czas",
+      "title": "Plan",
+      "titleMinSoc": "Minimalne ładowanie",
+      "titleTargetCharge": "Wyjazd",
+      "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",
+      "update": "Wykorzystać",
+      "weekdays": "Dni"
+    },
+    "energyflow": {
+      "battery": "Bateria",
+      "batteryCharge": "Ładowanie baterii",
+      "batteryDischarge": "Rozładowanie baterii",
+      "batteryHold": "Bateria (locked)",
+      "batteryTooltip": "{energy} z {total} ({soc})",
+      "gridImport": "Z sieci",
+      "homePower": "Zużycie",
+      "loadpoints": "Ładowarka | Ładowarka | {count} Ładowarki",
+      "noEnergy": "Brak danych licznika",
+      "pvExport": "Eksport na siec",
+      "pvProduction": "Produkcja",
+      "selfConsumption": "Konsumpcja własna"
+    },
+    "heatingStatus": {
+      "charging": "Ogrzewanie…",
+      "waitForVehicle": "Gotowe. Czekam na grzejnik…"
+    },
+    "loadpoint": {
+      "avgPrice": "⌀ Cena",
+      "charged": "Naładowano",
+      "co2": "⌀ CO₂",
+      "duration": "Czas trwania",
+      "fallbackName": "Ładowarka",
+      "power": "Moc",
+      "price": "Koszt",
+      "remaining": "Pozostało",
+      "remoteDisabledHard": "{source}: wyłączone",
+      "remoteDisabledSoft": "{source}: adaptacyjne ładowanie słonecznie wyłączone",
+      "solar": "Słoneczna"
+    },
+    "loadpointSettings": {
+      "currents": "Prąd Ładowania",
+      "default": "domyślny",
+      "disclaimerHint": "Uwaga:",
+      "limitSoc": {
+        "description": "Limit ładowania używany, gdy pojazd jest podłączony.",
+        "label": "Domyślny limit"
+      },
+      "maxCurrent": {
+        "label": "Maks. prąd"
+      },
+      "minCurrent": {
+        "label": "Min. Prąd"
+      },
+      "minSoc": {
+        "description": "Pojazd jest „szybko” ładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w ciemniejsze dni.",
+        "label": "Minimalne naładowanie %"
+      },
+      "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
+      "phasesConfigured": {
+        "label": "Fazy",
+        "no1p3pSupport": "Jak jest podłączona ładowarka?",
+        "phases_0": "automatyczne przełączanie",
+        "phases_1": "1 faza",
+        "phases_1_hint": "({min} do {max})",
+        "phases_3": "3 fazy",
+        "phases_3_hint": "({min} do {max})"
+      },
+      "smartCostCheap": "Tanie ładowanie sieciowe",
+      "smartCostClean": "Czyste ładowanie sieci",
+      "title": "Ustawienia {0}",
+      "vehicle": "Pojazd"
+    },
+    "mode": {
+      "minpv": "Min+Słońce",
+      "now": "Szybko",
+      "off": "Stop",
+      "pv": "Słońce"
+    },
+    "provider": {
+      "login": "zaloguj się",
+      "logout": "wyloguj"
+    },
+    "targetCharge": {
+      "activate": "Aktywować",
+      "co2Limit": "Limit CO₂ z {co2}",
+      "costLimitIgnore": "Skonfigurowany {limit} będzie ignorowany w tym okresie.",
+      "currentPlan": "Plan aktywny",
+      "descriptionEnergy": "Do kiedy należy załadować {targetEnergy} do pojazdu?",
+      "descriptionSoc": "Kiedy pojazd powinien zostać naladowany do {targetSoc}?",
+      "inactiveLabel": "Czas docelowy",
+      "notReachableInTime": "Cel zostanie osiągnięty {overrun} później.",
+      "onlyInPvMode": "Plan ładowania działa tylko w trybie solarnym.",
+      "planDuration": "Czas ładowania",
+      "planPeriodLabel": "Okres",
+      "planPeriodValue": "{start} do {end}",
+      "planUnknown": "jeszcze nie wiadomo",
+      "preview": "Podgląd planu",
+      "priceLimit": "limit ceny {cena}",
+      "remove": "Usuń",
+      "setTargetTime": "brak",
+      "targetIsAboveLimit": "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany.",
+      "targetIsAboveVehicleLimit": "Limit pojazdu jest poniżej celu ładowania.",
+      "targetIsInThePast": "Wybierz czas w przyszłości.",
+      "targetIsTooFarInTheFuture": "Dostosujemy plan, gdy tylko dowiemy się więcej o przyszłości.",
+      "title": "Czas Docelowy",
+      "today": "dzisiaj",
+      "tomorrow": "jutro",
+      "update": "Aktualizować",
+      "vehicleCapacityDocs": "Dowiedz się, jak to skonfigurować.",
+      "vehicleCapacityRequired": "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
+    },
+    "targetChargePlan": {
+      "chargeDuration": "Czas ładowania",
+      "co2Label": "CO₂ emisja ⌀",
+      "priceLabel": "Cena energii",
+      "timeRange": "{day} {range} h",
+      "unknownPrice": "nadal nieznany"
+    },
+    "targetEnergy": {
+      "label": "Ograniczenie",
+      "noLimit": "brak"
+    },
+    "vehicle": {
+      "addVehicle": "Dodaj pojazd",
+      "changeVehicle": "Zmień pojazd",
+      "detectionActive": "Wykrywanie pojazdu...",
+      "fallbackName": "Pojazd",
+      "moreActions": "Więcej akcji",
+      "none": "Brak pojazdu",
+      "notReachable": "Samochód nie był osiągalny. Spróbuj ponownie uruchomić evcc.",
+      "targetSoc": "Ograniczenie",
+      "temp": "Temp.",
+      "tempLimit": "Ograniczenie temp.",
+      "unknown": "Pojazd gościa",
+      "vehicleSoc": "Bateria"
+    },
+    "vehicleStatus": {
+      "charging": "Ładuje się...",
+      "cheapEnergyCharging": "Dostępna tania energia.",
+      "cleanEnergyCharging": "Czysta energia dostępna.",
+      "climating": "Wykryto wstępne przygotowanie",
+      "connected": "Połączony.",
+      "disconnected": "Rozłączony.",
+      "minCharge": "Minimalne ładowanie do {soc}.",
+      "pvDisable": "Za mało nadwyżki. Wkrótce przerwa.",
+      "pvEnable": "Dostępne nadwyżki. Zaczynamy wkrótce.",
+      "scale1p": "Wkrótce przejdziemy na ładowanie jednofazowe.",
+      "scale3p": "Wkrótce przejdziemy na ładowanie 3-fazowe.",
+      "targetChargeActive": "Plan ładowania aktywny. Szacunkowy czas zakończenia za {duration}.",
+      "targetChargePlanned": "Zaplanowane ładowanie zacznie się {duration}.",
+      "targetChargeWaitForVehicle": "Zaplanowane ładowanie gotowy. Czekajem na pojazd...",
+      "vehicleLimitReached": "Osiągnięto limit pojazdu.",
+      "waitForVehicle": "Gotowe. Czekam na pojazd..."
+    },
+    "vehicles": "Garaż"
+  },
+  "notifications": {
+    "dismissAll": "Odrzuć wszystkie",
+    "modalTitle": "Powiadomienia"
+  },
+  "offline": {
+    "message": "Brak połączenia z serwerem."
+  },
+  "session": {
+    "cancel": "Anuluj",
+    "co2": "CO₂",
+    "date": "Okres",
+    "delete": "Usunąć",
+    "finished": "Zakończony",
+    "meter": "Licznik",
+    "meterstart": "Licznik początek",
+    "meterstop": "Licznik koniec",
+    "odometer": "Przebieg",
+    "price": "Cena",
+    "started": "Zaczęło się",
+    "title": "Sesja ładowania"
+  },
+  "sessions": {
+    "avgPower": "⌀ Moc",
+    "avgPrice": "⌀ Cena",
+    "chargeDuration": "Czas trwania",
+    "chartTitle": {
+      "solar": "Udział energii słonecznej w ciągu roku"
+    },
+    "co2": "⌀ CO₂",
+    "csv": {
+      "chargedenergy": "Energia (kWh)",
+      "created": "Stworzony",
+      "finished": "Zakończony",
+      "identifier": "Identyfikator",
+      "loadpoint": "Ładowarka",
+      "meterstart": "Licznik początek (kWh)",
+      "meterstop": "Licznik koniec (kWh)",
+      "odometer": "Przebieg (km)",
+      "vehicle": "Pojazd"
+    },
+    "csvMonth": "Pobierz plik {month} CSV",
+    "csvTotal": "Pobierz plik CSV",
+    "date": "Rozpoczęty",
+    "downloadCsv": "Pobierz jako CSV",
+    "energy": "Naładowano",
+    "filter": {
+      "allLoadpoints": "wszystkie punkty ładowania",
+      "allVehicles": "wszystkie pojazdy",
+      "filter": "Filtrować"
+    },
+    "loadpoint": "Ładowarka",
+    "noData": "Brak sesji ładowania w tym miesiącu.",
+    "overview": "Przegląd",
+    "price": "Koszt",
+    "reallyDelete": "Czy na pewno chcesz usunąć tę sesję?",
+    "solar": "Słoneczna",
+    "title": "Sesje ładowania",
+    "total": "Totalny",
+    "vehicle": "Pojazd"
+  },
+  "settings": {
+    "hiddenFeatures": {
+      "label": "Eksperymentalny",
+      "value": "Pokaż eksperymentalne funkcje interfejsu"
+    },
+    "language": {
+      "auto": "Automatyczny",
+      "label": "Język"
+    },
+    "sponsorToken": {
+      "expires": "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj.",
+      "getNew": "Weź świeżego",
+      "hint": "Uwaga: zautomatyzujemy to w przyszłości."
+    },
+    "telemetry": {
+      "label": "Telemetria"
+    },
+    "theme": {
+      "auto": "systemu",
+      "dark": "ciemny",
+      "label": "Wygląd",
+      "light": "jasny"
+    },
+    "title": "Interfejs użytkownika",
+    "unit": {
+      "km": "km",
+      "label": "Jednostki",
+      "mi": "mile"
+    }
+  },
+  "smartCost": {
+    "activeHours": "{charging} z {total}",
+    "activeHoursLabel": "Aktywne godziny",
+    "applyToAll": "Aplikować wszędzie?",
+    "batteryDescription": "Ładuje akumulator domu energią z sieci.",
+    "cheapTitle": "Tanie ładowanie z sieci",
+    "cleanTitle": "Czyste ładowanie z sieci",
+    "co2Label": "Emisja CO₂",
+    "co2Limit": "Limit CO₂",
+    "loadpointDescription": "Umożliwia tymczasowe szybkie ładowanie w trybie solarnym.",
+    "modalTitle": "Ładowanie z inteligentnej sieci",
+    "none": "nie ma",
+    "priceLabel": "Cena energii",
+    "priceLimit": "Limit ceny",
+    "saved": "Zapisano."
+  },
+  "startupError": {
+    "configFile": "Używany plik konfiguracyjny:",
+    "configuration": "Konfig",
+    "description": "Sprawdź swój plik konfiguracyjny. Jeśli komunikat o błędzie nie pomoże, zapoznaj się z naszym {0}.",
+    "discussions": "Dyskusje GitHub",
+    "fixAndRestart": "Proszę rozwiązać problem i zrestartować serwer.",
+    "hint": "Uwaga: Możliwe też, że masz wadliwe urządzenie (inwerter, licznik, ...). Sprawdź połączenia sieciowe.",
+    "lineError": "Błąd w {0}.",
+    "lineErrorLink": "wiersz {0}",
+    "restartButton": "Restartuj",
+    "title": "Błąd uruchamiania"
+  }
+}

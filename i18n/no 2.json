@@ -1,0 +1,373 @@
+{
+  "batterySettings": {
+    "batteryLevel": "Ladenivå",
+    "bufferStart": {
+      "full": "når det er nesten fullt",
+      "never": "bare med nok PV-overskudd"
+    },
+    "capacity": "{energy} av {total}",
+    "disclaimerHint": "Merk:",
+    "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
+    "legendBottomName": "Hjemmelading har prioritet",
+    "legendBottomSubline": "ikke bruk til lading",
+    "legendMiddleName": "kjøretøy først",
+    "legendMiddleSubline": "hjemme etterpå",
+    "legendTopAutostart": "starter automatisk",
+    "legendTopName": "batteriassistert lading",
+    "legendTopSubline": "uten avbrudd",
+    "modalTitle": "Batteriinnstillinger"
+  },
+  "config": {
+    "form": {
+      "example": "Eksempel",
+      "optional": "valgfritt"
+    },
+    "main": {
+      "addVehicle": "Legg til kjøretøy",
+      "edit": "rediger",
+      "title": "Oppsett",
+      "vehicles": "Mine kjøretøy"
+    },
+    "validation": {
+      "failed": "mislykket",
+      "label": "Status",
+      "running": "bekrefter …",
+      "success": "vellykket",
+      "unknown": "ukjent",
+      "validate": "bekreft"
+    },
+    "vehicle": {
+      "cancel": "Avbryt",
+      "delete": "Slett kjøretøy",
+      "generic": "Andre integreringer",
+      "online": "Kjøretøy med nettbasert API",
+      "save": "Lagre",
+      "scooter": "Scooter",
+      "template": "Fabrikat",
+      "titleAdd": "Legg til kjøretøy",
+      "titleEdit": "Rediger kjøretøy",
+      "validateSave": "Bekreft og lagre"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "Solenergi",
+      "greenEnergySub1": "ladet med evcc",
+      "greenEnergySub2": "siden oktober 2022",
+      "greenShare": "Solenergiandel",
+      "greenShareSub1": "kraft levert av",
+      "greenShareSub2": "solenergi, og batterilagring",
+      "power": "Ladeeffekt",
+      "powerSub1": "{activeClients} av {totalClients} deltagere",
+      "powerSub2": "lader...",
+      "tabTitle": "Interessefellesskap"
+    },
+    "savings": {
+      "footerLong": "{percent} solcelleenergi",
+      "footerShort": "{percent} solenergi",
+      "modalTitle": "Oversikt over ladeenergi",
+      "percentGrid": "{self} kWh lysnett",
+      "percentSelf": "{self} kWt sol",
+      "percentTitle": "Solenergi",
+      "priceTitle": "Kraftpris",
+      "tabTitle": "Mine data"
+    },
+    "sponsor": {
+      "becomeSponsor": "Bli sponsor",
+      "confetti": "Klar for konfetti?",
+      "confettiPromise": "Du får klistremerker og digital konfetti",
+      "sticker": "... eller evcc-klistremerker?",
+      "supportUs": "Vårt oppdrag: gjør solenergi til normen. Hjelp oss ved å støtte evcc økonomisk.",
+      "thanks": "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre.",
+      "titleNoSponsor": "Støtt oss",
+      "titleSponsor": "Du er en støttespiller"
+    },
+    "telemetry": {
+      "optIn": "Jeg ønsker å bidra med mine data.",
+      "optInMoreDetails": "Flere detaljer {0}.",
+      "optInMoreDetailsLink": "her",
+      "optInSponsorship": "Sponsing kreves."
+    },
+    "version": {
+      "availableLong": "Ny versjon tilgjengelig",
+      "modalCancel": "Avbryt",
+      "modalDownload": "Last ned",
+      "modalInstalledVersion": "Installert versjon",
+      "modalNoReleaseNotes": "Ingen versjonsmerknader tilgjengelig. Mer info om den nye versjonen:",
+      "modalTitle": "Ny versjon tilgjengelig",
+      "modalUpdate": "Installer",
+      "modalUpdateNow": "Installer nå",
+      "modalUpdateStarted": "Starter den nye versjonen av evcc...",
+      "modalUpdateStatusStart": "Installasjonen startet:"
+    }
+  },
+  "header": {
+    "about": "Om",
+    "blog": "Blogg",
+    "docs": "Dokumentasjon",
+    "github": "GitHub",
+    "login": "Kjøretøysinnlogginger",
+    "needHelp": "Trenger du hjelp?",
+    "sessions": "Ladeøkter"
+  },
+  "help": {
+    "discussionsButton": "GitHub-diskusjoner",
+    "documentationButton": "Dokumentasjon",
+    "issueButton": "Rapporter feil",
+    "issueDescription": "Funnet noe merkelig eller feil?",
+    "modalTitle": "Trenger du hjelp?",
+    "primaryActions": "Er det noe som ikke virker som det skal? Dette er gode ressurser å starte med.",
+    "restart": {
+      "cancel": "Avbryt",
+      "confirm": "Ja, start på ny.",
+      "description": "I normale fall bør ikke omstart være nødvendig. Overvei å sende en feilrapport hvis du må starte evcc på ny ofte.",
+      "disclaimer": "Merk: evcc vil avsluttes og be operativsystemet om å starte enheten på ny.",
+      "modalTitle": "Er du sikker på at du vil utføre omstart?"
+    },
+    "restartButton": "Start på ny",
+    "restartDescription": "Prøvd å slå av og på igjen?",
+    "secondaryActions": "Vedvarer problemet? Her har du mer drastiske tiltak."
+  },
+  "main": {
+    "chargingPlan": {
+      "arrivalTab": "Ankomst",
+      "departureTab": "Avgang",
+      "modalTitle": "Ladeplan",
+      "none": "ingen",
+      "title": "Plan",
+      "titleMinSoc": "Min.-lading",
+      "titleTargetCharge": "Avgang"
+    },
+    "energyflow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batterilading",
+      "batteryDischarge": "Batteri utlading",
+      "batteryTooltip": "{energy} av {total} ({soc})",
+      "gridImport": "Lysnettimport",
+      "homePower": "Forbruk",
+      "loadpoints": "Lader| Lader | {count} ladere",
+      "noEnergy": "Ingen telleverksdata",
+      "pvExport": "Lysnetteksport",
+      "pvProduction": "Produksjon",
+      "selfConsumption": "Eget forbruk"
+    },
+    "loadpoint": {
+      "avgPrice": "⌀-pris",
+      "charged": "Oppladet",
+      "co2": "⌀-CO₂",
+      "duration": "Varighet",
+      "fallbackName": "Ladepunkt",
+      "power": "Effekt",
+      "price": "Σ-pris",
+      "solar": "Solenergi"
+    },
+    "loadpointSettings": {
+      "currents": "Ladestrøm",
+      "default": "forvalg",
+      "disclaimerHint": "Merknad:",
+      "maxCurrent": {
+        "label": "Maks. ladestrøm"
+      },
+      "minCurrent": {
+        "label": "Min. ladestrøm"
+      },
+      "minSoc": {
+        "description": "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet.",
+        "label": "Min. lading%"
+      },
+      "phasesConfigured": {
+        "label": "Faser",
+        "phases_0": "automatisk veksling",
+        "phases_1": "1-fase",
+        "phases_1_hint": "({min} til {max})",
+        "phases_3": "3-fase",
+        "phases_3_hint": "({min} til {max})"
+      },
+      "title": "Innstillinger for {0}",
+      "vehicle": "Kjøretøy"
+    },
+    "mode": {
+      "minpv": "Min+Sol-e.",
+      "now": "Raskt",
+      "off": "Stopp",
+      "pv": "Sol"
+    },
+    "provider": {
+      "login": "logg inn",
+      "logout": "logg ut"
+    },
+    "targetCharge": {
+      "activate": "Aktiver",
+      "co2Limit": "CO₂-grense på {co2}",
+      "costLimitIgnore": "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden.",
+      "descriptionEnergy": "Når skal {targetEnergy} være på kjøretøyet?",
+      "descriptionSoc": "Når skal kjøretøyet lades til {targetSoc}?",
+      "inactiveLabel": "Stopptidspunkt",
+      "onlyInPvMode": "Ladeplan fungerer kun i solcellemodus.",
+      "planDuration": "Ladetid",
+      "planPeriodLabel": "Periode",
+      "planPeriodValue": "{start} til {end}",
+      "planUnknown": "ikke kjent enda",
+      "priceLimit": "prisgrense på {price}",
+      "setTargetTime": "ingen",
+      "targetIsInThePast": "Velg et tidspunkt i fremtiden, Marty.",
+      "targetIsTooFarInTheFuture": "Planen vil bli justert så snart mer info tilkommer.",
+      "title": "Mål-tid",
+      "today": "i dag",
+      "tomorrow": "i morgen",
+      "update": "Oppdater"
+    },
+    "targetChargePlan": {
+      "chargeDuration": "Ladetid",
+      "co2Label": "CO₂-utslipp ⌀",
+      "priceLabel": "Energipris",
+      "timeRange": "{day} {range} t",
+      "unknownPrice": "fremdeles ukjent"
+    },
+    "targetEnergy": {
+      "label": "Grense",
+      "noLimit": "ingen"
+    },
+    "vehicle": {
+      "addVehicle": "Legg til kjøretøy",
+      "changeVehicle": "Endre kjøretøy",
+      "detectionActive": "Oppdager kjøretøy ...",
+      "fallbackName": "Kjøretøy",
+      "moreActions": "Flere handlinger",
+      "none": "Ingen kjøretøy",
+      "targetSoc": "Grense",
+      "temp": "Temp.",
+      "tempLimit": "Temp.-grense",
+      "unknown": "Gjestekjøretøy",
+      "vehicleSoc": "Lade"
+    },
+    "vehicleStatus": {
+      "charging": "Lading...",
+      "cheapEnergyCharging": "Billig energi tilgjengelig. Lader …",
+      "cleanEnergyCharging": "Ren energi tilgjengelig. Lader …",
+      "climating": "Klimaanlegg på forhånd oppdaget.",
+      "connected": "Tilkoblet.",
+      "disconnected": "Frakoblet.",
+      "minCharge": "Minimumslading til {soc}.",
+      "pvDisable": "Ikke nok overskudd. Pause i {remaining}...",
+      "pvEnable": "Overskudd tilgjengelig. Starter om {remaining}...",
+      "scale1p": "Reduserer til 1-fase strøm i {remaining}...",
+      "scale3p": "Øker til 3-fase strøm i {remaining}...",
+      "targetChargeActive": "Målladning aktiv ...",
+      "targetChargePlanned": "Mållading starter på {time}.",
+      "targetChargeWaitForVehicle": "Mållading klar. Venter på kjøretøy...",
+      "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
+      "waitForVehicle": "Klar. Venter på kjøretøy..."
+    },
+    "vehicles": "Parkering"
+  },
+  "notifications": {
+    "dismissAll": "Forkast alle",
+    "modalTitle": "Merknader"
+  },
+  "offline": {
+    "message": "Ikke koblet til en server."
+  },
+  "session": {
+    "cancel": "Avbryt",
+    "co2": "CO₂",
+    "date": "Tidsrom",
+    "delete": "Slett",
+    "finished": "Fullført",
+    "meter": "Måleravlesning",
+    "meterstart": "Start-målerstand",
+    "meterstop": "Stopp-målerstand",
+    "odometer": "Kilometerstand",
+    "price": "Pris",
+    "started": "Startet",
+    "title": "Ladeøkt"
+  },
+  "sessions": {
+    "avgPower": "⌀-effekt",
+    "avgPrice": "⌀-pris",
+    "chargeDuration": "Varighet",
+    "co2": "⌀-CO₂",
+    "csv": {
+      "chargedenergy": "Energi (kWh)",
+      "created": "Opprettet",
+      "finished": "Fullført",
+      "identifier": "Identifikator",
+      "loadpoint": "Ladepunkt",
+      "meterstart": "Start-målerstand (kWh)",
+      "meterstop": "Stopp-målerstand (kWh)",
+      "odometer": "Kilometerstand",
+      "vehicle": "Kjøretøy"
+    },
+    "csvMonth": "Last ned (måned) CSV",
+    "csvTotal": "Last ned total CSV",
+    "date": "Start",
+    "downloadCsv": "Last ned som CSV",
+    "energy": "Oppladet",
+    "filter": {
+      "allLoadpoints": "alle ladepunkter",
+      "allVehicles": "alle kjøretøy",
+      "filter": "Filter"
+    },
+    "loadpoint": "Ladepunkt",
+    "noData": "Ingen ladeøkter denne måneden.",
+    "price": "Σ-pris",
+    "reallyDelete": "Slett denne økten?",
+    "solar": "Solenergi",
+    "title": "Ladeøkter",
+    "total": "Totalt",
+    "vehicle": "Kjøretøy"
+  },
+  "settings": {
+    "hiddenFeatures": {
+      "label": "Eksperimentelt",
+      "value": "Vis eksperimentelle grensesnittsfunksjoner."
+    },
+    "language": {
+      "auto": "Automatisk",
+      "label": "Språk"
+    },
+    "sponsorToken": {
+      "expires": "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din.",
+      "getNew": "Få en ny token",
+      "hint": "Merk: Dette vil bli automatisert i fremtiden."
+    },
+    "telemetry": {
+      "label": "Telemetri"
+    },
+    "theme": {
+      "auto": "system",
+      "dark": "mørk",
+      "label": "Design",
+      "light": "lys"
+    },
+    "title": "Innstillinger",
+    "unit": {
+      "km": "km",
+      "label": "Enheter",
+      "mi": "mil"
+    }
+  },
+  "smartCost": {
+    "activeHours": "{charging} av {total}",
+    "activeHoursLabel": "Aktive timer",
+    "co2Label": "CO₂-utslipp",
+    "co2Limit": "CO₂-grense",
+    "loadpointDescription": "Slår på midlertidig hurtiglading i solcellemodus.",
+    "modalTitle": "Smart lysnettlading",
+    "none": "ingen",
+    "priceLabel": "Energipris",
+    "priceLimit": "Prisgrense"
+  },
+  "startupError": {
+    "configFile": "Brukt oppsettsfil:",
+    "configuration": "Oppsett",
+    "description": "Vennligst sjekk konfigurasjonsfilen din. Hvis feilmeldingen ikke hjelper, kan du sjekke ut {0}.",
+    "discussions": "GitHub-diskusjoner",
+    "fixAndRestart": "Vennligst fiks problemet og start serveren på nytt.",
+    "hint": "Merk: Det kan også være at du har en defekt enhet (omformer, måler, ...). Sjekk nettverkstilkoblingene dine.",
+    "lineError": "Feil i {0}.",
+    "lineErrorLink": "linje {0}",
+    "restartButton": "Omstart",
+    "title": "Oppstartsfeil"
+  }
+}
