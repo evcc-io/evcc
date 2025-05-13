@@ -1,0 +1,251 @@
+{
+  "batterySettings": {
+    "batteryLevel": "Уровень заряда батареи",
+    "bufferStart": {
+      "full": "когда почти полная",
+      "never": "только при достаточном избытке"
+    },
+    "capacity": "{energy} из {total}",
+    "control": "Управление батареей",
+    "discharge": "Предотвратить разряд в быстром режиме и запланированной зарядке.",
+    "disclaimerHint": "Примечание:",
+    "disclaimerText": "Эти настройки влияют только на режим солнечной батареи. Поведение зарядки изменяется соответствующе.",
+    "legendBottomName": "домашний приоритет",
+    "legendBottomSubline": "не используется для зарядки",
+    "legendMiddleName": "сначала автомобиль",
+    "legendMiddleSubline": "дом вторым",
+    "legendTopAutostart": "запускается автоматически",
+    "legendTopName": "зарядка с поддержкой от аккумулятора",
+    "legendTopSubline": "без перебоев",
+    "modalTitle": "Настройки батареи"
+  },
+  "config": {
+    "form": {
+      "example": "Пример",
+      "optional": "опционально"
+    },
+    "main": {
+      "addVehicle": "Добавить транспортное средство",
+      "edit": "редактировать",
+      "title": "Конфигурация",
+      "vehicles": "Мои транспортные средства"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "Солнечная электроэнергия",
+      "greenEnergySub1": "заряжено с помощью evcc",
+      "greenEnergySub2": "c октября 2022 г",
+      "greenShare": "Доля солнечной энергии",
+      "greenShareSub1": "энергия предоставляется от",
+      "greenShareSub2": "солнца или батарей",
+      "power": "Мощность зарядки",
+      "powerSub1": "{activeClients} из {totalClients} участников",
+      "powerSub2": "заряжаются...",
+      "tabTitle": "Данные комьюнити"
+    },
+    "savings": {
+      "footerLong": "{percent} солнечной энергии",
+      "footerShort": "{percent} солнечной",
+      "modalTitle": "Обзор потребленной электроэнергии",
+      "percentGrid": "{self} кВт/ч из сети",
+      "percentSelf": "{self} кВт/ч солнечной",
+      "percentTitle": "Солнечная энергия",
+      "priceTitle": "Цена электроэнергии",
+      "tabTitle": "Мои данные"
+    },
+    "sponsor": {
+      "becomeSponsor": "Стать спонсором",
+      "confetti": "Готовы к конфети?",
+      "confettiPromise": "Ты получишь стикеры или цифровое конфети",
+      "sticker": "... или стикеры evcc?",
+      "supportUs": "Наша миссия — сделать солнечную энергию нормой. Помоги evcc, заплатив столько, сколько считаешь нужным.",
+      "thanks": "Спасибо, {sponsor}! Ваша поддержка поможет развивать evcc.",
+      "titleNoSponsor": "Поддержать нас",
+      "titleSponsor": "Ты нас поддерживаешь"
+    },
+    "telemetry": {
+      "optIn": "Я хочу поделиться своими данными.",
+      "optInMoreDetails": "Больше информации {0}.",
+      "optInMoreDetailsLink": "здесь",
+      "optInSponsorship": "Требуется спонсорство."
+    },
+    "version": {
+      "availableLong": "доступна новая версия",
+      "modalCancel": "Отмена",
+      "modalDownload": "Загрузить",
+      "modalInstalledVersion": "Установленная версия",
+      "modalNoReleaseNotes": "Нет доступных примечаний к выпуску. Дополнительная информация о новой версии:",
+      "modalTitle": "Доступна новая версия",
+      "modalUpdate": "Установить",
+      "modalUpdateNow": "Установить сейчас",
+      "modalUpdateStarted": "Запускаю новую версию evcc...",
+      "modalUpdateStatusStart": "Установка начата:"
+    }
+  },
+  "header": {
+    "about": "О нас",
+    "blog": "Блог",
+    "docs": "Документация",
+    "github": "GitHub",
+    "sessions": "Сеансы зарядки"
+  },
+  "main": {
+    "energyflow": {
+      "battery": "Батарея",
+      "batteryCharge": "Батарея заряжается",
+      "batteryDischarge": "Батарея разряжается",
+      "gridImport": "Потребление из сети",
+      "homePower": "Потребление",
+      "loadpoints": "Зарядная станция | Зарядная станция | {count} зарядные станции",
+      "noEnergy": "Нет данных счетчика",
+      "pvExport": "Экспорт в сеть",
+      "pvProduction": "Генерация",
+      "selfConsumption": "Собственное потребление"
+    },
+    "loadpoint": {
+      "charged": "Заряжено",
+      "duration": "Длительность",
+      "fallbackName": "Зарядная станция",
+      "power": "Мощность"
+    },
+    "loadpointSettings": {
+      "currents": "Ток зарядки",
+      "default": "по умолчанию",
+      "disclaimerHint": "Заметка:",
+      "maxCurrent": {
+        "label": "Макс. ток"
+      },
+      "minCurrent": {
+        "label": "Мин. ток"
+      },
+      "minSoc": {
+        "label": "Мин. заряд %"
+      },
+      "phasesConfigured": {
+        "label": "Фазы",
+        "phases_0": "авто переключение",
+        "phases_1": "1 фаза",
+        "phases_1_hint": "({min} до {max})",
+        "phases_3": "3 фазы",
+        "phases_3_hint": "({min} до {max})"
+      },
+      "title": "Настройки {0}",
+      "vehicle": "Транспортное средство"
+    },
+    "mode": {
+      "minpv": "Мин+солн. эн",
+      "now": "Быстро",
+      "off": "Выкл",
+      "pv": "Солн. эн"
+    },
+    "provider": {
+      "login": "войти",
+      "logout": "выйти"
+    },
+    "targetCharge": {
+      "activate": "Активировать",
+      "descriptionSoc": "Когда транспортное средство следует зарядить до {targetSoc}?",
+      "inactiveLabel": "Запланированное время",
+      "setTargetTime": "ни одного",
+      "targetIsInThePast": "Выбери время в будущем.",
+      "title": "Запланированное время",
+      "today": "сегодня",
+      "tomorrow": "завтра"
+    },
+    "targetEnergy": {
+      "label": "Лимит",
+      "noLimit": "ни одного"
+    },
+    "vehicle": {
+      "changeVehicle": "Сменить транспортное средство",
+      "detectionActive": "Определение транспортного средства...",
+      "fallbackName": "Транспортное средство",
+      "none": "Нет транспортного средства",
+      "targetSoc": "Лимит",
+      "unknown": "Гостевое транспортное средство",
+      "vehicleSoc": "Заряд"
+    },
+    "vehicleStatus": {
+      "charging": "Зарядка...",
+      "connected": "Подключено.",
+      "disconnected": "Отключено.",
+      "minCharge": "Минимальная зарядка до {soc}.",
+      "pvDisable": "Недостаточно избытка. Пауза через {remaining}...",
+      "pvEnable": "Доступен избыток. Начинаю через {remaining}...",
+      "scale1p": "Снижаю до одной фазы через {remaining}...",
+      "scale3p": "Увеличиваю до трех фаз через {remaining}...",
+      "targetChargeActive": "Плановая зарядка активна...",
+      "targetChargePlanned": "Плановая зарядка начнется в {time}.",
+      "targetChargeWaitForVehicle": "Плановая зарядка готова. Ожидаю транспортное средство...",
+      "waitForVehicle": "Готов. Ожидание транспортного средства..."
+    },
+    "vehicles": "Парковка"
+  },
+  "notifications": {
+    "dismissAll": "Отклонить все",
+    "modalTitle": "Уведомления"
+  },
+  "offline": {
+    "message": "Не подключено к серверу."
+  },
+  "session": {
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "finished": "Завершено",
+    "meterstart": "Початок лічильника",
+    "meterstop": "Зупинка лічильника",
+    "odometer": "Пробіг",
+    "started": "Розпочато"
+  },
+  "sessions": {
+    "csv": {
+      "chargedenergy": "Электроэнергия (кВт/ч)",
+      "created": "Создано",
+      "finished": "Закончено",
+      "identifier": "Идентификатор",
+      "loadpoint": "Зарядная станция",
+      "odometer": "Пробег (км)",
+      "vehicle": "Транспортное средство"
+    },
+    "date": "Период",
+    "downloadCsv": "Загрузить CSV",
+    "energy": "Заряжено",
+    "loadpoint": "Зарядная станция",
+    "title": "Сессии зарядки",
+    "vehicle": "Транспортное средство"
+  },
+  "settings": {
+    "language": {
+      "auto": "Автоматически",
+      "label": "Язык"
+    },
+    "telemetry": {
+      "label": "Телеметрия"
+    },
+    "theme": {
+      "auto": "системный",
+      "dark": "темный",
+      "label": "Дизайн",
+      "light": "светлый"
+    },
+    "title": "Настройки",
+    "unit": {
+      "km": "км",
+      "label": "Единицы измерения",
+      "mi": "мили"
+    }
+  },
+  "startupError": {
+    "configFile": "Используемый конфигурационный файл:",
+    "configuration": "Конфигурация",
+    "description": "Пожалуйста проверь конфигурационный файл. Если это сообщение не помогло, проверь {0}.",
+    "discussions": "GitHub Discussions",
+    "fixAndRestart": "Пожалуйста исправьте проблему и перезагрузите сервер.",
+    "hint": "Заметка: Возможно у вас неисправно устройство (инвертор, счетчик, ...). Проверьте сетевые подключения.",
+    "lineError": "Ошибка в {0}.",
+    "lineErrorLink": "линия {0}",
+    "restartButton": "Рестарт",
+    "title": "Ошибка запуска"
+  }
+}
