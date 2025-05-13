@@ -122,4 +122,3 @@ render: |
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}
-  
