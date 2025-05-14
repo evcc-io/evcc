@@ -55,13 +55,13 @@ render: |
             type: writeholding
             encoding: int16
     - case: 1 # dimm
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 55
-            type: writeholding
-            encoding: int16
+      set:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 55
+          type: writeholding
+          encoding: int16
   {{- if .tempsource }}
   temp:
     source: modbus
