@@ -121,7 +121,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			log.WARN.Println("Tibber pulse: websocket disconnected")
 		}).
 		OnSubscriptionComplete(func(_ graphql.Subscription) {
-			log.INFO.Println("Tibber pulse: websocket subscription completed by server")
+			log.WARN.Println("Tibber pulse: websocket subscription completed by server")
 		}).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {
 			// Don't let Hasura go graphql client reconnect when authorization fails
