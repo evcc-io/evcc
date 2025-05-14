@@ -3,7 +3,7 @@ products:
   - brand: FoxESS
     description:
       generic: H3-Smart Series Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "power-meter", "energy-meter", "solar-production"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
