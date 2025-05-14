@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -41,6 +42,8 @@ type Keba struct {
 	*embed
 	log          *util.Logger
 	conn         *modbus.Connection
+	mu           sync.Mutex
+	enabled      bool
 	current      uint16
 	regEnable    uint16
 	energyFactor float64
@@ -200,7 +203,14 @@ func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if _, err := wb.Enabled(); err != nil {
+		var enabled bool
+		wb.mu.Lock()
+		if wb.enabled {
+			enabled = wb.enabled
+		}
+		wb.mu.Unlock()
+
+		if err := wb.setEnable(enabled); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -276,18 +286,34 @@ func (wb *Keba) Enabled() (bool, error) {
 	return !(s == 5 || s == 1), nil
 }
 
-// Enable implements the api.Charger interface
-func (wb *Keba) Enable(enable bool) error {
+// setEnable writes the enable register without modifying the stored current value
+
+func (wb *Keba) setEnable(enable bool) error {
 	var u uint16
 	if enable {
 		if wb.regEnable == kebaRegMaxCurrent {
+			wb.mu.Lock()
 			u = wb.current
+			wb.mu.Unlock()
 		} else {
 			u = 1
 		}
 	}
 
 	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
+
+	return err
+}
+
+// Enable implements the api.Charger interface
+func (wb *Keba) Enable(enable bool) error {
+	err := wb.setEnable(enable)
+	if err == nil {
+		wb.mu.Lock()
+		wb.enabled = enable
+		wb.mu.Unlock()
+	}
+
 	return err
 }
 
@@ -304,7 +330,9 @@ func (wb *Keba) MaxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
 
 	if err == nil {
+		wb.mu.Lock()
 		wb.current = u
+		wb.mu.Unlock()
 	}
 
 	return err
