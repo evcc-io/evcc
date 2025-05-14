@@ -15,10 +15,8 @@ params:
   - name: homeid
     example: 96a14971-525a-4420-aae9-e5aedaa129ff
   - name: timeout
-    default: 1m
-    advanced: true
+    deprecated: true
 render: |
   type: tibber-pulse
   token: {{ .token }}
   homeid: {{ .homeid }}
-  timeout: {{ .timeout }}

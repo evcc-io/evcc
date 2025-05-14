@@ -1,6 +1,9 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import formatter, { POWER_UNIT } from "./formatter";
+import * as units from "../units";
+
+const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 config.global.mocks["$t"] = (a) => a;
@@ -181,5 +184,25 @@ describe("fmtPercentage", () => {
     expect(fmt.fmtPercentage(100, 0, false)).eq("100 %");
     expect(fmt.fmtPercentage(-100, 0, true)).eq("-100 %");
     expect(fmt.fmtPercentage(-100, 0, false)).eq("-100 %");
+  });
+});
+
+const testDate = new Date(2023, 0, 15, 15, 30); // Jan 15, 2023, 15:30 (3:30 PM)
+
+describe("12h/24h time format", () => {
+  test("12h format", () => {
+    is12hSpy.mockReturnValue(true);
+    expect(fmt.fmtHourMinute(testDate)).toBe("3:30 PM");
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So., 15. Jan., 3:30 PM");
+    expect(fmt.fmtWeekdayTime(testDate)).toBe("So. 3:30 PM");
+    expect(fmt.fmtAbsoluteDate(testDate)).toBe("So 3:30 PM");
+  });
+
+  test("24h format", () => {
+    is12hSpy.mockReturnValue(false);
+    expect(fmt.fmtHourMinute(testDate)).toBe("15:30");
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So., 15. Jan., 15:30");
+    expect(fmt.fmtWeekdayTime(testDate)).toBe("So., 15:30");
+    expect(fmt.fmtAbsoluteDate(testDate)).toBe("So 15:30");
   });
 });

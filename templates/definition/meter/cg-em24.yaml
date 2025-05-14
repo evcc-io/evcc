@@ -6,6 +6,12 @@ products:
   - brand: Victron
     description:
       generic: EM24
+requirements:
+  description:
+    de: |
+      EM24 mit RS-485-Anschluss. Benutze die EM24_E1 für die EM24 mit Ethernet-Anschluss, denn die Definition ist nicht kompatibel.
+    en: |
+      EM24 with RS-485 connection. Use the EM24_E1 if you have an EM24_E1 with Ethernet connection, the definitions are not compatible.
 params:
   - name: usage
     choice: ["grid", "charge"]
@@ -21,15 +27,11 @@ render: |
     - CurrentL1
     - CurrentL2
     - CurrentL3
-  {{- if eq .usage "grid" }}
   powers:
     - PowerL1
     - PowerL2
     - PowerL3
-  {{- end }}
-  {{- if eq .usage "charge" }}
   voltages:
     - VoltageL1
     - VoltageL2
     - VoltageL3
-  {{- end }}
