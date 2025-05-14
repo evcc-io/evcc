@@ -2,7 +2,8 @@
 	<component :is="icon" :class="`icon icon--${size}`"></component>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import _1 from "./1.vue";
 import _2 from "./2.vue";
 import _3 from "./3.vue";
@@ -26,18 +27,18 @@ const icons = {
 	_9,
 };
 
-export default {
+export default defineComponent({
 	name: "MultiIcon",
 	props: {
-		count: { type: Number },
+		count: { type: Number, default: 1 },
 		size: { type: String, default: "s" },
 	},
 	computed: {
 		icon() {
-			return this.count > 9 ? Plus : icons[`_${this.count}`];
+			return this.count > 9 ? Plus : icons[`_${this.count}` as keyof typeof icons];
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

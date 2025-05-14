@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -96,13 +97,13 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms?: number) {
-			return gramms ? `${this.fmtNumber(gramms, 0)} g` : "?";
+		fmtCo2Short(gramms = 0) {
+			return `${this.fmtNumber(gramms, 0)} g`;
 		},
-		fmtCo2Medium(gramms: number) {
+		fmtCo2Medium(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
 		},
-		fmtCo2Long(gramms: number) {
+		fmtCo2Long(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
 		},
 		fmtNumberToLocale(val: number, pad = 0) {
@@ -198,6 +199,7 @@ export default defineComponent({
 			if (locale === "de") return date.getHours();
 			return new Intl.DateTimeFormat(locale, {
 				hour: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		weekdayShort(date: Date) {
@@ -210,6 +212,7 @@ export default defineComponent({
 			const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 
 			return `${weekday} ${hour}`.trim();
@@ -218,6 +221,7 @@ export default defineComponent({
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtFullDateTime(date: Date, short: boolean) {
@@ -227,6 +231,7 @@ export default defineComponent({
 				day: "numeric",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtWeekdayTime(date: Date) {
@@ -234,6 +239,7 @@ export default defineComponent({
 				weekday: "short",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtMonthYear(date: Date) {

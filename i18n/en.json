@@ -255,6 +255,7 @@
       "addVehicle": "Add vehicle",
       "configured": "configured",
       "edit": "edit",
+      "loadpointRequired": "At least one charge point has to be configured.",
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",
@@ -930,6 +931,11 @@
       "dark": "dark",
       "label": "Design",
       "light": "light"
+    },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Time format"
     },
     "title": "User Interface",
     "unit": {
