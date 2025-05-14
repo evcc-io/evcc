@@ -161,7 +161,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}
 	}()
 
-	log.INFO.Printf("Tibber pulse: User-Agent set to %s", getUserAgent())
+	log.INFO.Printf("!! User-Agent set to %s", getUserAgent())
 
 	return t, nil
 }
