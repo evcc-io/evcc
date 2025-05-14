@@ -22,11 +22,9 @@ func init() {
 }
 
 func getUserAgent() string {
-	evccVersion := util.Version
-	graphqlClientVersion := "0.13.2+unknown"
+	graphqlClientVersion := "unknown"
 
 	if info, ok := debug.ReadBuildInfo(); ok {
-		evccVersion = baseVersion(info.Main.Version)
 		for _, dep := range info.Deps {
 			if dep.Path == "github.com/hasura/go-graphql-client" {
 				graphqlClientVersion = baseVersion(dep.Version)
@@ -34,7 +32,7 @@ func getUserAgent() string {
 		}
 	}
 
-	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", evccVersion, graphqlClientVersion)
+	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", util.FormattedVersion(), graphqlClientVersion)
 }
 
 func baseVersion(v string) string {
@@ -215,7 +213,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}
 	}()
 
-	log.INFO.Printf("Tibber pulse: User-Agent set to %s", getUserAgent())
+	log.INFO.Printf("!! User-Agent set to %s", getUserAgent())
 
 	return t, nil
 }
