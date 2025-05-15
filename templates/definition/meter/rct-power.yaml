@@ -24,7 +24,7 @@ params:
     advanced: true
     default: 30s
   - name: maxchargepower
-  - name: queryExternalPower
+  - name: queryexternalpower
     type: bool
     default: true
     description:
