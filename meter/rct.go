@@ -186,8 +186,6 @@ func (m *RCT) CurrentPower() (float64, error) {
 				c, err = m.queryFloat(rct.S0ExternalPowerW)
 				return err
 			})
-		} else {
-			c = 0
 		}
 
 		err := eg.Wait()
