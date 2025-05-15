@@ -1,4 +1,4 @@
-export interface SavingsData {
+export interface LiveCommunityData {
 	totalClients: number;
 	activeClients: number;
 	totalInstances: number;

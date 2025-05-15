@@ -42,7 +42,7 @@ import formatter from "@/mixins/formatter";
 import communityApi from "./communityApi.ts";
 import { defineComponent } from "vue";
 import type { Timeout } from "@/types/evcc";
-import type { SavingsData } from "./types";
+import type { LiveCommunityData } from "./types";
 
 const UPDATE_INTERVAL_SECONDS = 10;
 
@@ -54,7 +54,7 @@ export default defineComponent({
 	data() {
 		return {
 			refresh: null as Timeout,
-			result: {} as SavingsData,
+			result: {} as LiveCommunityData,
 		};
 	},
 	computed: {

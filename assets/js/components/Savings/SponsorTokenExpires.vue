@@ -34,7 +34,7 @@ export default defineComponent({
 		inXDays() {
 			return this.expiresAt
 				? this.fmtTimeAgo(new Date(this.expiresAt).getTime() - new Date().getTime())
-				: "?";
+				: "";
 		},
 		isTrial() {
 			return this.name === TRIAL;
