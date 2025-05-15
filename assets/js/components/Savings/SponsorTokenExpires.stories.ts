@@ -27,7 +27,7 @@ const Template: StoryFn<typeof SponsorTokenExpires> = (args) => ({
 export const SomeDay = Template.bind({});
 SomeDay.args = {
 	expiresSoon: true,
-	expiresAt: new Date(Date.now() + 22 * 20 * 60 * 1000),
+	expiresAt: new Date(Date.now() + 22 * 20 * 60 * 1000).toISOString(),
 };
 
 export const Empty = Template.bind({});

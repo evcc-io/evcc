@@ -76,7 +76,7 @@ export default defineComponent({
 	name: "Sponsor",
 	props: {
 		name: String,
-		expiresAt: Date,
+		expiresAt: String,
 		expiresSoon: Boolean,
 	},
 	computed: {

@@ -27,7 +27,7 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		expiresSoon: Boolean,
-		expiresAt: Date,
+		expiresAt: String,
 		name: String,
 	},
 	computed: {
