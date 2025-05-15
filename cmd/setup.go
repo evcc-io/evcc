@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"regexp"
 	"slices"
@@ -1049,7 +1048,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1058,38 +1057,4 @@ func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mu
 
 	// wire the handler
 	oauth2redirect.SetupRouter(auth)
-
-	// initialize
-	authCollection := util.NewAuthCollection(paramC)
-
-	baseURI := conf.URI()
-	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
-
-	var id int
-	for _, v := range vehicles {
-		if provider, ok := v.(api.AuthProvider); ok {
-			id += 1
-
-			basePath := fmt.Sprintf("vehicles/%d", id)
-			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
-
-			// register vehicle
-			ap := authCollection.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
-
-			provider.SetCallbackParams(baseURI, callbackURI, ap.Handler())
-
-			auth.
-				Methods(http.MethodPost).
-				Path(fmt.Sprintf("/%s/login", basePath)).
-				HandlerFunc(provider.LoginHandler())
-			auth.
-				Methods(http.MethodPost).
-				Path(fmt.Sprintf("/%s/logout", basePath)).
-				HandlerFunc(provider.LogoutHandler())
-
-			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
-		}
-	}
-
-	authCollection.Publish()
 }
