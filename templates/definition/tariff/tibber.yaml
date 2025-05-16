@@ -7,6 +7,7 @@ requirements:
     de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: https://developer.tibber.com/"
   evcc: ["skiptest"]
 group: price
+countries: ["NO", "SE", "DE", "NL"]
 params:
   - name: token
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4

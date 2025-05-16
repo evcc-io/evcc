@@ -97,11 +97,11 @@ params:
     usages: ["vehicle", "battery"]
   - name: maxacpower
     description:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     help:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters
-      en: Maximum AC power of the hybrid inverter
+      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
+      en: Maximum AC power of the hybrid inverter in W
     default: 0
     example: 5000
     type: float
@@ -156,21 +156,21 @@ params:
     type: chargemodes
   - name: minsoc
     description:
-      de: Minimaler Ladestand (Soc) in %
-      en: Minimum state of charge (Soc) in %
+      de: Minimaler Ladestand (%)
+      en: Minimum charge (%)
     help:
-      de: Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht
-      en: Immediate charging with maximum power up to the defined state of charge independently from solar production if the charge mode is not set to 'Off'
+      de: Untere Grenze beim Entladen der Batterie (normaler Betrieb)
+      en: Lower limit when discharging the battery (normal operation)
     example: 25
     type: int
-  - name: targetsoc
+  - name: maxsoc
     description:
-      de: Zielladestand (Soc) in %
-      en: Target state of charge (Soc) in %
+      de: Maximaler Ladestand (%)
+      en: Maximum charge (%)
     help:
-      de: Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden
-      en: Until which state of charge (Soc) should the vehicle be charged
-    example: 80
+      de: Oberes Limit beim Laden der Batterie aus dem Netz
+      en: Upper limit when charging the battery from the grid
+    example: 95
     type: int
   - name: mincurrent
     description:
@@ -238,23 +238,41 @@ params:
       - bus
       - moped
       - motorcycle
+      - rocket
       - scooter
+      - taxi
       - tractor
+      - rickshaw
       - shuttle
       - van
-      - heater
-      - heatpump
-      - waterheater
-      - laundry
-      - dishwasher
       - airpurifier
+      - battery
+      - bulb
       - climate
-      - cooler
-      - generic
-      - device
-      - meter
+      - coffeemaker
       - compute
+      - cooking
+      - cooler
+      - desktop
+      - device
+      - dishwasher
+      - dryer
+      - floorlamp
+      - generic
+      - heater
+      - heatexchange
+      - heatpump
+      - kettle
+      - laundry
+      - laundry2
+      - machine
+      - meter
+      - microwave
+      - pump
+      - smartconsumer
       - tool
+      - waterheater
+
   - name: ski
     required: true
     description:
@@ -310,8 +328,9 @@ params:
       en: Maximum charge power (W)
       de: Maximale Ladeleistung (W)
     help:
-      en: Power limit for grid charging.
-      de: Leistungslimit für Netzladung.
+      en: Maximum charge power for forced charging of the battery in watts.
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt.
+    advanced: true
   - name: maxchargerate
     type: int
     usages: ["battery"]
@@ -319,9 +338,10 @@ params:
       en: Maximum charge power (%)
       de: Maximale Ladeleistung (%)
     help:
-      en: Power limit for grid charging.
-      de: Leistungslimit für Netzladung.
+      en: Maximum charge power for forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
+      de: Maximale Leistung für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
+    advanced: true
 
 presets:
   vehicle-base:
@@ -400,6 +420,40 @@ presets:
           de: Individuelle Formel zur Berechnung des Preises
           en: Individual formula for calculating the price
         example: "math.Max((price + charges) * (1 + tax), 0.0)"
+  forecast-base:
+    params:
+      - name: lat
+        description:
+          en: Latitude
+          de: Breitengrad
+        type: float
+        example: 55.7351
+        required: true
+      - name: lon
+        description:
+          en: Longitude
+          de: Längengrad
+        type: float
+        example: 9.1275
+        required: true
+      - name: dec
+        description:
+          en: Decline
+          de: Neigung
+        help:
+          en: 0 = horizontal, 90 = vertical
+          de: 0 = horizontal, 90 = vertikal
+        type: int
+        example: 25
+        required: true
+      - name: kwp
+        description:
+          en: Maximum generator power [kWp]
+          de: Maximale Generatorleistung [kWp]
+        type: float
+        example: 9.8
+        required: true
+
   eebus:
     params:
       - name: ski
@@ -589,3 +643,6 @@ devicegroups:
   co2:
     de: CO₂ Vorhersage
     en: CO₂ forecast
+  solar:
+    de: PV Vorhersage
+    en: PV forecast

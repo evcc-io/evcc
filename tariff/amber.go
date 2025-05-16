@@ -44,7 +44,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.Token == "" {
-		return nil, errors.New("missing token")
+		return nil, api.ErrMissingToken
 	}
 
 	if cc.SiteID == "" {
@@ -83,12 +83,11 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Amber) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := time.Tick(time.Minute); ; <-tick {
 		var res []amber.PriceInfo
-		uri := fmt.Sprintf("%s&endDate=%s", t.uri, time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return backoffPermanentError(t.GetJSON(t.uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
@@ -105,10 +104,10 @@ func (t *Amber) run(done chan error) {
 				ar := api.Rate{
 					Start: startTime.Local(),
 					End:   endTime.Local(),
-					Price: r.PerKwh / 1e2,
+					Value: r.PerKwh / 1e2,
 				}
 				if r.AdvancedPrice != nil {
-					ar.Price = r.AdvancedPrice.Predicted / 1e2
+					ar.Value = r.AdvancedPrice.Predicted / 1e2
 				}
 				data = append(data, ar)
 			}

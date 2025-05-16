@@ -21,6 +21,7 @@ func init() {
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
+	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -39,7 +40,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	mode := api.BatteryUnknown
-	if val := cmd.Flags().Lookup(flagBatteryMode).Value.String(); val != "" {
+	if val := cmd.Flag(flagBatteryMode).Value.String(); val != "" {
 		var err error
 		mode, err = api.BatteryModeString(val)
 		if err != nil {
@@ -76,6 +77,10 @@ func runMeter(cmd *cobra.Command, args []string) {
 			d.DumpWithHeader(dev.Config().Name, v)
 		}
 		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
+			if d, err := cmd.Flags().GetDuration(flagRepeatInterval); d > 0 && err == nil {
+				log.INFO.Println("waiting for:", d)
+				time.Sleep(d)
+			}
 			goto REPEAT
 		}
 	}

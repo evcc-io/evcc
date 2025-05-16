@@ -80,10 +80,10 @@
 </template>
 
 <script>
-import GenericModal from "./../GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
-import store from "../../store";
-import api from "../../api";
+import store from "@/store";
+import api from "@/api";
 
 export default {
 	name: "ControlModal",
@@ -153,8 +153,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.btn-cancel {
-	margin-left: -0.75rem;
 }
 </style>

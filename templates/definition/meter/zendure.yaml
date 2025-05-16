@@ -21,6 +21,7 @@ params:
     type: choice
     choice: ["EU", "Global"]
     default: EU
+    required: true
   - name: capacity
     default: 2
     advanced: true

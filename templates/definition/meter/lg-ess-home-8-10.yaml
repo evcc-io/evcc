@@ -3,6 +3,13 @@ products:
   - brand: LG
     description:
       generic: ESS Home 8/10
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: >
+      To use the battery control, a firmware version greater than or equal to 10.05.7433 / R2155 is required
+    de: >
+      Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7433 / R2155 benötigt
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -24,6 +31,13 @@ params:
       de: Registriernummer des LG ESS HOME Wechselrichters.
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
+    advanced: true
 render: |
   type: lgess8
   usage: {{ .usage }}
@@ -35,4 +49,8 @@ render: |
   {{- if .registration }}
   registration: {{ .registration }}
   {{- end }}
+  {{- if eq .usage "battery" }}
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
+  {{- end }}

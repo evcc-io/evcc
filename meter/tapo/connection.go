@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
 )
@@ -33,7 +34,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	}
 
 	if user == "" || password == "" {
-		return nil, fmt.Errorf("missing user or password")
+		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("tapo").Redact(user, password)

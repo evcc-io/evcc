@@ -142,7 +142,7 @@ func (h *SocketHub) broadcast(p util.Param) {
 }
 
 // Run starts data and status distribution
-func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
+func (h *SocketHub) Run(in <-chan util.Param, cache *util.ParamCache) {
 	for {
 		select {
 		case client := <-h.register:

@@ -46,7 +46,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 
 		for _, d := range devs {
 			fmt.Printf("%d. %s\n", d.ID, d.Type)
-			fmt.Println(d.Value)
+			fmt.Println(d.Data)
 			fmt.Println()
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -38,7 +38,7 @@ type All struct {
 	Vehicles     []config.Named
 	Tariffs      Tariffs
 	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
 
@@ -54,8 +54,8 @@ type Go struct {
 
 type ModbusProxy struct {
 	Port            int
-	ReadOnly        string
-	modbus.Settings `mapstructure:",squash"`
+	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
+	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:",omitempty"`
 }
 
 var _ api.Redactor = (*Hems)(nil)
@@ -72,6 +72,13 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
+func masked(s any) string {
+	if s != "" {
+		return "***"
+	}
+	return ""
+}
+
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -79,19 +86,18 @@ type Mqtt struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Mqtt) Redacted() any {
-	// TODO add masked password
-	return struct {
-		Broker   string `json:"broker"`
-		Topic    string `json:"topic"`
-		User     string `json:"user,omitempty"`
-		ClientID string `json:"clientID,omitempty"`
-		Insecure bool   `json:"insecure,omitempty"`
-	}{
-		Broker:   m.Broker,
-		Topic:    m.Topic,
-		User:     m.User,
-		ClientID: m.ClientID,
-		Insecure: m.Insecure,
+	return Mqtt{
+		Config: mqtt.Config{
+			Broker:     m.Broker,
+			User:       m.User,
+			Password:   masked(m.Password),
+			ClientID:   m.ClientID,
+			Insecure:   m.Insecure,
+			CaCert:     masked(m.CaCert),
+			ClientCert: masked(m.ClientCert),
+			ClientKey:  masked(m.ClientKey),
+		},
+		Topic: m.Topic,
 	}
 }
 
@@ -108,18 +114,13 @@ type Influx struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (c Influx) Redacted() any {
-	// TODO add masked password
-	return struct {
-		URL      string `json:"url"`
-		Database string `json:"database"`
-		Org      string `json:"org"`
-		User     string `json:"user"`
-		Insecure bool   `json:"insecure"`
-	}{
+	return Influx{
 		URL:      c.URL,
 		Database: c.Database,
+		Token:    masked(c.Token),
 		Org:      c.Org,
 		User:     c.User,
+		Password: masked(c.Password),
 		Insecure: c.Insecure,
 	}
 }
@@ -134,12 +135,17 @@ type Messaging struct {
 	Services []config.Typed
 }
 
+func (c Messaging) Configured() bool {
+	return len(c.Services) > 0 || len(c.Events) > 0
+}
+
 type Tariffs struct {
 	Currency string
 	Grid     config.Typed
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
+	Solar    []config.Typed
 }
 
 type Network struct {

@@ -117,7 +117,7 @@ func TestEnergyMetrics(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		s := NewEnergyMetrics()
+		var s EnergyMetrics
 
 		for _, tc := range tc.steps {
 			s.SetEnvironment(tc.greenShare, tc.effPrice, tc.effCo2)
@@ -145,7 +145,7 @@ func TestEnergyMetrics(t *testing.T) {
 	}
 
 	// reset
-	s := NewEnergyMetrics()
+	var s EnergyMetrics
 	s.SetEnvironment(1, f(1), f(1))
 	s.Update(1)
 	s.Reset()

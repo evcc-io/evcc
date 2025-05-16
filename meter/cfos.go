@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"encoding/binary"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,11 +24,11 @@ type CfosPowerBrain struct {
 }
 
 func init() {
-	registry.Add("cfos", NewCfosPowerBrainFromConfig)
+	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
 
 // NewCfosPowerBrainFromConfig creates a cFos meter from generic config
-func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -36,12 +37,12 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Meter, error
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
 }
 
 // NewCfosPowerBrain creates a cFos meter
-func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (*CfosPowerBrain, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}

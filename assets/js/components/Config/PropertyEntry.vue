@@ -2,9 +2,10 @@
 	<FormRow
 		:id="id"
 		:optional="!Required"
-		:label="Description || `[${Name}]`"
-		:help="Description === Help ? undefined : Help"
-		:example="Example"
+		:deprecated="Deprecated"
+		:label="label"
+		:help="help"
+		:example="example"
 	>
 		<PropertyField
 			:id="id"
@@ -31,6 +32,7 @@ export default {
 		id: String,
 		Name: String,
 		Required: Boolean,
+		Deprecated: Boolean,
 		Description: String,
 		Help: String,
 		Example: String,
@@ -48,6 +50,16 @@ export default {
 			set(value) {
 				this.$emit("update:modelValue", value);
 			},
+		},
+		label() {
+			return this.Description || `[${this.Name}]`;
+		},
+		help() {
+			return this.Description === this.Help ? undefined : this.Help;
+		},
+		example() {
+			// hide example text since config ui doesnt use go duration format (e.g. 5m)
+			return this.Type === "Duration" ? undefined : this.Example;
 		},
 	},
 };

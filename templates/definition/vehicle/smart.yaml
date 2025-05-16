@@ -3,8 +3,36 @@ products:
   - brand: Smart
     description:
       generic: EQ
+requirements:
+  description:
+    de: |
+      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+    en: |
+      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
-  - preset: vehicle-base
+  - preset: vehicle-common
+  - name: user
+    required: true
+  - name: region
+    required: true
+    choice: [EMEA, APAC, NORAM]
+    default: EMEA
+  - name: accessToken
+    required: true
+    mask: true
+  - name: refreshToken
+    required: true
+    mask: true
+  - name: vin
+    example: V...
+  - name: cache
+    default: 15m
 render: |
-  type: smart
-  {{ include "vehicle-base" . }}
+  type: smart-eq
+  vin: {{ .vin }}
+  user: {{ .user }}
+  region: {{ .region }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}

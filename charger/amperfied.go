@@ -35,6 +35,7 @@ type Amperfied struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
+	phases  int
 	wakeup  bool
 }
 
@@ -58,7 +59,7 @@ func init() {
 	registry.AddCtx("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -80,7 +81,7 @@ func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (
 
 // NewAmperfied creates Amperfied charger
 func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +299,7 @@ func (wb *Amperfied) Voltages() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*Amperfied)(nil)
 
-// identify implements the api.Identifier interface
+// Identify implements the api.Identifier interface
 func (wb *Amperfied) Identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegRfidUID, 6)
 	if err != nil {
@@ -346,6 +347,8 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
+	wb.phases = phases
+
 	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
 	return err
 }
@@ -357,5 +360,10 @@ func (wb *Amperfied) getPhases() (int, error) {
 		return 0, err
 	}
 
-	return int(binary.BigEndian.Uint16(b)), nil
+	phases := int(binary.BigEndian.Uint16(b))
+	if phases == 0 {
+		return wb.phases, nil
+	}
+
+	return phases, nil
 }

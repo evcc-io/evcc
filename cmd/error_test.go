@@ -18,5 +18,5 @@ func TestError(t *testing.T) {
 
 	b, err := res.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, `{"class":"meter","device":"0815","error":"foo"}`, string(b))
+	require.Equal(t, `{"class":"meter","device":"0815","error":"[0815] foo"}`, string(b))
 }

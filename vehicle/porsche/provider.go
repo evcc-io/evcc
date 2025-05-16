@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -19,11 +18,11 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, carModel string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (StatusResponse, error) {
+		statusG: util.Cached(func() (StatusResponse, error) {
 			return connect.Status(vin)
 		}, cache),
 
-		emobilityG: provider.Cached(func() (EmobilityResponse, error) {
+		emobilityG: util.Cached(func() (EmobilityResponse, error) {
 			if carModel != "" {
 				return emobility.Status(vin, carModel)
 			}

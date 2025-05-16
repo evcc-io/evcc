@@ -25,7 +25,7 @@
 	</div>
 </template>
 <script>
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
@@ -52,15 +52,17 @@ export default {
 			}
 			switch (name) {
 				case "power":
+				case "solarForecast":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
 				case "soc":
-				case "socLimit":
+				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
+				case "heaterTempLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
@@ -83,6 +85,9 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "phases1p3p":
+				case "singlePhase":
+				case "enabled":
 				case "configured":
 					return value
 						? this.$t("config.deviceValue.yes")

@@ -7,6 +7,7 @@ requirements:
     en: "Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
   evcc: ["skiptest"]
 group: price
+countries: ["EU"]
 params:
   - name: region
     example: GER
@@ -41,9 +42,11 @@ params:
     default: EUR
     type: choice
     choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
+    required: true
   - preset: tariff-base
 render: |
   type: custom
+  {{ include "tariff-base" . }}
   forecast:
     source: go
     script: |
@@ -60,7 +63,7 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }} / 1000
+                "value": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
       - name: tomorrow
@@ -74,7 +77,6 @@ render: |
               {
                 "start": .deliveryStart,
                 "end":   .deliveryEnd,
-                "price": .entryPerArea.{{ .region }} / 1000
+                "value": .entryPerArea.{{ .region }} / 1000
               }
             ] | tostring
-  {{ include "tariff-base" . }}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -19,15 +19,16 @@ type SwitchSocket struct {
 	*switchSocket
 }
 
-//go:generate decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		Enabled      provider.Config
-		Enable       provider.Config
-		Power        provider.Config
-		Energy       *provider.Config
+		Enabled      plugin.Config
+		Enable       plugin.Config
+		Power        plugin.Config
+		Energy       *plugin.Config
+		Soc          *plugin.Config
 		StandbyPower float64
 	}
 
@@ -35,27 +36,29 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	enabled, err := provider.NewBoolGetterFromConfig(ctx, cc.Enabled)
+	enabled, err := cc.Enabled.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	enable, err := provider.NewBoolSetterFromConfig(ctx, "enable", cc.Enable)
+	enable, err := cc.Enable.BoolSetter(ctx, "enable")
 	if err != nil {
 		return nil, err
 	}
 
-	power, err := provider.NewFloatGetterFromConfig(ctx, cc.Power)
+	power, err := cc.Power.FloatGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var energy func() (float64, error)
-	if cc.Energy != nil {
-		energy, err = provider.NewFloatGetterFromConfig(ctx, *cc.Energy)
-		if err != nil {
-			return nil, err
-		}
+	energy, err := cc.Energy.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	soc, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	c := &SwitchSocket{
@@ -64,7 +67,7 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]interface{}
 		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),
 	}
 
-	return decorateSwitchSocket(c, energy), nil
+	return decorateSwitchSocket(c, energy, soc), nil
 }
 
 func (c *SwitchSocket) Enabled() (bool, error) {

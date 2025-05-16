@@ -1,5 +1,5 @@
 import axios from "axios";
-import { openLoginModal } from "./auth";
+import { openLoginModal } from "./components/Auth/auth";
 
 const { protocol, hostname, port, pathname } = window.location;
 
@@ -57,6 +57,12 @@ export default api;
 export const i18n = axios.create({
   baseURL: base + "i18n/",
   headers: {
-    Accept: "application/toml",
+    Accept: "application/json",
   },
 });
+
+export const allowClientError = {
+  validateStatus(status) {
+    return status >= 200 && status < 500;
+  },
+};

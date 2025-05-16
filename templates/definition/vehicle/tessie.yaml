@@ -74,7 +74,7 @@ render: |
     jq: .charge_state.charge_current_request
   chargeEnable:
     source: http
-    uri: https://api.tessie.com/{{ .vin }}/command/start_charging?retry_duration=40&wait_for_completion=true
+    uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .chargeenable }}start_charging{{ else }}stop_charging{{ end }}`}}?retry_duration=40&wait_for_completion=true
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
@@ -86,7 +86,7 @@ render: |
     method: POST
   wakeup:
     source: http
-    uri: https://api.tessie.com/{{ .vin }}/wake
+    uri: https://api.tessie.com/{{ .vin }}/command/wake
     headers:
       Authorization: Bearer {{ .token }}
     method: POST

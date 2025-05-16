@@ -25,7 +25,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/connectiq"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -71,7 +70,7 @@ func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
 	}
 
 	// cache meter readings
-	wb.meterG = provider.Cached(func() (connectiq.MeterStatus, error) {
+	wb.meterG = util.Cached(func() (connectiq.MeterStatus, error) {
 		var res connectiq.MeterStatus
 		uri := fmt.Sprintf("%s/meter/status", wb.uri)
 		err := wb.GetJSON(uri, &res)

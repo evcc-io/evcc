@@ -1,10 +1,14 @@
 package eebus
 
+import "github.com/evcc-io/evcc/util"
+
 const (
-	BrandName  string = "EVCC"
-	Model      string = "HEMS"
-	DeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
+	BrandName string = "EVCC"
+	Model     string = "HEMS"
 )
+
+// used as common name in cert generation
+var DeviceCode = util.Getenv("EEBUS_DEVICE_CODE", "EVCC_HEMS_01")
 
 type Config struct {
 	URI         string

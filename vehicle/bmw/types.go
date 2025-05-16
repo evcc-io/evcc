@@ -19,5 +19,8 @@ type VehicleStatus struct {
 			ChargingStatus       string
 			ChargingTarget       int64
 		}
+		ClimateControlState struct {
+			Activity string
+		}
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-//go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
+//go:generate go tool mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
 
 // Controller gives access to loadpoint
 type Controller interface {
@@ -23,11 +23,36 @@ type API interface {
 	GetStatus() api.ChargeStatus
 
 	//
+	// references
+	//
+
+	// TODO SetCircuitRef
+
+	// GetChargerRef returns the loadpoint charger
+	GetChargerRef() string
+	// SetChargerRef sets the loadpoint charger
+	SetChargerRef(string)
+	// GetMeterRef returns the loadpoint meter
+	GetMeterRef() string
+	// SetMeterRef sets the loadpoint meter
+	SetMeterRef(string)
+	// GetCircuitRef returns the loadpoint circuit name
+	GetCircuitRef() string
+	// GetCircuit returns the loadpoint circuit
+	GetCircuit() api.Circuit
+	// GetDefaultVehicleRef returns the loadpoint default vehicle
+	GetDefaultVehicleRef() string
+	// SetDefaultVehicleRef sets the loadpoint default vehicle
+	SetDefaultVehicleRef(string)
+
+	//
 	// settings
 	//
 
-	// Title returns the defined loadpoint title
-	Title() string
+	// GetTitle returns the loadpoint title
+	GetTitle() string
+	// SetTitle sets the loadpoint title
+	SetTitle(string)
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority
@@ -41,14 +66,20 @@ type API interface {
 	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64) error
 
-	// GetMode returns the charge mode
+	// GetMode returns the current charge mode
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetDefaultMode returns the default charge mode (for reset)
+	GetDefaultMode() api.ChargeMode
+	// SetDefaultMode sets the default charge mode (for reset)
+	SetDefaultMode(api.ChargeMode)
 	// GetPhases returns the enabled phases
 	GetPhases() int
-	// SetPhases sets the enabled phases
-	SetPhases(int) error
+	// GetPhasesConfigured returns the configured phases
+	GetPhasesConfigured() int
+	// SetPhasesConfigured sets the configured phases
+	SetPhasesConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 
@@ -83,18 +114,29 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, float64)
+	GetPlanEnergy() (time.Time, time.Duration, float64)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, float64) error
-	// GetPlanGoal returns the plan goal and if the goal is soc based
+	SetPlanEnergy(time.Time, time.Duration, float64) error
+	// GetPlanGoal returns the plan goal, precondition duration and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
+	// GetPlanPreCondDuration returns the precondition duration
+	GetPlanPreCondDuration() time.Duration
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates
 
+	// GetSocConfig returns the soc poll settings
+	GetSocConfig() SocConfig
+	// SetSocConfig sets the soc poll settings
+	SetSocConfig(soc SocConfig)
+
+	// GetThresholds returns the PV mode threshold settings
+	GetThresholds() ThresholdsConfig
+	// SetThresholds sets the PV mode threshold settings
+	SetThresholds(thresholds ThresholdsConfig)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold
@@ -114,7 +156,7 @@ type API interface {
 	SetDisableDelay(delay time.Duration)
 
 	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() bool
+	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
@@ -139,7 +181,7 @@ type API interface {
 	// GetChargePower returns the current charging power
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
-	GetChargePowerFlexibility() float64
+	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current
 	GetMaxPhaseCurrent() float64
 
@@ -164,7 +206,4 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
-
-	// GetCircuit gets the assigned circuit
-	GetCircuit() api.Circuit
 }

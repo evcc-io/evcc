@@ -12,8 +12,8 @@ import { Bar } from "vue-chartjs";
 import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import colors from "../../colors";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import colors from "@/colors";
 import { GROUPS, PERIODS } from "./types";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
@@ -193,13 +193,13 @@ export default {
 									: null;
 							},
 							labelColor: tooltipLabelColor(false),
-							labelPointStyle: function () {
+							labelPointStyle() {
 								return {
 									pointStyle: "circle",
 								};
 							},
 						},
-						itemSort: function (a, b) {
+						itemSort(a, b) {
 							return b.datasetIndex - a.datasetIndex;
 						},
 					},
@@ -211,7 +211,7 @@ export default {
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback: function (value) {
+							callback(value) {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
 									: this.getLabelForValue(value);

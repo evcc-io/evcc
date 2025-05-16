@@ -9,10 +9,7 @@ const (
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
-	GridCurrents          = "gridCurrents"
-	GridEnergy            = "gridEnergy"
-	GridPower             = "gridPower"
-	GridPowers            = "gridPowers"
+	Grid                  = "grid"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
@@ -22,6 +19,9 @@ const (
 	SiteTitle             = "siteTitle"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
+	Forecast              = "forecast"
+	SolarAccYield         = "solarAccYield"
+	SolarAccForecast      = "solarAccForecast"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
@@ -29,6 +29,7 @@ const (
 	TariffGrid            = "tariffGrid"
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
+	TariffSolar           = "tariffSolar"
 	Vehicles              = "vehicles"
 
 	// meters
@@ -52,4 +53,7 @@ const (
 	BatteryMode   = "batteryMode"
 	BatteryPower  = "batteryPower"
 	BatterySoc    = "batterySoc"
+
+	// external battery control
+	BatteryModeExternal = "batteryModeExternal"
 )

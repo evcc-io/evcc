@@ -22,6 +22,10 @@ type API interface {
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
 	SetBatteryMeterRefs([]string)
+	GetAuxMeterRefs() []string
+	SetAuxMeterRefs([]string)
+	GetExtMeterRefs() []string
+	SetExtMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
@@ -55,7 +59,7 @@ type API interface {
 	//
 
 	// GetTariff returns the respective tariff
-	GetTariff(string) api.Tariff
+	GetTariff(api.TariffUsage) api.Tariff
 
 	//
 	// battery control
@@ -63,4 +67,13 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+
+	//
+	// battery control external
+	//
+
+	// GetBatteryModeExternal returns the external battery mode
+	GetBatteryModeExternal() api.BatteryMode
+	// SetBatteryModeExternal sets the external battery mode
+	SetBatteryModeExternal(api.BatteryMode)
 }

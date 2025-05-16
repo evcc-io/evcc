@@ -79,12 +79,12 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	digits, err := strconv.Atoi(cmd.Flags().Lookup(flagDigits).Value.String())
+	digits, err := strconv.Atoi(cmd.Flag(flagDigits).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}
 
-	delay, err := time.ParseDuration(cmd.Flags().Lookup(flagDelay).Value.String())
+	delay, err := time.ParseDuration(cmd.Flag(flagDelay).Value.String())
 	if err != nil {
 		log.ERROR.Fatalln(err)
 	}

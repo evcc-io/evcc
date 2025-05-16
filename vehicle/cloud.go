@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/request"
@@ -63,7 +62,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	err = v.prepareVehicle()
 
-	v.chargeStateG = provider.Cached(v.chargeState, cc.Cache)
+	v.chargeStateG = util.Cached(v.chargeState, cc.Cache)
 
 	return v, err
 }

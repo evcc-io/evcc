@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openevse"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -20,7 +19,7 @@ import (
 type OpenEVSE struct {
 	*request.Helper
 	uri     string
-	statusG provider.Cacheable[openevse.Status]
+	statusG util.Cacheable[openevse.Status]
 	current int
 	enabled bool
 }
@@ -29,7 +28,7 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-//go:generate decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -67,7 +66,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 	}
 
-	c.statusG = provider.ResettableCached(func() (openevse.Status, error) {
+	c.statusG = util.ResettableCached(func() (openevse.Status, error) {
 		var res openevse.Status
 
 		uri := fmt.Sprintf("%s/status", c.uri)

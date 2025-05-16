@@ -1,9 +1,15 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
+	"reflect"
+	"slices"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // pass converts a simple api without return value to api with nil error return value
@@ -21,4 +27,33 @@ func parseFloat(payload string) (float64, error) {
 		err = fmt.Errorf("invalid float value: %s", payload)
 	}
 	return f, err
+}
+
+// parseDuration parses a duration string as seconds
+func parseDuration(payload string) (time.Duration, error) {
+	if payload == "" {
+		return 0, nil
+	}
+	v, err := strconv.Atoi(payload)
+	if err != nil {
+		return 0, err
+	}
+	if v < 0 {
+		return 0, fmt.Errorf("invalid duration: %s", payload)
+	}
+	return time.Duration(v) * time.Second, err
+}
+
+// jsonDecoder returns a json decoder with disallowed unknown fields
+func jsonDecoder(r io.Reader) *json.Decoder {
+	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
+	return dec
+}
+
+// omitEmpty returns true if struct field is omitempty
+func omitEmpty(f reflect.StructField) bool {
+	tag := f.Tag.Get("json")
+	values := strings.Split(tag, ",")
+	return slices.Contains(values, "omitempty")
 }

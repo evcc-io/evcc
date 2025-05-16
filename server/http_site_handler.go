@@ -57,8 +57,8 @@ func indexHandler() http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version":     Version,
-			"Commit":      Commit,
+			"Version":     util.Version,
+			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
@@ -196,8 +196,30 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	}
 }
 
+// updateBatteryMode sets the external battery mode
+func updateBatteryMode(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		var val api.BatteryMode
+
+		if r.Method != http.MethodDelete {
+			s, err := api.BatteryModeString(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = s
+		}
+
+		site.SetBatteryModeExternal(val)
+
+		jsonResult(w, site.GetBatteryModeExternal())
+	}
+}
+
 // stateHandler returns the combined state
-func stateHandler(cache *util.Cache) http.HandlerFunc {
+func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State(encode.NewEncoder(encode.WithDuration()))
 		for _, k := range ignoreState {
@@ -241,6 +263,7 @@ func healthHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	}
@@ -250,7 +273,13 @@ func healthHandler(site site.API) http.HandlerFunc {
 func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tariff := vars["tariff"]
+		val := vars["tariff"]
+
+		tariff, err := api.TariffUsageString(val)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
 
 		t := site.GetTariff(tariff)
 		if t == nil {
@@ -283,6 +312,11 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 
 func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	util.ResetCached()
+	jsonResult(w, "OK")
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {

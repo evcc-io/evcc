@@ -82,10 +82,29 @@
 							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
-							:powerTooltip="pvTooltip"
+							:details="solarForecastRemainingToday"
+							:detailsFmt="forecastFmt"
+							:detailsTooltip="solarForecastTooltip"
+							:detailsInactive="!solarForecastExists"
+							:detailsIcon="solarForecastIcon"
+							:detailsClickable="solarForecastExists"
 							:powerUnit="powerUnit"
+							:expanded="pvExpanded"
 							data-testid="energyflow-entry-production"
-						/>
+							@details-clicked="openForecastModal"
+							@toggle="togglePv"
+						>
+							<template v-if="multiplePv" #expanded>
+								<EnergyflowEntry
+									v-for="(p, index) in pv"
+									:key="index"
+									:name="p.title || genericPvTitle(index)"
+									:power="p.power"
+									:powerUnit="powerUnit"
+									:data-testid="`energyflow-entry-production-${index}`"
+								/>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
 							:name="batteryDischargeLabel"
@@ -99,12 +118,25 @@
 							}"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
+							:expanded="batteryExpanded"
 							detailsClickable
 							data-testid="energyflow-entry-batterydischarge"
 							@details-clicked="openBatterySettingsModal"
+							@toggle="toggleBattery"
 						>
-							<template v-if="batteryGridChargeActive" #subline>
+							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
+							</template>
+							<template v-if="multipleBattery" #expanded>
+								<EnergyflowEntry
+									v-for="(b, index) in battery"
+									:key="index"
+									:name="b.title || genericBatteryTitle(index)"
+									:details="b.soc"
+									:detailsFmt="batteryFmt"
+									:power="dischargePower(b.power)"
+									:powerUnit="powerUnit"
+								/>
 							</template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
@@ -142,6 +174,7 @@
 						/>
 						<EnergyflowEntry
 							:name="
+								// @ts-ignore
 								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
 									count: activeLoadpointsCount,
 								})
@@ -160,7 +193,23 @@
 								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
 							data-testid="energyflow-entry-loadpoints"
-						/>
+							:expanded="loadpointsExpanded"
+							@toggle="toggleLoadpoints"
+						>
+							<template v-if="activeLoadpointsCount > 1" #expanded>
+								<EnergyflowEntry
+									v-for="(lp, index) in activeLoadpoints"
+									:key="index"
+									:name="lp.title"
+									:power="lp.power"
+									:powerUnit="powerUnit"
+									icon="vehicle"
+									:iconProps="{ names: [lp.icon] }"
+									:details="lp.soc || undefined"
+									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
+								/>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
 							:name="batteryChargeLabel"
@@ -174,17 +223,42 @@
 							}"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
+							:expanded="batteryExpanded"
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
+							@toggle="toggleBattery"
 						>
-							<template v-if="batteryGridChargeActive" #subline>
+							<template v-if="batteryGridChargeLimitSet" #subline>
 								<button
 									type="button"
-									class="btn-reset d-flex justify-content-between"
+									class="btn-reset d-flex justify-content-between text-start pe-4"
 									@click.stop="openBatterySettingsModal"
 								>
-									{{ batteryGridChargeText }} (≤ {{ batteryGridChargeLimitFmt }})
+									<span v-if="batteryGridChargeActive">
+										{{ $t("main.energyflow.batteryGridChargeActive") }}
+										<span class="text-nowrap"
+											>(≤ <u>{{ batteryGridChargeLimitFmt }}</u
+											>)</span
+										>
+									</span>
+									<span v-else>
+										{{ $t("main.energyflow.batteryGridChargeLimit") }}
+										<span class="text-nowrap"
+											>≤ <u>{{ batteryGridChargeLimitFmt }}</u></span
+										>
+									</span>
 								</button>
+							</template>
+							<template v-if="multipleBattery" #expanded>
+								<EnergyflowEntry
+									v-for="(b, index) in battery"
+									:key="index"
+									:name="b.title || genericBatteryTitle(index)"
+									:details="b.soc"
+									:detailsFmt="batteryFmt"
+									:power="chargePower(b.power)"
+									:powerUnit="powerUnit"
+								/>
 							</template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
@@ -205,22 +279,24 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
-import EnergyflowEntry from "./EnergyflowEntry.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import AnimatedNumber from "../AnimatedNumber.vue";
-import settings from "../../settings";
-import { CO2_TYPE } from "../../units";
-import collector from "../../mixins/collector";
+import Entry from "./Entry.vue";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import settings from "@/settings";
+import { CO2_TYPE } from "@/units";
+import collector from "@/mixins/collector";
+import { defineComponent, type PropType } from "vue";
+import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Energyflow",
 	components: {
 		Visualization,
-		EnergyflowEntry,
+		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
 	mixins: [formatter, collector],
@@ -229,11 +305,11 @@ export default {
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
-		pv: { type: Array },
+		pv: { type: Array as PropType<Pv[]> },
 		pvPower: { type: Number, default: 0 },
-		loadpointsCompact: { type: Array, default: () => [] },
+		loadpointsCompact: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array },
+		battery: { type: Array as PropType<Battery[]> },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -241,73 +317,74 @@ export default {
 		batteryGridChargeActive: { type: Boolean },
 		batteryMode: { type: String },
 		tariffGrid: { type: Number },
-		tariffFeedIn: { type: Number },
+		tariffFeedIn: { type: Number, default: 0 },
 		tariffCo2: { type: Number },
 		tariffPriceHome: { type: Number },
 		tariffCo2Home: { type: Number },
 		tariffPriceLoadpoints: { type: Number },
 		tariffCo2Loadpoints: { type: Number },
 		smartCostType: { type: String },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
+		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
+		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
 	},
 	computed: {
-		gridImport: function () {
+		gridImport() {
 			return Math.max(0, this.gridPower);
 		},
-		pvProduction: function () {
+		pvProduction() {
 			return Math.abs(this.pvPower);
 		},
-		batteryDischarge: function () {
-			return Math.abs(Math.max(0, this.batteryPower));
+		batteryDischarge() {
+			return this.dischargePower(this.batteryPower);
 		},
-		batteryCharge: function () {
-			return Math.abs(Math.min(0, this.batteryPower) * -1);
+		batteryCharge() {
+			return this.chargePower(this.batteryPower);
 		},
-		batteryChargeLabel: function () {
+		batteryChargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
 		},
-		batteryDischargeLabel: function () {
+		batteryDischargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
 		},
-		batteryHold: function () {
+		batteryHold() {
 			return this.batteryMode === "hold";
 		},
-		consumption: function () {
+		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;
 		},
-		selfPv: function () {
+		selfPv() {
 			return Math.min(this.pvProduction, this.consumption);
 		},
-		selfBattery: function () {
+		selfBattery() {
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
-		activeLoadpoints: function () {
+		activeLoadpoints() {
 			return this.loadpointsCompact.filter((lp) => lp.charging);
 		},
-		activeLoadpointsCount: function () {
+		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
 		},
-		vehicleIcons: function () {
+		vehicleIcons() {
 			if (this.activeLoadpointsCount > 0) {
 				return this.activeLoadpoints.map((lp) => lp.icon);
 			}
 			return ["car"];
 		},
-		loadpointsPower: function () {
+		loadpointsPower() {
 			return this.loadpointsCompact.reduce((sum, lp) => {
 				return sum + (lp.power || 0);
 			}, 0);
 		},
-		pvExport: function () {
+		pvExport() {
 			return Math.max(0, this.gridPower * -1);
 		},
-		powerUnit: function () {
+		powerUnit() {
 			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
 			if (watt >= 1_000_000) {
 				return POWER_UNIT.MW;
@@ -317,23 +394,29 @@ export default {
 				return POWER_UNIT.W;
 			}
 		},
-		inPower: function () {
+		inPower() {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
 		},
-		outPower: function () {
+		outPower() {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
-		detailsHeight: function () {
+		detailsHeight() {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
-		pvTooltip() {
-			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
-				return;
-			}
-			return this.pv.map(({ power }) => this.fmtW(power, this.powerUnit));
-		},
 		batteryFmt() {
-			return (soc) => this.fmtPercentage(soc, 0);
+			return (soc: number) => this.fmtPercentage(soc, 0);
+		},
+		multipleBattery() {
+			return (this.battery?.length || 0) > 1;
+		},
+		multiplePv() {
+			return (this.pv?.length || 0) > 1;
+		},
+		fmtLoadpointSoc() {
+			return (soc: number) => this.fmtPercentage(soc, 0);
+		},
+		fmtLoadpointTemp() {
+			return (temp: number) => this.fmtTemperature(temp);
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
@@ -341,25 +424,55 @@ export default {
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
-		batteryGridChargeText() {
-			return this.$t(
-				`main.energyflow.${this.co2Available ? "clean" : "cheap"}BatteryGridCharge`
-			);
-		},
 		batteryGridChargeNow() {
 			if (this.co2Available) {
 				return this.fmtCo2Short(this.tariffCo2);
 			}
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
+		batteryGridChargeLimitSet() {
+			return (
+				this.batteryGridChargeLimit !== null && this.batteryGridChargeLimit !== undefined
+			);
+		},
 		batteryGridChargeLimitFmt() {
-			if (this.batteryGridChargeLimit === null) {
+			if (!this.batteryGridChargeLimitSet) {
 				return;
 			}
 			if (this.co2Available) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
+		},
+		solarForecastExists() {
+			return !!this.forecast?.solar;
+		},
+		solarForecastRemainingToday() {
+			if (!this.forecast?.solar) {
+				return undefined;
+			}
+			const { today, scale } = this.forecast.solar || {};
+			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
+			const energy = today?.energy || 0;
+			return energy * factor;
+		},
+		solarForecastIcon() {
+			return this.solarForecastExists ? "forecast" : undefined;
+		},
+		solarForecastTooltip() {
+			if (this.solarForecastExists) {
+				return [this.$t("main.energyflow.forecastTooltip")];
+			}
+			return [];
+		},
+		pvExpanded() {
+			return settings.energyflowPv;
+		},
+		batteryExpanded() {
+			return settings.energyflowBattery;
+		},
+		loadpointsExpanded() {
+			return settings.energyflowLoadpoints;
 		},
 	},
 	watch: {
@@ -375,6 +488,9 @@ export default {
 		batteryMode() {
 			this.$nextTick(this.updateHeight);
 		},
+		activeLoadpointsCount() {
+			this.$nextTick(this.updateHeight);
+		},
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
@@ -388,7 +504,7 @@ export default {
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
-		detailsTooltip(price, co2) {
+		detailsTooltip(price?: number, co2?: number) {
 			const result = [];
 			if (co2 !== undefined) {
 				result.push(`${this.fmtCo2Long(co2)}`);
@@ -398,37 +514,72 @@ export default {
 			}
 			return result;
 		},
-		detailsValue(price, co2) {
+		detailsValue(price?: number, co2?: number) {
 			if (this.co2Available) {
 				return co2;
 			}
 			return price;
 		},
-		detailsFmt(value) {
+		detailsFmt(value: number) {
 			if (this.co2Available) {
 				return this.fmtCo2Short(value);
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
-		kw: function (watt) {
+		forecastFmt(value: number) {
+			if (typeof value !== "number") return "";
+			return `${this.fmtWh(value, POWER_UNIT.KW)}`;
+		},
+		kw(watt: number) {
+			if (typeof watt !== "number") return "";
 			return this.fmtW(watt, this.powerUnit);
 		},
-		toggleDetails: function () {
+		toggleDetails() {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
 			settings.energyflowDetails = this.detailsOpen;
 		},
-		updateHeight: function () {
-			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
+		updateHeight() {
+			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal")
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
+		openForecastModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("forecastModal") as HTMLElement
+			);
+			modal.show();
+		},
+		dischargePower(power: number) {
+			return Math.abs(Math.max(0, power));
+		},
+		chargePower(power: number) {
+			return Math.abs(Math.min(0, power) * -1);
+		},
+		toggleBattery() {
+			settings.energyflowBattery = !settings.energyflowBattery;
+			this.$nextTick(this.updateHeight);
+		},
+		togglePv() {
+			settings.energyflowPv = !settings.energyflowPv;
+			this.$nextTick(this.updateHeight);
+		},
+		toggleLoadpoints() {
+			settings.energyflowLoadpoints = !settings.energyflowLoadpoints;
+			this.$nextTick(this.updateHeight);
+		},
+		genericBatteryTitle(index: number) {
+			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
+		},
+		genericPvTitle(index: number) {
+			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
+		},
 	},
-};
+});
 </script>
 <style scoped>
 .details {

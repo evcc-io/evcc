@@ -34,7 +34,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x40A7 # TotalGridPowerWatt
+      address: 0x40AD # SysGridPowerWall
       type: holding
       decode: int16
   currents:

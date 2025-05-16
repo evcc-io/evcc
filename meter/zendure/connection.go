@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"dario.cat/mergo"
-	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -18,8 +18,9 @@ var (
 )
 
 type Connection struct {
-	log  *util.Logger
-	data *util.Monitor[Data]
+	log    *util.Logger
+	data   *util.Monitor[Data]
+	serial string
 }
 
 func NewConnection(region, account, serial string, timeout time.Duration) (*Connection, error) {
@@ -47,8 +48,9 @@ func NewConnection(region, account, serial string, timeout time.Duration) (*Conn
 	}
 
 	conn := &Connection{
-		log:  log,
-		data: util.NewMonitor[Data](timeout),
+		log:    log,
+		data:   util.NewMonitor[Data](timeout),
+		serial: serial,
 	}
 
 	topic := res.Data.AppKey + "/#"
@@ -68,16 +70,14 @@ func (c *Connection) handler(data string) {
 		return
 	}
 
-	if res.Data == nil {
+	if res.Data == nil || res.Sn != c.serial {
 		return
 	}
 
 	c.data.SetFunc(func(v Data) Data {
-		if err := mergo.Merge(&v, res.Data); err != nil {
+		if err := mergo.Merge(&v, res.Data, mergo.WithOverride); err != nil {
 			c.log.ERROR.Println(err)
 		}
-
-		c.log.TRACE.Printf("!! data: %+v", v)
 
 		return v
 	})

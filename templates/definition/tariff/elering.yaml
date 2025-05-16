@@ -4,16 +4,14 @@ products:
   - brand: Nordpool
     description:
       generic: "Elering"
-requirements:
-  description:
-    de: "Nur für Estland verfügbar."
-    en: "Only available for Estonia."
 group: price
+countries: ["EE", "LT", "LV", "FI"]
 params:
   - name: region
     example: ee
     type: choice
     choice: ["ee", "lt", "lv", "fi"]
+    required: true
   - preset: tariff-base
 render: |
   type: elering

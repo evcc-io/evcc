@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -43,7 +42,7 @@ type RealTimeData struct {
 type Trydan struct {
 	*request.Helper
 	uri     string
-	statusG provider.Cacheable[RealTimeData]
+	statusG util.Cacheable[RealTimeData]
 	current int
 	enabled bool
 }
@@ -83,7 +82,7 @@ func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
-	c.statusG = provider.ResettableCached(func() (RealTimeData, error) {
+	c.statusG = util.ResettableCached(func() (RealTimeData, error) {
 		var res RealTimeData
 		uri := fmt.Sprintf("%s/RealTimeData", c.uri)
 		err := c.GetJSON(uri, &res)
