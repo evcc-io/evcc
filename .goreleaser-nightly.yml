@@ -34,6 +34,9 @@ builds:
           - -trimpath
           - -tags=release,timetzdata
 
+env:
+  - CGO_ENABLED=0
+
 archives:
   - ids:
       - evcc
@@ -45,9 +48,6 @@ archives:
       - evcc.dist.yaml
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
-
-env:
-  - CGO_ENABLED=0
 
 universal_binaries:
   - replace: true
@@ -74,7 +74,7 @@ nfpms:
 
     homepage: https://evcc.io
     description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
+    maintainer: info@evcc.io
     license: MIT
     vendor: evcc.io
 

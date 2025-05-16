@@ -16,7 +16,7 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 	NZD: "c", // New Zealand cent
 	PLN: "gr", // Polish grosz
 	USD: "¢", // US cent,
-	DKK: "Ø", // Danish øre
+	DKK: "øre", // Danish øre
 };
 
 export enum POWER_UNIT {
