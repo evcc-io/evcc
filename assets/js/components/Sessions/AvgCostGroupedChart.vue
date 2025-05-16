@@ -1,5 +1,4 @@
 <template>
-	{{ sessions }}
 	<div v-if="chartData.labels.length > 1" class="row">
 		<div class="col-12 col-md-6 mb-3">
 			<PolarArea :data="chartData" :options="options" />
