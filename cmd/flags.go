@@ -22,6 +22,9 @@ const (
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
 
+	flagInjectCss            = "inject-css"
+	flagInjectCssDescription = "Inserts the contents of a user-defined CSS file into the UI"
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
 	flagBatteryModeWait            = "battery-mode-wait"

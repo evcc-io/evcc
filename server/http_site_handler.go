@@ -37,7 +37,7 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler() http.HandlerFunc {
+func indexHandler(injectCss string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -60,10 +60,18 @@ func indexHandler() http.HandlerFunc {
 			"Version":     util.Version,
 			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
+			"InjectCss":   sanitizeCss(injectCss),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
 	}
+}
+
+func sanitizeCss(content string) string {
+	// prevent embedded html
+	sanitized := strings.ReplaceAll(content, "<", "&lt;")
+	sanitized = strings.ReplaceAll(sanitized, ">", "&gt;")
+	return sanitized
 }
 
 // jsonHandler is a middleware that decorates responses with JSON and CORS headers

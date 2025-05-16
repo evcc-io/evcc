@@ -70,6 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
 	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
+	rootCmd.PersistentFlags().String(flagInjectCss, "", flagInjectCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -122,6 +123,18 @@ func Execute() {
 	}
 }
 
+func loadCustomCss(cmd *cobra.Command) (string, error) {
+	cssFile, err := cmd.Flags().GetString(flagInjectCss)
+	if err != nil || cssFile == "" {
+		return "", err
+	}
+
+	log.WARN.Printf("❗ using injected CSS: %s", cssFile)
+
+	content, err := os.ReadFile(cssFile)
+	return string(content), err
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -146,6 +159,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
+	// inject user-defined CSS
+	var injectCssContent string
+	if err == nil {
+		injectCssContent, err = loadCustomCss(cmd)
+	}
+
 	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
@@ -159,7 +178,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, injectCssContent)
 
 	// metrics
 	if viper.GetBool("metrics") {

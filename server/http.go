@@ -40,7 +40,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, injectCss string) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	log := util.NewLogger("httpd")
@@ -72,7 +72,7 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		})
 	})
 
-	static.HandleFunc("/", indexHandler())
+	static.HandleFunc("/", indexHandler(injectCss))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
