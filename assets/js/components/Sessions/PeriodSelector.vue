@@ -16,23 +16,26 @@
 	/>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import type { SelectOption } from "@/types/evcc";
+import type { PERIODS } from "./types";
 
-export default {
+export default defineComponent({
 	name: "PeriodSelector",
 	components: {
 		SelectGroup,
 	},
 	props: {
 		period: { type: String, required: true },
-		periodOptions: { type: Array, required: true },
+		periodOptions: { type: Array as PropType<SelectOption<PERIODS>[]>, required: true },
 	},
 	emits: ["update:period"],
 	methods: {
-		changePeriod(newPeriod) {
+		changePeriod(newPeriod: PERIODS) {
 			this.$emit("update:period", newPeriod);
 		},
 	},
-};
+});
 </script>
