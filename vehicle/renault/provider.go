@@ -24,7 +24,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup bool, cache time.Duration) *Provider {
+func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, cache time.Duration) *Provider {
 	impl := &Provider{
 		batteryG: util.Cached(func() (kamereon.Response, error) {
 			return api.Battery(accountID, vin)
@@ -36,10 +36,15 @@ func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup boo
 			return api.Hvac(accountID, vin)
 		}, cache),
 		wakeup: func() (kamereon.Response, error) {
-			if alternativeWakeup {
+			switch wakeupMode {
+			case "alternative":
 				return api.Action(accountID, kamereon.ActionStart, vin)
+			case "new":
+				// Qui puoi inserire la nuova logica di wakeup, ad esempio:
+				return api.NewWakeUp(accountID, vin)
+			default: // "default"
+				return api.WakeUp(accountID, vin)
 			}
-			return api.WakeUp(accountID, vin)
 		},
 		position: func() (kamereon.Response, error) {
 			return api.Position(accountID, vin)
