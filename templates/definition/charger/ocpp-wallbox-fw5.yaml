@@ -1,5 +1,4 @@
 template: wallbox-fw5
-protocol: ocpp
 covers: ["pulsarplus-fw5"]
 products:
   - brand: wallbox

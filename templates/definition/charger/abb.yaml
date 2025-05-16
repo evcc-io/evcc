@@ -1,5 +1,4 @@
 template: abb
-protocol: modbus
 products:
   - brand: ABB
     description:

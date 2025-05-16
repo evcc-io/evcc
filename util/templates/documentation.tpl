@@ -56,9 +56,6 @@ product:
 {{- if .ProductGroup }}
   group: {{ .ProductGroup }}
 {{- end }}
-{{- if .Protocol }}
-protocol: {{ .Protocol }}
-{{- end }}
 {{- if .Capabilities }}
 capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- end }}

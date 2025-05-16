@@ -1,5 +1,4 @@
 template: tessie
-protocol: cloudapi
 products:
   - description:
       generic: Tessie

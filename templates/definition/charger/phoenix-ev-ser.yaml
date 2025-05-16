@@ -1,5 +1,4 @@
 template: phoenix-ev-ser
-protocol: modbus
 products:
   - brand: Phoenix Contact
     description:

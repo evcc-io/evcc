@@ -1,5 +1,4 @@
 template: go-e-v3
-protocol: localapi
 covers: ["go-e-gemini"]
 products:
   - brand: go-e

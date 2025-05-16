@@ -1,5 +1,4 @@
 template: alfen
-protocol: modbus
 products:
   - brand: Alfen
     description:

@@ -1,5 +1,4 @@
 template: go-e
-protocol: localapi
 products:
   - brand: go-e
     description:
