@@ -1,6 +1,6 @@
 :root {
 	--evcc-dark-green: rebeccapurple;
-    --evcc-yellow: hotpink;
+	--evcc-yellow: hotpink;
 }
 
 [data-testid="header"],
