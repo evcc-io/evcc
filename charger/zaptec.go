@@ -39,7 +39,6 @@ import (
 // https://api.zaptec.com/.well-known/openid-configuration/
 
 // Zaptec charger implementation
-
 type Zaptec struct {
 	*request.Helper
 	log            *util.Logger
