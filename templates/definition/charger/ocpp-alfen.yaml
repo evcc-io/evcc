@@ -1,9 +1,9 @@
-template: ocpp-enplus
+template: ocpp-alfen
 products:
-  - brand: EN+
+  - brand: Alfen
     description:
-      generic: AC EV Charger
-capabilities: ["rfid"]
+      generic: Eve
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

@@ -1,9 +1,9 @@
-template: ocpp-enplus
+template: ocpp-sungrow
 products:
-  - brand: EN+
+  - brand: Sungrow
     description:
-      generic: AC EV Charger
-capabilities: ["rfid"]
+      generic: AC011E
+capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

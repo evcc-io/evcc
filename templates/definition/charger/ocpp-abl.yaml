@@ -10,6 +10,8 @@ products:
     description:
       generic: eMH4
 capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |

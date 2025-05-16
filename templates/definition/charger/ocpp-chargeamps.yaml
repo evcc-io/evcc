@@ -1,11 +1,8 @@
-template: ocpp-autoaid
+template: ocpp-chargeamps
 products:
-  - brand: Autoaid
+  - brand: Charge Amps
     description:
-      generic: Intelligent Wallbox
-  - brand: Autoaid
-    description:
-      generic: Business Wallbox
+      generic: Halo
 capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
