@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -15,7 +16,7 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 	NZD: "c", // New Zealand cent
 	PLN: "gr", // Polish grosz
 	USD: "¢", // US cent,
-	DKK: "Ø", // Danish øre
+	DKK: "øre", // Danish øre
 };
 
 export enum POWER_UNIT {
@@ -198,6 +199,7 @@ export default defineComponent({
 			if (locale === "de") return date.getHours();
 			return new Intl.DateTimeFormat(locale, {
 				hour: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		weekdayShort(date: Date) {
@@ -210,6 +212,7 @@ export default defineComponent({
 			const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 
 			return `${weekday} ${hour}`.trim();
@@ -218,6 +221,7 @@ export default defineComponent({
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtFullDateTime(date: Date, short: boolean) {
@@ -227,6 +231,7 @@ export default defineComponent({
 				day: "numeric",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtWeekdayTime(date: Date) {
@@ -234,6 +239,7 @@ export default defineComponent({
 				weekday: "short",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtMonthYear(date: Date) {

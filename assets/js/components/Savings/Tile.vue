@@ -32,7 +32,8 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/receivepayment";
@@ -41,7 +42,7 @@ import "@h2d2/shopicons/es/regular/eco1";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import formatter from "@/mixins/formatter";
 
-export default {
+export default defineComponent({
 	name: "SavingsTile",
 	components: { AnimatedNumber },
 	mixins: [formatter],
@@ -49,7 +50,7 @@ export default {
 		title: String,
 		icon: String,
 		value: [String, Number],
-		valueFmt: Function,
+		valueFmt: Function as PropType<(value: number) => string>,
 		unit: String,
 		sub1: String,
 		sub2: String,
@@ -59,7 +60,7 @@ export default {
 			return this.unit === "%" && this.hasLeadingPercentageSign();
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .tile-icon {

@@ -101,7 +101,7 @@
 										:value="priceConfigured ? avgPriceFormatted.value : '__'"
 										:unit="avgPriceFormatted.unit"
 										:sub1="
-											priceConfigured
+											priceConfigured && referenceGrid
 												? `${fmtMoney(
 														(referenceGrid - avgPrice) * totalCharged,
 														currency,
@@ -190,7 +190,7 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsorActive="!!sponsor.name" />
+								<TelemetrySettings :sponsorActive="!!sponsor?.name" />
 							</div>
 							<Sponsor v-bind="sponsor" />
 						</div>
@@ -201,7 +201,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "@/mixins/formatter";
 import Sponsor from "./Sponsor.vue";
@@ -209,28 +209,31 @@ import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import co2Reference from "./co2Reference";
 import settings from "@/settings";
 import api, { allowClientError } from "@/api";
 import { docsPrefix } from "@/i18n";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY, Rate, SelectOption, Sponsor as SponsorType } from "@/types/evcc";
+import type { Period } from "./types";
+import co2Reference from "./co2Reference.ts";
 
-export default {
+export default defineComponent({
 	name: "Savings",
 	components: { Sponsor, SavingsTile: Tile, LiveCommunity, TelemetrySettings, CustomSelect },
 	mixins: [formatter],
 	props: {
 		statistics: { type: Object, default: () => ({}) },
 		co2Configured: Boolean,
-		sponsor: Object,
-		currency: String,
+		sponsor: Object as PropType<SponsorType>,
+		currency: String as PropType<CURRENCY>,
 	},
 	data() {
 		return {
 			communityView: false,
 			telemetryEnabled: false,
-			period: settings.savingsPeriod || "30d",
-			selectedRegion: settings.savingsRegion || "Germany",
-			referenceGrid: undefined,
+			period: settings.savingsPeriod || ("30d" as Period),
+			selectedRegion: settings.savingsRegion || ("Germany" as string),
+			referenceGrid: undefined as number | undefined,
 		};
 	},
 	computed: {
@@ -258,8 +261,8 @@ export default {
 			// first region
 			return co2Reference.regions[0];
 		},
-		periodOptions() {
-			return ["30d", "365d", "thisYear", "total"].map((p) => ({
+		periodOptions(): SelectOption<Period>[] {
+			return (["30d", "365d", "thisYear", "total"] as Period[]).map((p) => ({
 				value: p,
 				name: this.$t(`footer.savings.period.${p}`),
 			}));
@@ -307,22 +310,24 @@ export default {
 			this.communityView = false;
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("savingsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("savingsModal") as HTMLElement
+			);
 			modal.show();
 			this.updateReferenceGrid();
 		},
-		selectPeriod(period) {
+		selectPeriod(period: Period) {
 			this.period = period;
 			settings.savingsPeriod = period;
 		},
-		selectRegion(region) {
+		selectRegion(region: string) {
 			this.selectedRegion = region;
 			settings.savingsRegion = region;
 		},
 		async updateReferenceGrid() {
 			try {
 				const res = await api.get(`tariff/grid`, allowClientError);
-				const { rates } = res.data.result;
+				const { rates } = res.data.result as { rates: Rate[] };
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
 						return acc + slot.value;
@@ -333,5 +338,5 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>

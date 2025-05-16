@@ -61,17 +61,18 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import confetti from "canvas-confetti";
 import "@h2d2/shopicons/es/regular/heart";
 import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
 import { docsPrefix } from "@/i18n";
+import { defineComponent } from "vue";
 
 export const TRIAL = "trial";
 export const VICTRON_DEVICE = "victron";
 
-export default {
+export default defineComponent({
 	name: "Sponsor",
 	props: {
 		name: String,
@@ -94,39 +95,41 @@ export default {
 	},
 	methods: {
 		surprise() {
-			const $el = this.$refs.confetti;
-			const angle = 45 + Math.random() * 90;
-			const drift = 0;
+			const $el = this.$refs["confetti"];
+			if ($el) {
+				const angle = 45 + Math.random() * 90;
+				const drift = 0;
 
-			const { top, height, left, width } = $el.getBoundingClientRect();
-			const x = (left + width / 2) / window.innerWidth;
-			const y = (top + height / 2) / window.innerHeight;
-			const origin = { x, y };
+				const { top, height, left, width } = $el.getBoundingClientRect();
+				const x = (left + width / 2) / window.innerWidth;
+				const y = (top + height / 2) / window.innerHeight;
+				const origin = { x, y };
 
-			confetti({
-				origin,
-				angle,
-				particleCount: 75 + Math.random() * 50,
-				spread: 50 + Math.random() * 50,
-				drift,
-				scalar: 1.3,
-				zIndex: 1056, // Bootstrap Modal is 1055
-				colors: [
-					"#0d6efd",
-					"#0fdd42",
-					"#408458",
-					"#4923BA",
-					"#5BC8EC",
-					"#C54482",
-					"#CC444A",
-					"#EE8437",
-					"#F7C144",
-					"#FFFD54",
-				],
-			});
+				confetti({
+					origin,
+					angle,
+					particleCount: 75 + Math.random() * 50,
+					spread: 50 + Math.random() * 50,
+					drift,
+					scalar: 1.3,
+					zIndex: 1056, // Bootstrap Modal is 1055
+					colors: [
+						"#0d6efd",
+						"#0fdd42",
+						"#408458",
+						"#4923BA",
+						"#5BC8EC",
+						"#C54482",
+						"#CC444A",
+						"#EE8437",
+						"#F7C144",
+						"#FFFD54",
+					],
+				});
+			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

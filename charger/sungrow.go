@@ -229,18 +229,6 @@ func (wb *Sungrow) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(sgRegVoltages, 10)
 }
 
-var _ api.ChargeRater = (*Sungrow)(nil)
-
-// ChargedEnergy implements the api.MeterEnergy interface
-func (wb *Sungrow) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(sgRegChargedEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
-}
-
 var _ api.MeterEnergy = (*Sungrow)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface

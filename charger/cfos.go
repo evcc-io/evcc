@@ -69,10 +69,6 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	log := util.NewLogger("cfos")
 	conn.Logger(log.TRACE)
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	wb := &CfosPowerBrain{
 		conn: conn,
 	}

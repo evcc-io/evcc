@@ -67,7 +67,7 @@ func init() {
 	registry.AddCtx("vestel", NewVestelFromConfig)
 }
 
-//go:generate go tool decorate -f decorateVestel -b *Vestel -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateVestel -b *Vestel -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewVestelFromConfig creates a Vestel charger from generic config
 func NewVestelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -111,6 +111,11 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
+	var identify func() (string, error)
+	if _, err := wb.identify(); err == nil {
+		identify = wb.identify
+	}
+
 	// get failsafe timeout from charger
 	b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1)
 	if err != nil {
@@ -125,7 +130,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 	go wb.heartbeat(ctx, timeout)
 
-	return decorateVestel(wb, phasesS, phasesG), err
+	return decorateVestel(wb, phasesS, phasesG, identify), err
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -298,10 +303,8 @@ func (wb *Vestel) getPhases() (int, error) {
 	return 1 + int(binary.BigEndian.Uint16(b))<<1, nil
 }
 
-var _ api.Identifier = (*Vestel)(nil)
-
 // Identify implements the api.Identifier interface
-func (wb *Vestel) Identify() (string, error) {
+func (wb *Vestel) identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15)
 	if err != nil {
 		return "", err
