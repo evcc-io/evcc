@@ -1,4 +1,4 @@
-template: ocpp-sungrow-ac
+template: ocpp-sungrow
 products:
   - brand: Sungrow
     description:

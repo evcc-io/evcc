@@ -1,4 +1,4 @@
-template: ocpp-elvi
+template: ocpp-evbox-elvi
 covers: ["elvi"]
 products:
   - brand: EVBox

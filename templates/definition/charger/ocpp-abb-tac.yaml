@@ -1,4 +1,5 @@
-template: ocpp-abb
+template: ocpp-abb-tac
+covers: ["ocpp-abb"]
 products:
   - brand: ABB
     description:

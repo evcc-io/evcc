@@ -1,4 +1,4 @@
-template: ocpp-enercab-smart
+template: ocpp-enercab
 products:
   - brand: enercab
     description:

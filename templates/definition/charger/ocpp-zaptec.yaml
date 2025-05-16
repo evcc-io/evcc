@@ -1,4 +1,4 @@
-template: ocpp-zaptec-go
+template: ocpp-zaptec
 products:
   - brand: Zaptec
     description:
