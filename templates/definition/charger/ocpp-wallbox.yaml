@@ -1,4 +1,3 @@
-<<<<<<<< HEAD:templates/definition/charger/ocpp-wallbox.yaml
 template: ocpp-wallbox
 covers: ["pulsarplus"]
 products:
@@ -14,23 +13,6 @@ products:
   - brand: wallbox
     description:
       generic: Copper SB
-========
-template: wallbox-fw5
-covers: ["pulsarplus-fw5"]
-products:
-  - brand: wallbox
-    description:
-      generic: Pulsar Plus (FW 5.x)
-  - brand: wallbox
-    description:
-      generic: Pulsar Max (FW 5.x)
-  - brand: wallbox
-    description:
-      generic: Commander 2 (FW 5.x)
-  - brand: wallbox
-    description:
-      generic: Copper SB (FW 5.x)
->>>>>>>> master:templates/definition/charger/ocpp-wallbox-fw5.yaml
 requirements:
   description:
     de: |
@@ -52,9 +34,5 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
-  - name: metervalues
-    default: -Current.Offered,Power.Offered
 render: |
   {{ include "ocpp" . }}
-  remotestart: true 
-  stacklevelzero: true
