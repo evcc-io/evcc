@@ -41,9 +41,6 @@ func ensureChargerEx[T any](
 				return charger, nil
 			}
 		}
-
-		// id defined but doesn't exist
-		err = fmt.Errorf("cannot find charger %s", id)
 	} else if len(chargers) == 1 {
 		// id empty and exactly one charger
 		return chargers[0], nil
