@@ -162,8 +162,8 @@ import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import breakpoint from "@/mixins/breakpoint";
 import settings from "@/settings";
-import type { Session } from "./types";
 import type { CURRENCY } from "@/types/evcc";
+import type { Session } from "./types";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,

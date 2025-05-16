@@ -22,7 +22,7 @@ import {
 	type TooltipModel,
 	type TooltipItem,
 } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";

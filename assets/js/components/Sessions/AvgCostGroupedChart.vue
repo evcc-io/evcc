@@ -12,7 +12,7 @@
 <script lang="ts">
 import { PolarArea } from "vue-chartjs";
 import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";

@@ -20,7 +20,7 @@ import {
 	type TooltipItem,
 } from "chart.js";
 import LegendList from "./LegendList.vue";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, type Session } from "./types";

@@ -32,7 +32,7 @@ import {
 } from "chart.js";
 import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
-import { registerChartComponents, commonOptions } from "../Sessions/chartConfig.ts";
+import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { lighterColor } from "@/colors";
 import type { CURRENCY } from "@/types/evcc";
