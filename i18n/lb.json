@@ -142,7 +142,7 @@
       "save": "Späicheren",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
       "telemetry": "Telemetrie",
-      "templateLoading": "Luet…",
+      "templateLoading": "Lueden…",
       "title": "Titel",
       "validateSave": "Iwwerpréiwen & späicheren"
     },
@@ -166,7 +166,7 @@
       "labelPassword": "Passwuert",
       "labelToken": "API-Token",
       "labelUrl": "URL",
-      "labelUser": "Benotzer",
+      "labelUser": "Numm vum Benotzer",
       "title": "InfluxDB",
       "v1Support": "Brauchs du Ënnerstëtzung fir InfluxDB 1.x?",
       "v2Support": "Zréck op InfluxDB 2.x"
@@ -255,6 +255,7 @@
       "addVehicle": "Gefier derbäi setzen",
       "configured": "konfiguréiert",
       "edit": "beaarbechten",
+      "loadpointRequired": "Op mannst een Luedepunkt muss konfiguréiert ginn.",
       "name": "Numm",
       "title": "Konfiguratioun",
       "unconfigured": "net konfiguréiert",
@@ -280,8 +281,24 @@
       "validateSave": "Iwwerpréiwen & späicheren"
     },
     "modbus": {
+      "baudrate": "Baudrate",
+      "comset": "ComSet",
       "connection": "Modbus Verbindung",
-      "connectionValueTcpip": "Netzwierk"
+      "connectionHintSerial": "Den Apparat ass direkt per RS485 mat EVCC verbonnen.",
+      "connectionHintTcpip": "Den Apparat kann direkt per LAN/Wifi duerch evcc konfiguréiert ginn.",
+      "connectionValueSerial": "Seriell / USB",
+      "connectionValueTcpip": "Netzwierk",
+      "device": "Numm vum Apparat",
+      "deviceHint": "Beispill: /dev/ttyUSB0",
+      "host": "IP-Adress oder Hostname",
+      "hostHint": "Beispill : 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Port",
+      "protocol": "Modbus Protokoll",
+      "protocolHintRtu": "Verbindung durch een RS485 zu Ethernet-Adapter ouni Protokoll-Iwwersetzung.",
+      "protocolHintTcp": "Apparat huet eng nativ LAN/Wifi-Ënnerstëtzung oder ass duerch en RS485 zu Ethernet-Adapter mat Protokoll-Iwwersetzung verbonnen.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Erlaabt méi Clienten Zougank zu engem eenzegen Modbus Apparat ze hunn.",
@@ -301,7 +318,7 @@
       "labelInsecure": "Validatioun vum Certificat",
       "labelPassword": "Passwuert",
       "labelTopic": "Thema",
-      "labelUser": "Benotzer",
+      "labelUser": "Benotzernumm",
       "publishing": "Verëffentlechen",
       "title": "MQTT"
     },
@@ -476,7 +493,7 @@
       "modalTitle": "Aktualiséierung verfügbar",
       "modalUpdate": "Installéieren",
       "modalUpdateNow": "Elo installéieren",
-      "modalUpdateStarted": "Déi nei Versioun vun evcc starten ...",
+      "modalUpdateStarted": "Déi nei Versioun vun evcc starten…",
       "modalUpdateStatusStart": "Installatioun ugefaang:"
     }
   },
@@ -572,6 +589,11 @@
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
       "planNumber": "Planifkatioun {number}",
+      "preconditionDescription": "Luetzäit {Zeit} virum Fortfuere fir Batterie-Prekonditionéierung.",
+      "preconditionLong": "Verspéit Lueden",
+      "preconditionOptionAll": "Alles",
+      "preconditionOptionNo": "Nee",
+      "preconditionShort": "Spéit",
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
@@ -606,7 +628,7 @@
       "charging": "Wiermen…",
       "connected": "Standby.",
       "vehicleLimit": "Limitt vun der Heizung",
-      "waitForVehicle": "Prett. Waarden op d'Heizung..."
+      "waitForVehicle": "Prett. Waarden op d'Heizung…"
     },
     "loadpoint": {
       "avgPrice": "⌀ Präis",
@@ -614,6 +636,7 @@
       "co2": "⌀ CO₂",
       "duration": "Dauer",
       "fallbackName": "Luedstatioun",
+      "finished": "Fäerdeg um",
       "power": "Leeschtung",
       "price": "Käschten",
       "remaining": "Reschtzäit",
@@ -718,13 +741,13 @@
     "vehicle": {
       "addVehicle": "Gefier derbäi fügen",
       "changeVehicle": "Gefier änneren",
-      "detectionActive": "Erkennung vum Gefier ...",
+      "detectionActive": "Erkennung vum Gefier…",
       "fallbackName": "Gefier",
       "moreActions": "Weider Aktiounen",
       "none": "Kee Gefier",
       "notReachable": "D'Gefier war net erreechbar. Probéiert evcc nei ze starten.",
       "targetSoc": "Luedlimitt",
-      "temp": "Temperatur",
+      "temp": "Temperatur.",
       "tempLimit": "Temp. Limitt",
       "unknown": "Gaascht Gefier",
       "vehicleSoc": "Gelueden"
@@ -732,7 +755,7 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Waarden op d'Autorisatioun.",
       "batteryBoost": "Batterie Boost ass aktiv.",
-      "charging": "Luet ...",
+      "charging": "Luet…",
       "cheapEnergyCharging": "Gënschteg Energie verfügbar.",
       "cheapEnergyNextStart": "Gënschteg Energie an {duration}.",
       "cheapEnergySet": "Präislimitt gesat.",
@@ -745,16 +768,16 @@
       "disconnected": "Deconnectéiert.",
       "finished": "Ofgeschloss.",
       "minCharge": "Minimum oplueden bis {soc}.",
-      "pvDisable": "Net genuch Iwwerschoss. Paus a {remaining}…",
+      "pvDisable": "Net genuch Iwwerschoss. Et gëtt geschwënn pauséiert.",
       "pvEnable": "Iwwerschoss verfügbar. Starte geschwënn.",
       "scale1p": "Reduktioun op eng eenzeg Phase.",
       "scale3p": "Erhéije geschwënn op dräi Phasen.",
       "targetChargeActive": "Luedplanung aktiv. Ageschate Schluss an {duration}.",
       "targetChargePlanned": "Luedpladung fänkt un an {time} un.",
-      "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier...",
+      "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier…",
       "vehicleLimit": "Limitt vum Gefier",
       "vehicleLimitReached": "Limitt vum Gefier erreecht.",
-      "waitForVehicle": "Prett. Waarden op d'Gefier ...",
+      "waitForVehicle": "Prett. Waarden op d'Gefier…",
       "welcome": "Kuerz Lueden fir d'Verbindung ze confirméieren."
     },
     "vehicles": "Parking",
@@ -908,6 +931,11 @@
       "dark": "däischter",
       "label": "Design",
       "light": "hell"
+    },
+    "time": {
+      "12h": "12 Stonnen",
+      "24h": "24 Stonnen",
+      "label": "Zeitformat"
     },
     "title": "Duerstellung",
     "unit": {
