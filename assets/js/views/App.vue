@@ -53,8 +53,7 @@ export default {
 		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
 	},
 	head() {
-		const siteTitle = store.state.siteTitle;
-		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
+		return { title: "...", titleTemplate: "%s | evcc" };
 	},
 	computed: {
 		version() {
