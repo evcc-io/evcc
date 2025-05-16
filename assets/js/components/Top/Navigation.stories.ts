@@ -8,7 +8,7 @@ export default {
     layout: "centered",
   },
   argTypes: {
-    vehicleLogins: { control: "object" },
+    authProviders: { control: "object" },
     sponsor: { control: "object" },
   },
 } as Meta<typeof Navigation>;
@@ -24,9 +24,9 @@ const Template: StoryFn<typeof Navigation> = (args) => ({
 export const Standard = Template.bind({});
 Standard.args = {};
 
-export const VehicleLogins = Template.bind({});
+/* export const VehicleLogins = Template.bind({});
 VehicleLogins.args = {
-  vehicleLogins: {
+  authProviders: {
     "Mercedes EQS": {
       authenticated: true,
       uri: "https://login-provider-a.test/",
@@ -40,7 +40,7 @@ VehicleLogins.args = {
 
 export const PendingVehicleLogins = Template.bind({});
 PendingVehicleLogins.args = {
-  vehicleLogins: {
+  authProviders: {
     "Mercedes EQS": {
       authenticated: true,
       uri: "https://login-provider-a.test/",
@@ -50,7 +50,7 @@ PendingVehicleLogins.args = {
       uri: "https://login-provider-b.test/",
     },
   },
-};
+}; */
 
 export const TokenExpires = Template.bind({});
 TokenExpires.args = {

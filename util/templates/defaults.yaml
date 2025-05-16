@@ -6,6 +6,7 @@ params:
     help:
       de: Wird in der Benutzeroberfläche angezeigt
       en: Will be displayed in the user interface
+    example: My favourite EV
   - name: usage
     description:
       de: Verwendung
