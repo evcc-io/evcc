@@ -198,7 +198,7 @@
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxPhysicalCurrentHelp": "Muss größer als der minimale Strom sein.",
       "maxPhysicalCurrentLabel": "Maximaler Strom",
-      "minPhysicalCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
+      "minPhysicalCurrentHelp": "Warnung: 6 A ist der im IEC Standard vorgeschriebene Mindestwert für das Laden von Elektrofahrzeugen.",
       "minPhysicalCurrentLabel": "Minimaler Strom",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
       "phases1p": "1-phasig",

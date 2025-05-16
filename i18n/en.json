@@ -199,7 +199,7 @@
       "estimateLabel": "Interpolate charge level between API updates",
       "maxPhysicalCurrentHelp": "Must be greater than minimum current.",
       "maxPhysicalCurrentLabel": "Maximum current",
-      "minPhysicalCurrentHelp": "Only go below 6 A if you know what you're doing.",
+      "minPhysicalCurrentHelp": "Warning: 6 A is the minimum value defined by the IEC standard for EV charging.",
       "minPhysicalCurrentLabel": "Minimum current",
       "noVehicles": "No vehicles are configured.",
       "phases1p": "1-phase",
