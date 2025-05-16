@@ -4,6 +4,8 @@ products:
     description:
       generic: Halo
 capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |
