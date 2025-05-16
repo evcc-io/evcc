@@ -40,12 +40,12 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
-		WakeupMode                  string // <-- Cambiato da AlternativeWakeup bool
+		WakeupMode                  string
 		Cache                       time.Duration
 		Timeout                     time.Duration
 	}{
 		Region:     "de_DE",
-		WakeupMode: "default", // valore di default
+		WakeupMode: "default",
 		Cache:      interval,
 		Timeout:    request.Timeout,
 	}
