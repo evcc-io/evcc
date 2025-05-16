@@ -233,6 +233,7 @@ vehicles:
     title: Wärmepumpe
     icon: waterheater
 
+
 site:
   title: Zuhause
   meters:

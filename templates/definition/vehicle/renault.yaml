@@ -5,13 +5,13 @@ params:
   - preset: vehicle-base
   - name: vin
     example: WREN...
-  - name: alternativewakeup
-    type: bool
+  - name: wakeupmode
+    type: string
     description:
-      de: Alternativer Aufweckmechanismus
-      en: Alternative wakeup mechanism
+      de: Aufweckmechanismus
+      en: Wakeup mechanism
     advanced: true
 render: |
   type: renault
   {{ include "vehicle-base" . }}
-  alternativewakeup: {{ .alternativewakeup }}
+  wakeupmode: {{ .wakeupmode }}
