@@ -19,6 +19,7 @@ package charger
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,7 +32,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -39,13 +39,17 @@ import (
 // https://api.zaptec.com/.well-known/openid-configuration/
 
 // Zaptec charger implementation
+
 type Zaptec struct {
 	*request.Helper
-	log      *util.Logger
-	statusG  util.Cacheable[zaptec.StateResponse]
-	id       string
-	enabled  bool
-	priority bool
+	log            *util.Logger
+	statusG        util.Cacheable[zaptec.StateResponse]
+	id             string
+	installationId string
+	enabled        bool
+	priority       bool
+	version        int
+	activePhases   int
 }
 
 func init() {
@@ -77,7 +81,6 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewZaptec creates Zaptec charger
 func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
-
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
@@ -128,23 +131,59 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Base:   c.Transport,
 	}
 
-	c.id, err = ensureCharger(c.id, c.chargers)
-
+	selectedCharger, err := c.chargers()
+	if err != nil {
+		return nil, err
+	}
+	c.id = selectedCharger.Id
+	c.installationId = selectedCharger.InstallationId
+	c.version = c.detectZaptecVersion()
 	return c, err
 }
 
-func (c *Zaptec) chargers() ([]string, error) {
+func (c *Zaptec) detectZaptecVersion() int {
+	var capabilities zaptec.CapabilitiesResponse
+
+	res, err := c.statusG.Get()
+	if err != nil {
+		return zaptec.ZaptecGo1_Pro
+	}
+
+	capResp := res.ObservationByID(zaptec.Capabilities)
+	if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
+		c.log.ERROR.Printf("invalid capabilities model: %s %v", capResp.ValueAsString, err)
+		return zaptec.ZaptecGo1_Pro
+	}
+
+	if capabilities.ProductVariant == "Go2" {
+		c.log.INFO.Printf("zaptec go2 detected")
+		return zaptec.ZaptecGo2
+	}
+	c.log.INFO.Printf("zaptec go/pro detected")
+	return zaptec.ZaptecGo1_Pro
+}
+
+func (c *Zaptec) chargers() (*zaptec.Charger, error) {
 	var res zaptec.ChargersResponse
 
 	uri := fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
-	err := c.GetJSON(uri, &res)
-	if err == nil {
-		return lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
-			return c.Id
-		}), nil
+	if err := c.GetJSON(uri, &res); err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	if len(res.Data) == 0 {
+		return nil, fmt.Errorf("no chargers found")
+	}
+
+	if c.id == "" {
+		return &res.Data[0], nil
+	}
+	for _, charger := range res.Data {
+		if charger.Id == c.id {
+			return &charger, nil
+		}
+	}
+	return nil, fmt.Errorf("no chargers found")
 }
 
 // Status implements the api.Charger interface
@@ -221,11 +260,29 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
 	curr := int(current)
-	data := zaptec.Update{
-		MaxChargeCurrent: &curr,
-	}
+	if c.version == zaptec.ZaptecGo2 {
+		var noCurrent = 0
+		data := zaptec.UpdateInstallation{
+			AvailableCurrentPhase1: &curr,
+			AvailableCurrentPhase2: &noCurrent,
+			AvailableCurrentPhase3: &noCurrent,
+		}
 
-	return c.chargerUpdate(data)
+		if c.activePhases == 3 {
+			data = zaptec.UpdateInstallation{
+				AvailableCurrentPhase1: &curr,
+				AvailableCurrentPhase2: &curr,
+				AvailableCurrentPhase3: &curr,
+			}
+		}
+		c.log.DEBUG.Printf("zaptec: zaptec2 go - set phases to %d, max current %d", c.activePhases, curr)
+		return c.installationUpdate(data)
+	} else {
+		data := zaptec.Update{
+			MaxChargeCurrent: &curr,
+		}
+		return c.chargerUpdate(data)
+	}
 }
 
 var _ api.Meter = (*Zaptec)(nil)
@@ -275,13 +332,20 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
-	res, err := c.statusG.Get()
+	var err error
 
-	if err == nil {
+	c.activePhases = phases
+	if c.version == zaptec.ZaptecGo2 {
+		phaseCurrent := int64(32)
+		if phases == 3 {
+			phaseCurrent = int64(6)
+		}
+		c.log.DEBUG.Printf("zaptec2 go - set phases to %d, max current %d", phases, phaseCurrent)
+		err = c.MaxCurrent(phaseCurrent)
+	} else {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
-
 		err = c.chargerUpdate(data)
 	}
 
@@ -289,7 +353,10 @@ func (c *Zaptec) Phases1p3p(phases int) error {
 		data := zaptec.SessionPriority{
 			PrioritizedPhases: &phases,
 		}
-
+		res, err := c.statusG.Get()
+		if err != nil {
+			return err
+		}
 		if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
 			err = c.sessionPriority(session.ValueAsString, data)
 		} else {
@@ -314,6 +381,18 @@ func (c *Zaptec) Identify() (string, error) {
 	}
 
 	return "", nil
+}
+
+func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
+	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.installationId)
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = c.DoBody(req)
+		c.statusG.Reset()
+	}
+
+	return err
 }
 
 var _ api.Diagnosis = (*Zaptec)(nil)

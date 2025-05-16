@@ -81,3 +81,18 @@ type Update struct {
 type SessionPriority struct {
 	PrioritizedPhases *int `json:"prioritizedPhases,omitempty"`
 }
+
+type UpdateInstallation struct {
+	AvailableCurrentPhase1 *int `json:"availableCurrentPhase1,omitempty"`
+	AvailableCurrentPhase2 *int `json:"availableCurrentPhase2,omitempty"`
+	AvailableCurrentPhase3 *int `json:"availableCurrentPhase3,omitempty"`
+}
+
+type CapabilitiesResponse struct {
+	CommunicationModes []string `json:"communicationModes"`
+	DeviceType         string   `json:"deviceType"`
+	MeterCalibrated    bool     `json:"meterCalibrated"`
+	PhaseBalancing     []string `json:"phaseBalancing"`
+	ProductVariant     string   `json:"productVariant"`
+	SchemaVersion      string   `json:"schemaVersion"`
+}
