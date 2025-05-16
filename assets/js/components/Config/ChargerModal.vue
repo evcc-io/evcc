@@ -221,29 +221,17 @@ export default {
 			}
 			return this.$t(`config.charger.titleEdit`);
 		},
-		uniqueProducts() {
-			// append protocol if multiple products with same name exist
-			const names = this.products.map((p) => p.name);
-			return this.products.map((p) => {
-				if (names.filter((n) => n === p.name).length > 1 && p.protocol) {
-					const protocol = this.$t(`config.deviceProtocol.${p.protocol}`);
-					const name = `${p.name} (${protocol})`;
-					return { ...p, name };
-				}
-				return p;
-			});
-		},
 		chargerOptions() {
-			return this.uniqueProducts.filter((p) => !p.group);
+			return this.products.filter((p) => !p.group);
 		},
 		genericOptions() {
-			return this.uniqueProducts.filter((p) => p.group === "generic");
+			return this.products.filter((p) => p.group === "generic");
 		},
 		switchSocketOptions() {
-			return this.uniqueProducts.filter((p) => p.group === "switchsockets");
+			return this.products.filter((p) => p.group === "switchsockets");
 		},
 		heatingdevicesOptions() {
-			return this.uniqueProducts.filter((p) => p.group === "heating");
+			return this.products.filter((p) => p.group === "heating");
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
