@@ -72,9 +72,9 @@
 										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
+										{{ fmtFullDateTime(session.created, false) }}
 										<br />
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
+										{{ fmtFullDateTime(session.finished, false) }}
 									</td>
 								</tr>
 								<tr>
