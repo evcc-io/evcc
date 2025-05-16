@@ -190,6 +190,8 @@ export default defineComponent({
 		chargerSinglePhase: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
+		minPhysicalCurrent: Number,
+		maxPhysicalCurrent: Number,
 		offeredCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
