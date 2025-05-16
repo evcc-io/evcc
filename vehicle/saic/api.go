@@ -35,7 +35,7 @@ type API struct {
 	*request.Helper
 	identity *Identity
 	request  ConcurrentRequest
-	Logger   *util.Logger
+	log      *util.Logger
 }
 
 // NewAPI creates a new vehicle
@@ -43,7 +43,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
-		Logger:   log,
+		log:      log,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -98,7 +98,7 @@ func (v *API) repeatRequest(path string, event_id string) {
 	v.request.Status = StatRunning
 	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
 		time.Sleep(2 * time.Second)
-		v.Logger.DEBUG.Printf("Starting repeated query. Count: %d\n", count)
+		v.log.TRACE.Printf("Starting repeated query. Count: %d", count)
 		err = v.doRepeatedRequest(path, event_id)
 		count++
 	}
@@ -108,7 +108,7 @@ func (v *API) repeatRequest(path string, event_id string) {
 	if v.request.Status == StatRunning {
 		v.request.Status = StatInvalid
 	}
-	v.Logger.DEBUG.Printf("Exiting repeated query. Count: %d\n", count)
+	v.log.TRACE.Printf("Exiting repeated query. Count: %d", count)
 }
 
 func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
@@ -121,7 +121,7 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusUnauthorized {
-		v.Logger.DEBUG.Printf("DoRequest: %s", resp.Status)
+		v.log.TRACE.Printf("DoRequest: %s", resp.Status)
 		v.identity.Login()
 		return "", api.ErrMustRetry
 	}
@@ -131,17 +131,15 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	if result != nil {
 		body, err = requests.DecryptAnswer(resp)
 		if err == nil {
-			err = json.Unmarshal(body, result)
-			if err == nil && result.Code != 0 {
+			if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
 				if result.Code == 4 {
 					err = api.ErrMustRetry
 				} else {
 					err = fmt.Errorf("%d: %s", result.Code, result.Message)
 				}
-				v.Logger.DEBUG.Printf("%d: %s", result.Code, result.Message)
 			}
 		} else {
-			v.Logger.DEBUG.Printf("decrypt: %s", err.Error())
+			err = fmt.Errorf("decrypt: %w", err)
 		}
 	}
 
@@ -199,14 +197,15 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	// Check if we are already running in the background
 	if v.request.Status == StatValid {
 		v.request.Status = StatInvalid
-		v.Logger.DEBUG.Printf("StatVaild. Returning stored value\n")
+		v.log.TRACE.Printf("StatValid. Returning stored value")
 		// v.printAnswer()
 		return v.request.Result, nil
-	} else if v.request.Status == StatRunning {
-		v.Logger.DEBUG.Printf("StatRunning. Exiting\n")
+	}
+	if v.request.Status == StatRunning {
+		v.log.TRACE.Printf("StatRunning. Exiting")
 		return res, api.ErrMustRetry
 	}
-	v.Logger.DEBUG.Printf("StatInvaild. Starting query\n")
+	v.log.TRACE.Printf("StatInvalid. Starting query")
 
 	token, err = v.identity.Token()
 	if err != nil {
@@ -229,12 +228,12 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	event_id, err = v.DoRequest(req, &answer)
 	if err != nil {
-		v.Logger.DEBUG.Printf("Getting event id failed")
+		v.log.TRACE.Printf("Getting event id failed")
 		return res, err
 	}
 
 	if event_id == "" {
-		v.Logger.ERROR.Printf("Answer without event ID")
+		v.log.TRACE.Printf("Answer without event ID")
 		return res, api.ErrMustRetry
 	}
 
@@ -247,7 +246,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		token.AccessToken,
 		event_id)
 	if err != nil {
-		v.Logger.ERROR.Printf("Could not create request %s", err.Error())
+		v.log.TRACE.Printf("Could not create request %s", err.Error())
 		return res, err
 	}
 
@@ -256,10 +255,10 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	// Continue checking....
 	if err == api.ErrMustRetry {
 		v.request.Status = StatRunning
-		v.Logger.DEBUG.Printf(" No answer yet. Continue status query in background\n")
+		v.log.TRACE.Printf(" No answer yet. Continue status query in background")
 		go v.repeatRequest(path, event_id)
 	} else if err != nil {
-		v.Logger.ERROR.Printf("doRequest failed with %s", err.Error())
+		v.log.TRACE.Printf("doRequest failed with %s", err.Error())
 	}
 
 	return res, err

@@ -142,6 +142,9 @@ export default {
 			busy: false,
 		};
 	},
+	head() {
+		return { title: this.$t("log.title") };
+	},
 	computed: {
 		filteredLines() {
 			return this.lines.filter(

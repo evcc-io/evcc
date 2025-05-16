@@ -15,15 +15,28 @@ make lint
 make lint-ui
 ```
 
-#### Changing device templates
+#### Device templates
 
-evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository.
+The software supports a massive amount of different devices (charger, meter, vehicle, tariff) that are defined by **templates**.
+A template can use the [plugin system](https://docs.evcc.io/docs/devices/plugins) (preferred) for communication with the device or reference a dedicated Go implementation.
+All bundled templates are located in the [`/templates/definition`](https://github.com/evcc-io/evcc/tree/master/templates/definition) directory.
 
-You can verify the generated meta-data by running:
+If you want to add a new plugin we recommend looking at existing, similar implementations for reference.
+When your template requires Go code you have to build the project from source (see instructions below).
+Otherwise you can use the evcc binary and point it to your new template file for testing.
+
+```sh
+evcc --template-type charger --template new-charger-template.yaml
+```
+
+Besides the actual device configuration, templates contain meta-data like product name, manufacturer, instructions how to configure the device to work with evcc.
+On release, this data is extracted and pushed to the [`evcc-io/docs`](https://github.com/evcc-io/docs) repository to keep the documentation in sync. You can verify the generated meta-data by running:
 
 ```sh
 make docs
 ```
+
+This will write the documentation-relevant data to `/templates/docs`.
 
 ### Building from source
 

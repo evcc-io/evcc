@@ -216,7 +216,7 @@ export default defineComponent({
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
 			active: false,
-			selectedPrecondition: 0,
+			selectedPrecondition: this.precondition,
 		};
 	},
 	computed: {

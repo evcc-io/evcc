@@ -110,12 +110,14 @@ func (v *Niu) newRequest(method, uri string, body io.Reader) (*http.Request, err
 		return nil, err
 	}
 	req, err := request.New(method, uri, body, map[string]string{
-		"token": v.token.AccessToken,
+		"Accept-Language": "en-US",
+		"Content-Type":    "application/x-www-form-urlencoded",
+		"token":           v.token.AccessToken,
 	})
 	return req, err
 }
 
-func (v *Niu) request(uri string) (*http.Request, error) {
+func (v *Niu) get(uri string) (*http.Request, error) {
 	return v.newRequest(http.MethodGet, uri, nil)
 }
 
@@ -128,7 +130,7 @@ func (v *Niu) post(uri string) (*http.Request, error) {
 func (v *Niu) batteryAPI() (niu.Response, error) {
 	var res niu.Response
 
-	req, err := v.request(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
+	req, err := v.get(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
