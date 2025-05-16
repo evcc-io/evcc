@@ -1,20 +1,3 @@
-<<<<<<<< HEAD:templates/definition/charger/ocpp-wallbox.yaml
-template: ocpp-wallbox
-covers: ["pulsarplus"]
-products:
-  - brand: wallbox
-    description:
-      generic: Pulsar Plus
-  - brand: wallbox
-    description:
-      generic: Pulsar Max
-  - brand: wallbox
-    description:
-      generic: Commander 2
-  - brand: wallbox
-    description:
-      generic: Copper SB
-========
 template: wallbox-fw5
 covers: ["pulsarplus-fw5"]
 products:
@@ -30,7 +13,6 @@ products:
   - brand: wallbox
     description:
       generic: Copper SB (FW 5.x)
->>>>>>>> master:templates/definition/charger/ocpp-wallbox-fw5.yaml
 requirements:
   description:
     de: |
