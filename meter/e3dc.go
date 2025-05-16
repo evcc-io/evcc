@@ -108,6 +108,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsageGrid:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 		return rscpValue(*res, cast.ToFloat64E)
@@ -118,6 +119,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
 		})
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 
@@ -131,6 +133,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 		pwr, err := rscpValue(*res, cast.ToFloat64E)
@@ -148,6 +151,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 func (m *E3dc) batterySoc() (float64, error) {
 	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
 	if err != nil {
+		m.conn.Disconnect()
 		return 0, err
 	}
 	return rscpValue(*res, cast.ToFloat64E)
@@ -182,7 +186,9 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 		return api.ErrNotAvailable
 	}
 
-	if err == nil {
+	if err != nil {
+		m.conn.Disconnect()
+	} else {
 		err = rscpError(res...)
 	}
 	return err
