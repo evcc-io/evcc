@@ -6,50 +6,50 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo"
 )
 
 // ensureCharger extracts ID from list of IDs returned from `list` function
 func ensureCharger(id string, list func() ([]string, error)) (string, error) {
-	id, _, err := ensureChargerWithFeature(id, list, func(v string) (string, string) {
-		return v, ""
+	id, err := ensureChargerEx(id, list, func(v string) (string, error) {
+		return v, nil
 	})
 
 	return id, err
 }
 
-// ensureChargerWithFeature extracts ID and feature from list of chargers of type V returned from `list` function
-func ensureChargerWithFeature[Charger, Feature any](
+// ensureChargerEx extracts charger with matching id from list of chargers
+func ensureChargerEx[T any](
 	id string,
-	list func() ([]Charger, error),
-	extract func(Charger) (string, Feature),
-) (string, Feature, error) {
-	var zero Feature
+	list func() ([]T, error),
+	extract func(T) (string, error),
+) (T, error) {
+	var zero T
 
 	chargers, err := list()
 	if err != nil {
-		return "", zero, fmt.Errorf("cannot get chargers: %w", err)
+		return zero, fmt.Errorf("cannot get chargers: %w", err)
 	}
 
 	if id = strings.ToUpper(id); id != "" {
 		for _, charger := range chargers {
-			if v, res := extract(charger); strings.ToUpper(v) == id {
-				return v, res, nil
+			cc, err := extract(charger)
+			if err != nil {
+				return zero, err
+			}
+			if strings.ToUpper(cc) == id {
+				return charger, nil
 			}
 		}
-
-		// id defined but doesn't exist
-		err = fmt.Errorf("cannot find charger %s", id)
-	} else {
-		// id empty
-		if len(chargers) == 1 {
-			id, res := extract(chargers[0])
-			return id, res, nil
-		}
-
-		err = fmt.Errorf("cannot find charger, got: %v", chargers)
+	} else if len(chargers) == 1 {
+		// id empty and exactly one charger
+		return chargers[0], nil
 	}
 
-	return "", zero, err
+	return zero, fmt.Errorf("cannot find charger, got: %v", lo.Map(chargers, func(v T, _ int) string {
+		vin, _ := extract(v)
+		return vin
+	}))
 }
 
 // bytesAsString normalises a string by stripping leading 0x00 and trimming white space
