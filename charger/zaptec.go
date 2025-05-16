@@ -81,6 +81,7 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewZaptec creates Zaptec charger
 func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
+
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
@@ -131,7 +132,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Base:   c.Transport,
 	}
 
-	selectedCharger, err := c.chargers()
+	selectedCharger, err := ensureChargerEx(id, c.chargers, func(charger zaptec.Charger) (string, error) { return charger.Id, nil })
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,7 @@ func (c *Zaptec) detectZaptecVersion() int {
 	return zaptec.ZaptecGo1_Pro
 }
 
-func (c *Zaptec) chargers() (*zaptec.Charger, error) {
+func (c *Zaptec) chargers() ([]zaptec.Charger, error) {
 	var res zaptec.ChargersResponse
 
 	uri := fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
@@ -171,19 +172,7 @@ func (c *Zaptec) chargers() (*zaptec.Charger, error) {
 		return nil, err
 	}
 
-	if len(res.Data) == 0 {
-		return nil, fmt.Errorf("no chargers found")
-	}
-
-	if c.id == "" {
-		return &res.Data[0], nil
-	}
-	for _, charger := range res.Data {
-		if charger.Id == c.id {
-			return &charger, nil
-		}
-	}
-	return nil, fmt.Errorf("no chargers found")
+	return res.Data, nil
 }
 
 // Status implements the api.Charger interface
@@ -277,12 +266,12 @@ func (c *Zaptec) MaxCurrent(current int64) error {
 		}
 		c.log.DEBUG.Printf("zaptec: zaptec2 go - set phases to %d, max current %d", c.activePhases, curr)
 		return c.installationUpdate(data)
-	} else {
-		data := zaptec.Update{
-			MaxChargeCurrent: &curr,
-		}
-		return c.chargerUpdate(data)
 	}
+	data := zaptec.Update{
+		MaxChargeCurrent: &curr,
+	}
+	return c.chargerUpdate(data)
+
 }
 
 var _ api.Meter = (*Zaptec)(nil)
