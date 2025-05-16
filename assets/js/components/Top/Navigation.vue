@@ -136,15 +136,15 @@ import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, VehicleLogins } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders } from "@/types/evcc";
 import type { Provider as Provider } from "./types";
 
 export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
-		vehicleLogins: {
-			type: Object as PropType<VehicleLogins>,
+		authProviders: {
+			type: Object as PropType<AuthProviders>,
 			default: () => {
 				return {};
 			},
@@ -173,11 +173,11 @@ export default defineComponent({
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
+			return Object.entries(this.authProviders).map(([k, v]) => ({
 				title: k,
 				loggedIn: v.authenticated,
-				loginPath: v.uri + "/login",
-				logoutPath: v.uri + "/logout",
+				loginPath: "providerauth/login?id=" + v.id,
+				logoutPath: "providerauth/logout?id=" + v.id,
 			}));
 		},
 		loginRequired() {
@@ -219,11 +219,11 @@ export default defineComponent({
 	methods: {
 		async handleProviderAuthorization(provider: Provider) {
 			if (!provider.loggedIn) {
-				baseAPI.post(provider.loginPath).then(function (response) {
+				baseAPI.get(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;
 				});
 			} else {
-				baseAPI.post(provider.logoutPath);
+				baseAPI.get(provider.logoutPath);
 			}
 		},
 		openSettingsModal() {

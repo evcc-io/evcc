@@ -130,7 +130,7 @@ export default defineComponent({
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
+		auth: { type: Object as PropType<Auth>, default: () => ({ authProviders: {} }) },
 
 		currency: { type: String as PropType<CURRENCY>, required: true },
 		statistics: Object,
@@ -190,7 +190,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
+			return { vehicleLogins: this.auth.authProviders, ...this.collectProps(Navigation) };
 		},
 		showParkingLot() {
 			// work in progess

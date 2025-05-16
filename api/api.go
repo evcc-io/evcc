@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"io"
-	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -193,9 +193,11 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	HandleCallback(r *http.Request)
-	HandleLogout(r *http.Request)
-	AuthCodeURL(state string) string
+	Login(state string) string
+	Logout() error
+	HandleCallback(responseValues url.Values) error
+	Authenticated() bool
+	DisplayName() string
 }
 
 // IconDescriber optionally provides an icon
