@@ -190,7 +190,7 @@ func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
 	return dev.Instance(), nil
 }
 
-// deviceStatusHandler returns a device configuration by class
+// deviceStatusHandler returns the device test status by class
 func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
