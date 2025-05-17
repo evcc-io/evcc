@@ -2,7 +2,10 @@ template: ocpp-autel
 products:
   - brand: AUTEL
     description:
-      generic: AC MaxiCharger, AC Compact (OCPP)
+      generic: AC MaxiCharger
+  - brand: AUTEL
+    description:
+      generic: AC Compact
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship", "skiptest"]

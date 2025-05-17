@@ -1,4 +1,5 @@
-template: orbis-viaris
+template: ocpp-orbis
+covers: ["orbis-viaris"]
 products:
   - brand: Orbis
     description:
