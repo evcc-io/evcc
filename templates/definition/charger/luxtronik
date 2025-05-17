@@ -16,23 +16,23 @@ render: |
   type: heatpump
   setmaxpower:
     source: sequence
-      set:
-        - source: modbus
-          {{- include "modbus" . | indent 10 }}
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10041 # PV Überschussleistung in 0.1 kW
+          type: writeholding
+          decode: uint16
+        scale: 10
+      - source: const
+        value: 1 #  0: no Limit, 1: Soft Limit for PV, 2: HardLimit $14a
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
           register:
-            address: 10041 # PV Überschussleistung in 0.1 kW
+            address: 10040
             type: writeholding
             decode: uint16
-          scale: 0.1
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 10040
-              type: writemultiple
-              decode: uint16
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -40,7 +40,7 @@ render: |
       address: 10301 # aktuelle Aufnahmeleistung der WP 
       type: input
       decode: uint16
-    scale: 0.1
+    scale: 100
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -56,4 +56,12 @@ render: |
       address: 10120
       type: input
       decode: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10123
+      type: input
+      encoding: int16
     scale: 0.1
