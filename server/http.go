@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -74,6 +75,9 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 
 	if customCssFile != "" {
 		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
+		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
+		}
 		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
 			// disable caching
 			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
