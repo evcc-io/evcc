@@ -1,19 +1,19 @@
 <template>
-	<div class="test-result my-4 p-4">
+	<div class="test-result my-4 p-4" data-testid="test-result">
 		<div class="d-flex justify-content-between align-items-center">
 			<strong>
 				<span>{{ $t("config.validation.label") }}: </span>
-				<span v-if="unknown">{{ $t("config.validation.unknown") }}</span>
-				<span v-if="running">{{ $t("config.validation.running") }}</span>
-				<span v-if="success" class="text-success">
+				<span v-if="isUnknown">{{ $t("config.validation.unknown") }}</span>
+				<span v-if="isRunning">{{ $t("config.validation.running") }}</span>
+				<span v-if="isSuccess" class="text-success">
 					{{ $t("config.validation.success") }}
 				</span>
-				<span v-if="failed" class="text-danger">
+				<span v-if="isError" class="text-danger">
 					{{ $t("config.validation.failed") }}
 				</span>
 			</strong>
 			<span
-				v-if="running"
+				v-if="isRunning"
 				class="spinner-border spinner-border-sm"
 				role="status"
 				aria-hidden="true"
@@ -33,22 +33,23 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
 
-export default {
+export default defineComponent({
 	name: "TestResult",
 	components: { DeviceTags },
 	props: {
-		success: Boolean,
-		failed: Boolean,
-		unknown: Boolean,
-		running: Boolean,
-		result: Object,
-		error: String,
+		isUnknown: Boolean,
+		isSuccess: Boolean,
+		isError: Boolean,
+		isRunning: Boolean,
+		result: Object as PropType<Record<string, any> | null>,
+		error: String as PropType<string | null>,
 	},
 	emits: ["test"],
-};
+});
 </script>
 <style scoped>
 .test-result {

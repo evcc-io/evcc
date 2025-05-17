@@ -161,11 +161,10 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import FormRow from "./FormRow.vue";
-import PropertyField from "./PropertyField.vue";
+import FormRow from "../FormRow.vue";
+import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
-
-type Capability = "rs485" | "tcpip";
+import type { ModbusCapability } from "./index";
 type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
 type ConnectionOption = "tcpip" | "serial";
 type ProtocolOption = "tcp" | "rtu";
@@ -175,7 +174,7 @@ export default defineComponent({
 	components: { FormRow, PropertyField },
 	props: {
 		capabilities: {
-			type: Array as PropType<Capability[]>,
+			type: Array as PropType<ModbusCapability[]>,
 			default: () => [],
 		},
 		modbus: String as PropType<Modbus>,
@@ -233,7 +232,7 @@ export default defineComponent({
 		selectedModbus(newValue: Modbus) {
 			this.$emit("update:modbus", newValue);
 		},
-		options(newValue: Capability[]) {
+		options(newValue: ModbusCapability[]) {
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
@@ -248,7 +247,7 @@ export default defineComponent({
 		this.$emit("update:modbus", this.selectedModbus);
 	},
 	methods: {
-		setProtocolByCapabilities(capabilities: Capability[]) {
+		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
 			this.protocol = capabilities.includes("tcpip") ? "tcp" : "rtu";
 		},
 		setConnectionAndProtocolByModbus(modbus?: Modbus) {

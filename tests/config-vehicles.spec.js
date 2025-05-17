@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import {
+  editorClear,
+  editorType,
+  enableExperimental,
+  expectModalHidden,
+  expectModalVisible,
+} from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -11,6 +17,8 @@ test.describe.configure({ mode: "parallel" });
 test.afterEach(async () => {
   await stop();
 });
+
+const GENERIC_VEHICLE = "Generic vehicle (without API)";
 
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
@@ -24,7 +32,7 @@ test.describe("vehicles", async () => {
 
     // create #1
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -32,7 +40,7 @@ test.describe("vehicles", async () => {
 
     // create #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -79,12 +87,12 @@ test.describe("vehicles", async () => {
 
     // create #1 & #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByLabel("car").click();
     await vehicleModal.getByLabel("van").check();
@@ -112,7 +120,7 @@ test.describe("vehicles", async () => {
 
     // create #2
     await page.getByTestId("add-vehicle").click();
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
@@ -131,7 +139,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await expect(vehicleModal.getByLabel("Title")).toBeVisible();
     await expect(vehicleModal.getByLabel("Car")).toBeVisible(); // icon
     await expect(vehicleModal.getByLabel("Battery capacity")).toBeVisible();
@@ -169,7 +177,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
@@ -187,5 +195,40 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+  });
+
+  test("user-defined vehicle", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY);
+
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    await page.getByTestId("add-vehicle").click();
+    const modal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(modal);
+
+    await modal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const editor = modal.getByTestId("yaml-editor");
+    await expect(editor).toContainText("title: green Honda");
+
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "title: blue Honda",
+      "capacity: 12.3",
+      "soc:",
+      "  source: const",
+      "value: 42",
+    ]);
+
+    const restResult = modal.getByTestId("test-result");
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: successful");
+    await expect(restResult).toContainText(["Capacity", "12.3 kWh"].join(""));
+    await expect(restResult).toContainText(["Charge", "42.0%"].join(""));
+
+    // TODO: add save, restart, change delete roundtrip
   });
 });
