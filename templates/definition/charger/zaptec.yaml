@@ -1,4 +1,5 @@
 template: zaptec
+protocol: localapi
 products:
   - brand: Zaptec
     description:
