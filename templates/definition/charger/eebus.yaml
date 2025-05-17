@@ -1,7 +1,7 @@
 template: eebus
 products:
   - description:
-      de: EEBUS kompatible
+      de: EEBUS kompatibel
       en: EEBUS compatible
 group: generic
 capabilities: ["mA"]
