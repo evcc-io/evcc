@@ -89,16 +89,16 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		// from database
 		dc["id"] = configurable.ID()
 
+		props, err := propsToMap(configurable.Properties())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := mergo.Merge(&dc, props); err != nil {
+			return nil, err
+		}
+
 		if conf.Type == typeTemplate {
-			props, err := propsToMap(configurable.Properties())
-			if err != nil {
-				return nil, err
-			}
-
-			if err := mergo.Merge(&dc, props); err != nil {
-				return nil, err
-			}
-
 			params, err := sanitizeMasked(class, conf.Other)
 			if err != nil {
 				return nil, err
