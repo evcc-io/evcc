@@ -35,23 +35,26 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Tile from "./Tile.vue";
 
 import formatter from "@/mixins/formatter";
-import communityApi from "./communityApi";
+import communityApi from "./communityApi.ts";
+import { defineComponent } from "vue";
+import type { Timeout } from "@/types/evcc";
+import type { LiveCommunityData } from "./types";
 
 const UPDATE_INTERVAL_SECONDS = 10;
 
-export default {
+export default defineComponent({
 	name: "LiveCommunity",
 	components: { SavingsTile: Tile },
 	mixins: [formatter],
 	props: {},
 	data() {
 		return {
-			refresh: null,
-			result: {},
+			refresh: null as Timeout,
+			result: {} as LiveCommunityData,
 		};
 	},
 	computed: {
@@ -88,7 +91,9 @@ export default {
 		await this.update();
 	},
 	unmounted() {
-		clearInterval(this.refresh);
+		if (this.refresh) {
+			clearInterval(this.refresh);
+		}
 	},
 	methods: {
 		async update() {
@@ -99,12 +104,12 @@ export default {
 				console.error(err);
 			}
 		},
-		fmtAnimation(number) {
+		fmtAnimation(number: number) {
 			let decimals = 0;
 			if (number < 100) decimals = 1;
 			if (number < 10) decimals = 2;
 			return this.fmtNumber(number, decimals);
 		},
 	},
-};
+});
 </script>

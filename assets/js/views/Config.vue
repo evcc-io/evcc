@@ -493,6 +493,9 @@ export default {
 			isPageVisible: true,
 		};
 	},
+	head() {
+		return { title: this.$t("config.main.title") };
+	},
 	computed: {
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;

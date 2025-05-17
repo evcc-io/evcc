@@ -314,7 +314,7 @@ export default {
 							maxTicksLimit: 6,
 						},
 						suggestedMax: this.suggestedMaxCost,
-						min: 0,
+						suggestedMin: 0,
 					},
 					y1: {
 						position: "left",

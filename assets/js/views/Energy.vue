@@ -74,7 +74,7 @@ export default defineComponent({
 		};
 	},
 	head() {
-		return { title: `${this.$t("sessions.title")} | evcc` };
+		return { title: this.$t("energy.title") };
 	},
 	computed: {
 		typeIcons() {

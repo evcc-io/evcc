@@ -115,7 +115,7 @@
     },
     "eebus": {
       "description": "Конфігурація, яка дозволяє evcc спілкуватися з іншими пристроями EEBus.",
-      "title": "EEBus"
+      "title": "EEBus'"
     },
     "ext": {
       "description": "Може використовуватися для керування навантаженням або статистики.",
@@ -167,7 +167,7 @@
       "labelToken": "API Token",
       "labelUrl": "URL",
       "labelUser": "Ім'я користувача",
-      "title": "InfluxDB",
+      "title": "InfluxDB'",
       "v1Support": "Потрібна підтримка для InfluxDB 1.x?",
       "v2Support": "Назад до InfluxDB 2.x"
     },
@@ -282,7 +282,7 @@
     },
     "modbus": {
       "baudrate": "Швидкість передачі даних",
-      "comset": "ComSet",
+      "comset": "ComSet'",
       "connection": "Підключення Modbus",
       "connectionHintSerial": "Пристрій безпосередньо підключається до evcc через інтерфейс RS485.",
       "connectionHintTcpip": "Пристрій адресується з evcc через LAN/Wifi.",
@@ -849,7 +849,7 @@
     "csv": {
       "chargedenergy": "Енергія (кВт/год)",
       "chargeduration": "Тривалість",
-      "co2perkwh": "CO₂/kWh",
+      "co2perkwh": "CO₂/kWh'",
       "created": "Створено",
       "finished": "Завершено",
       "identifier": "Ідентифікатор",
@@ -933,7 +933,7 @@
       "light": "світла"
     },
     "time": {
-      "12h": "12h",
+      "12h": "12 г",
       "24h": "24 г",
       "label": "Формат часу"
     },
