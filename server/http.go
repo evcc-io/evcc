@@ -260,6 +260,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
+			"liveconfig":         {"GET", "/live", LiveConfigHandler(site)},
 		}
 
 		// yaml handlers
