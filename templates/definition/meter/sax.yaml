@@ -8,7 +8,7 @@ params:
     choice: ["grid", "battery"]
   - name: modbus
     choice: ["tcpip"]
-    port: 3600
+    port: 502
     id: 64
 render: |
   type: custom
