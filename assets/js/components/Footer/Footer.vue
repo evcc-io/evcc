@@ -1,5 +1,5 @@
 <template>
-	<footer class="footer">
+	<footer class="footer" data-testid="footer">
 		<div class="container py-2">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />

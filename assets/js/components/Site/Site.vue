@@ -1,7 +1,10 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
+			<div
+				class="d-flex justify-content-between align-items-center my-3 my-md-4"
+				data-testid="header"
+			>
 				<h1 class="d-block my-0">
 					<span v-if="!isInitialSetup">
 						{{ siteTitle || "evcc" }}
