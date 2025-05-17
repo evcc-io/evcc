@@ -1,0 +1,59 @@
+template: luxtronik
+products:
+  - brand: Novelan
+    description:
+      generic: LADV
+  - brand: Alpha Innotec
+    description:
+      generic: LWDV
+group: heating
+ #requirements:
+  #  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: heatpump
+  setmaxpower:
+    source: sequence
+      set:
+        - source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 10041 # PV Überschussleistung in 0.1 kW
+            type: writeholding
+            decode: uint16
+          scale: 0.1
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10040
+              type: writemultiple
+              decode: uint16
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10301 # aktuelle Aufnahmeleistung der WP 
+      type: input
+      decode: uint16
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10310 # kumulierter Stromverbrauch 0.1 kWh 
+      type: input
+      decode: int32
+    scale: 0.1
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10120
+      type: input
+      decode: int16
+    scale: 0.1
