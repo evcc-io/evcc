@@ -284,6 +284,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("identifier", val, err)
 	}
 
+	if dev, ok := instance.(api.AuthProvider); ok {
+		val := dev.AuthIdentifier()
+		makeResult("authIdentifier", val, nil)
+	}
+
 	return res
 }
 

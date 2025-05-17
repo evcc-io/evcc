@@ -196,6 +196,7 @@ type AuthProvider interface {
 	HandleCallback(r *http.Request)
 	HandleLogout(r *http.Request)
 	AuthCodeURL(state string) string
+	AuthIdentifier() string
 }
 
 // IconDescriber optionally provides an icon
