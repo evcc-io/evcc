@@ -271,9 +271,12 @@ func configureMeters(static []config.Named, names ...string) error {
 				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom meter '%s': %w", cc.Name, err)}
 			}
 
-			instance, err := meter.NewFromConfig(ctx, cc.Type, props)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+			var instance api.Meter
+			if err == nil {
+				instance, err = meter.NewFromConfig(ctx, cc.Type, props)
+				if err != nil {
+					err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+				}
 			}
 
 			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
@@ -340,9 +343,12 @@ func configureChargers(static []config.Named, names ...string) error {
 				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom charger '%s': %w", cc.Name, err)}
 			}
 
-			instance, err := charger.NewFromConfig(ctx, cc.Type, props)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
+			var instance api.Charger
+			if err == nil {
+				instance, err = charger.NewFromConfig(ctx, cc.Type, props)
+				if err != nil {
+					err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
+				}
 			}
 
 			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
@@ -360,11 +366,12 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
 	props, err := customDevice(cc.Other)
-	if err != nil {
-		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom vehicle '%s': %w", cc.Name, err)}
+
+	var instance api.Vehicle
+	if err == nil {
+		instance, err = vehicle.NewFromConfig(ctx, cc.Type, props)
 	}
 
-	instance, err := vehicle.NewFromConfig(ctx, cc.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
