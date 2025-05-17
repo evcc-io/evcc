@@ -51,6 +51,15 @@ func (c *configReq) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (c *configReq) Serialise() map[string]any {
+	if c.Yaml != "" {
+		return map[string]any{
+			"yaml": c.Yaml,
+		}
+	}
+	return c.Other
+}
+
 func propsToMap(props config.Properties) (map[string]any, error) {
 	res := make(map[string]any)
 	if err := mapstructure.Decode(props, &res); err != nil {
@@ -161,6 +170,12 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 	}
 
 	conf := dev.Config()
+
+	// TODO merge custom config
+	if req.Yaml != "" {
+		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		return dev, instance, req.Serialise(), err
+	}
 
 	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
@@ -331,7 +346,7 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.NewDecoder(strings.NewReader(res.Yaml)).Decode(&res.Other); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
 		return configReq{}, err
 	}
 

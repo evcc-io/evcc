@@ -227,7 +227,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
+	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +302,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 	if !ok {
 		return errors.New("not configurable")
 	}
+
 	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
