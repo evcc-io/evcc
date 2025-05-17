@@ -17,14 +17,14 @@ render: |
   setmaxpower:
     source: sequence
     set:
-      - source: modbus
+      - source: modbus # Refresh Power limit
         {{- include "modbus" . | indent 6 }}
         register:
           address: 10041 # PV Überschussleistung in 0.1 kW
           type: writeholding
           decode: uint16
-        scale: 10
-      - source: const
+        scale: 0.01
+      - source: const # Apply power limit
         value: 1 #  0: no Limit, 1: Soft Limit for PV, 2: HardLimit $14a
         set:
           source: modbus
@@ -33,6 +33,26 @@ render: |
             address: 10040
             type: writeholding
             decode: uint16
+      - source: const # Set increased target temp
+        value: 65 
+        set:
+          source: modbus # Set Target Temp to trigger heating
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10006
+            type: writeholding
+            decode: uint16
+          scale: 10
+      - source: const # Apply increased temp
+        value: 1 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10005
+            type: writeholding
+            decode: uint16
+
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
