@@ -45,6 +45,10 @@ params:
       de: "Redirect-URI deiner EVCC-Instanz, Format: http://evcc.local:7070/oauth/callback. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
   - name: vin
     example: WF0FXX...
+  - name: accessToken
+    deprecated: true
+  - name: refreshToken
+    deprecated: true
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}
