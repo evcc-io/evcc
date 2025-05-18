@@ -24,9 +24,8 @@ params:
     advanced: true
     default: 30s
   - name: maxchargepower
-  - name: queryexternalpower
+  - name: externalpower
     type: bool
-    default: true
     description:
       de: Externe Leistung
       en: External power
@@ -43,3 +42,4 @@ render: |
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
   maxchargepower: {{ .maxchargepower }}
+  externalpower: {{ .externalpower }}
