@@ -41,13 +41,12 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log          *util.Logger
-	statusG      util.Cacheable[zaptec.StateResponse]
-	instance     zaptec.Charger
-	version      int
-	enabled      bool
-	priority     bool
-	activePhases int
+	log      *util.Logger
+	statusG  util.Cacheable[zaptec.StateResponse]
+	instance zaptec.Charger
+	version  int
+	enabled  bool
+	priority bool
 }
 
 func init() {
@@ -249,25 +248,6 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
 	curr := int(current)
-	if c.version == zaptec.ZaptecGo2 {
-		var zero int
-		data := zaptec.UpdateInstallation{
-			AvailableCurrentPhase1: &curr,
-			AvailableCurrentPhase2: &zero,
-			AvailableCurrentPhase3: &zero,
-		}
-
-		if c.activePhases == 3 {
-			data = zaptec.UpdateInstallation{
-				AvailableCurrentPhase1: &curr,
-				AvailableCurrentPhase2: &curr,
-				AvailableCurrentPhase3: &curr,
-			}
-		}
-
-		return c.installationUpdate(data)
-	}
-
 	data := zaptec.Update{
 		MaxChargeCurrent: &curr,
 	}
@@ -323,20 +303,10 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
 	var err error
-
-	c.activePhases = phases
 	if c.version == zaptec.ZaptecGo2 {
-		phaseCurrent := int64(32)
-		if phases == 3 {
-			phaseCurrent = int64(6)
-		}
-		c.log.DEBUG.Printf("zaptec2 go - set phases to %d, max current %d", phases, phaseCurrent)
-		err = c.MaxCurrent(phaseCurrent)
+		err = c.switchForZaptecGo2(phases)
 	} else {
-		data := zaptec.Update{
-			MaxChargePhases: &phases,
-		}
-		err = c.chargerUpdate(data)
+		err = c.switchForZaptecPro(phases)
 	}
 
 	if err == nil && c.priority {
@@ -355,8 +325,32 @@ func (c *Zaptec) Phases1p3p(phases int) error {
 			err = errors.New("unknown session")
 		}
 	}
-
 	return err
+}
+
+func (c *Zaptec) switchForZaptecPro(phases int) error {
+	data := zaptec.Update{
+		MaxChargePhases: &phases,
+	}
+	return c.chargerUpdate(data)
+}
+
+func (c *Zaptec) switchForZaptecGo2(phases int) error {
+	curr := 32
+	var zero int
+	data := zaptec.UpdateInstallation{
+		AvailableCurrentPhase1: &curr,
+		AvailableCurrentPhase2: &zero,
+		AvailableCurrentPhase3: &zero,
+	}
+	if phases == 3 {
+		data = zaptec.UpdateInstallation{
+			AvailableCurrentPhase1: &curr,
+			AvailableCurrentPhase2: &curr,
+			AvailableCurrentPhase3: &curr,
+		}
+	}
+	return c.installationUpdate(data)
 }
 
 var _ api.Identifier = (*Zaptec)(nil)
