@@ -372,9 +372,9 @@ func (c *Zaptec) Identify() (string, error) {
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
 	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.instance.InstallationId)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.statusG.Reset()
 	}
 
