@@ -25,6 +25,7 @@
 		</select>
 		<input
 			v-else
+			:id="`${deviceType}Template`"
 			type="text"
 			:value="productName || $t('config.general.customOption')"
 			disabled

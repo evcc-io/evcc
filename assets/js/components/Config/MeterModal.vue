@@ -54,7 +54,6 @@
 				</FormRow>
 
 				<TemplateSelector
-					v-if="isNew"
 					ref="templateSelect"
 					v-model="templateName"
 					device-type="meter"

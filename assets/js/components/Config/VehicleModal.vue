@@ -9,7 +9,6 @@
 	>
 		<form ref="form" class="container mx-0 px-0">
 			<TemplateSelector
-				v-if="isNew"
 				ref="templateSelect"
 				v-model="templateName"
 				device-type="vehicle"

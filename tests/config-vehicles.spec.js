@@ -229,6 +229,53 @@ test.describe("vehicles", async () => {
     await expect(restResult).toContainText(["Capacity", "12.3 kWh"].join(""));
     await expect(restResult).toContainText(["Charge", "42.0%"].join(""));
 
-    // TODO: add save, restart, change delete roundtrip
+    // create
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+
+    // restart evcc
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await expect(modal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
+    await page.waitForLoadState("networkidle");
+    await expect(editor).toContainText("title: blue Honda");
+
+    // update
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "title: pink Honda",
+      "capacity: 23.4",
+      "soc:",
+      "  source: const",
+      "value: 32",
+    ]);
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: successful");
+    await expect(restResult).toContainText(["Capacity", "23.4 kWh"].join(""));
+    await expect(restResult).toContainText(["Charge", "32.0%"].join(""));
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+
+    // delete
+    await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await expect(editor).toContainText("title: pink Honda");
+    await modal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(modal);
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
+
+    // restart evcc
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(0);
   });
 });
