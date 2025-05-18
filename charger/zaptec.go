@@ -236,9 +236,9 @@ func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) error {
 	uri := fmt.Sprintf("%s/api/session/%s/priority", zaptec.ApiURL, session)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.statusG.Reset()
 	}
 
@@ -302,40 +302,36 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
-	var err error
-	if c.version == zaptec.ZaptecGo2 {
-		err = c.switchForZaptecGo2(phases)
-	} else {
-		err = c.switchForZaptecPro(phases)
+	err := c.switchPhases(phases)
+	if err != nil || !c.priority {
+		return err
 	}
 
-	if err == nil && c.priority {
-		data := zaptec.SessionPriority{
-			PrioritizedPhases: &phases,
-		}
-
-		res, err := c.statusG.Get()
-		if err != nil {
-			return err
-		}
-
-		if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
-			err = c.sessionPriority(session.ValueAsString, data)
-		} else {
-			err = errors.New("unknown session")
-		}
+	// priority configured
+	data := zaptec.SessionPriority{
+		PrioritizedPhases: &phases,
 	}
-	return err
+
+	res, err := c.statusG.Get()
+	if err != nil {
+		return err
+	}
+
+	if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
+		return c.sessionPriority(session.ValueAsString, data)
+	}
+
+	return errors.New("unknown session")
 }
 
-func (c *Zaptec) switchForZaptecPro(phases int) error {
-	data := zaptec.Update{
-		MaxChargePhases: &phases,
+func (c *Zaptec) switchPhases(phases int) error {
+	if c.version != zaptec.ZaptecGo2 {
+		data := zaptec.Update{
+			MaxChargePhases: &phases,
+		}
+		return c.chargerUpdate(data)
 	}
-	return c.chargerUpdate(data)
-}
 
-func (c *Zaptec) switchForZaptecGo2(phases int) error {
 	curr := 32
 	var zero int
 	data := zaptec.UpdateInstallation{
@@ -350,6 +346,7 @@ func (c *Zaptec) switchForZaptecGo2(phases int) error {
 			AvailableCurrentPhase3: &curr,
 		}
 	}
+
 	return c.installationUpdate(data)
 }
 
