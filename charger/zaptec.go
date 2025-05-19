@@ -41,13 +41,13 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log                    *util.Logger
-	statusG                util.Cacheable[zaptec.StateResponse]
-	instance               zaptec.Charger
-	MaxInstallationCurrent int
-	version                int
-	enabled                bool
-	priority               bool
+	log        *util.Logger
+	statusG    util.Cacheable[zaptec.StateResponse]
+	instance   zaptec.Charger
+	maxCurrent int
+	version    int
+	enabled    bool
+	priority   bool
 }
 
 func init() {
@@ -140,7 +140,8 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	if err != nil {
 		return nil, err
 	}
-	c.MaxInstallationCurrent, err = c.installationGet()
+
+	c.maxCurrent, err = c.getMaxCurrent()
 	if err != nil {
 		return nil, err
 	}
@@ -215,9 +216,9 @@ func (c *Zaptec) Enable(enable bool) error {
 
 	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
 
-	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.enabled = enable
 		c.statusG.Reset()
 	}
@@ -228,9 +229,9 @@ func (c *Zaptec) Enable(enable bool) error {
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.instance.Id)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.statusG.Reset()
 	}
 
@@ -338,15 +339,15 @@ func (c *Zaptec) switchPhases(phases int) error {
 
 	var zero int
 	data := zaptec.UpdateInstallation{
-		AvailableCurrentPhase1: &c.MaxInstallationCurrent,
+		AvailableCurrentPhase1: &c.maxCurrent,
 		AvailableCurrentPhase2: &zero,
 		AvailableCurrentPhase3: &zero,
 	}
 	if phases == 3 {
 		data = zaptec.UpdateInstallation{
-			AvailableCurrentPhase1: &c.MaxInstallationCurrent,
-			AvailableCurrentPhase2: &c.MaxInstallationCurrent,
-			AvailableCurrentPhase3: &c.MaxInstallationCurrent,
+			AvailableCurrentPhase1: &c.maxCurrent,
+			AvailableCurrentPhase2: &c.maxCurrent,
+			AvailableCurrentPhase3: &c.maxCurrent,
 		}
 	}
 
@@ -369,13 +370,14 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) installationGet() (int, error) {
+func (c *Zaptec) getMaxCurrent() (int, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
 	if err := c.GetJSON(uri, &res); err != nil {
 		return 0, err
 	}
+
 	return int(res.MaxCurrent), nil
 }
 
