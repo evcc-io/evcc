@@ -173,7 +173,7 @@ tariffs:
 # mqtt message broker
 mqtt:
   # broker: localhost:1883
-  # topic: evcc # root topic for publishing, set empty to disable
+  # topic: evcc # root topic for publishing
   # user:
   # password:
 

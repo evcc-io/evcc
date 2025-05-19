@@ -19,13 +19,7 @@
 			</FormRow>
 
 			<h6>{{ $t("config.mqtt.publishing") }}</h6>
-			<FormRow
-				id="mqttTopic"
-				:label="$t('config.mqtt.labelTopic')"
-				:help="$t('config.mqtt.descriptionTopic')"
-				example="evcc"
-				optional
-			>
+			<FormRow id="mqttTopic" :label="$t('config.mqtt.labelTopic')" example="evcc" optional>
 				<input id="mqttTopic" v-model="values.topic" class="form-control" />
 			</FormRow>
 			<FormRow

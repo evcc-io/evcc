@@ -308,7 +308,6 @@
       "authentication": "Authenticatie",
       "description": "Verbind met een MQTT broker om data met andere netwerksystemen uit te wisselen.",
       "descriptionClientId": "Auteur van de berichten. Wanneer leeg wordt `evcc-[rand]` gebruikt.",
-      "descriptionTopic": "Laat leeg om publicatie te deactiveren.",
       "labelBroker": "Agent",
       "labelCaCert": "Servercertificaat (CA)",
       "labelCheckInsecure": "Sta self-signed certificaten toe",

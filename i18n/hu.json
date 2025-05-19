@@ -298,7 +298,6 @@
       "authentication": "Hitelesítés",
       "description": "Csatlakozás egy MQTT brókerhez az adatok cseréjéhez egy másik rendszerrel a hálózaton.",
       "descriptionClientId": "Az üzenetek szerzője. Ha üres, akkor az `evcc-[rand]` lesz használva.",
-      "descriptionTopic": "Hagyd üresen a publikálás letiltásához.",
       "labelBroker": "Bróker",
       "labelCaCert": "Szerver tanúsítvány (CA)",
       "labelCheckInsecure": "Önaláírt tanúsítványok engedélyezése",

@@ -291,7 +291,6 @@
       "authentication": "Authentifizéierung",
       "description": "Mat engem MQTT-Broker verbanne fir Daten mat anere Systemer op Ärem Netz auszetauschen.",
       "descriptionClientId": "Auteur vun de Messagen. Wann eidel `evcc-[rand]` benotzt gëtt.",
-      "descriptionTopic": "Eidel loosse fir d'Verëffentlechung ze deaktivéieren.",
       "labelBroker": "Broker",
       "labelCaCert": "Servercertifikat (CA)",
       "labelCheckInsecure": "Onsécher Verbindungen erlaben",

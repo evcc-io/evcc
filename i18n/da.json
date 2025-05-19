@@ -308,7 +308,6 @@
       "authentication": "Godkendelse",
       "description": "Opret forbindelse til en MQTT-broker for at udveksle data med andre systemer på dit netværk.",
       "descriptionClientId": "Afsender af meddelelserne. Hvis tom bruges `evcc-[rand]`.",
-      "descriptionTopic": "Efterlades tom for at deaktivere udgivelse.",
       "labelBroker": "Broker",
       "labelCaCert": "Server certifikat (CA)",
       "labelCheckInsecure": "Tillad selvsignerede certifikater",

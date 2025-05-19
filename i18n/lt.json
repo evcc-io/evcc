@@ -308,7 +308,6 @@
       "authentication": "Autentifikavimas",
       "description": "Prisijunkite prie MQTT brokerio, kad keistumėtės duomenimis su kitomis tinklo sistemomis.",
       "descriptionClientId": "Pranešimų autorius. Jei naudojamas tuščias `evcc-[rand]` .",
-      "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
       "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",

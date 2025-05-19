@@ -308,7 +308,6 @@
       "authentication": "Authentication",
       "description": "Connect to an MQTT broker to exchange data with other systems on your network.",
       "descriptionClientId": "Author of the messages. If empty `evcc-[rand]` is used.",
-      "descriptionTopic": "Leave empty to disable publishing.",
       "labelBroker": "Broker",
       "labelCaCert": "Server certificate (CA)",
       "labelCheckInsecure": "Allow self-signed certificates",

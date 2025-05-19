@@ -307,7 +307,6 @@
       "authentication": "Kimlik Doğrulama",
       "description": "Ağındaki diğer sistemlerle veri alışverişi yapmak için evcc'yi bir MQTT aracısına bağla.",
       "descriptionClientId": "İletilerin yazarı. Eğer boşsa `evcc-[rand]` kullanılır.",
-      "descriptionTopic": "Yayınlamayı devre dışı bırakmak için boş bırak.",
       "labelBroker": "Aracı",
       "labelCaCert": "“Sunucu sertifikası (CA)”",
       "labelCheckInsecure": "Güvenli olmayan bağlantılara izin ver",

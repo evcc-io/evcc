@@ -307,7 +307,6 @@
       "authentication": "Autentifikace",
       "description": "Připojte se k MQTT brokeru pro výměnu dat s jinými systémy ve vaší síti.",
       "descriptionClientId": "Autor zpráv. Pokud je pole prázdné, použije se evcc-[rand].",
-      "descriptionTopic": "Nechte prázdné pro deaktivaci publikování.",
       "labelBroker": "Broker",
       "labelCaCert": "Certifikát serveru (CA)",
       "labelCheckInsecure": "Povolit self-signed certifikáty",

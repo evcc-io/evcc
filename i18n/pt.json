@@ -307,7 +307,6 @@
       "authentication": "Autenticação",
       "description": "Conecte-se a um broker MQTT para trocar dados com outros sistemas da sua rede.",
       "descriptionClientId": "Autor das mensagens. Se o `evcc-[rand]` vazio é usado.",
-      "descriptionTopic": "Deixe por preencher para desativar a publicação.",
       "labelBroker": "Broker",
       "labelCaCert": "Certificado do servidor (CA)",
       "labelCheckInsecure": "Permitir certificados auto-assinados",

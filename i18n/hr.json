@@ -231,7 +231,6 @@
       "authentication": "Provjera vjerodostojnosti",
       "description": "Spoji se na MQTT posrednika za izmjenu podataka s drugim sustavima na vašoj mreži.",
       "descriptionClientId": "Autor poruke. Ukoliko nije postavljeno, koristiti će se `evcc-[rand]`.",
-      "descriptionTopic": "Ostavite praznim kako bi onemogućili objavljivanje.",
       "labelBroker": "Posrednik",
       "labelCaCert": "Certifikat poslužitelja (CA)",
       "labelCheckInsecure": "Dozvoli samopotpisane certifikate",

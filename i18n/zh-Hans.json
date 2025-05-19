@@ -308,7 +308,6 @@
       "authentication": "身份验证",
       "description": "连接到 MQTT 代理服务器，以便与网络上的其他系统交换数据。",
       "descriptionClientId": "消息的发布者。如果为空，则使用 `evcc-[rand]`。",
-      "descriptionTopic": "留空以禁用发布。",
       "labelBroker": "代理服务器",
       "labelCaCert": "服务器证书 (CA)",
       "labelCheckInsecure": "允许自签名证书",

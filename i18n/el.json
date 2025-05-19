@@ -307,7 +307,6 @@
       "authentication": "Έλεγχος ταυτότητας",
       "description": "Συνδεθείτε σε ένα MQTT broker για ανταλλάγη δεδομένων με άλλα συστήματα στο δίκτυό σας.",
       "descriptionClientId": "Αποστολέας των μηνυμάτων. Εάν μείνει κενό θα γίνει χρήση του `evcc-[τυχαίο]`.",
-      "descriptionTopic": "Αφήστε το κενό για να απενεργοποιήσετε δημοσιεύσεις.",
       "labelBroker": "Broker",
       "labelCaCert": "Πιστοποιητικό διακομιστή (CA)",
       "labelCheckInsecure": "Να επιτρέπονται τα πιστοποιητικά self-signed",

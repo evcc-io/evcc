@@ -259,7 +259,6 @@
       "authentication": "Avtentikacija",
       "description": "Povežite se s posrednikom MQTT za izmenjavo podatkov z drugimi sistemi v vašem omrežju.",
       "descriptionClientId": "Avtor sporočil. Če se pusti prazno, se uporabi `evcc-[rand]`.",
-      "descriptionTopic": "Pustite prazno, če želite onemogočiti objavljanje.",
       "labelBroker": "Posrednik",
       "labelCaCert": "Certifikat strežnika (CA)",
       "labelCheckInsecure": "Dovoli samopodpisane certifikate",

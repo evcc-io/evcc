@@ -281,7 +281,6 @@
       "authentication": "Todennus",
       "description": "Yhdistä MQTT-välittäjään vaihtaaksesi tietoja muiden verkossasi olevien järjestelmien kanssa.",
       "descriptionClientId": "Viestien kirjoittaja. Jos tyhjää `evcc-[rand]` käytetään.",
-      "descriptionTopic": "Jätä tyhjäksi, jos haluat poistaa julkaisut käytöstä.",
       "labelBroker": "Välittäjä (Broker)",
       "labelCaCert": "Palvelinvarmenne (CA)",
       "labelCheckInsecure": "Salli itse-allekirjoitetut varmenteet",

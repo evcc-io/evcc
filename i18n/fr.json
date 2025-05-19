@@ -308,7 +308,6 @@
       "authentication": "Authentification",
       "description": "Connectez-vous à un courtier MQTT pour échanger des données avec d'autres systèmes de votre réseau.",
       "descriptionClientId": "Auteur des messages. `evcc-XXXX` sera utilisé si laissé vide.",
-      "descriptionTopic": "Laisser vide pour désactiver la publication.",
       "labelBroker": "Courtier",
       "labelCaCert": "Certificat serveur (CA)",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",

@@ -155,7 +155,6 @@
       "authentication": "Autenticación",
       "description": "Conéctate a un agente MQTT para intercambiar datos con otros sistemas en tu red",
       "descriptionClientId": "Autor del mensaje. Si se deja en blanco, se utiliza `evcc-[rand]`",
-      "descriptionTopic": "Déjelo en blanco para desactivar la publicación",
       "labelBroker": "Broker",
       "labelCaCert": "Certificado de servidor (CA)",
       "labelCheckInsecure": "Permitir certificados autofirmados",
