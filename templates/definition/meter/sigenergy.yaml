@@ -3,6 +3,10 @@ products:
   - brand: Sigenergy
     description:
       generic: Sigen Hybrid/Sigen PV Max/SigenStore EC
+requirements:
+  description:
+    de: Der Elektriker muss die Funktion Modbus via TCP/IP in seiner Version der Sigen App aktivieren bevor diese Konfiguration funktional ist. Diese Option ist in der mySigen App für Kunden nicht verfügbar.
+    en: The electrician needs to enable the Modbus via TCP/IP in their service app before the setup is functional. This is not available in the customers mySigen app.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
