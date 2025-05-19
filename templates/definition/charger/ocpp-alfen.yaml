@@ -1,0 +1,12 @@
+template: ocpp-alfen
+products:
+  - brand: Alfen
+    description:
+      generic: Eve
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

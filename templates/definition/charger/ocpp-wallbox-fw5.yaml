@@ -1,12 +1,23 @@
-template: pulsarplus
+template: wallbox-fw5
+covers: ["pulsarplus-fw5"]
 products:
   - brand: wallbox
     description:
-      generic: Pulsar Plus, Pulsar Max, Commander 2, Copper SB (FW 6.x)
+      generic: Pulsar Plus (FW 5.x)
+  - brand: wallbox
+    description:
+      generic: Pulsar Max (FW 5.x)
+  - brand: wallbox
+    description:
+      generic: Commander 2 (FW 5.x)
+  - brand: wallbox
+    description:
+      generic: Copper SB (FW 5.x)
 requirements:
   description:
     de: |
       Anleitung: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+
       * “OCPP aktivieren” (myWallbox app) bzw. den “OCPP-WebSocket-Verbindung” Schalter (myWallbox Portal) aktivieren
       * Zusätzlich die “Verbesserte Ladegerätsteuerung” (Profil -> Experimentelle Funktionen) einschalten (myWallbox app)
       * URL: ws://[evcc-adresse]:8887/ (Verbindung über das lokale Netzwerk)
@@ -14,6 +25,7 @@ requirements:
       * Passwort: leer lassen
     en: |
       Setup Guide: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+
       * Switch on “Enable OCPP” (myWallbox app) or enable the “OCPP WebSocket connection” switch (myWallbox Portal)
       * Enable “Improved charger control” (Profile -> Experimental functions) (myWallbox app) 
       * URL: ws://[evcc-adresse]:8887/ (local network connection)
@@ -22,5 +34,9 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered,Power.Offered
 render: |
   {{ include "ocpp" . }}
+  remotestart: true 
+  stacklevelzero: true

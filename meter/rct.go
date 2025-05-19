@@ -19,8 +19,9 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
-	conn  *rct.Connection // connection with the RCT device
-	usage string          // grid, pv, battery
+	conn          *rct.Connection // connection with the RCT device
+	usage         string          // grid, pv, battery
+	externalPower bool            // whether to query external power
 }
 
 var (
@@ -42,6 +43,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		MinSoc, MaxSoc int
 		MaxChargePower int
 		Cache          time.Duration
+		ExternalPower  bool
 	}{
 		MaxChargePower: 10000,
 		Cache:          30 * time.Second,
@@ -55,11 +57,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.MaxChargePower, cc.Cache, cc.capacity.Decorator())
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.MaxChargePower, cc.Cache, cc.ExternalPower, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepower int, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepower int, cache time.Duration, externalPower bool, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -82,8 +84,9 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepow
 	rctMu.Unlock()
 
 	m := &RCT{
-		usage: strings.ToLower(usage),
-		conn:  conn,
+		usage:         strings.ToLower(usage),
+		conn:          conn,
+		externalPower: externalPower,
 	}
 
 	// decorate api.MeterEnergy
@@ -178,11 +181,13 @@ func (m *RCT) CurrentPower() (float64, error) {
 			return err
 		})
 
-		eg.Go(func() error {
-			var err error
-			c, err = m.queryFloat(rct.S0ExternalPowerW)
-			return err
-		})
+		if m.externalPower {
+			eg.Go(func() error {
+				var err error
+				c, err = m.queryFloat(rct.S0ExternalPowerW)
+				return err
+			})
+		}
 
 		err := eg.Wait()
 		return a + b + c, err
