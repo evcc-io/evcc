@@ -46,7 +46,22 @@ params:
       en: InstallationID
     help:
       de: siehe https://docs.evcc.io/docs/devices/heating#viessmann
-      en: see https://docs.evcc.io/docs/devices/heating#viessmann
+      en: |
+        Unfortunately you cannot simply lookup this number in the Viessmann app - instead you need to use the following commands on the command line... we're aware this is not for every user, but currently we don't have a better workflow...<br/>
+
+        Prerequisites: curl, jq, and the following parameters:
+        ```
+        VIESSMANN_USER=<your-user>
+        VIESSMANN_PASS=<your-password>
+        VIESSMANN_CLIENT_ID=<your-clientid>
+        ```
+
+        Then execute the following (n.b. it's best to paste the entire block as-is, since the intermediate 'CODE' is only valid for 20 seconds):
+        ```
+        VIESSMANN_REDIRECT_URI="http://localhost:4200/"
+        VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
+        VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
+        ```
   - name: device_id
     required: true
     description:
