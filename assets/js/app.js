@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { VueHeadMixin, createHead } from "@unhead/vue";
+import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";

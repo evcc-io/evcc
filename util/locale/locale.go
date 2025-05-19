@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/server/assets"
@@ -58,12 +59,13 @@ func Init() error {
 			m := make([]*i18n.Message, 0, len(s.Sessions.CSV))
 			for k, v := range s.Sessions.CSV {
 				m = append(m, &i18n.Message{
-					ID:    k,
+					ID:    "sessions.csv." + k,
 					Other: v,
 				})
 			}
 
-			if err := Bundle.AddMessages(language.Make(d.Name()), m...); err != nil {
+			languageTag := language.Make(strings.TrimSuffix(d.Name(), filepath.Ext(d.Name())))
+			if err := Bundle.AddMessages(languageTag, m...); err != nil {
 				return fmt.Errorf("loading locales failed: %w", err)
 			}
 		}

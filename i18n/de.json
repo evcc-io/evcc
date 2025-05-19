@@ -437,13 +437,13 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden ...",
+      "powerSub2": "laden…",
       "tabTitle": "Live-Community"
     },
     "savings": {
       "co2Saved": "{value} eingespart",
       "co2Title": "CO₂ Emission",
-      "configurePriceCo2": "Preis und CO₂-Emissionen konfigurieren",
+      "configurePriceCo2": "Lerne Preis und CO₂-Emissionen zu konfigurieren.",
       "footerLong": "{percent} Sonnenenergie",
       "footerShort": "{percent} Sonne",
       "modalTitle": "Auswertung Ladeenergie",
@@ -493,7 +493,7 @@
       "modalTitle": "Neue Version verfügbar",
       "modalUpdate": "Installieren",
       "modalUpdateNow": "Jetzt installieren",
-      "modalUpdateStarted": "Starte die neue Version von evcc ...",
+      "modalUpdateStarted": "Starte die neue Version von evcc…",
       "modalUpdateStatusStart": "Installation gestartet:"
     }
   },
@@ -748,7 +748,7 @@
       "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
       "targetSoc": "Ladelimit",
       "temp": "Temperatur",
-      "tempLimit": "Zieltemp.",
+      "tempLimit": "Temperaturlimit",
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
     },
