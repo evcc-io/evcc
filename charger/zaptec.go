@@ -41,13 +41,13 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log          *util.Logger
-	statusG      util.Cacheable[zaptec.StateResponse]
-	instance     zaptec.Charger
-	installation *zaptec.Installation
-	version      int
-	enabled      bool
-	priority     bool
+	log                    *util.Logger
+	statusG                util.Cacheable[zaptec.StateResponse]
+	instance               zaptec.Charger
+	MaxInstallationCurrent int
+	version                int
+	enabled                bool
+	priority               bool
 }
 
 func init() {
@@ -140,7 +140,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	if err != nil {
 		return nil, err
 	}
-	c.installation, err = c.installationGet()
+	c.MaxInstallationCurrent, err = c.installationGet()
 	if err != nil {
 		return nil, err
 	}
@@ -336,18 +336,17 @@ func (c *Zaptec) switchPhases(phases int) error {
 		return c.chargerUpdate(data)
 	}
 
-	curr := int(c.installation.MaxCurrent.IntPart())
 	var zero int
 	data := zaptec.UpdateInstallation{
-		AvailableCurrentPhase1: &curr,
+		AvailableCurrentPhase1: &c.MaxInstallationCurrent,
 		AvailableCurrentPhase2: &zero,
 		AvailableCurrentPhase3: &zero,
 	}
 	if phases == 3 {
 		data = zaptec.UpdateInstallation{
-			AvailableCurrentPhase1: &curr,
-			AvailableCurrentPhase2: &curr,
-			AvailableCurrentPhase3: &curr,
+			AvailableCurrentPhase1: &c.MaxInstallationCurrent,
+			AvailableCurrentPhase2: &c.MaxInstallationCurrent,
+			AvailableCurrentPhase3: &c.MaxInstallationCurrent,
 		}
 	}
 
@@ -370,15 +369,14 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) installationGet() (*zaptec.Installation, error) {
+func (c *Zaptec) installationGet() (int, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
 	if err := c.GetJSON(uri, &res); err != nil {
-		return nil, err
+		return 0, err
 	}
-
-	return &res, nil
+	return int(res.MaxCurrent), nil
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
