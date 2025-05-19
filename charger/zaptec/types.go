@@ -1,6 +1,10 @@
 package zaptec
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/shopspring/decimal"
+)
 
 type ChargersResponse struct {
 	Pages int
@@ -80,6 +84,11 @@ type Update struct {
 
 type SessionPriority struct {
 	PrioritizedPhases *int `json:"prioritizedPhases,omitempty"`
+}
+
+type Installation struct {
+	Id         string          `json:"id"`
+	MaxCurrent decimal.Decimal `json:"maxCurrent"`
 }
 
 type UpdateInstallation struct {
