@@ -46,7 +46,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plu
 	defer modbus.Unlock()
 
 	var slaveID uint8
-	if cc.SubDevice != 0 {
+	if cc.SubDevice > 0 && cc.SubDevice <= 255 {
 		slaveID = uint8(cc.SubDevice)
 	} else {
 		slaveID = cc.ID
