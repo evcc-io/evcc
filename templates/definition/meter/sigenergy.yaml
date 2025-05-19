@@ -7,9 +7,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: modbus
-    choice: ["tcpip", "rs485"]
-    id: 1
+  - name: host
+  - name: port
+  - name: id
   - name: capacity
     advanced: true
 render: |
@@ -17,15 +17,18 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    subdevice: 247
+    uri: {{ .host }}:{{ .port }}
+    id: 247
+    rtu: false
     register:
       address: 30005 # [Grid sensor] Active power
       type: holding
       decode: int32
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    rtu: false
     register:
       address: 30562 # Accumulated import energy
       type: holding
@@ -33,21 +36,27 @@ render: |
     scale: 0.01
   currents:
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      rtu: false
       register:
         address: 31017 # Phase A current
         type: holding
         decode: int32
       scale: 0.01
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      rtu: false
       register:
         address: 31019 # Phase B current
         type: holding
         decode: int32
       scale: 0.01
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      rtu: false
       register:
         address: 31021 # Phase C current
         type: holding
@@ -57,8 +66,9 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    subdevice: 247
+    uri: {{ .host }}:{{ .port }}
+    id: 247
+    rtu: false
     register:
       type: holding
       address: 30035 # Photovoltaic power
@@ -67,8 +77,9 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    subdevice: 247
+    uri: {{ .host }}:{{ .port }}
+    id: 247
+    rtu: false
     register:
       type: holding
       address: 30037 # Battery power
@@ -76,7 +87,9 @@ render: |
     scale: -1
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    rtu: false
     register:
       address: 30574 # Battery accumulated discharge energy
       type: holding
@@ -84,8 +97,9 @@ render: |
     scale: 0.01
   soc:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    subdevice: 247
+    uri: {{ .host }}:{{ .port }}
+    id: 247
+    rtu: false
     register:
       address: 30014 # Energy storage system SOC
       type: holding

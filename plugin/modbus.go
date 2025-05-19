@@ -45,14 +45,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plu
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	var slaveID uint8
-	if cc.SubDevice > 0 && cc.SubDevice <= 255 {
-		slaveID = uint8(cc.SubDevice)
-	} else {
-		slaveID = cc.ID
-	}
-
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), slaveID)
+	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
