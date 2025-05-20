@@ -380,7 +380,7 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 
 	// Re-enable charging if it was previously enabled
 	if enabled {
-		err = wb.Enable(true)
+		err := wb.Enable(true)
 	}
 
 	return err
