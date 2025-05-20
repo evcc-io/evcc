@@ -13,7 +13,9 @@ params:
     allinone: true
   - name: host
   - name: port
+    default: 502
   - name: id
+    default: 1
   - name: capacity
     advanced: true
 render: |
@@ -23,7 +25,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 247
-    rtu: false
     register:
       address: 30005 # [Grid sensor] Active power
       type: holding
@@ -32,7 +33,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
-    rtu: false
     register:
       address: 30562 # Accumulated import energy
       type: holding
@@ -42,7 +42,6 @@ render: |
     - source: modbus
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
-      rtu: false
       register:
         address: 31017 # Phase A current
         type: holding
@@ -51,7 +50,6 @@ render: |
     - source: modbus
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
-      rtu: false
       register:
         address: 31019 # Phase B current
         type: holding
@@ -60,7 +58,6 @@ render: |
     - source: modbus
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
-      rtu: false
       register:
         address: 31021 # Phase C current
         type: holding
@@ -72,7 +69,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 247
-    rtu: false
     register:
       type: holding
       address: 30035 # Photovoltaic power
@@ -83,7 +79,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 247
-    rtu: false
     register:
       type: holding
       address: 30037 # Battery power
@@ -93,7 +88,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
-    rtu: false
     register:
       address: 30574 # Battery accumulated discharge energy
       type: holding
@@ -103,7 +97,6 @@ render: |
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 247
-    rtu: false
     register:
       address: 30014 # Energy storage system SOC
       type: holding
