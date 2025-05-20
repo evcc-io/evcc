@@ -254,7 +254,7 @@ func (wb *Kathrein) Enable(enable bool) error {
 	}
 
 	// Enable EMS-Control
-	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
 		return err
 	}
 
@@ -364,17 +364,17 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 	}
 
 	// Enable EMS-Control
-	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
 		return err
 	}
 	
 	// Switch phases
-	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
 		return err
 	}
 
 	// After switching phases Kathrein WB must be disabled (Stop/Reset Charging)
-	if err = wb.Enable(false); err != nil {
+	if err := wb.Enable(false); err != nil {
 			return err
 		}		
 
