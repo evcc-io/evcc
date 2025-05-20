@@ -67,7 +67,7 @@ const (
 	kathreinRegCurrents         = 0x0036 // float32 Line 1 Current (A)
 	kathreinRegPowers           = 0x003C // float32 Line 1 Power (W)
 	kathreinRegTotalActivePower = 0x0054 // float32 Total active power (W)
-	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (kWh)
+	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (Wh - deviating from Kathrein Register Document)
 	kathreinRegFrequencyLine    = 0x005E // float32 Frequency line (Hz)
 
 	// EVSE - Charging state (uint16)
@@ -253,6 +253,11 @@ func (wb *Kathrein) Enable(enable bool) error {
 		u = wb.curr
 	}
 
+	// Enable EMS-Control
+	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+		return err
+	}
+
 	_, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, u)
 
 	return err
@@ -340,7 +345,7 @@ func (wb *Kathrein) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), err
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3, err
 }
 
 var _ api.PhaseSwitcher = (*Kathrein)(nil)
@@ -358,16 +363,20 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 		return err
 	}
 
-	if enabled {
-		if err = wb.Enable(false); err != nil {
-			return err
-		}
+	// Enable EMS-Control
+	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+		return err
 	}
-
+	
 	// Switch phases
 	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
 		return err
 	}
+
+	// After switching phases Kathrein WB must be disabled (Stop/Reset Charging)
+	if err = wb.Enable(false); err != nil {
+			return err
+		}		
 
 	// Re-enable charging if it was previously enabled
 	if enabled {
@@ -425,7 +434,7 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f kWh\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
+		fmt.Printf("Meter - W tot:\t%f kWh\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
