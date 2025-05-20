@@ -212,7 +212,7 @@ params:
       en: Standby power (W)
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
-      en: Power values above this value will be considered as charging pow
+      en: Power values above this value will be considered as charging power
     type: int
   - name: language
     description:
