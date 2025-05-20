@@ -87,11 +87,11 @@ params:
     mask: true
   - name: capacity
     description:
-      de: Akkukapazität in kWh
-      en: Battery capacity in kWh
+      de: Akkukapazität (kWh)
+      en: Battery capacity (kWh)
     help:
-      de: Akkukapazität in kWh
-      en: Battery capacity in kWh
+      de: Akkukapazität (kWh)
+      en: Battery capacity (kWh)
     example: 50
     type: float
     usages: ["vehicle", "battery"]
