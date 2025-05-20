@@ -432,11 +432,7 @@ func (wb *Kathrein) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2); err == nil {
 		fmt.Printf("Meter - P tot (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f kWh\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3)
-	}
-
+	
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
 		fmt.Printf("Meter - W tot:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
