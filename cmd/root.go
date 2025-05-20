@@ -36,13 +36,13 @@ const (
 )
 
 var (
-	log         = util.NewLogger("main")
-	cfgFile     string
-	cfgDatabase string
-
-	ignoreEmpty = ""                                      // ignore empty keys
-	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+	log           = util.NewLogger("main")
+	cfgFile       string
+	cfgDatabase   string
+	customCssFile string
+	ignoreEmpty   = ""                                      // ignore empty keys
+	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
 	viper *vpr.Viper
 
@@ -70,6 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
 	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
+	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -159,7 +160,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
 
 	// metrics
 	if viper.GetBool("metrics") {
