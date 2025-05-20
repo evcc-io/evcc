@@ -154,7 +154,7 @@ export default {
 			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact() {
-			return this.loadpoints.map((lp) => {
+			return this.loadpoints.map((lp, index) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
 				const title =
@@ -165,7 +165,7 @@ export default {
 				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
 				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, power, soc, heating };
+				return { icon, title, charging, power, soc, heating, index };
 			});
 		},
 		vehicleList() {
