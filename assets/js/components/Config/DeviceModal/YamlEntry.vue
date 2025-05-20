@@ -6,7 +6,7 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<YamlEditorContainer v-model="localValue" />
+		<YamlEditorContainer v-model="localValue" :error-line="errorLine" />
 	</div>
 </template>
 
@@ -24,10 +24,8 @@ export default defineComponent({
 	},
 	props: {
 		modelValue: String,
-		type: {
-			type: String as () => DeviceType,
-			required: true,
-		},
+		type: { type: String as () => DeviceType, required: true },
+		errorLine: { type: [Number, null], default: null },
 	},
 	emits: ["update:modelValue"],
 	data() {

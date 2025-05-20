@@ -20,7 +20,12 @@
 				@change="templateChanged"
 			/>
 
-			<YamlEntry v-if="values.type === 'custom'" v-model="values.yaml" type="charger" />
+			<YamlEntry
+				v-if="values.type === 'custom'"
+				v-model="values.yaml"
+				type="charger"
+				:error-line="test.errorLine"
+			/>
 			<div v-else>
 				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<SponsorTokenRequired v-if="sponsorTokenRequired" />

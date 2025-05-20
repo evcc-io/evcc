@@ -17,7 +17,12 @@
 				:groups="templateOptions"
 				@change="templateChanged"
 			/>
-			<YamlEntry v-if="values.type === 'custom'" v-model="values.yaml" type="vehicle" />
+			<YamlEntry
+				v-if="values.type === 'custom'"
+				v-model="values.yaml"
+				type="vehicle"
+				:error-line="test.errorLine"
+			/>
 			<div v-else>
 				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<Markdown v-if="description" :markdown="description" class="my-4" />

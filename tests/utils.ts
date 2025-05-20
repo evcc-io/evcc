@@ -18,9 +18,9 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
 	await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
-export async function editorClear(editor: Locator): Promise<void> {
+export async function editorClear(editor: Locator, iterations = 6): Promise<void> {
 	await editor.locator(".view-line").nth(0).click();
-	for (let i = 0; i < 6; i++) {
+	for (let i = 0; i < iterations; i++) {
 		await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 10 });
 		await editor.page().keyboard.press("Backspace", { delay: 10 });
 	}

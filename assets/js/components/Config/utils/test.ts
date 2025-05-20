@@ -7,6 +7,7 @@ export type TestState = {
 	isRunning: boolean;
 	result: Record<string, any> | null;
 	error: string | null;
+	errorLine: number | null;
 };
 
 export const initialTestState = (): TestState => ({
@@ -16,6 +17,7 @@ export const initialTestState = (): TestState => ({
 	isRunning: false,
 	result: null,
 	error: null,
+	errorLine: null,
 });
 
 export const performTest = async (
@@ -28,6 +30,7 @@ export const performTest = async (
 	state.isSuccess = false;
 	state.isError = false;
 	state.isRunning = true;
+	state.errorLine = null;
 	try {
 		const res = await api();
 		for (const [key, value] of Object.entries(res.data.result)) {
@@ -44,6 +47,7 @@ export const performTest = async (
 	} catch (e: any) {
 		state.isError = true;
 		state.error = e.response?.data?.error || e.message;
+		state.errorLine = e.response?.data?.line || null;
 	} finally {
 		state.isRunning = false;
 	}

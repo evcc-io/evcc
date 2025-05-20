@@ -157,4 +157,39 @@ test.describe("aux meter", async () => {
 
     await expect(page.getByTestId("aux")).toHaveCount(0);
   });
+
+  test("user-defined meter yaml errors", async ({ page }) => {
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    await page.getByRole("button", { name: "Add additional meter" }).click();
+
+    const modal = page.getByTestId("meter-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Add self-regulating consumer" }).click();
+
+    await modal.getByLabel("Title").fill("Large heater");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const editor = modal.getByTestId("yaml-editor");
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "hello: world",
+      "  foo: bar",
+    ]);
+
+    // no errors
+    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+
+    const restResult = modal.getByTestId("test-result");
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: failed");
+    await expect(restResult).toContainText(
+      "yaml: line 2: mapping values are not allowed in this context"
+    );
+    // error line
+    await expect(editor.locator(".line-numbers.error")).toHaveCount(1);
+  });
 });

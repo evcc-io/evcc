@@ -18,7 +18,7 @@ export default {
 	components: { YamlEditor },
 	props: {
 		modelValue: String,
-		errorLine: Number,
+		errorLine: { type: [Number, null], default: null },
 		removeKey: String,
 		hidden: Boolean,
 	},
