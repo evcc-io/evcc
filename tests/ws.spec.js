@@ -39,4 +39,5 @@ test("show offline when websocket is closed", async ({ page }) => {
   });
   await page.goto("/");
   await expect(page.getByText("Not connected to a server.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Let's start configuration" })).toBeHidden();
 });
