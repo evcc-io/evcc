@@ -3,9 +3,9 @@ products:
   - brand: Zaptec
     description:
       generic: Go 2
-capabilities: [ "rfid", "1p3p" ]
+capabilities: ["rfid", "1p3p"]
 requirements:
-  evcc: [ "sponsorship" ]
+  evcc: ["sponsorship"]
   description:
     de: |
       Im Zaptec-Portal (Installationen -> Einstellungen -> Leistungsregelung) müssen für die Zaptec Go 2 folgende Einstellungen vorgenommen werden:
