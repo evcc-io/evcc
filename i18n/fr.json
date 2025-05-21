@@ -15,7 +15,7 @@
     "legendBottomName": "Priorité chargement batterie maison",
     "legendBottomSubline": "Jusqu'à ce que le {soc} soit atteint.",
     "legendMiddleName": "Priorité chargement du véhicule",
-    "legendMiddleSubline": "lorsque la batterie maison est au-dessus du {soc}",
+    "legendMiddleSubline": "lorsque la batterie maison est au-dessus du {soc}.",
     "legendTopAutostart": "Démarrer automatiquement",
     "legendTopName": "Recharge soutenue par la batterie",
     "legendTopSubline": "lorsque la batterie maison est au-dessus du {soc}.",
@@ -255,6 +255,7 @@
       "addVehicle": "Ajouter un véhicule",
       "configured": "configuré",
       "edit": "éditer",
+      "loadpointRequired": "Au moins un point de charge doit être configuré.",
       "name": "Nom",
       "title": "Configuration",
       "unconfigured": "non configuré",
@@ -278,6 +279,26 @@
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
       "validateSave": "Valider et enregistrer"
+    },
+    "modbus": {
+      "baudrate": "Débit en bauds",
+      "comset": "ComSet",
+      "connection": "Connections Modbus",
+      "connectionHintSerial": "Cet appareil est directement connecté à evcc via une interface RS485.",
+      "connectionHintTcpip": "Cet appareil est atteignable depuis evcc via LAN/Wifi.",
+      "connectionValueSerial": "Série / USB",
+      "connectionValueTcpip": "Réseau",
+      "device": "Nom de l’appareil",
+      "deviceHint": "Exemple : /dev/ttyUSB0",
+      "host": "Adresse IP ou nom d’hôte",
+      "hostHint": "Exemple : 192.0.2.2",
+      "id": "ID Modbus",
+      "port": "Port",
+      "protocol": "Protocole Modbus",
+      "protocolHintRtu": "Connexion via un adaptateur RS485 vers Ethernet sans traduction de protocole.",
+      "protocolHintTcp": "L'appareil dispose d'un support LAN/Wifi natif ou est connecté via un adaptateur RS485 vers Ethernet avec traduction de protocole.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Autoriser plusieurs clients à accéder à un appareil Modbus unique.",
@@ -375,7 +396,7 @@
     "validation": {
       "failed": "échec",
       "label": "Statut",
-      "running": "validation...",
+      "running": "en cours de validation…",
       "success": "réussi",
       "unknown": "inconnu",
       "validate": "valider"
@@ -416,7 +437,7 @@
       "greenShareSub2": "solaire et stockage de batterie",
       "power": "Puissance de charge",
       "powerSub1": "{activeClients} de {totalClients} participants",
-      "powerSub2": "sont en train de charger...",
+      "powerSub2": "sont en train de charger…",
       "tabTitle": "Communauté en ligne"
     },
     "savings": {
@@ -445,9 +466,9 @@
     "sponsor": {
       "becomeSponsor": "Devenir parrain",
       "becomeSponsorExtended": "Soutenez-nous directement pour obtenir des autocollants.",
-      "confetti": "Prêt pour les confettis?",
+      "confetti": "Prêt pour les confettis ?",
       "confettiPromise": "Vous obtenez des autocollants et des confettis numériques",
-      "sticker": "… ou autocollants evcc?",
+      "sticker": "… ou autocollants evcc ?",
       "supportUs": "Notre mission est de faire du solaire la norme. Aidez evcc en payant ce que ça vaut pour vous.",
       "thanks": "Merci, {sponsor} ! Votre contribution permet de poursuivre le développement d'evcc.",
       "titleNoSponsor": "Soutenez-nous",
@@ -468,12 +489,12 @@
       "modalCancel": "Annuler",
       "modalDownload": "Télécharger",
       "modalInstalledVersion": "Version actuellement installée",
-      "modalNoReleaseNotes": "Aucune note de version disponible. Plus d'informations sur la nouvelle version disponibles ici:",
+      "modalNoReleaseNotes": "Aucune note de version disponible. Plus d'informations sur la nouvelle version disponibles ici :",
       "modalTitle": "Mise à jour disponible",
       "modalUpdate": "Installer",
       "modalUpdateNow": "Installer maintenant",
-      "modalUpdateStarted": "Démarrage de la nouvelle version de evcc...",
-      "modalUpdateStatusStart": "L'installation a commencé:"
+      "modalUpdateStarted": "Démarrage de la nouvelle version d’evcc…",
+      "modalUpdateStatusStart": "L'installation a commencé :"
     }
   },
   "forecast": {
@@ -490,8 +511,8 @@
     },
     "solar": {
       "dayAfterTomorrow": "Après demain",
-      "partly": "Partiellement",
-      "remaining": "Restant",
+      "partly": "partiellement",
+      "remaining": "restant",
       "today": "Aujourd'hui",
       "tomorrow": "Demain"
     },
@@ -510,21 +531,21 @@
     "login": "Connexions véhicule",
     "logout": "Se déconnecter",
     "nativeSettings": "Changer de serveur",
-    "needHelp": "Besoin d'aide?",
+    "needHelp": "Besoin d'aide ?",
     "sessions": "Sessions de recharge"
   },
   "help": {
     "discussionsButton": "Discussions GitHub",
     "documentationButton": "Documentation",
     "issueButton": "Signaler un bug",
-    "issueDescription": "Trouvé un comportement étrange ou erroné?",
+    "issueDescription": "Trouvé un comportement étrange ou erroné ?",
     "logsButton": "Voir les journaux",
     "logsDescription": "Vérifiez s’il y a des erreurs dans les journaux.",
-    "modalTitle": "Besoin d'aide?",
+    "modalTitle": "Besoin d'aide ?",
     "primaryActions": "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide.",
     "restart": {
       "cancel": "Annuler",
-      "confirm": "Oui, redémarrer!",
+      "confirm": "Oui, redémarrer !",
       "description": "En temps normal, un redémarrage ne devrait pas être nécessaire. Envisagez de signaler un bug si vous devez redémarrer evcc régulièrement.",
       "disclaimer": "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service.",
       "modalTitle": "Voulez-vous vraiment redémarrer ?"
@@ -548,7 +569,7 @@
   },
   "loginModal": {
     "cancel": "Annuler",
-    "error": "Connection échouée: ",
+    "error": "Connection échouée : ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
     "invalid": "Mot de passe invalide.",
@@ -568,13 +589,18 @@
       "modalTitle": "Planification de la charge",
       "none": "aucune",
       "planNumber": "Planning {number}",
+      "preconditionDescription": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
+      "preconditionLong": "Chargement tardif",
+      "preconditionOptionAll": "tous",
+      "preconditionOptionNo": "non",
+      "preconditionShort": "Tardif",
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",
       "selectAll": "Sélect. tous",
       "time": "Heure",
       "title": "Planification",
-      "titleMinSoc": "Charge min.",
+      "titleMinSoc": "Charge min",
       "titleTargetCharge": "Départ",
       "unsavedChanges": "Il y a des modifications non sauvegardées. Appliquer ?",
       "update": "Appliquer",
@@ -610,6 +636,7 @@
       "co2": "CO₂ ⌀",
       "duration": "Durée",
       "fallbackName": "Point de chargement",
+      "finished": "Heure de fin",
       "power": "Puissance",
       "price": "Prix",
       "remaining": "Temps restant",
@@ -627,16 +654,16 @@
       "batteryUsage": "Batterie domestique",
       "currents": "Courant de charge",
       "default": "défaut",
-      "disclaimerHint": "Remarque:",
+      "disclaimerHint": "Remarque :",
       "limitSoc": {
         "description": "Limite de charge à utiliser quand ce véhicule est connecté.",
         "label": "Limite par défaut"
       },
       "maxCurrent": {
-        "label": "Courant de charge max."
+        "label": "Courant de charge max"
       },
       "minCurrent": {
-        "label": "Courant de charge min."
+        "label": "Courant de charge min"
       },
       "minSoc": {
         "description": "Le véhicule est chargé en mode „Rapide” à {0} en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres.",
@@ -674,8 +701,8 @@
       "co2Limit": "Limite de CO₂ {co2]",
       "costLimitIgnore": "La limite configurée {limit} sera ignorée durant cette période.",
       "currentPlan": "Plan actif",
-      "descriptionEnergy": "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?",
-      "descriptionSoc": "Quand le véhicule doit-il être chargé à {targetSoc}?",
+      "descriptionEnergy": "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy} ?",
+      "descriptionSoc": "Quand le véhicule doit-il être chargé à {targetSoc} ?",
       "goalReached": "Objectif déjà atteint",
       "inactiveLabel": "Temps visé",
       "nextPlan": "Prochain planning",
@@ -720,7 +747,7 @@
       "none": "Pas de véhicule",
       "notReachable": "Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.",
       "targetSoc": "Limite",
-      "temp": "Température",
+      "temp": "Temp.",
       "tempLimit": "Temp. limite",
       "unknown": "Véhicule invité",
       "vehicleSoc": "Charge"
@@ -728,7 +755,7 @@
     "vehicleStatus": {
       "awaitingAuthorization": "En attente d’autorisation.",
       "batteryBoost": "Boost Batterie actif.",
-      "charging": "En charge...",
+      "charging": "En charge…",
       "cheapEnergyCharging": "Énergie bon marché disponible.",
       "cheapEnergyNextStart": "Énergie bon marché dans {duration}.",
       "cheapEnergySet": "Limite de prix définie.",
@@ -747,14 +774,14 @@
       "scale3p": "Augmentation en triphasé imminente.",
       "targetChargeActive": "Plan de charge actif. Fin estimée dans {duration}.",
       "targetChargePlanned": "Le plan de charge démarre dans {duration}.",
-      "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule...",
+      "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule…",
       "vehicleLimit": "Limit du véhicule",
       "vehicleLimitReached": "Limite du véhicule atteinte.",
       "waitForVehicle": "Prêt à charger. Attente du véhicule…",
       "welcome": "Courte charge initiale pour confirmer la connexion."
     },
     "vehicles": "Place de stationnement",
-    "welcome": "Bienvenue à bord!"
+    "welcome": "Bienvenue à bord !"
   },
   "notifications": {
     "dismissAll": "Supprimer tout",
@@ -771,7 +798,7 @@
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
     "empty": "Le mot de passe ne doit pas être vide",
-    "error": "Erreur: ",
+    "error": "Erreur : ",
     "labelCurrent": "Mot de passe actuel",
     "labelNew": "Nouveau mot de passe",
     "labelRepeat": "Répétez le mot de passe",
@@ -857,7 +884,7 @@
       "vehicle": "Véhicule"
     },
     "loadpoint": "Point de chargement",
-    "noData": "Pas de session de charge ce mois-ci",
+    "noData": "Pas de session de charge ce mois-ci.",
     "overview": "Aperçu",
     "period": {
       "month": "Mois",
@@ -865,7 +892,7 @@
       "year": "Année"
     },
     "price": "Prix",
-    "reallyDelete": "Voulez-vous vraiment supprimer cette session?",
+    "reallyDelete": "Voulez-vous vraiment supprimer cette session ?",
     "showIndividualEntries": "Afficher les sessions individuelles",
     "solar": "Solaire",
     "title": "Sessions de charge",
@@ -905,6 +932,11 @@
       "label": "Thème",
       "light": "clair"
     },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Format d’heure"
+    },
     "title": "Interface utilisateur",
     "unit": {
       "km": "km",
@@ -927,12 +959,12 @@
     "priceLabel": "Prix de l'énergie",
     "priceLimit": "Limite de prix",
     "resetAction": "Supprimer la limite",
-    "resetWarning": "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration?",
+    "resetWarning": "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration ?",
     "saved": "Enregistré."
   },
   "startupError": {
-    "configFile": "Fichier de configuration utilisé:",
-    "configuration": "Config.",
+    "configFile": "Fichier de configuration utilisé :",
+    "configuration": "Config",
     "description": "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}.",
     "discussions": "Discussions GitHub",
     "fixAndRestart": "Corrigez le problème et redémarrez le serveur.",

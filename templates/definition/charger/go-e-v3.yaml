@@ -3,7 +3,13 @@ covers: ["go-e-gemini"]
 products:
   - brand: go-e
     description:
-      generic: Charger Gemini, HOME+, HOMEfix (V3)
+      generic: Charger Gemini
+  - brand: go-e
+    description:
+      generic: Charger HOME+
+  - brand: go-e
+    description:
+      generic: Charger V3
 capabilities: ["1p3p", "rfid"]
 requirements:
   description:

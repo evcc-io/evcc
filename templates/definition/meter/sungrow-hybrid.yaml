@@ -21,8 +21,9 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    usages: ["battery"]
-    advanced: true
+    help:
+      en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. (0 um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
 render: |
   type: custom
   {{- if eq .usage "grid" }}

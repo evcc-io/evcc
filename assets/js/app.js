@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { VueHeadMixin, createHead } from "@unhead/vue";
+import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
@@ -75,3 +75,10 @@ window.app = app.mount("#app");
 
 watchThemeChanges();
 appDetection();
+
+if (window.evcc.customCss) {
+  const link = document.createElement("link");
+  link.href = `./custom.css`;
+  link.rel = "stylesheet";
+  document.head.appendChild(link);
+}
