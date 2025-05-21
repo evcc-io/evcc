@@ -1,0 +1,35 @@
+template: zaptec-go2
+products:
+  - brand: Zaptec
+    description:
+      generic: Go 2
+capabilities: [ "rfid", "1p3p" ]
+requirements:
+  evcc: [ "sponsorship" ]
+  description:
+    de: |
+      Im Zaptec-Portal (Installationen -> Einstellungen -> Leistungsregelung) müssen für die Zaptec Go 2 folgende Einstellungen vorgenommen werden:
+      <ul>
+        <li>Aktiviere "Ladegeräten erlauben, zum dreiphasigen Laden zurückkehren"</li>
+        <li>Setze "Erlaubte Wechsel vor der Festlegung auf einphasiges Laden" auf das Maximum von 20</li>
+        <li>Setze "Wechsel von drei- auf einphasiges Laden" auf 1 A</li>
+      </ul>
+    en: |
+      In the Zaptec portal (Installations -> Settings -> Power Management), the following settings must be configured for the Zaptec Go 2:
+      <ul>
+        <li>Enable "Allow chargers to return to three-phase charging"</li>
+        <li>Set "Allowed switches before locking to single-phase charging" to the maximum of 20</li>
+        <li>Set "Switch from three-phase to single-phase charging" to 1 A</li>
+      </ul>
+params:
+  - name: id
+    help:
+      de: Wallbox ID
+      en: Charger ID
+  - name: user
+  - name: password
+render: |
+  type: zaptec
+  id: {{ .id }}
+  user: {{ .user }}
+  password: '{{ .password }}'
