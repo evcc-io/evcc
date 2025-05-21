@@ -1,9 +1,6 @@
 template: iometer
 products:
   - brand: IOmeter
-    description:
-      generic: HTTP API
-group: generic
 params:
   - name: usage
     choice: ["grid"]
@@ -17,11 +14,11 @@ render: |
     source: http
     uri: http://{{ .host }}/v1/reading
     method: GET
-    timeout: 10s
     jq: .meter.reading.registers[] | select(.obis == "01-00:10.07.00*ff") | .value
+    cache: 10s
   energy:
     source: http
     uri: http://{{ .host }}/v1/reading
     method: GET
-    timeout: 10s
     jq: .meter.reading.registers[] | select(.obis == "01-00:01.08.00*ff") | .value
+    cache: 10s
