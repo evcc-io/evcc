@@ -52,6 +52,6 @@ func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundT
 			return nil, err
 		}
 
-		return authorizer.Transport(base)
+		return authorizer.Transport(base), nil
 	}
 }

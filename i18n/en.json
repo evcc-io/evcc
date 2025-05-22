@@ -255,6 +255,7 @@
       "addVehicle": "Add vehicle",
       "configured": "configured",
       "edit": "edit",
+      "loadpointRequired": "At least one charge point has to be configured.",
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",

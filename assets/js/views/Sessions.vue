@@ -263,7 +263,7 @@ export default {
 		};
 	},
 	head() {
-		return { title: `${this.$t("sessions.title")} | evcc` };
+		return { title: this.$t("sessions.title") };
 	},
 	computed: {
 		currency() {

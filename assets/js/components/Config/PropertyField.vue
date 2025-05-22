@@ -214,7 +214,7 @@ export default {
 				}
 
 				if (this.boolean) {
-					return this.modelValue === true;
+					return this.modelValue === "true" || this.modelValue === true;
 				}
 
 				if (this.array) {

@@ -1,0 +1,124 @@
+template: fox-ess-h3-smart
+products:
+  - brand: FoxESS
+    description:
+      generic: H3-Smart Series Hybrid Inverter
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 247
+  - name: capacity
+    type: float
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
+    advanced: true
+  - name: maxacpower
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 38817 # Meter Power R
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 38819 # Meter Power S
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 38821 # Meter Power T
+        type: holding
+        decode: int16
+      scale: -0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39618 # Grid Consumption Total
+      type: holding
+      decode: int16
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39280 # PV1
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39282 # PV2
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39284 # PV3
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39286 # PV4
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39288 # PV5
+        type: holding
+        decode: int16
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39238 # Battery Charge/Discharge
+      type: holding
+      decode: int16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 37612 # Soc
+      type: holding
+      decode: int16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 46609 # limit soc
+        type: writesingle
+        decode: uint16
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  {{- end }}

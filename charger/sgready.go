@@ -56,13 +56,11 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		GetMode                 *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
-		Phases                  int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Phases: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

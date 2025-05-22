@@ -196,10 +196,10 @@
 							:expanded="loadpointsExpanded"
 							@toggle="toggleLoadpoints"
 						>
-							<template v-if="activeLoadpointsCount > 1" #expanded>
+							<template v-if="activeLoadpointsCount > 0" #expanded>
 								<EnergyflowEntry
-									v-for="(lp, index) in activeLoadpoints"
-									:key="index"
+									v-for="lp in activeLoadpoints"
+									:key="lp.index"
 									:name="lp.title"
 									:power="lp.power"
 									:powerUnit="powerUnit"

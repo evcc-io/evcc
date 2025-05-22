@@ -1,0 +1,15 @@
+template: ocpp-autoaid
+products:
+  - brand: Autoaid
+    description:
+      generic: Intelligent Wallbox
+  - brand: Autoaid
+    description:
+      generic: Business Wallbox
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
