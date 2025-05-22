@@ -43,6 +43,7 @@ test.describe("onboarding", async () => {
     await enableExperimental(page);
 
     // create loadpoint with charger
+    await expect(page.getByTestId("loadpoint-required")).toBeVisible();
     await page.getByTestId("add-loadpoint").click();
     const lpModal = page.getByTestId("loadpoint-modal");
     await lpModal.getByLabel("Title").fill("Solar Carport");
@@ -57,6 +58,7 @@ test.describe("onboarding", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint-required")).not.toBeVisible();
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();

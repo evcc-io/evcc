@@ -19,6 +19,7 @@ package charger
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,7 +32,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -41,11 +41,13 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log      *util.Logger
-	statusG  util.Cacheable[zaptec.StateResponse]
-	id       string
-	enabled  bool
-	priority bool
+	log        *util.Logger
+	statusG    util.Cacheable[zaptec.StateResponse]
+	instance   zaptec.Charger
+	maxCurrent int
+	version    int
+	enabled    bool
+	priority   bool
 }
 
 func init() {
@@ -85,7 +87,6 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	c := &Zaptec{
 		Helper:   request.NewHelper(log),
 		log:      log,
-		id:       id,
 		priority: priority,
 	}
 
@@ -93,7 +94,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
 
-		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.id)
+		uri := fmt.Sprintf("%s/api/chargers/%s/state", zaptec.ApiURL, c.instance.Id)
 		err := c.GetJSON(uri, &res)
 
 		return res, err
@@ -128,23 +129,54 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Base:   c.Transport,
 	}
 
-	c.id, err = ensureCharger(c.id, c.chargers)
+	c.instance, err = ensureChargerEx(id, c.chargers, func(charger zaptec.Charger) (string, error) {
+		return charger.Id, nil
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	return c, err
+	c.version, err = c.detectVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	c.maxCurrent, err = c.getMaxCurrent()
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
-func (c *Zaptec) chargers() ([]string, error) {
+func (c *Zaptec) detectVersion() (int, error) {
+	var capabilities zaptec.CapabilitiesResponse
+
+	res, err := c.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	capResp := res.ObservationByID(zaptec.Capabilities)
+	if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
+		return 0, err
+	}
+
+	if capabilities.ProductVariant == "Go2" {
+		return zaptec.ZaptecGo2, nil
+	}
+
+	return zaptec.ZaptecGo1_Pro, nil
+}
+
+func (c *Zaptec) chargers() ([]zaptec.Charger, error) {
 	var res zaptec.ChargersResponse
 
 	uri := fmt.Sprintf("%s/api/chargers", zaptec.ApiURL)
-	err := c.GetJSON(uri, &res)
-	if err == nil {
-		return lo.Map(res.Data, func(c zaptec.Charger, _ int) string {
-			return c.Id
-		}), nil
+	if err := c.GetJSON(uri, &res); err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	return res.Data, nil
 }
 
 // Status implements the api.Charger interface
@@ -182,11 +214,11 @@ func (c *Zaptec) Enable(enable bool) error {
 		cmd = zaptec.CmdResumeCharging
 	}
 
-	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.id, cmd)
+	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
 
-	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.enabled = enable
 		c.statusG.Reset()
 	}
@@ -195,11 +227,11 @@ func (c *Zaptec) Enable(enable bool) error {
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
-	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.id)
+	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.instance.Id)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.statusG.Reset()
 	}
 
@@ -209,9 +241,9 @@ func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) error {
 	uri := fmt.Sprintf("%s/api/session/%s/priority", zaptec.ApiURL, session)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
 	if err == nil {
-		_, err = c.DoBody(req)
 		c.statusG.Reset()
 	}
 
@@ -275,29 +307,51 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
-	res, err := c.statusG.Get()
+	err := c.switchPhases(phases)
+	if err != nil || !c.priority {
+		return err
+	}
 
-	if err == nil {
+	// priority configured
+	data := zaptec.SessionPriority{
+		PrioritizedPhases: &phases,
+	}
+
+	res, err := c.statusG.Get()
+	if err != nil {
+		return err
+	}
+
+	if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
+		return c.sessionPriority(session.ValueAsString, data)
+	}
+
+	return errors.New("unknown session")
+}
+
+func (c *Zaptec) switchPhases(phases int) error {
+	if c.version != zaptec.ZaptecGo2 {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
-
-		err = c.chargerUpdate(data)
+		return c.chargerUpdate(data)
 	}
 
-	if err == nil && c.priority {
-		data := zaptec.SessionPriority{
-			PrioritizedPhases: &phases,
-		}
-
-		if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
-			err = c.sessionPriority(session.ValueAsString, data)
-		} else {
-			err = errors.New("unknown session")
+	var zero int
+	data := zaptec.UpdateInstallation{
+		AvailableCurrentPhase1: &c.maxCurrent,
+		AvailableCurrentPhase2: &zero,
+		AvailableCurrentPhase3: &zero,
+	}
+	if phases == 3 {
+		data = zaptec.UpdateInstallation{
+			AvailableCurrentPhase1: &c.maxCurrent,
+			AvailableCurrentPhase2: &c.maxCurrent,
+			AvailableCurrentPhase3: &c.maxCurrent,
 		}
 	}
 
-	return err
+	return c.installationUpdate(data)
 }
 
 var _ api.Identifier = (*Zaptec)(nil)
@@ -314,6 +368,29 @@ func (c *Zaptec) Identify() (string, error) {
 	}
 
 	return "", nil
+}
+
+func (c *Zaptec) getMaxCurrent() (int, error) {
+	var res zaptec.Installation
+
+	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
+	if err := c.GetJSON(uri, &res); err != nil {
+		return 0, err
+	}
+
+	return int(res.MaxCurrent), nil
+}
+
+func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
+	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.instance.InstallationId)
+
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	_, err := c.DoBody(req)
+	if err == nil {
+		c.statusG.Reset()
+	}
+
+	return err
 }
 
 var _ api.Diagnosis = (*Zaptec)(nil)

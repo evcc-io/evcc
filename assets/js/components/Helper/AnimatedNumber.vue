@@ -11,7 +11,7 @@ const DURATION = 0.5;
 export default defineComponent({
 	name: "AnimatedNumber",
 	props: {
-		to: { type: Number, default: 0 },
+		to: { type: [String, Number], default: 0 },
 		format: { type: Function as PropType<(n: number) => string>, required: true },
 		duration: { type: Number, default: DURATION },
 	},
@@ -30,8 +30,8 @@ export default defineComponent({
 		if (this.instance) {
 			return;
 		}
-		this.instance = new CountUp(this.$el, this.to, {
-			startVal: this.to,
+		this.instance = new CountUp(this.$el, Number(this.to), {
+			startVal: Number(this.to),
 			formattingFn: this.format,
 			duration: this.duration,
 			decimalPlaces: 3,
@@ -49,7 +49,7 @@ export default defineComponent({
 	methods: {
 		forceUpdate() {
 			this.instance?.reset();
-			this.update(this.to);
+			this.update(Number(this.to));
 		},
 		update(value: number) {
 			// debounced to avoid rendering issues

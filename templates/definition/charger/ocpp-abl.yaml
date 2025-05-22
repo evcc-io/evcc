@@ -1,0 +1,18 @@
+template: ocpp-abl
+products:
+  - brand: ABL Sursum
+    description:
+      generic: eMH2
+  - brand: ABL Sursum
+    description:
+      generic: eMH3
+  - brand: ABL Sursum
+    description:
+      generic: eMH4
+capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

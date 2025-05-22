@@ -23,6 +23,11 @@
     "usageTab": "Uso della batteria"
   },
   "config": {
+    "aux": {
+      "description": "Dispositivo che modifica il suo consumo sulla base del surplus di produzione disponibile (es: boiler smart). evcc si aspetta che questo dispositivo riduca il suo consumo se richiesto.",
+      "titleAdd": "Aggiungi consumatore autoregolato",
+      "titleEdit": "Modifica dispositivo con consumo auto-regolato"
+    },
     "battery": {
       "titleAdd": "Aggiungi Batteria",
       "titleEdit": "Modifica Batteria"
@@ -34,6 +39,7 @@
     "charger": {
       "chargers": "Caricatori EV",
       "generic": "Integrazioni generiche",
+      "heatingdevices": "Dispositivi di riscaldamento",
       "ocppHelp": "Copia questo indirizzo nella configurazione dei tuoi caricatori",
       "ocppLabel": "URL Server OCPP",
       "switchsockets": "Prese commutabili",
@@ -75,6 +81,7 @@
       "energy": "Energia",
       "feedinPrice": "Prezzo di vendita",
       "gridPrice": "Prezzo d'acquisto",
+      "heaterTempLimit": "Limite del dispositivo di riscaldamento",
       "hemsType": "Sistema",
       "identifier": "Identificatore RFID",
       "no": "no",
@@ -89,6 +96,7 @@
       "range": "Intervallo",
       "singlePhase": "Singola fase",
       "soc": "Carica",
+      "solarForecast": "Previsioni solari",
       "temp": "Temperatura",
       "topic": "Argomento",
       "url": "URL",
@@ -100,11 +108,22 @@
       "B": "B (collegato)",
       "C": "C (in carica)"
     },
+    "devices": {
+      "auxMeter": "Dispositivo smart",
+      "batteryStorage": "Batteria di accumulo",
+      "solarSystem": "Sistema fotovoltaico"
+    },
     "eebus": {
       "description": "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "Può essere utilizzato per la gestione del carico o per le statistiche.",
+      "titleAdd": "Aggiungi contatore esterno",
+      "titleEdit": "Modifica contatore esterno"
+    },
     "form": {
+      "danger": "Pericolo",
       "deprecated": "deprecato",
       "example": "Esempio",
       "optional": "facoltativo"
@@ -123,6 +142,7 @@
       "save": "Salva",
       "showAdvancedSettings": "Mostra impostazioni avanzate",
       "telemetry": "Telemetria",
+      "templateLoading": "Caricamento...",
       "title": "Titolo",
       "validateSave": "Conferma e salva"
     },
@@ -155,6 +175,7 @@
       "addCharger": "Aggiungi caricabatterie",
       "addMeter": "Aggiungi un contatore dedicato per il caricabatterie",
       "cancel": "Annulla",
+      "chargerError": "È necessario configurare un caricatore.",
       "chargerLabel": "Caricabatterie",
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16A",
@@ -186,6 +207,7 @@
       "phasesAutomaticHelp": "Il tuo caricabatterie supporta il passaggio automatico tra la carica monofase e quella trifase. Nella schermata principale è possibile modificare la gestione della fase durante la ricarica.",
       "phasesHelp": "Numero delle fasi collegate al caricabatterie.",
       "phasesLabel": "Fasi",
+      "pollIntervalDanger": "L'aggiornamento ripetuto dei dati dal veicolo può scaricarne la batteria. Alcune case automobilistiche possono in questi casi impedire attivamente la carica. Non raccomandato! Usare solo se si è consapevoli dei rischi.",
       "pollIntervalHelp": "Intervallo tra gli aggiornamenti tramite API del veicolo. Intervalli più brevi possono scaricare la batteria.",
       "pollIntervalLabel": "Intervallo di aggiornamento",
       "pollModeAlways": "sempre",
@@ -225,6 +247,7 @@
       "vehiclesTitle": "Veicoli"
     },
     "main": {
+      "addAdditional": "Aggiungi un contatore aggiuntivo",
       "addGrid": "Aggiungi contatore di rete",
       "addLoadpoint": "Aggiungi punto di ricarica",
       "addPvBattery": "Aggiungi fotovoltaico o batteria",
@@ -232,6 +255,7 @@
       "addVehicle": "Aggiungi veicolo",
       "configured": "configurato",
       "edit": "modifica",
+      "loadpointRequired": "E' necessario configurare almeno un punto di carica.",
       "name": "Nome",
       "title": "Configurazione",
       "unconfigured": "non configurato",
@@ -245,10 +269,36 @@
     "meter": {
       "cancel": "Annulla",
       "delete": "Elimina",
+      "option": {
+        "aux": "Aggiungi un consumatore autoregolato",
+        "battery": "Aggiungi contatore batteria",
+        "ext": "Aggiungi contatore esterno",
+        "pv": "Aggiungi contatore fotovoltaico"
+      },
       "save": "Salva",
       "template": "Produttore",
       "titleChoice": "Cosa vuoi aggiungere?",
       "validateSave": "Conferma e salva"
+    },
+    "modbus": {
+      "baudrate": "Baud rate",
+      "comset": "ComSet",
+      "connection": "Connessione Modbus",
+      "connectionHintSerial": "Il dispositivo è collegato direttamente a evcc tramite un'interfaccia RS485.",
+      "connectionHintTcpip": "Il dispositivo è controllabile da evcc via LAN/Wifi.",
+      "connectionValueSerial": "Seriale / USB",
+      "connectionValueTcpip": "Rete",
+      "device": "Nome del dispositivo",
+      "deviceHint": "Esempio: /dev/ttyUSB0",
+      "host": "Indirizzo IP o hostname",
+      "hostHint": "Esempio: 192.0.2.2",
+      "id": "Modbus ID",
+      "port": "Porta",
+      "protocol": "Protocollo Modbus",
+      "protocolHintRtu": "Collegamento tramite un adattatore da RS485 a Ethernet senza traduzione di protocollo.",
+      "protocolHintTcp": "Il dispositivo è dotato di supporto LAN/Wifi nativo o è collegato tramite un adattatore da RS485 a Ethernet con traduzione di protocollo.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Permetti a più client di accedere ad un singolo dispositivo Modbus",
@@ -305,6 +355,7 @@
       "titleEdit": "Modifica Contatore Fotovoltaico"
     },
     "section": {
+      "additionalMeter": "Contatori aggiuntivi",
       "general": "Generali",
       "grid": "Rete Elettrica",
       "integrations": "Integrazioni",
@@ -352,9 +403,22 @@
     },
     "vehicle": {
       "cancel": "Annulla",
+      "chargingSettings": "Impostazioni di carica",
+      "defaultMode": "Modalità predefinita",
+      "defaultModeHelp": "Modo di carica predefinito alla connessione del veicolo.",
       "delete": "Cancella",
       "generic": "Altre integrazioni",
+      "identifiers": "Identificatori RFID",
+      "identifiersHelp": "Lista di stringhe RFID per l'identificazione del veicolo. Una stringa per riga. L'identificativo corrente è indicato nella pagina riassuntiva del punto di carica.",
+      "maximumCurrent": "Corrente massima",
+      "maximumCurrentHelp": "Deve essere maggiore della corrente minima.",
+      "maximumPhases": "Fasi massime",
+      "maximumPhasesHelp": "Con quante fasi può essere caricato questo veicolo? Questo dato è usato per calcolare il surplus minimo e la durata della pianificazione.",
+      "minimumCurrent": "Corrente minima",
+      "minimumCurrentHelp": "Scendi al di sotto di 6A solo se sai cosa stai facendo.",
       "online": "Veicoli con API online",
+      "priority": "Priorità",
+      "priorityHelp": "Con una priorità maggiore il veicolo ha un accesso prioritario al surplus solare.",
       "save": "Salva",
       "scooter": "Scooter",
       "template": "Produttore",
@@ -452,6 +516,7 @@
       "today": "Oggi",
       "tomorrow": "Domani"
     },
+    "solarAdjust": "Modifica la previsione sulla base dei dati reali{percent}.",
     "type": {
       "co2": "CO₂",
       "price": "Prezzo",
@@ -524,6 +589,11 @@
       "modalTitle": "Piano di ricarica",
       "none": "nessuno",
       "planNumber": "Piano {number}",
+      "preconditionDescription": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
+      "preconditionLong": "Carica ritardata",
+      "preconditionOptionAll": "tutto",
+      "preconditionOptionNo": "no",
+      "preconditionShort": "Ritardata",
       "remove": "Rimuovi",
       "repeating": "ricorrente",
       "repeatingPlans": "Piani ricorrenti",
@@ -549,12 +619,15 @@
       "homePower": "Consumo",
       "loadpoints": "Caricabatterie| Caricabatterie | {count} caricabatterie",
       "noEnergy": "Nessun valore",
+      "pv": "Fotovoltaico",
       "pvExport": "Immissione in rete",
       "pvProduction": "Produzione",
       "selfConsumption": "Autoconsumo"
     },
     "heatingStatus": {
       "charging": "Scaldando. . .",
+      "connected": "Standby.",
+      "vehicleLimit": "Limite riscaldamento",
       "waitForVehicle": "Pronto. In attesa del calorifero. . ."
     },
     "loadpoint": {
@@ -563,6 +636,7 @@
       "co2": "⌀ CO₂",
       "duration": "Durata",
       "fallbackName": "Punto di ricarica",
+      "finished": "Ora di fine",
       "power": "Potenza",
       "price": "Costo",
       "remaining": "Rimanenti",
@@ -629,6 +703,7 @@
       "currentPlan": "Piano attivo",
       "descriptionEnergy": "Fino a quando dovrebbero essere {targetEnergy} caricati nel veicolo?",
       "descriptionSoc": "Quando dovrebbe essere caricato il veicolo al {targetSoc}?",
+      "goalReached": "Obiettivo già raggiunto",
       "inactiveLabel": "Tempo target",
       "nextPlan": "Prossimo piano",
       "notReachableInTime": "L'obiettivo sarà raggiunto con un ritardo di {overrun}.",
@@ -857,6 +932,11 @@
       "label": "Design",
       "light": "chiaro"
     },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Formato ora"
+    },
     "title": "Interfaccia Utente",
     "unit": {
       "km": "km",
@@ -878,6 +958,8 @@
     "none": "nessuno",
     "priceLabel": "Costo corrente",
     "priceLimit": "Limite di prezzo",
+    "resetAction": "Rimuovi limite",
+    "resetWarning": "Tariffa dinamica o sorgente di CO₂ non configurate. Tuttavia, c'è ancora un limite di {limit}. Annullare la configurazione?",
     "saved": "Salvato."
   },
   "startupError": {
