@@ -40,7 +40,7 @@ export default defineComponent({
 		},
 		time() {
 			const time = new Date((this.activeSlot! as TimeseriesEntry).ts);
-			return `${this.weekdayShort(time)} ${this.hourShort(time)}`;
+			return `${this.weekdayShort(time)} ${this.fmtTimeString(time)}`;
 		},
 	},
 });
