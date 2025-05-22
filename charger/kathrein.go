@@ -434,7 +434,7 @@ func (wb *Kathrein) Diagnose() {
 	}
 	
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
+		fmt.Printf("Meter - Frequency:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1); err == nil {
@@ -490,6 +490,6 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSTimeOutFallbackCurrent, 1); err == nil {
-		fmt.Printf("EMS-Control - Timeout Fallback Pattern:\t%d mA\n", b[1])
+		fmt.Printf("EMS-Control - Timeout Fallback Current:\t%d mA\n", b[1])
 	}
 }
