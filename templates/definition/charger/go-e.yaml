@@ -2,7 +2,10 @@ template: go-e
 products:
   - brand: go-e
     description:
-      generic: Charger HOME+, HOMEfix, Pro
+      generic: Charger HOMEfix
+  - brand: go-e
+    description:
+      generic: Charger PRO
 capabilities: ["rfid"]
 requirements:
   description:

@@ -81,3 +81,15 @@ test.describe("loadpoint settings", async () => {
     await expect(page.getByText("~ 1.4 kW")).toBeVisible();
   });
 });
+
+test.describe("network requests", async () => {
+  test("no failed requests", async ({ page }) => {
+    const failedRequests = [];
+    page.on("requestfailed", (request) => failedRequests.push(request.url()));
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    expect(failedRequests).toHaveLength(0);
+  });
+});
