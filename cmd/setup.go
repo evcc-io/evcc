@@ -610,7 +610,7 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
-		if !runAsService {
+		if !runAsService || conf.Topic == "" {
 			return
 		}
 
