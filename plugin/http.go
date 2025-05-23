@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gregjones/httpcache"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
@@ -23,11 +23,7 @@ type HTTP struct {
 	url, method string
 	headers     map[string]string
 	body        string
-	cache       time.Duration
-	updated     time.Time
 	pipeline    *pipeline.Pipeline
-	val         []byte // Cached http response value
-	err         error  // Cached http response error
 }
 
 func init() {
@@ -35,11 +31,6 @@ func init() {
 }
 
 var mc = httpcache.NewMemoryCache()
-
-// Auth is the authorization config
-type Auth struct {
-	Type, User, Password string
-}
 
 // NewHTTPPluginFromConfig creates a HTTP provider
 func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
@@ -64,6 +55,10 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, err
 	}
 
+	if cc.URI == "" {
+		return nil, errors.New("missing uri")
+	}
+
 	log := contextLogger(ctx, util.NewLogger("http"))
 	p := NewHTTP(
 		log,
@@ -79,18 +74,21 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 
 	p.getter = defaultGetters(p, cc.Scale)
 
-	var err error
-	if cc.Auth.Type != "" {
-		_, err = p.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+	if cc.Auth.Type != "" || cc.Auth.Source != "" {
+		transport, err := cc.Auth.Transport(ctx, log, p.Client.Transport)
+		if err != nil {
+			return nil, err
+		}
+		p.Client.Transport = transport
 	}
 
-	if err == nil {
-		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(log, cc.Settings)
-		p = p.WithPipeline(pipe)
+	pipe, err := pipeline.New(log, cc.Settings)
+	if err != nil {
+		return nil, err
 	}
+	p.pipeline = pipe
 
-	return p, err
+	return p, nil
 }
 
 // NewHTTP create HTTP provider
@@ -99,13 +97,22 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		Helper: request.NewHelper(log),
 		url:    uri,
 		method: method,
-		cache:  cache,
 	}
 
 	// http cache
 	p.Client.Transport = &httpcache.Transport{
 		Cache:     mc,
 		Transport: p.Client.Transport,
+	}
+
+	if cache > 0 {
+		cacheHeader := fmt.Sprintf("max-age=%d, must-revalidate", int(cache.Seconds()))
+		p.Client.Transport = &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"Cache-Control": cacheHeader,
+			}),
+			Base: p.Client.Transport,
+		}
 	}
 
 	// ignore the self signed certificate
@@ -118,7 +125,12 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 // WithBody adds request body
 func (p *HTTP) WithBody(body string) *HTTP {
-	p.body = body
+	if body != "" {
+		p.body = body
+		if p.method == http.MethodGet {
+			p.method = http.MethodPost
+		}
+	}
 	return p
 }
 
@@ -128,54 +140,29 @@ func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
 	return p
 }
 
-// WithPipeline adds a processing pipeline
-func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
-	p.pipeline = pipeline
-	return p
-}
-
-// WithAuth adds authorized transport
-func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
-	switch strings.ToLower(typ) {
-	case "basic":
-		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
-	case "bearer":
-		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
-	case "digest":
-		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
-	default:
-		return nil, fmt.Errorf("unknown auth type '%s'", typ)
-	}
-
-	return p, nil
-}
-
 // request executes the configured request or returns the cached value
 func (p *HTTP) request(url string, body string) ([]byte, error) {
-	if time.Since(p.updated) >= p.cache {
-		var b io.Reader
-		if p.method != http.MethodGet {
-			b = strings.NewReader(body)
-		}
-
-		url := util.DefaultScheme(url, "http")
-
-		// empty method becomes GET
-		req, err := request.New(p.method, url, b, p.headers)
-		if err != nil {
-			return []byte{}, err
-		}
-
-		p.val, p.err = p.DoBody(req)
-		if p.err != nil {
-			if err := knownErrors(p.val); err != nil {
-				p.err = err
-			}
-		}
-		p.updated = time.Now()
+	var b io.Reader
+	if p.method != http.MethodGet {
+		b = strings.NewReader(body)
 	}
 
-	return p.val, p.err
+	url = util.DefaultScheme(url, "http")
+
+	// empty method becomes GET
+	req, err := request.New(p.method, url, b, p.headers)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	val, err := p.DoBody(req)
+	if err != nil {
+		if err2 := knownErrors(val); err2 != nil {
+			err = err2
+		}
+	}
+
+	return val, err
 }
 
 var _ Getters = (*HTTP)(nil)

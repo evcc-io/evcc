@@ -44,7 +44,11 @@ test.describe("session info", async () => {
   });
   test("change value", async ({ page }) => {
     // by select
-    await page.getByTestId("sessionInfoSelect").first().selectOption({ label: "Solar" });
+    await page
+      .getByTestId("sessionInfoSelect")
+      .first()
+      .getByRole("combobox")
+      .selectOption({ label: "Solar" });
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     // by click on value
     await page.getByTestId("sessionInfoValue").first().click();
@@ -52,7 +56,11 @@ test.describe("session info", async () => {
   });
   test("keep selection on reload", async ({ page }) => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
-    await page.getByTestId("sessionInfoSelect").first().selectOption({ label: "Solar" });
+    await page
+      .getByTestId("sessionInfoSelect")
+      .first()
+      .getByRole("combobox")
+      .selectOption({ label: "Solar" });
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     await page.reload();
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
@@ -71,5 +79,17 @@ test.describe("loadpoint settings", async () => {
     await page.getByLabel("1 phase").click();
     await expect(page.getByText("~ 3.7 kW")).toBeVisible();
     await expect(page.getByText("~ 1.4 kW")).toBeVisible();
+  });
+});
+
+test.describe("network requests", async () => {
+  test("no failed requests", async ({ page }) => {
+    const failedRequests = [];
+    page.on("requestfailed", (request) => failedRequests.push(request.url()));
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    expect(failedRequests).toHaveLength(0);
   });
 });

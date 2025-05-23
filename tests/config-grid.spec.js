@@ -1,15 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
+const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
-  await start(CONFIG_EMPTY);
+  await start(CONFIG_ONE_LP);
 });
 test.afterAll(async () => {
   await stop();
@@ -34,11 +34,11 @@ test.describe("grid meter", async () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    await expect(page.getByTestId("grid")).toHaveCount(1);
-    await expect(page.getByTestId("grid").getByTestId("device-tag-configured")).toContainText("no");
+    await expect(page.getByTestId("grid")).toHaveCount(0);
+    await expect(page.getByTestId("add-grid")).toBeVisible();
 
     // create #1
-    await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("add-grid").click();
 
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
@@ -47,10 +47,10 @@ test.describe("grid meter", async () => {
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart(CONFIG_ONE_LP);
     await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("5.0 kW");
 
     // check in main ui
@@ -61,10 +61,11 @@ test.describe("grid meter", async () => {
     // delete #1
     await page.goto("/#/config");
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
-    await expect(meterModal).not.toBeVisible();
+    await expectModalHidden(meterModal);
 
-    await expect(page.getByTestId("grid")).toHaveCount(1);
-    await expect(page.getByTestId("grid").getByTestId("device-tag-configured")).toContainText("no");
+    await expect(page.getByTestId("grid")).not.toBeVisible();
+    await expect(page.getByTestId("add-grid")).toBeVisible();
   });
 });

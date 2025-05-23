@@ -1,5 +1,5 @@
 import { Chart, Tooltip } from "chart.js";
-import colors from "../../colors";
+import colors from "@/colors";
 // Register common components
 export function registerChartComponents(components) {
   Chart.register(...components);
@@ -40,6 +40,7 @@ export const commonOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
+    datalabels: { display: false },
     tooltip: {
       backgroundColor: "#000000cc",
       boxPadding: 5,

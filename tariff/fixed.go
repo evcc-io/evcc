@@ -28,8 +28,8 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Price float64
 		Zones []struct {
-			Price       float64
-			Days, Hours string
+			Price               float64
+			Days, Hours, Months string
 		}
 	}
 
@@ -48,6 +48,11 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 			return nil, err
 		}
 
+		months, err := fixed.ParseMonths(z.Months)
+		if err != nil {
+			return nil, err
+		}
+
 		hours, err := fixed.ParseTimeRanges(z.Hours)
 		if err != nil && z.Hours != "" {
 			return nil, err
@@ -55,17 +60,19 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 		if len(hours) == 0 {
 			t.zones = append(t.zones, fixed.Zone{
-				Price: z.Price,
-				Days:  days,
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
 			})
 			continue
 		}
 
 		for _, h := range hours {
 			t.zones = append(t.zones, fixed.Zone{
-				Price: z.Price,
-				Days:  days,
-				Hours: h,
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
+				Hours:  h,
 			})
 		}
 	}
@@ -86,14 +93,15 @@ func (t *Fixed) Rates() (api.Rates, error) {
 
 	start := now.With(t.clock.Now().Local()).BeginningOfDay()
 	for i := range 7 {
+		dayStart := start.AddDate(0, 0, i)
 		dow := fixed.Day((int(start.Weekday()) + i) % 7)
+		month := fixed.Month(dayStart.Month() - 1)
 
-		zones := t.zones.ForDay(dow)
+		zones := t.zones.ForDayAndMonth(dow, month)
 		if len(zones) == 0 {
 			return nil, fmt.Errorf("no zones for weekday %d", dow)
 		}
 
-		dayStart := start.AddDate(0, 0, i)
 		markers := zones.TimeTableMarkers()
 
 		for i, m := range markers {
@@ -118,9 +126,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			}
 
 			rate := api.Rate{
-				Price: zone.Price,
 				Start: ts,
 				End:   end,
+				Value: zone.Price,
 			}
 
 			res = append(res, rate)

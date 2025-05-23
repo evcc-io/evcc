@@ -89,6 +89,7 @@
 						v-if="filteredLines.length"
 						class="d-block evcc-default-text flex-grow-1"
 						data-testid="log-content"
+						@copy="onCopy"
 					>
 						<div
 							v-for="{ line, className, key } in lineEntries"
@@ -107,10 +108,10 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/download";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
-import MultiSelect from "../components/MultiSelect.vue";
+import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 
@@ -123,7 +124,7 @@ const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase())
 export default {
 	name: "Log",
 	components: {
-		TopHeader,
+		TopHeader: Header,
 		Play,
 		Record,
 		MultiSelect,
@@ -141,6 +142,9 @@ export default {
 			levels: LEVELS,
 			busy: false,
 		};
+	},
+	head() {
+		return { title: this.$t("log.title") };
 	},
 	computed: {
 		filteredLines() {
@@ -297,6 +301,11 @@ export default {
 		},
 		changeAreas(areas) {
 			this.updateQuery({ areas });
+		},
+		onCopy(event) {
+			const selection = window.getSelection().toString();
+			event.clipboardData.setData("text/plain", "```\n" + selection + "\n```");
+			event.preventDefault();
 		},
 	},
 };

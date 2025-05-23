@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -16,12 +17,6 @@ import (
 var _ site.API = (*Site)(nil)
 
 var ErrBatteryNotConfigured = errors.New("battery not configured")
-
-const (
-	GridTariff    = "grid"
-	FeedinTariff  = "feedin"
-	PlannerTariff = "planner"
-)
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -120,6 +115,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 
 	site.Meters.AuxMetersRef = ref
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
+// GetExtMeterRefs returns the ExtMeterRef
+func (site *Site) GetExtMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ExtMetersRef
+}
+
+// SetExtMeterRefs sets the ExtMeterRef
+func (site *Site) SetExtMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ExtMetersRef = ref
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // Loadpoints returns the loadpoints as api interfaces
@@ -272,39 +283,10 @@ func (site *Site) SetResidualPower(power float64) error {
 }
 
 // GetTariff returns the respective tariff if configured or nil
-func (site *Site) GetTariff(tariff string) api.Tariff {
+func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
 	defer site.RUnlock()
-
-	switch tariff {
-	case GridTariff:
-		return site.tariffs.Grid
-
-	case FeedinTariff:
-		return site.tariffs.FeedIn
-
-	case PlannerTariff:
-		switch {
-		case site.tariffs.Planner != nil:
-			// prio 0: manually set planner tariff
-			return site.tariffs.Planner
-
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
-			// prio 1: grid tariff with forecast
-			return site.tariffs.Grid
-
-		case site.tariffs.Co2 != nil:
-			// prio 2: co2 tariff
-			return site.tariffs.Co2
-
-		default:
-			// prio 3: static grid tariff
-			return site.tariffs.Grid
-		}
-
-	default:
-		return nil
-	}
+	return site.tariffs.Get(tariff)
 }
 
 // GetBatteryDischargeControl returns the battery control mode (no discharge only)
@@ -353,4 +335,62 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
+}
+
+// GetBatteryMode returns the battery mode
+func (site *Site) GetBatteryMode() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryMode
+}
+
+// GetBatteryModeExternal returns the external battery mode
+func (site *Site) GetBatteryModeExternal() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryModeExternal
+}
+
+// SetBatteryModeExternal sets the external battery mode
+func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
+
+	disable := mode == api.BatteryUnknown
+
+	if mode != site.batteryModeExternal {
+		site.batteryModeExternal = mode
+		site.publish(keys.BatteryModeExternal, mode)
+
+		// start watchdog if not running
+		if !disable && site.batteryModeExternalTimer.IsZero() {
+			go func() {
+				for range time.Tick(time.Second) {
+					if site.batteryModeWatchdogExpired() {
+						return
+					}
+				}
+			}()
+		}
+	}
+
+	// reset timer
+	if !disable {
+		site.batteryModeExternalTimer = time.Now()
+	}
+}
+
+func (site *Site) batteryModeWatchdogExpired() bool {
+	site.RLock()
+	elapsed := time.Since(site.batteryModeExternalTimer)
+	site.RUnlock()
+
+	if elapsed > time.Minute && !site.batteryModeExternalTimer.IsZero() {
+		site.SetBatteryModeExternal(api.BatteryUnknown)
+		return true
+	}
+
+	return false
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -171,8 +172,8 @@ func TestDefaultVehicle(t *testing.T) {
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
-	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	lp.Mode_ = api.ModeOff // ondisconnect
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.DefaultMode = api.ModeOff // ondisconnect
 	lp.defaultVehicle = dflt
 
 	// populate channels

@@ -26,7 +26,6 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -44,7 +43,7 @@ type Vaillant struct {
 	systemId string
 }
 
-//go:generate decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -54,16 +53,14 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		Realm           string
 		HeatingZone     int
 		HeatingSetpoint float32
-		Phases          int
 		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Realm:  sensonet.REALM_GERMANY,
-		Phases: 1,
-		Cache:  time.Minute,
+		Realm: sensonet.REALM_GERMANY,
+		Cache: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -96,24 +93,52 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	systemId := homes[0].SystemID
 	heating := cc.HeatingSetpoint > 0
 
+	wwCancel := func() {}
+
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
 			if heating {
 				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
 			}
+
+			wwCancel()
 			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
+
 		case Boost:
 			if heating {
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
-			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT) // zone 255
+
+			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+				return err
+			}
+
+			var wwCtx context.Context
+			wwCtx, wwCancel = context.WithCancel(ctx)
+
+			// re-boost every 15m
+			go func() {
+				for {
+					select {
+					case <-wwCtx.Done():
+						return
+					case <-time.After(15 * time.Minute):
+						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+							log.ERROR.Println("hot water boost:", err)
+						}
+					}
+				}
+			}()
+
+			return nil
+
 		default:
 			return api.ErrNotAvailable
 		}
 	}
 
-	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil, cc.Phases)
+	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +152,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	var power func() (float64, error)
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		power = plugin.Cached(func() (float64, error) {
+		power = util.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
@@ -153,7 +178,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	var temp func() (float64, error)
 	if !heating || heatingTempSensor {
-		temp = plugin.Cached(func() (float64, error) {
+		temp = util.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err

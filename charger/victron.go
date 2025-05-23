@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -67,22 +68,22 @@ var (
 )
 
 func init() {
-	registry.Add("victron", NewVictronGXFromConfig)
-	registry.Add("victron-evcs", NewVictronEVCSFromConfig)
+	registry.AddCtx("victron", NewVictronGXFromConfig)
+	registry.AddCtx("victron-evcs", NewVictronEVCSFromConfig)
 }
 
 // NewVictronGXFromConfig creates a ABB charger from generic config
-func NewVictronGXFromConfig(other map[string]interface{}) (api.Charger, error) {
-	return NewVictronFromConfig(other, victronGX)
+func NewVictronGXFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	return NewVictronFromConfig(ctx, other, victronGX)
 }
 
 // NewVictronEVCSFromConfig creates a ABB charger from generic config
-func NewVictronEVCSFromConfig(other map[string]interface{}) (api.Charger, error) {
-	return NewVictronFromConfig(other, victronEVCS)
+func NewVictronEVCSFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	return NewVictronFromConfig(ctx, other, victronEVCS)
 }
 
 // NewVictronFromConfig creates a ABB charger from generic config
-func NewVictronFromConfig(other map[string]interface{}, regs victronRegs) (api.Charger, error) {
+func NewVictronFromConfig(ctx context.Context, other map[string]interface{}, regs victronRegs) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: cast.ToUint8(regs.isGX) * 100,
 	}
@@ -91,12 +92,12 @@ func NewVictronFromConfig(other map[string]interface{}, regs victronRegs) (api.C
 		return nil, err
 	}
 
-	return NewVictron(cc.URI, cc.ID, regs)
+	return NewVictron(ctx, cc.URI, cc.ID, regs)
 }
 
 // NewVictron creates Victron charger
-func NewVictron(uri string, slaveID uint8, regs victronRegs) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}

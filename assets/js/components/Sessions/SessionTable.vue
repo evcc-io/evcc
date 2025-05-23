@@ -157,10 +157,10 @@
 </template>
 
 <script>
-import CustomSelect from "../CustomSelect.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
-import breakpoint from "../../mixins/breakpoint";
-import settings from "../../settings";
+import CustomSelect from "../Helper/CustomSelect.vue";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import breakpoint from "@/mixins/breakpoint";
+import settings from "@/settings";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,

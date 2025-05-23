@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"context"
 	"encoding/binary"
 	"math/rand"
 	"net"
@@ -34,7 +35,7 @@ func TestConcurrentRead(t *testing.T) {
 
 		go func(id int) {
 			// client
-			conn, err := modbus.NewConnection(l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
+			conn, err := modbus.NewConnection(context.TODO(), l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
 			require.NoError(t, err)
 
 			for range 50 {
@@ -78,7 +79,7 @@ func TestReadCoils(t *testing.T) {
 	require.NoError(t, err)
 	defer pl.Close()
 
-	downstreamConn, err := modbus.NewConnection(l.Addr().String(), "", "", 0, modbus.Tcp, 1)
+	downstreamConn, err := modbus.NewConnection(context.TODO(), l.Addr().String(), "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
 
 	proxy, _ := mbserver.New(&handler{
@@ -90,7 +91,7 @@ func TestReadCoils(t *testing.T) {
 
 	// test client
 	{
-		conn, err := modbus.NewConnection(pl.Addr().String(), "", "", 0, modbus.Tcp, 1)
+		conn, err := modbus.NewConnection(context.TODO(), pl.Addr().String(), "", "", 0, modbus.Tcp, 1)
 		require.NoError(t, err)
 
 		{ // read

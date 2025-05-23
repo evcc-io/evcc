@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -40,19 +40,20 @@ test.describe("general", async () => {
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
     const modal = page.getByTestId("title-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await modal.getByLabel("Title").fill("Whoops World");
 
     // close modal and ignore entry on cancel
     await modal.getByRole("button", { name: "Cancel" }).click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
 
     // change and save value
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
     await modal.getByLabel("Title").fill("Ahoy World");
     await modal.getByRole("button", { name: "Save" }).click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("generalconfig-title")).toContainText("Ahoy World");
 
     // check changed value on main ui

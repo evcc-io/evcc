@@ -4,9 +4,9 @@ products:
 requirements:
   description:
     de: |
-      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+      Benötigt `access` und `refresh` Tokens. Anleitung zur Generierung hier: https://tinyurl.com/mbapi2020helptoken.
     en: |
-      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+      Requires `access` and `refresh` tokens. Documentation here: https://tinyurl.com/mbapi2020helptoken.
 params:
   - preset: vehicle-common
   - name: user

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-//go:generate mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
+//go:generate go tool mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
 
 type API interface {
 	// Instance returns the vehicle instance
@@ -39,9 +39,9 @@ type API interface {
 	SetLimitSoc(soc int)
 
 	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() (time.Time, int)
+	GetPlanSoc() (time.Time, time.Duration, int)
 	// SetPlanSoc sets the charge plan time and soc
-	SetPlanSoc(time.Time, int) error
+	SetPlanSoc(time.Time, time.Duration, int) error
 
 	// GetRepeatingPlans returns every repeating plan
 	GetRepeatingPlans() []api.RepeatingPlanStruct

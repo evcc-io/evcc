@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,9 +32,11 @@ type Connector struct {
 	idTag string
 
 	remoteIdTag string
+
+	meterInterval time.Duration
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -42,12 +45,32 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, e
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 
-		remoteIdTag: idTag,
+		remoteIdTag:   idTag,
+		meterInterval: meterInterval,
 	}
 
-	err := cp.registerConnector(id, conn)
+	if err := cp.registerConnector(id, conn); err != nil {
+		return nil, err
+	}
 
-	return conn, err
+	// trigger status for all connectors
+
+	var ok bool
+	// apply cached status if available
+	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+		if _, err := cp.OnStatusNotification(status); err == nil {
+			ok = true
+		}
+	})
+
+	// only trigger if we don't already have a status
+	if !ok && cp.HasRemoteTriggerFeature {
+		if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+			cp.log.WARN.Printf("failed triggering StatusNotification: %v", err)
+		}
+	}
+
+	return conn, nil
 }
 
 func (conn *Connector) TestClock(clock clock.Clock) {
@@ -81,15 +104,21 @@ func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
-func (conn *Connector) WatchDog(timeout time.Duration) {
+func (conn *Connector) WatchDog(ctx context.Context, timeout time.Duration) {
 	tick := time.NewTicker(2 * time.Second)
-	for ; true; <-tick.C {
+	for {
 		conn.mu.Lock()
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
 			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
 		}
 	}
 }
@@ -103,7 +132,7 @@ func (conn *Connector) Initialized() error {
 		case <-conn.statusC:
 			return nil
 
-		case <-trigger: // try to trigger StatusNotification again as last resort
+		case <-trigger: // try to trigger StatusNotification again as last resort even when the charger does not report RemoteTrigger support
 			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
 		case <-timeout:
@@ -165,7 +194,7 @@ func (conn *Connector) isWaitingForAuth() bool {
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.clock.Since(conn.meterUpdated) > Timeout
+	return conn.clock.Since(conn.meterUpdated) > max(conn.meterInterval+10*time.Second, Timeout)
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
@@ -290,6 +319,13 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	if m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
+	}
+
+	// fallback for missing total energy
+	for _, suffix := range []types.Measurand{"", "-N"} {
+		if res, found, err := conn.phaseMeasurements(types.MeasurandEnergyActiveImportRegister, suffix); found {
+			return (res[0] + res[1] + res[2]) / 1e3, err
+		}
 	}
 
 	return 0, api.ErrNotAvailable

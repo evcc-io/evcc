@@ -31,6 +31,13 @@
             "$ref": "#/definitions/Linked"
           }
         },
+        "countries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          }
+        },
         "capabilities": {
           "type": "array",
           "items": {

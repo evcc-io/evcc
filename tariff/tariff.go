@@ -35,9 +35,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		Price    *plugin.Config
 		Forecast *plugin.Config
 		Type     api.TariffType `mapstructure:"tariff"`
+		Interval time.Duration
 		Cache    time.Duration
 	}{
-		Cache: 15 * time.Minute,
+		Interval: time.Hour,
+		Cache:    15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -57,7 +59,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, fmt.Errorf("price: %w", err)
 	}
 	if priceG != nil {
-		priceG = plugin.Cached(priceG, cc.Cache)
+		priceG = util.Cached(priceG, cc.Cache)
 	}
 
 	forecastG, err := cc.Forecast.StringGetter(ctx)
@@ -70,22 +72,22 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	if forecastG != nil {
 		done := make(chan error)
-		go t.run(forecastG, done)
+		go t.run(forecastG, done, cc.Interval)
 		err = <-done
 	}
 
 	return t, err
 }
 
-func (t *Tariff) run(forecastG func() (string, error), done chan error) {
+func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := time.Tick(interval); ; <-tick {
 		var data api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
@@ -96,7 +98,11 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 				return backoff.Permanent(err)
 			}
 			for i, r := range data {
-				data[i].Price = t.totalPrice(r.Price, r.Start)
+				data[i] = api.Rate{
+					Value: t.totalPrice(r.Value, r.Start),
+					Start: r.Start.Local(),
+					End:   r.End.Local(),
+				}
 			}
 			return nil
 		}, bo()); err != nil {
@@ -106,7 +112,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 			continue
 		}
 
-		mergeRates(t.data, data)
+		// only prune rates older than current period
+		periodStart := now.With(time.Now()).BeginningOfHour()
+		if t.typ == api.TariffTypeSolar {
+			periodStart = beginningOfDay()
+		}
+		mergeRatesAfter(t.data, data, periodStart)
+
 		once.Do(func() { close(done) })
 	}
 }
@@ -133,7 +145,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price, slot),
+			Value: t.totalPrice(price, slot),
 		}
 	}
 

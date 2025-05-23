@@ -3,10 +3,12 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
@@ -39,8 +41,18 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
+
+	log := util.NewLogger("httpd")
+
+	// log all requests
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	// websocket
 	router.HandleFunc("/ws", socketHandler(hub))
@@ -61,10 +73,25 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		})
 	})
 
-	static.HandleFunc("/", indexHandler())
+	if customCssFile != "" {
+		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
+		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
+		}
+		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
+			// disable caching
+			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			http.ServeFile(w, r, customCssFile)
+		})
+	}
+
+	static.HandleFunc("/", indexHandler(customCssFile != ""))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
+
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
@@ -107,6 +134,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
 		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
 		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
+		"batterymode":             {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
+		"batterymodedelete":       {"DELETE", "/batterymode", updateBatteryMode(site)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
@@ -121,19 +150,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 
 	for _, r := range routes {
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-
-	// config ui (secured)
-	configApi := api.PathPrefix("/config").Subrouter()
-
-	// TODO clarify location of site config
-	configRoutes := map[string]route{
-		"site":       {"GET", "/site", siteHandler(site)},
-		"updatesite": {"PUT", "/site", updateSiteHandler(site)},
-	}
-
-	for _, r := range configRoutes {
-		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// vehicle api
@@ -156,6 +172,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	// loadpoint api
+	// TODO any loadpoint
 	for id, lp := range site.Loadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
@@ -165,7 +182,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"limitenergy":          {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
 			"mincurrent":           {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
 			"maxcurrent":           {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
-			"phases":               {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
+			"phases":               {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhasesConfigured, lp.GetPhasesConfigured)},
 			"plan":                 {"GET", "/plan", planHandler(lp)},
 			"staticPlanPreview":    {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
 			"repeatingPlanPreview": {"GET", "/plan/repeating/preview/{soc:[0-9]+}/{weekdays:[0-6,]+}/{time:[0-2][0-9]:[0-5][0-9]}/{tz:[a-zA-Z0-9_./:-]+}", repeatingPlanPreviewHandler(lp)},
@@ -182,7 +199,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"smartCost":            {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"smartCostDelete":      {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"priority":             {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
-			"batteryBoost":         {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, lp.GetBatteryBoost)},
+			"batteryBoost":         {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 		}
 
 		for _, r := range routes {
@@ -192,7 +209,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -202,6 +219,17 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
+
+	if site == nil {
+		// If site is nil, create a new empty site. Settings will be loaded during this process and
+		// site meter references and title can be updated using APIs.
+		var err error
+		site, err = core.NewSiteFromConfig(nil)
+		if err != nil {
+			// should not happen
+			panic(err)
+		}
+	}
 
 	{ // /api
 		routes := map[string]route{
@@ -236,18 +264,18 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		routes := map[string]route{
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
 		}
 
 		// yaml handlers
@@ -271,12 +299,30 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
 			keys.Influx:  func() any { return new(globalconfig.Influx) },
 		} {
-			// routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}
 		}
 
 		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// site
+		for _, r := range map[string]route{
+			"site":       {"GET", "/site", siteHandler(site)},
+			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// loadpoints
+		for _, r := range map[string]route{
+			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
+			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
+			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
+			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
+			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
+		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
@@ -289,6 +335,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		routes := map[string]route{
 			"log":      {"GET", "/log", logHandler},
 			"logareas": {"GET", "/log/areas", logAreasHandler},
+			"reset":    {"POST", "/reset", resetHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)

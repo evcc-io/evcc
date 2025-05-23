@@ -3,7 +3,7 @@ products:
   - brand: openWB
     description:
       generic: Software 2.x
-capabilities: ["1p3p", "mA"]
+capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   description:
     de: |

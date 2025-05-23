@@ -10,6 +10,7 @@ requirements:
       Day-ahead prices for the European electricity market. See https://transparency.entsoe.eu for more information.
       Basis for many dynamic tariffs.
 group: price
+countries: ["EU"]
 params:
   - name: securitytoken
     help:

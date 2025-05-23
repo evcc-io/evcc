@@ -46,7 +46,7 @@ func init() {
 	})
 }
 
-//go:generate decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // newGoEFromConfig creates a go-e charger from generic config
 func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {

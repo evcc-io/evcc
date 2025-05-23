@@ -35,6 +35,8 @@ func (lp *Loadpoint) createSession() {
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		lp.session.Vehicle = vehicle.Title()
+	} else if lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.session.Vehicle = lp.GetTitle()
 	}
 
 	if c, ok := lp.charger.(api.Identifier); ok {
@@ -63,7 +65,7 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+	if chargedEnergy := lp.GetChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
 		lp.energyMetrics.Update(chargedEnergy)
 	}
 

@@ -9,6 +9,13 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: tempsource
+    choice: ["1", "2", "3"]
+    default: "1"
+    description:
+      en: "Temperature sensor"
+      de: "Temperatursensor"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
+  tempsource: {{ .tempsource }}

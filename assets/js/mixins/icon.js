@@ -2,7 +2,7 @@ export default {
   props: {
     size: {
       type: String,
-      validator: function (value) {
+      validator(value) {
         return ["xs", "s", "m", "l", "xl"].includes(value);
       },
     },

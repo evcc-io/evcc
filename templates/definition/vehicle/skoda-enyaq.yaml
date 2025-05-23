@@ -1,4 +1,5 @@
 template: enyaq
+covers: ["skoda"]
 products:
   - brand: Skoda
     description:

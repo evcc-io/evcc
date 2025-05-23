@@ -18,7 +18,7 @@
 				role="status"
 				aria-hidden="true"
 			></span>
-			<a v-else href="#" class="alert-link" @click.prevent="$emit('test')">
+			<a v-else href="#" class="alert-link" tabindex="0" @click.prevent="$emit('test')">
 				{{ $t("config.validation.validate") }}
 			</a>
 		</div>

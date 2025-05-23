@@ -21,8 +21,8 @@ import {
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
-import formatter from "../../mixins/formatter";
-import colors from "../../colors";
+import formatter from "@/mixins/formatter";
+import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS } from "./types";
 
 registerChartComponents([
@@ -276,7 +276,7 @@ export default {
 							},
 							labelColor: tooltipLabelColor(false),
 						},
-						itemSort: function (a, b) {
+						itemSort(a, b) {
 							return b.datasetIndex - a.datasetIndex;
 						},
 					},
@@ -288,7 +288,7 @@ export default {
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback: function (value) {
+							callback(value) {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
 									: this.getLabelForValue(value);
@@ -314,7 +314,7 @@ export default {
 							maxTicksLimit: 6,
 						},
 						suggestedMax: this.suggestedMaxCost,
-						min: 0,
+						suggestedMin: 0,
 					},
 					y1: {
 						position: "left",

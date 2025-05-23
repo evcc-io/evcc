@@ -1,4 +1,5 @@
 template: weishaupt-wpm
+deprecated: true
 products:
   - brand: Weishaupt
     description:
@@ -11,7 +12,7 @@ params:
     choice: ["tcpip"]
   - name: tempsource
     type: choice
-    choice: ["", "warmwater", "buffer"]
+    choice: ["warmwater", "buffer"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
@@ -24,10 +25,10 @@ render: |
   getmode:
     source: go
     script: |
-      res := 1
+      res := 2 // 0/0 Normal
       switch {
-      case SG1 == 1 && SG2 == 0: res = 3
-      case SG2 == 1: res = 2
+      case SG1 == 1 && SG2 == 0: res = 1 // 1/0 Frostschutz
+      case SG2 == 1: res = 3 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
       }
       res
     in:

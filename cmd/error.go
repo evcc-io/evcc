@@ -7,7 +7,7 @@ import (
 
 type Class int
 
-//go:generate enumer -type Class -trimprefix Class -transform=lower -text
+//go:generate go tool enumer -type Class -trimprefix Class -transform=lower -text
 const (
 	_ Class = iota
 	ClassConfigFile
@@ -27,6 +27,7 @@ const (
 	ClassInflux
 	ClassMessenger
 	ClassSponsorship
+	ClassLoadpoint
 )
 
 // FatalError is an error that can be marshaled
@@ -57,7 +58,7 @@ type DeviceError struct {
 }
 
 func (e *DeviceError) Error() string {
-	return e.err.Error()
+	return "[" + e.Name + "] " + e.err.Error()
 }
 
 // ClassError indicates the class of devices that failed
@@ -67,7 +68,7 @@ type ClassError struct {
 }
 
 func (e *ClassError) Error() string {
-	return e.err.Error()
+	return e.Class.String() + " " + e.err.Error()
 }
 
 func (e ClassError) MarshalJSON() ([]byte, error) {
@@ -80,8 +81,7 @@ func (e ClassError) MarshalJSON() ([]byte, error) {
 		Error: e.err.Error(),
 	}
 
-	var de *DeviceError
-	if errors.As(e.err, &de) {
+	if de := new(DeviceError); errors.As(e.err, &de) {
 		res.Device = de.Name
 	}
 
