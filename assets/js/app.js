@@ -76,7 +76,7 @@ window.app = app.mount("#app");
 watchThemeChanges();
 appDetection();
 
-if (window.evcc.customCss) {
+if (window.evcc.customCss === "true") {
   const link = document.createElement("link");
   link.href = `./custom.css`;
   link.rel = "stylesheet";
