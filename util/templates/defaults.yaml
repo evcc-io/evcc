@@ -77,18 +77,18 @@ params:
       en: Password of the user account (use single quotes in case of leading zeros)
     mask: true
   - name: capacity
+    unit: kWh
     description:
       de: Akkukapazität
       en: Battery capacity
-    unit: kWh
     example: 50
     type: float
     usages: ["vehicle", "battery"]
   - name: maxacpower
+    unit: W
     description:
       de: Maximale AC Leistung des Hybrid-Wechselrichters
       en: Maximum AC power of the hybrid inverter
-    unit: W
     default: 0
     example: 5000
     type: float
