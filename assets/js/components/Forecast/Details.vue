@@ -129,12 +129,22 @@ export default defineComponent({
 		lowestPriceHour() {
 			if (this.isSolar) return "";
 			const slots = this.upcomingSlots;
-			const min = Math.min(...slots.map((slot) => slot.value));
-			const slot = slots.find((slot) => slot.value === min);
-			if (!slot) return "";
-			const start = new Date(slot.start);
-			const end = new Date(slot.end);
-			return `${this.weekdayShort(start)} ${this.hourShort(start)} – ${this.hourShort(end)}`;
+			if (!slots.length) return "";
+			// Group slots by hour, summing values per hour
+			const hourSums: Record<number, { sum: number; start: Date }> = {};
+			for (const slot of slots) {
+				const d = new Date(slot.start);
+				d.setMinutes(0, 0, 0); // round to hour
+				const k = d.getTime();
+				if (!hourSums[k]) hourSums[k] = { sum: 0, start: new Date(d) };
+				hourSums[k].sum += slot.value;
+			}
+			// Find hour with lowest sum
+			const min = Object.values(hourSums).reduce((a, b) => (a.sum < b.sum ? a : b));
+			const end = new Date(min.start);
+			end.setHours(end.getHours() + 1);
+
+			return `${this.weekdayShort(min.start)} ${this.hourShort(min.start)} – ${this.hourShort(end)}`;
 		},
 		highlightColor() {
 			switch (this.type) {
