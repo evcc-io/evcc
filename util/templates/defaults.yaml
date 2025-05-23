@@ -78,15 +78,17 @@ params:
     mask: true
   - name: capacity
     description:
-      de: Akkukapazität (kWh)
-      en: Battery capacity (kWh)
+      de: Akkukapazität
+      en: Battery capacity
+    unit: kWh
     example: 50
     type: float
     usages: ["vehicle", "battery"]
   - name: maxacpower
     description:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters (W)
-      en: Maximum AC power of the hybrid inverter (W)
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    unit: W
     default: 0
     example: 5000
     type: float
@@ -140,27 +142,30 @@ params:
       en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
     type: chargemodes
   - name: minsoc
+    unit: "%"
     description:
-      de: Minimaler Ladestand (%)
-      en: Minimum charge (%)
+      de: Minimaler Ladestand
+      en: Minimum charge
     help:
       de: Untere Grenze beim Entladen der Batterie (normaler Betrieb)
       en: Lower limit when discharging the battery (normal operation)
     example: 25
     type: int
   - name: maxsoc
+    unit: "%"
     description:
-      de: Maximaler Ladestand (%)
-      en: Maximum charge (%)
+      de: Maximaler Ladestand
+      en: Maximum charge
     help:
       de: Oberes Limit beim Laden der Batterie aus dem Netz
       en: Upper limit when charging the battery from the grid
     example: 95
     type: int
   - name: mincurrent
+    unit: A
     description:
-      de: Minimale Stromstärke in Ampere (A)
-      en: Minimum amperage (A)
+      de: Minimale Stromstärke
+      en: Minimum amperage
     help:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The minimum amperage per connected phase with which the car should be charged
@@ -168,8 +173,8 @@ params:
     type: int
   - name: maxcurrent
     description:
-      de: Maximale Stromstärke in Ampere (A)
-      en: Maximum amperage (A)
+      de: Maximale Stromstärke
+      en: Maximum amperage
     help:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
       en: The maximum amperage per connected phase with which the car shuold be charged
@@ -192,9 +197,10 @@ params:
       en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
     type: int
   - name: standbypower
+    unit: W
     description:
-      de: Standby-Leistung (W)
-      en: Standby power (W)
+      de: Standby-Leistung
+      en: Standby power
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
       en: Power values above this value will be considered as charging power
@@ -307,21 +313,23 @@ params:
       de: Standardmodus für die aktive Batteriesteuerung auf die der Wechselrichter wieder nach einem Laden des Speichers oder Unterbinden der Entladung zurückfällt.
       en: Default mode for battery control to which the inverter falls back after charging the battery or after stopping discharge.
   - name: maxchargepower
+    unit: W
     type: int
     usages: ["battery"]
     description:
-      en: Maximum charge power (W)
-      de: Maximale Ladeleistung (W)
+      en: Maximum charge power
+      de: Maximale Ladeleistung
     help:
       en: Maximum charge power for forced charging of the battery in watts.
       de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt.
     advanced: true
   - name: maxchargerate
+    unit: "%"
     type: int
     usages: ["battery"]
     description:
-      en: Maximum charge power (%)
-      de: Maximale Ladeleistung (%)
+      en: Maximum charge power
+      de: Maximale Ladeleistung
     help:
       en: Maximum charge power for forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
       de: Maximale Leistung für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
