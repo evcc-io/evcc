@@ -70,7 +70,7 @@ func ConvertTo15mSlots(rates Rates, typ TariffType) Rates {
 			switch typ {
 			case TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypePriceForecast:
 				val = r.Value
-			case TariffTypeSolar:
+			case TariffTypeSolar, TariffTypeCo2:
 				if i+1 < len(rates) {
 					start0 := r.Start
 					start1 := rates[i+1].Start
@@ -79,8 +79,6 @@ func ConvertTo15mSlots(rates Rates, typ TariffType) Rates {
 				} else {
 					val = r.Value
 				}
-			case TariffTypeCo2:
-				// TODO
 			}
 			result = append(result, Rate{Start: start, End: end, Value: val})
 		}
