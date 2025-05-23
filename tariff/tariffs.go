@@ -36,7 +36,7 @@ func Forecast(t api.Tariff) api.Rates {
 	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
 	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
 		if rr, err := t.Rates(); err == nil {
-			return rr
+			return api.ConvertTo15mSlots(rr, t.Type())
 		}
 	}
 	return nil

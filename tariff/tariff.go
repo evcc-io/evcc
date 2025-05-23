@@ -97,7 +97,6 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			if err := json.Unmarshal([]byte(s), &data); err != nil {
 				return backoff.Permanent(err)
 			}
-			data = api.ConvertTo15mSlots(data, t.typ)
 			for i, r := range data {
 				data[i] = api.Rate{
 					Value: t.totalPrice(r.Value, r.Start),
