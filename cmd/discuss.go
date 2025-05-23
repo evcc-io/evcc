@@ -9,7 +9,7 @@ import (
 	"text/template"
 
 	"github.com/cli/browser"
-	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +54,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 		"CfgFile":    file,
 		"CfgError":   errorString(cfgErr),
 		"CfgContent": redacted,
-		"Version":    server.FormattedVersion(),
+		"Version":    util.FormattedVersion(),
 	})
 
 	body := out.String()

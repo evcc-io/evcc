@@ -28,7 +28,7 @@ type PollConfig struct {
 	Interval time.Duration `json:"interval"` // interval when not charging
 }
 
-//go:generate enumer -type PollMode -trimprefix Poll -transform=lower -text
+//go:generate go tool enumer -type PollMode -trimprefix Poll -transform=lower -text
 type PollMode int
 
 // Poll modes

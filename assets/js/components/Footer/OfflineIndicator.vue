@@ -72,13 +72,15 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/car1";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
-import restart, { performRestart, restartComplete } from "../../restart.js";
+import restart, { performRestart, restartComplete } from "@/restart";
+import type { FatalError } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "OfflineIndicator",
 	components: {
 		CloudOffline,
@@ -86,7 +88,7 @@ export default {
 	},
 	props: {
 		offline: Boolean,
-		fatal: Object,
+		fatal: Object as PropType<FatalError>,
 	},
 	data() {
 		return { dismissed: false };
@@ -129,7 +131,7 @@ export default {
 			performRestart();
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .restart {

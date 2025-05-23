@@ -72,14 +72,14 @@ const teslaloggerMiddleware = (req, res, next) => {
 };
 
 const shellyMiddleware = (req, res, next) => {
-  // simulate a shelly gen1 device api. implement power and energy
-  if (req.method === "GET" && req.originalUrl === "/shelly") {
+  // simulate a shelly gen2 switch device api. implement power and energy
+  if (req.originalUrl === "/shelly") {
     res.end(JSON.stringify({ gen: 2 }));
-  } else if (req.originalUrl === "/rpc/Shelly.GetStatus") {
+  } else if (req.originalUrl === "/rpc/Shelly.ListMethods") {
+    res.end(JSON.stringify({ methods: ["Switch.GetStatus"] }));
+  } else if (req.originalUrl === "/rpc/Switch.GetStatus?id=0") {
     res.end(
-      JSON.stringify({
-        "switch:0": { apower: state.site.pv.power, aenergy: { total: state.site.pv.energy } },
-      })
+      JSON.stringify({ apower: state.site.pv.power, aenergy: { total: state.site.pv.energy } })
     );
   } else {
     next();

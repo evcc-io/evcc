@@ -17,6 +17,7 @@ import (
 )
 
 type E3dc struct {
+	mu             sync.Mutex
 	dischargeLimit uint32
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
@@ -104,10 +105,14 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	switch m.usage {
 	case templates.UsageGrid:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 		return rscpValue(*res, cast.ToFloat64E)
@@ -118,6 +123,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
 		})
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 
@@ -131,6 +137,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
 		if err != nil {
+			m.conn.Disconnect()
 			return 0, err
 		}
 		pwr, err := rscpValue(*res, cast.ToFloat64E)
@@ -146,14 +153,22 @@ func (m *E3dc) CurrentPower() (float64, error) {
 }
 
 func (m *E3dc) batterySoc() (float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
 	if err != nil {
+		m.conn.Disconnect()
 		return 0, err
 	}
+
 	return rscpValue(*res, cast.ToFloat64E)
 }
 
 func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	var (
 		res []rscp.Message
 		err error
@@ -182,7 +197,9 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 		return api.ErrNotAvailable
 	}
 
-	if err == nil {
+	if err != nil {
+		m.conn.Disconnect()
+	} else {
 		err = rscpError(res...)
 	}
 	return err

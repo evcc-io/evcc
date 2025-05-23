@@ -1,5 +1,8 @@
 <template>
-	<header class="d-flex justify-content-between align-items-center py-3 py-md-4">
+	<header
+		class="d-flex justify-content-between align-items-center py-3 py-md-4"
+		data-testid="header"
+	>
 		<h1 class="mb-1 pt-1 d-flex text-nowrap text-truncate">
 			<router-link class="evcc-default-text" to="/" data-testid="home-link">
 				<shopicon-regular-home size="s" class="icon"></shopicon-regular-home>
@@ -25,8 +28,8 @@
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
 import Navigation from "./Navigation.vue";
-import collector from "../../mixins/collector.js";
-import store from "../../store.js";
+import collector from "@/mixins/collector";
+import store from "@/store";
 
 export default {
 	name: "TopHeader",

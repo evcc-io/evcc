@@ -34,6 +34,13 @@
 
 				<div v-if="$hiddenFeatures()">
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<p
+						v-if="loadpointsRequired"
+						class="text-muted my-4"
+						data-testid="loadpoint-required"
+					>
+						{{ $t("config.main.loadpointRequired") }}
+					</p>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
@@ -60,6 +67,7 @@
 						<NewDeviceButton
 							data-testid="add-loadpoint"
 							:title="$t('config.main.addLoadpoint')"
+							:attention="loadpointsRequired"
 							@click="newLoadpoint"
 						/>
 					</ul>
@@ -141,7 +149,11 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Solar system'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.solarSystem')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -159,7 +171,9 @@
 							v-for="meter in batteryMeters"
 							:key="meter.name"
 							:title="
-								meter.deviceTitle || meter.config?.template || 'Battery storage'
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.batteryStorage')
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
@@ -185,7 +199,11 @@
 						<DeviceCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
-							:title="meter.deviceTitle || meter.config?.template || 'Aux meter'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.auxMeter')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -193,7 +211,7 @@
 							@edit="editMeter(meter.id, 'aux')"
 						>
 							<template #icon>
-								<VehicleIcon :name="meter.deviceIcon || 'aux'" />
+								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
 							</template>
 							<template #tags>
 								<DeviceTags :tags="deviceTags('meter', meter.name)" />
@@ -476,7 +494,13 @@ export default {
 			isPageVisible: true,
 		};
 	},
+	head() {
+		return { title: this.$t("config.main.title") };
+	},
 	computed: {
+		loadpointsRequired() {
+			return this.loadpoints.length === 0;
+		},
 		fatalClass() {
 			return store.state?.fatal?.class;
 		},
@@ -752,6 +776,7 @@ export default {
 		},
 		newLoadpoint() {
 			this.selectedLoadpointId = undefined;
+			this.$refs.loadpointModal.reset();
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {

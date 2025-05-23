@@ -36,6 +36,9 @@ const (
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
 
+	// loadpoint setpoint
+	OfferedCurrent = "offeredCurrent" // offered current
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit
@@ -51,7 +54,6 @@ const (
 	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
 
 	// measurements
-	ChargeCurrent     = "chargeCurrent"     // charge current
 	ChargePower       = "chargePower"       // charge power
 	ChargeCurrents    = "chargeCurrents"    // charge currents
 	ChargeVoltages    = "chargeVoltages"    // charge voltages
@@ -68,6 +70,7 @@ const (
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)

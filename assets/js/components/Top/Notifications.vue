@@ -88,7 +88,7 @@
 
 <script>
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "Notifications",

@@ -84,7 +84,7 @@
 						class="form-control w-100"
 					/>
 				</FormRow>
-				<p v-if="loadingTemplate">Loading ...</p>
+				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<Markdown v-if="description" :markdown="description" class="my-4" />
 				<Modbus
 					v-if="modbus"
@@ -181,7 +181,7 @@ import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
-import api from "../../api";
+import api from "@/api";
 import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
@@ -198,7 +198,7 @@ function sleep(ms) {
 const CUSTOM_FIELDS = ["usage", "modbus"];
 
 const defaultIcons = {
-	aux: "aux",
+	aux: "smartconsumer",
 	ext: "meter",
 };
 

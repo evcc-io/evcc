@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -250,22 +249,7 @@ func (p *Param) yamlQuote(value string) string {
 		return value
 	}
 
-	input := fmt.Sprintf("key: %s", value)
-
-	var res struct {
-		Value string `yaml:"key"`
-	}
-
-	if err := yaml.Unmarshal([]byte(input), &res); err != nil || value != res.Value {
-		return quote(value)
-	}
-
-	// fix 0815, but not 0
-	if strings.HasPrefix(value, "0") && len(value) > 1 {
-		return quote(value)
-	}
-
-	return value
+	return yamlQuote(value)
 }
 
 // Product contains naming information about a product a template supports

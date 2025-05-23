@@ -552,11 +552,11 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
-import api from "../../api";
+import api from "@/api";
 import GenericModal from "../Helper/GenericModal.vue";
-import deepClone from "../../utils/deepClone";
-import deepEqual from "../../utils/deepEqual";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import deepClone from "@/utils/deepClone";
+import deepEqual from "@/utils/deepEqual";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 
 const nsPerMin = 60 * 1e9;
@@ -726,7 +726,6 @@ export default {
 			this.updatePhases();
 		},
 		async loadConfiguration() {
-			console.log("loadpoint modal loadConfiguration");
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data.result);
@@ -766,7 +765,6 @@ export default {
 				await api.post("config/loadpoints", this.values);
 				this.$emit("updated");
 				this.$refs.modal.close();
-				this.reset();
 			} catch (e) {
 				console.error(e);
 				const error = e.response?.data?.error;

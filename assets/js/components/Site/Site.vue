@@ -1,7 +1,10 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
+			<div
+				class="d-flex justify-content-between align-items-center my-3 my-md-4"
+				data-testid="header"
+			>
 				<h1 class="d-block my-0">
 					<span v-if="!isInitialSetup">
 						{{ siteTitle || "evcc" }}
@@ -54,6 +57,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:forecast="forecast"
 				:selectedIndex="selectedLoadpointIndex"
 				@index-changed="selectedLoadpointChanged"
 			/>
@@ -69,8 +73,8 @@ import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
 
 export default {
@@ -131,7 +135,7 @@ export default {
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {
@@ -150,12 +154,18 @@ export default {
 			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact() {
-			return this.loadpoints.map((lp) => {
+			return this.loadpoints.map((lp, index) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
+				const title =
+					this.vehicleTitle(lp.vehicleName) ||
+					lp.title ||
+					this.$t("main.loadpoint.fallbackName");
 				const charging = lp.charging;
+				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
-				return { icon, charging, power };
+				const heating = lp.chargerFeatureHeating;
+				return { icon, title, charging, power, soc, heating, index };
 			});
 		},
 		vehicleList() {
@@ -197,6 +207,9 @@ export default {
 	methods: {
 		selectedLoadpointChanged(index) {
 			this.$router.push({ query: { lp: index + 1 } });
+		},
+		vehicleTitle(vehicleName) {
+			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
 };

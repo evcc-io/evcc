@@ -4,11 +4,12 @@
 	</svg>
 </template>
 
-<script>
-import icon from "../../mixins/icon";
+<script lang="ts">
+import icon from "@/mixins/icon";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Add",
 	mixins: [icon],
-};
+});
 </script>

@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { docsPrefix } from "../../i18n";
+import { docsPrefix } from "@/i18n";
 import Markdown from "./Markdown.vue";
 
 export default {

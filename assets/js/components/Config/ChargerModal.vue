@@ -64,7 +64,7 @@
 					class="form-control w-100"
 				/>
 			</FormRow>
-			<p v-if="loadingTemplate">Loading ...</p>
+			<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 			<SponsorTokenRequired v-if="sponsorTokenRequired" />
 			<Markdown v-if="description" :markdown="description" class="my-4" />
 			<FormRow
@@ -167,7 +167,7 @@ import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
-import api from "../../api";
+import api from "@/api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../Helper/GenericModal.vue";

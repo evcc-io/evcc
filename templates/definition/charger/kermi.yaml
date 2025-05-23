@@ -13,7 +13,7 @@ params:
   - name: host
   - name: tempsource
     type: choice
-    choice: ["", "warmwater", "buffer"]
+    choice: ["warmwater", "buffer"]
     description:
       de: "Temperaturquelle"
       en: "Temperature source"
@@ -32,8 +32,9 @@ render: |
       id: 40 # WP
       register:
         address: 301 # PV Überschussleistung
-        type: holding
+        type: writesingle
         decode: int16
+      scale: 10.0
   power:
     source: modbus
     uri: {{ .host }}:502

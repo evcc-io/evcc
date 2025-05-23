@@ -1,0 +1,134 @@
+template: sunspec-meter
+products:
+  - description:
+      de: SunSpec Zähler
+      en: SunSpec Meter
+  - brand: Fronius
+    description:
+      de: Smartmeter (über Wechselrichter)
+      en: Smartmeter (via Inverter)
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  # sunspec model 201 or 203 (int+sf)/ 211 or 213 (float) meter
+  {{- if eq .usage "grid" }}
+  power:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    value:
+      - 201:W
+      - 211:W
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    value:
+      - 201:TotWhImp
+      - 211:TotWhImp
+      - 203:TotWhImp
+      - 213:TotWhImp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:AphA
+        - 211:AphA
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:AphB
+        - 211:AphB
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:AphC
+        - 211:AphC
+        - 203:AphC
+        - 213:AphC
+  voltages:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:PhVphA
+        - 211:PhVphA
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:PhVphB
+        - 211:PhVphB
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:PhVphC
+        - 211:PhVphC
+        - 203:PhVphC
+        - 213:PhVphC
+  powers:
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:WphA
+        - 211:WphA
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:WphB
+        - 211:WphB
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      value:
+        - 201:WphC
+        - 211:WphC
+        - 203:WphC
+        - 213:WphC
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    value:
+      - 201:W
+      - 211:W
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    value:
+      - 201:TotWhExp
+      - 211:TotWhExp
+      - 203:TotWhExp
+      - 213:TotWhExp
+    scale: 0.001
+  {{- end }}

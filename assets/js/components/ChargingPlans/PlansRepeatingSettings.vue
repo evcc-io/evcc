@@ -8,8 +8,8 @@
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
+				:showPrecondition="showPrecondition"
 				@updated="updatePlan(index, $event)"
-				@saved="savePlan(index, $event)"
 				@removed="removePlan(index)"
 			/>
 		</div>
@@ -28,25 +28,28 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import PlanRepeatingSettings from "./PlanRepeatingSettings.vue";
-import deepEqual from "../../utils/deepEqual.js";
-import formatter from "../../mixins/formatter.js";
+import deepEqual from "@/utils/deepEqual";
+import formatter from "@/mixins/formatter";
+import { defineComponent, type PropType } from "vue";
+import type { RepeatingPlan } from "./types";
 
-const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5]; // weekdays
+const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5];
 const DEFAULT_TARGET_TIME = "07:00";
 const DEFAULT_TARGET_SOC = 80;
 
-export default {
+export default defineComponent({
 	name: "ChargingPlansRepeatingSettings",
 	components: {
 		ChargingPlanRepeatingSettings: PlanRepeatingSettings,
 	},
 	mixins: [formatter],
 	props: {
-		id: Number,
+		id: [Number, String],
 		rangePerSoc: Number,
-		plans: { type: Array, default: () => [] },
+		plans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
+		showPrecondition: Boolean,
 	},
 	emits: ["updated"],
 	computed: {
@@ -56,11 +59,12 @@ export default {
 	},
 	methods: {
 		deepEqual,
-		addPlan() {
+		addPlan(): void {
 			const newPlan = {
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
+				precondition: 0,
 				active: false,
 				tz: this.timezone(),
 			};
@@ -70,21 +74,21 @@ export default {
 			plans.push(newPlan);
 			this.updatePlans(plans);
 		},
-		updatePlan(index, plan) {
+		updatePlan(index: number, plan: RepeatingPlan): void {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1, plan);
 			this.updatePlans(plans);
 		},
-		updatePlans(plans) {
+		updatePlans(plans: RepeatingPlan[]): void {
 			this.$emit("updated", plans);
 		},
-		removePlan(index) {
+		removePlan(index: number): void {
 			const plans = [...this.plans]; // clone array
 			plans.splice(index, 1);
 			this.updatePlans(plans);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

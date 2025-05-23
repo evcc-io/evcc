@@ -43,11 +43,15 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:AphB
+        - 211:AphB
         - 203:AphB
         - 213:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:AphC
+        - 211:AphC
         - 203:AphC
         - 213:AphC
   voltages:
@@ -61,11 +65,15 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:PhVphB
+        - 211:PhVphB
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:PhVphC
+        - 211:PhVphC
         - 203:PhVphC
         - 213:PhVphC
   powers:
@@ -79,11 +87,15 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:WphB
+        - 211:WphB
         - 203:WphB
         - 213:WphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
+        - 201:WphC
+        - 211:WphC
         - 203:WphC
         - 213:WphC
   {{- end }}

@@ -14,22 +14,27 @@
 
 		<div v-if="showHeader" class="row d-none d-lg-flex mb-2">
 			<div class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6 col-lg-3">
+			<div class="col-3">
 				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-2">
+			<div class="col-2">
 				<label :for="formId('time')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3">
+			<div :class="showPrecondition ? 'col-2' : 'col-3'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-1">
+			<div v-if="showPrecondition" class="col-1">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.preconditionShort") }}
+				</label>
+			</div>
+			<div class="col-1">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
 		</div>
@@ -76,7 +81,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
+			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
 				<select
 					:id="formId('goal')"
 					v-model="selectedSoc"
@@ -88,6 +93,21 @@
 						{{ opt.name }}
 					</option>
 				</select>
+			</div>
+			<div v-if="showPrecondition" class="col-5 d-lg-none col-form-label">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.preconditionLong") }}
+				</label>
+			</div>
+			<div
+				v-if="showPrecondition"
+				class="col-7 col-lg-1 mb-2 mb-lg-0 d-flex align-items-center"
+			>
+				<PreconditionSelect
+					:id="formId('precondition')"
+					v-model="selectedPrecondition"
+					testid="repeating-plan-precondition"
+				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
@@ -126,37 +146,50 @@
 					class="btn btn-sm btn-outline-secondary border-0"
 					aria-label="Remove"
 					tabindex="0"
-					@click="$emit('removed', id)"
+					@click="$emit('removed', id())"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
 			</div>
 		</div>
+		<!-- Large screen precondition description -->
+		<div class="plan-id-inset">
+			<PreconditionSelect
+				:id="formId('precondition')"
+				v-model="selectedPrecondition"
+				testid="repeating-plan-precondition"
+				description-lg-only
+			/>
+		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
-import { distanceUnit } from "../../units.js";
+import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
-import formatter from "../../mixins/formatter.js";
-import deepEqual from "../../utils/deepEqual.js";
-export default {
+import formatter from "@/mixins/formatter";
+import deepEqual from "@/utils/deepEqual";
+import PreconditionSelect from "./PreconditionSelect.vue";
+import type { SelectOption } from "@/types/evcc";
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "ChargingPlanRepeatingSettings",
-	components: {
-		MultiSelect,
-	},
+	components: { MultiSelect, PreconditionSelect },
 	mixins: [formatter],
 	props: {
 		number: Number,
-		weekdays: { type: Array, default: () => [] },
+		weekdays: { type: Array as PropType<number[]>, default: () => [] },
 		time: String,
 		tz: String,
 		soc: Number,
+		precondition: Number,
 		showHeader: Boolean,
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
+		showPrecondition: Boolean,
 	},
 	emits: ["updated", "removed"],
 	data() {
@@ -165,68 +198,77 @@ export default {
 			selectedTime: this.time,
 			selectedSoc: this.soc,
 			selectedActive: this.active,
+			selectedPrecondition: this.precondition,
 		};
 	},
 	computed: {
-		dataChanged() {
+		dataChanged(): boolean {
 			return (
 				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
 				this.soc !== this.selectedSoc ||
-				this.active !== this.selectedActive
+				this.active !== this.selectedActive ||
+				this.precondition !== this.selectedPrecondition
 			);
 		},
-		showApply() {
+		showApply(): boolean {
 			return this.dataChanged && this.selectedActive;
 		},
-		weekdaysLabel() {
+		weekdaysLabel(): string {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
-		socOptions() {
+		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		dayOptions() {
+		dayOptions(): SelectOption<number>[] {
 			return this.getWeekdaysList("long");
 		},
 	},
 	watch: {
-		weekdays(newValue, oldValue) {
+		weekdays(newValue: number[], oldValue: number[]) {
 			if (!deepEqual(newValue, oldValue)) {
 				this.selectedWeekdays = newValue;
 			}
 		},
-		time(newValue) {
+		time(newValue: string) {
 			this.selectedTime = newValue;
 		},
-		soc(newValue) {
+		soc(newValue: number) {
 			this.selectedSoc = newValue;
 		},
-		active(newValue) {
+		active(newValue: boolean) {
 			this.selectedActive = newValue;
+		},
+		precondition(newValue: number) {
+			this.selectedPrecondition = newValue;
 		},
 	},
 	methods: {
-		changeSelectedWeekdays(weekdays) {
+		id(): number {
+			return this.number || 0;
+		},
+		changeSelectedWeekdays(weekdays: number[]): void {
 			this.selectedWeekdays = weekdays;
 			this.update();
 		},
-		formId(name) {
+		formId(name: string): string {
 			return `${this.formIdPrefix}-${this.number}-${name}`;
 		},
-		socOption(value) {
+		socOption(value: number): SelectOption<number> {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		update(forceSave = false) {
+		update(forceSave = false): void {
 			const plan = {
 				weekdays: this.selectedWeekdays,
 				time: this.selectedTime,
 				soc: this.selectedSoc,
 				tz: this.tz,
 				active: this.selectedActive,
+				precondition: this.selectedPrecondition,
 			};
 
 			if (forceSave || !this.selectedActive) {
@@ -234,9 +276,12 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
+.plan-id-inset {
+	margin-left: 2.5rem;
+}
 .plan-id {
 	width: 2.5rem;
 	color: var(--evcc-gray);

@@ -22,6 +22,9 @@ const (
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
 
+	flagCustomCss            = "custom-css"
+	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
 	flagBatteryModeWait            = "battery-mode-wait"
@@ -54,10 +57,10 @@ const (
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
 
-	flagRepeat                 = "repeat"
-	flagRepeatDescription      = "Repeat until interrupted"
-	flagRepeatDelay            = "repeat-delay"
-	flagRepeatDelayDescription = "Delay between repeats"
+	flagRepeat                    = "repeat"
+	flagRepeatDescription         = "Repeat until interrupted"
+	flagRepeatInterval            = "repeat-interval"
+	flagRepeatIntervalDescription = "Interval between repetitions"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

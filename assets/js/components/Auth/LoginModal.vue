@@ -57,14 +57,15 @@
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
-import api from "../../api.js";
-import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth.js";
-import { docsPrefix } from "../../i18n.js";
+import api from "@/api";
+import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
+import { docsPrefix } from "@/i18n";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "LoginModal",
 	components: { GenericModal },
 	data: () => {
@@ -98,11 +99,11 @@ export default {
 			this.iframeHint = false;
 		},
 		focus() {
-			console.log(this.$refs.password);
-			this.$refs.password.focus();
+			console.log(this.$refs["password"]);
+			this.$refs["password"]?.focus();
 		},
 		closeModal() {
-			Modal.getOrCreateInstance(document.getElementById("loginModal")).hide();
+			Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement).hide();
 		},
 		async login() {
 			this.loading = true;
@@ -136,13 +137,15 @@ export default {
 				}
 			} catch (err) {
 				console.error(err);
-				this.error = err.message;
+				if (err instanceof Error) {
+					this.error = err.message;
+				}
 			} finally {
 				this.loading = false;
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 form {

@@ -56,7 +56,7 @@
 					class="form-control w-100"
 				/>
 			</FormRow>
-			<p v-if="loadingTemplate">Loading ...</p>
+			<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 			<Markdown v-if="description" :markdown="description" class="my-4" />
 			<PropertyEntry
 				v-for="param in normalParams"
@@ -77,11 +77,11 @@
 					/>
 				</template>
 				<template #more>
-					<h6 class="mt-3">Charging settings</h6>
+					<h6 class="mt-3">{{ $t("config.vehicle.chargingSettings") }}</h6>
 					<FormRow
 						id="vehicleParamMode"
-						label="Default mode"
-						help="Charging point mode when connecting this vehicle."
+						:label="$t('config.vehicle.defaultMode')"
+						:help="$t('config.vehicle.defaultModeHelp')"
 					>
 						<PropertyField
 							id="vehicleParamMode"
@@ -98,8 +98,8 @@
 					</FormRow>
 					<FormRow
 						id="vehicleParamPhases"
-						label="Maximum phases"
-						help="How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
+						:label="$t('config.vehicle.maximumPhases')"
+						:help="$t('config.vehicle.maximumPhasesHelp')"
 					>
 						<SelectGroup
 							id="vehicleParamPhases"
@@ -117,11 +117,11 @@
 					<div class="row mb-3">
 						<FormRow
 							id="vehicleParamMinCurrent"
-							label="Minimum current"
+							:label="$t('config.vehicle.minimumCurrent')"
 							class="col-sm-6 mb-sm-0"
 							:help="
 								values.minCurrent && values.minCurrent < 6
-									? 'Only go below 6 A if you know what you\'re doing.'
+									? $t('config.vehicle.minimumCurrentHelp')
 									: null
 							"
 						>
@@ -136,13 +136,13 @@
 						</FormRow>
 						<FormRow
 							id="vehicleParamMaxCurrent"
-							label="Maximum current"
+							:label="$t('config.vehicle.maximumCurrent')"
 							class="col-sm-6 mb-sm-0"
 							:help="
 								values.minCurrent &&
 								values.maxCurrent &&
 								values.maxCurrent < values.minCurrent
-									? 'Must be greater than minimum current.'
+									? $t('config.vehicle.maximumCurrentHelp')
 									: null
 							"
 						>
@@ -159,8 +159,8 @@
 
 					<FormRow
 						id="vehicleParamPriority"
-						label="Priority"
-						help="Changes the charging point priority when connecting this vehicle."
+						:label="$t('config.vehicle.priority')"
+						:help="$t('config.vehicle.priorityHelp')"
 					>
 						<PropertyField
 							id="vehicleParamPriority"
@@ -175,8 +175,8 @@
 
 					<FormRow
 						id="vehicleParamIdentifiers"
-						label="RFID identifiers"
-						help="List of RFID strings to identify the vehicle. One per line. See the current identifier on the configuration overview."
+						:label="$t('config.vehicle.identifiers')"
+						:help="$t('config.vehicle.identifiersHelp')"
 					>
 						<PropertyField
 							id="vehicleParamIdentifiers"
@@ -248,7 +248,7 @@ import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
-import api from "../../api";
+import api from "@/api";
 import test from "./mixins/test";
 
 const initialValues = { type: "template", icon: "car" };
