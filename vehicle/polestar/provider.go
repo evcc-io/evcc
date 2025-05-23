@@ -27,23 +27,22 @@ func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Dur
 // SOC via car telemetry
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.telemetryG()
-	return res.Battery.BatteryChargeLevelPercentage, err
+	return float64(res.Battery[0].BatteryChargeLevelPercentage), err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
 
-// Range via car telemetry
+// Status via car telemetry
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status, err := v.telemetryG()
 
 	res := api.StatusA
-	if status.Battery.ChargerConnectionStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
+	if status.Battery[0].ChargingStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
 		res = api.StatusB
 	}
-	if status.Battery.ChargingStatus == "CHARGING_STATUS_CHARGING" {
+	if status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
 		res = api.StatusB
 	}
-
 	return res, err
 }
 
@@ -52,7 +51,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range via car telemetry
 func (v *Provider) Range() (int64, error) {
 	res, err := v.telemetryG()
-	return int64(res.Battery.EstimatedDistanceToEmptyKm), err
+	return res.Battery[0].EstimatedDistanceToEmptyKm, err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -60,7 +59,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer via car telemetry
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.telemetryG()
-	return res.Odometer.OdometerMeters / 1e3, err
+	return float64(res.Odometer[0].OdometerMeters) / 1e3, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -68,8 +67,5 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime via car telemetry
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.telemetryG()
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Now().Add(time.Duration(res.Battery.EstimatedChargingTimeToFullMinutes) * time.Minute), nil
+	return time.Now().Add(time.Duration(res.Battery[0].EstimatedChargingTimeToFullMinutes) * time.Minute), err
 }
