@@ -375,8 +375,8 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 
 	// After (!!!) switching phases charging must be stopped to execute phase switching (special behavior of Kathrein WB)
 	if err := wb.Enable(false); err != nil {
-			return err
-		}		
+		return err
+	}		
 
 	// Re-enable charging if it was previously enabled
 	if enabled {
