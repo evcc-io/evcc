@@ -367,7 +367,7 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
 		return err
 	}
-	
+
 	// Switch phases
 	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
 		return err
