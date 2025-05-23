@@ -10,24 +10,26 @@ params:
   - name: host
   - name: port
     default: 8080
+  - name: path
+    default: / # usually /BSMData.shtml
   - name: capacity
     advanced: true
 render: |
   type: custom
   power:
     source: http
-    uri: http://{{ .host }}:{{ .port }}/
+    uri: http://{{ .host }}:{{ .port }}{{ .path }}
   {{- if eq .usage "grid" }}
     jq: .FData.PGrid
   {{- end }}
   {{- if eq .usage "pv" }}
-    jq: .FData.IBat * .FData.VBa * -1
+    jq: .FData.IPV * .FData.VPV
   {{- end }}
   {{- if eq .usage "battery" }}
     jq: .FData.IBat * .FData.VBat
   soc:
     source: http
-    uri: http://{{ .host }}:{{ .port }}/
+    uri: http://{{ .host }}:{{ .port }}{{ .path }}
     jq: .SData.SoC
   capacity: {{ .capacity }} # kWh
   {{- end }}
