@@ -1,12 +1,12 @@
-template: ocpp-abb
+template: ocpp-sungrow
 products:
-  - brand: ABB
+  - brand: Sungrow
     description:
-      generic: Terra AC (OCPP)
+      generic: AC011E
+capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  stacklevelzero: true

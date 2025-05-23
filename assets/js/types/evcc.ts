@@ -20,14 +20,6 @@ export interface State {
 	currency?: CURRENCY;
 	fatal?: FatalError;
 }
-export interface LoadpointCompact {
-	icon: string;
-	title: string;
-	charging: boolean;
-	soc?: number;
-	power: number;
-	heating?: boolean;
-}
 
 export interface LoadpointCompact {
 	icon: string;
@@ -38,6 +30,7 @@ export interface LoadpointCompact {
 	heating?: boolean;
 	chargePower: number;
 	connected: boolean;
+	index: number;
 }
 
 export enum CURRENCY {
@@ -62,7 +55,8 @@ export enum PHASES {
 
 export interface Sponsor {
 	name: string;
-	expiresAt: Date;
+	expiresAt: string;
+	expiresSoon: boolean;
 }
 
 export interface Battery {
