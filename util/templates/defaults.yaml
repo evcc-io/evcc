@@ -41,15 +41,9 @@ params:
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
-    help:
-      de: IP-Adresse oder Hostname
-      en: IP address or hostname
     example: 192.0.2.2
   - name: ip
     description:
-      de: IP-Adresse
-      en: IP address
-    help:
       de: IP-Adresse
       en: IP address
     example: 192.0.2.2
@@ -63,9 +57,6 @@ params:
     type: int
   - name: interface
     description:
-      de: Netzwerkschnittstelle
-      en: Network interface
-    help:
       de: Netzwerkschnittstelle
       en: Network interface
     advanced: true
@@ -87,21 +78,15 @@ params:
     mask: true
   - name: capacity
     description:
-      de: Akkukapazität in kWh
-      en: Battery capacity in kWh
-    help:
-      de: Akkukapazität in kWh
-      en: Battery capacity in kWh
+      de: Akkukapazität (kWh)
+      en: Battery capacity (kWh)
     example: 50
     type: float
     usages: ["vehicle", "battery"]
   - name: maxacpower
     description:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
-      en: Maximum AC power of the hybrid inverter in W
-    help:
-      de: Maximale AC Leistung des Hybrid-Wechselrichters in W
-      en: Maximum AC power of the hybrid inverter in W
+      de: Maximale AC Leistung des Hybrid-Wechselrichters (W)
+      en: Maximum AC power of the hybrid inverter (W)
     default: 0
     example: 5000
     type: float
@@ -208,11 +193,11 @@ params:
     type: int
   - name: standbypower
     description:
-      de: Standby-Leistung in W
-      en: Standby power in W
+      de: Standby-Leistung (W)
+      en: Standby power (W)
     help:
       de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
-      en: Power values above this value will be considered as charging pow
+      en: Power values above this value will be considered as charging power
     type: int
   - name: language
     description:
