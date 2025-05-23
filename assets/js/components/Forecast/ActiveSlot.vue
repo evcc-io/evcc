@@ -32,11 +32,11 @@ export default defineComponent({
 		},
 		start() {
 			const startDate = new Date((this.activeSlot! as ForecastSlot).start);
-			return this.hourShort(startDate);
+			return this.fmtTimeString(startDate);
 		},
 		end() {
 			const endDate = new Date((this.activeSlot! as ForecastSlot).end);
-			return this.hourShort(endDate);
+			return this.fmtTimeString(endDate);
 		},
 		time() {
 			const time = new Date((this.activeSlot! as TimeseriesEntry).ts);
