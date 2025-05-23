@@ -158,7 +158,8 @@ func (t *Tariff) Rates() (api.Rates, error) {
 		return t.priceRates()
 	}
 
-	return t.forecastRates()
+	res, err := t.forecastRates()
+	return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 // Type implements the api.Tariff interface
