@@ -1,8 +1,8 @@
-template: fox-ess-h3-smart
+template: fox-ess-h3-smart_pro
 products:
   - brand: FoxESS
     description:
-      generic: H3-Smart Series Hybrid Inverter
+      generic: H3-Smart/Pro Series Hybrid Inverter
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -91,6 +91,18 @@ render: |
         address: 39288 # PV5
         type: holding
         decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39288 # PV5
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39290 # PV6
+        type: holding
+        decode: int16
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -101,11 +113,18 @@ render: |
       address: 39238 # Battery Charge/Discharge
       type: holding
       decode: int16
-  soc:
+  soc1:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 37612 # Soc
+      type: holding
+      decode: int16
+  soc2:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 38310 # Soc
       type: holding
       decode: int16
   limitsoc:
