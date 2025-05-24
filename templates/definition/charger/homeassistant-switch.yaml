@@ -8,6 +8,7 @@ params:
       de: Basis-URL der Home Assistant Instanz (z.B. http://homeassistant.local:8123)
       en: Base URL of the Home Assistant instance (e.g. http://homeassistant.local:8123)
     required: true
+    default: http://homeassistant.local:8123
   - name: token
     mask: true
     required: true
