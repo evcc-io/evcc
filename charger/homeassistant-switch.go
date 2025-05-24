@@ -22,20 +22,20 @@ func init() {
 	registry.Add("homeassistant-switch", NewHomeAssistantSwitchFromConfig)
 }
 
-type haSwitchConfig struct {
-	embed        `mapstructure:",squash"`
-	BaseURL      string
-	Token        string
-	SwitchEntity string
-	PowerEntity  string
-	StandbyPower float64
-}
-
 func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc haSwitchConfig
+	var cc struct {
+	    embed        `mapstructure:",squash"`
+	    BaseURL      string
+	    Token        string
+	    SwitchEntity string
+	    PowerEntity  string
+	    StandbyPower float64
+    }
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
 	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
 }
 
