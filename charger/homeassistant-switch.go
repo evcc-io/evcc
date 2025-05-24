@@ -1,15 +1,13 @@
 package charger
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 type HomeAssistantSwitch struct {
@@ -17,7 +15,7 @@ type HomeAssistantSwitch struct {
 	token        string
 	switchEntity string
 	powerEntity  string
-	client       *http.Client
+	helper       *request.Helper
 	*switchSocket
 }
 
@@ -43,12 +41,21 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 }
 
 func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (*HomeAssistantSwitch, error) {
+	helper := request.NewHelper(util.NewLogger("homeassistant-switch"))
+	helper.Client.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization": "Bearer " + token,
+			"Content-Type":  "application/json",
+		}),
+		Base: helper.Client.Transport,
+	}
+
 	c := &HomeAssistantSwitch{
 		baseURL:      baseURL,
 		token:        token,
 		switchEntity: switchEntity,
 		powerEntity:  powerEntity,
-		client:       &http.Client{Timeout: 5 * time.Second},
+		helper:       helper,
 	}
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
 	return c, nil
@@ -56,40 +63,27 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 
 func (c *HomeAssistantSwitch) apiRequest(method, path string, body interface{}) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", c.baseURL, path)
-	var reqBody io.Reader
+	var req *http.Request
+	var err error
+	headers := map[string]string{"Content-Type": "application/json"}
 	if body != nil {
-		b, _ := json.Marshal(body)
-		reqBody = bytes.NewReader(b)
+		req, err = request.New(method, url, request.MarshalJSON(body), headers)
+	} else {
+		req, err = request.New(method, url, nil, headers)
 	}
-	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.token)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("homeassistantswitch: %s %d", url, resp.StatusCode)
-	}
-	return io.ReadAll(resp.Body)
+	return c.helper.DoBody(req)
 }
 
 // Enabled implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enabled() (bool, error) {
-	// GET /api/states/<entity_id>
-	path := fmt.Sprintf("/api/states/%s", c.switchEntity)
-	b, err := c.apiRequest("GET", path, nil)
-	if err != nil {
-		return false, err
-	}
+	path := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchEntity)
 	var resp struct {
 		State string `json:"state"`
 	}
-	if err := json.Unmarshal(b, &resp); err != nil {
+	if err := c.helper.GetJSON(path, &resp); err != nil {
 		return false, err
 	}
 	return resp.State == "on", nil
@@ -97,7 +91,6 @@ func (c *HomeAssistantSwitch) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enable(enable bool) error {
-	// POST /api/services/switch/turn_on or turn_off
 	service := "turn_off"
 	if enable {
 		service = "turn_on"
@@ -113,18 +106,14 @@ func (c *HomeAssistantSwitch) CurrentPower() (float64, error) {
 	if c.powerEntity == "" {
 		return 0, nil
 	}
-	path := fmt.Sprintf("/api/states/%s", c.powerEntity)
-	b, err := c.apiRequest("GET", path, nil)
-	if err != nil {
-		return 0, err
-	}
+	path := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
 	var resp struct {
 		State string `json:"state"`
 	}
-	if err := json.Unmarshal(b, &resp); err != nil {
+	if err := c.helper.GetJSON(path, &resp); err != nil {
 		return 0, err
 	}
 	var val float64
-	_, err = fmt.Sscanf(resp.State, "%f", &val)
+	_, err := fmt.Sscanf(resp.State, "%f", &val)
 	return val, err
 }
