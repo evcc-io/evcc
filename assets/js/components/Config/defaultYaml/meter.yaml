@@ -1,0 +1,50 @@
+## required attributes
+
+power: # current power
+  source: const
+  value: 1000 # W
+
+## optional attributes (read-only)
+
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#maxpower: # maximum AC power in W (for hybrid pv)
+#  source: const
+#  value: 5000
+#soc: # state of charge in % (for battery)
+#  source: const
+#  value: 75
+#capacity: # capacity in kWh (for battery)
+#  source: const
+#  value: 10.5
+#powers: # phase powers in W
+#  - source: const
+#    value: 330
+#  - source: const
+#    value: 340
+#  - source: const
+#    value: 330
+#currents: # phase currents in A
+#  - source: const
+#    value: 1.5
+#  - source: const
+#    value: 1.6
+#  - source: const
+#    value: 1.5
+#voltages: # phase voltages in V
+#  - source: const
+#    value: 230.1
+#  - source: const
+#    value: 230.2
+#  - source: const
+#    value: 230.3
+
+## optional attributes (writeable)
+
+#limitsoc: # set battery charge target in % (for battery)
+#  source: js
+#  script: console.log(limitsoc)
+#batterymode: # set charging mode directly (1: normal, 2: hold, 3: charge) (for battery)
+#  source: js
+#  script: console.log(batterymode)

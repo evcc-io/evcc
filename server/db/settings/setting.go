@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"slices"
 	"strconv"
@@ -224,11 +223,12 @@ func Yaml(key string, other, res any) error {
 	if err != nil {
 		return err
 	}
+
 	if s == "" {
 		return ErrNotFound
 	}
 
-	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(s), &other); err != nil {
 		return err
 	}
 

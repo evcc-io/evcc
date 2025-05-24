@@ -17,7 +17,6 @@
 					</p>
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
-						<li>custom/plugin meters and vehicles</li>
 						<li>migration for loadpoints</li>
 					</ul>
 					<p>

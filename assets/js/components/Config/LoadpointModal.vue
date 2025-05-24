@@ -634,7 +634,10 @@ export default {
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
-			const title = this.charger.deviceProduct || this.charger.config?.template || "unknown";
+			const title =
+				this.charger.deviceProduct ||
+				this.charger.config?.template ||
+				this.$t("config.general.customOption");
 			return `${title} [${this.values.charger}]`;
 		},
 		chargerStatus() {

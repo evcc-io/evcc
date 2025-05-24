@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open">
+	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -8,12 +8,12 @@
 		</p>
 		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
-			<div class="editor-container" :style="{ height }">
-				<YamlEditor
+			<div class="editor-container">
+				<YamlEditorContainer
 					v-model="yaml"
-					class="editor"
 					:errorLine="errorLine"
 					:removeKey="removeKey"
+					:hidden="!modalVisible"
 				/>
 			</div>
 
@@ -48,11 +48,11 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
-import YamlEditor from "./YamlEditor.vue";
+import YamlEditorContainer from "./YamlEditorContainer.vue";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditor },
+	components: { GenericModal, YamlEditorContainer },
 	props: {
 		title: String,
 		description: String,
@@ -70,14 +70,12 @@ export default {
 			errorLine: undefined,
 			yaml: "",
 			serverYaml: "",
+			modalVisible: false,
 		};
 	},
 	computed: {
 		docsLink() {
 			return `${docsPrefix()}${this.docs}`;
-		},
-		height() {
-			return Math.max(150, this.yaml.split("\n").length * 18) + 22 + "px";
 		},
 		nothingChanged() {
 			return this.yaml === this.serverYaml && this.yaml !== "";
@@ -93,7 +91,11 @@ export default {
 		},
 		async open() {
 			this.reset();
+			this.modalVisible = true;
 			await this.load();
+		},
+		close() {
+			this.modalVisible = false;
 		},
 		async load() {
 			try {
@@ -134,14 +136,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.editor-container {
-	margin: 0 -1rem 0 -1.25rem;
-}
-/* reset margins on lg */
-@media (min-width: 992px) {
-	.editor-container {
-		margin: 0;
-	}
 }
 </style>
