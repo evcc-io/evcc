@@ -1559,10 +1559,6 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	if lp.hasPhaseSwitching() {
-		return // we don't need the voltages
-	}
-
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
@@ -1572,6 +1568,10 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	if err != nil {
 		lp.log.ERROR.Printf("charge voltages: %v", err)
 		return
+	}
+
+	if lp.hasPhaseSwitching() {
+		return // we don't need the voltages
 	}
 
 	chargeVoltages := []float64{u1, u2, u3}
