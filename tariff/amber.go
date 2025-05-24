@@ -124,7 +124,7 @@ func (t *Amber) Rates() (api.Rates, error) {
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
 	})
-	return res, err
+	return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 func (t *Amber) Unit() string {
