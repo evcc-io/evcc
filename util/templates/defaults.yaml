@@ -440,6 +440,7 @@ presets:
         required: true
 
   eebus:
+    protocol: eebus
     params:
       - name: ski
         help:
@@ -465,6 +466,9 @@ presets:
       - name: icon
         advanced: true
   ocpp:
+    protocol: ocpp
+    requirements:
+      evcc: ["sponsorship"]
     params:
       - name: stationid
         type: string
@@ -523,6 +527,7 @@ presets:
         example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
 
   mqtt:
+    protocol: mqtt
     params:
       - name: host
         help:

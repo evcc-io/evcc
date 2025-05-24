@@ -1,4 +1,5 @@
 template: daheimladen-mb
+protocol: modbus
 products:
   - brand: DaheimLaden
     description:
