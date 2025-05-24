@@ -24,13 +24,13 @@ func init() {
 
 func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
-	    embed        `mapstructure:",squash"`
-	    BaseURL      string
-	    Token        string
-	    SwitchEntity string
-	    PowerEntity  string
-	    StandbyPower float64
-    }
+		embed        `mapstructure:",squash"`
+		BaseURL      string
+		Token        string
+		SwitchEntity string
+		PowerEntity  string
+		StandbyPower float64
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		powerEntity:  powerEntity,
 		Helper:       request.NewHelper(util.NewLogger("homeassistant-switch")),
 	}
-	
+
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
 	c.Helper.Client.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
@@ -90,15 +90,8 @@ func (c *HomeAssistantSwitch) CurrentPower() (float64, error) {
 	}
 	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
 	var resp struct {
-		State string `json:"state"`
+		State float64 `json:"state,string"`
 	}
-	if err := c.Helper.GetJSON(uri, &resp); err != nil {
-		return 0, err
-	}
-	if resp.State == "unknown" || resp.State == "unavailable" {
-		return 0, nil
-	}
-	var val float64
-	_, err := fmt.Sscanf(resp.State, "%f", &val)
-	return val, err
+	err := c.Helper.GetJSON(uri, &resp)
+	return resp.State, err
 }
