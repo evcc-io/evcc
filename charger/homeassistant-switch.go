@@ -88,11 +88,11 @@ func (c *HomeAssistantSwitch) CurrentPower() (float64, error) {
 	if c.powerEntity == "" {
 		return 0, nil
 	}
-	path := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
+	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
 	var resp struct {
 		State string `json:"state"`
 	}
-	if err := c.Helper.GetJSON(path, &resp); err != nil {
+	if err := c.Helper.GetJSON(uri, &resp); err != nil {
 		return 0, err
 	}
 	if resp.State == "unknown" || resp.State == "unavailable" {
