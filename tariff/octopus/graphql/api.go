@@ -22,6 +22,9 @@ const URI = BaseURI + "/v1/graphql/"
 type OctopusGraphQLClient struct {
 	*graphql.Client
 
+	// Local logging utility.
+	log *util.Logger
+
 	// apikey is the Octopus Energy API key (provided by user)
 	apikey string
 
@@ -42,6 +45,7 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 
 	gq := &OctopusGraphQLClient{
 		Client: graphql.NewClient(URI, cli),
+		log:    log,
 		apikey: apikey,
 	}
 
@@ -70,6 +74,8 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 		return nil
 	}
 
+	c.log.TRACE.Println("GraphQL: refreshing token")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -80,6 +86,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 
 	c.token = &q.ObtainKrakenToken.Token
 	c.tokenExpiration = time.Now().Add(time.Hour)
+	c.log.TRACE.Println("GraphQL: new token acquired, expires", c.tokenExpiration)
 	return nil
 }
 
@@ -111,6 +118,7 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 		return "", errors.New("more than one octopus account on this api key not supported")
 	}
 	c.accountNumber = q.Viewer.Accounts[0].Number
+	c.log.TRACE.Println("GraphQL: account number found:", c.accountNumber)
 	return c.accountNumber, nil
 }
 
@@ -143,5 +151,8 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	//switch t := q.Account.ElectricityAgreements[0].Tariff.(type) {
 	//
 	//}
-	return q.Account.ElectricityAgreements[0].Tariff.TariffCode(), nil
+	tariffCode := q.Account.ElectricityAgreements[0].Tariff.TariffCode()
+	c.log.TRACE.Println("GraphQL: tariff code found:", tariffCode)
+
+	return tariffCode, nil
 }
