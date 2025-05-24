@@ -40,8 +40,15 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 }
 
 func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (*HomeAssistantSwitch, error) {
-	helper := request.NewHelper(util.NewLogger("homeassistant-switch"))
-	helper.Client.Transport = &transport.Decorator{
+	c := &HomeAssistantSwitch{
+		baseURL:      baseURL,
+		switchEntity: switchEntity,
+		powerEntity:  powerEntity,
+		Helper:       request.NewHelper(util.NewLogger("homeassistant-switch")),
+	}
+	
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
+	c.Helper.Client.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": "Bearer " + token,
 			"Content-Type":  "application/json",
@@ -49,13 +56,6 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Base: helper.Client.Transport,
 	}
 
-	c := &HomeAssistantSwitch{
-		baseURL:      baseURL,
-		switchEntity: switchEntity,
-		powerEntity:  powerEntity,
-		Helper:       helper,
-	}
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
 	return c, nil
 }
 
