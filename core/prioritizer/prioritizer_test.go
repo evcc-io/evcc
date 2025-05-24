@@ -17,11 +17,13 @@ func TestPrioritzer(t *testing.T) {
 	lo.EXPECT().GetTitle().AnyTimes()
 	lo.EXPECT().GetPriority().Return(0).AnyTimes()       // prio 0
 	lo.EXPECT().EffectivePriority().Return(0).AnyTimes() // prio 0
+	lo.EXPECT().GetMaxPhysicalCurrent().Return((*float64)(nil)).AnyTimes()
 
 	hi := loadpoint.NewMockAPI(ctrl)
 	hi.EXPECT().GetTitle().AnyTimes()
 	hi.EXPECT().GetPriority().Return(1).AnyTimes()       // prio 1
 	hi.EXPECT().EffectivePriority().Return(1).AnyTimes() // prio 1
+	hi.EXPECT().GetMaxPhysicalCurrent().Return((*float64)(nil)).AnyTimes()
 
 	// no additional power available
 	lo.EXPECT().GetChargePowerFlexibility(nil).Return(300.0)

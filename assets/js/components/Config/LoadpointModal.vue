@@ -308,13 +308,7 @@
 				<FormRow
 					id="chargerPower"
 					:label="$t('config.loadpoint.chargerTypeLabel')"
-					:help="
-						chargerPower === '11kw'
-							? $t('config.loadpoint.chargerPower11kwHelp')
-							: chargerPower === '22kw'
-								? $t('config.loadpoint.chargerPower22kwHelp')
-								: $t('config.loadpoint.chargerPowerCustomHelp')
-					"
+					:help="chargerPowerHelp"
 				>
 					<SelectGroup
 						id="chargerPower"
@@ -331,14 +325,18 @@
 
 				<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
 					<FormRow
-						id="loadpointMinCurrent"
-						:label="$t('config.loadpoint.minCurrentLabel')"
+						id="loadpointMinPhysicalCurrent"
+						:label="$t('config.loadpoint.minPhysicalCurrentLabel')"
 						class="col-sm-6 mb-sm-0"
-						:help="values.minCurrent < 6 ? $t('config.loadpoint.minCurrentHelp') : null"
+						:help="
+							values.minPhysicalCurrent < 6
+								? $t('config.loadpoint.minPhysicalCurrentHelp')
+								: null
+						"
 					>
 						<PropertyField
-							id="loadpointMinCurrent"
-							v-model="values.minCurrent"
+							id="loadpointMinPhysicalCurrent"
+							v-model="values.minPhysicalCurrent"
 							type="Float"
 							unit="A"
 							size="w-25 w-min-200"
@@ -348,18 +346,18 @@
 					</FormRow>
 
 					<FormRow
-						id="loadpointMaxCurrent"
-						:label="$t('config.loadpoint.maxCurrentLabel')"
+						id="loadpointMaxPhysicalCurrent"
+						:label="$t('config.loadpoint.maxPhysicalCurrentLabel')"
 						class="col-sm-6 mb-sm-0"
 						:help="
-							values.maxCurrent < values.minCurrent
-								? $t('config.loadpoint.maxCurrentHelp')
+							values.maxPhysicalCurrent < values.minPhysicalCurrent
+								? $t('config.loadpoint.maxPhysicalCurrentHelp')
 								: null
 						"
 					>
 						<PropertyField
-							id="loadpointMaxCurrent"
-							v-model="values.maxCurrent"
+							id="loadpointMaxPhysicalCurrent"
+							v-model="values.maxPhysicalCurrent"
 							type="Float"
 							unit="A"
 							size="w-25 w-min-200"
@@ -557,6 +555,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import test from "./mixins/test";
 import EditIcon from "../MaterialIcon/Edit.vue";
 
 const nsPerMin = 60 * 1e9;
@@ -566,6 +565,8 @@ const defaultValues = {
 	phasesConfigured: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
+	minPhysicalCurrent: 6,
+	maxPhysicalCurrent: 16,
 	priority: 0,
 	defaultMode: "",
 	thresholds: {
@@ -590,7 +591,7 @@ const defaultThresholds = {
 export default {
 	name: "LoadpointModal",
 	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
-	mixins: [formatter],
+	mixins: [formatter, test],
 	props: {
 		id: Number,
 		name: String,
@@ -622,6 +623,13 @@ export default {
 				return this.$t(`config.loadpoint.titleAdd`);
 			}
 			return this.$t(`config.loadpoint.titleEdit`);
+		},
+		chargerPowerHelp() {
+			const baseText = this.$t("config.loadpoint.chargerPowerHelp");
+			const powerType = this.chargerPower === "other" ? "Custom" : this.chargerPower;
+			const specificText = this.$t(`config.loadpoint.chargerPower${powerType}Help`);
+
+			return `${baseText} ${specificText}`;
 		},
 		isNew() {
 			return this.id === undefined;
@@ -701,11 +709,11 @@ export default {
 		},
 		chargerPower(value) {
 			if (value === "11kw") {
-				this.values.minCurrent = 6;
-				this.values.maxCurrent = 16;
+				this.values.minPhysicalCurrent = 6;
+				this.values.maxPhysicalCurrent = 16;
 			} else if (value === "22kw") {
-				this.values.minCurrent = 6;
-				this.values.maxCurrent = 32;
+				this.values.minPhysicalCurrent = 6;
+				this.values.maxPhysicalCurrent = 32;
 			}
 		},
 		solarMode(value) {
@@ -739,13 +747,13 @@ export default {
 		async update() {
 			this.saving = true;
 			try {
+				this.validate();
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
 				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				this.handleUpdateError(e);
 			}
 			this.saving = false;
 		},
@@ -755,20 +763,18 @@ export default {
 				this.$emit("updated");
 				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				alert("delete failed");
+				this.handleRemoveError(e);
 			}
 		},
 		async create() {
 			this.saving = true;
 			try {
+				this.validate();
 				await api.post("config/loadpoints", this.values);
 				this.$emit("updated");
 				this.$refs.modal.close();
 			} catch (e) {
-				console.error(e);
-				const error = e.response?.data?.error;
-				alert(`failed to create loadpoint: ${error}`);
+				this.handleCreateError(e);
 			}
 			this.saving = false;
 		},
@@ -797,10 +803,10 @@ export default {
 			this.values.charger = charger;
 		},
 		updateChargerPower() {
-			const { minCurrent, maxCurrent } = this.values;
-			if (minCurrent === 6 && maxCurrent === 16) {
+			const { minPhysicalCurrent, maxPhysicalCurrent } = this.values;
+			if (minPhysicalCurrent === 6 && maxPhysicalCurrent === 16) {
 				this.chargerPower = "11kw";
-			} else if (minCurrent === 6 && maxCurrent === 32) {
+			} else if (minPhysicalCurrent === 6 && maxPhysicalCurrent === 32) {
 				this.chargerPower = "22kw";
 			} else {
 				this.chargerPower = "other";
@@ -828,6 +834,16 @@ export default {
 				this.values.phasesConfigured = 3; // no automatic switching, default to 3-phase
 				return;
 			}
+		},
+		validate() {
+			const {
+				minCurrent: min,
+				maxCurrent: max,
+				minPhysicalCurrent: minP,
+				maxPhysicalCurrent: maxP,
+			} = this.values;
+			this.values.minCurrent = Math.max(minP, Math.min(min, maxP));
+			this.values.maxCurrent = Math.min(maxP, Math.max(max, minP));
 		},
 	},
 };
