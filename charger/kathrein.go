@@ -373,17 +373,17 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 		return err
 	}
 
-	// After (!!!) switching phases charging must be stopped to execute phase switching (special behavior of Kathrein WB)
-	if err := wb.Enable(false); err != nil {
-		return err
-	}
-
-	// Re-enable charging if it was previously enabled
+	// Disable and re-enable charging to apply the new phase setting
 	if enabled {
-		err = wb.Enable(true)
+		if err := wb.Enable(false); err != nil {
+			return err
+		}
+		if err := wb.Enable(true); err != nil {
+			return err
+		}
 	}
 
-	return err
+	return nil
 }
 
 var _ api.PhaseGetter = (*Kathrein)(nil)
@@ -429,14 +429,6 @@ func (wb *Kathrein) Diagnose() {
 		fmt.Printf("Device - Serial:\t%s\n", b)
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2); err == nil {
-		fmt.Printf("Meter - P tot (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
-		fmt.Printf("Meter - Frequency:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
-	}
-
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1); err == nil {
 		fmt.Printf("EVSE - Charging-State:\t%d\n", b[1])
 	}
@@ -459,14 +451,6 @@ func (wb *Kathrein) Diagnose() {
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegGrantedPower, 1); err == nil {
 		fmt.Printf("EVSE - Granted Power:\t%d W\n", b[1])
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2); err == nil {
-		fmt.Printf("Charging - Duration:\t%d s\n", b)
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2); err == nil {
-		fmt.Printf("Charging - Energy:\t%d Wh\n", b)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSControlRegister, 1); err == nil {
