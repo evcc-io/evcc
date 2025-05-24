@@ -11,14 +11,15 @@ params:
   - name: port
     default: 8080
   - name: path
-    default: / # usually /BSMData.shtml
+    default: / # usually /BMSData.shtml, always start with a /
   - name: capacity
     advanced: true
 render: |
   type: custom
+  {{- $uri := printf "http://%s:%s%s" .host .port .path }}
   power:
     source: http
-    uri: http://{{ .host }}:{{ .port }}{{ .path }}
+    uri: {{ $uri }}
   {{- if eq .usage "grid" }}
     jq: .FData.PGrid
   {{- end }}
@@ -29,7 +30,7 @@ render: |
     jq: .FData.IBat * .FData.VBat
   soc:
     source: http
-    uri: http://{{ .host }}:{{ .port }}{{ .path }}
+    uri: {{ $uri }}
     jq: .SData.SoC
   capacity: {{ .capacity }} # kWh
   {{- end }}
