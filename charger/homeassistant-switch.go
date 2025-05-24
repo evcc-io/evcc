@@ -53,7 +53,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 			"Authorization": "Bearer " + token,
 			"Content-Type":  "application/json",
 		}),
-		Base: helper.Client.Transport,
+		Base: c.Helper.Client.Transport,
 	}
 
 	return c, nil
