@@ -27,37 +27,30 @@ query getCars {
 	}
 }
 
-query CarTelematics($vin: String!) {
-	carTelematics(vin: $vin) {
+query CarTelematicsV2($vins: [String!]!) {
+	carTelematicsV2(vins: $vins) {
+		health {
+			vin
+			brakeFluidLevelWarning
+			daysToService
+			distanceToServiceKm
+			engineCoolantLevelWarning
+			oilLevelWarning
+			serviceWarning
+			timestamp { seconds nanos }
+		}
 		battery {
-			averageEnergyConsumptionKwhPer100Km
+			vin
 			batteryChargeLevelPercentage
-			chargerConnectionStatus
-			chargingCurrentAmps
-			chargingPowerWatts
 			chargingStatus
-			estimatedChargingTimeMinutesToTargetDistance
 			estimatedChargingTimeToFullMinutes
 			estimatedDistanceToEmptyKm
-			estimatedDistanceToEmptyMiles
-			eventUpdatedTimestamp {
-				iso
-				unix
-				__typename
-			}
-			__typename
+			timestamp { seconds nanos }
 		}
 		odometer {
-			averageSpeedKmPerHour
-			eventUpdatedTimestamp {
-				iso
-				unix
-				__typename
-			}
+			vin
 			odometerMeters
-			tripMeterAutomaticKm
-			tripMeterManualKm
-			__typename
+			timestamp { seconds nanos }
 		}
 	}
 }
