@@ -12,10 +12,9 @@ import (
 
 type HomeAssistantSwitch struct {
 	baseURL      string
-	token        string
 	switchEntity string
 	powerEntity  string
-	helper       *request.Helper
+	*request.Helper
 	*switchSocket
 }
 
@@ -52,41 +51,22 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 
 	c := &HomeAssistantSwitch{
 		baseURL:      baseURL,
-		token:        token,
 		switchEntity: switchEntity,
 		powerEntity:  powerEntity,
-		helper:       helper,
+		Helper:       helper,
 	}
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
 	return c, nil
 }
 
-func (c *HomeAssistantSwitch) apiRequest(method, path string, body interface{}) ([]byte, error) {
-	url := fmt.Sprintf("%s%s", c.baseURL, path)
-	var req *http.Request
-	var err error
-	headers := map[string]string{"Content-Type": "application/json"}
-	if body != nil {
-		req, err = request.New(method, url, request.MarshalJSON(body), headers)
-	} else {
-		req, err = request.New(method, url, nil, headers)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return c.helper.DoBody(req)
-}
-
 // Enabled implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enabled() (bool, error) {
-	path := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchEntity)
+	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchEntity)
 	var resp struct {
 		State string `json:"state"`
 	}
-	if err := c.helper.GetJSON(path, &resp); err != nil {
-		return false, err
-	}
-	return resp.State == "on", nil
+	err := c.Helper.GetJSON(uri, &resp)
+	return resp.State == "on", err
 }
 
 // Enable implements the api.Charger interface
@@ -95,10 +75,12 @@ func (c *HomeAssistantSwitch) Enable(enable bool) error {
 	if enable {
 		service = "turn_on"
 	}
-	path := fmt.Sprintf("/api/services/switch/%s", service)
-	body := map[string]interface{}{"entity_id": c.switchEntity}
-	_, err := c.apiRequest("POST", path, body)
-	return err
+	uri := fmt.Sprintf("%s/api/services/switch/%s", c.baseURL, service)
+
+	data := map[string]interface{}{"entity_id": c.switchEntity}
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+	return c.Helper.DoJSON(req, nil)
 }
 
 // CurrentPower implements the api.Meter interface (optional)
@@ -110,8 +92,11 @@ func (c *HomeAssistantSwitch) CurrentPower() (float64, error) {
 	var resp struct {
 		State string `json:"state"`
 	}
-	if err := c.helper.GetJSON(path, &resp); err != nil {
+	if err := c.Helper.GetJSON(path, &resp); err != nil {
 		return 0, err
+	}
+	if resp.State == "unknown" || resp.State == "unavailable" {
+		return 0, nil
 	}
 	var val float64
 	_, err := fmt.Sscanf(resp.State, "%f", &val)

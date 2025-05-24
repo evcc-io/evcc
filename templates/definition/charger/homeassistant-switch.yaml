@@ -1,5 +1,3 @@
-# Home Assistant API charger template for evcc
-
 template: homeassistant-switch
 products:
   - brand: Home Assistant Switch
@@ -32,7 +30,5 @@ render: |
   baseurl: {{ .baseurl }}
   token: {{ .token }}
   switchentity: {{ .switchentity }}
-  {{- if .powerentity }}
   powerentity: {{ .powerentity }}
-  {{- end }}
   {{ include "switchsocket" . }}
