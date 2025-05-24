@@ -67,8 +67,7 @@ const (
 	kathreinRegCurrents         = 0x0036 // float32 Line 1 Current (A)
 	kathreinRegPowers           = 0x003C // float32 Line 1 Power (W)
 	kathreinRegTotalActivePower = 0x0054 // float32 Total active power (W)
-	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (Wh - deviating from Kathrein Register Document)
-	kathreinRegFrequencyLine    = 0x005E // float32 Frequency line (Hz)
+	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (Wh)
 
 	// EVSE - Charging state (uint16)
 	//   0 : Idle
