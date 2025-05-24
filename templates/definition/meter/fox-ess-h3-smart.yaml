@@ -91,6 +91,12 @@ render: |
         address: 39288 # PV5
         type: holding
         decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 39290 # PV6
+        type: holding
+        decode: int16
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
