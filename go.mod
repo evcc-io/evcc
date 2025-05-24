@@ -223,3 +223,5 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0
+
+replace github.com/volkszaehler/mbmd v0.0.0-20250503134953-5c7e3f60eee5 => github.com/guido4096/mbmd v0.0.0-20250509173423-495d092fee0e
