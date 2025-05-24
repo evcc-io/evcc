@@ -1,9 +1,9 @@
-template: zaptec
+template: zaptec-pro
 products:
   - brand: Zaptec
     description:
-      generic: Go
-capabilities: ["rfid"]
+      generic: Pro
+capabilities: ["rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:
