@@ -1,0 +1,87 @@
+template: luxtronik
+products:
+  - brand: Novelan
+    description:
+      generic: LADV
+  - brand: Alpha Innotec
+    description:
+      generic: LWDV
+group: heating
+ #requirements:
+  #  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: heatpump
+  setmaxpower:
+    source: sequence
+    set:
+      - source: modbus # Refresh Power limit
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10041 # PV Überschussleistung in 0.1 kW
+          type: writeholding
+          decode: uint16
+        scale: 0.01
+      - source: const # Apply power limit
+        value: 1 #  0: no Limit, 1: Soft Limit for PV, 2: HardLimit $14a
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10040
+            type: writeholding
+            decode: uint16
+      - source: const # Set increased target temp
+        value: 65 
+        set:
+          source: modbus # Set Target Temp to trigger heating
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10006
+            type: writeholding
+            decode: uint16
+          scale: 10
+      - source: const # Apply increased temp
+        value: 1 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10005
+            type: writeholding
+            decode: uint16
+
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10301 # aktuelle Aufnahmeleistung der WP 
+      type: input
+      decode: uint16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10310 # kumulierter Stromverbrauch 0.1 kWh 
+      type: input
+      decode: int32
+    scale: 0.1
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10120
+      type: input
+      decode: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10123
+      type: input
+      encoding: int16
+    scale: 0.1
