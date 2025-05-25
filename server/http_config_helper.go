@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	// typeTemplate is the updatable configuration type
-	typeTemplate = "template"
+	typeCustom   = "custom"   // typeCustom is the custom configuration type
+	typeTemplate = "template" // typeTemplate is the updatable configuration type
 
 	// masked indicates a masked config parameter value
 	masked = "***"
@@ -338,7 +338,7 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return res, nil
 	}
 
-	if !strings.EqualFold(res.Type, "custom") {
+	if !strings.EqualFold(res.Type, typeCustom) {
 		return configReq{}, errors.New("invalid config: yaml only allowed for custom type")
 	}
 
