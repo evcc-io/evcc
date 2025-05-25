@@ -99,7 +99,6 @@ func (t *Octopus) run(done chan error) {
 
 	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
 	if t.apikey != "" {
-		t.log.TRACE.Println("running in GraphQL mode")
 		gqlCli, err := octoGql.NewClient(t.log, t.apikey, t.accountnumber)
 		if err != nil {
 			once.Do(func() { done <- err })
@@ -112,15 +111,11 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		t.log.TRACE.Println("GraphQL tariff code retrieved:", tariffCode)
 		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
 	} else {
-		t.log.TRACE.Println("running in productCode mode")
 		// Construct Rest Query URI using tariff and region codes.
 		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.productCode, t.region)
 	}
-
-	t.log.TRACE.Println("Rest Query URI:", restQueryUri)
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
 	for tick := time.Tick(time.Hour); ; <-tick {
@@ -135,8 +130,6 @@ func (t *Octopus) run(done chan error) {
 			continue
 		}
 
-		t.log.TRACE.Printf("REST result returned %v results", res.Count)
-
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
 			// This checks whether:
@@ -145,14 +138,13 @@ func (t *Octopus) run(done chan error) {
 			// - the Payment Method in the Result matches the Payment Method filter
 			if r.PaymentMethod != "" && t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
 				// A Payment Method filter is set, and this Tariff entry does not match our filter.
-				t.log.TRACE.Printf("tariff entry %v fails payment method filtration - pass", r.ValidityStart)
 				continue
 			}
 			// ValidityEnd can be zero (wonderful) which just means that the tariff has no present expected end.
 			// We need to catch that and set the date to something way in the future.
 			rateEnd := r.ValidityEnd
 			if rateEnd.IsZero() {
-				t.log.DEBUG.Printf("handling rate with indefinite length: %v", r.ValidityStart)
+				t.log.TRACE.Printf("handling rate with indefinite length: %v", r.ValidityStart)
 				// Currently adds a year from the start date
 				rateEnd = r.ValidityStart.AddDate(1, 0, 0)
 			}
@@ -162,7 +154,6 @@ func (t *Octopus) run(done chan error) {
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
 				Value: r.PriceInclusiveTax / 1e2,
 			}
-			t.log.TRACE.Printf("rate: start %s, end %s, value %v", ar.Start, ar.End, ar.Value)
 			data = append(data, ar)
 		}
 
