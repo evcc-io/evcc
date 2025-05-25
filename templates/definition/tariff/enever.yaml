@@ -25,6 +25,7 @@ params:
         "GSL",
         "MDE",
         "NE",
+        "PE",
         "TI",
         "VDB",
         "VON",

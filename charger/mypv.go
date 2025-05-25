@@ -37,6 +37,7 @@ type MyPv struct {
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	power   uint32
+	scale   float64
 	statusC uint16
 	enabled bool
 	regTemp uint16
@@ -68,22 +69,24 @@ func newMyPvFromConfig(ctx context.Context, name string, other map[string]interf
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		TempSource         int
+		Scale              float64
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1, // default
 		},
 		TempSource: 1,
+		Scale:      1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.TempSource, statusC)
+	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.TempSource, statusC, cc.Scale)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
-func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16) (api.Charger, error) {
+func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16, scale float64) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -104,6 +107,7 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 		log:     log,
 		conn:    conn,
 		statusC: statusC,
+		scale:   scale,
 		regTemp: elwaTemp[tempSource-1],
 	}
 
@@ -177,7 +181,7 @@ func (wb *MyPv) Enabled() (bool, error) {
 
 func (wb *MyPv) setPower(power uint16) error {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, power)
+	binary.BigEndian.PutUint16(b, uint16(wb.scale*float64(power)))
 
 	_, err := wb.conn.WriteMultipleRegisters(elwaRegSetPower, 1, b)
 	return err
