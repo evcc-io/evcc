@@ -37,16 +37,20 @@ type OctopusGraphQLClient struct {
 
 	// accountNumber is the Octopus Energy account number associated with the given API key (queried ourselves via GraphQL)
 	accountNumber string
+
+	// accountNumberDesire is an optional Octopus Energy account number to search for, if there are multiple accounts on the key.
+	accountNumberDesire string
 }
 
 // NewClient returns a new, unauthenticated instance of OctopusGraphQLClient.
-func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
+func NewClient(log *util.Logger, apikey string, accountNumber string) (*OctopusGraphQLClient, error) {
 	cli := request.NewClient(log)
 
 	gq := &OctopusGraphQLClient{
-		Client: graphql.NewClient(URI, cli),
-		log:    log,
-		apikey: apikey,
+		Client:              graphql.NewClient(URI, cli),
+		log:                 log,
+		apikey:              apikey,
+		accountNumberDesire: accountNumber,
 	}
 
 	if err := gq.refreshToken(); err != nil {
@@ -92,6 +96,8 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 
 // AccountNumber queries the Account Number assigned to the associated API key.
 // Caching is provided.
+// If more than one Account is bound to the API Key, this will search for AccountNumberDesire in the list of available accounts,
+// and return an error if it cannot be found.
 func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 	// Check cache
 	if c.accountNumber != "" {
@@ -114,11 +120,44 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 	if len(q.Viewer.Accounts) == 0 {
 		return "", errors.New("no account associated with given octopus api key")
 	}
-	if len(q.Viewer.Accounts) > 1 {
-		return "", errors.New("more than one octopus account on this api key not supported")
+
+	// If a desired account number is set, let's try and bind to that first.
+	if c.accountNumberDesire != "" {
+		for _, account := range q.Viewer.Accounts {
+			if account.Number == c.accountNumberDesire {
+				c.accountNumber = q.Viewer.Accounts[0].Number
+				break
+			}
+		}
 	}
-	c.accountNumber = q.Viewer.Accounts[0].Number
-	c.log.TRACE.Println("GraphQL: account number found:", c.accountNumber)
+
+	if c.accountNumber == "" {
+		// Filtration either didn't happen or failed - let's find out if it was necessary.
+		if len(q.Viewer.Accounts) > 1 {
+			// More than one account, and filtration didn't produce any result.
+			if c.accountNumberDesire == "" {
+				// A filter isn't set - encourage the user to fix that.
+				c.log.ERROR.Println("There is more than one account associated with this Octopus API key.")
+				c.log.ERROR.Println("Please add one of the following accounts to your tariff configuration under the accountNumber key:")
+				for _, account := range q.Viewer.Accounts {
+					c.log.ERROR.Println(" - ", account.Number)
+				}
+				return "", errors.New("more than one account on this api key - please specify an account to use in configuration")
+			} else {
+				// We tried filtration and it failed
+				return "", errors.New("unable to find given octopus account id")
+			}
+		} else if c.accountNumberDesire != "" {
+			// User has an accountNumber set for no reason - tell them they can remove it.
+			c.log.ERROR.Println("There is only one account number associated with this Octopus API key, but we couldn't find the requested accountNumber. Try removing the accountNumber from your configuration.")
+			return "", errors.New("unable to find given octopus account id")
+		} else {
+			// There's exactly one account - filtration wasn't necessary, so bind to that.
+			c.accountNumber = q.Viewer.Accounts[0].Number
+		}
+	}
+
+	c.log.TRACE.Println("GraphQL: using account number:", c.accountNumber)
 	return c.accountNumber, nil
 }
 

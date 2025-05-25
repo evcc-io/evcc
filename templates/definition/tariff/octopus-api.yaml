@@ -15,6 +15,12 @@ params:
     required: true
     help:
       generic: "Octopus Energy API Key."
+  - name: accountNumber
+    type: string
+    required: false
+    help:
+      generic: "Optional Account Number (usually in the format X-XXXXXXXX). Only required if you have multiple Accounts."
 render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
+  accountNumber: {{ .accountNumber }}
