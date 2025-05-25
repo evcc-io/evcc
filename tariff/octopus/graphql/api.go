@@ -78,8 +78,6 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 		return nil
 	}
 
-	c.log.TRACE.Println("GraphQL: refreshing token")
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -90,7 +88,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 
 	c.token = &q.ObtainKrakenToken.Token
 	c.tokenExpiration = time.Now().Add(time.Hour)
-	c.log.TRACE.Println("GraphQL: new token acquired, expires", c.tokenExpiration)
+	c.log.TRACE.Println("GraphQL: refreshed token, now expires", c.tokenExpiration)
 	return nil
 }
 
@@ -98,7 +96,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 // Caching is provided.
 // If more than one Account is bound to the API Key, this will search for AccountNumberDesire in the list of available accounts,
 // and return an error if it cannot be found.
-func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
+func (c *OctopusGraphQLClient) AccountNumber() (accountNumber string, err error) {
 	// Check cache
 	if c.accountNumber != "" {
 		return c.accountNumber, nil
@@ -117,44 +115,16 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 		return "", err
 	}
 
-	if len(q.Viewer.Accounts) == 0 {
-		return "", errors.New("no account associated with given octopus api key")
-	}
-
-	// If a desired account number is set, let's try and bind to that first.
-	if c.accountNumberDesire != "" {
-		for _, account := range q.Viewer.Accounts {
-			if account.Number == c.accountNumberDesire {
-				c.accountNumber = account.Number
-				break
+	c.accountNumber, err = filterAccount(q.Viewer.Accounts, c.accountNumberDesire)
+	if err != nil {
+		if errors.Is(err, ErrMultipleAccounts) {
+			c.log.ERROR.Println("There is more than one account associated with this Octopus API key.")
+			c.log.ERROR.Println("Please add one of the following accounts to your tariff configuration under the accountNumber key:")
+			for _, account := range q.Viewer.Accounts {
+				c.log.ERROR.Println(" - ", account.Number)
 			}
 		}
-	}
-
-	if c.accountNumber == "" {
-		// Filtration either didn't happen or failed - let's find out if it was necessary.
-		if len(q.Viewer.Accounts) > 1 {
-			// More than one account, and filtration didn't produce any result.
-			if c.accountNumberDesire == "" {
-				// A filter isn't set - encourage the user to fix that.
-				c.log.ERROR.Println("There is more than one account associated with this Octopus API key.")
-				c.log.ERROR.Println("Please add one of the following accounts to your tariff configuration under the accountNumber key:")
-				for _, account := range q.Viewer.Accounts {
-					c.log.ERROR.Println(" - ", account.Number)
-				}
-				return "", errors.New("more than one account on this api key - please specify an account to use in configuration")
-			} else {
-				// We tried filtration and it failed
-				return "", errors.New("unable to find given octopus account id")
-			}
-		} else if c.accountNumberDesire != "" {
-			// User has an accountNumber set for no reason - tell them they can remove it.
-			c.log.ERROR.Println("There is only one account number associated with this Octopus API key, but we couldn't find the requested accountNumber. Try removing the accountNumber from your configuration.")
-			return "", errors.New("unable to find given octopus account id")
-		} else {
-			// There's exactly one account - filtration wasn't necessary, so bind to that.
-			c.accountNumber = q.Viewer.Accounts[0].Number
-		}
+		return "", err
 	}
 
 	c.log.TRACE.Println("GraphQL: using account number:", c.accountNumber)
@@ -194,4 +164,34 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	c.log.TRACE.Println("GraphQL: tariff code found:", tariffCode)
 
 	return tariffCode, nil
+}
+
+// filterAccount searches the given accounts for one exactly matching the desire.
+// If a desire is set, but cannot be found, it will return an error.
+// If a desire is not set, but there is more than one account, it will return an error.
+// If a desire is not set, but there is only one account, it will return the Number of that account.
+func filterAccount(accounts []krakenAccount, desire string) (result string, err error) {
+	// Test for no available accounts.
+	if len(accounts) == 0 {
+		return "", ErrNoAccounts
+	}
+
+	// If a desired account number is set, let's try and bind to that first.
+	if desire != "" {
+		for _, account := range accounts {
+			if account.Number == desire {
+				return account.Number, nil
+			}
+		}
+		// A Desire was set, but we couldn't find it.
+		return "", ErrAccountNotFound
+	}
+
+	if len(accounts) == 1 {
+		// Only one possible result, filtration not enabled.
+		return accounts[0].Number, nil
+	}
+
+	// There is more than one account, and no filter is set. We need the user to intervene at this point, as we can't presume.
+	return "", ErrMultipleAccounts
 }
