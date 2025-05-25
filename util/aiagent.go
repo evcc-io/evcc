@@ -27,8 +27,14 @@ func AIFormatter(ai AIAgent, msg string) (string, error) {
 			},
 		},
 	)
+
 	if err != nil {
 		return "", err
 	}
+
+	if len(resp.Choices) == 0 {
+		return msg, nil
+	}
+
 	return resp.Choices[0].Message.Content, nil
 }

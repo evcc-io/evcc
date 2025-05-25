@@ -131,7 +131,6 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 			if err != nil {
 				log.ERROR.Printf("AI formatter error for %s: %v", ev.Event, err)
 			}
-
 		}
 
 		if strings.TrimSpace(msg) == "" {
