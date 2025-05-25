@@ -16,6 +16,12 @@ params:
     choice: ["grid"]
   - name: host
     required: true
+  - name: timeout
+    default: 10s
+    advanced: true
+    help:
+      de: Timeout für HTTP-Anfragen an das ESPHome-Gerät.
+      en: Timeout for HTTP requests to the ESPHome device.
 render: |
   type: custom
   power: # Total power: positive for consumption, negative for production (Watts)
@@ -25,13 +31,14 @@ render: |
       uri: http://{{ .host }}/sensor/active_power_taken_from_grid # ESPHome sensor: name: "Active power taken from grid"
       headers:
       - content-type: application/json
+      timeout: {{ .timeout }}
       jq: .value
       # No scale: value is already in Watts
     - source: http
       uri: http://{{ .host }}/sensor/active_power_put_into_grid # ESPHome sensor: name: "Active power put into grid"
       headers:
       - content-type: application/json
-      timeout: 5s
+      timeout: {{ .timeout }}
       jq: .value
       scale: -1 # Invert for production, value is already in Watts
   energy: # Total imported energy (kWh)
@@ -39,7 +46,7 @@ render: |
     uri: http://{{ .host }}/sensor/active_energy_taken_from_grid # ESPHome sensor: name: "Active energy taken from grid"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     scale: 0.001 # Convert Wh from ESPHome to kWh for evcc
     jq: .value
   currents: # Phase currents (Amperes)
@@ -47,36 +54,36 @@ render: |
     uri: http://{{ .host }}/sensor/current_l1 # ESPHome sensor: name: "Current L1"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/current_l2 # ESPHome sensor: name: "Current L2"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/current_l3 # ESPHome sensor: name: "Current L3"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
   voltages: # Phase voltages (Volts)
   - source: http
     uri: http://{{ .host }}/sensor/voltage_l1 # ESPHome sensor: name: "Voltage L1"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/voltage_l2 # ESPHome sensor: name: "Voltage L2"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/voltage_l3 # ESPHome sensor: name: "Voltage L3"
     headers:
     - content-type: application/json
-    timeout: 5s
+    timeout: {{ .timeout }}
     jq: .value
