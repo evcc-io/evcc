@@ -195,6 +195,16 @@ eebus:
 
 # push messages
 messaging:
+  aiagent: # AI agent for rewriting messages
+    # type: openai
+    # token: sk-Replace-with-your-openai-key
+    # context: |
+    #   You are an EV charging assistant based on the opensource evcc software.
+    #   You help users to charge their electric vehicles.
+    # prompt: |
+    #   Please rewrite the message in a more human-readable format, keeping the original meaning intact.
+    #   Always start your conversation with a kind hello to the driver and end your event information with a nice personal wish to have a healthy next trip or similar.
+    # language: de # language for AI responses, use "en" for English
   events:
     start: # charge start event
       title: Charge started
