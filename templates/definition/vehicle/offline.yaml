@@ -1,8 +1,11 @@
 template: offline
 products:
   - description:
-      en: Generic vehicle
-      de: Generisches Fahrzeug
+      en: Generic vehicle (without API)
+      de: Generisches Fahrzeug (ohne API)
+requirements:
+  description:
+    de:
 group: generic
 params:
   - preset: vehicle-common
