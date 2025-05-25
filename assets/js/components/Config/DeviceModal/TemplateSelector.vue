@@ -4,7 +4,7 @@
 			v-if="isNew"
 			:id="`${deviceType}Template`"
 			ref="select"
-			v-model="localValue"
+			v-model="modelProxy"
 			class="form-select w-100"
 			@change="changed"
 		>
@@ -65,21 +65,15 @@ export default defineComponent({
 		groups: Array as PropType<TemplateGroup[]>,
 	},
 	emits: ["update:modelValue", "change"],
-	data() {
-		return {
-			localValue: this.modelValue,
-		};
-	},
-	watch: {
-		modelValue() {
-			this.localValue = this.modelValue;
+	computed: {
+		modelProxy: {
+			get() {
+				return this.modelValue;
+			},
+			set(value: string) {
+				this.$emit("update:modelValue", value);
+			},
 		},
-		localValue() {
-			this.$emit("update:modelValue", this.localValue);
-		},
-	},
-	beforeMount() {
-		this.localValue = this.modelValue;
 	},
 	methods: {
 		changed(e: Event) {
