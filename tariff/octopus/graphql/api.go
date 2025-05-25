@@ -132,7 +132,7 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	// Get Account Number
 	acc, err := c.AccountNumber()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
