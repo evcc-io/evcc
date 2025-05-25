@@ -138,20 +138,20 @@ func (v *API) WakeUp(accountID string, vin string) (Response, error) {
 	return v.request(uri, request.MarshalJSON(data))
 }
 
-func (v *API) NewWakeUp(accountID string, vin string) (Response, error) {
+func (v *API) WakeUpMY24(accountID string, vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/ev/settings", v.keys.Target, accountID, vin)
 
-	data := map[string]interface{}{
-		"lastSettingsUpdateTimestamp":    "2025-04-24T12:41:41.823Z",
-		"delegatedActivated":             false,
-		"chargeModeRq":                   "SCHEDULED",
-		"chargeTimeStart":                "21:00",
-		"chargeDuration":                 1615,
-		"preconditioningTemperature":     20.0,
-		"preconditioningHeatedStrgWheel": false,
-		"preconditioningHeatedRightSeat": false,
-		"preconditioningHeatedLeftSeat":  false,
-		"programs":                       []interface{}{},
+	data := EvSettingsRequest{
+		LastSettingsUpdateTimestamp:    "2025-04-24T12:41:41.823Z",
+		DelegatedActivated:             false,
+		ChargeModeRq:                   "SCHEDULED",
+		ChargeTimeStart:                "21:00",
+		ChargeDuration:                 1615,
+		PreconditioningTemperature:     20.0,
+		PreconditioningHeatedStrgWheel: false,
+		PreconditioningHeatedRightSeat: false,
+		PreconditioningHeatedLeftSeat:  false,
+		Programs:                       []interface{}{},
 	}
 
 	return v.request(uri, request.MarshalJSON(data))

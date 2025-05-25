@@ -39,8 +39,8 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 			switch wakeupMode {
 			case "alternative":
 				return api.Action(accountID, kamereon.ActionStart, vin)
-			case "new":
-				return api.NewWakeUp(accountID, vin)
+			case "MY24":
+				return api.WakeUpMY24(accountID, vin)
 			default:
 				return api.WakeUp(accountID, vin)
 			}

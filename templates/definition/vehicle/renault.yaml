@@ -5,8 +5,17 @@ params:
   - preset: vehicle-base
   - name: vin
     example: WREN...
+  - name: alternativewakeup
+    type: bool
+    description:
+      de: Alternative Aufweckmechanismus (veraltet)
+      en: Alternative wakeup mechanism (deprecated)
+    advanced: true
+    deprecated: true
   - name: wakeupmode
-    type: string
+    type: choice
+    choice: ["default", "alternative", "MY24"]
+    default: default
     description:
       de: Aufweckmechanismus
       en: Wakeup mechanism
