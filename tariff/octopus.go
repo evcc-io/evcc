@@ -115,7 +115,6 @@ func (t *Octopus) run(done chan error) {
 		}
 		t.log.TRACE.Println("GraphQL tariff code retrieved:", tariffCode)
 		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
-
 	} else {
 		t.log.TRACE.Println("running in productCode mode")
 		// Construct Rest Query URI using tariff and region codes.
@@ -164,7 +163,7 @@ func (t *Octopus) run(done chan error) {
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
 				Value: r.PriceInclusiveTax / 1e2,
 			}
-			t.log.TRACE.Printf("rate: start %s, end %s, value %s", ar.Start, ar.End, ar.Value)
+			t.log.TRACE.Printf("rate: start %s, end %s, value %v", ar.Start, ar.End, ar.Value)
 			data = append(data, ar)
 		}
 
