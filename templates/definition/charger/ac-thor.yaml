@@ -15,7 +15,14 @@ params:
     description:
       en: "Temperature sensor"
       de: "Temperatursensor"
+  - name: scale
+    type: float
+    default: 1
+    description:
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
   tempsource: {{ .tempsource }}
+  scale: {{ .scale }}
