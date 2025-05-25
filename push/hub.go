@@ -37,7 +37,6 @@ type Hub struct {
 
 // NewHub creates push hub with definitions and receiver
 func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCache, ai util.AIAgent) (*Hub, error) {
-
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
