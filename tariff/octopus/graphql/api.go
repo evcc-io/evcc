@@ -125,7 +125,7 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 	if c.accountNumberDesire != "" {
 		for _, account := range q.Viewer.Accounts {
 			if account.Number == c.accountNumberDesire {
-				c.accountNumber = q.Viewer.Accounts[0].Number
+				c.accountNumber = account.Number
 				break
 			}
 		}
