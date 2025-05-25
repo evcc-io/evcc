@@ -133,9 +133,12 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 			}
 
 		}
+
 		if strings.TrimSpace(msg) == "" {
 			continue
 		}
+
+		log.TRACE.Printf("Event %s: %s", ev.Event, msg)
 
 		for _, sender := range h.sender {
 			go sender.Send(title, msg)
