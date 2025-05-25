@@ -158,7 +158,7 @@ test.describe("aux meter", async () => {
     await expect(page.getByTestId("aux")).toHaveCount(0);
   });
 
-  test("user-defined meter yaml errors", async ({ page }) => {
+  test("user-defined meter with errors", async ({ page }) => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -172,6 +172,8 @@ test.describe("aux meter", async () => {
     await modal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
     const editor = modal.getByTestId("yaml-editor");
+
+    // yaml syntax error
     await editorClear(editor);
     await editorType(editor, [
       // prettier-ignore
@@ -181,7 +183,6 @@ test.describe("aux meter", async () => {
 
     // no errors
     await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
-
     const restResult = modal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
@@ -189,7 +190,48 @@ test.describe("aux meter", async () => {
     await expect(restResult).toContainText(
       "yaml: line 2: mapping values are not allowed in this context"
     );
-    // error line
     await expect(editor.locator(".line-numbers.error")).toHaveCount(1);
+
+    // invalid field error
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "apower:",
+      "  source: const",
+      "value: 3000 # W",
+    ]);
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: failed");
+    await expect(restResult).toContainText("has invalid keys: apower");
+    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+
+    // unknown source error
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "power:",
+      "  source: unknown",
+      "value: 3000 # W",
+    ]);
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: failed");
+    await expect(restResult).toContainText("invalid plugin type: unknown");
+    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+
+    // missing required field error
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "energy:",
+      "  source: const",
+      "value: 300 # kWh",
+    ]);
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: failed");
+    await expect(restResult).toContainText("power: missing plugin source");
+    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
   });
 });
