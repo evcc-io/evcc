@@ -2,7 +2,7 @@
 	<div>
 		<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
 			<div class="d-flex justify-content-between">
-				<span class="d-flex flex-nowrap align-items-top">
+				<span class="d-flex flex-nowrap">
 					<BatteryIcon v-if="isBattery" v-bind="iconProps" />
 					<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
 					<div v-else-if="!icon" class="icon-placeholder"></div>
