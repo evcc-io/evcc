@@ -10,19 +10,30 @@ type AIAgent struct {
 	Type, Token, Context, Prompt, Language string
 }
 
-func AIFormatter(ai AIAgent, msg string) (string, error) {
-	client := openai.NewClient(ai.Token)
-	resp, err := client.CreateChatCompletion(
-		context.Background(),
+type AIInstance struct {
+	Client *openai.Client
+	Ctx    context.Context
+	AIAgent
+}
+
+func (i *AIInstance) NewAIAgent(p AIAgent) {
+	i.Client = openai.NewClient(p.Token)
+	i.Ctx = context.Background()
+	i.AIAgent = p
+}
+
+func (i *AIInstance) AIFormat(msg string) (string, error) {
+	resp, err := i.Client.CreateChatCompletion(
+		i.Ctx,
 		openai.ChatCompletionRequest{
 			Model: openai.GPT3Dot5Turbo,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role: openai.ChatMessageRoleUser,
-					Content: "Context: " + ai.Context + "\n\n" +
+					Content: "Context: " + i.Context + "\n\n" +
 						"evcc event message: " + msg + "\n\n" +
-						ai.Prompt + "\n\n" +
-						"Use the language of the following language iso code: " + ai.Language + "\n\n",
+						i.Prompt + "\n\n" +
+						"Use the language of the following language iso code: " + i.Language + "\n\n",
 				},
 			},
 		},

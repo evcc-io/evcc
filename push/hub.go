@@ -32,11 +32,12 @@ type Hub struct {
 	sender      []Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
-	aiagent     util.AIAgent // optional AI agent for push messages
+	ai          util.AIInstance // optional AI agent for push messages
 }
 
 // NewHub creates push hub with definitions and receiver
 func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCache, ai util.AIAgent) (*Hub, error) {
+
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
@@ -47,11 +48,16 @@ func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCac
 		}
 	}
 
+	var i util.AIInstance
+	if ai.Type != "" && ai.Token != "" {
+		i.NewAIAgent(ai)
+	}
+
 	h := &Hub{
 		definitions: cc,
 		cache:       cache,
 		vehicles:    vv,
-		aiagent:     ai,
+		ai:          i,
 	}
 
 	return h, nil
@@ -126,8 +132,8 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 			continue
 		}
 
-		if h.aiagent.Type != "" {
-			msg, err = util.AIFormatter(h.aiagent, msg)
+		if h.ai.Type != "" {
+			msg, err = h.ai.AIFormat(msg)
 			if err != nil {
 				log.ERROR.Printf("AI formatter error for %s: %v", ev.Event, err)
 			}
