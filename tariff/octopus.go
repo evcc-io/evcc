@@ -106,7 +106,6 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		t.log.TRACE.Println("requesting tariff code")
 		tariffCode, err := gqlCli.TariffCode()
 		if err != nil {
 			once.Do(func() { done <- err })
