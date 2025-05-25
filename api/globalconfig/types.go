@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -133,6 +134,7 @@ type DB struct {
 type Messaging struct {
 	Events   map[string]push.EventTemplateConfig
 	Services []config.Typed
+	AIAgent  util.AIAgent
 }
 
 func (c Messaging) Configured() bool {

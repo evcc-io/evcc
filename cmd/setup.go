@@ -735,7 +735,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 
 	messageChan := make(chan push.Event, 1)
 
-	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
+	messageHub, err := push.NewHub(conf.Events, vehicles, cache, conf.AIAgent)
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
