@@ -1,13 +1,14 @@
 package graphql
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestOctopusGraphQLAccountFiltration(t *testing.T) {
 	validAccountNumber := "A-AAAAAAAA"
-	noAccounts := []krakenAccount{}
+	var noAccounts []krakenAccount
 	oneAccount := []krakenAccount{
 		{Number: validAccountNumber},
 	}
