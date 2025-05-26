@@ -100,3 +100,18 @@ func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) {
 		schedule.EnableScheduleType = false
 	}
 }
+
+var _ api.Resurrector = (*Controller)(nil)
+
+func (c *Controller) WakeUp() error {
+	if c.pin == "" {
+		return api.ErrMissingCredentials
+	}
+
+	res, err := c.api.ChargeNow(c.vin, c.pin)
+	if err == nil && res.ResponseStatus != "pending" {
+		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	}
+
+	return err
+}
