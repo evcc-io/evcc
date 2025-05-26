@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type Prop, type PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import { Doughnut } from "vue-chartjs";
 import {
 	DoughnutController,
@@ -52,7 +52,7 @@ export default defineComponent({
 				aggregatedData.grid = total - self;
 			} else {
 				this.sessions.forEach((session) => {
-					const groupKey = session[this.groupBy];
+					const groupKey = session[this.groupBy as "loadpoint" | "vehicle"];
 					if (!aggregatedData[groupKey]) {
 						aggregatedData[groupKey] = 0;
 					}
@@ -114,7 +114,7 @@ export default defineComponent({
 						position: "center",
 						callbacks: {
 							label: (tooltipItem: TooltipItem<"doughnut">) =>
-								this.formatValue(tooltipItem.raw || 0),
+								this.formatValue(tooltipItem.raw as number),
 							labelColor: tooltipLabelColor(false),
 						},
 					},

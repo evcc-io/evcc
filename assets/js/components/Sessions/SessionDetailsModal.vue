@@ -112,7 +112,7 @@
 									<td>
 										{{ fmtMoney(session.price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}<br />
-										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+										{{ fmtPricePerKWh(session.pricePerKWh || 0, currency) }}
 									</td>
 								</tr>
 								<tr v-if="session.co2PerKWh != null">
@@ -211,7 +211,7 @@ export default defineComponent({
 	components: { VehicleOptions: Options, CustomSelect },
 	mixins: [formatter],
 	props: {
-		session: { type: Object as PropType<Session>, default: () => [] },
+		session: { type: Object as PropType<Session>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },

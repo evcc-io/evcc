@@ -121,7 +121,7 @@
 						scope="col"
 						class="align-top text-end"
 					>
-						{{ column.format(column.total) }}
+						{{ column.format(column.total || 0) }}
 					</th>
 				</tr>
 			</tfoot>
@@ -148,7 +148,7 @@
 					</td>
 					<td v-for="column in columnsPerBreakpoint" :key="column.name" class="text-end">
 						<span v-if="column.value(session) === null" class="text-gray"> - </span>
-						<span v-else>{{ column.format(column.value(session)) }}</span>
+						<span v-else>{{ column.format(column.value(session) || 0) }}</span>
 					</td>
 				</tr>
 			</tbody>
@@ -160,7 +160,7 @@
 import { defineComponent, type PropType } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import breakpoint from "@/mixins/breakpoint";
+import breakpoint from "@/mixins/breakpoint.ts";
 import settings from "@/settings";
 import type { CURRENCY } from "@/types/evcc";
 import type { Session } from "./types";
@@ -177,7 +177,7 @@ const COLUMNS_PER_BREAKPOINT = {
 interface Column {
 	name: string;
 	unit: string;
-	total: number;
+	total: number | null;
 	value: (session: Session) => number | null;
 	format: (value: number) => string | undefined;
 }
@@ -242,7 +242,7 @@ export default defineComponent({
 					name: "co2",
 					unit: "g/kWh",
 					total: this.co2PerKWh,
-					value: (session) => session.co2PerKWh,
+					value: (session) => session.co2PerKWh || null,
 					format: (value) => this.fmtNumber(value, 0),
 				},
 				{
@@ -277,10 +277,10 @@ export default defineComponent({
 		},
 		sortedColumns() {
 			const columns = [...this.columns];
-			const sorted = [];
+			const sorted = [] as Column[];
 			for (const name of this.selectedColumns) {
 				if (!name && columns.length) {
-					sorted.push(columns.shift());
+					sorted.push(columns.shift() as Column);
 				} else if (columns.some((c) => c.name === name)) {
 					const column = columns.find((c) => c.name === name);
 					if (column) {
@@ -300,7 +300,7 @@ export default defineComponent({
 				return {
 					name: this.$t(`sessions.${column.name}`),
 					value: column.name,
-					disabled: this.columnsPerBreakpoint.find((c) => c.name === column.name),
+					disabled: this.columnsPerBreakpoint.some((c) => c.name === column.name),
 				};
 			});
 		},
@@ -309,7 +309,7 @@ export default defineComponent({
 				{
 					name: this.$t("sessions.filter.allVehicles"),
 					value: "",
-					count: this.filterCountForVehicle(),
+					count: this.filterCountForVehicle(""),
 				},
 			];
 			this.vehicles.forEach((name) => {
@@ -323,7 +323,7 @@ export default defineComponent({
 				{
 					name: this.$t("sessions.filter.allLoadpoints"),
 					value: "",
-					count: this.filterCountForLoadpoint(),
+					count: this.filterCountForLoadpoint(""),
 				},
 			];
 			this.loadpoints.forEach((name) => {
@@ -339,7 +339,7 @@ export default defineComponent({
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
 		},
 		price() {
-			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
+			return this.filteredSessions.reduce((total, s) => total + (s.price || 0), 0);
 		},
 		avgPower() {
 			const { energy, hours } = this.filteredSessions
@@ -362,7 +362,7 @@ export default defineComponent({
 				.filter((s) => s.price !== null)
 				.reduce(
 					(total, s) => ({
-						price: total.price + s.price,
+						price: total.price + (s.price || 0),
 						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
 					}),
 					{ price: 0, chargedEnergy: 0 }
@@ -374,7 +374,7 @@ export default defineComponent({
 				.filter((s) => s.co2PerKWh !== null)
 				.reduce(
 					(total, s) => ({
-						emittedCo2: total.emittedCo2 + s.chargedEnergy * s.co2PerKWh,
+						emittedCo2: total.emittedCo2 + s.chargedEnergy * (s.co2PerKWh || 0),
 						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
 					}),
 					{ emittedCo2: 0, chargedEnergy: 0 }

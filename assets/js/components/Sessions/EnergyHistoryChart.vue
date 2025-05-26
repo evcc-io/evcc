@@ -17,8 +17,6 @@ import {
 	LinearScale,
 	Legend,
 	Tooltip,
-	type TooltipPositioner,
-	type TooltipPositionerFunction,
 	type TooltipModel,
 	type TooltipItem,
 } from "chart.js";
