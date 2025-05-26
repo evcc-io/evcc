@@ -40,13 +40,14 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
-		AlternativeWakeup           bool
+		WakeupMode                  string
 		Cache                       time.Duration
 		Timeout                     time.Duration
 	}{
-		Region:  "de_DE",
-		Cache:   interval,
-		Timeout: request.Timeout,
+		Region:     "de_DE",
+		WakeupMode: "default",
+		Cache:      interval,
+		Timeout:    request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -94,7 +95,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.AlternativeWakeup, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.WakeupMode, cc.Cache)
 
 	return v, err
 }

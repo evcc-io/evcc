@@ -39,11 +39,11 @@ func init() {
 func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity       `mapstructure:",squash"`
+		battery        `mapstructure:",squash"`
 		Uri, Usage     string
-		MinSoc, MaxSoc int
 		MaxChargePower int
-		Cache          time.Duration
 		ExternalPower  bool
+		Cache          time.Duration
 	}{
 		MaxChargePower: 10000,
 		Cache:          30 * time.Second,
@@ -57,11 +57,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.MinSoc, cc.MaxSoc, cc.MaxChargePower, cc.Cache, cc.ExternalPower, cc.capacity.Decorator())
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.battery, cc.MaxChargePower, cc.Cache, cc.ExternalPower, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepower int, cache time.Duration, externalPower bool, capacity func() float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, battery battery, maxchargepower int, cache time.Duration, externalPower bool, capacity func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -120,7 +120,7 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepow
 					return err
 				}
 
-				if err := m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(minSoc)/100)); err != nil {
+				if err := m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(battery.MinSoc)/100)); err != nil {
 					return err
 				}
 
@@ -131,7 +131,7 @@ func NewRCT(ctx context.Context, uri, usage string, minSoc, maxSoc, maxchargepow
 					return err
 				}
 
-				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(maxSoc)/100))
+				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(battery.MaxSoc)/100))
 
 			case api.BatteryCharge:
 				if err := m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1}); err != nil {
