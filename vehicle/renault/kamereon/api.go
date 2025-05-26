@@ -138,6 +138,21 @@ func (v *API) WakeUp(accountID string, vin string) (Response, error) {
 	return v.request(uri, request.MarshalJSON(data))
 }
 
+func (v *API) WakeUpMY24(accountID string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/ev/settings", v.keys.Target, accountID, vin)
+
+	data := EvSettingsRequest{
+		LastSettingsUpdateTimestamp: "2025-04-24T12:41:41.823Z",
+		DelegatedActivated:          false,
+		ChargeModeRq:                "SCHEDULED",
+		ChargeTimeStart:             "21:00",
+		ChargeDuration:              1615,
+		PreconditioningTemperature:  20.0,
+	}
+
+	return v.request(uri, request.MarshalJSON(data))
+}
+
 func (v *API) Position(accountID string, vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
 	return v.request(uri, nil)

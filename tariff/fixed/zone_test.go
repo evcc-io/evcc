@@ -54,8 +54,12 @@ func TestZonesTimeTableMarkers(t *testing.T) {
 			To:   HourMin{2, 0},
 		}},
 		{Hours: TimeRange{
-			From: HourMin{3, 30},
-			To:   HourMin{4, 30},
+			From: HourMin{2, 0}, // make sure adjacent zones don't generate duplicate markers
+			To:   HourMin{3, 0},
+		}},
+		{Hours: TimeRange{
+			From: HourMin{4, 30},
+			To:   HourMin{5, 30},
 		}},
 	}
 
@@ -63,14 +67,15 @@ func TestZonesTimeTableMarkers(t *testing.T) {
 		{0, 0},
 		{1, 0},
 		{2, 0},
-		{3, 0}, // 1hr intervals
-		{3, 30},
+		{3, 0},
 		{4, 0}, // 1hr intervals
 		{4, 30},
+		{5, 0}, // 1hr intervals
+		{5, 30},
 	}
 
 	// 1hr intervals
-	for hour := 5; hour < 24; hour++ {
+	for hour := 6; hour < 24; hour++ {
 		expect = append(expect, HourMin{hour, 0})
 	}
 

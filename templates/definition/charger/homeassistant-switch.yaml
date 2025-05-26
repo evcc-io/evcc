@@ -1,0 +1,34 @@
+template: homeassistant-switch
+products:
+  - brand: Home Assistant Switch
+group: switchsockets
+params:
+  - name: baseurl
+    description:
+      de: Basis-URL der Home Assistant Instanz (z.B. http://homeassistant.local:8123)
+      en: Base URL of the Home Assistant instance (e.g. http://homeassistant.local:8123)
+    required: true
+    default: http://homeassistant.local:8123
+  - name: token
+    mask: true
+    required: true
+    description:
+      de: Long-Lived Access Token aus Home Assistant Profil
+      en: Long-Lived Access Token from Home Assistant profile
+  - name: switchentity
+    required: true
+    description:
+      de: Entity ID des schaltbaren Geräts (z.B. switch.smartsocket)
+      en: Entity ID of the switch device (e.g. switch.smartsocket)
+  - name: powerentity
+    description:
+      de: Entity ID für Leistungsmessung (optional, z.B. sensor.smartsocket_power)
+      en: Entity ID for power measurement (optional, e.g. sensor.smartsocket_power)
+  - preset: switchsocket
+render: |
+  type: homeassistant-switch
+  baseurl: {{ .baseurl }}
+  token: {{ .token }}
+  switchentity: {{ .switchentity }}
+  powerentity: {{ .powerentity }}
+  {{ include "switchsocket" . }}
