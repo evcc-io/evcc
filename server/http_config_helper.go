@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,11 +18,12 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 const (
-	// typeTemplate is the updatable configuration type
-	typeTemplate = "template"
+	typeCustom   = "custom"   // typeCustom is the custom configuration type
+	typeTemplate = "template" // typeTemplate is the updatable configuration type
 
 	// masked indicates a masked config parameter value
 	masked = "***"
@@ -28,6 +31,7 @@ const (
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
+	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
 }
 
@@ -45,6 +49,15 @@ func (c *configReq) UnmarshalJSON(data []byte) error {
 
 	*c = cr
 	return nil
+}
+
+func (c *configReq) Serialise() map[string]any {
+	if c.Yaml != "" {
+		return map[string]any{
+			"yaml": c.Yaml,
+		}
+	}
+	return c.Other
 }
 
 func propsToMap(props config.Properties) (map[string]any, error) {
@@ -157,6 +170,12 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 	}
 
 	conf := dev.Config()
+
+	// TODO merge custom config
+	if req.Yaml != "" {
+		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		return dev, instance, req.Serialise(), err
+	}
 
 	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
@@ -306,4 +325,30 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 		return nil
 	}
+}
+
+func decodeDeviceConfig(r io.Reader) (configReq, error) {
+	var res configReq
+
+	if err := json.NewDecoder(r).Decode(&res); err != nil {
+		return configReq{}, err
+	}
+
+	if res.Yaml == "" {
+		return res, nil
+	}
+
+	if !strings.EqualFold(res.Type, typeCustom) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for custom type")
+	}
+
+	if len(res.Other) != 0 {
+		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
+	}
+
+	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+		return configReq{}, err
+	}
+
+	return res, nil
 }

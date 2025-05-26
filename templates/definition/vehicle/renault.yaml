@@ -8,10 +8,19 @@ params:
   - name: alternativewakeup
     type: bool
     description:
-      de: Alternativer Aufweckmechanismus
-      en: Alternative wakeup mechanism
+      de: Alternative Aufweckmechanismus (veraltet)
+      en: Alternative wakeup mechanism (deprecated)
+    advanced: true
+    deprecated: true
+  - name: wakeupmode
+    type: choice
+    choice: ["default", "alternative", "MY24"]
+    default: default
+    description:
+      de: Aufweckmechanismus
+      en: Wakeup mechanism
     advanced: true
 render: |
   type: renault
   {{ include "vehicle-base" . }}
-  alternativewakeup: {{ .alternativewakeup }}
+  wakeupmode: {{ .wakeupmode }}
