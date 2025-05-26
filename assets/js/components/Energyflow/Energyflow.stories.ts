@@ -56,6 +56,13 @@ GridAndPV.args = {
 	smartCostType: "price",
 	currency: CURRENCY.EUR,
 	pv: [{ power: 5000 }, { power: 2300 }],
+	forecast: {
+		solar: {
+			today: { energy: 1000, complete: true },
+			tomorrow: { energy: 1000, complete: false },
+			dayAfterTomorrow: { energy: 1000, complete: false },
+		},
+	},
 };
 
 export const BatteryAndGrid = Template.bind({});
