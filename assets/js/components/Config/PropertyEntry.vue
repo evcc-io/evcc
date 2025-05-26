@@ -10,10 +10,11 @@
 		<PropertyField
 			:id="id"
 			v-model="value"
+			class="me-2"
 			:masked="Mask"
 			:property="Name"
 			:type="Type"
-			class="me-2"
+			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
 		/>
@@ -37,6 +38,7 @@ export default {
 		Help: String,
 		Example: String,
 		Type: String,
+		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
 		modelValue: [String, Number, Boolean, Object],
