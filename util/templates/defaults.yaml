@@ -51,9 +51,6 @@ params:
     description:
       de: Port
       en: Port
-    help:
-      de: Port
-      en: Port
     type: int
   - name: interface
     description:
@@ -66,15 +63,15 @@ params:
       de: Benutzerkonto
       en: Username
     help:
-      de: Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
-      en: User account (e.g. email address, user id, etc.)
+      de: bspw. E-Mail Adresse, User Id, etc.
+      en: e.g. email address, user id, etc.
   - name: password
     description:
       de: Passwort
       en: Password
     help:
-      de: Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
-      en: Password of the user account (use single quotes in case of leading zeros)
+      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
+      en: Use single quotes in case of leading zeros
     mask: true
   - name: capacity
     unit: kWh
@@ -99,8 +96,8 @@ params:
       de: Fahrzeugidentifikationsnummer
       en: Vehicle Identification Number
     help:
-      de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
-      en: Required if you own multiple vehicles of the same brand
+      de: Wenn mehrere Fahrzeuge eines Herstellers vorhanden sind
+      en: If you own multiple vehicles from the same manufacturer
     example: W...
   - name: phases
     description:
@@ -147,8 +144,8 @@ params:
       de: Minimaler Ladestand
       en: Minimum charge
     help:
-      de: Untere Grenze beim Entladen der Batterie (normaler Betrieb)
-      en: Lower limit when discharging the battery (normal operation)
+      de: Untere Grenze beim Entladen der Batterie im normalen Betrieb
+      en: Lower limit when discharging the battery in normal operation
     example: 25
     type: int
   - name: maxsoc
@@ -172,6 +169,7 @@ params:
     example: 6
     type: int
   - name: maxcurrent
+    unit: A
     description:
       de: Maximale Stromstärke
       en: Maximum amperage
@@ -209,9 +207,6 @@ params:
     description:
       de: Sprache
       en: Language
-    help:
-      de: "'de' für Deutsch und 'en' für Englisch"
-      en: "'en' for English and 'de' for German"
     default: en
     type: choice
     choice: ["en", "de"]
@@ -220,8 +215,8 @@ params:
       de: Icon
       en: Icon
     help:
-      de: "Icon in der Benutzeroberfläche"
-      en: "Icon as shown in user interface"
+      de: Wird in der Benutzeroberfläche angezeigt
+      en: Will be displayed in the user interface
     type: choice
     choice:
       - car
@@ -270,8 +265,8 @@ params:
       en: Subject Key Identifier (SKI)
       de: Identifikationsschlüssel (SKI)
     help:
-      en: The SKI of the wallbox, usually found on the web interface of the wallbox
-      de: Die SKI der Wallbox, üblicherweise im Web Interface der Wallbox zu finden
+      en: Usually found on the web interface of the wallbox
+      de: Üblicherweise im Web Interface der Wallbox zu finden
   - name: uri
     description:
       generic: URI
@@ -285,8 +280,8 @@ params:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: The AIN is printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
   - name: coarsecurrent
     type: bool
     help:
@@ -310,8 +305,8 @@ params:
       de: Standardmodus für die aktive Batteriesteuerung
       en: Default mode for battery control
     help:
-      de: Standardmodus für die aktive Batteriesteuerung auf die der Wechselrichter wieder nach einem Laden des Speichers oder Unterbinden der Entladung zurückfällt.
-      en: Default mode for battery control to which the inverter falls back after charging the battery or after stopping discharge.
+      de: Wechselrichter fällt nach einem Laden des Speichers oder Unterbinden der Entladung zurück auf diesen Modus.
+      en: Inverter falls back to this mode after charging the battery or after stopping discharge.
   - name: maxchargepower
     unit: W
     type: int
@@ -320,8 +315,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: Maximum charge power for forced charging of the battery in watts.
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt.
+      en: For forced charging of the battery in watts.
+      de: Für erzwungenes Laden des Speichers in Watt.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -331,8 +326,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: Maximum charge power for forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
-      de: Maximale Leistung für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
+      en: For forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
+      de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
     advanced: true
 
@@ -397,17 +392,26 @@ presets:
       - name: charges
         type: int
         advanced: true
+        description:
+          en: Charge
+          de: Aufschlag
         help:
           de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
           en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
       - name: tax
         type: int
         advanced: true
+        description:
+          en: Tax
+          de: Steuer
         help:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
           en: Additional percentage charge (e.g. 0.2 for 20%)
       - name: formula
         type: string
+        description:
+          en: Formula
+          de: Formel
         advanced: true
         help:
           de: Individuelle Formel zur Berechnung des Preises
@@ -441,8 +445,9 @@ presets:
         required: true
       - name: kwp
         description:
-          en: Maximum generator power [kWp]
-          de: Maximale Generatorleistung [kWp]
+          en: Maximum generator power
+          de: Maximale Generatorleistung
+        unit: kWp
         type: float
         example: 9.8
         required: true
@@ -450,9 +455,6 @@ presets:
   eebus:
     params:
       - name: ski
-        help:
-          de: SKI (Subject Key Identifier)
-          en: SKI (Subject Key Identifier)
       - name: ip
   switchsocket:
     params:
@@ -461,29 +463,41 @@ presets:
       - name: integrateddevice
         type: bool
         advanced: true
+        description:
+          en: Integrated device
+          de: Integriertes Gerät
         help:
-          de: Integriertes Gerät (keine Fahrzeugverbindung)
-          en: Integrated device (no vehicle connection)
+          de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+          en: Integrated device. No charging sessions
       - name: heating
         type: bool
         advanced: true
+        description:
+          en: Heating device
+          de: Wärmeerzeuger
         help:
-          de: Wärmeerzeuger (°C anstatt %)
-          en: Heating device (°C instead of %)
+          de: Zeigt °C anstatt % an
+          en: Shows °C instead of %
       - name: icon
         advanced: true
   ocpp:
     params:
       - name: stationid
         type: string
+        description:
+          en: Station ID
+          de: Station ID
         help:
           en: "Station ID of the charging point. Only required if multiple OCPP charging stations are set up to assign them correctly. A single OCPP charging station can also be automatically assigned. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form ws://<evcc-address>:8887/<stationid>. Most charging stations automatically add the ID internally."
           de: "Station ID des Ladepunktes. Nur erforderlich wenn mehrere OCPP-Ladestationen eingerichtet sind um diese korrekt zuzuweisen. Eine einzelne OCPP-Ladestation kann auch automatisch zugeordnet werden. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form ws://<evcc-adresse>:8887/<stationid> anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
         example: EVB-P12354
       - name: connector
+        description:
+          en: Connector number
+          de: Anschlussnummer
         help:
-          de: Anschlussnummer bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
-          en: Connector number for charging stations with multiple connectors. Counting starts at 1 for the first connector.
+          de: Bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
+          en: For charging stations with multiple connectors. Counting starts at 1 for the first connector.
         default: 1
       - name: remotestart
         advanced: true
