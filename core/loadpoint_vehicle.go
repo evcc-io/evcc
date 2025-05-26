@@ -174,22 +174,27 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
+	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
+	charger, chargerCanWakeUp := lp.charger.(api.Resurrector)
+	vehicle, vehicleCanWakeUp := lp.GetVehicle().(api.Resurrector)
+
 	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
-		// charger
-		if c, ok := lp.charger.(api.Resurrector); ok {
-			lp.log.DEBUG.Printf("wake-up charger, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
-			if err := c.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up charger: %v", err)
-			}
+		if chargerCanWakeUp {
+			lp.wakeUpResurrector(charger, "charger")
+		} else if vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
 		}
 	} else {
-		// vehicle
-		if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
-			lp.log.DEBUG.Printf("wake-up vehicle, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-			}
+		if chargerCanWakeUp && vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
 		}
+	}
+}
+
+func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string) {
+	lp.log.DEBUG.Printf("wake-up %s, attempts left: %d", name, lp.wakeUpTimer.wakeupAttemptsLeft)
+	if err := resurrector.WakeUp(); err != nil {
+		lp.log.ERROR.Printf("wake-up %s: %v", name, err)
 	}
 }
 
