@@ -19,9 +19,6 @@ params:
   - name: timeout
     default: 10s
     advanced: true
-    help:
-      de: Timeout für HTTP-Anfragen an das ESPHome-Gerät.
-      en: Timeout for HTTP requests to the ESPHome device.
 render: |
   type: custom
   power: # Total power: positive for consumption, negative for production (Watts)
