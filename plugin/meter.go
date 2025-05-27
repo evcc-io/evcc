@@ -46,7 +46,7 @@ func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plug
 var _ FloatGetter = (*meterPlugin)(nil)
 
 func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
-	err := fmt.Errorf("unsupported reading %s", o.key)
+	err := fmt.Errorf("unsupported reading: %s", o.key.String())
 
 	switch o.key {
 	case Power:
