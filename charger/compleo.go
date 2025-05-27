@@ -219,7 +219,7 @@ var _ api.ChargeRater = (*Compleo)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Compleo) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegEnergy, 2)
+	b, err := wb.conn.ReadInputRegisters(compleoRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -229,7 +229,7 @@ func (wb *Compleo) ChargedEnergy() (float64, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *Compleo) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 3)
+	b, err := wb.conn.ReadInputRegisters(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
