@@ -1,0 +1,41 @@
+---
+template: marstek-venus
+products:
+  - brand: Marstek
+    description:
+      generic: Venus Battery Storage
+requirements:
+  description:
+    en: Requires a Modbus TCP gateway (e.g., PUSR USR-DR134). Tested with firmware version V151.
+    de: Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.
+params:
+  - name: uri
+    required: true
+    example: 192.168.0.5:502
+    help:
+      de: "Modbus-TCP-Adresse (IP und Port)"
+      en: "Modbus TCP address (IP and port)"
+  - name: id
+    default: 1
+    example: "1"
+    help:
+      de: "Modbus-Slave-ID"
+      en: "Modbus slave ID"
+  - name: timeout
+    default: 5
+    advanced: true
+    help:
+      de: "Verbindungs-Timeout"
+      en: "Connection timeout"
+  - name: capacity
+    default: 5.12
+    advanced: true
+    help:
+      de: "Batteriekapazität in kWh (Marstek Venus E 5.12kWh, Marstek Venus C 2.56kWh)"
+      en: "Battery capacity in kWh (Marstek Venus E 5.12kWh, Marstek Venus C 2.56kWh)"
+render: |
+  type: marstek-venus
+  uri: {{ .uri }}
+  id: {{ .id }}
+  timeout: {{ .timeout }}
+  capacity: {{ .capacity }}
