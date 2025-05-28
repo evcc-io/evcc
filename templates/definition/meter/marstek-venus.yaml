@@ -1,42 +1,183 @@
----
 template: marstek-venus
 products:
   - brand: Marstek
     description:
       generic: Venus Battery Storage
+capabilities: ["battery-control"]
 requirements:
-  evcc: ["skiptest"]
   description:
-    en: Requires a Modbus TCP gateway (e.g., PUSR USR-DR134). Tested with firmware version V151.
-    de: Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.
+    en: >
+      Requires a Modbus TCP gateway (e.g., PUSR USR-DR134). Tested with firmware version V151.
+      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None, TCP Server.
+    de: >
+      Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.
+      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None, TCP Server.
 params:
   - name: uri
     required: true
-    example: 192.168.0.5:502
-    help:
-      de: "Modbus-TCP-Adresse (IP und Port)"
-      en: "Modbus TCP address (IP and port)"
   - name: id
     default: 1
-    example: "1"
-    help:
-      de: "Modbus-Slave-ID"
-      en: "Modbus slave ID"
-  - name: timeout
-    default: 5s
-    advanced: true
-    help:
-      de: "Verbindungs-Timeout"
-      en: "Connection timeout"
   - name: capacity
     default: 5.12
     advanced: true
-    help:
-      de: "Batteriekapazität in kWh (Marstek Venus E 5.12kWh, Marstek Venus C 2.56kWh)"
-      en: "Battery capacity in kWh (Marstek Venus E 5.12kWh, Marstek Venus C 2.56kWh)"
+    description:
+      de: "Batteriekapazität in kWh. Venus-E: 5.12, Venus-C: 2.56"
+      en: "Batterie capacity in kWh. Venus-E: 5.12, Venus-C: 2.56"
+  - name: minsoc
+    default: 11
+    type: int
+    advanced: true
+    description:
+      de: "Venus kann nur bis 11% entladen werden."
+      en: "Venus can only be discharged down to 11%."
+  - name: maxsoc
+    default: 100
+    type: int
+    advanced: true
 render: |
-  type: marstek-venus
-  uri: {{ .uri }}
-  id: {{ .id }}
-  timeout: {{ .timeout }}
-  capacity: {{ .capacity }}
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .uri }}
+    id: {{ .id }}
+    timeout: 5s
+    delay: 1s
+    register:
+      address: 32202 # AC Power (Watt)
+      type: holding
+      decode: int32
+    scale: 1
+  energy:
+    source: modbus
+    uri: {{ .uri }}
+    id: {{ .id }}
+    timeout: 5s
+    delay: 1s
+    register:
+      address: 33000 # Total Charging Energy (kWh)
+      type: holding
+      decode: uint32
+    scale: 1
+  soc:
+    source: modbus
+    uri: {{ .uri }}
+    id: {{ .id }}
+    timeout: 5s
+    delay: 1s
+    register:
+      address: 32104 # Battery SOC (%)
+      type: holding
+      decode: uint16
+    scale: 1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 43000 # User Work Mode = Anti-Feed
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 21947
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42000 # RS485 Control Mode = Disabled
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42010 # Force Charge/Discharge = Stop
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42010 # Force Charge/Discharge = Charge
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 2500
+          set:
+            source: modbus
+            uri: {{ .uri }}
+            id: {{ .id }}
+            timeout: 5s
+            delay: 100ms
+            register:
+              address: 42020 # Forcible Charge Power = 2500 watts
+              type: writesingle
+              decode: uint16
+  capacity: {{ .capacity }} # kWh
