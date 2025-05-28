@@ -12,12 +12,14 @@ requirements:
     de: >
       Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.
       Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None, TCP Server.
+  evcc: ["skiptest"]
 params:
   - name: uri
     required: true
     description:
       en: Ip address and port of the Modbus TCP gateway.
       de: IP-Adresse und Port des Modbus-TCP-Gateways.
+    example: "192.168.0.8:502"
   - name: capacity
     default: 5.12
     description:
