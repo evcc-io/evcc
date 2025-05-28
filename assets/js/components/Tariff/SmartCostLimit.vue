@@ -170,16 +170,17 @@ export default {
 		},
 		slots(): Slot[] {
 			if (!this.tariff?.rates || !this.startTime) return [];
+
 			const { rates } = this.tariff;
+			const quarterHour = 15 * 60 * 1000;
+			const base = new Date(this.startTime);
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
 
-			return Array.from({ length: 42 }, (_, i) => {
+			return Array.from({ length: 42 * 4 }, (_, i) => {
 				// @ts-expect-error
-				const start = new Date(this.startTime.getTime());
-				start.setHours(start.getHours() + i, 0, 0, 0);
-				const startHour = start.getHours();
-
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
+				const start = new Date(this.startTime.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
 
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const charging =
@@ -190,10 +191,8 @@ export default {
 				return {
 					day: this.weekdayShort(start),
 					value,
-					startHour,
-					startMinute: start.getMinutes(),
-					endHour: end.getHours(),
-					endMinute: end.getMinutes(),
+					start,
+					end,
 					charging,
 					selectable: value !== undefined,
 				};
@@ -216,8 +215,8 @@ export default {
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${start.getHours()}–${end.getHours()}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;

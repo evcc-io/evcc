@@ -115,8 +115,8 @@ export default defineComponent({
 		},
 		activeSlotName(): string | null {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${start.getHours()}–${end.getHours()}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
@@ -138,15 +138,15 @@ export default defineComponent({
 		slots(): Slot[] {
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
+			const quarterHour = 15 * 60 * 1000;
 
-			return Array.from({ length: 39 }, (_, i) => {
-				const start = new Date(this.startTime.getTime());
-				start.setHours(start.getHours() + i, 0, 0, 0);
-				const startHour = start.getHours();
+			const base = new Date(this.startTime);
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
 
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-
+			return Array.from({ length: 48 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
 				const charging = this.findSlotInRange(start, end, plan) !== null;
 				const warning =
 					charging &&
@@ -158,11 +158,9 @@ export default defineComponent({
 				return {
 					day: this.weekdayShort(start),
 					value: this.findSlotInRange(start, end, rates)?.value,
-					startHour,
-					startMinute: start.getMinutes(),
-					endHour: end.getHours(),
-					endMinute: end.getMinutes(),
-					charging: charging,
+					start,
+					end,
+					charging,
 					toLate: this.targetTime && this.targetTime <= start,
 					warning,
 					isTarget: this.targetTime && start <= this.targetTime && end > this.targetTime,

@@ -3,7 +3,7 @@
 		<div class="chart position-relative">
 			<div
 				v-for="(slot, index) in slots"
-				:key="`${slot.day}-${slot.startHour}`"
+				:key="`${slot.day}-${slot.start.getHours()}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -27,7 +27,7 @@
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						formatHour(slot.startHour)
+						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -116,10 +116,7 @@ export default {
 	computed: {
 		chartData() {
 			return {
-				labels: this.slots.map(
-					(s) =>
-						`${this.formatHour(s.startHour)}:${s.startMinute.toString().padStart(2, "0")}`
-				),
+				labels: this.slots.map((s) => this.fmtHourMinute(s.start)),
 				datasets: [
 					{
 						label: "Planner",
@@ -212,7 +209,7 @@ export default {
 					return false;
 				}
 			}
-			if (slot.startHour === 0) {
+			if (slot.start.getHours() === 0) {
 				return true;
 			}
 			return false;
