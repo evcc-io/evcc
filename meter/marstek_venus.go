@@ -138,7 +138,7 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 		m.log.INFO.Printf("Battery mode set to Normal/Anti-Feed (mode=%v)", mode)
 
 	case api.BatteryCharge:
-		// Step 1: Set RS485 Control Mode = Enabled (21930)
+		// Step 1: Enable RS485 control so we can hold the battery
 		if _, err := m.conn.WriteSingleRegister(regControlMode, controlModeEnabled); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
@@ -161,6 +161,8 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 		if _, err := m.conn.WriteSingleRegister(regForceMode, forceModeStop); err != nil {
 			return fmt.Errorf("failed to set stop mode: %v", err)
 		}
+		// Note: we intentionally DO NOT disable RS485 here,
+		// otherwise the battery will exit Hold and go back to Normal.
 		m.log.INFO.Printf("Battery mode set to Hold (mode=%v)", mode)
 
 	default:
