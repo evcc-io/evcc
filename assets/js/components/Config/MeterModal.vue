@@ -5,6 +5,7 @@
 		:title="modalTitle"
 		data-testid="meter-modal"
 		:fade="fade"
+		:size="modalSize"
 		@open="open"
 		@close="close"
 	>
@@ -18,7 +19,7 @@
 			/>
 		</div>
 		<form v-else ref="form" class="container mx-0 px-0">
-			<p v-if="['aux', 'ext'].includes(meterType)" class="mt-0 mb-4">
+			<p v-if="hasDescription" class="mt-0 mb-4">
 				{{ $t(`config.${meterType}.description`) }}
 			</p>
 			<div v-if="meterType === 'ext'" class="alert alert-warning mb-4" role="alert">
@@ -51,158 +52,132 @@
 						required
 					/>
 				</FormRow>
-				<FormRow id="meterTemplate" :label="$t('config.meter.template')">
-					<select
-						v-if="isNew"
-						id="meterTemplate"
-						ref="templateSelect"
-						v-model="templateName"
-						class="form-select w-100"
-						@change="templateChanged"
-					>
-						<option
-							v-for="option in genericOptions"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-						<option v-if="genericOptions.length" disabled>──────────</option>
-						<option
-							v-for="option in templateOptions"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</select>
-					<input
-						v-else
-						type="text"
-						:value="productName"
-						disabled
-						class="form-control w-100"
+
+				<TemplateSelector
+					ref="templateSelect"
+					v-model="templateName"
+					device-type="meter"
+					:is-new="isNew"
+					:product-name="productName"
+					:groups="templateOptions"
+					@change="templateChanged"
+				/>
+
+				<YamlEntry
+					v-if="values.type === 'custom'"
+					v-model="values.yaml"
+					type="meter"
+					:error-line="test.errorLine"
+				/>
+				<div v-else>
+					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
+					<Markdown v-if="description" :markdown="description" class="my-4" />
+					<Modbus
+						v-if="modbus"
+						v-model:modbus="values.modbus"
+						v-model:id="values.id"
+						v-model:host="values.host"
+						v-model:port="values.port"
+						v-model:device="values.device"
+						v-model:baudrate="values.baudrate"
+						v-model:comset="values.comset"
+						:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+						:defaultComset="modbus.Comset"
+						:defaultBaudrate="modbus.Baudrate"
+						:defaultPort="modbus.Port"
+						:capabilities="modbusCapabilities"
 					/>
-				</FormRow>
-				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
-				<Markdown v-if="description" :markdown="description" class="my-4" />
-				<Modbus
-					v-if="modbus"
-					v-model:modbus="values.modbus"
-					v-model:id="values.id"
-					v-model:host="values.host"
-					v-model:port="values.port"
-					v-model:device="values.device"
-					v-model:baudrate="values.baudrate"
-					v-model:comset="values.comset"
-					:defaultId="modbus.ID"
-					:defaultComset="modbus.Comset"
-					:defaultBaudrate="modbus.Baudrate"
-					:defaultPort="modbus.Port"
-					:capabilities="modbusCapabilities"
-				/>
-				<PropertyEntry
-					v-for="param in normalParams"
-					:id="`meterParam${param.Name}`"
-					:key="param.Name"
-					v-bind="param"
-					v-model="values[param.Name]"
-				/>
+					<PropertyEntry
+						v-for="param in normalParams"
+						:id="`meterParam${param.Name}`"
+						:key="param.Name"
+						v-bind="param"
+						v-model="values[param.Name]"
+					/>
 
-				<PropertyCollapsible>
-					<template v-if="advancedParams.length" #advanced>
-						<PropertyEntry
-							v-for="param in advancedParams"
-							:id="`meterParam${param.Name}`"
-							:key="param.Name"
-							v-bind="param"
-							v-model="values[param.Name]"
-						/>
-					</template>
-				</PropertyCollapsible>
+					<PropertyCollapsible>
+						<template v-if="advancedParams.length" #advanced>
+							<PropertyEntry
+								v-for="param in advancedParams"
+								:id="`meterParam${param.Name}`"
+								:key="param.Name"
+								v-bind="param"
+								v-model="values[param.Name]"
+							/>
+						</template>
+					</PropertyCollapsible>
+				</div>
 
-				<TestResult
-					v-if="templateName"
-					:success="testSuccess"
-					:failed="testFailed"
-					:unknown="testUnknown"
-					:running="testRunning"
-					:result="testResult"
-					:error="testError"
+				<DeviceModalActions
+					v-if="showActions"
+					:is-deletable="isDeletable"
+					:test-state="test"
+					:is-saving="saving"
+					@save="isNew ? create() : update()"
+					@remove="remove"
 					@test="testManually"
 				/>
-
-				<div v-if="templateName" class="my-4 d-flex justify-content-between">
-					<button
-						v-if="isDeletable"
-						type="button"
-						class="btn btn-link text-danger"
-						tabindex="0"
-						@click.prevent="remove"
-					>
-						{{ $t("config.general.delete") }}
-					</button>
-					<button
-						v-else
-						type="button"
-						class="btn btn-link text-muted"
-						data-bs-dismiss="modal"
-						tabindex="0"
-					>
-						{{ $t("config.general.cancel") }}
-					</button>
-					<button
-						type="submit"
-						class="btn btn-primary"
-						:disabled="testRunning || saving"
-						tabindex="0"
-						@click.prevent="isNew ? create() : update()"
-					>
-						<span
-							v-if="saving"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						{{
-							testUnknown
-								? $t("config.general.validateSave")
-								: $t("config.general.save")
-						}}
-					</button>
-				</div>
 			</div>
 		</form>
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
-import TestResult from "./TestResult.vue";
-import api from "@/api";
-import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
-import Modbus from "./Modbus.vue";
+import Modbus from "./DeviceModal/Modbus.vue";
+import DeviceModalActions from "./DeviceModal/Actions.vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import Markdown from "./Markdown.vue";
 import PropertyField from "./PropertyField.vue";
-const initialValues = { type: "template", deviceTitle: "", deviceIcon: "" };
+import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
+import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
+import { initialTestState, performTest } from "./utils/test";
+import {
+	handleError,
+	ConfigType,
+	type DeviceValues,
+	type Template,
+	type Product,
+	type ModbusParam,
+	type ModbusCapability,
+	applyDefaultsFromTemplate,
+	createDeviceUtils,
+} from "./DeviceModal";
+import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
-function sleep(ms) {
+const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
+const device = createDeviceUtils("meter");
+
+function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const CUSTOM_FIELDS = ["usage", "modbus"];
 
-const defaultIcons = {
+const defaultIcons: Record<string, string> = {
 	aux: "smartconsumer",
 	ext: "meter",
 };
 
-export default {
+type MeterDeviceValues = DeviceValues & {
+	deviceTitle: string;
+	deviceIcon: string;
+	modbus?: any;
+	id?: any;
+	host?: any;
+	port?: any;
+	device?: any;
+	baudrate?: any;
+	comset?: any;
+	yaml?: string;
+};
+
+export default defineComponent({
 	name: "MeterModal",
 	components: {
 		FormRow,
@@ -210,18 +185,22 @@ export default {
 		PropertyField,
 		GenericModal,
 		Modbus,
-		TestResult,
 		NewDeviceButton,
 		PropertyCollapsible,
 		Markdown,
+		TemplateSelector,
+		YamlEntry,
+		DeviceModalActions,
 	},
-	mixins: [test],
 	props: {
 		id: Number,
 		name: String,
-		type: String,
+		type: {
+			type: String as () => string | undefined,
+			default: undefined,
+		},
 		typeChoices: {
-			type: Array,
+			type: Array as () => string[],
 			default: () => ["pv", "battery", "aux", "ext"],
 		},
 		fade: String,
@@ -230,15 +209,16 @@ export default {
 	data() {
 		return {
 			isModalVisible: false,
-			templates: [],
-			products: [],
-			templateName: null,
-			template: null,
+			templates: [] as Template[],
+			products: [] as Product[],
+			templateName: null as string | null,
+			template: null as Template | null,
 			saving: false,
-			selectedType: null,
+			selectedType: null as string | null,
 			loadingTemplate: false,
 			iconChoices: ICONS,
-			values: { ...initialValues },
+			values: { ...initialValues } as MeterDeviceValues,
+			test: initialTestState(),
 		};
 	},
 	computed: {
@@ -256,19 +236,28 @@ export default {
 			return this.type || this.selectedType;
 		},
 		hasDeviceTitle() {
-			return ["pv", "battery", "aux", "ext"].includes(this.meterType);
+			return ["pv", "battery", "aux", "ext"].includes(this.meterType || "");
 		},
 		hasDeviceIcon() {
-			return ["aux", "ext"].includes(this.meterType);
+			return ["aux", "ext"].includes(this.meterType || "");
 		},
 		templateOptions() {
-			return this.products.filter((p) => p.group !== "generic");
-		},
-		genericOptions() {
-			return this.products.filter((p) => p.group === "generic");
+			return [
+				{
+					label: "generic",
+					options: [
+						...this.products.filter((p) => p.group === "generic"),
+						customTemplateOption(this.$t("config.general.customOption")),
+					],
+				},
+				{
+					label: "specific",
+					options: this.products.filter((p) => p.group !== "generic"),
+				},
+			];
 		},
 		templateParams() {
-			return (this.template?.Params || [])
+			const params = (this.template?.Params || [])
 				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
 				.map((p) => {
 					if (this.meterType === "battery" && p.Name === "capacity") {
@@ -276,19 +265,20 @@ export default {
 					}
 					return p;
 				});
+			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
-		modbus() {
+		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
-			return params.find((p) => p.Name === "modbus");
+			return (params as ModbusParam[]).find((p) => p.Name === "modbus");
 		},
 		modbusCapabilities() {
-			return this.modbus?.Choice || [];
+			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
 		modbusDefaults() {
 			const { ID, Comset, Baudrate, Port } = this.modbus || {};
@@ -303,21 +293,33 @@ export default {
 			return this.template?.Requirements?.Description;
 		},
 		productName() {
-			return this.values.deviceProduct || this.templateName;
+			return this.values.deviceProduct || this.templateName || "";
 		},
 		apiData() {
-			return {
-				template: this.templateName,
+			const data: Record<string, any> = {
 				...this.modbusDefaults,
 				...this.values,
-				usage: this.meterType,
 			};
+			if (this.values.type === ConfigType.Template) {
+				data["template"] = this.templateName;
+				data["usage"] = this.meterType || undefined;
+			}
+			return data;
 		},
 		isNew() {
 			return this.id === undefined;
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		modalSize() {
+			return this.values.type === ConfigType.Custom ? "xl" : undefined;
+		},
+		showActions() {
+			return this.templateName || this.values.type === ConfigType.Custom;
+		},
+		hasDescription() {
+			return ["ext", "aux"].includes(this.meterType || "");
 		},
 	},
 	watch: {
@@ -326,6 +328,7 @@ export default {
 				this.templateName = null;
 				this.selectedType = null;
 				this.reset();
+				this.test = initialTestState();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -333,6 +336,7 @@ export default {
 			}
 		},
 		meterType(type) {
+			if (!type) return;
 			this.loadProducts();
 			this.values.deviceIcon = defaultIcons[type] || "";
 		},
@@ -341,7 +345,7 @@ export default {
 		},
 		values: {
 			handler() {
-				this.resetTest();
+				this.test = initialTestState();
 			},
 			deep: true,
 		},
@@ -351,12 +355,12 @@ export default {
 			const keep = keepTitle
 				? { deviceTitle: this.values.deviceTitle, deviceIcon: this.values.deviceIcon }
 				: {};
-			this.values = { ...initialValues, ...keep };
-			this.resetTest();
+			this.values = { ...initialValues, ...keep } as MeterDeviceValues;
+			this.test = initialTestState();
 		},
 		async loadConfiguration() {
 			try {
-				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
+				const meter = await device.load(this.id as number);
 				this.values = meter.config;
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
@@ -364,7 +368,7 @@ export default {
 				this.values.deviceTitle = meter.deviceTitle;
 				this.values.deviceIcon = meter.deviceIcon;
 				this.values.deviceProduct = meter.deviceProduct;
-				this.applyDefaultsFromTemplate();
+				applyDefaultsFromTemplate(this.template, this.values);
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
@@ -375,101 +379,81 @@ export default {
 				return;
 			}
 			try {
-				const opts = {
-					params: {
-						usage: this.meterType,
-						lang: this.$i18n?.locale,
-					},
-				};
-				this.products = (await api.get("config/products/meter", opts)).data.result;
+				this.products = await device.loadProducts(this.$i18n?.locale, this.meterType);
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		async loadTemplate() {
 			this.template = null;
-			if (!this.templateName) return;
+			if (!this.templateName || this.templateName === ConfigType.Custom) return;
 			this.loadingTemplate = true;
 			try {
-				const opts = {
-					params: {
-						lang: this.$i18n?.locale,
-						name: this.templateName,
-					},
-				};
-				const result = await api.get("config/templates/meter", opts);
-				this.template = result.data.result;
-				this.applyDefaultsFromTemplate();
+				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
+				applyDefaultsFromTemplate(this.template, this.values);
 			} catch (e) {
 				console.error(e);
 			}
 			this.loadingTemplate = false;
 		},
-		applyDefaultsFromTemplate() {
-			const params = this.template?.Params || [];
-			params
-				.filter((p) => p.Default && !this.values[p.Name])
-				.forEach((p) => {
-					this.values[p.Name] = p.Default;
-				});
-		},
 		async create() {
 			// persist selected template product
-			if (this.template) {
-				const select = this.$refs.templateSelect;
-				const name = select.options[select.selectedIndex].text;
-				this.values.deviceProduct = name;
+			if (this.template && this.$refs["templateSelect"]) {
+				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
 			}
 
-			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+			if (this.test.isUnknown) {
+				const success = await performTest(
+					this.test,
+					this.testMeter,
+					this.$refs["form"] as HTMLFormElement
+				);
 				if (!success) return;
 				await sleep(100);
 			}
 			this.saving = true;
 			try {
-				const response = await api.post("config/devices/meter", this.apiData);
-				const { name } = response.data.result;
+				const { name } = await device.create(this.apiData);
 				this.$emit("added", this.meterType, name);
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
-				this.handleCreateError(e);
+				handleError(e, "create failed");
 			}
 			this.saving = false;
 		},
 		async testManually() {
-			await this.test(this.testMeter);
+			await performTest(this.test, this.testMeter, this.$refs["form"] as HTMLFormElement);
 		},
 		async testMeter() {
-			let url = "config/test/meter";
-			if (!this.isNew) {
-				url += `/merge/${this.id}`;
-			}
-			return await api.post(url, this.apiData, { timeout: this.testTimeout });
+			return device.test(this.id, this.apiData);
 		},
 		async update() {
-			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+			if (this.test.isUnknown) {
+				const success = await performTest(
+					this.test,
+					this.testMeter,
+					this.$refs["form"] as HTMLFormElement
+				);
 				if (!success) return;
 				await sleep(250);
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				await device.update(this.id as number, this.apiData);
 				this.$emit("updated");
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
-				this.handleUpdateError(e);
+				handleError(e, "update failed");
 			}
 			this.saving = false;
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/meter/${this.id}`);
+				await device.remove(this.id as number);
 				this.$emit("removed", this.meterType, this.name);
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
-				this.handleRemoveError(e);
+				handleError(e, "remove failed");
 			}
 		},
 		open() {
@@ -479,14 +463,19 @@ export default {
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		selectType(type) {
+		selectType(type: string) {
 			this.selectedType = type;
 		},
-		templateChanged() {
+		templateChanged(e: Event) {
+			const value = (e.target as HTMLSelectElement).value;
 			this.reset(true);
+			if (value === ConfigType.Custom) {
+				this.values.type = ConfigType.Custom;
+				this.values.yaml = defaultYaml;
+			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .container {

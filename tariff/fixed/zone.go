@@ -47,10 +47,14 @@ func (r Zones) TimeTableMarkers() []HourMin {
 
 	for _, z := range r {
 		if !z.Hours.From.IsNil() {
-			res = append(res, z.Hours.From)
+			if !slices.Contains(res, z.Hours.From) {
+				res = append(res, z.Hours.From)
+			}
 		}
 		if !z.Hours.To.IsNil() {
-			res = append(res, z.Hours.To)
+			if !slices.Contains(res, z.Hours.To) {
+				res = append(res, z.Hours.To)
+			}
 		}
 	}
 

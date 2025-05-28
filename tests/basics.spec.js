@@ -84,6 +84,8 @@ test.describe("loadpoint settings", async () => {
 
 test.describe("network requests", async () => {
   test("no failed requests", async ({ page }) => {
+    await page.waitForLoadState("networkidle");
+
     const failedRequests = [];
     page.on("requestfailed", (request) => failedRequests.push(request.url()));
 

@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import {
+  enableExperimental,
+  expectModalHidden,
+  expectModalVisible,
+  editorClear,
+  editorType,
+} from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
@@ -11,8 +17,6 @@ test.describe.configure({ mode: "parallel" });
 test.afterEach(async () => {
   await stop();
 });
-
-const SELECT_ALL = "ControlOrMeta+KeyA";
 
 async function goToConfig(page) {
   await page.goto("/#/config");
@@ -38,31 +42,24 @@ test.describe("tariffs", async () => {
     await page.waitForLoadState("networkidle");
 
     // default content
-    await expect(modal).toContainText("#currency: EUR");
+    const editor = modal.getByTestId("yaml-editor");
+    await expect(editor).toContainText("#currency: EUR");
 
     // clear and enter invalid yaml
-    await modal.locator(".monaco-editor .view-line").nth(0).click();
-
-    for (let i = 0; i < 4; i++) {
-      await page.keyboard.press(SELECT_ALL, { delay: 10 });
-      await page.keyboard.press("Backspace", { delay: 10 });
-    }
-
-    await page.keyboard.type("foo: bar\n");
+    await editorClear(editor);
+    await editorType(editor, "foo: bar");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).toContainText("invalid keys: foo");
 
     // clear and enter valid yaml
-    await modal.locator(".monaco-editor .view-line").nth(0).click();
-    for (let i = 0; i < 4; i++) {
-      await page.keyboard.press(SELECT_ALL, { delay: 10 });
-      await page.keyboard.press("Backspace", { delay: 10 });
-    }
-
-    await page.keyboard.type("currency: CHF\n");
-    await page.keyboard.type("grid:\n");
-    await page.keyboard.type("  type: fixed\n");
-    await page.keyboard.type("price: 0.123\n");
+    await editorClear(editor);
+    await editorType(editor, [
+      // prettier-ignore
+      "currency: CHF",
+      "grid:",
+      "  type: fixed",
+      "price: 0.123",
+    ]);
 
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();
