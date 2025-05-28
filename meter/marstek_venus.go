@@ -120,55 +120,45 @@ func (m *MarstekVenus) Soc() (float64, error) {
 
 // SetBatteryMode implements the api.BatteryController interface
 func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
+	m.log.INFO.Printf("Setting battery mode to (mode=%v)", mode)
 	switch mode {
 	case api.BatteryNormal:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, controlModeEnabled)
-		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regControlMode, controlModeEnabled); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set User Work Mode = Anti-Feed (1)
-		binary.BigEndian.PutUint16(b, workModeAntiFeed)
-		if _, err := m.conn.WriteMultipleRegisters(regWorkMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regWorkMode, workModeAntiFeed); err != nil {
 			return fmt.Errorf("failed to set anti-feed mode: %v", err)
 		}
 		// Step 3: Set RS485 Control Mode = Disabled (21947)
-		binary.BigEndian.PutUint16(b, controlModeDisabled)
-		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regControlMode, controlModeDisabled); err != nil {
 			return fmt.Errorf("failed to disable RS485 control mode: %v", err)
 		}
 		m.log.INFO.Printf("Battery mode set to Normal/Anti-Feed (mode=%v)", mode)
-
 	case api.BatteryCharge:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, controlModeEnabled)
-		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regControlMode, controlModeEnabled); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set Force Charge/Discharge Mode = Charge (1)
-		binary.BigEndian.PutUint16(b, forceModeCharge)
-		if _, err := m.conn.WriteMultipleRegisters(regForceMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regForceMode, forceModeCharge); err != nil {
 			return fmt.Errorf("failed to set charge mode: %v", err)
 		}
 		// Step 3: Set Forcible Charge Power = 2500 watts
-		binary.BigEndian.PutUint16(b, maxChargePowerWatts)
-		if _, err := m.conn.WriteMultipleRegisters(regChargePower, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regChargePower, maxChargePowerWatts); err != nil {
 			return fmt.Errorf("failed to set charge power: %v", err)
 		}
 		m.log.INFO.Printf("Battery mode set to Charge with %d watts (mode=%v)", maxChargePowerWatts, mode)
 
 	case api.BatteryHold:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, controlModeEnabled)
-		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
+		// Step 1: Set RS485 Control Mode = Enabled (21930)
+		if _, err := m.conn.WriteSingleRegister(regControlMode, controlModeEnabled); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set Force Charge/Discharge = Stop (0)
-		binary.BigEndian.PutUint16(b, forceModeStop)
-		if _, err := m.conn.WriteMultipleRegisters(regForceMode, 1, b); err != nil {
+		if _, err := m.conn.WriteSingleRegister(regForceMode, forceModeStop); err != nil {
 			return fmt.Errorf("failed to set stop mode: %v", err)
 		}
 		m.log.INFO.Printf("Battery mode set to Hold (mode=%v)", mode)
