@@ -183,21 +183,21 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 // Diagnose implements the api.Diagnosis interface
 func (m *MarstekVenus) Diagnose() {
 	if b, err := m.conn.ReadHoldingRegisters(32202, 2); err == nil {
-		fmt.Printf("\tPower:\t%d W\n", int32(binary.BigEndian.Uint32(b)))
+		m.log.INFO.Printf("\tPower:\t%d W", int32(binary.BigEndian.Uint32(b)))
 	}
 	if b, err := m.conn.ReadHoldingRegisters(32104, 1); err == nil {
-		fmt.Printf("\tSOC:\t%d%%\n", binary.BigEndian.Uint16(b))
+		m.log.INFO.Printf("\tSOC:\t%d%%", binary.BigEndian.Uint16(b))
 	}
 	if b, err := m.conn.ReadHoldingRegisters(regControlMode, 1); err == nil {
-		fmt.Printf("\tControl Mode:\t%d\n", binary.BigEndian.Uint16(b))
+		m.log.INFO.Printf("\tControl Mode:\t%d", binary.BigEndian.Uint16(b))
 	}
 	if b, err := m.conn.ReadHoldingRegisters(regForceMode, 1); err == nil {
-		fmt.Printf("\tForce Mode:\t%d\n", binary.BigEndian.Uint16(b))
+		m.log.INFO.Printf("\tForce Mode:\t%d", binary.BigEndian.Uint16(b))
 	}
 	if b, err := m.conn.ReadHoldingRegisters(regChargePower, 1); err == nil {
-		fmt.Printf("\tCharge Power:\t%d W\n", binary.BigEndian.Uint16(b))
+		m.log.INFO.Printf("\tCharge Power:\t%d W", binary.BigEndian.Uint16(b))
 	}
 	if b, err := m.conn.ReadHoldingRegisters(regWorkMode, 1); err == nil {
-		fmt.Printf("\tWork Mode:\t%d\n", binary.BigEndian.Uint16(b))
+		m.log.INFO.Printf("\tWork Mode:\t%d", binary.BigEndian.Uint16(b))
 	}
 }
