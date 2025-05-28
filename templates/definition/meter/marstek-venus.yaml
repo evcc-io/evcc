@@ -40,6 +40,18 @@ params:
     default: 100
     type: int
     advanced: true
+  - name: charge_power
+    default: 2500
+    advanced: true
+    description:
+      en: Charge power in watts for Charge mode.
+      de: Ladeleistung in Watt für den Charge-Modus.
+  - name: work_mode_normal
+    default: 1
+    advanced: true
+    description:
+      en: Work mode for Normal state. 0 manual, 1 anti-feed, 2 trade mode.
+      de: Work mode für Normal-Modus. 0 Manueller Modus, 1 Eigenverbrauch, 2 AI-Optimierung.
 render: |
   type: custom
   power:
@@ -95,7 +107,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: 1
+          value: {{ .work_mode_normal }}
           set:
             source: modbus
             uri: {{ .uri }}
@@ -103,7 +115,7 @@ render: |
             timeout: 5s
             delay: 100ms
             register:
-              address: 43000 # User Work Mode = Anti-Feed
+              address: 43000 # User Work Mode
               type: writesingle
               decode: uint16
         - source: const
@@ -175,7 +187,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: 2500
+          value: {{ .charge_power }}
           set:
             source: modbus
             uri: {{ .uri }}
@@ -183,7 +195,7 @@ render: |
             timeout: 5s
             delay: 100ms
             register:
-              address: 42020 # Forcible Charge Power = 2500 watts
+              address: 42020 # Forcible Charge Power
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
