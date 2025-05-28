@@ -22,7 +22,7 @@ params:
       de: "Modbus-Slave-ID"
       en: "Modbus slave ID"
   - name: timeout
-    default: 5
+    default: 5s
     advanced: true
     help:
       de: "Verbindungs-Timeout"
