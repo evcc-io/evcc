@@ -245,6 +245,8 @@ test.describe("loadpoint", async () => {
     // set vehicle as default for loadpoint 1
     await page.getByTestId("loadpoint").nth(0).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
+    await expect(lpModal.getByTestId("loadpointPollMode-charging")).toHaveClass(/active/);
+    await expect(lpModal.getByRole("checkbox", { name: "Interpolate charge level" })).toBeChecked();
     await lpModal.getByLabel("Default vehicle").selectOption(VEHICLE_1);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
