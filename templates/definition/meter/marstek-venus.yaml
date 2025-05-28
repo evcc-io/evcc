@@ -22,7 +22,7 @@ params:
     advanced: true
     description:
       de: "Batteriekapazität in kWh. Venus-E: 5.12, Venus-C: 2.56"
-      en: "Batterie capacity in kWh. Venus-E: 5.12, Venus-C: 2.56"
+      en: "Battery capacity in kWh. Venus-E: 5.12, Venus-C: 2.56"
   - name: minsoc
     default: 11
     type: int
