@@ -40,12 +40,7 @@ params:
     default: 100
     type: int
     advanced: true
-  - name: charge_power
-    default: 2500
-    advanced: true
-    description:
-      en: Charge power in watts for Charge mode.
-      de: Ladeleistung in Watt für den Charge-Modus.
+  - name: maxchargepower
   - name: work_mode_normal
     default: 1
     advanced: true
