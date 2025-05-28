@@ -1,6 +1,8 @@
 template: spottyenergy
 products:
   - brand: Spotty Energie
+requirements:
+  evcc: ["skiptest"]
 group: price
 countries: ["AT"]
 params:
@@ -24,5 +26,10 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ .contractid }}
-    jq: '[.[] | {start: .from, end: (.from | fromdate + 3600 | todate), price: (.price/100)}] | tostring'
+    uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ unquote .contractid }}
+    jq: |
+      [ .[] | {
+        start: .from,
+        end:   (.from | fromdate + 3600 | todate),
+        value: (.price/100)
+      } ] | tostring

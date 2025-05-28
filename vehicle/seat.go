@@ -58,7 +58,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs, err := service.TokenRefreshServiceTokenSource(log, cupra.TRSParams, cupra.AuthParams, cc.User, cc.Password)
+	trs, err := vwidentity.Oauth2Login(log, cupra.OAuth2Config, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

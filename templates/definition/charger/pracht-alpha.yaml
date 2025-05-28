@@ -2,7 +2,16 @@ template: pracht-alpha
 products:
   - brand: Pracht
     description:
-      generic: Alpha XT, XT+, Mono XT, Mono XT+, PNI
+      generic: Alpha XT
+  - brand: Pracht
+    description:
+      generic: XT+
+  - brand: Pracht
+    description:
+      generic: Mono XT
+  - brand: Pracht
+    description:
+      generic: PNI
 requirements:
   evcc: ["sponsorship"]
 params:

@@ -3,13 +3,16 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -45,20 +48,33 @@ func unwrap(err error) (res []string) {
 	return
 }
 
+var redactSecrets = []string{
+	"mac",                   // infrastructure
+	"sponsortoken", "plant", // global settings
+	"apikey", "user", "password", "pin", // users
+	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
+	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
+	"app", "chats", "recipients", // push messaging
+	"vin",               // vehicles
+	"lat", "lon", "zip", // solar forecast
+}
+
 // redact redacts a configuration string
 func redact(src string) string {
-	secrets := []string{
-		"mac",                   // infrastructure
-		"sponsortoken", "plant", // global settings
-		"user", "password", "pin", // users
-		"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
-		"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
-		"app", "chats", "recipients", // push messaging
-		"vin", // vehicles
-	}
 	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
+		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(redactSecrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
+}
+
+func redactMap(src map[string]any) map[string]any {
+	res := maps.Clone(src)
+	for k := range res {
+		if slices.Contains(redactSecrets, k) {
+			res[k] = "*****"
+		}
+	}
+
+	return res
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
@@ -96,4 +112,15 @@ func wrapFatalError(err error) error {
 	}
 
 	return &FatalError{err}
+}
+
+func customDevice(other map[string]any) (map[string]any, error) {
+	customYaml, ok := other["yaml"].(string)
+	if !ok {
+		return other, nil
+	}
+
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(customYaml), &res)
+	return res, err
 }

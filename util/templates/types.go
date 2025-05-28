@@ -243,6 +243,15 @@ func (p *Param) IsAllInOne() bool {
 	return p.AllInOne != nil && *p.AllInOne
 }
 
+// yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
+func (p *Param) yamlQuote(value string) string {
+	if p.Type != TypeString {
+		return value
+	}
+
+	return yamlQuote(value)
+}
+
 // Product contains naming information about a product a template supports
 type Product struct {
 	Brand       string       // product brand
@@ -257,7 +266,7 @@ type CountryCode string
 
 func (c CountryCode) IsValid() bool {
 	// ensure ISO 3166-1 alpha-2 format
-	var validCode = regexp.MustCompile(`^[A-Z]{2}$`)
+	validCode := regexp.MustCompile(`^[A-Z]{2}$`)
 	return validCode.MatchString(string(c))
 }
 

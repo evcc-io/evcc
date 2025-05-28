@@ -25,7 +25,7 @@
 	</div>
 </template>
 <script>
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
@@ -52,6 +52,7 @@ export default {
 			}
 			switch (name) {
 				case "power":
+				case "solarForecast":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
@@ -61,6 +62,7 @@ export default {
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
+				case "heaterTempLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":

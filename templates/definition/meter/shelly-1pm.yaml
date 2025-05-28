@@ -21,4 +21,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
+  usage: {{ .usage }}
   channel: {{ .channel }}  # shelly device relay channel

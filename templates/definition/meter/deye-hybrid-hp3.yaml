@@ -30,6 +30,12 @@ params:
     default: 95
     advanced: true
   - name: maxacpower
+  - name: includegenport
+    type: bool
+    advanced: true
+    description:
+      de: GEN-Anschluss als Solar-Eingang verwenden
+      en: Treat GEN port as solar input
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -103,14 +109,34 @@ render: |
         type: holding
         decode: uint16
       scale: 10
+    {{- if eq .includegenport "true" }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 667 # "low word of input power at GEN-Port"
+        type: holding
+        decode: int16 # "value is actually a signed 32 bit value but high word is at reg 671
+      scale: 1
+    {{- end }}
   energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 534 # "Total_PV_Power_Wh"
-      type: holding
-      decode: uint32s
-    scale: 0.1
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 534 # "Total_PV_Power_Wh"
+        type: holding
+        decode: uint32s
+      scale: 0.1
+    {{- if eq .includegenport "true" }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 537 # "Total_Gen_Power_Wh"
+        type: holding
+        decode: int32s
+      scale: 0.1
+    {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}

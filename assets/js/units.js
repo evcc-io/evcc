@@ -29,3 +29,11 @@ export function getUnits() {
 export function setUnits(value) {
   settings.unit = value;
 }
+
+export function is12hFormat() {
+  return settings.is12hFormat;
+}
+
+export function set12hFormat(value) {
+  settings.is12hFormat = value;
+}

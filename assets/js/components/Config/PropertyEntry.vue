@@ -3,9 +3,9 @@
 		:id="id"
 		:optional="!Required"
 		:deprecated="Deprecated"
-		:label="Description || `[${Name}]`"
-		:help="Description === Help ? undefined : Help"
-		:example="Example"
+		:label="label"
+		:help="help"
+		:example="example"
 	>
 		<PropertyField
 			:id="id"
@@ -50,6 +50,16 @@ export default {
 			set(value) {
 				this.$emit("update:modelValue", value);
 			},
+		},
+		label() {
+			return this.Description || `[${this.Name}]`;
+		},
+		help() {
+			return this.Description === this.Help ? undefined : this.Help;
+		},
+		example() {
+			// hide example text since config ui doesnt use go duration format (e.g. 5m)
+			return this.Type === "Duration" ? undefined : this.Example;
 		},
 	},
 };

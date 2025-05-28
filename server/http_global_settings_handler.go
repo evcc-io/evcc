@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -54,7 +53,7 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 			return
 		}
 
-		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil && err != io.EOF {
+		if err := yaml.Unmarshal(b, &other); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -72,24 +71,22 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	}
 }
 
-// func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
-// 			jsonError(w, http.StatusInternalServerError, err)
-// 			return
-// 		}
-
-// 		jsonResult(w, struc)
-// 	}
-// }
-
-func settingsSetJsonHandler(key string, valueChan chan<- util.Param, struc any) http.HandlerFunc {
+func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		struc := newStruc()
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&struc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
+		}
+
+		oldStruc := newStruc()
+		if err := settings.Json(key, &oldStruc); err == nil {
+			if err := mergeMaskedAny(oldStruc, struc); err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
 		}
 
 		settings.SetJson(key, struc)

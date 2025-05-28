@@ -208,13 +208,13 @@ func (c *Connection) CurrentPower() (float64, error) {
 		}
 		res += power
 	}
-	return res, nil
+	return res + float64(s.StatusSNS.SML.PowerCurr), nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.statusSnsG.Get()
-	return res.StatusSNS.Energy.Total, err
+	return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
 }
 
 // Currents implements the api.PhaseCurrents interface
@@ -249,16 +249,4 @@ func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float
 	}
 
 	return res[0], res[1], res[2], nil
-}
-
-// SmlPower provides the sml sensor power
-func (c *Connection) SmlPower() (float64, error) {
-	res, err := c.statusSnsG.Get()
-	return float64(res.StatusSNS.SML.PowerCurr), err
-}
-
-// SmlTotalEnergy provides the sml sensor total import energy
-func (c *Connection) SmlTotalEnergy() (float64, error) {
-	res, err := c.statusSnsG.Get()
-	return res.StatusSNS.SML.TotalIn, err
 }

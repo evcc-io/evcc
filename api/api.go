@@ -44,8 +44,8 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
-// MaxACPower provides max AC power in W
-type MaxACPower interface {
+// MaxACPowerGetter provides max AC power in W
+type MaxACPowerGetter interface {
 	MaxACPower() float64
 }
 
@@ -193,9 +193,9 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	SetCallbackParams(baseURL, redirectURL string, authenticated chan<- bool)
-	LoginHandler() http.HandlerFunc
-	LogoutHandler() http.HandlerFunc
+	HandleCallback(r *http.Request)
+	HandleLogout(r *http.Request)
+	AuthCodeURL(state string) string
 }
 
 // IconDescriber optionally provides an icon

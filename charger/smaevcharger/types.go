@@ -26,6 +26,14 @@ const (
 	ChargerManualLockDisabled = "5172"
 )
 
+type ErrUnknownMeasurement struct {
+	Measurement string
+}
+
+func (e *ErrUnknownMeasurement) Error() string {
+	return "unknown measurement: " + e.Measurement
+}
+
 // Measurements Data json Response structure
 type Measurements struct {
 	ChannelId   string `json:"channelId"`

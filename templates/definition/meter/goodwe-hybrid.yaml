@@ -81,7 +81,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: {{ if eq .battery "1" }}35182{{ else }}35265{{ end }} # Battery1/2 Power
+      address: {{ if eq .battery "1" }}35182{{ else }}35264{{ end }} # Battery1/2 Power
       type: holding
       decode: int32
   soc:

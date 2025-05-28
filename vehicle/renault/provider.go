@@ -1,6 +1,7 @@
 package renault
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
@@ -23,7 +24,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup bool, cache time.Duration) *Provider {
+func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, cache time.Duration) *Provider {
 	impl := &Provider{
 		batteryG: util.Cached(func() (kamereon.Response, error) {
 			return api.Battery(accountID, vin)
@@ -35,10 +36,14 @@ func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup boo
 			return api.Hvac(accountID, vin)
 		}, cache),
 		wakeup: func() (kamereon.Response, error) {
-			if alternativeWakeup {
+			switch wakeupMode {
+			case "alternative":
 				return api.Action(accountID, kamereon.ActionStart, vin)
+			case "MY24":
+				return api.WakeUpMY24(accountID, vin)
+			default:
+				return api.WakeUp(accountID, vin)
 			}
-			return api.WakeUp(accountID, vin)
 		},
 		position: func() (kamereon.Response, error) {
 			return api.Position(accountID, vin)
@@ -140,7 +145,7 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 

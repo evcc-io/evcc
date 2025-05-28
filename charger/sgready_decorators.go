@@ -8,10 +8,10 @@ import (
 
 func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	switch {
-	case battery == nil && meter == nil && socLimiter == nil:
+	case battery == nil && meter == nil:
 		return base
 
-	case battery == nil && meter != nil && meterEnergy == nil && socLimiter == nil:
+	case battery == nil && meter != nil && meterEnergy == nil:
 		return &struct {
 			*SgReady
 			api.Meter
@@ -22,7 +22,7 @@ func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy f
 			},
 		}
 
-	case battery == nil && meter != nil && meterEnergy != nil && socLimiter == nil:
+	case battery == nil && meter != nil && meterEnergy != nil:
 		return &struct {
 			*SgReady
 			api.Meter
@@ -79,51 +79,6 @@ func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy f
 			},
 			MeterEnergy: &decorateSgReadyMeterEnergyImpl{
 				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery == nil && meter == nil && socLimiter != nil:
-		return &struct {
-			*SgReady
-			api.SocLimiter
-		}{
-			SgReady: base,
-			SocLimiter: &decorateSgReadySocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && meter != nil && meterEnergy == nil && socLimiter != nil:
-		return &struct {
-			*SgReady
-			api.Meter
-			api.SocLimiter
-		}{
-			SgReady: base,
-			Meter: &decorateSgReadyMeterImpl{
-				meter: meter,
-			},
-			SocLimiter: &decorateSgReadySocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
-	case battery == nil && meter != nil && meterEnergy != nil && socLimiter != nil:
-		return &struct {
-			*SgReady
-			api.Meter
-			api.MeterEnergy
-			api.SocLimiter
-		}{
-			SgReady: base,
-			Meter: &decorateSgReadyMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateSgReadyMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			SocLimiter: &decorateSgReadySocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 		}
 

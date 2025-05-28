@@ -20,11 +20,26 @@ params:
     type: int
     default: 97
     advanced: true
+  - name: cache
+    advanced: true
+    default: 30s
+  - name: maxchargepower
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Leistung
+      en: External power
+    help:
+      de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
+      en: Query external power of all devices connected to S0
+    advanced: true
 render: |
   type: rct
   uri: {{ .host }}
   usage: {{ .usage }}
-  cache: 2s
+  cache: {{ .cache }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
+  maxchargepower: {{ .maxchargepower }}
+  externalpower: {{ .externalpower }}

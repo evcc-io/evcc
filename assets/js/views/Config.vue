@@ -17,10 +17,7 @@
 					</p>
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
-						<li>aux meters</li>
-						<li>custom/plugin meters and vehicles</li>
-						<li>migration for vehicles, chargers, meters, loadpoints</li>
-						<li>remove mixed mode (evcc.yaml + db) for meters and vehicles</li>
+						<li>migration for loadpoints</li>
 					</ul>
 					<p>
 						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
@@ -36,6 +33,13 @@
 
 				<div v-if="$hiddenFeatures()">
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<p
+						v-if="loadpointsRequired"
+						class="text-muted my-4"
+						data-testid="loadpoint-required"
+					>
+						{{ $t("config.main.loadpointRequired") }}
+					</p>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
@@ -62,6 +66,7 @@
 						<NewDeviceButton
 							data-testid="add-loadpoint"
 							:title="$t('config.main.addLoadpoint')"
+							:attention="loadpointsRequired"
 							@click="newLoadpoint"
 						/>
 					</ul>
@@ -143,7 +148,11 @@
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Solar system'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.solarSystem')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -160,7 +169,11 @@
 						<DeviceCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:title="meter.config?.template || 'Battery storage'"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.batteryStorage')
+							"
 							:name="meter.name"
 							:editable="!!meter.id"
 							:error="deviceError('meter', meter.name)"
@@ -176,7 +189,36 @@
 						</DeviceCard>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
-							@click="newMeter"
+							@click="addSolarBatteryMeter"
+						/>
+					</ul>
+
+					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="meter in auxMeters"
+							:key="meter.name"
+							:title="
+								meter.deviceTitle ||
+								meter.config?.template ||
+								$t('config.devices.auxMeter')
+							"
+							:name="meter.name"
+							:editable="!!meter.id"
+							:error="deviceError('meter', meter.name)"
+							data-testid="aux"
+							@edit="editMeter(meter.id, 'aux')"
+						>
+							<template #icon>
+								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('meter', meter.name)" />
+							</template>
+						</DeviceCard>
+						<NewDeviceButton
+							:title="$t('config.main.addAdditional')"
+							@click="newAdditionalMeter"
 						/>
 					</ul>
 
@@ -318,10 +360,11 @@
 					:id="selectedMeterId"
 					:name="selectedMeterName"
 					:type="selectedMeterType"
+					:typeChoices="selectedMeterTypeChoices"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
-					@added="addMeter"
+					@added="meterAdded"
 					@updated="meterChanged"
-					@removed="removeMeter"
+					@removed="meterRemoved"
 					@close="meterModalClosed"
 				/>
 				<ChargerModal
@@ -329,9 +372,9 @@
 					:name="selectedChargerName"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					:isSponsor="isSponsor"
-					@added="addCharger"
+					@added="chargerAdded"
 					@updated="chargerChanged"
-					@removed="removeCharger"
+					@removed="chargerRemoved"
 					@close="chargerModalClosed"
 				/>
 				<InfluxModal @changed="loadDirty" />
@@ -387,7 +430,7 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
-import TopHeader from "../components/TopHeader.vue";
+import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 
@@ -420,7 +463,7 @@ export default {
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
-		TopHeader,
+		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
 	},
@@ -439,15 +482,24 @@ export default {
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
+			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			isComponentMounted: true,
+			isPageVisible: true,
 		};
 	},
+	head() {
+		return { title: this.$t("config.main.title") };
+	},
 	computed: {
+		loadpointsRequired() {
+			return this.loadpoints.length === 0;
+		},
 		fatalClass() {
 			return store.state?.fatal?.class;
 		},
@@ -466,6 +518,14 @@ export default {
 			const names = this.site?.battery;
 			return this.getMetersByNames(names);
 		},
+		auxMeters() {
+			const names = this.site?.aux;
+			return this.getMetersByNames(names);
+		},
+		extMeters() {
+			const names = this.site?.ext;
+			return this.getMetersByNames(names);
+		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
 		},
@@ -473,8 +533,13 @@ export default {
 			return this.getChargerById(this.selectedChargerId)?.name;
 		},
 		tariffTags() {
-			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
-			if (tariffGrid === undefined && tariffFeedIn === undefined && tariffCo2 === undefined) {
+			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			if (
+				tariffGrid === undefined &&
+				tariffFeedIn === undefined &&
+				tariffCo2 === undefined &&
+				tariffSolar === undefined
+			) {
 				return null;
 			}
 			const tags = {};
@@ -489,6 +554,9 @@ export default {
 			}
 			if (tariffCo2) {
 				tags.co2 = { value: tariffCo2 };
+			}
+			if (tariffSolar) {
+				tags.solarForecast = { value: tariffSolar };
 			}
 			return tags;
 		},
@@ -546,12 +614,25 @@ export default {
 		},
 	},
 	mounted() {
+		this.isComponentMounted = true;
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
+		this.isPageVisible = document.visibilityState === "visible";
 		this.loadAll();
 	},
 	unmounted() {
+		this.isComponentMounted = false;
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 		clearTimeout(this.deviceValueTimeout);
 	},
 	methods: {
+		handleVisibilityChange() {
+			this.isPageVisible = document.visibilityState === "visible";
+			if (this.isPageVisible) {
+				this.updateValues();
+			} else {
+				clearTimeout(this.deviceValueTimeout);
+			}
+		},
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
@@ -560,7 +641,7 @@ export default {
 			await this.loadLoadpoints();
 			await this.loadCircuits();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
@@ -658,6 +739,18 @@ export default {
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
 		},
+		addSolarBatteryMeter() {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = undefined;
+			this.selectedMeterTypeChoices = ["pv", "battery"];
+			this.$nextTick(() => this.meterModal().show());
+		},
+		newAdditionalMeter() {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = undefined;
+			this.selectedMeterTypeChoices = ["aux", "ext"];
+			this.$nextTick(() => this.meterModal().show());
+		},
 		editCharger(id) {
 			this.selectedChargerId = id;
 			this.$nextTick(() => this.chargerModal().show());
@@ -668,15 +761,13 @@ export default {
 		},
 		async meterChanged() {
 			await this.loadMeters();
-			this.meterModal().hide();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		async chargerChanged() {
 			await this.loadChargers();
-			this.chargerModal().hide();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		editLoadpoint(id) {
 			this.selectedLoadpointId = id;
@@ -684,12 +775,12 @@ export default {
 		},
 		newLoadpoint() {
 			this.selectedLoadpointId = undefined;
+			this.$refs.loadpointModal.reset();
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {
 			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
-			this.loadpointModal().hide();
 			this.loadDirty();
 		},
 		editVehicle(id) {
@@ -712,7 +803,7 @@ export default {
 		yamlChanged() {
 			this.loadDirty();
 		},
-		addMeter(type, name) {
+		meterAdded(type, name) {
 			if (type === "charge") {
 				// update loadpoint
 				this.$refs.loadpointModal?.setMeter(name);
@@ -728,26 +819,26 @@ export default {
 				this.site[type].push(name);
 				this.saveSite(type);
 			}
+			this.meterChanged();
 		},
-		removeMeter(type, name) {
+		meterRemoved(type) {
 			if (type === "charge") {
 				// update loadpoint
 				this.$refs.loadpointModal?.setMeter(undefined);
-			} else if (type === "grid") {
-				// update site grid
-				this.site.grid = "";
-				this.saveSite(type);
 			} else {
-				// update site pv, battery, aux
-				this.site[type] = this.site[type].filter((i) => i !== name);
-				this.saveSite(type);
+				// update site grid, pv, battery, aux, ext
+				this.loadSite();
+				this.loadDirty();
 			}
+			this.meterChanged();
 		},
-		addCharger(name) {
+		async chargerAdded(name) {
+			await this.chargerChanged();
 			this.$refs.loadpointModal?.setCharger(name);
 		},
-		removeCharger() {
+		chargerRemoved() {
 			this.$refs.loadpointModal?.setCharger(undefined);
+			this.chargerChanged();
 		},
 		meterModalClosed() {
 			if (this.selectedMeterType === "charge") {
@@ -764,7 +855,7 @@ export default {
 			await api.put("/config/site", body);
 			await this.loadSite();
 			await this.loadDirty();
-			await this.updateValues();
+			this.updateValues();
 		},
 		todo() {
 			alert("not implemented yet");
@@ -792,14 +883,17 @@ export default {
 				};
 				for (const type in devices) {
 					for (const device of devices[type]) {
-						await this.updateDeviceValue(type, device.name);
+						if (this.isComponentMounted && this.isPageVisible) {
+							await this.updateDeviceValue(type, device.name);
+						}
 					}
 				}
 			}
-			// ensure that component is still mounted
-			if (!this.$el) return;
-			const interval = (store.state?.interval || 30) * 1000;
-			this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+
+			if (this.isComponentMounted && this.isPageVisible) {
+				const interval = (store.state?.interval || 30) * 1000;
+				this.deviceValueTimeout = setTimeout(this.updateValues, interval);
+			}
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || {};

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"slices"
 	"sync"
 	"text/template"
@@ -30,14 +31,39 @@ var (
 func init() {
 	ConfigDefaults.Load()
 
-	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
+	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
-		templates[class] = load(class)
+		load(class)
 	}
 }
 
-func FromBytes(b []byte) (Template, error) {
+// Register adds a template file to the registry
+func Register(class Class, filepath string) error {
+	b, err := os.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := fromBytes(b)
+	if err != nil {
+		return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
+	}
+
+	return register(class, tmpl)
+}
+
+func register(class Class, tmpl Template) error {
+	if slices.ContainsFunc(templates[class], func(t Template) bool { return t.Template == tmpl.Template }) {
+		return fmt.Errorf("duplicate template name: %s", tmpl.Template)
+	}
+
+	templates[class] = append(templates[class], tmpl)
+
+	return nil
+}
+
+func fromBytes(b []byte) (Template, error) {
 	// panic if template definition contains unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -65,7 +91,7 @@ func FromBytes(b []byte) (Template, error) {
 	return tmpl, err
 }
 
-func load(class Class) (res []Template) {
+func load(class Class) {
 	err := fs.WalkDir(definition.YamlTemplates, class.String(), func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -79,24 +105,16 @@ func load(class Class) (res []Template) {
 			return err
 		}
 
-		tmpl, err := FromBytes(b)
+		tmpl, err := fromBytes(b)
 		if err != nil {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		if slices.ContainsFunc(res, func(t Template) bool { return t.Template == tmpl.Template }) {
-			return fmt.Errorf("duplicate template name '%s' found in file '%s'", tmpl.Template, filepath)
-		}
-
-		res = append(res, tmpl)
-
-		return nil
+		return register(class, tmpl)
 	})
 	if err != nil {
 		panic(err)
 	}
-
-	return res
 }
 
 // EncoderLanguage sets the template language for encoding json

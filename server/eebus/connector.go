@@ -1,11 +1,14 @@
 package eebus
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 )
+
+const registerTimeout = 90 * time.Second
 
 type Connector struct {
 	once     sync.Once
@@ -16,9 +19,11 @@ func NewConnector() *Connector {
 	return &Connector{connectC: make(chan struct{})}
 }
 
-func (c *Connector) Wait(timeout time.Duration) error {
+func (c *Connector) Wait(ctx context.Context) error {
 	select {
-	case <-time.After(timeout):
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(registerTimeout):
 		return api.ErrTimeout
 	case <-c.connectC:
 		return nil

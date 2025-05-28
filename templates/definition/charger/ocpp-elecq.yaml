@@ -1,0 +1,17 @@
+template: ocpp-elecq
+products:
+  - brand: Elecq
+    description:
+      generic: Home
+  - brand: Elecq
+    description:
+      generic: Biz
+  - brand: Elecq
+    description:
+      generic: Station
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
