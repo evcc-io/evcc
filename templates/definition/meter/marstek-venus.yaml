@@ -182,7 +182,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: {{ .charge_power }}
+          value: {{ . maxchargepower }}
           set:
             source: modbus
             uri: {{ .uri }}
