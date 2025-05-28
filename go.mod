@@ -151,7 +151,7 @@ require (
 	github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57 // indirect
 	github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -166,7 +166,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
