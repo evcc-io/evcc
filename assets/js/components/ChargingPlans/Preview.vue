@@ -146,9 +146,11 @@ export default defineComponent({
 				start.setMinutes(0);
 				start.setSeconds(0);
 				start.setMilliseconds(0);
+				const startMinute = start.getMinutes();
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
+				const endMinute = end.getMinutes();
 				const day = this.weekdayShort(start);
 				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
@@ -166,7 +168,9 @@ export default defineComponent({
 					day,
 					value,
 					startHour,
+					startMinute,
 					endHour,
+					endMinute,
 					charging,
 					toLate,
 					warning,

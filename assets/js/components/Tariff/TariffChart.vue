@@ -49,6 +49,10 @@
 			<div class="text-nowrap" data-testid="target-text">{{ targetText }}</div>
 			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
+		<div style="height: 200px">
+			<!-- @vue-ignore -->
+			<Bar ref="chart" :data="chartData" :options="options" />
+		</div>
 	</div>
 </template>
 
@@ -59,12 +63,39 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
+import { Bar } from "vue-chartjs";
+import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
+import {
+	BarController,
+	BarElement,
+	CategoryScale,
+	Filler,
+	Legend,
+	LinearScale,
+	PointElement,
+	TimeSeriesScale,
+} from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import colors from "@/colors";
+
+registerChartComponents([
+	BarController,
+	BarElement,
+	Filler,
+	CategoryScale,
+	LinearScale,
+	TimeSeriesScale,
+	Legend,
+	PointElement,
+	ChartDataLabels,
+]);
 
 const BAR_WIDTH = 20;
 
 export default {
 	name: "TariffChart",
 	components: {
+		Bar,
 		PlanEndIcon,
 	},
 	mixins: [formatter],
@@ -83,6 +114,45 @@ export default {
 		};
 	},
 	computed: {
+		chartData() {
+			return {
+				labels: this.slots.map(
+					(s) =>
+						`${this.formatHour(s.startHour)}:${s.startMinute.toString().padStart(2, "0")}`
+				),
+				datasets: [
+					{
+						label: "Planner",
+						data: this.slots.map((s) => s.value),
+						borderRadius: 8,
+						backgroundColor: colors.co2,
+						barThickness: 10,
+						minBarLength: 10,
+					},
+				],
+			};
+		},
+		options() {
+			return {
+				...commonOptions,
+				borderSkipped: false,
+				animation: {
+					duration: 500, // --evcc-transition-medium
+					colors: true,
+					numbers: false,
+				},
+				scales: {
+					x: {
+						grid: {
+							color: colors.border,
+						},
+					},
+					y: {
+						display: false,
+					},
+				},
+			};
+		},
 		valueInfo() {
 			let max = Number.MIN_VALUE;
 			let min = 0;

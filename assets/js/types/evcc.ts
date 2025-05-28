@@ -95,7 +95,9 @@ export interface Slot {
 	day: string;
 	value?: number;
 	startHour: number;
+	startMinute: number;
 	endHour: number;
+	endMinute: number;
 	charging: boolean;
 	toLate?: boolean | null;
 	warning?: boolean | null;
