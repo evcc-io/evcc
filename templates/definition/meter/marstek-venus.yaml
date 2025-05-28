@@ -59,15 +59,6 @@ render: |
       type: holding
       decode: int32
     scale: 1
-  energy:
-    source: modbus
-    uri: {{ .uri }}
-    id: {{ .id }}
-    register:
-      address: 33000 # Total Charging Energy (kWh)
-      type: holding
-      decode: uint32
-    scale: 0.01
   soc:
     source: modbus
     uri: {{ .uri }}
