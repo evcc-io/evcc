@@ -130,7 +130,7 @@ export default defineComponent({
 				this.updateDetailsTooltip();
 			}
 		},
-		powerInKw(newVal, oldVal) {
+		powerUnit(newVal, oldVal) {
 			// force update if unit changes but not the value
 			if (newVal !== oldVal) {
 				(this.$refs["powerNumber"] as any).forceUpdate();
