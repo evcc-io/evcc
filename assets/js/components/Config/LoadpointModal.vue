@@ -574,7 +574,7 @@ const defaultValues = {
 	},
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
-		estimate: false,
+		estimate: true,
 	},
 	vehicle: "",
 	charger: "",
