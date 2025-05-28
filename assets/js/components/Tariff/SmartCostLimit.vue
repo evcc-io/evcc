@@ -169,33 +169,35 @@ export default {
 			return 1;
 		},
 		slots(): Slot[] {
-			const result: Slot[] = [];
-			if (!this.tariff?.rates || !this.startTime) return result;
-
+			if (!this.tariff?.rates || !this.startTime) return [];
 			const { rates } = this.tariff;
-			const oneHour = 60 * 60 * 1000;
 
-			for (let i = 0; i < 42; i++) {
-				const start = new Date(this.startTime.getTime() + oneHour * i);
+			return Array.from({ length: 42 }, (_, i) => {
+				// @ts-expect-error
+				const start = new Date(this.startTime.getTime());
+				start.setHours(start.getHours() + i, 0, 0, 0);
 				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
+
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
-				// TODO: handle multiple matching time slots
+
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const charging =
 					this.selectedSmartCostLimit !== null &&
 					value !== undefined &&
 					value <= this.selectedSmartCostLimit;
-				const selectable = value !== undefined;
-				result.push({ day, value, startHour, endHour, charging, selectable });
-			}
 
-			return result;
+				return {
+					day: this.weekdayShort(start),
+					value,
+					startHour,
+					startMinute: start.getMinutes(),
+					endHour: end.getHours(),
+					endMinute: end.getMinutes(),
+					charging,
+					selectable: value !== undefined,
+				};
+			});
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);

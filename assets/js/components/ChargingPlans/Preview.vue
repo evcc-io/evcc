@@ -136,48 +136,38 @@ export default defineComponent({
 			return this.fmtWeekdayTime(this.targetTime);
 		},
 		slots(): Slot[] {
-			const result = [];
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
-			const oneHour = 60 * 60 * 1000;
-			for (let i = 0; i < 39; i++) {
-				const start = new Date(this.startTime.getTime() + oneHour * i);
+
+			return Array.from({ length: 39 }, (_, i) => {
+				const start = new Date(this.startTime.getTime());
+				start.setHours(start.getHours() + i, 0, 0, 0);
 				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const startMinute = start.getMinutes();
+
 				const end = new Date(start.getTime());
 				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const endMinute = end.getMinutes();
-				const day = this.weekdayShort(start);
-				const toLate = this.targetTime && this.targetTime <= start;
-				// TODO: handle multiple matching time slots
-				const value = this.findSlotInRange(start, end, rates)?.value;
-				const isTarget =
-					this.targetTime && start <= this.targetTime && end > this.targetTime;
-				const charging = this.findSlotInRange(start, end, plan) != null;
+
+				const charging = this.findSlotInRange(start, end, plan) !== null;
 				const warning =
 					charging &&
 					this.targetTime &&
 					this.endTime &&
 					end > this.targetTime &&
 					this.targetTime < this.endTime;
-				result.push({
-					day,
-					value,
+
+				return {
+					day: this.weekdayShort(start),
+					value: this.findSlotInRange(start, end, rates)?.value,
 					startHour,
-					startMinute,
-					endHour,
-					endMinute,
-					charging,
-					toLate,
+					startMinute: start.getMinutes(),
+					endHour: end.getHours(),
+					endMinute: end.getMinutes(),
+					charging: charging,
+					toLate: this.targetTime && this.targetTime <= start,
 					warning,
-					isTarget,
-				});
-			}
-			return result;
+					isTarget: this.targetTime && start <= this.targetTime && end > this.targetTime,
+				};
+			});
 		},
 	},
 	watch: {
