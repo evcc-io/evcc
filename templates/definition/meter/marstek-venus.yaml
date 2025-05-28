@@ -53,8 +53,6 @@ render: |
     source: modbus
     uri: {{ .uri }}
     id: {{ .id }}
-    timeout: 5s
-    delay: 1s
     register:
       address: 32202 # AC Power (Watt)
       type: holding
@@ -64,8 +62,6 @@ render: |
     source: modbus
     uri: {{ .uri }}
     id: {{ .id }}
-    timeout: 5s
-    delay: 1s
     register:
       address: 33000 # Total Charging Energy (kWh)
       type: holding
@@ -75,8 +71,6 @@ render: |
     source: modbus
     uri: {{ .uri }}
     id: {{ .id }}
-    timeout: 5s
-    delay: 1s
     register:
       address: 32104 # Battery SOC (%)
       type: holding
@@ -95,8 +89,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
@@ -107,8 +99,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 43000 # User Work Mode
               type: writesingle
@@ -119,8 +109,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42000 # RS485 Control Mode = Disabled
               type: writesingle
@@ -135,8 +123,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
@@ -147,8 +133,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42010 # Force Charge/Discharge = Stop
               type: writesingle
@@ -163,8 +147,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
@@ -175,8 +157,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42010 # Force Charge/Discharge = Charge
               type: writesingle
@@ -187,8 +167,6 @@ render: |
             source: modbus
             uri: {{ .uri }}
             id: {{ .id }}
-            timeout: 5s
-            delay: 100ms
             register:
               address: 42020 # Forcible Charge Power
               type: writesingle
