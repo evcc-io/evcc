@@ -15,21 +15,27 @@ requirements:
 params:
   - name: uri
     required: true
-  - name: id
-    default: 1
+    description:
+      en: Ip address and port of the Modbus TCP gateway.
+      de: IP-Adresse und Port des Modbus-TCP-Gateways.
   - name: capacity
     default: 5.12
+    description:
+      de: Batteriekapazität in kWh. Venus-E 5.12, Venus-C 2.56
+      en: Battery capacity in kWh. Venus-E 5.12, Venus-C 2.56
+  - name: id
+    default: 1
     advanced: true
     description:
-      de: "Batteriekapazität in kWh. Venus-E: 5.12, Venus-C: 2.56"
-      en: "Battery capacity in kWh. Venus-E: 5.12, Venus-C: 2.56"
+      en: Slave ID of the Modbus device.
+      de: Slave-ID des Modbus-Geräts.
   - name: minsoc
     default: 11
     type: int
     advanced: true
     description:
-      de: "Venus kann nur bis 11% entladen werden."
-      en: "Venus can only be discharged down to 11%."
+      de: Venus kann nur bis 11% entladen werden.
+      en: Venus can only be discharged down to 11%.
   - name: maxsoc
     default: 100
     type: int
