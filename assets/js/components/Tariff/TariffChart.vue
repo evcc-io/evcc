@@ -116,22 +116,26 @@ export default {
 	computed: {
 		chartData() {
 			return {
-				labels: this.slots.map((s) => this.fmtHourMinute(s.start)),
 				datasets: [
 					{
 						label: "Planner",
-						data: this.slots.map((s) => s.value),
+						data: this.slots.map((s) => ({
+							x: s.start.toISOString(),
+							y: s.value,
+						})),
 						borderRadius: 8,
 						backgroundColor: colors.co2,
-						barThickness: 10,
-						minBarLength: 10,
+						barThickness: 1,
+						minBarLength: 3,
 					},
 				],
 			};
 		},
 		options() {
+			const vThis = this;
 			return {
 				...commonOptions,
+				locale: this.$i18n?.locale,
 				borderSkipped: false,
 				animation: {
 					duration: 500, // --evcc-transition-medium
@@ -140,9 +144,52 @@ export default {
 				},
 				scales: {
 					x: {
-						grid: {
-							color: colors.border,
+						type: "timeseries",
+						display: true,
+						time: {
+							unit: "minute",
+							displayFormats: { minute: "HH:mm" },
 						},
+						grid: {
+							display: true,
+							color: colors.border,
+							offset: false,
+							// @ts-expect-error no-explicit-any
+							lineWidth(context) {
+								if (context.type !== "tick") {
+									return 0;
+								}
+								const label = context.tick?.label;
+								return Array.isArray(label) ? 1 : 0;
+							},
+						},
+						ticks: {
+							color: colors.muted,
+							autoSkip: false,
+							maxRotation: 0,
+							minRotation: 0,
+							source: "data",
+							align: "center",
+							padding: 0,
+							callback(value: number) {
+								const date = new Date(value);
+								const hour = date.getHours();
+								const minute = date.getMinutes();
+								if (minute !== 0) {
+									return "";
+								}
+								const hourFmt = vThis.hourShort(date);
+								if (hour === 0) {
+									return [hourFmt, vThis.weekdayShort(date)];
+								}
+								if (hour % 6 === 0) {
+									return hourFmt;
+								}
+								return "";
+							},
+						},
+						barPercentage: 0.6,
+						categoryPercentage: 0.7,
 					},
 					y: {
 						display: false,
