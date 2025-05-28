@@ -5,6 +5,7 @@ products:
     description:
       generic: Venus Battery Storage
 requirements:
+  evcc: ["skiptest"]
   description:
     en: Requires a Modbus TCP gateway (e.g., PUSR USR-DR134). Tested with firmware version V151.
     de: Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.

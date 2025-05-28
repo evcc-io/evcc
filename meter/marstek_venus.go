@@ -13,11 +13,25 @@ import (
 
 // Constants for Modbus registers and settings
 const (
-	regControlMode      = 42000 // RS485 Control Mode
-	regForceMode        = 42010 // Force Charge/Discharge Mode
-	regChargePower      = 42020 // Forcible Charge Power
-	regWorkMode         = 43000 // User Work Mode
-	maxChargePowerWatts = 2500  // Maximum charge power in watts
+	// Register addresses
+	regControlMode = 42000 // RS485 Control Mode
+	regForceMode   = 42010 // Force Charge/Discharge Mode
+	regChargePower = 42020 // Forcible Charge Power
+	regWorkMode    = 43000 // User Work Mode
+
+	// Control mode values
+	controlModeEnabled  = 21930 // RS485 Control Mode enabled
+	controlModeDisabled = 21947 // RS485 Control Mode disabled
+
+	// Force mode values
+	forceModeStop   = 0 // Stop charging/discharging
+	forceModeCharge = 1 // Force charging mode
+
+	// Work mode values
+	workModeAntiFeed = 1 // Anti-Feed mode
+
+	// Power settings
+	maxChargePowerWatts = 2500 // Maximum charge power in watts
 )
 
 // init registers the Marstek Venus meter type
@@ -110,17 +124,17 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 	case api.BatteryNormal:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, 21930)
+		binary.BigEndian.PutUint16(b, controlModeEnabled)
 		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set User Work Mode = Anti-Feed (1)
-		binary.BigEndian.PutUint16(b, 1)
+		binary.BigEndian.PutUint16(b, workModeAntiFeed)
 		if _, err := m.conn.WriteMultipleRegisters(regWorkMode, 1, b); err != nil {
 			return fmt.Errorf("failed to set anti-feed mode: %v", err)
 		}
 		// Step 3: Set RS485 Control Mode = Disabled (21947)
-		binary.BigEndian.PutUint16(b, 21947)
+		binary.BigEndian.PutUint16(b, controlModeDisabled)
 		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
 			return fmt.Errorf("failed to disable RS485 control mode: %v", err)
 		}
@@ -129,12 +143,12 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 	case api.BatteryCharge:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, 21930)
+		binary.BigEndian.PutUint16(b, controlModeEnabled)
 		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set Force Charge/Discharge Mode = Charge (1)
-		binary.BigEndian.PutUint16(b, 1)
+		binary.BigEndian.PutUint16(b, forceModeCharge)
 		if _, err := m.conn.WriteMultipleRegisters(regForceMode, 1, b); err != nil {
 			return fmt.Errorf("failed to set charge mode: %v", err)
 		}
@@ -148,12 +162,12 @@ func (m *MarstekVenus) SetBatteryMode(mode api.BatteryMode) error {
 	case api.BatteryHold:
 		// Step 1: Set RS485 Control Mode = Enabled (21930)
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, 21930)
+		binary.BigEndian.PutUint16(b, controlModeEnabled)
 		if _, err := m.conn.WriteMultipleRegisters(regControlMode, 1, b); err != nil {
 			return fmt.Errorf("failed to enable RS485 control mode: %v", err)
 		}
 		// Step 2: Set Force Charge/Discharge = Stop (0)
-		binary.BigEndian.PutUint16(b, 0)
+		binary.BigEndian.PutUint16(b, forceModeStop)
 		if _, err := m.conn.WriteMultipleRegisters(regForceMode, 1, b); err != nil {
 			return fmt.Errorf("failed to set stop mode: %v", err)
 		}
