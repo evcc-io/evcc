@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -111,9 +113,13 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
+	// compare firmware version to determine if RFID is available
 	var identify func() (string, error)
-	if _, err := wb.identify(); err == nil {
-		identify = wb.identify
+	if b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
+		if versionGreaterOrEqual(string(b), "v3.156.0") {
+			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
+			identify = wb.identify
+		}
 	}
 
 	// get failsafe timeout from charger
@@ -131,6 +137,40 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	go wb.heartbeat(ctx, timeout)
 
 	return decorateVestel(wb, phasesS, phasesG, identify), err
+}
+
+// versionGreaterOrEqual compares two version strings in the vXXX.YYY.ZZZ scheme.
+// It returns true if v1 is greater than or equal to v2.
+func versionGreaterOrEqual(v1, v2 string) bool {
+	v1 = strings.TrimPrefix(v1, "v")
+	v2 = strings.TrimPrefix(v2, "v")
+
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	if len(parts1) != 3 || len(parts2) != 3 {
+		// Unexpected version format
+		return false
+	}
+
+	for i := range 3 {
+		n1, err1 := strconv.Atoi(parts1[i])
+		n2, err2 := strconv.Atoi(parts2[i])
+		if err1 != nil || err2 != nil {
+			// Not numeric: compare strings directly.
+			if parts1[i] == parts2[i] {
+				continue
+			}
+			return parts1[i] >= parts2[i]
+		}
+		if n1 == n2 {
+			continue
+		}
+		return n1 > n2
+	}
+
+	// All parts are equal: v1 is equal to v2.
+	return true
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {
