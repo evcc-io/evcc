@@ -610,11 +610,12 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	var actualCurrent float64
 	if lp.chargeCurrents != nil {
-		actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-	} else if lp.status == api.StatusC {
-		actualCurrent = lp.offeredCurrent
+		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	}
+
+	if lp.status == api.StatusC {
+		return lp.offeredCurrent
 	}
 	return actualCurrent
 }
