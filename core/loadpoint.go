@@ -1559,19 +1559,10 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
-	if !ok {
-		return // don't guess
-	}
-
 	u1, u2, u3, err := phaseMeter.Voltages()
 	if err != nil {
 		lp.log.ERROR.Printf("charge voltages: %v", err)
 		return
-	}
-
-	if lp.hasPhaseSwitching() {
-		return // we don't need the voltages
 	}
 
 	chargeVoltages := []float64{u1, u2, u3}
@@ -1579,6 +1570,11 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	lp.publish(keys.ChargeVoltages, chargeVoltages)
 
 	a1, a2, a3 := u1 >= minActiveVoltage, u2 >= minActiveVoltage, u3 >= minActiveVoltage
+
+	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
+	if !ok {
+		return // don't guess
+	}
 
 	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
 	if !a1 && a3 || a2 && !a3 || !a2 && a3 {
