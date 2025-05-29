@@ -34,7 +34,7 @@ func init() {
 func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
-		capacity           `mapstructure:",squash"`
+		batteryCapacity    `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
 		Currents           []string
@@ -133,7 +133,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 		soc = m.soc
 	}
 
-	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.capacity.Decorator()), nil
+	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
 }
 
 func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {

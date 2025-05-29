@@ -1,10 +1,10 @@
-template: goodwe-wifi
+template: bosch-bpt
 # UDP implementation is broken
 # deprecated: true
 products:
-  - brand: GoodWe
+  - brand: Bosch
     description:
-      generic: GoodWe over Wifi
+      generic: BPT-S 5 Hybrid
 requirements:
   evcc: ["skiptest"]
 params:
@@ -12,10 +12,10 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: uri
-    description:
-      en: IP address or hostname
-      de: IP-Adresse des Hostname
+  - name: capacity
+    advanced: true
 render: |
-  type: goodwe-wifi
+  type: bosch-bpt
   usage: {{ .usage }}
   uri: {{ .uri }}
+  capacity: {{ .capacity }} # kWh
