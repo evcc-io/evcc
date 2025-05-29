@@ -1,0 +1,236 @@
+template: luxtronik-lpc
+products:
+  - brand: Buderus (Logamatic HMC20, HMC20 Z) 
+    description:
+      generic: Luxtronik 2.1
+  - brand: alpha innotec
+    description:
+      generic: Luxtronik 2.1
+  - brand: CTA All-In-One (Aeroplus)
+    description:
+      generic: Luxtronik 2.1
+  - brand: Elco
+    description:
+      generic: Luxtronik 2.1
+  - brand: Nibe (AP-AW10)
+    description:
+      generic: Luxtronik 2.1
+  - brand: Roth (ThermoAura, ThermoTerra)
+    description:
+      generic: Luxtronik 2.1
+  - brand: Novelan (WPR NET, LADV)
+    description:
+      generic: Luxtronik 2.1
+  - brand: Wolf (BWL/BWS)
+    description:
+      generic: Luxtronik 2.1
+group: heating
+requirements:
+  description:
+    de: Regelung für Wärmepumpe mit Luxtronik 2.1 Steuerung (modbus tcp). Braucht Software >= v3.90.3. Aktivierung über SERVICE --> Systemsteuerung --> Konnektivität --> Smart-Home-Interface. Details https://github.com/raibisch/mylibs/blob/main/LuxModbusSHI/LuxtronikSHI.md und Seite 39 https://files.ait-group.net/FILES/Alpha-InnoTec/Betriebsanleitungen/01%20Waermepumpen/05%20Regler/LUX/83055400nDE_Lux_21_Teil_2.pdf
+    en: Uses modbus tcp. Requires Software >= v3.90.3. Enable via SERVICE --> Systemsteuerung --> Konnektivität --> Smart-Home-Interface. 
+#   evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: ww-offset
+    type: int
+    help:
+      de: Anhebung der WW Temperatur. Werte in 0.1K
+      en: Temperature boost offset for hot water. Value in 0.1K
+    default: 0
+  - name: heat-offset
+    type: int
+    help:
+      de: Anhebung der RL Temperatur. Werte in 0.1K
+      en: Temperature boost offset for heating. Value in 0.1K
+    default: 0
+render: |
+  type: sgready
+  getmode:
+    source: go
+    script: |
+      res := 2 // SGReady Normal (2)
+      switch {
+      case LPC == 2: res = 1 // LPC 2 (Lux hard limit) == SGReady 1 (reduziert)
+      case HEAT > 0 || WW > 0: res = 3 // if any of the offset modes set --> SGReady 3 (boost)
+      }
+      res
+    in:
+    - name: LPC
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 100040
+          type: input
+          encoding: uint16
+    - name: HEAT
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10000
+          type: input
+          encoding: uint16
+    - name: WW
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10005
+          type: input
+          encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # dimm (reduzierte Leistung)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Lux Hard-Limit (2)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 100040 # LPC mode
+              type: writesingle
+              encoding: uint16
+        {{ if ne .heat-offset 0 -}}
+        - source: const
+          value: 0 # 2 = Heiz.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+        {{ if ne .ww-offset 0 -}}
+        - source: const
+          value: 0 # 2 = WW.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+    - case: 2 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Lux No-Limit (0)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 100040 # LPC mode
+              type: writesingle
+              encoding: uint16
+        {{ if ne .heat-offset 0 -}}
+        - source: const
+          value: 0 # 2 = Heiz.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+        {{ if ne .ww-offset 0 -}}
+        - source: const
+          value: 0 # 2 = WW.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+    - case: 3 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Lux No-Limit (0)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 100040 # LPC mode
+              type: writesingle
+              encoding: uint16
+        {{ if ne .heat-offset 0 -}}
+        - source: const
+          value: 2 # 2 = Heiz.Mode Offset
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: {{ .heat-offset }} 
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10002 # Heiz. Offset [0.1 K]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+        {{ if ne .ww-offset 0 -}}
+        - source: const
+          value: 2 # 2 = WW Mode Offset
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: {{ .ww-offset }} # Lux No-Limit (0)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10007 # WW Offset [0.1 K]
+              type: writesingle
+              encoding: uint16
+        {{- end }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10120 # 10120 = Temp x10 Warmwasser ist
+      type: input
+      encoding: int16
+    scale: 0.1
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10301 # 10301 = kW x10 Power-In elektrisch
+      type: input
+      encoding: int16
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10311 # 10311 = kWh x10 kumulierter Stromverbrauch
+      type: input
+      decode: int32
+    scale: 0.1
