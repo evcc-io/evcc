@@ -9,13 +9,13 @@ params:
   - name: pin
     mask: true
     help:
-      en: Required for evcc to refresh the SoC while charging. When connected to TWC3, used to start/stop charging.
-      de: Benötigt zur Aktualisierung des Ladestands während der Ladung. Bei Nutzung mit TWC3 kann der Ladevorgang mittels PIN gestartet und gestoppt werden.
+      en: Required for evcc to wake up the vehicle for charging and to refresh the SoC while charging. When connected to TWC3, used to start/stop charging.
+      de: Benötigt um das Fahrzeug zum Laden aufzuwecken and zur Aktualisierung des Ladestands während der Ladung. Bei Nutzung mit TWC3 kann der Ladevorgang mittels PIN gestartet und gestoppt werden.
   - preset: vehicle-features
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
   {{- if .pin }}
-  pin: {{ .pin }} # mandatory to deep refresh Soc & start/stop charge
+  pin: {{ .pin }} # mandatory to wake up, deep refresh Soc & start/stop charge
   {{- end }}
   {{ include "vehicle-features" . }}
