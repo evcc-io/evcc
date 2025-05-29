@@ -43,8 +43,8 @@ params:
     default: 2500
     advanced: true
     description:
-      en: Charge power in watts for Charge mode. 2500W is the maximum for Venus-E.
-      de: Ladeleistung in Watt für den Charge-Modus. 2500W ist das Maximum für Venus-E.
+      en: Charge power in watts for Charge mode. 2500W is the maximum for Venus.
+      de: Ladeleistung in Watt für den Charge-Modus. 2500W ist das Maximum für Venus.
   - name: work_mode_normal
     default: 1
     advanced: true
