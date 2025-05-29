@@ -21,11 +21,11 @@ func init() {
 // NewOpenWBFromConfig creates a new configurable meter
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
-		Usage       string
-		capacity    `mapstructure:",squash"`
+		mqtt.Config     `mapstructure:",squash"`
+		Topic           string
+		Timeout         time.Duration
+		Usage           string
+		batteryCapacity `mapstructure:",squash"`
 	}{
 		Topic:   openwb.RootTopic,
 		Timeout: openwb.Timeout,
@@ -128,7 +128,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, err
 		}
 
-		capacity = cc.capacity.Decorator()
+		capacity = cc.batteryCapacity.Decorator()
 
 	default:
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)
