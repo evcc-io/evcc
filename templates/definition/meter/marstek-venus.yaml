@@ -7,29 +7,26 @@ capabilities: ["battery-control"]
 requirements:
   description:
     en: >
-      Requires a Modbus TCP gateway (e.g., PUSR USR-DR134). Tested with firmware version V151.
-      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None, TCP Server.
+      Supports Modbus communication via RS485. Use an RS485-to-Ethernet adapter (e.g., PUSR USR-DR134) for
+      TCP/IP access or a direct serial connection (e.g., USB-RS485 adapter).
+      Tested with firmware version V151.
+      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None.
+      Refer to the adapter or device manual for configuration details.
     de: >
-      Erfordert ein Modbus-TCP-Gateway (z. B. PUSR USR-DR134). Getestet mit Firmware-Version V151.
-      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None, TCP Server.
+      Unterstützt Modbus-Kommunikation über RS485. Verwenden Sie einen RS485-auf-Ethernet-Adapter (z. B. PUSR USR-DR134) für TCP/IP-Zugriff oder eine direkte serielle Verbindung (z. B. USB-RS485-Adapter).
+      Getestet mit Firmware-Version V151.
+      Einstellungen: Baudrate 115200, Datenbits 8, Stoppbits 1, Parität None.
+      Siehe die Bedienungsanleitung des Adapters oder Geräts für Konfigurationsdetails.
 params:
-  - name: uri
-    required: true
-    description:
-      en: Ip address and port of the Modbus TCP gateway.
-      de: IP-Adresse und Port des Modbus-TCP-Gateways.
-    example: "192.168.0.8:502"
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 115200
+    comset: 8N1
   - name: capacity
     default: 5.12
     description:
       de: Batteriekapazität in kWh. Venus-E 5.12, Venus-C 2.56
       en: Battery capacity in kWh. Venus-E 5.12, Venus-C 2.56
-  - name: id
-    default: 1
-    advanced: true
-    description:
-      en: Slave ID of the Modbus device.
-      de: Slave-ID des Modbus-Geräts.
   - name: minsoc
     default: 11
     type: int
@@ -42,18 +39,22 @@ params:
     type: int
     advanced: true
   - name: maxchargepower
+    default: 2500
+    advanced: true
+    description:
+      en: Charge power in watts for Charge mode. 2500W is the maximum for Venus-E.
+      de: Ladeleistung in Watt für den Charge-Modus. 2500W ist das Maximum für Venus-E.
   - name: work_mode_normal
     default: 1
     advanced: true
     description:
       en: Work mode for Normal state. 0 manual, 1 anti-feed, 2 trade mode.
-      de: Work mode für Normal-Modus. 0 Manueller Modus, 1 Eigenverbrauch, 2 AI-Optimierung.
+      de: Work mode für Normal-Modus. 0 manuell, 1 Eigenverbrauch, 2 AI-Optimierung.
 render: |
   type: custom
   power:
     source: modbus
-    uri: {{ .uri }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 32202 # AC Power (Watt)
       type: holding
@@ -61,8 +62,7 @@ render: |
     scale: 1
   soc:
     source: modbus
-    uri: {{ .uri }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 32104 # Battery SOC (%)
       type: holding
@@ -75,32 +75,32 @@ render: |
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set User Work Mode
         - source: const
           value: {{ .work_mode_normal }}
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 43000 # User Work Mode
               type: writesingle
               decode: uint16
+        # Disable RS485 Control Mode
         - source: const
           value: 21947
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42000 # RS485 Control Mode = Disabled
               type: writesingle
@@ -109,22 +109,22 @@ render: |
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set Force Charge/Discharge to Stop
         - source: const
           value: 0
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42010 # Force Charge/Discharge = Stop
               type: writesingle
@@ -133,32 +133,32 @@ render: |
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set Force Charge/Discharge to Charge
         - source: const
           value: 1
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42010 # Force Charge/Discharge = Charge
               type: writesingle
               decode: uint16
+        # Set Forcible Charge Power
         - source: const
           value: {{ .maxchargepower }}
           set:
             source: modbus
-            uri: {{ .uri }}
-            id: {{ .id }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 42020 # Forcible Charge Power
               type: writesingle
