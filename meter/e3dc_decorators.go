@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (float64, error), batteryController func(api.BatteryMode) error) api.Meter {
+func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
 	case battery == nil:
 		return base

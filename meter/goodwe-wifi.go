@@ -24,9 +24,9 @@ func init() {
 
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		URI, Usage string
-		Timeout    time.Duration
+		batteryCapacity `mapstructure:",squash"`
+		URI, Usage      string
+		Timeout         time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -54,7 +54,7 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 		inverter: inverter,
 	}
 
-	// decorate api.BatterySoc
+	// decorate battery
 	var batterySoc func() (float64, error)
 	if usage == "battery" {
 		batterySoc = res.batterySoc
