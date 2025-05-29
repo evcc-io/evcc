@@ -13,7 +13,8 @@ requirements:
       Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None.
       Refer to the adapter or device manual for configuration details.
     de: >
-      Unterstützt Modbus-Kommunikation über RS485. Verwenden Sie einen RS485-auf-Ethernet-Adapter (z. B. PUSR USR-DR134) für TCP/IP-Zugriff oder eine direkte serielle Verbindung (z. B. USB-RS485-Adapter).
+      Unterstützt Modbus-Kommunikation über RS485. Verwenden Sie einen RS485-auf-Ethernet-Adapter (z. B. PUSR USR-DR134)
+      für TCP/IP-Zugriff oder eine direkte serielle Verbindung (z. B. USB-RS485-Adapter).
       Getestet mit Firmware-Version V151.
       Einstellungen: Baudrate 115200, Datenbits 8, Stoppbits 1, Parität None.
       Siehe die Bedienungsanleitung des Adapters oder Geräts für Konfigurationsdetails.
