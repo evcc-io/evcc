@@ -45,7 +45,7 @@ params:
       de: Installation ID
       en: Installation ID
     help:
-      de: siehe https://docs.evcc.io/docs/devices/heating#viessmann
+      de: siehe https://docs.evcc.io/en/docs/devices/heating#viessmann
       en: |
         Unfortunately you cannot simply lookup this number in the Viessmann app - instead you need to use the following commands on the command line... we're aware this is not for every user, but currently we don't have a better workflow...<br/>
 
