@@ -588,7 +588,9 @@
     "login": "Inloggen",
     "password": "Wachtwoord",
     "reset": "Wachtwoord resetten?",
-    "title": "Authenticatie"
+    "title": "Authenticatie",
+    "demoMode": "Login niet ondersteund in demo mode"
+
   },
   "main": {
     "chargingPlan": {

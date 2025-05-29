@@ -7,7 +7,14 @@
 		@open="open"
 		@closed="closed"
 	>
-		<form v-if="modalVisible" @submit.prevent="login">
+		<form v-if="demoVisible">
+			<label class="col-form-label">
+				<div class="w-150">
+					<span class="label">{{ $t("loginModal.demoMode") }}</span>
+				</div>
+			</label>
+		</form>
+		<form v-if="loginVisible" @submit.prevent="login">
 			<div class="mb-4">
 				<label for="loginPassword" class="col-form-label">
 					<div class="w-100">
@@ -61,7 +68,7 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
-import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
+import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn, isDemoMode } from "./auth";
 import { docsPrefix } from "@/i18n";
 import { defineComponent } from "vue";
 
@@ -70,7 +77,8 @@ export default defineComponent({
 	components: { GenericModal },
 	data: () => {
 		return {
-			modalVisible: false,
+			loginVisible: false,
+			demoVisible: false,
 			password: "",
 			loading: false,
 			resetHint: false,
@@ -88,10 +96,15 @@ export default defineComponent({
 	},
 	methods: {
 		open() {
-			this.modalVisible = true;
+			if (isDemoMode()) {
+				this.demoVisible = true;
+			} else {
+				this.loginVisible = true;
+			}
 		},
 		closed() {
-			this.modalVisible = false;
+			this.loginVisible = false;
+			this.demoVisible = false;
 			this.password = "";
 			this.loading = false;
 			this.error = "";
@@ -111,11 +124,12 @@ export default defineComponent({
 			try {
 				const data = { password: this.password };
 				const res = await api.post("/auth/login", data, {
-					validateStatus: (code) => [200, 401].includes(code),
+					validateStatus: (code) => [200, 401, 403].includes(code),
 				});
 				this.resetHint = false;
 				this.iframeHint = false;
 				this.error = "";
+				this.demoMode = false;
 				if (res.status === 200) {
 					await updateAuthStatus();
 					if (isLoggedIn()) {
@@ -134,6 +148,9 @@ export default defineComponent({
 				if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
 					this.resetHint = true;
+				}
+				if (res.status === 403) {
+					this.demoMode = true;
 				}
 			} catch (err) {
 				console.error(err);
