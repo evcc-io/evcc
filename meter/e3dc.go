@@ -27,7 +27,7 @@ func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
+//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
@@ -66,14 +66,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	// cc.batteryMaxACPower.Decorator(),
-
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.batteryMaxACPower.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity, maxacpower func() float64) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -104,7 +102,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		batteryMode = m.setBatteryMode
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode), nil
+	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower), nil
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
