@@ -617,7 +617,8 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	if lp.status == api.StatusC {
 		return lp.offeredCurrent
 	}
-	return actualCurrent
+    // not charging
+	return 0
 }
 
 // GetMinCurrent returns the min loadpoint current
