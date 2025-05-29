@@ -25,10 +25,12 @@ export async function updateAuthStatus() {
 		});
 		if (res.status === 501) {
 			auth.configured = false;
+			auth.demoMode = false;
 		}
 		if (res.status === 200) {
 			auth.configured = true;
 			auth.loggedIn = res.data === true;
+			auth.demoMode = false;
 		}
 		if (res.status === 403) {
 			auth.configured = true;
@@ -37,6 +39,7 @@ export async function updateAuthStatus() {
 		}
 		if (res.status === 500) {
 			auth.loggedIn = null;
+			auth.demoMode = false;
 			console.log("unable to fetch auth status", res);
 		}
 	} catch (e) {
