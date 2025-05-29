@@ -12,6 +12,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
 )
 
@@ -67,10 +69,21 @@ func ParseHostIPNet(arg string) (res []string) {
 }
 
 func display(res []tasks.Result) {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
-	table.SetAutoMergeCells(true)
-	table.SetRowLine(true)
+	table := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{MergeMode: tw.MergeVertical},
+			},
+		}),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.Border{Left: tw.On, Right: tw.On, Top: tw.On, Bottom: tw.On},
+			Settings: tw.Settings{
+				Lines:      tw.Lines{ShowHeaderLine: tw.On, ShowFooterLine: tw.On},
+				Separators: tw.Separators{BetweenRows: tw.On, BetweenColumns: tw.On},
+			},
+		})),
+	)
+	table.Header([]string{"IP", "Hostname", "Task", "Details"})
 
 	for _, hit := range res {
 		switch hit.ID {

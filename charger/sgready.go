@@ -23,6 +23,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -33,6 +34,11 @@ type SgReady struct {
 	mode  int64
 	modeS func(int64) error
 	modeG func() (int64, error)
+
+	// optional power setter for devices that support SGReady with power envelope
+	power     int64
+	lp        loadpoint.API
+	maxPowerS func(int64) error
 }
 
 func init() {
@@ -54,15 +60,14 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		embed                   `mapstructure:",squash"`
 		SetMode                 plugin.Config
 		GetMode                 *plugin.Config // optional
+		SetMaxPower             *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
-		Phases                  int
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Phases: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -79,7 +84,12 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG)
+	maxPowerS, err := cc.SetMaxPower.IntSetter(ctx, "maxpower")
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG, maxPowerS)
 	if err != nil {
 		return nil, err
 	}
@@ -98,12 +108,13 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewSgReady creates SG Ready charger
-func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error)) (*SgReady, error) {
+func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error) (*SgReady, error) {
 	res := &SgReady{
-		embed: embed,
-		mode:  Normal,
-		modeS: modeS,
-		modeG: modeG,
+		embed:     embed,
+		mode:      Normal,
+		modeS:     modeS,
+		modeG:     modeG,
+		maxPowerS: maxPowerS,
 	}
 
 	return res, nil
@@ -140,14 +151,48 @@ func (wb *SgReady) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *SgReady) Enable(enable bool) error {
 	mode := map[bool]int64{false: Normal, true: Boost}[enable]
-	err := wb.modeS(mode)
-	if err == nil {
-		wb.mode = mode
+
+	if err := wb.modeS(mode); err != nil {
+		return err
 	}
-	return err
+
+	wb.mode = mode
+
+	return wb.setMaxPower(wb.power)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *SgReady) MaxCurrent(current int64) error {
-	return nil
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*SgReady)(nil)
+
+// MaxCurrent implements the api.Charger interface
+func (wb *SgReady) MaxCurrentMillis(current float64) error {
+	phases := 1
+	if wb.lp != nil {
+		phases = wb.lp.GetPhases()
+	}
+	return wb.setMaxPower(int64(230 * current * float64(phases)))
+}
+
+func (wb *SgReady) setMaxPower(power int64) error {
+	if wb.maxPowerS == nil {
+		return nil
+	}
+
+	err := wb.maxPowerS(power)
+	if err == nil {
+		wb.power = power
+	}
+
+	return err
+}
+
+var _ loadpoint.Controller = (*SgReady)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *SgReady) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }

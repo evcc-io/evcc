@@ -30,6 +30,7 @@ GridAndPV.args = {
 			title: "Garage",
 			chargePower: 1000,
 			connected: true,
+			index: 0,
 		},
 		{
 			power: 1000,
@@ -38,6 +39,7 @@ GridAndPV.args = {
 			title: "Garage",
 			chargePower: 1000,
 			connected: true,
+			index: 1,
 		},
 		{
 			power: 2200,
@@ -46,6 +48,7 @@ GridAndPV.args = {
 			title: "Garage",
 			chargePower: 2200,
 			connected: true,
+			index: 2,
 		},
 	],
 	tariffGrid: 0.25,
@@ -53,6 +56,13 @@ GridAndPV.args = {
 	smartCostType: "price",
 	currency: CURRENCY.EUR,
 	pv: [{ power: 5000 }, { power: 2300 }],
+	forecast: {
+		solar: {
+			today: { energy: 1000, complete: true },
+			tomorrow: { energy: 1000, complete: false },
+			dayAfterTomorrow: { energy: 1000, complete: false },
+		},
+	},
 };
 
 export const BatteryAndGrid = Template.bind({});
@@ -90,6 +100,7 @@ BatteryCharging.args = {
 			title: "Garage",
 			chargePower: 1400,
 			connected: true,
+			index: 0,
 		},
 	],
 	batteryPower: -1500,
@@ -123,6 +134,7 @@ BatteryThresholds.args = {
 			title: "Garage",
 			chargePower: 5000,
 			connected: true,
+			index: 0,
 		},
 		{
 			power: 2500,
@@ -131,6 +143,7 @@ BatteryThresholds.args = {
 			title: "Garage",
 			chargePower: 2500,
 			connected: true,
+			index: 1,
 		},
 	],
 	batteryPower: -700,
@@ -153,6 +166,7 @@ PVThresholds.args = {
 			title: "Garage",
 			chargePower: 5000,
 			connected: true,
+			index: 0,
 		},
 		{
 			power: 1600,
@@ -161,6 +175,7 @@ PVThresholds.args = {
 			title: "Garage",
 			chargePower: 1600,
 			connected: true,
+			index: 1,
 		},
 	],
 	batteryPower: 800,
@@ -183,6 +198,7 @@ GridOnly.args = {
 			title: "Garage",
 			chargePower: 5500,
 			connected: true,
+			index: 0,
 		},
 		{
 			power: 0,
@@ -191,6 +207,7 @@ GridOnly.args = {
 			title: "Garage",
 			chargePower: 0,
 			connected: false,
+			index: 1,
 		},
 		{
 			power: 0,
@@ -199,6 +216,7 @@ GridOnly.args = {
 			title: "Garage",
 			chargePower: 0,
 			connected: false,
+			index: 2,
 		},
 		{
 			power: 0,
@@ -207,6 +225,7 @@ GridOnly.args = {
 			title: "Garage",
 			chargePower: 0,
 			connected: false,
+			index: 3,
 		},
 	],
 	batteryPower: 0,
@@ -243,6 +262,7 @@ CO2.args = {
 			title: "Garage",
 			chargePower: 1000,
 			connected: true,
+			index: 0,
 		},
 		{
 			power: 1000,
@@ -251,6 +271,7 @@ CO2.args = {
 			title: "Garage",
 			chargePower: 1000,
 			connected: true,
+			index: 1,
 		},
 		{
 			power: 2200,
@@ -259,6 +280,7 @@ CO2.args = {
 			title: "Garage",
 			chargePower: 2200,
 			connected: true,
+			index: 2,
 		},
 	],
 	tariffGrid: 0.25,
@@ -283,6 +305,7 @@ UnknownInput.args = {
 			title: "Garage",
 			chargePower: 1000,
 			connected: true,
+			index: 0,
 		},
 	],
 };
@@ -312,6 +335,7 @@ UnknownOutput.args = {
 			title: "Garage",
 			chargePower: 1700,
 			connected: true,
+			index: 0,
 		},
 	],
 };
@@ -330,6 +354,7 @@ UnknownOutputLessThan10Percent.args = {
 			title: "Garage",
 			chargePower: 1800,
 			connected: true,
+			index: 0,
 		},
 	],
 };

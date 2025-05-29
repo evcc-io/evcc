@@ -8,16 +8,18 @@
 					<div v-else-if="!icon" class="icon-placeholder"></div>
 					<component :is="`shopicon-regular-${icon}`" v-else></component>
 				</span>
-				<div class="d-block flex-grow-1 ms-3 text-truncate">
-					<span v-if="!$slots['expanded']">{{ name }}</span>
+				<div class="d-flex flex-grow-1 ms-3 align-items-center text-truncate">
+					<span v-if="!$slots['expanded']" class="text-truncate">
+						{{ name }}
+					</span>
 					<button
 						v-else
-						class="btn-neutral d-flex align-items-baseline flex-shrink-1 flex-grow-1"
+						class="btn-neutral d-flex align-items-center flex-shrink-1 flex-grow-1"
 						style="max-width: 100%"
 						@click="toggle"
 					>
-						<div class="text-truncate flex-shrink-1 flex-grow-0">
-							{{ name }}
+						<div class="flex-shrink-1 flex-grow-0 d-flex text-truncate">
+							<span class="text-truncate"> {{ name }} </span>
 						</div>
 						<shopicon-regular-arrowdropdown
 							class="expand-icon flex-shrink-0 flex-grow-0"
@@ -25,10 +27,10 @@
 						/>
 					</button>
 				</div>
-				<span class="text-end text-nowrap ps-1 fw-bold d-flex">
+				<span class="text-end text-nowrap ps-1 fw-bold d-flex align-items-center">
 					<div
 						ref="details"
-						class="fw-normal"
+						class="fw-normal d-flex align-items-center"
 						:class="{
 							'text-decoration-underline': detailsClickable,
 							'evcc-gray': detailsInactive,
@@ -128,7 +130,7 @@ export default defineComponent({
 				this.updateDetailsTooltip();
 			}
 		},
-		powerInKw(newVal, oldVal) {
+		powerUnit(newVal, oldVal) {
 			// force update if unit changes but not the value
 			if (newVal !== oldVal) {
 				(this.$refs["powerNumber"] as any).forceUpdate();

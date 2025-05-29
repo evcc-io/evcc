@@ -191,7 +191,7 @@ var _ api.MeterEnergy = (*EProWallbox)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *EProWallbox) TotalEnergy() (float64, error) {
 	l1, l2, l3, err := wb.getPhaseValues(eproRegActiveEnergies, 1000)
-	return l1 + l2 + l3, err
+	return -(l1 + l2 + l3), err
 }
 
 var _ api.PhaseCurrents = (*EProWallbox)(nil)

@@ -80,3 +80,11 @@ render: |
       type: input
       encoding: int16
     scale: 10
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 56 # PV surplus
+      type: writeholding
+      decode: int16
+    scale: 0.1
