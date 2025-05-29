@@ -1,4 +1,4 @@
-template: luxtronik
+template: luxtronik-lpc
 products:
   - brand: Buderus (Logamatic HMC20, HMC20 Z) 
     description:
@@ -18,7 +18,7 @@ products:
   - brand: Roth (ThermoAura, ThermoTerra)
     description:
       generic: Luxtronik 2.1
-  - brand: Novelan (WPR NET)
+  - brand: Novelan (WPR NET, LADV)
     description:
       generic: Luxtronik 2.1
   - brand: Wolf (BWL/BWS)
@@ -101,4 +101,12 @@ render: |
       address: 10301 # kW x10 Power-In elektrisch
       type: input
       encoding: int16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10310 # kumulierter Stromverbrauch 0.1 kWh 
+      type: input
+      decode: int32
     scale: 0.1
