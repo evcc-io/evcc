@@ -108,7 +108,7 @@ var _ api.Resurrector = (*Controller)(nil)
 
 func (c *Controller) WakeUp() error {
 	if c.pin == "" {
-		c.log.DEBUG.Printf("Pin needs to be configured to wakeup vehicle")
+		c.log.DEBUG.Printf("pin required for vehicle wakeup")
 		return nil
 	}
 
