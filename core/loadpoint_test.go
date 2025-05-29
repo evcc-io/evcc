@@ -763,3 +763,39 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+// test PV hysteresis after phase switch down, depending on remaining energy
+func TestGetMaxPhaseCurrent(t *testing.T) {
+	tc := []struct {
+		offeredCurrent float64
+		status         api.ChargeStatus
+		chargeCurrents []float64
+		res            float64
+	}{
+		// no measured phase currents, not charging, return 0
+		{16, api.StatusA, nil, 0.0},
+		// no measured phase currents, charging, return offered current
+		{16, api.StatusC, nil, 16.0},
+		// measured phase current, always return max measured phase current
+		{16, api.StatusA, []float64{6, 8, 10}, 10.0},
+		{16, api.StatusC, []float64{6, 8, 10}, 10.0},
+	}
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		offeredCurrent: 16,
+		enabled:        true,
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		lp.offeredCurrent = tc.offeredCurrent
+		lp.status = tc.status
+		lp.chargeCurrents = tc.chargeCurrents
+
+		assert.Equal(t, tc.res, lp.GetMaxPhaseCurrent())
+	}
+}
