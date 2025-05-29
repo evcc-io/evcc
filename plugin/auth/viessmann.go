@@ -68,11 +68,11 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 	return v, nil
 }
 
-func (v *Viessmann) Transport(base http.RoundTripper) (http.RoundTripper, error) {
+func (v *Viessmann) Transport(base http.RoundTripper) http.RoundTripper {
 	return &oauth2.Transport{
 		Base:   base,
 		Source: v.ts,
-	}, nil
+	}
 }
 
 func (v *Viessmann) login(ctx context.Context, oc *oauth2.Config, user, password string) (*oauth2.Token, error) {
