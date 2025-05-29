@@ -66,6 +66,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
+	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
@@ -128,13 +129,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-		log.INFO.Println("missing config file - switching into demo mode")
+	if cmd.Flag(flagDemoMode).Changed {
+		log.INFO.Println("Switching into demo mode as requested through the --demo flag")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
+			log.INFO.Println("Config file missing, create configuration using config UI")
+		} else {
+			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		}
 	}
 
 	// setup environment
@@ -295,13 +300,19 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(httpd.Router())
 
-	auth := auth.New()
+	authObject := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
-		auth.Disable()
+		authObject.SetAuthMode(auth.Disabled)
+
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, auth, func() {
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
+		log.WARN.Println(" Authentication is disabled because of demo mode.")
+		authObject.SetAuthMode(auth.DemoMode)
+	}
+
+	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
