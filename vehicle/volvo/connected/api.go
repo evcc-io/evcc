@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
-	"golang.org/x/oauth2"
 )
 
 // api constants
@@ -22,21 +22,18 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity oauth2.TokenSource, vccapikey string) *API {
+func NewAPI(log *util.Logger, vccapikey string, authorizer auth.Authorizer) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}
 
-	// replace client transport with authenticated transport
-	v.Client.Transport = &oauth2.Transport{
-		Source: identity,
-		Base: &transport.Decorator{
-			Base: v.Client.Transport,
-			Decorator: transport.DecorateHeaders(map[string]string{
-				"vcc-api-key": vccapikey,
-			}),
-		},
+	decoratedTransport := &transport.Decorator{
+		Base: v.Client.Transport,
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"vcc-api-key": vccapikey,
+		}),
 	}
+	v.Client.Transport = authorizer.Transport(decoratedTransport)
 
 	return v
 }

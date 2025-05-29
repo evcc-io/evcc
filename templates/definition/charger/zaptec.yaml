@@ -2,7 +2,13 @@ template: zaptec
 products:
   - brand: Zaptec
     description:
-      generic: Go, Pro
+      generic: Go
+  - brand: Zaptec
+    description:
+      generic: Go 2
+  - brand: Zaptec
+    description:
+      generic: Pro
 capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]

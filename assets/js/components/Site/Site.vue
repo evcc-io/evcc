@@ -1,7 +1,10 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
+			<div
+				class="d-flex justify-content-between align-items-center my-3 my-md-4"
+				data-testid="header"
+			>
 				<h1 class="d-block my-0">
 					<span v-if="!isInitialSetup">
 						{{ siteTitle || "evcc" }}
@@ -151,7 +154,7 @@ export default {
 			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact() {
-			return this.loadpoints.map((lp) => {
+			return this.loadpoints.map((lp, index) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
 				const title =
@@ -162,7 +165,7 @@ export default {
 				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
 				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, power, soc, heating };
+				return { icon, title, charging, power, soc, heating, index };
 			});
 		},
 		vehicleList() {

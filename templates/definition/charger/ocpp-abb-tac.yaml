@@ -1,0 +1,16 @@
+template: ocpp-abb-tac
+covers: ["ocpp-abb"]
+products:
+  - brand: ABB
+    description:
+      generic: Terra AC
+capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    generic: https://library.e.abb.com/public/8f07987a3a284da6bf4e4f8f53cd6502/ABB_Terra_AC_Charger_OCPP1.6_ImplementationOverview%20_v1.8_FW1.6.6.pdf
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  stacklevelzero: true

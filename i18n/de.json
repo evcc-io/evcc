@@ -113,6 +113,9 @@
       "batteryStorage": "Batterie",
       "solarSystem": "PV-Anlage"
     },
+    "editor": {
+      "loading": "Lade YAML-Editor …"
+    },
     "eebus": {
       "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Abbrechen",
+      "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
+      "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
       "experimental": "Experimentell",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "ändern"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
@@ -191,7 +199,7 @@
       "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
-      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen",
+      "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrisch",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
@@ -269,6 +277,7 @@
     "meter": {
       "cancel": "Abbrechen",
       "delete": "Löschen",
+      "generic": "Generische Integrationen",
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
@@ -276,6 +285,7 @@
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
+      "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
       "validateSave": "Überprüfen & speichern"
@@ -417,6 +427,7 @@
       "minimumCurrent": "Minimaler Strom",
       "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
+      "primary": "Generische Integrationen",
       "priority": "Priorität",
       "priorityHelp": "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat.",
       "save": "Speichern",
@@ -437,13 +448,13 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden ...",
+      "powerSub2": "laden…",
       "tabTitle": "Live-Community"
     },
     "savings": {
       "co2Saved": "{value} eingespart",
       "co2Title": "CO₂ Emission",
-      "configurePriceCo2": "Preis und CO₂-Emissionen konfigurieren",
+      "configurePriceCo2": "Lerne Preis und CO₂-Emissionen zu konfigurieren.",
       "footerLong": "{percent} Sonnenenergie",
       "footerShort": "{percent} Sonne",
       "modalTitle": "Auswertung Ladeenergie",
@@ -493,7 +504,7 @@
       "modalTitle": "Neue Version verfügbar",
       "modalUpdate": "Installieren",
       "modalUpdateNow": "Jetzt installieren",
-      "modalUpdateStarted": "Starte die neue Version von evcc ...",
+      "modalUpdateStarted": "Starte die neue Version von evcc…",
       "modalUpdateStatusStart": "Installation gestartet:"
     }
   },
@@ -748,7 +759,7 @@
       "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
       "targetSoc": "Ladelimit",
       "temp": "Temperatur",
-      "tempLimit": "Zieltemp.",
+      "tempLimit": "Temperaturlimit",
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
     },
@@ -792,7 +803,7 @@
     "configurationError": "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu.",
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
-    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen",
+    "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
     "restarting": "Server ist gleich wieder verfügbar."
   },
   "passwordModal": {

@@ -113,6 +113,9 @@
       "batteryStorage": "Energijos kaupiklis",
       "solarSystem": "Saulės elektrinė"
     },
+    "editor": {
+      "loading": "Užkraunamas YAML redaktorius…"
+    },
     "eebus": {
       "description": "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Atšaukti",
+      "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
+      "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
       "docsLink": "Žiūrėkite dokumentaciją.",
       "experimental": "Eksperimentinis",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Prijunkite evcc prie kitos namų energijos valdymo sistemos.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "pakeisti"
     },
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
@@ -255,6 +263,7 @@
       "addVehicle": "Pridėti automobilį",
       "configured": "sukonfigūruota",
       "edit": "redaguoti",
+      "loadpointRequired": "Turi būti sukonfigūruotas bent vienas įkroviklis.",
       "name": "Vardas",
       "title": "Konfigūracija",
       "unconfigured": "nesukonfigūruota",
@@ -268,6 +277,7 @@
     "meter": {
       "cancel": "Atšaukti",
       "delete": "Ištrinti",
+      "generic": "Paprastos integracijos",
       "option": {
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
@@ -275,6 +285,7 @@
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
       "save": "Išsaugoti",
+      "specific": "Specifinės integracijos",
       "template": "Gamintojas",
       "titleChoice": "Ką norite pridėti?",
       "validateSave": "Patikrinti ir išsaugoti"
@@ -416,6 +427,7 @@
       "minimumCurrent": "Minimali srovė",
       "minimumCurrentHelp": "Ne mažiau 6A. Nebent tiksliai žinote, ką darote.",
       "online": "Automobiliai su internetiniu API",
+      "primary": "Paprastos integracijos",
       "priority": "Pirmumas",
       "priorityHelp": "Didesnis prioritetas reiškia, kad šiam automobiliui suteikiama pirmenybė saulės energijos pertekliui.",
       "save": "Išsaugoti",
@@ -930,6 +942,11 @@
       "dark": "tamsus",
       "label": "Dizainas",
       "light": "šviesus"
+    },
+    "time": {
+      "12h": "12 val.",
+      "24h": "24 val.",
+      "label": "Laiko formatas"
     },
     "title": "Vartotojo sąsaja",
     "unit": {

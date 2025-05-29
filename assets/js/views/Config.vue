@@ -17,7 +17,6 @@
 					</p>
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
-						<li>custom/plugin meters and vehicles</li>
 						<li>migration for loadpoints</li>
 					</ul>
 					<p>
@@ -493,6 +492,9 @@ export default {
 			isComponentMounted: true,
 			isPageVisible: true,
 		};
+	},
+	head() {
+		return { title: this.$t("config.main.title") };
 	},
 	computed: {
 		loadpointsRequired() {

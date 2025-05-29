@@ -22,6 +22,9 @@ const (
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
 
+	flagCustomCss            = "custom-css"
+	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
 	flagBatteryModeWait            = "battery-mode-wait"
