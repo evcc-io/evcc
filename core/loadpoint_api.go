@@ -618,7 +618,7 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 		return lp.offeredCurrent
 	}
 
-    // not charging
+	// not charging
 	return 0
 }
 
