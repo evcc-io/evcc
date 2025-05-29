@@ -1,5 +1,5 @@
-import { reactive } from "vue";
 import api from "./api";
+import { reactive } from "vue";
 
 const restart = reactive({
   restartNeeded: false,
@@ -11,7 +11,7 @@ export async function performRestart() {
     await api.post("/system/shutdown");
     restart.restarting = true;
   } catch (e) {
-    alert("Unabled to restart server.", e);
+    alert("Unable to restart server.", e);
   }
 }
 

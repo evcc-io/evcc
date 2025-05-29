@@ -588,7 +588,8 @@
     "login": "Anmelden",
     "password": "Passwort",
     "reset": "Passwort zurücksetzen?",
-    "title": "Authentifizierung"
+    "title": "Authentifizierung",
+    "demoMode": "Login nicht unterstütz in demo demo"
   },
   "main": {
     "chargingPlan": {
