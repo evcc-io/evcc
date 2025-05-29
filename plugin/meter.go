@@ -11,8 +11,8 @@ import (
 )
 
 type meterPlugin struct {
-	meter api.Meter
-	key   Key
+	meter  api.Meter
+	method Method
 }
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
 	var cc struct {
 		Config config.Typed
-		Key
+		Method
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -36,8 +36,8 @@ func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plug
 	}
 
 	o := &meterPlugin{
-		meter: meter,
-		key:   cc.Key,
+		meter:  meter,
+		method: cc.Method,
 	}
 
 	return o, nil
@@ -46,26 +46,27 @@ func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plug
 var _ FloatGetter = (*meterPlugin)(nil)
 
 func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
-	err := fmt.Errorf("unsupported reading: %s", o.key.String())
+	err := fmt.Errorf("unsupported reading: %s", o.method.String())
 
-	switch o.key {
-	case Power:
+	switch o.method {
 	case Energy:
 		if _, ok := o.meter.(api.MeterEnergy); !ok {
 			return nil, err
 		}
-	default:
-		return nil, err
+	case Soc:
+		if _, ok := o.meter.(api.Battery); !ok {
+			return nil, err
+		}
 	}
 
 	return func() (float64, error) {
-		switch o.key {
-		case Power:
-			return o.meter.CurrentPower()
+		switch o.method {
 		case Energy:
 			return o.meter.(api.MeterEnergy).TotalEnergy()
+		case Soc:
+			return o.meter.(api.Battery).Soc()
 		default:
-			return 0, err
+			return o.meter.CurrentPower()
 		}
 	}, nil
 }
