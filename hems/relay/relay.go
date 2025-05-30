@@ -45,8 +45,8 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 	}
 
 	// register LPC-Circuit for use in config, if not already registered
-	if _, err := config.Circuits().ByName("lpc-relay"); err != nil {
-		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc-relay"}, api.Circuit(lpc)))
+	if _, err := config.Circuits().ByName("lpc"); err != nil {
+		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc"}, api.Circuit(lpc)))
 	}
 
 	// wrap old root with new pc parent
