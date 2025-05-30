@@ -36,7 +36,7 @@ type API interface {
 	SetMeterRef(string)
 	// GetCircuitRef returns the loadpoint circuit
 	GetCircuitRef() string
-	// SetCircuitRef sets the loadpoint circuit name
+	// SetCircuitRef sets the loadpoint circuit
 	SetCircuitRef(string)
 	// GetCircuit returns the loadpoint circuit
 	GetCircuit() api.Circuit
