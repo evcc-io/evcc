@@ -73,7 +73,7 @@ func (lp *Loadpoint) SetCircuitRef(ref string) {
 		return
 	}
 
-    lp.log.DEBUG.Println("set circuit ref:", ref)
+	lp.log.DEBUG.Println("set circuit ref:", ref)
 
 	lp.Lock()
 	defer lp.Unlock()
