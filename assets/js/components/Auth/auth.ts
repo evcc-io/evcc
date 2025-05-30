@@ -10,7 +10,7 @@ const auth = reactive({
 	loggedIn: null as boolean | null, // true / false / null (unknown)
 	nextUrl: null as string | null, // url to navigate to after login
 	nextModal: null as Modal | null, // modal instance to show after login
-	demoMode: false,                 // Demo Mode
+	demoMode: false, // Demo Mode
 });
 
 export async function updateAuthStatus() {

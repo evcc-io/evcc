@@ -304,7 +304,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)
-
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {

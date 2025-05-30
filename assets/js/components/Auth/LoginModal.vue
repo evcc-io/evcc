@@ -68,7 +68,13 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
-import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn, isDemoMode } from "./auth";
+import {
+	updateAuthStatus,
+	getAndClearNextUrl,
+	getAndClearNextModal,
+	isLoggedIn,
+	isDemoMode,
+} from "./auth";
 import { docsPrefix } from "@/i18n";
 import { defineComponent } from "vue";
 
@@ -129,7 +135,6 @@ export default defineComponent({
 				this.resetHint = false;
 				this.iframeHint = false;
 				this.error = "";
-				this.demoMode = false;
 				if (res.status === 200) {
 					await updateAuthStatus();
 					if (isLoggedIn()) {
@@ -150,7 +155,7 @@ export default defineComponent({
 					this.resetHint = true;
 				}
 				if (res.status === 403) {
-					this.demoMode = true;
+					this.error = this.$t("loginModal.demoMode");
 				}
 			} catch (err) {
 				console.error(err);
