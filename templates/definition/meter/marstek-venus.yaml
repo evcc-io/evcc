@@ -6,7 +6,7 @@ products:
 capabilities: ["battery-control"]
 params:
   - name: usage
-    choice: battery
+    choice: ["battery"]
   - name: modbus
     choice: ["rs485"]
     baudrate: 115200
