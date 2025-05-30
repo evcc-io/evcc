@@ -34,6 +34,7 @@ type ABB struct {
 	log         *util.Logger
 	conn        *modbus.Connection
 	lastCurrent uint32
+	lastStatus  uint32
 	settings    AbbSettings
 }
 
@@ -111,7 +112,7 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 		settings:    abbSettings,
 	}
 
-	// keep-alive
+	// keep-alive // TODO: sometimes it seems the abb class gets collected if there is no current needed -> WB stopps charge
 	go func() {
 		for range time.Tick(30 * time.Second) {
 			_, _ = wb.status()
@@ -126,6 +127,11 @@ func (wb *ABB) status() (byte, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	status := b[2] & 0x7f
+
+	wb.lastStatus = uint32(status)
+	wb.log.TRACE.Printf("status: %0x", wb.lastStatus)
 
 	return b[2] & 0x7f, nil
 }
@@ -229,7 +235,7 @@ func (wb *ABB) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *ABB) Enable(enable bool) error {
+func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is only called on mode switch and not on start of evcc so wb stays disabled if it was not enabled by app or rfid
 	var current uint32 = 0 // values lower then 6A pause the session
 	if enable {
 		current = wb.lastCurrent
@@ -248,7 +254,7 @@ func (wb *ABB) Enable(enable bool) error {
 
 		if s == 0x05 && // 0x05 = session stopped
 			enable {
-			wb.log.INFO.Printf("session stopped, starting session; current: %dmA", current)
+			wb.log.INFO.Printf("session currently stopped -> starting new session; current: %dmA", current)
 			b = 0x00 // start session
 		} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
 			!enable {
@@ -272,13 +278,19 @@ func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
 
+	// if last status is 0x05 trigger enable
+	if wb.lastStatus == 0x05 && current > 0 {
+		wb.log.WARN.Printf("trying to set current %dmA while last status is 0x05 (session stopped), enabling charger", current)
+		wb.Enable(true)
+	}
+
 	/*
 	 * In addition to that charging session will enter Pause state when the current limit is less than
 	 * 6A. After that when current limit is set above 6A, then charging session will be resumed. The
 	 * choice of 6A is derived from IEC 61851-1
 	 */
 
-	wb.log.TRACE.Printf("set current: %dmA", current)
+	wb.log.TRACE.Printf("set current: %dmA; lastStatus: %0x", current, wb.lastStatus)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
