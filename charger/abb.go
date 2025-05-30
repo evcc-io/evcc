@@ -34,6 +34,11 @@ type ABB struct {
 	log         *util.Logger
 	conn        *modbus.Connection
 	lastCurrent uint32
+	settings    AbbSettings
+}
+
+type AbbSettings struct {
+	autoStartStopSession *bool `json:",omitempty" yaml:",omitempty"`
 }
 
 // https://library.e.abb.com/public/4124e0d39f614ba7b0a7a6f7a2ce1f99/ABB_Terra_AC_Charger_ModbusCommunication_v1.7.pdf
@@ -59,7 +64,7 @@ const (
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available (smalles value 6A according to docs/)
 	// abbRegSetPhases               = 0x4102 // Set charging phase 1 unsigned WO Not supported // TODO not found in docs - check source
 	// abbRegSetSocketLock           = 0x4103 // Set socket lock state 1 unsigned WO
-	// abbRegSetSession              = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	abbRegSetSession = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
 	// abbRegSetCommunicationTimeout = 0x4106 // Set communication timeout 1 1s unsigned WO -> RO 0x4020
 	// abbRegSetCurrentFallback      = 0x4109 // Set (current) fallback limit 1 1A unsigned WO -> RO 0x4024; default is 0xFF; if configured the carger will not go into error mode on modbus connection loss
 )
@@ -78,11 +83,15 @@ func NewABBFromConfig(ctx context.Context, other map[string]interface{}) (api.Ch
 		return nil, err
 	}
 
-	return NewABB(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	abbSettings := AbbSettings{
+		//autoStartStopSession: false,
+	}
+
+	return NewABB(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, abbSettings)
 }
 
 // NewABB creates ABB charger
-func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, abbSettings AbbSettings) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -99,6 +108,7 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 		log:         log,
 		conn:        conn,
 		lastCurrent: 6000, // assume min current
+		settings:    abbSettings,
 	}
 
 	// keep-alive
@@ -146,22 +156,22 @@ func (wb *ABB) socketStatus() (uint32, error) {
 
 	switch b := binary.BigEndian.Uint32(b); b {
 	case 0x0000: // No cable is plugged
-		wb.log.TRACE.Println("socket status: No cable is plugged (0x0000)")
+		wb.log.TRACE.Println("socket: No cable is plugged (0x0000)")
 		return b, nil
 	case 0x0001: // Cable is connected to the charging station unlocked
-		wb.log.TRACE.Println("socket status: Cable is connected to the charging station unlocked (0x0001)")
+		wb.log.TRACE.Println("socket: Cable is connected to the charging station unlocked (0x0001)")
 		return b, nil
 	case 0x0011: // Cable is connected to the charging station locked
-		wb.log.TRACE.Println("socket status: Cable is connected to the charging station locked (0x0011)")
+		wb.log.TRACE.Println("socket: Cable is connected to the charging station locked (0x0011)")
 		return b, nil
 	case 0x0101: // Cable is connected to the charging station and the electric vehicle, unlocked in charging station
-		wb.log.TRACE.Println("socket status: Cable is connected to the charging station and the electric vehicle, unlocked in charging station (0x0101)")
+		wb.log.TRACE.Println("socket: Cable is connected to the charging station and the electric vehicle, unlocked in charging station (0x0101)")
 		return b, nil
 	case 0x0111: // Cable is connected to the charging station and the electric vehicle, locked in charging station
-		wb.log.TRACE.Println("socket status: Cable is connected to the charging station and the electric vehicle, locked in charging station (0x0111)")
+		wb.log.TRACE.Println("socket: Cable is connected to the charging station and the electric vehicle, locked in charging station (0x0111)")
 		return b, nil
 	default:
-		return b, fmt.Errorf("invalid socket status: %0x", b)
+		return b, fmt.Errorf("socket: invalid status %0x", b)
 	}
 }
 
@@ -194,11 +204,12 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
 		wb.log.TRACE.Printf("status: Other: Session stopped (0x%02x)", s)
-		b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
+		//b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
+		b, err := wb.socketStatus()
 		if err != nil {
 			return api.StatusNone, err
 		}
-		if binary.BigEndian.Uint32(b) >= 0x0101 {
+		if b >= 0x0101 {
 			return api.StatusB, nil
 		}
 		return api.StatusA, nil
@@ -224,7 +235,34 @@ func (wb *ABB) Enable(enable bool) error {
 		current = wb.lastCurrent
 	}
 
-	// we should also start the charging session if not already
+	wb.log.TRACE.Printf("enable: %t; current: %dmA", enable, current)
+
+	// we should also start the charging session if not already -> abbRegSetSession
+	if wb.settings.autoStartStopSession != nil && *wb.settings.autoStartStopSession {
+		b := 0x00 // this would stop the session
+
+		s, err := wb.status()
+		if err != nil {
+			return fmt.Errorf("getting status: %w", err)
+		}
+
+		if s == 0x05 && // 0x05 = session stopped
+			enable {
+			wb.log.TRACE.Printf("session stopped, starting session; current: %dmA", current)
+			b = 0x01 // start session
+		} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
+			!enable {
+			b = 0x00 // stop session
+		} else {
+			// unknown state
+			wb.log.TRACE.Printf("unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
+		}
+
+		wb.log.TRACE.Printf("set session: %d; current: %dmA", b, current)
+		if _, err := wb.conn.WriteSingleRegister(abbRegSetSession, uint16(b)); err != nil {
+			return fmt.Errorf("setting session: %w", err)
+		}
+	}
 
 	return wb.setCurrent(current)
 }
@@ -239,6 +277,8 @@ func (wb *ABB) setCurrent(current uint32) error {
 	 * 6A. After that when current limit is set above 6A, then charging session will be resumed. The
 	 * choice of 6A is derived from IEC 61851-1
 	 */
+
+	wb.log.TRACE.Printf("set current: %dmA", current)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
@@ -263,8 +303,9 @@ func (wb *ABB) MaxCurrentMillis(current float64) error {
 		return err
 	}
 	maxRatedCurrentinA := float64(binary.BigEndian.Uint32(b)) / 1e3 // convert mA to A
+	wb.log.TRACE.Printf("max rated current: %.0fA", maxRatedCurrentinA*1e3)
 	if current > maxRatedCurrentinA {
-		return fmt.Errorf("current %.1fA exceeds max rated current %dA", current, maxRatedCurrentinA)
+		return fmt.Errorf("current %.1fA exceeds max rated current %.0fA", current, maxRatedCurrentinA)
 	}
 
 	wb.lastCurrent = uint32(current * 1e3)
@@ -292,6 +333,8 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	wb.log.TRACE.Printf("charged energy: %dWh", binary.BigEndian.Uint32(b))
 
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
