@@ -75,8 +75,9 @@ params:
     default: 0
   - name: target_temperature
     description:
-      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung (°C)
-      en: Target temperature for one-time charge (°C)
+      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung
+      en: Target temperature for one-time charge
+    unit: °C
     help:
       de: max. 60°C
       en: max. 60°C
