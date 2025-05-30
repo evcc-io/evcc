@@ -123,7 +123,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 
 	fw := strings.TrimPrefix(bytesAsString(b), "v")
 	if v, err := version.NewSemver(fw); err == nil {
-		if v.Compare(version.Must(version.NewSemver("3.156.0"))) >= 0 {
+		if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
 			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
 			identify = wb.identify
 		}
