@@ -21,6 +21,7 @@ params:
       de: Entity ID des schaltbaren Geräts (z.B. switch.smartsocket)
       en: Entity ID of the switch device (e.g. switch.smartsocket)
   - name: powerentity
+    required: true
     description:
       de: Entity ID für Leistungsmessung (optional, z.B. sensor.smartsocket_power)
       en: Entity ID for power measurement (optional, e.g. sensor.smartsocket_power)
