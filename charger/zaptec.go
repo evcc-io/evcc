@@ -41,13 +41,14 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	log        *util.Logger
-	statusG    util.Cacheable[zaptec.StateResponse]
-	instance   zaptec.Charger
-	maxCurrent int
-	version    int
-	enabled    bool
-	priority   bool
+	log           *util.Logger
+	statusG       util.Cacheable[zaptec.StateResponse]
+	instance      zaptec.Charger
+	maxCurrent    int
+	version       int
+	enabled       bool
+	desiredPhases int
+	priority      bool
 }
 
 func init() {
@@ -145,6 +146,11 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 	if err != nil {
 		return nil, err
 	}
+
+	err = c.disableAllPhases()
+	if err != nil {
+		return nil, err
+	}
 	return c, nil
 }
 
@@ -188,6 +194,14 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 
 	switch i, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); i {
 	case zaptec.OpModeDisconnected:
+		//When the plug is disconnected during charging, c.Enable(false) is not invoked.
+		if c.version == zaptec.ZaptecGo2 && c.enabled {
+			err = c.disableAllPhases()
+			if err != nil {
+				return api.StatusA, err
+			}
+		}
+		c.enabled = false
 		return api.StatusA, err
 	case zaptec.OpModeConnectedRequesting, zaptec.OpModeConnectedFinished:
 		return api.StatusB, err
@@ -212,6 +226,34 @@ func (c *Zaptec) Enable(enable bool) error {
 	cmd := zaptec.CmdStopChargingFinal
 	if enable {
 		cmd = zaptec.CmdResumeCharging
+	}
+	if c.version == zaptec.ZaptecGo2 {
+		phases, err := c.configuredPhases()
+
+		if enable && phases == 0 {
+			err = c.Phases1p3p(c.desiredPhases)
+			if err != nil {
+				return err
+			}
+		}
+		if !enable {
+			err = c.disableAllPhases()
+			if err != nil {
+				return err
+			}
+		}
+
+		res, err := c.statusG.Get()
+		if err != nil {
+			return err
+		}
+
+		// when the plug is connected the wallbox is charging an additional call to enable leads to a 500 error
+		isWallBoxOff := res.ObservationByID(zaptec.FinalStopActive).Bool()
+		if enable && !isWallBoxOff {
+			c.enabled = true
+			return nil
+		}
 	}
 
 	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
@@ -252,6 +294,15 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
+	if c.version == zaptec.ZaptecGo2 {
+		phases, err := c.configuredPhases()
+		if err != nil {
+			return err
+		}
+		if current > 0 && phases == 0 {
+			return c.switchPhases(c.desiredPhases)
+		}
+	}
 	curr := int(current)
 	data := zaptec.Update{
 		MaxChargeCurrent: &curr,
@@ -307,11 +358,14 @@ var _ api.PhaseSwitcher = (*Zaptec)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Zaptec) Phases1p3p(phases int) error {
-	err := c.switchPhases(phases)
-	if err != nil || !c.priority {
-		return err
-	}
+	c.desiredPhases = phases
+	if (c.version == zaptec.ZaptecGo2 && c.enabled) || c.version != zaptec.ZaptecGo2 {
+		err := c.switchPhases(phases)
 
+		if err != nil || !c.priority {
+			return err
+		}
+	}
 	// priority configured
 	data := zaptec.SessionPriority{
 		PrioritizedPhases: &phases,
@@ -327,6 +381,16 @@ func (c *Zaptec) Phases1p3p(phases int) error {
 	}
 
 	return errors.New("unknown session")
+}
+
+func (c *Zaptec) disableAllPhases() error {
+	var zero int
+	data := zaptec.UpdateInstallation{
+		AvailableCurrentPhase1: &zero,
+		AvailableCurrentPhase2: &zero,
+		AvailableCurrentPhase3: &zero,
+	}
+	return c.installationUpdate(data)
 }
 
 func (c *Zaptec) switchPhases(phases int) error {
@@ -368,6 +432,22 @@ func (c *Zaptec) Identify() (string, error) {
 	}
 
 	return "", nil
+}
+
+func (c *Zaptec) configuredPhases() (int, error) {
+	var res zaptec.Installation
+
+	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
+	if err := c.GetJSON(uri, &res); err != nil {
+		return 0, err
+	}
+	if res.AvailableCurrentPhase1 == 0 && res.AvailableCurrentPhase2 == 0 && res.AvailableCurrentPhase3 == 0 {
+		return 0, nil
+	}
+	if res.AvailableCurrentPhase1 > 0 && res.AvailableCurrentPhase2 > 0 && res.AvailableCurrentPhase3 > 0 {
+		return 3, nil
+	}
+	return 1, nil
 }
 
 func (c *Zaptec) getMaxCurrent() (int, error) {
