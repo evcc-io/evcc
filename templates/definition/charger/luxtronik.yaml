@@ -27,8 +27,8 @@ products:
 group: heating
 requirements:
   description:
-    de: Regelung für Wärmepumpen mit Luxtronik 2.1 Steuerung (modbus tcp). Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
-    en: Template for heatpumps with Luxtronik 2.1 controller (modbus tcp). Requires Software later than v3.90.3. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
+    de: Regelung für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
+    en: Template for heatpumps with Luxtronik 2.1 controller. Uses modbus-tcp. Requires software v3.90.3 or later. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
 #   evcc: ["sponsorship"]
 params:
   - name: modbus
@@ -102,7 +102,7 @@ render: |
               encoding: uint16
         {{ if ne .heatoffset 0 -}}
         - source: const
-          value: 0 # 2 = Heiz.Mode Aus
+          value: 0 # 0 = Heiz.Mode Aus
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -113,7 +113,7 @@ render: |
         {{- end }}
         {{ if ne .wwoffset 0 -}}
         - source: const
-          value: 0 # 2 = WW.Mode Aus
+          value: 0 # 0 = WW.Mode Aus
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -137,7 +137,7 @@ render: |
               encoding: uint16
         {{ if ne .heatoffset 0 -}}
         - source: const
-          value: 0 # 2 = Heiz.Mode Aus
+          value: 0 # 0 = Heiz.Mode Aus
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -148,7 +148,7 @@ render: |
         {{- end }}
         {{ if ne .wwoffset 0 -}}
         - source: const
-          value: 0 # 2 = WW.Mode Aus
+          value: 0 # 0 = WW.Mode Aus
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -201,7 +201,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ .wwoffset }} # Lux No-Limit (0)
+          value: {{ .wwoffset }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
