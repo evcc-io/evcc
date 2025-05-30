@@ -4,30 +4,18 @@ products:
     description:
       generic: Venus Battery Storage
 capabilities: ["battery-control"]
-requirements:
-  description:
-    en: >
-      Supports Modbus communication via RS485. Use an RS485-to-Ethernet adapter (e.g., PUSR USR-DR134) for
-      TCP/IP access or a direct serial connection (e.g., USB-RS485 adapter).
-      Tested with firmware version V151.
-      Settings: Baud Rate 115200, Data Bits 8, Stop Bits 1, Parity None.
-      Refer to the adapter or device manual for configuration details.
-    de: >
-      Unterstützt Modbus-Kommunikation über RS485. Verwenden Sie einen RS485-auf-Ethernet-Adapter (z. B. PUSR USR-DR134)
-      für TCP/IP-Zugriff oder eine direkte serielle Verbindung (z. B. USB-RS485-Adapter).
-      Getestet mit Firmware-Version V151.
-      Einstellungen: Baudrate 115200, Datenbits 8, Stoppbits 1, Parität None.
-      Siehe die Bedienungsanleitung des Adapters oder Geräts für Konfigurationsdetails.
 params:
+  - name: usage
+    choice: battery
   - name: modbus
     choice: ["rs485"]
     baudrate: 115200
     comset: 8N1
   - name: capacity
     default: 5.12
-    description:
-      de: Batteriekapazität in kWh. Venus-E 5.12, Venus-C 2.56
-      en: Battery capacity in kWh. Venus-E 5.12, Venus-C 2.56
+    help:
+      de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
+      en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
   - name: minsoc
     default: 11
     type: int
