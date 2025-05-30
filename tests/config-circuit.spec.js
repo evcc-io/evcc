@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { enableExperimental } from "./utils";
 
-const CONFIG_YAML = "config-circuit.yaml";
+const CONFIG_YAML = "config-circuit.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
