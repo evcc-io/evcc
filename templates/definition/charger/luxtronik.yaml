@@ -53,7 +53,7 @@ render: |
       res := 2 // SGReady Normal (2)
       switch {
       case LPC == 2: res = 1 // LPC 2 (Lux hard limit) == SGReady 1 (reduziert)
-      case HEAT > 0 || WW > 0: res = 3 // if any of the offset modes set --> SGReady 3 (boost)
+      case HEAT > 0 || WW > 0: res = 3 // if any boost mode set (offset(2) or setpoint(1)) --> SGReady 3 (boost)
       }
       res
     in:
