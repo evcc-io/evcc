@@ -41,7 +41,7 @@ export default {
         for (const [key, { error }] of Object.entries(res.data.result)) {
           if (error) {
             this.testState = TEST_FAILED;
-            this.testResult = null;
+            this.testResult = res.data.result;
             this.testError = `${key}: ${error}`;
             return false;
           }
