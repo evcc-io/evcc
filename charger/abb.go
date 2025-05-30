@@ -38,7 +38,7 @@ type ABB struct {
 }
 
 type AbbSettings struct {
-	autoStartStopSession *bool `json:",omitempty" yaml:",omitempty"`
+	autoStartStopSession bool `json:",omitempty" yaml:",omitempty"`
 }
 
 // https://library.e.abb.com/public/4124e0d39f614ba7b0a7a6f7a2ce1f99/ABB_Terra_AC_Charger_ModbusCommunication_v1.7.pdf
@@ -84,7 +84,7 @@ func NewABBFromConfig(ctx context.Context, other map[string]interface{}) (api.Ch
 	}
 
 	abbSettings := AbbSettings{
-		//autoStartStopSession: false,
+		autoStartStopSession: true,
 	}
 
 	return NewABB(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, abbSettings)
@@ -235,11 +235,11 @@ func (wb *ABB) Enable(enable bool) error {
 		current = wb.lastCurrent
 	}
 
-	wb.log.TRACE.Printf("enable: %t; current: %dmA", enable, current)
+	wb.log.WARN.Printf("enable: %t; current: %dmA; autoStartStopSession: %t", enable, current, wb.settings.autoStartStopSession)
 
 	// we should also start the charging session if not already -> abbRegSetSession
-	if wb.settings.autoStartStopSession != nil && *wb.settings.autoStartStopSession {
-		b := 0x00 // this would stop the session
+	if /*wb.settings.autoStartStopSession != nil &&*/ wb.settings.autoStartStopSession {
+		b := 0x01 // this would stop the session
 
 		s, err := wb.status()
 		if err != nil {
@@ -248,14 +248,14 @@ func (wb *ABB) Enable(enable bool) error {
 
 		if s == 0x05 && // 0x05 = session stopped
 			enable {
-			wb.log.TRACE.Printf("session stopped, starting session; current: %dmA", current)
-			b = 0x01 // start session
+			wb.log.INFO.Printf("session stopped, starting session; current: %dmA", current)
+			b = 0x00 // start session
 		} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
 			!enable {
-			b = 0x00 // stop session
+			b = 0x01 // stop session
 		} else {
 			// unknown state
-			wb.log.TRACE.Printf("unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
+			wb.log.WARN.Printf("unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
 		}
 
 		wb.log.TRACE.Printf("set session: %d; current: %dmA", b, current)
