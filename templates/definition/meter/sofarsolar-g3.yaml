@@ -38,8 +38,8 @@ params:
   - name: maxacpower
   - name: defaultmode
     help:
-      de: Standardmodus für die aktive Batteriesteuerung. Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
-      en: Default mode for battery control. Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
+      de: Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
+      en: Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
     advanced: true
   # battery control

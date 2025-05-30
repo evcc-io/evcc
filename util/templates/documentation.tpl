@@ -3,14 +3,20 @@
   {{- range .Values }}
   - {{ . }}
   {{- end }}
+  {{- $unit := .Unit -}}
+  {{- $description := localize .Description | replace "\n" " " -}}
   {{- $help := localize .Help | replace "\n" " " -}}
   {{- $choices := join ", " .Choice -}}
   {{- $optional := not .IsRequired -}}
-  {{- if or $help $choices $optional }} # {{end}}
+  {{- if or $help $choices $optional $description }} # {{end}}
+  {{- if $description }}{{ $description }}
+    {{- if $unit }} ({{ $unit }}){{- end }}
+    {{- if or $help $choices $optional }}, {{end}}
+  {{- end}}
   {{- if $help }}{{ $help }} {{end}}
   {{- if $choices }}[{{ $choices }}] {{end}}
   {{- if $optional }}
-    {{- if or $help  $choices }}(optional){{ else }}optional{{end }}
+    {{- if or $help $choices }}(optional){{ else }}optional{{end }}
   {{- end }}
 {{- end }}
 

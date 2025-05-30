@@ -186,6 +186,7 @@ type Param struct {
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
+	Unit          string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
