@@ -13,13 +13,15 @@ params:
     choice: ["battery"]
   - name: power
     description:
-      de: Leistung (W)
-      en: Power (W)
+      de: Leistung
+      en: Power
+    unit: W
     type: int
   - name: soc
     description:
-      de: Ladestand (%)
-      en: Charge (%)
+      de: Ladestand
+      en: Charge
+    unit: "%"
     type: int
   - name: controllable
     description:
@@ -31,26 +33,30 @@ params:
       en: "Supports active battery control"
   - name: energy
     description:
-      de: Zählerstand (kWh)
-      en: Meter reading (kWh)
+      de: Zählerstand
+      en: Meter reading
+    unit: kWh
     type: int
     advanced: true
   - name: currentL1
     description:
-      de: L1 Stromstärke (A)
-      en: L1 current (A)
+      de: L1 Stromstärke
+      en: L1 current
+    unit: A
     type: int
     advanced: true
   - name: currentL2
     description:
-      de: L2 Stromstärke (A)
-      en: L2 current (A)
+      de: L2 Stromstärke
+      en: L2 current
+    unit: A
     type: int
     advanced: true
   - name: currentL3
     description:
-      de: L3 Stromstärke (A)
-      en: L3 current (A)
+      de: L3 Stromstärke
+      en: L3 current
+    unit: A
     type: int
     advanced: true
 
