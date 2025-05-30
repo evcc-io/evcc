@@ -315,8 +315,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: For forced charging of the battery in watts.
-      de: Für erzwungenes Laden des Speichers in Watt.
+      en: For forced charging of the battery.
+      de: Für erzwungenes Laden des Speichers.
     advanced: true
   - name: maxchargerate
     unit: "%"
