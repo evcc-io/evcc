@@ -21,12 +21,14 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/hashicorp/go-version"
 )
 
 const (
@@ -111,13 +113,26 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
+	// compare firmware version to determine if RFID is available
 	var identify func() (string, error)
-	if _, err := wb.identify(); err == nil {
-		identify = wb.identify
+
+	b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read firmware version: %w", err)
+	}
+
+	fw := strings.TrimPrefix(bytesAsString(b), "v")
+	if v, err := version.NewSemver(fw); err == nil {
+		if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
+			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
+			identify = wb.identify
+		}
+	} else {
+		log.WARN.Printf("failed to parse firmware version %q: %v", string(b), err)
 	}
 
 	// get failsafe timeout from charger
-	b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1)
+	b, err = wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1)
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
