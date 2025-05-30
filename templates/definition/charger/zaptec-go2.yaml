@@ -9,18 +9,14 @@ requirements:
   description:
     de: |
       Im Zaptec-Portal (Installationen -> Einstellungen -> Leistungsregelung) müssen für die Zaptec Go 2 folgende Einstellungen vorgenommen werden:
-      <ul>
-        <li>Aktiviere "Ladegeräten erlauben, zum dreiphasigen Laden zurückkehren"</li>
-        <li>Setze "Erlaubte Wechsel vor der Festlegung auf einphasiges Laden" auf das Maximum von 20</li>
-        <li>Setze "Wechsel von drei- auf einphasiges Laden" auf 1 A</li>
-      </ul>
+        - Aktiviere "Ladegeräten erlauben, zum dreiphasigen Laden zurückkehren"
+        - Setze "Erlaubte Wechsel vor der Festlegung auf einphasiges Laden" auf das Maximum von 20
+        - Setze "Wechsel von drei- auf einphasiges Laden" auf 1 A
     en: |
       In the Zaptec portal (Installations -> Settings -> Power Management), the following settings must be configured for the Zaptec Go 2:
-      <ul>
-        <li>Enable "Allow chargers to return to three-phase charging"</li>
-        <li>Set "Allowed switches before locking to single-phase charging" to the maximum of 20</li>
-        <li>Set "Switch from three-phase to single-phase charging" to 1 A</li>
-      </ul>
+        - Enable "Allow chargers to return to three-phase charging"
+        - Set "Allowed switches before locking to single-phase charging" to the maximum of 20
+        - Set "Switch from three-phase to single-phase charging" to 1 A
 params:
   - name: id
     help:
