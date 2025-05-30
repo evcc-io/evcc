@@ -26,7 +26,7 @@ products:
       generic: Luxtronik 2.1
 group: heating
 requirements:
-   description:
+  description:
     de: Regelung für Wärmepumpen mit Luxtronik 2.1 Steuerung (modbus tcp). Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
     en: Template for heatpumps with Luxtronik 2.1 controller (modbus tcp). Requires Software later than v3.90.3. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
 #   evcc: ["sponsorship"]
