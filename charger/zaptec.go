@@ -229,6 +229,9 @@ func (c *Zaptec) Enable(enable bool) error {
 	}
 	if c.version == zaptec.ZaptecGo2 {
 		phases, err := c.configuredPhases()
+		if err != nil {
+			return err
+		}
 
 		if enable && phases == 0 {
 			err = c.Phases1p3p(c.desiredPhases)
