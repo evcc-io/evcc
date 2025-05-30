@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply, andig
+// Copyright (c) 2022 premultiply, andig, fritz-net
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -31,14 +31,18 @@ import (
 
 // ABB charger implementation
 type ABB struct {
-	conn *modbus.Connection
-	curr uint32
+	log         *util.Logger
+	conn        *modbus.Connection
+	lastCurrent uint32
 }
 
+// https://library.e.abb.com/public/4124e0d39f614ba7b0a7a6f7a2ce1f99/ABB_Terra_AC_Charger_ModbusCommunication_v1.7.pdf
+// https://library.e.abb.com/public/982c2befa2734d259e66d76fa4a7ba77/ABB_Terra_AC_Charger_ModbusCommunication_v1.11.pdf?x-sign=iLpQGyucvLxy9vxpJTfP6c8T5PD2xNxDRcfuyYcqp84qm7jSCqomJm0%2FlJ9jA%2BvU
 const (
+	// Read Only Registers
 	abbRegSerial     = 0x4000 // Serial Number 4 unsigned RO available
 	abbRegFirmware   = 0x4004 // Firmware version 2 unsigned RO available
-	abbRegMaxRated   = 0x4006 // Max rated current 2 unsigned RO available
+	abbRegMaxRated   = 0x4006 // Max rated current 2 unsigned RO available // <- is set in the Terra Config App
 	abbRegErrorCode  = 0x4008 // Error Code 2 unsigned RO available
 	abbRegSocketLock = 0x400A // Socket Lock State 2 unsigned RO available
 	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
@@ -47,9 +51,17 @@ const (
 	abbRegVoltages   = 0x4016 // Voltage phases 6 0.1 V unsigned RO available
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
-	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
-	// abbRegSession    = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
-	// abbRegPhases     = 0x4102 // Set charging phase 1 unsigned WO Not supported
+	//abbCommunicationTimeout = 0x4020 // Communication timeout 1 1s unsigned RO
+	//abbRegCurrentModbus     = 0x4022 // current liomit set by Modbus 2 0.001A unsigned RO
+	//abbRegCurrentFallback   = 0x4024 // Fallback current limit 2 1A unsigned RO
+
+	// Write Only Registers
+	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available (smalles value 6A according to docs/)
+	// abbRegSetPhases               = 0x4102 // Set charging phase 1 unsigned WO Not supported // TODO not found in docs - check source
+	// abbRegSetSocketLock           = 0x4103 // Set socket lock state 1 unsigned WO
+	// abbRegSetSession              = 0x4105 // Start/Stop Charging Session 1 unsigned WO available
+	// abbRegSetCommunicationTimeout = 0x4106 // Set communication timeout 1 1s unsigned WO -> RO 0x4020
+	// abbRegSetCurrentFallback      = 0x4109 // Set (current) fallback limit 1 1A unsigned WO -> RO 0x4024; default is 0xFF; if configured the carger will not go into error mode on modbus connection loss
 )
 
 func init() {
@@ -84,8 +96,9 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 	conn.Logger(log.TRACE)
 
 	wb := &ABB{
-		conn: conn,
-		curr: 6000, // assume min current
+		log:         log,
+		conn:        conn,
+		lastCurrent: 6000, // assume min current
 	}
 
 	// keep-alive
@@ -107,6 +120,51 @@ func (wb *ABB) status() (byte, error) {
 	return b[2] & 0x7f, nil
 }
 
+func (wb *ABB) socketStatus() (uint32, error) {
+	b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	/**
+	 * Value | Description                                           | Socket     | Non-socket
+	 * 0x0000 | No cable is plugged.                                 | Applicable | Not applicable
+	 * 0x0001 | Cable is connected to the charging station unlocked. | Applicable | Applicable
+	 * 0x0011 | Cable is connected to the charging station locked.   | Applicable | Not applicable
+	 * 0x0101 | Cable is connected to the charging station and the
+	 * 		    electric vehicle, unlocked in charging station.      | Applicable | Applicable
+	 * 0x0111 | Cable is connected to the charging station and the
+	 * 		    electric vehicle, locked in charging station.        | Applicable | Not applicable
+	 */
+
+	/*
+	 * this table results in:
+	 * bit 0 = cabled is plugged
+	 * bit 1 = cable is locked in charging station
+	 * bit 2 = cable is connected to vehicle
+	 */
+
+	switch b := binary.BigEndian.Uint32(b); b {
+	case 0x0000: // No cable is plugged
+		wb.log.TRACE.Println("socket status: No cable is plugged (0x0000)")
+		return b, nil
+	case 0x0001: // Cable is connected to the charging station unlocked
+		wb.log.TRACE.Println("socket status: Cable is connected to the charging station unlocked (0x0001)")
+		return b, nil
+	case 0x0011: // Cable is connected to the charging station locked
+		wb.log.TRACE.Println("socket status: Cable is connected to the charging station locked (0x0011)")
+		return b, nil
+	case 0x0101: // Cable is connected to the charging station and the electric vehicle, unlocked in charging station
+		wb.log.TRACE.Println("socket status: Cable is connected to the charging station and the electric vehicle, unlocked in charging station (0x0101)")
+		return b, nil
+	case 0x0111: // Cable is connected to the charging station and the electric vehicle, locked in charging station
+		wb.log.TRACE.Println("socket status: Cable is connected to the charging station and the electric vehicle, locked in charging station (0x0111)")
+		return b, nil
+	default:
+		return b, fmt.Errorf("invalid socket status: %0x", b)
+	}
+}
+
 // Status implements the api.Charger interface
 func (wb *ABB) Status() (api.ChargeStatus, error) {
 	s, err := wb.status()
@@ -114,18 +172,28 @@ func (wb *ABB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	if _, err := wb.socketStatus(); err != nil {
+		return api.StatusNone, err
+	}
+
 	switch s {
 	case 0: // State A: Idle
+		wb.log.TRACE.Printf("status: State A: Idle (0x%02x)", s)
 		return api.StatusA, nil
 	case 1: // State B1: EV Plug in, pending authorization
+		wb.log.TRACE.Printf("status: State B1: EV Plug in, pending authorization (0x%02x)", s)
 		return api.StatusB, nil
 	case 2: // State B2: EV Plug in, EVSE ready for charging(PWM)
+		wb.log.TRACE.Printf("status: State B2: EV Plug in, EVSE ready for charging (0x%02x)", s)
 		return api.StatusB, nil
 	case 3: // State C1: EV Ready for charge, S2 closed(no PWM)
+		wb.log.TRACE.Printf("status: State C1: EV Ready for charge, S2 closed (0x%02x)", s)
 		return api.StatusB, nil
 	case 4: // State C2: Charging Contact closed, energy delivering
+		wb.log.TRACE.Printf("status: State C2: Charging Contact closed, energy delivering (0x%02x)", s)
 		return api.StatusC, nil
 	case 5: // Other: Session stopped
+		wb.log.TRACE.Printf("status: Other: Session stopped (0x%02x)", s)
 		b, err := wb.conn.ReadHoldingRegisters(abbRegSocketLock, 2)
 		if err != nil {
 			return api.StatusNone, err
@@ -151,10 +219,12 @@ func (wb *ABB) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABB) Enable(enable bool) error {
-	var current uint32
+	var current uint32 = 0 // values lower then 6A pause the session
 	if enable {
-		current = wb.curr
+		current = wb.lastCurrent
 	}
+
+	// we should also start the charging session if not already
 
 	return wb.setCurrent(current)
 }
@@ -163,6 +233,12 @@ func (wb *ABB) Enable(enable bool) error {
 func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
+
+	/*
+	 * In addition to that charging session will enter Pause state when the current limit is less than
+	 * 6A. After that when current limit is set above 6A, then charging session will be resumed. The
+	 * choice of 6A is derived from IEC 61851-1
+	 */
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
@@ -178,12 +254,22 @@ var _ api.ChargerEx = (*ABB)(nil)
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+		return fmt.Errorf("invalid current %.1fA", current) // its actually not invalid but would pause charging if current is less then 6A
 	}
 
-	wb.curr = uint32(current * 1e3)
+	// read max rated current
+	b, err := wb.conn.ReadHoldingRegisters(abbRegMaxRated, 2)
+	if err != nil {
+		return err
+	}
+	maxRatedCurrentinA := float64(binary.BigEndian.Uint32(b)) / 1e3 // convert mA to A
+	if current > maxRatedCurrentinA {
+		return fmt.Errorf("current %.1fA exceeds max rated current %dA", current, maxRatedCurrentinA)
+	}
 
-	return wb.setCurrent(wb.curr)
+	wb.lastCurrent = uint32(current * 1e3)
+
+	return wb.setCurrent(wb.lastCurrent)
 }
 
 var _ api.Meter = (*ABB)(nil)
