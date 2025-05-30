@@ -50,6 +50,9 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Helper:       request.NewHelper(util.NewLogger("ha-switch")),
 	}
 
+	if switchEntity == "" {
+		return nil, errors.New("missing switch entity")
+	}
 	if powerEntity == "" {
 		return nil, errors.New("missing power entity")
 	}
