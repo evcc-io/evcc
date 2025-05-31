@@ -16,8 +16,8 @@ products:
 capabilities: ["rfid", "1p3p"]
 requirements:
   description:
-    de: 1P3P und RFID erfordern Firmware 3.187.0 oder neuer.
-    en: 1P3P and RFID require at least firmware version 3.187.0.
+    de: 1P3P erfordert Firmware 3.187.0 oder neuer, RFID erfordert 3.156.0 oder neuer.
+    en: 1P3P requires at least firmware version 3.187.0, RFID at least 3.156.0.
   evcc: ["sponsorship"]
 params:
   - name: modbus
