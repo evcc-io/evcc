@@ -27,8 +27,9 @@ products:
 group: heating
 requirements:
   description:
-    de: Regelung für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
-    en: Template for heatpumps with Luxtronik 2.1 controller. Uses modbus-tcp. Requires software v3.90.3 or later. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface. 
+    de: Für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
+    en: For heatpumps with Luxtronik 2.1 controller. Uses modbus-tcp. Requires software v3.90.3 or later. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
+    uri: https://github.com/raibisch/mylibs/blob/main/LuxModbusSHI/LuxtronikSHI.md#aktivierung-in-luxtronik
 #   evcc: ["sponsorship"]
 params:
   - name: modbus
@@ -37,10 +38,11 @@ params:
     type: float
     unit: K
     help:
-      de: Anhebung der Warmwassertemperatur.
-      en: Temperature boost offset for hot water.
+      de: Anhebung der Warmwassertemperatur. Erhöht evtl. den Verschleiss des Kompressors.
+      en: Temperature boost offset for hot water. Possibly increases wear on compressor.
     default: 0.0
     example: 8.5
+    advanced: true
   - name: heatoffset
     type: float
     unit: K
@@ -56,7 +58,7 @@ render: |
     script: |
       res := 2 // SGReady Normal (2)
       switch {
-      case LPC == 2: res = 1 // LPC 2 (Lux hard limit) == SGReady 1 (reduziert)
+      case LPC == 2: res = 1 // LPC 2 (Lux hard limit) == SGReady 1 (dimm)
       case HEAT > 0 || WW > 0: res = 3 // if any boost mode set (offset(2) or setpoint(1)) --> SGReady 3 (boost)
       }
       res
@@ -218,7 +220,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10120 # 10120 = Temp x10 Warmwasser ist
+      address: 10101 # 10101 = Temp. x10 RL-Ist
       type: input
       encoding: int16
     scale: 0.1
