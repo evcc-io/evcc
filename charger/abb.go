@@ -39,7 +39,8 @@ type ABB struct {
 }
 
 type AbbSettings struct {
-	autoStartStopSession bool `json:",omitempty" yaml:",omitempty"`
+	autoStartSession bool `json:",omitempty" yaml:",omitempty"`
+	autoStopSession  bool `json:",omitempty" yaml:",omitempty"`
 }
 
 // https://library.e.abb.com/public/4124e0d39f614ba7b0a7a6f7a2ce1f99/ABB_Terra_AC_Charger_ModbusCommunication_v1.7.pdf
@@ -85,7 +86,8 @@ func NewABBFromConfig(ctx context.Context, other map[string]interface{}) (api.Ch
 	}
 
 	abbSettings := AbbSettings{
-		autoStartStopSession: true,
+		autoStartSession: true,
+		autoStopSession:  false,
 	}
 
 	return NewABB(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, abbSettings)
@@ -241,10 +243,13 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 		current = wb.lastCurrent
 	}
 
-	wb.log.WARN.Printf("enable: %t; current: %dmA; autoStartStopSession: %t", enable, current, wb.settings.autoStartStopSession)
+	wb.log.WARN.Printf("Enable(%t); current: %dmA; autoStartSession: %t; autoStopSession: %t",
+		enable, current, wb.settings.autoStartSession, wb.settings.autoStopSession)
 
 	// we should also start the charging session if not already -> abbRegSetSession
-	if /*wb.settings.autoStartStopSession != nil &&*/ wb.settings.autoStartStopSession {
+	if wb.settings.autoStartSession && enable {
+		return wb.StartStopSession(enable)
+	} else if wb.settings.autoStopSession && !enable {
 		return wb.StartStopSession(enable)
 	}
 
@@ -252,34 +257,33 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 }
 func (wb *ABB) StartStopSession(enable bool) error { // TODO: the issue is that this is only called on mode switch and not on start of evcc so wb stays disabled if it was not enabled by app or rfid
 
-	wb.log.WARN.Printf("StartStopSession: enable: %t; autoStartStopSession: %t", enable, wb.settings.autoStartStopSession)
+	wb.log.WARN.Printf("StartStopSession(%t); autoStartSession: %t; autoStopSession: %t",
+		enable, wb.settings.autoStartSession, wb.settings.autoStopSession)
 
 	// we should also start the charging session if not already -> abbRegSetSession
-	if /*wb.settings.autoStartStopSession != nil &&*/ wb.settings.autoStartStopSession {
-		b := 0x01 // this would stop the session
+	b := 0x01 // this would stop the session
 
-		s, err := wb.status()
-		if err != nil {
-			return fmt.Errorf("getting status: %w", err)
-		}
+	s, err := wb.status()
+	if err != nil {
+		return fmt.Errorf("getting status: %w", err)
+	}
 
-		if (s == 0x05 || // 0x05 = session stopped
-			s == 0x01) && // 0x01 = EV Plug in, pending authorization
-			enable {
-			wb.log.INFO.Printf("session currently stopped -> starting new session;")
-			b = 0x00 // start session
-		} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
-			!enable {
-			b = 0x01 // stop session
-		} else {
-			// unknown state
-			wb.log.WARN.Printf("unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
-		}
+	if (s == 0x05 || // 0x05 = session stopped
+		s == 0x01) && // 0x01 = EV Plug in, pending authorization
+		enable {
+		wb.log.INFO.Printf("session currently stopped -> starting new session;")
+		b = 0x00 // start session
+	} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
+		!enable {
+		b = 0x01 // stop session
+	} else {
+		// unknown state
+		wb.log.ERROR.Printf("StartStopSession: unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
+	}
 
-		wb.log.TRACE.Printf("set session: %d", b)
-		if _, err := wb.conn.WriteSingleRegister(abbRegSetSession, uint16(b)); err != nil {
-			return fmt.Errorf("setting session: %w", err)
-		}
+	wb.log.TRACE.Printf("set session: %d", b)
+	if _, err := wb.conn.WriteSingleRegister(abbRegSetSession, uint16(b)); err != nil {
+		return fmt.Errorf("setting session: %w", err)
 	}
 
 	return nil
