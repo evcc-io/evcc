@@ -104,7 +104,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		return nil, err
 	}
 
-	if v.Compare(version.Must(version.NewSemver("2.0.0"))) >= 0 {
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.0.0"))) {
 		wb.fw = 2
 	}
 

@@ -438,6 +438,10 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		label = langLabel
 	}
 
+	if param.Unit != "" {
+		label = fmt.Sprintf("%s (%s)", label, param.Unit)
+	}
+
 	value := c.askValue(question{
 		label:        label,
 		defaultValue: param.Default,

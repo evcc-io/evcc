@@ -33,7 +33,7 @@ test.describe("aux meter", async () => {
     await meterModal.getByRole("button", { name: "Add self-regulating consumer" }).click();
     await meterModal.getByLabel("Title").fill("Water heater");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power (W)").fill("1200");
+    await meterModal.getByLabel("Power").fill("1200");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
 

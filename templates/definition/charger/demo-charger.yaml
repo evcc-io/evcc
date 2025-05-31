@@ -31,8 +31,9 @@ params:
     default: true
   - name: maxcurrent
     description:
-      de: Maximale Stromstärke (A)
-      en: Maximum amperage (A)
+      de: Maximale Stromstärke
+      en: Maximum amperage
+    unit: A
     help:
     example: 16
     type: int
