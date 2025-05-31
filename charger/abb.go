@@ -252,7 +252,8 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 			return fmt.Errorf("getting status: %w", err)
 		}
 
-		if s == 0x05 && // 0x05 = session stopped
+		if (s == 0x05 || // 0x05 = session stopped
+			s == 0x01) && // 0x01 = EV Plug in, pending authorization
 			enable {
 			wb.log.INFO.Printf("session currently stopped -> starting new session; current: %dmA", current)
 			b = 0x00 // start session
@@ -279,7 +280,7 @@ func (wb *ABB) setCurrent(current uint32) error {
 	binary.BigEndian.PutUint32(b, current)
 
 	// if last status is 0x05 trigger enable
-	if wb.lastStatus == 0x05 && current > 0 {
+	if (wb.lastStatus == 0x01 || wb.lastStatus == 0x05) && current > 0 {
 		wb.log.WARN.Printf("trying to set current %dmA while last status is 0x05 (session stopped), enabling charger", current)
 		wb.Enable(true)
 	}
