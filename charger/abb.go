@@ -245,6 +245,17 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 
 	// we should also start the charging session if not already -> abbRegSetSession
 	if /*wb.settings.autoStartStopSession != nil &&*/ wb.settings.autoStartStopSession {
+		return wb.StartStopSession(enable)
+	}
+
+	return wb.setCurrent(current)
+}
+func (wb *ABB) StartStopSession(enable bool) error { // TODO: the issue is that this is only called on mode switch and not on start of evcc so wb stays disabled if it was not enabled by app or rfid
+
+	wb.log.WARN.Printf("StartStopSession: enable: %t; autoStartStopSession: %t", enable, wb.settings.autoStartStopSession)
+
+	// we should also start the charging session if not already -> abbRegSetSession
+	if /*wb.settings.autoStartStopSession != nil &&*/ wb.settings.autoStartStopSession {
 		b := 0x01 // this would stop the session
 
 		s, err := wb.status()
@@ -255,7 +266,7 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 		if (s == 0x05 || // 0x05 = session stopped
 			s == 0x01) && // 0x01 = EV Plug in, pending authorization
 			enable {
-			wb.log.INFO.Printf("session currently stopped -> starting new session; current: %dmA", current)
+			wb.log.INFO.Printf("session currently stopped -> starting new session;")
 			b = 0x00 // start session
 		} else if s == 0x04 && // 0x04 = energy delivering // TODO do we also want other states to stop session?
 			!enable {
@@ -265,13 +276,13 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 			wb.log.WARN.Printf("unknown session state: %0x, not changing session; requested enable flag: %t", s, enable)
 		}
 
-		wb.log.TRACE.Printf("set session: %d; current: %dmA", b, current)
+		wb.log.TRACE.Printf("set session: %d", b)
 		if _, err := wb.conn.WriteSingleRegister(abbRegSetSession, uint16(b)); err != nil {
 			return fmt.Errorf("setting session: %w", err)
 		}
 	}
 
-	return wb.setCurrent(current)
+	return nil
 }
 
 // setCurrent writes the current limit in mA
@@ -279,10 +290,13 @@ func (wb *ABB) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, current)
 
+	wb.log.TRACE.Printf("set current: %dmA; lastStatus: %0x", current, wb.lastStatus)
+
 	// if last status is 0x05 trigger enable
 	if (wb.lastStatus == 0x01 || wb.lastStatus == 0x05) && current > 0 {
 		wb.log.WARN.Printf("trying to set current %dmA while last status is 0x05 (session stopped), enabling charger", current)
-		wb.Enable(true)
+		//wb.Enable(true) // this would create a loop
+		wb.StartStopSession(true)
 	}
 
 	/*
@@ -290,8 +304,6 @@ func (wb *ABB) setCurrent(current uint32) error {
 	 * 6A. After that when current limit is set above 6A, then charging session will be resumed. The
 	 * choice of 6A is derived from IEC 61851-1
 	 */
-
-	wb.log.TRACE.Printf("set current: %dmA; lastStatus: %0x", current, wb.lastStatus)
 
 	_, err := wb.conn.WriteMultipleRegisters(abbRegSetCurrent, 2, b)
 	return err
