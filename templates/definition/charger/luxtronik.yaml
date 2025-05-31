@@ -183,7 +183,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ .heatoffset / 10.0 }} 
+          value: {{ .heatoffset * 10.0 }} 
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -203,7 +203,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ .wwoffset / 10.0 }}
+          value: {{ .wwoffset * 10.0 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
