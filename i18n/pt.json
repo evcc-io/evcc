@@ -113,6 +113,9 @@
       "batteryStorage": "“Bateria”",
       "solarSystem": "Sistema fotovoltaico"
     },
+    "editor": {
+      "loading": "A carregar editor YAML…"
+    },
     "eebus": {
       "description": "Configuração que permite o evcc comunicar com outros dispositivos EEBus.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Cancelar",
+      "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
+      "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
       "experimental": "Experimental",
