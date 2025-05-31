@@ -34,17 +34,19 @@ params:
   - name: modbus
     choice: ["tcpip"]
   - name: wwoffset
-    type: int
+    type: float
+    unit: K
     help:
-      de: Anhebung der WW Temperatur. Werte in 0.1K
-      en: Temperature boost offset for hot water. Value in 0.1K
-    default: 0
+      de: Anhebung der Warmwassertemperatur.
+      en: Temperature boost offset for hot water.
+    default: 0.0
   - name: heatoffset
-    type: int
+    type: float
+    unit: K
     help:
-      de: Anhebung der RL Temperatur. Werte in 0.1K
-      en: Temperature boost offset for heating. Value in 0.1K
-    default: 0
+      de: Anhebung der Heizwassertemperatur.
+      en: Temperature boost offset for heating.
+    default: 0.0
 render: |
   type: sgready
   getmode:
@@ -100,7 +102,7 @@ render: |
               address: 100040 # LPC mode
               type: writesingle
               encoding: uint16
-        {{ if ne .heatoffset 0 -}}
+        {{ if ne .heatoffset 0.0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -111,7 +113,7 @@ render: |
               type: writesingle
               encoding: uint16
         {{- end }}
-        {{ if ne .wwoffset 0 -}}
+        {{ if ne .wwoffset 0.0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -135,7 +137,7 @@ render: |
               address: 100040 # LPC mode
               type: writesingle
               encoding: uint16
-        {{ if ne .heatoffset 0 -}}
+        {{ if ne .heatoffset 0.0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -146,7 +148,7 @@ render: |
               type: writesingle
               encoding: uint16
         {{- end }}
-        {{ if ne .wwoffset 0 -}}
+        {{ if ne .wwoffset 0.0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -170,7 +172,7 @@ render: |
               address: 100040 # LPC mode
               type: writesingle
               encoding: uint16
-        {{ if ne .heatoffset 0 -}}
+        {{ if ne .heatoffset 0.0 -}}
         - source: const
           value: 2 # 2 = Heiz.Mode Offset
           set:
@@ -181,7 +183,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ .heatoffset }} 
+          value: {{ .heatoffset / 10.0 }} 
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -190,7 +192,7 @@ render: |
               type: writesingle
               encoding: uint16
         {{- end }}
-        {{ if ne .wwoffset 0 -}}
+        {{ if ne .wwoffset 0.0 -}}
         - source: const
           value: 2 # 2 = WW Mode Offset
           set:
@@ -201,7 +203,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ .wwoffset }}
+          value: {{ .wwoffset / 10.0 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
