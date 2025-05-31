@@ -40,7 +40,9 @@
 			</label>
 		</div>
 		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
-			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
+			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">
+				{{ $t("config.icon.change") }}
+			</a>
 		</div>
 	</div>
 	<SelectGroup
@@ -160,9 +162,6 @@ export default {
 			}
 			if (this.unit) {
 				return this.unit;
-			}
-			if (this.property === "capacity") {
-				return "kWh";
 			}
 			return null;
 		},

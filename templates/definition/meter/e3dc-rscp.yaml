@@ -36,6 +36,7 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
+  - name: maxacpower
   - name: capacity
     advanced: true
 render: |

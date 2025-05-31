@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorType } from "./utils";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -49,7 +49,7 @@ async function addVehicle(page, title) {
   await page.getByRole("button", { name: "Add vehicle" }).click();
   const modal = page.getByTestId("vehicle-modal");
   await expectModalVisible(modal);
-  await modal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+  await modal.getByLabel("Manufacturer").selectOption("Generic vehicle (without API)");
   await modal.getByLabel("Title").fill(title);
   await modal.getByRole("button", { name: "Validate & save" }).click();
   await expectModalHidden(modal);
@@ -245,6 +245,8 @@ test.describe("loadpoint", async () => {
     // set vehicle as default for loadpoint 1
     await page.getByTestId("loadpoint").nth(0).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
+    await expect(lpModal.getByTestId("loadpointPollMode-charging")).toHaveClass(/active/);
+    await expect(lpModal.getByRole("checkbox", { name: "Interpolate charge level" })).toBeChecked();
     await lpModal.getByLabel("Default vehicle").selectOption(VEHICLE_1);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -413,5 +415,79 @@ test.describe("loadpoint", async () => {
     await expect(
       lpModal.getByRole("button", { name: "Add dedicated charger meter" })
     ).toBeVisible();
+  });
+
+  test("user-defined charger", async ({ page }) => {
+    await start(CONFIG_EMPTY);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // add loadpoint
+    await newLoadpoint(page, "Carport");
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+
+    // add user-defined charger
+    const chargerModal = page.getByTestId("charger-modal");
+    await expectModalVisible(chargerModal);
+    await chargerModal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const editor = chargerModal.getByTestId("yaml-editor");
+    await expect(editor).toContainText("status: # charger status [A..F]");
+
+    await editorClear(editor, 10);
+    await editorType(editor, [
+      // prettier-ignore
+      "status:\n  source: const\nvalue: 'C'",
+      "Shift+Tab",
+      "enabled:\n  source: const\nvalue: true",
+      "Shift+Tab",
+      "enable:\n  source: js\nscript: console.log(enable)",
+      "Shift+Tab",
+      "maxcurrent:\n  source: js\nscript: console.log(maxcurrent)",
+      "Shift+Tab",
+      "power:\n  source: const\nvalue: 11000",
+    ]);
+
+    const restResult = chargerModal.getByTestId("test-result");
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: successful");
+    await expect(restResult).toContainText(["Status", "charging"].join(""));
+    await expect(restResult).toContainText(["Enabled", "yes"].join(""));
+    await expect(restResult).toContainText(["Power", "11.0 kW"].join(""));
+
+    // create
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    await expect(page.getByTestId("loadpoint")).toContainText("Carport");
+
+    // restart evcc
+    await restart(CONFIG_EMPTY);
+    await page.reload();
+
+    const lpEntry = page.getByTestId("loadpoint");
+    await expect(lpEntry).toHaveCount(1);
+    await expect(lpEntry).toContainText("Carport");
+    await expect(lpEntry).toContainText(["Status", "charging"].join(""));
+    await expect(lpEntry).toContainText(["Enabled", "yes"].join(""));
+    await expect(lpEntry).toContainText(["Power", "11.0 kW"].join(""));
+
+    await lpEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+
+    await expect(lpModal.getByLabel("Charger").first()).toHaveValue("User-defined device [db:1]");
+    await lpModal.getByLabel("Charger").first().click();
+    await expectModalVisible(chargerModal);
+
+    await expect(chargerModal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
+    await page.waitForLoadState("networkidle");
+    await expect(editor).toContainText("value: 'C'");
+    await expect(editor).toContainText("value: 11000");
   });
 });

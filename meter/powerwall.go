@@ -40,13 +40,13 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Cache                      time.Duration
 		RefreshToken               string
 		SiteId                     int64
-		battery                    `mapstructure:",squash"`
+		batterySocLimits           `mapstructure:",squash"`
 	}{
-		Cache: time.Second,
-		battery: battery{
+		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -69,11 +69,11 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, battery battery) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
@@ -142,7 +142,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate api.BatterySoc
+	// decorate battery
 	var batterySoc func() (float64, error)
 	var batteryCapacity func() float64
 	if usage == "battery" {
@@ -161,7 +161,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	// decorate api.BatteryController
 	var batModeS func(api.BatteryMode) error
 	if batteryControl {
-		batModeS = battery.LimitController(m.socG, func(limit float64) error {
+		batModeS = batterySocLimits.LimitController(m.socG, func(limit float64) error {
 			return m.energySite.SetBatteryReserve(uint64(limit))
 		})
 	}

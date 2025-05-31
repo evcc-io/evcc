@@ -5,20 +5,23 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 type Controller struct {
 	pvd *Provider
 	api *API
+	log *util.Logger
 	vin string
 	pin string
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(provider *Provider, api *API, vin string, pin string) *Controller {
+func NewController(provider *Provider, api *API, log *util.Logger, vin string, pin string) *Controller {
 	impl := &Controller{
 		pvd: provider,
 		api: api,
+		log: log,
 		vin: vin,
 		pin: pin,
 	}
@@ -99,4 +102,20 @@ func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) {
 	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
 		schedule.EnableScheduleType = false
 	}
+}
+
+var _ api.Resurrector = (*Controller)(nil)
+
+func (c *Controller) WakeUp() error {
+	if c.pin == "" {
+		c.log.DEBUG.Printf("pin required for vehicle wakeup")
+		return nil
+	}
+
+	res, err := c.api.ChargeNow(c.vin, c.pin)
+	if err == nil && res.ResponseStatus != "pending" {
+		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	}
+
+	return err
 }
