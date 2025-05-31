@@ -247,26 +247,24 @@ test.describe("columns desktop", async () => {
 
 test.describe("csv export", async () => {
   test("total export", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=5");
-    await expect(page.getByRole("link", { name: "Download total CSV" })).toHaveAttribute(
-      "href",
-      "./api/sessions?format=csv&lang=en"
-    );
-
-    await page.goto("/#/sessions?year=2023&month=6");
+    await page.goto("/#/sessions?period=total");
     await expect(page.getByRole("link", { name: "Download total CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?format=csv&lang=en"
     );
   });
+  test("year export", async ({ page }) => {
+    await page.goto("/#/sessions?period=year&year=2023");
+    await expect(page.getByRole("link", { name: "Download 2023 CSV" })).toHaveAttribute(
+      "href",
+      "./api/sessions?format=csv&lang=en&year=2023"
+    );
+  });
   test("monthly export", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=5");
+    await page.goto("/#/sessions?&year=2023&month=5");
     await expect(page.getByRole("link", { name: "Download May 2023 CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?format=csv&lang=en&year=2023&month=5"
     );
-
-    await page.goto("/#/sessions?year=2023&month=6");
-    await expect(page.getByRole("link", { name: "Download June 2023 CSV" })).toHaveCount(0);
   });
 });

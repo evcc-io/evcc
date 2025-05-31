@@ -862,10 +862,9 @@
       "solarpercentage": "Solare (%)",
       "vehicle": "Veicolo"
     },
-    "csvMonth": "Scarica il CSV di {month}",
+    "csvPeriod": "Scarica il CSV di {period}",
     "csvTotal": "Scarica il CSV complessivo",
     "date": "Avvio",
-    "downloadCsv": "Scarica come CSV",
     "energy": "Caricato",
     "filter": {
       "allLoadpoints": "tutte le stazioni di ricarica",

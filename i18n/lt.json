@@ -873,10 +873,9 @@
       "solarpercentage": "Saulės (%)",
       "vehicle": "Automobilis"
     },
-    "csvMonth": "Atsisiųsti {month} CSV",
+    "csvPeriod": "Atsisiųsti {period} CSV",
     "csvTotal": "Atsisiųsti visą CSV",
     "date": "Pradžia",
-    "downloadCsv": "Atsisiųsti CSV failą",
     "energy": "Įkrauta",
     "filter": {
       "allLoadpoints": "visi įkrovikliai",

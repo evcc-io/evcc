@@ -489,10 +489,9 @@
       "odometer": "Przebieg (km)",
       "vehicle": "Pojazd"
     },
-    "csvMonth": "Pobierz plik {month} CSV",
+    "csvPeriod": "Pobierz plik {period} CSV",
     "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęty",
-    "downloadCsv": "Pobierz jako CSV",
     "energy": "Naładowano",
     "filter": {
       "allLoadpoints": "wszystkie punkty ładowania",
