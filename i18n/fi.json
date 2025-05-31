@@ -814,10 +814,9 @@
       "solarpercentage": "Aurinkoenergia (%)",
       "vehicle": "Ajoneuvo"
     },
-    "csvMonth": "Lataa {month} CSV",
+    "csvPeriod": "Lataa {period} CSV",
     "csvTotal": "Lataa kaikki CSV",
     "date": "Aloitettu",
-    "downloadCsv": "Lataa CSV muodossa",
     "energy": "Ladattu",
     "filter": {
       "allLoadpoints": "kaikki latauspisteet",

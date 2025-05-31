@@ -873,10 +873,9 @@
       "solarpercentage": "Solární energie (%)",
       "vehicle": "Vozidlo"
     },
-    "csvMonth": "Stažení {month} CSV",
+    "csvPeriod": "Stažení {period} CSV",
     "csvTotal": "Stažení celkového CSV",
     "date": "Start",
-    "downloadCsv": "Stáhnout jako CSV",
     "energy": "Nabito",
     "filter": {
       "allLoadpoints": "všechny nabíjecí body",

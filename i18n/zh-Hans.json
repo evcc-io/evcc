@@ -862,10 +862,9 @@
       "solarpercentage": "太阳能 (%)",
       "vehicle": "车辆"
     },
-    "csvMonth": "下载 {month} CSV 文件",
+    "csvPeriod": "下载 {period} CSV 文件",
     "csvTotal": "下载总计 CSV 文件",
     "date": "开始",
-    "downloadCsv": "下载为 CSV 文件",
     "energy": "已充电量",
     "filter": {
       "allLoadpoints": "所有充电点",

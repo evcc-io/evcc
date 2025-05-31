@@ -873,10 +873,9 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Fordon"
     },
-    "csvMonth": "Ladda hem {month} CSV",
+    "csvPeriod": "Ladda hem {period} CSV",
     "csvTotal": "Ladda hem total CSV",
     "date": "Start",
-    "downloadCsv": "Ladda hem som CSV",
     "energy": "Laddat",
     "filter": {
       "allLoadpoints": "alla laddplatser",
