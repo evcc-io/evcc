@@ -862,10 +862,9 @@
       "solarpercentage": "Sonn (%)",
       "vehicle": "Gefier"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Gesamt CSV eroflueden",
     "date": "Ufank",
-    "downloadCsv": "Als CSV eroflueden",
     "energy": "Opgelueden",
     "filter": {
       "allLoadpoints": "All Luedstatiounen",

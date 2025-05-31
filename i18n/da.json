@@ -873,10 +873,9 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download som CSV",
     "energy": "Opladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",

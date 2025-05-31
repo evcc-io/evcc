@@ -380,10 +380,9 @@
       "odometer": "Kilometraj (km)",
       "vehicle": "Vehicul"
     },
-    "csvMonth": "Descarca {month} CSV",
+    "csvPeriod": "Descarca {period} CSV",
     "csvTotal": "Descarca total CSV",
     "date": "Start",
-    "downloadCsv": "Descarcă ca CSV",
     "energy": "Încărcat",
     "filter": {
       "allLoadpoints": "toate punctele de incarcare",
