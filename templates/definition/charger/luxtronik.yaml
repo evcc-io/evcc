@@ -40,6 +40,7 @@ params:
       de: Anhebung der Warmwassertemperatur.
       en: Temperature boost offset for hot water.
     default: 0.0
+    example: 8.5
   - name: heatoffset
     type: float
     unit: K
@@ -47,6 +48,7 @@ params:
       de: Anhebung der Heizwassertemperatur.
       en: Temperature boost offset for heating.
     default: 0.0
+    example: 2.0
 render: |
   type: sgready
   getmode:
