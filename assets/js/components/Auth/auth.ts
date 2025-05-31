@@ -1,14 +1,16 @@
 import { reactive, watch } from "vue";
-import api from "@/api";
-import store from "@/store";
+
 import Modal from "bootstrap/js/dist/modal";
+import api from "@/api";
 import { isSystemError } from "@/utils/fatal.js";
+import store from "@/store";
 
 const auth = reactive({
 	configured: true,
 	loggedIn: null as boolean | null, // true / false / null (unknown)
 	nextUrl: null as string | null, // url to navigate to after login
 	nextModal: null as Modal | null, // modal instance to show after login
+	demoMode: false, // Demo Mode
 });
 
 export async function updateAuthStatus() {
@@ -19,17 +21,25 @@ export async function updateAuthStatus() {
 
 	try {
 		const res = await api.get("/auth/status", {
-			validateStatus: (code) => [200, 501, 500].includes(code),
+			validateStatus: (code) => [200, 403, 501, 500].includes(code),
 		});
 		if (res.status === 501) {
 			auth.configured = false;
+			auth.demoMode = false;
 		}
 		if (res.status === 200) {
 			auth.configured = true;
 			auth.loggedIn = res.data === true;
+			auth.demoMode = false;
+		}
+		if (res.status === 403) {
+			auth.configured = true;
+			auth.loggedIn = false;
+			auth.demoMode = true;
 		}
 		if (res.status === 500) {
 			auth.loggedIn = null;
+			auth.demoMode = false;
 			console.log("unable to fetch auth status", res);
 		}
 	} catch (e) {
@@ -49,6 +59,10 @@ export async function logout() {
 
 export function isLoggedIn() {
 	return auth.loggedIn === true;
+}
+
+export function isDemoMode() {
+	return auth.demoMode === true;
 }
 
 export function statusUnknown() {
