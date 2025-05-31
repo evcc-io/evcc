@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
       "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Laden",
+      "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
       "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
