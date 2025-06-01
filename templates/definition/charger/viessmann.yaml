@@ -160,9 +160,9 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
       clientid: {{ .clientid }}
-    jq: '.data.properties.active.value | if . == false then 1 elif . == true then 2 else . end'
-    # false -> oneTimeCharge is disabled -> normal mode -> 1
-    # true -> oneTimeCharge is enabled -> boost mode -> 2
+    jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    # false -> oneTimeCharge is disabled -> normal mode -> 2
+    # true -> oneTimeCharge is enabled -> boost mode -> 3
   setmode:
     source: watchdog
     timeout: 60m # re-write at timeout/2
