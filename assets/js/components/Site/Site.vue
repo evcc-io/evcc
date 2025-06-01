@@ -125,7 +125,10 @@ export default defineComponent({
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: { type: Object as PropType<{ vehicles: VehicleLogin[] }>, default: () => ({ vehicles: {} }) },
+		auth: {
+			type: Object as PropType<{ vehicles: VehicleLogin[] }>,
+			default: () => ({ vehicles: {} }),
+		},
 
 		currency: String as PropType<CURRENCY>,
 		statistics: Object,
