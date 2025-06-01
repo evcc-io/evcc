@@ -242,8 +242,8 @@ github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57 h1:f5bEvO4we3fbfi
 github.com/gokrazy/internal v0.0.0-20250126213949-423a5b587b57/go.mod h1:SJG1KwuJQXFEoBgryaNCkMbdISyovDgZd0xmXJRZmiw=
 github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8 h1:JS8xlGmF5UXVzZV9Sc1GX5B5jNIe6YvKYa7KQCCS5Zs=
 github.com/gokrazy/tools v0.0.0-20250212161915-30b9fe0c81f8/go.mod h1:c8f1EjCxMYk5IiEkBFb5d+WiPXWgqc1yPnAl4nlKyJM=
-github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33 h1:m6NVAznErzAL9fzaIh+HeFbbImxV6ku4iaUUHhYctmg=
-github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33/go.mod h1:PYOvzGOL4nlBmuxu7IyKQTFLaxr61+WPRNRzVtuYOHw=
+github.com/gokrazy/updater v0.0.0-20250601065453-91649328574c h1:a8dmMwaooonr7TdDG+UWD97zEPxaEp9R11woElaQ+nE=
+github.com/gokrazy/updater v0.0.0-20250601065453-91649328574c/go.mod h1:EtAn+BPibqnAHnYGj3FW5e284xNsiOOMOL2dJiwu7H4=
 github.com/golang-jwt/jwt/v5 v5.2.2 h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8=
 github.com/golang-jwt/jwt/v5 v5.2.2/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=

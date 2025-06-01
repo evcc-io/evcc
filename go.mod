@@ -39,7 +39,7 @@ require (
 	github.com/go-telegram/bot v1.15.0
 	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33
+	github.com/gokrazy/updater v0.0.0-20250601065453-91649328574c
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.6.0
