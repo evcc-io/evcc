@@ -255,6 +255,7 @@ func (wb *ABB) Enable(enable bool) error { // TODO: the issue is that this is on
 
 	return wb.setCurrent(current)
 }
+
 func (wb *ABB) StartStopSession(enable bool) error { // TODO: the issue is that this is only called on mode switch and not on start of evcc so wb stays disabled if it was not enabled by app or rfid
 
 	wb.log.WARN.Printf("StartStopSession(%t); autoStartSession: %t; autoStopSession: %t",
@@ -268,7 +269,7 @@ func (wb *ABB) StartStopSession(enable bool) error { // TODO: the issue is that 
 		return fmt.Errorf("getting status: %w", err)
 	}
 
-	if (s == 0x05 || // 0x05 = session stopped
+	if (s == 0x05 || // 0x05 = session stopped (this could be because car is already full)
 		s == 0x01) && // 0x01 = EV Plug in, pending authorization
 		enable {
 		wb.log.INFO.Printf("session currently stopped -> starting new session;")
@@ -297,7 +298,7 @@ func (wb *ABB) setCurrent(current uint32) error {
 	wb.log.TRACE.Printf("set current: %dmA; lastStatus: %0x", current, wb.lastStatus)
 
 	// if last status is 0x05 trigger enable
-	if (wb.lastStatus == 0x01 || wb.lastStatus == 0x05) && current > 0 {
+	if (wb.lastStatus == 0x01 /*|| wb.lastStatus == 0x05*/) && current > 0 { // do not start if 0x05 cause this could also mean car is full
 		wb.log.WARN.Printf("trying to set current %dmA while last status is 0x05 (session stopped), enabling charger", current)
 		//wb.Enable(true) // this would create a loop
 		wb.StartStopSession(true)
