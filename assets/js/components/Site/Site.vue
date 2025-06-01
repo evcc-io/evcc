@@ -125,7 +125,7 @@ export default defineComponent({
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: { type: Object as PropType<{ vehicles: VehicleLogin[] }>, default: () => [] },
+		auth: { type: Object as PropType<{ vehicles: VehicleLogin[] }>, default: () => {} },
 
 		currency: String as PropType<CURRENCY>,
 		statistics: Object,
