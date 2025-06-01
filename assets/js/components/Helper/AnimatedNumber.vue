@@ -18,7 +18,7 @@ export default defineComponent({
 	data() {
 		return {
 			instance: null as CountUp | null,
-			timeout: null as Timeout | null,
+			timeout: null as Timeout,
 		};
 	},
 	watch: {

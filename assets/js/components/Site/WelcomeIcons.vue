@@ -57,7 +57,7 @@ export default defineComponent({
 				markRaw(SunUp),
 				markRaw(DynamicPrice),
 			],
-			interval: null as Timeout | null,
+			interval: null as Timeout,
 		};
 	},
 	computed: {
