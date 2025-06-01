@@ -213,5 +213,6 @@ render: |
             body: >
               { }
       - case: 1 # dimm
-        - source: error
+        set:
+          source: error
           error: ErrNotAvailable
