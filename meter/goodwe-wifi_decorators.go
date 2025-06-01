@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error)) api.Meter {
+func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
-	case battery != nil:
+	case battery != nil && batteryCapacity == nil:
 		return &struct {
 			*goodWeWiFi
 			api.Battery
@@ -19,6 +19,21 @@ func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error)) api.M
 			goodWeWiFi: base,
 			Battery: &decorateGoodWeWifiBatteryImpl{
 				battery: battery,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil:
+		return &struct {
+			*goodWeWiFi
+			api.Battery
+			api.BatteryCapacity
+		}{
+			goodWeWiFi: base,
+			Battery: &decorateGoodWeWifiBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateGoodWeWifiBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
 			},
 		}
 	}
@@ -32,4 +47,12 @@ type decorateGoodWeWifiBatteryImpl struct {
 
 func (impl *decorateGoodWeWifiBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
+}
+
+type decorateGoodWeWifiBatteryCapacityImpl struct {
+	batteryCapacity func() float64
+}
+
+func (impl *decorateGoodWeWifiBatteryCapacityImpl) Capacity() float64 {
+	return impl.batteryCapacity()
 }

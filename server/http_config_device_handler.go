@@ -487,6 +487,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Circuit:
 			err = deleteDevice(id, config.Circuits())
+
+			// cleanup references
+			for _, dev := range h.Devices() {
+				lp := dev.Instance()
+				if lp.GetCircuitRef() == config.NameForID(id) {
+					lp.SetCircuitRef("")
+				}
+			}
 		}
 
 		setConfigDirty()

@@ -113,6 +113,9 @@
       "batteryStorage": "Batterilager",
       "solarSystem": "Solanläggning"
     },
+    "editor": {
+      "loading": "Öppnar Yaml-editorn…"
+    },
     "eebus": {
       "description": "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Avbryt",
+      "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
+      "customOption": "Egen-definierad enhet",
       "delete": "Radera",
       "docsLink": "Se dokumentation.",
       "experimental": "Experimentell",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Anslut evcc till annat energistyrningssystem i hemmet.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "ändra"
     },
     "influx": {
       "description": "Skriver laddata och andra mätningar till InfluxDB. Använd Grafana eller andra verktyg för att visualisera data.",
@@ -269,6 +277,7 @@
     "meter": {
       "cancel": "Avbryt",
       "delete": "Radera",
+      "generic": "Generisk integration",
       "option": {
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
@@ -276,6 +285,7 @@
         "pv": "Lägg till solenergimätare"
       },
       "save": "Spara",
+      "specific": "Specifik integration",
       "template": "Tillverkare",
       "titleChoice": "Vad vill du lägga till?",
       "validateSave": "Validera & spara"
@@ -417,6 +427,7 @@
       "minimumCurrent": "Minimi ström",
       "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",
+      "primary": "Generisk integration",
       "priority": "Prioritet",
       "priorityHelp": "Högre prioritet betyder att detta fordon får förtur till solöverskott.",
       "save": "Spara",
@@ -862,10 +873,9 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Fordon"
     },
-    "csvMonth": "Ladda hem {month} CSV",
+    "csvPeriod": "Ladda hem {period} CSV",
     "csvTotal": "Ladda hem total CSV",
     "date": "Start",
-    "downloadCsv": "Ladda hem som CSV",
     "energy": "Laddat",
     "filter": {
       "allLoadpoints": "alla laddplatser",

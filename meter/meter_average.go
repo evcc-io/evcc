@@ -16,9 +16,9 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 	cc := struct {
 		Decay float64
 		Meter struct {
-			capacity `mapstructure:",squash"`
-			Type     string
-			Other    map[string]interface{} `mapstructure:",remain"`
+			batteryCapacity `mapstructure:",squash"`
+			Type            string
+			Other           map[string]interface{} `mapstructure:",remain"`
 		}
 	}{
 		Decay: 0.1,
@@ -70,7 +70,7 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.capacity.Decorator(), nil, nil), nil
+	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil), nil
 }
 
 type MovingAverage struct {

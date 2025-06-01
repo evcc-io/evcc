@@ -113,6 +113,9 @@
       "batteryStorage": "Batterilagring",
       "solarSystem": "Solcelleanlæg"
     },
+    "editor": {
+      "loading": "Indlæser YAML-editor…"
+    },
     "eebus": {
       "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Afbryd",
+      "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
+      "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
       "docsLink": "Se dokumentation.",
       "experimental": "Eksperimentel",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Tilslut evcc til et andet energistyringssystem i hjemmet.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "ændre"
     },
     "influx": {
       "description": "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data.",
@@ -269,6 +277,7 @@
     "meter": {
       "cancel": "Afbryd",
       "delete": "Slet",
+      "generic": "Generiske integrationer",
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
@@ -276,6 +285,7 @@
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
+      "specific": "Specifikke integrationer",
       "template": "Fabrikant",
       "titleChoice": "Hvad ønsker du at tilføje?",
       "validateSave": "Valider og gem"
@@ -417,6 +427,7 @@
       "minimumCurrent": "Minimal strømstyrke",
       "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
       "online": "Køretøj med online API",
+      "primary": "Generiske integrationer",
       "priority": "Prioritet",
       "priorityHelp": "Højere prioritet betyder, at dette køretøj får fortrin til soloverskud.",
       "save": "Gem",
@@ -862,10 +873,9 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download som CSV",
     "energy": "Opladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",

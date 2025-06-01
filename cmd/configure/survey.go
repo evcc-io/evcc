@@ -129,8 +129,13 @@ func (c *CmdConfigure) askParam(p templates.Param) string {
 		required = *p.Required
 	}
 
+	label := p.Description.String(c.lang)
+	if p.Unit != "" {
+		label = fmt.Sprintf("%s (%s)", label, p.Unit)
+	}
+
 	return c.askValue(question{
-		label:     p.Description.String(c.lang),
+		label:     label,
 		valueType: p.Type,
 		choice:    p.Choice,
 		mask:      mask,
