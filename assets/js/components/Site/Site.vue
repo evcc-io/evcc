@@ -47,7 +47,7 @@
 			<Loadpoints
 				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="loadpoints"
+				:loadpoints="loadpointsCompact"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
 				:tariffGrid="tariffGrid"
@@ -66,7 +66,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
@@ -76,8 +76,18 @@ import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
+import { defineComponent, type PropType } from "vue";
+import type {
+	Battery,
+	CURRENCY,
+	Forecast,
+	LoadpointCompact,
+	Sponsor,
+	VehicleLogin,
+} from "@/types/evcc";
+import type { Grid, Loadpoint } from "./types";
 
-export default {
+export default defineComponent({
 	name: "Site",
 	components: {
 		Loadpoints,
@@ -89,7 +99,7 @@ export default {
 	},
 	mixins: [formatter, collector],
 	props: {
-		loadpoints: Array,
+		loadpoints: { type: Array as PropType<Loadpoint[]>, default: () => [] },
 		selectedLoadpointIndex: Number,
 
 		notifications: Array,
@@ -97,17 +107,17 @@ export default {
 
 		// details
 		gridConfigured: Boolean,
-		grid: Object,
+		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
-		pv: Array,
+		pv: { type: Array, default: () => [] },
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: Array,
+		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -115,9 +125,9 @@ export default {
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: Object,
+		auth: { type: Object as PropType<{ vehicles: VehicleLogin[] }>, default: () => [] },
 
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -132,10 +142,10 @@ export default {
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
-		sponsor: { type: Object, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object, // as PropType<Forecast>,
+		forecast: Object as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {
@@ -153,7 +163,7 @@ export default {
 		loadpointTitles() {
 			return this.loadpoints.map((lp) => lp.title);
 		},
-		loadpointsCompact() {
+		loadpointsCompact(): LoadpointCompact[] {
 			return this.loadpoints.map((lp, index) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
@@ -163,9 +173,9 @@ export default {
 					this.$t("main.loadpoint.fallbackName");
 				const charging = lp.charging;
 				const soc = lp.vehicleSoc;
-				const power = lp.chargePower || 0;
+				const chargePower = lp.chargePower || 0;
 				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, power, soc, heating, index };
+				return { icon, title, charging, chargePower, soc, heating, index };
 			});
 		},
 		vehicleList() {
@@ -173,8 +183,7 @@ export default {
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation) };
+			return { vehicles: this.auth.vehicles, ...this.collectProps(Navigation) };
 		},
 		showParkingLot() {
 			// work in progess
@@ -205,14 +214,14 @@ export default {
 		},
 	},
 	methods: {
-		selectedLoadpointChanged(index) {
+		selectedLoadpointChanged(index: number) {
 			this.$router.push({ query: { lp: index + 1 } });
 		},
-		vehicleTitle(vehicleName) {
+		vehicleTitle(vehicleName: string) {
 			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .site {
@@ -222,8 +231,6 @@ export default {
 .content-area {
 	flex-grow: 1;
 	z-index: 1;
-}
-.fatal {
 }
 
 .configure-button:not(:active):not(:hover),

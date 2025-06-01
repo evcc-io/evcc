@@ -201,7 +201,7 @@
 									v-for="lp in activeLoadpoints"
 									:key="lp.index"
 									:name="lp.title"
-									:power="lp.power"
+									:power="lp.chargePower"
 									:powerUnit="powerUnit"
 									icon="vehicle"
 									:iconProps="{ names: [lp.icon] }"
@@ -378,7 +378,7 @@ export default defineComponent({
 		},
 		loadpointsPower() {
 			return this.loadpointsCompact.reduce((sum, lp) => {
-				return sum + (lp.power || 0);
+				return sum + (lp.chargePower || 0);
 			}, 0);
 		},
 		pvExport() {

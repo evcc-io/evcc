@@ -4,7 +4,13 @@ import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 declare global {
 	interface Window {
 		app: any;
+		evcc: { version: string; commit: string };
 	}
+}
+
+export interface VehicleLogin {
+	authenticated: boolean;
+	uri: string;
 }
 
 export interface FatalError {
@@ -26,10 +32,9 @@ export interface LoadpointCompact {
 	title: string;
 	charging: boolean;
 	soc?: number;
-	power: number;
-	heating?: boolean;
 	chargePower: number;
-	connected: boolean;
+	heating?: boolean;
+	connected?: boolean;
 	index: number;
 }
 

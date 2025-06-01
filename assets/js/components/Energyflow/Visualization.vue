@@ -86,7 +86,7 @@
 				<LabelBar
 					v-for="(lp, index) in loadpoints"
 					:key="index"
-					v-bind="labelBarProps('bottom', 'loadpoints', lp.power)"
+					v-bind="labelBarProps('bottom', 'loadpoints', lp.chargePower)"
 				>
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
