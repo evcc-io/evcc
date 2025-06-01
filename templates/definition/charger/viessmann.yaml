@@ -170,7 +170,7 @@ render: |
     set:
       source: switch
       switch:
-      - case: 1 # normal
+      - case: 2 # normal
         set:
           source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
@@ -184,7 +184,7 @@ render: |
             clientid: {{ .clientid }}
           body: >
             { }
-      - case: 2 # boost
+      - case: 3 # boost
         set:
           source: sequence
           set:
@@ -212,3 +212,6 @@ render: |
               clientid: {{ .clientid }}
             body: >
               { }
+      - case: 1 # dimm
+        - source: error
+          error: ErrNotAvailable
