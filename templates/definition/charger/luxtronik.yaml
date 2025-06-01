@@ -187,7 +187,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ fmul .heatoffset 10.0 | abs }} 
+          value: {{ fmul .heatoffset 10.0 | int }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -207,7 +207,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: {{ fmul .wwoffset 10.0 | abs }}
+          value: {{ fmul .wwoffset 10.0 | int }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
