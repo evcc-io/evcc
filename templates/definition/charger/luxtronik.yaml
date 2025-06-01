@@ -29,7 +29,6 @@ requirements:
   description:
     de: Für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
     en: For heatpumps with Luxtronik 2.1 controller. Uses modbus-tcp. Requires software v3.90.3 or later. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
-  uri: https://github.com/raibisch/mylibs/blob/main/LuxModbusSHI/LuxtronikSHI.md#aktivierung-in-luxtronik
 #  evcc: ["sponsorship"]
 params:
   - name: modbus
