@@ -46,7 +46,7 @@ params:
       en: Installation ID
     help:
       de: |
-        Leider kann man die Installation ID nicht ein fach in der Viessmann App einsehen - stattdessen müssen wir die folgenden Kommandos in der Kommandozeile ausführen. Es ist uns bewusst, dass das nicht für jeden Benutzer einfach umsetzbar ist, aber bisher haben wir leider keinen besseren Ablauf...<br/>
+        Leider kann man die Installation ID nicht einfach in der Viessmann App einsehen - stattdessen müssen wir die folgenden Kommandos in der Kommandozeile ausführen. Es ist uns bewusst, dass das nicht für jeden Benutzer einfach umsetzbar ist, aber bisher haben wir leider keinen besseren Ablauf...<br/>
 
         Vorraussetzungen: curl, jq, und die folgenden Umgebungsvariblen:
 
