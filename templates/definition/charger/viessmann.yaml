@@ -160,9 +160,9 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
       clientid: {{ .clientid }}
-    jq: '.data.properties.active.value | if . == false then 1 elif . == true then 2 else . end'
-    # false -> oneTimeCharge is disabled -> normal mode -> 1
-    # true -> oneTimeCharge is enabled -> boost mode -> 2
+    jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    # false -> oneTimeCharge is disabled -> normal mode -> 2
+    # true -> oneTimeCharge is enabled -> boost mode -> 3
   setmode:
     source: watchdog
     timeout: 60m # re-write at timeout/2
@@ -170,7 +170,7 @@ render: |
     set:
       source: switch
       switch:
-      - case: 1 # normal
+      - case: 2 # normal
         set:
           source: http
           uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
@@ -184,7 +184,7 @@ render: |
             clientid: {{ .clientid }}
           body: >
             { }
-      - case: 2 # boost
+      - case: 3 # boost
         set:
           source: sequence
           set:
@@ -212,3 +212,7 @@ render: |
               clientid: {{ .clientid }}
             body: >
               { }
+      - case: 1 # dimm
+        set:
+          source: error
+          error: ErrNotAvailable
