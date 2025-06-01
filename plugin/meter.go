@@ -13,6 +13,7 @@ import (
 type meterPlugin struct {
 	meter  api.Meter
 	method Method
+	scale  float64
 }
 
 func init() {
@@ -21,9 +22,12 @@ func init() {
 
 // NewMeterFromConfig creates type conversion provider
 func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
-	var cc struct {
+	cc := struct {
 		Config config.Typed
 		Method
+		Scale float64
+	}{
+		Scale: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -38,6 +42,7 @@ func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plug
 	o := &meterPlugin{
 		meter:  meter,
 		method: cc.Method,
+		scale:  cc.Scale,
 	}
 
 	return o, nil
@@ -62,11 +67,14 @@ func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		switch o.method {
 		case Energy:
-			return o.meter.(api.MeterEnergy).TotalEnergy()
+			f, err := o.meter.(api.MeterEnergy).TotalEnergy()
+			return f * o.scale, err
 		case Soc:
-			return o.meter.(api.Battery).Soc()
+			f, err := o.meter.(api.Battery).Soc()
+			return f * o.scale, err
 		default:
-			return o.meter.CurrentPower()
+			f, err := o.meter.CurrentPower()
+			return f * o.scale, err
 		}
 	}, nil
 }
