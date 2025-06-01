@@ -12,13 +12,13 @@
 <script lang="ts">
 import { PolarArea } from "vue-chartjs";
 import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY } from "@/types/evcc";
-import { TYPES, GROUPS, type Session } from "./types";
+import { TYPES, GROUPS, type Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
@@ -29,7 +29,10 @@ export default defineComponent({
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		currency: { type: String as PropType<CURRENCY>, default: "EUR" },
-		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
+		groupBy: {
+			type: String as PropType<Exclude<GROUPS, GROUPS.NONE>>,
+			default: GROUPS.LOADPOINT,
+		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMax: { type: Number, default: 0 },
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
@@ -47,10 +50,10 @@ export default defineComponent({
 				const chargedEnergy = session.chargedEnergy;
 				if (this.costType === TYPES.CO2) {
 					aggregatedData[groupKey].energy += chargedEnergy;
-					aggregatedData[groupKey].cost += session.co2PerKWh * chargedEnergy;
+					aggregatedData[groupKey].cost += (session.co2PerKWh || 0) * chargedEnergy;
 				} else if (this.costType === TYPES.PRICE) {
 					aggregatedData[groupKey].energy += chargedEnergy;
-					aggregatedData[groupKey].cost += session.price;
+					aggregatedData[groupKey].cost += session.price || 0;
 				}
 			});
 
@@ -87,7 +90,7 @@ export default defineComponent({
 				aspectRatio: 1,
 				borderRadius: 8,
 				borderWidth: 3,
-				color: colors.text,
+				color: colors.text || "",
 				spacing: 0,
 				radius: "100%",
 				plugins: {
@@ -112,7 +115,7 @@ export default defineComponent({
 							},
 							labelColor: tooltipLabelColor(true),
 						},
-					},
+					} as any,
 				},
 				scales: {
 					r: {
@@ -120,15 +123,15 @@ export default defineComponent({
 						suggestedMax: this.suggestedMax,
 						beginAtZero: false,
 						ticks: {
-							color: colors.muted,
-							backdropColor: colors.background,
+							color: colors.muted || "",
+							backdropColor: colors.background || "",
 							font: { size: 10 },
 							callback: this.formatValue,
 							maxTicksLimit: 6,
 						},
 						angleLines: { display: false },
-						grid: { color: colors.border },
-					},
+						grid: { color: colors.border || "" },
+					} as any,
 				},
 			};
 		},

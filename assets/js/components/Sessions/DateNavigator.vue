@@ -108,9 +108,9 @@ export default defineComponent({
 	},
 	mixins: [formatter],
 	props: {
-		month: Number,
-		year: Number,
-		startDate: Date,
+		month: { type: Number, required: true },
+		year: { type: Number, required: true },
+		startDate: { type: Date, required: true },
 		showMonth: Boolean,
 		showYear: Boolean,
 	},
@@ -134,7 +134,7 @@ export default defineComponent({
 		},
 		monthOptions() {
 			return Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
-				name: this.fmtMonth(new Date(this.year, month - 1, 1)),
+				name: this.fmtMonth(new Date(this.year, month - 1, 1), false),
 				value: month,
 			}));
 		},

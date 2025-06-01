@@ -15,7 +15,7 @@ export default defineComponent({
 		disabled: Boolean,
 		prev: Boolean,
 		next: Boolean,
-		onClick: { type: Function as PropType<() => ((payload: MouseEvent) => void) | undefined> },
+		onClick: { type: Function as PropType<(event: MouseEvent) => void> },
 	},
 	computed: {
 		icon() {

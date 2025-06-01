@@ -20,11 +20,11 @@ import {
 	Tooltip,
 	type TooltipItem,
 } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
-import type { Legend, PERIODS, Session } from "./types";
+import type { Legend, PERIODS, Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
 
@@ -52,12 +52,14 @@ export default defineComponent({
 		chartData() {
 			console.log("update solar month data");
 
-			if (this.sessions.length > 0) return { labels: [], datasets: [] };
+			if (!this.firstDay || !this.lastDay) {
+				return { labels: [], datasets: [] };
+			}
 
 			const firstYear = this.firstDay.getFullYear();
 			const lastYear = this.lastDay.getFullYear();
 
-			const result: Record<string, Record<string, { self?: number; grid?: number }>> = {};
+			const result: Record<string, Record<string, { self: number; grid: number }>> = {};
 
 			const years: string[] = [];
 
@@ -69,7 +71,7 @@ export default defineComponent({
 				console.log("year", yearString);
 
 				for (let month = 1; month <= 12; month++) {
-					result[yearString][month] = {};
+					result[yearString][month] = { self: 0, grid: 0 };
 				}
 			}
 
@@ -82,8 +84,8 @@ export default defineComponent({
 				const charged = session.chargedEnergy;
 				const self = (charged / 100) * session.solarPercentage;
 				const grid = charged - self;
-				result[year][month].self = (result[year][month].self || 0) + self;
-				result[year][month].grid = (result[year][month].grid || 0) + grid;
+				result[year][month].self += self;
+				result[year][month].grid += grid;
 			});
 
 			const datasets = years.map((year) => {
@@ -108,7 +110,7 @@ export default defineComponent({
 			});
 
 			const labels = Object.keys(result[firstYear]).map((month) =>
-				this.fmtMonth(new Date(firstYear, month - 1, 1), true)
+				this.fmtMonth(new Date(firstYear, parseInt(month) - 1, 1), true)
 			);
 
 			return {
@@ -134,10 +136,14 @@ export default defineComponent({
 					const value = this.chartData.datasets[0].data[index];
 					return {
 						label,
+						color: null,
 						value:
 							value === null
 								? "- %"
-								: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
+								: this.fmtPercentage(
+										this.chartData.datasets[0].data[index] || 0,
+										1
+									),
 					};
 				});
 			}
@@ -148,7 +154,7 @@ export default defineComponent({
 				locale: this.$i18n?.locale,
 				aspectRatio: 1,
 				borderWidth: 4,
-				color: colors.text,
+				color: colors.text || "",
 				spacing: 0,
 				radius: "100%",
 				elements: { line: { tension: 0.05 } },
@@ -166,7 +172,7 @@ export default defineComponent({
 							},
 							labelColor: tooltipLabelColor(true),
 						},
-					},
+					} as any,
 				},
 				scales: {
 					r: {
@@ -184,7 +190,7 @@ export default defineComponent({
 						grid: { color: colors.border },
 					},
 				},
-			};
+			} as any;
 		},
 	},
 });

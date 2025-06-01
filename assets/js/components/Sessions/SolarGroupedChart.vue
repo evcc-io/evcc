@@ -13,11 +13,11 @@
 import { defineComponent, type PropType } from "vue";
 import { PolarArea } from "vue-chartjs";
 import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
-import { GROUPS, type Session } from "./types";
+import { GROUPS, type Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
@@ -27,7 +27,10 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
-		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
+		groupBy: {
+			type: String as PropType<Exclude<GROUPS, GROUPS.NONE>>,
+			default: GROUPS.LOADPOINT,
+		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	computed: {
@@ -58,8 +61,7 @@ export default defineComponent({
 				return selfPercentage;
 			});
 
-			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const borderColors = labels.map((label) => this.colorMappings[colorGroup][label]);
+			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {
 				labels: labels,
@@ -119,7 +121,7 @@ export default defineComponent({
 						grid: { color: colors.border },
 					},
 				},
-			};
+			} as any;
 		},
 	},
 });
