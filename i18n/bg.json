@@ -862,10 +862,9 @@
       "solarpercentage": "Слънчева енергия (%)",
       "vehicle": "Превозно средство"
     },
-    "csvMonth": "Изтегляне на {month} CSV",
+    "csvPeriod": "Изтегляне на {period} CSV",
     "csvTotal": "Изтегляне на общ CSV",
     "date": "Начало",
-    "downloadCsv": "Изтегляне като CSV",
     "energy": "Заредено",
     "filter": {
       "allLoadpoints": "Всички зарядни точки",

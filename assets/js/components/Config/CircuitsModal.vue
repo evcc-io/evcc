@@ -7,6 +7,7 @@
 		:defaultYaml="defaultYaml"
 		removeKey="circuits"
 		endpoint="/config/circuits"
+		data-testid="circuits-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

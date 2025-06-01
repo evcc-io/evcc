@@ -148,6 +148,7 @@ func (v *API) WakeUpMY24(accountID string, vin string) (Response, error) {
 		ChargeTimeStart:             "21:00",
 		ChargeDuration:              1615,
 		PreconditioningTemperature:  20.0,
+		Programs:                    []interface{}{},
 	}
 
 	return v.request(uri, request.MarshalJSON(data))

@@ -873,10 +873,9 @@
       "solarpercentage": "Güneş (%)",
       "vehicle": "Araç"
     },
-    "csvMonth": "{month} CSV olarak indir",
+    "csvPeriod": "{period} CSV olarak indir",
     "csvTotal": "CSV'nin tamamını indir",
     "date": "Başlangıç",
-    "downloadCsv": "CSV olarak indir",
     "energy": "Doldurulan",
     "filter": {
       "allLoadpoints": "tüm doldurma noktaları",

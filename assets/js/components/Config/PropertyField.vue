@@ -163,9 +163,6 @@ export default {
 			if (this.unit) {
 				return this.unit;
 			}
-			if (this.property === "capacity") {
-				return "kWh";
-			}
 			return null;
 		},
 		icons() {

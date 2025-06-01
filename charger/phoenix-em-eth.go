@@ -106,7 +106,7 @@ func (wb *PhoenixEMEth) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint16(b) > 0, nil
+	return b[0] == 1, nil
 }
 
 // Enable implements the api.Charger interface

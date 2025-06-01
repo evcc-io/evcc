@@ -873,10 +873,9 @@
       "solarpercentage": "Соляр (%)",
       "vehicle": "Транспортний засіб"
     },
-    "csvMonth": "Завантажити {month} CSV",
+    "csvPeriod": "Завантажити {period} CSV",
     "csvTotal": "Завантажити повний CSV",
     "date": "Почати",
-    "downloadCsv": "Завантажити як CSV",
     "energy": "Заряджено",
     "filter": {
       "allLoadpoints": "всі точки зарядки",
