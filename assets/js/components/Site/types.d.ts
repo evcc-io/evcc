@@ -10,4 +10,6 @@ export interface Loadpoint {
 	charging: boolean;
 	chargePower?: number;
 	chargerFeatureHeating: boolean;
+	icon: string;
+	index: number;
 }

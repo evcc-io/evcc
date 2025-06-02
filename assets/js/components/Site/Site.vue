@@ -47,7 +47,7 @@
 			<Loadpoints
 				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="loadpointsCompact"
+				:loadpoints="loadpoints as LoadpointCompact[]"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
 				:tariffGrid="tariffGrid"
@@ -165,21 +165,6 @@ export default defineComponent({
 		},
 		loadpointTitles() {
 			return this.loadpoints.map((lp) => lp.title);
-		},
-		loadpointsCompact(): LoadpointCompact[] {
-			return this.loadpoints.map((lp, index) => {
-				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
-				const icon = lp.chargerIcon || vehicleIcon || "car";
-				const title =
-					this.vehicleTitle(lp.vehicleName) ||
-					lp.title ||
-					this.$t("main.loadpoint.fallbackName");
-				const charging = lp.charging;
-				const soc = lp.vehicleSoc;
-				const chargePower = lp.chargePower || 0;
-				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, chargePower, soc, heating, index };
-			});
 		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
