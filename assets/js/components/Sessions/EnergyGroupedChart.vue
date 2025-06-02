@@ -48,8 +48,8 @@ export default defineComponent({
 					(acc, s) => acc + (s.chargedEnergy / 100) * s.solarPercentage,
 					0
 				);
-				aggregatedData[self] = self;
-				aggregatedData.grid = total - self;
+				aggregatedData["self"] = self;
+				aggregatedData["grid"] = total - self;
 			} else {
 				this.sessions.forEach((session) => {
 					const groupKey = session[this.groupBy as "loadpoint" | "vehicle"];
@@ -119,7 +119,7 @@ export default defineComponent({
 						},
 					},
 				},
-			};
+			} as any;
 		},
 	},
 	methods: {
