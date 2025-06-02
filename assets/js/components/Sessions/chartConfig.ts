@@ -21,8 +21,8 @@ Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 
 // Custom tooltip positioners
-(Tooltip.positioners as any)["center"] = function (context: Context) {
-	const { chart } = context;
+(Tooltip.positioners as any)["center"] = function () {
+	const { chart } = this;
 	return {
 		x: chart.width / 2,
 		y: chart.height / 2,
@@ -32,10 +32,10 @@ Chart.defaults.layout.padding = 0;
 };
 
 (Tooltip.positioners as any)["topBottomCenter"] = function (
-	context: Context,
+	_context: Context,
 	eventPosition: Point
 ) {
-	const { chart } = context;
+	const { chart } = this;
 	const { height, width } = chart;
 
 	const isTop = eventPosition.y > height / 2;

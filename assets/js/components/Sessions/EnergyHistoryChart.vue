@@ -106,8 +106,8 @@ export default defineComponent({
 						const charged = session.chargedEnergy;
 						const self = (charged / 100) * session.solarPercentage;
 						const grid = charged - self;
-						result[index][self] = (result[index][self] || 0) + self;
-						result[index][grid] = (result[index][grid] || 0) + grid;
+						result[index]["self"] = (result[index]["self"] || 0) + self;
+						result[index]["grid"] = (result[index]["grid"] || 0) + grid;
 					} else {
 						const groupKey = session[this.groupBy];
 						groups.add(groupKey);
