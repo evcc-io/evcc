@@ -151,6 +151,7 @@ type Loadpoint struct {
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
+	prevStatus     api.ChargeStatus       // Previous charger status to detect changes
 	remoteDemand   loadpoint.RemoteDemand // External status demand
 	chargePower    float64                // Charging power
 	chargeCurrents []float64              // Phase currents
@@ -269,6 +270,7 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 		bus:        bus,      // event bus
 		mode:       api.ModeOff,
 		status:     api.StatusNone,
+		prevStatus: api.StatusNone,
 		minCurrent: 6,  // A
 		maxCurrent: 16, // A
 		Soc: loadpoint.SocConfig{
@@ -1055,25 +1057,18 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 	return res
 }
 
-// updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+// processChargerStatus updates charger status and detects car connected/disconnected events
+func (lp *Loadpoint) processChargerStatus() bool {
 	var welcomeCharge bool
 
-	status, err := lp.charger.Status()
-	if err != nil {
-		return false, fmt.Errorf("charger status: %w", err)
-	}
+	lp.log.DEBUG.Printf("charger status: %s", lp.status)
 
-	lp.log.DEBUG.Printf("charger status: %s", status)
-
-	if prevStatus := lp.GetStatus(); status != prevStatus {
-		lp.setStatus(status)
-
-		for _, ev := range statusEvents(prevStatus, status) {
+	if lp.status != lp.prevStatus {
+		for _, ev := range statusEvents(lp.prevStatus, lp.status) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
-			if prevStatus != api.StatusNone {
+			if lp.prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
 					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge)
@@ -1096,12 +1091,14 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 				}
 			}
 		}
+		//upadate stored previous status
+		lp.prevStatus = lp.status
 
 		// update whenever there is a state change
 		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 	}
 
-	return welcomeCharge, nil
+	return welcomeCharge
 }
 
 // effectiveCurrent returns the currently effective charging current
@@ -1475,8 +1472,18 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	return targetCurrent
 }
 
-// UpdateChargePowerAndCurrents updates charge meter power and currents for load management
-func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
+// UpdateCharger updates charger status and charge meter power and currents for load management
+func (lp *Loadpoint) UpdateChargerStatusAndPowerAndCurrents() float64 {
+
+	// update charger status
+	status, err := lp.charger.Status()
+	if err == nil {
+		lp.setStatus(status)
+	} else {
+		lp.setStatus(api.StatusNone) // reset status on error
+		lp.log.ERROR.Printf("charger status: %v", err)
+	}
+
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
 	if err == nil {
 		lp.Lock()
@@ -1804,10 +1811,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	lp.PublishEffectiveValues()
 
 	// read and publish status
-	welcomeCharge, err := lp.updateChargerStatus()
-	if err != nil {
-		lp.log.ERROR.Println(err)
-		return
+	welcomeCharge := lp.processChargerStatus()
+	if lp.status == api.StatusNone {
+		return // exit, status was not available in lp.UpdateChargerStatusAndPowerAndCurrents
 	}
 
 	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
@@ -1851,6 +1857,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
+
+	var err error
 
 	// execute loading strategy
 	switch {
