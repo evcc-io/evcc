@@ -70,8 +70,8 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 100040 # LPC mode
-          type: input
+          address: 10040 # LPC mode
+          type: holding
           encoding: uint16
     - name: HEAT
       type: int
@@ -80,7 +80,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-          type: input
+          type: holding
           encoding: uint16
     - name: WW
       type: int
@@ -89,7 +89,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-          type: input
+          type: holding
           encoding: uint16
   setmode:
     source: switch
@@ -104,8 +104,8 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 100040 # LPC mode
-              type: writesingle
+              address: 10040 # LPC mode
+              type: writeholding
               encoding: uint16
         {{ if ne $heatint 0 -}}
         - source: const
@@ -115,7 +115,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         {{- end }}
         {{ if ne $waterint 0 -}}
@@ -126,7 +126,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         {{- end }}
     - case: 2 # normal
@@ -139,8 +139,8 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 100040 # LPC mode
-              type: writesingle
+              address: 10040 # LPC mode
+              type: writeholding
               encoding: uint16
         {{ if ne $heatint 0 -}}
         - source: const
@@ -150,7 +150,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         {{- end }}
         {{ if ne $waterint 0 -}}
@@ -161,7 +161,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         {{- end }}
     - case: 3 # boost
@@ -174,8 +174,8 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 100040 # LPC mode
-              type: writesingle
+              address: 10040 # LPC mode
+              type: writeholding
               encoding: uint16
         {{ if ne $heatint 0 -}}
         - source: const
@@ -185,7 +185,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: {{ mulf .heatoffset 10.0 | int64 }}
@@ -194,8 +194,8 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10002 # Heiz. Offset [0.1 K]
-              type: writesingle
-              encoding: uint16
+              type: writeholding
+              encoding: int16
         {{- end }}
         {{ if ne $waterint 0 -}}
         - source: const
@@ -205,7 +205,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: {{ mulf .wwoffset 10.0 | int64 }}
@@ -214,8 +214,8 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10007 # WW Offset [0.1 K]
-              type: writesingle
-              encoding: uint16
+              type: writeholding
+              encoding: int16
         {{- end }}
   temp:
     source: modbus
@@ -223,7 +223,7 @@ render: |
     register:
       address: 10101 # 10101 = Temp. x10 RL-Ist
       type: input
-      encoding: int16
+      encoding: uint16
     scale: 0.1
   power:
     source: modbus
@@ -231,7 +231,7 @@ render: |
     register:
       address: 10301 # 10301 = kW x10 Power-In elektrisch
       type: input
-      encoding: int16
+      encoding: uint16
     scale: 0.1
   energy:
     source: modbus
@@ -239,5 +239,5 @@ render: |
     register:
       address: 10311 # 10311 = kWh x10 kumulierter Stromverbrauch
       type: input
-      decode: int32
+      decode: uint16
     scale: 0.1
