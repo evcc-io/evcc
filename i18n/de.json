@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
       "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Laden",
+      "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
       "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
@@ -873,10 +874,9 @@
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Gesamte CSV herunterladen",
     "date": "Anfang",
-    "downloadCsv": "Als CSV herunterladen",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "Alle Ladepunkte",

@@ -28,7 +28,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power (W)").fill("5000");
+    await meterModal.getByLabel("Power").fill("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
@@ -40,7 +40,7 @@ test.describe("pv meter", async () => {
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Power (W)").fill("6000");
+    await meterModal.getByLabel("Power").fill("6000");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
 

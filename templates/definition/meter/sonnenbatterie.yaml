@@ -38,9 +38,6 @@ params:
     default: self-consumption
     required: true
     advanced: true
-    help:
-      de: Standardmodus für die aktive Batteriesteuerung
-      en: Default mode for active battery control
     usages: ["battery"]
   - name: chargepower
     deprecated: true

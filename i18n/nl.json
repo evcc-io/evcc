@@ -862,10 +862,9 @@
       "solarpercentage": "Zonne-energie (%)",
       "vehicle": "Voertuig"
     },
-    "csvMonth": "Download CSV van {month}",
+    "csvPeriod": "Download CSV van {period}",
     "csvTotal": "Download totale CSV",
     "date": "Start",
-    "downloadCsv": "Download als CSV",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "alle oplaadpunten",

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -49,7 +50,14 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Helper:       request.NewHelper(util.NewLogger("ha-switch")),
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.CurrentPower, standbypower)
+	if switchEntity == "" {
+		return nil, errors.New("missing switch entity")
+	}
+	if powerEntity == "" {
+		return nil, errors.New("missing power entity")
+	}
+
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
 	c.Helper.Client.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": "Bearer " + token,
@@ -58,12 +66,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Base: c.Helper.Client.Transport,
 	}
 
-	var currentPower func() (float64, error)
-	if powerEntity != "" {
-		currentPower = c.currentPower
-	}
-
-	return decorateHomeAssistantSwitch(c, currentPower), nil
+	return decorateHomeAssistantSwitch(c, c.currentPower), nil
 }
 
 // Enabled implements the api.Charger interface

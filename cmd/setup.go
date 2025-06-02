@@ -1007,7 +1007,7 @@ CONTINUE:
 		}
 
 		if !isRoot && !instance.HasMeter() {
-			return fmt.Errorf("circuit %s has no meter and no loadpoint assigned", dev.Config().Name)
+			log.INFO.Printf("circuit %s has no meter and no loadpoint assigned", dev.Config().Name)
 		}
 	}
 
