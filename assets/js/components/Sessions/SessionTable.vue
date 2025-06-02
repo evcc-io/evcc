@@ -163,7 +163,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import breakpoint from "@/mixins/breakpoint.ts";
 import settings from "@/settings";
 import type { CURRENCY } from "@/types/evcc";
-import type { Session } from "./types";
+import type { Session, Column } from "./types";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -173,14 +173,6 @@ const COLUMNS_PER_BREAKPOINT = {
 	xl: 5,
 	xxl: 6,
 };
-
-interface Column {
-	name: string;
-	unit: string;
-	total: number | null;
-	value: (session: Session) => number | null;
-	format: (value: number) => string | undefined;
-}
 
 export default defineComponent({
 	name: "SessionTable",

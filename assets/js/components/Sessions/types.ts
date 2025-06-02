@@ -22,6 +22,14 @@ export interface Legend {
 	value: string | string[];
 }
 
+export interface Column {
+	name: string;
+	unit: string;
+	total: number | null;
+	value: (session: Session) => number | null;
+	format: (value: number) => string | undefined;
+}
+
 export enum TYPES {
 	SOLAR = "solar",
 	PRICE = "price",

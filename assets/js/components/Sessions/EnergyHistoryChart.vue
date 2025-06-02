@@ -17,6 +17,7 @@ import {
 	LinearScale,
 	Legend,
 	Tooltip,
+	type ChartData,
 	type TooltipModel,
 	type TooltipItem,
 } from "chart.js";
@@ -47,10 +48,10 @@ export default defineComponent({
 			return new Date(this.sessions[0].created);
 		},
 		month() {
-			return this.firstDay?.getMonth() + 1;
+			return (this.firstDay?.getMonth() || 0) + 1;
 		},
 		year() {
-			return this.firstDay?.getFullYear();
+			return this.firstDay?.getFullYear() || 0;
 		},
 		lastDay() {
 			if (this.sessions.length === 0) {
@@ -58,12 +59,12 @@ export default defineComponent({
 			}
 			return new Date(this.sessions[this.sessions.length - 1].created);
 		},
-		chartData() {
+		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update energy history data");
 			const result: Record<number, Record<string, number>> = {};
 			const groups: Set<string> = new Set();
 
-			if (this.sessions.length > 0) {
+			if (this.firstDay && this.lastDay) {
 				//const lastDay = new Date(this.year, this.month, 0);
 				//const daysInMonth = this.lastDay.getDate();
 				let xFrom, xTo;
@@ -129,13 +130,13 @@ export default defineComponent({
 					borderRadius: (context: Context) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
-						const currentValue = context.dataset.data[dataIndex];
+						const currentValue = context.dataset.data[dataIndex] as number;
 						const previousValuesExist = context.chart.data.datasets
 							.slice(datasetIndex + 1)
-							.some((dataset) => (dataset?.data[dataIndex] || 0) > threshold);
+							.some((dataset: any) => (dataset?.data[dataIndex] || 0) > threshold);
 						return currentValue > threshold && !previousValuesExist
-							? { topLeft: 10, topRight: 10 }
-							: { topLeft: 0, topRight: 0 };
+							? { topLeft: 10, topRight: 10, bottomLeft: 0, bottomRight: 0 }
+							: { topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0 };
 					},
 				};
 			});
@@ -147,7 +148,7 @@ export default defineComponent({
 		},
 		legends() {
 			return this.chartData.datasets.map((dataset) => ({
-				label: dataset.label,
+				label: dataset.label || "",
 				color: dataset.backgroundColor,
 				value: this.fmtWh(
 					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
@@ -174,31 +175,33 @@ export default defineComponent({
 						positioner: (context: TooltipModel<"bar">) => {
 							const { chart, tooltipPosition } = context;
 							const { tooltip } = chart;
-							const { width, height } = tooltip;
-							const { x, y } = tooltipPosition();
+							const { width, height } = tooltip || {};
+							const { x, y } = tooltipPosition(false);
 							const { innerWidth, innerHeight } = window;
 
 							return {
-								x: Math.min(x, innerWidth - width),
-								y: Math.min(y, innerHeight - height),
+								x: Math.min(x, innerWidth - (width || 0)),
+								y: Math.min(y, innerHeight - (height || 0)),
 							};
 						},
 						callbacks: {
-							title: (tooltipItem: TooltipItem<"bar">) => {
+							title: (tooltipItem: TooltipItem<"bar">[]) => {
 								const { label } = tooltipItem[0];
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {
-									const date = new Date(this.year, label - 1, 1);
-									return this.fmtMonth(date);
+									const date = new Date(this.year, Number(label) - 1, 1);
+									return this.fmtMonth(date, false);
 								} else {
-									const date = new Date(this.year, this.month - 1, label);
+									const date = new Date(this.year, this.month - 1, Number(label));
 									return this.fmtDayMonth(date);
 								}
 							},
 							label: (tooltipItem: TooltipItem<"bar">) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.dataset.data[tooltipItem.dataIndex] || 0;
+								const value =
+									(tooltipItem.dataset.data[tooltipItem.dataIndex] as number) ||
+									0;
 								return value
 									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
 									: null;
@@ -225,7 +228,7 @@ export default defineComponent({
 							callback(value: number) {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
-									: this.getLabelForValue(value);
+									: (this as any).getLabelForValue(value);
 							},
 						},
 					},
@@ -248,7 +251,7 @@ export default defineComponent({
 						min: 0,
 					},
 				},
-			};
+			} as any;
 		},
 	},
 });
