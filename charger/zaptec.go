@@ -213,11 +213,20 @@ func (c *Zaptec) Enable(enable bool) error {
 	if enable {
 		cmd = zaptec.CmdResumeCharging
 	}
+	currentPower, err := c.CurrentPower()
+	if err != nil {
+		return err
+	}
+
+	if enable && currentPower > 0.5 {
+		c.enabled = true
+		return nil
+	}
 
 	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
 
 	req, _ := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	_, err := c.DoBody(req)
+	_, err = c.DoBody(req)
 	if err == nil {
 		c.enabled = enable
 		c.statusG.Reset()
