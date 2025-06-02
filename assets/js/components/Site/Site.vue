@@ -186,7 +186,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			return { vehicles: this.auth.vehicles, ...this.collectProps(Navigation) };
+			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
 		},
 		showParkingLot() {
 			// work in progess
