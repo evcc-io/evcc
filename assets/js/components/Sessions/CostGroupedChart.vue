@@ -35,7 +35,10 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
-		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.LOADPOINT },
+		groupBy: {
+			type: String as PropType<Exclude<GROUPS, GROUPS.NONE>>,
+			default: GROUPS.LOADPOINT,
+		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
@@ -51,9 +54,10 @@ export default defineComponent({
 					aggregatedData[groupKey] = 0;
 				}
 				if (this.costType === TYPES.PRICE) {
-					aggregatedData[groupKey] += session.price;
+					aggregatedData[groupKey] += session.price || 0;
 				} else if (this.costType === TYPES.CO2) {
-					aggregatedData[groupKey] += session.co2PerKWh * session.chargedEnergy;
+					aggregatedData[groupKey] +=
+						(session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 				}
 			});
 
@@ -85,9 +89,9 @@ export default defineComponent({
 				locale: this.$i18n?.locale,
 				aspectRatio: 1,
 				borderRadius: 10,
-				color: colors.text,
+				color: colors.text || "",
 				borderWidth: 3,
-				borderColor: colors.background,
+				borderColor: colors.background || "",
 				cutout: "70%",
 				radius: "95%",
 				animation: { duration: 250 },
@@ -106,7 +110,7 @@ export default defineComponent({
 						},
 					},
 				},
-			};
+			} as any;
 		},
 	},
 	methods: {

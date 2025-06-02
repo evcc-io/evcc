@@ -19,6 +19,7 @@ import {
 	LineController,
 	LineElement,
 	Tooltip,
+	type ChartData,
 	type TooltipItem,
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
@@ -62,10 +63,10 @@ export default defineComponent({
 			return new Date(this.sessions[0].created);
 		},
 		month() {
-			return this.firstDay?.getMonth() + 1;
+			return (this.firstDay?.getMonth() || 0) + 1;
 		},
 		year() {
-			return this.firstDay?.getFullYear();
+			return this.firstDay?.getFullYear() || 0;
 		},
 		lastDay() {
 			if (this.sessions.length === 0) {
@@ -73,7 +74,7 @@ export default defineComponent({
 			}
 			return new Date(this.sessions[this.sessions.length - 1].created);
 		},
-		chartData() {
+		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update cost history data");
 			const result: Array<{
 				[key: string]: number;
@@ -82,6 +83,10 @@ export default defineComponent({
 				avgCost: number;
 			}> = [];
 			const groups: Set<string> = new Set();
+
+			if (!this.firstDay || !this.lastDay) {
+				return { labels: [], datasets: [] };
+			}
 
 			if (this.sessions.length > 0) {
 				//const lastDay = new Date(this.year, this.month, 0);
@@ -104,7 +109,7 @@ export default defineComponent({
 
 				// initialize result with empty arrays
 				for (let i = xFrom; i <= xTo; i++) {
-					result[i] = {};
+					result[i] = { totalCost: 0, totalKWh: 0, avgCost: 0 };
 				}
 
 				// Populate with actual data
@@ -125,8 +130,8 @@ export default defineComponent({
 
 					const value =
 						this.costType === TYPES.PRICE
-							? session.price
-							: session.co2PerKWh * session.chargedEnergy;
+							? session.price || 0
+							: (session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 
 					result[index][groupKey] = (result[index][groupKey] || 0) + value;
 
@@ -143,21 +148,23 @@ export default defineComponent({
 					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
 
 				return {
-					type: "bar",
+					type: "bar" as const,
 					backgroundColor,
 					label,
 					data: Object.values(result).map((index) => index[group] || 0),
 					borderRadius: (context: Context) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
-						const currentValue = context.dataset.data[dataIndex];
+						const currentValue = context.dataset.data[dataIndex] as number;
 						const previousValuesExist = context.chart.data.datasets
 							.filter((dataset) => dataset.type === "bar")
 							.slice(datasetIndex + 1)
-							.some((dataset) => (dataset?.data[dataIndex] || 0) > threshold);
-						return currentValue > threshold && !previousValuesExist
-							? { topLeft: 10, topRight: 10 }
-							: { topLeft: 0, topRight: 0 };
+							.some((dataset: any) => (dataset?.data[dataIndex] || 0) > threshold);
+						return (
+							currentValue > threshold && !previousValuesExist
+								? { topLeft: 10, topRight: 10 }
+								: { topLeft: 0, topRight: 0 }
+						) as any;
 					},
 				};
 			});
@@ -165,7 +172,7 @@ export default defineComponent({
 			// add average price line
 			const costColor = this.costType === TYPES.PRICE ? colors.pricePerKWh : colors.co2PerKWh;
 			datasets.push({
-				type: "line",
+				type: "line" as const,
 				label:
 					this.costType === TYPES.PRICE
 						? this.$t("sessions.avgPrice")
@@ -179,7 +186,7 @@ export default defineComponent({
 				backgroundColor: costColor,
 				borderWidth: 2,
 				spanGaps: true,
-			});
+			} as any);
 
 			return {
 				labels: Object.keys(result),
@@ -191,7 +198,7 @@ export default defineComponent({
 				let value = null;
 
 				// line chart handling
-				if (dataset.type === "line") {
+				if ((dataset as any).type === "line") {
 					const items = dataset.data.filter((v) => v !== null);
 					const min = Math.min(...items);
 					const max = Math.max(...items);
@@ -211,7 +218,7 @@ export default defineComponent({
 							: this.fmtGrams(total);
 				}
 				return {
-					label: dataset.label,
+					label: dataset.label || "",
 					color: dataset.backgroundColor,
 					value,
 				};
@@ -224,16 +231,16 @@ export default defineComponent({
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
-				color: colors.text,
+				color: colors.text || "",
 				borderSkipped: false,
 				maxBarThickness: 40,
-				animation: false,
+				animation: false as const,
 				plugins: {
 					...commonOptions.plugins,
 					tooltip: {
 						...commonOptions.plugins.tooltip,
 						axis: "x",
-						positioner: (context) => {
+						positioner: (context: any) => {
 							const { chart, tooltipPosition } = context;
 							const { tooltip } = chart;
 							const { width, height } = tooltip;
@@ -246,15 +253,15 @@ export default defineComponent({
 							};
 						},
 						callbacks: {
-							title: (tooltipItem: TooltipItem<"bar">) => {
+							title: (tooltipItem: TooltipItem<"bar">[]) => {
 								const { label } = tooltipItem[0];
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {
-									const date = new Date(this.year, label - 1, 1);
-									return this.fmtMonth(date);
+									const date = new Date(this.year, Number(label) - 1, 1);
+									return this.fmtMonth(date, false);
 								} else {
-									const date = new Date(this.year, this.month - 1, label);
+									const date = new Date(this.year, this.month - 1, Number(label));
 									return this.fmtDayMonth(date);
 								}
 							},
@@ -262,12 +269,12 @@ export default defineComponent({
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.dataset.data[tooltipItem.dataIndex];
 
+								if (typeof value !== "number") {
+									return undefined;
+								}
+
 								// line datasets have null values
 								if (tooltipItem.dataset.type === "line") {
-									if (value === null) {
-										return null;
-									}
-
 									const valueFmt =
 										this.costType === TYPES.PRICE
 											? this.fmtPricePerKWh(value, this.currency, false)
@@ -281,7 +288,7 @@ export default defineComponent({
 												? this.fmtMoney(value, this.currency, true, true)
 												: this.fmtGrams(value)
 										}`
-									: null;
+									: undefined;
 							},
 							labelColor: tooltipLabelColor(false),
 						},
@@ -297,10 +304,10 @@ export default defineComponent({
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback(value: number) {
+							callback(value: number): string {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
-									: this.getLabelForValue(value);
+									: (this as any).getLabelForValue(value);
 							},
 						},
 					},
@@ -350,7 +357,7 @@ export default defineComponent({
 						},
 					},
 				},
-			};
+			} as any;
 		},
 	},
 });
