@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Nurodykite įkrovimo srovės ribas.",
       "chargerTypeLabel": "Įkroviklio tipas",
       "chargingTitle": "Įkrovimas",
+      "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitLabel": "Grandinė",
       "circuitUnassigned": "nepriskirtas",
       "defaultModeHelp": "Įkrovimo režimas prijungus automobilį.",
