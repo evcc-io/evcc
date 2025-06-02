@@ -52,8 +52,8 @@ params:
     example: 2.0
 render: |
   type: sgready
-  {{- $heatint := .heatoffset | int64 -}}
-  {{- $waterint := .wwoffset | int64 -}}
+  {{ $heatint := .heatoffset | int64 -}}
+  {{ $waterint := .wwoffset | int64 -}}
   getmode:
     source: go
     script: |
