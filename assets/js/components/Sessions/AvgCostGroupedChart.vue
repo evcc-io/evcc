@@ -9,33 +9,38 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
-import { TYPES, GROUPS } from "./types";
 import LegendList from "./LegendList.vue";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY } from "@/types/evcc";
+import { TYPES, GROUPS, type Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "AvgCostGroupedChart",
 	components: { PolarArea, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		currency: { type: String, default: "EUR" },
-		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		currency: { type: String as PropType<CURRENCY>, default: "EUR" },
+		groupBy: {
+			type: String as PropType<Exclude<GROUPS, GROUPS.NONE>>,
+			default: GROUPS.LOADPOINT,
+		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		suggestedMax: { type: Number, default: 0 },
-		costType: { type: String, default: TYPES.PRICE },
+		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
 	computed: {
 		chartData() {
 			console.log(`update ${this.costType} grouped data`);
-			const aggregatedData = {};
+			const aggregatedData: Record<string, { energy: number; cost: number }> = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
@@ -45,10 +50,10 @@ export default {
 				const chargedEnergy = session.chargedEnergy;
 				if (this.costType === TYPES.CO2) {
 					aggregatedData[groupKey].energy += chargedEnergy;
-					aggregatedData[groupKey].cost += session.co2PerKWh * chargedEnergy;
+					aggregatedData[groupKey].cost += (session.co2PerKWh || 0) * chargedEnergy;
 				} else if (this.costType === TYPES.PRICE) {
 					aggregatedData[groupKey].energy += chargedEnergy;
-					aggregatedData[groupKey].cost += session.price;
+					aggregatedData[groupKey].cost += session.price || 0;
 				}
 			});
 
@@ -85,7 +90,7 @@ export default {
 				aspectRatio: 1,
 				borderRadius: 8,
 				borderWidth: 3,
-				color: colors.text,
+				color: colors.text || "",
 				spacing: 0,
 				radius: "100%",
 				plugins: {
@@ -96,19 +101,21 @@ export default {
 						position: "topBottomCenter",
 						callbacks: {
 							title: () => null,
-							label: (tooltipItem) => {
-								const { label, raw = 0 } = tooltipItem;
+							label: (tooltipItem: TooltipItem<"polarArea">) => {
+								const { label, dataset, dataIndex } = tooltipItem;
+								const d = dataset.data[dataIndex];
+
 								return (
 									label +
 									": " +
 									(this.costType === TYPES.CO2
-										? this.fmtCo2Long(raw)
-										: this.fmtPricePerKWh(raw, this.currency))
+										? this.fmtCo2Long(d)
+										: this.fmtPricePerKWh(d, this.currency))
 								);
 							},
 							labelColor: tooltipLabelColor(true),
 						},
-					},
+					} as any,
 				},
 				scales: {
 					r: {
@@ -116,25 +123,25 @@ export default {
 						suggestedMax: this.suggestedMax,
 						beginAtZero: false,
 						ticks: {
-							color: colors.muted,
-							backdropColor: colors.background,
+							color: colors.muted || "",
+							backdropColor: colors.background || "",
 							font: { size: 10 },
 							callback: this.formatValue,
 							maxTicksLimit: 6,
 						},
 						angleLines: { display: false },
-						grid: { color: colors.border },
-					},
+						grid: { color: colors.border || "" },
+					} as any,
 				},
 			};
 		},
 	},
 	methods: {
-		formatValue(value) {
+		formatValue(value: number) {
 			return this.costType === TYPES.CO2
 				? this.fmtCo2Medium(value)
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 	},
-};
+});
 </script>

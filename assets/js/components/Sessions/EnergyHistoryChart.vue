@@ -7,25 +7,37 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { Bar } from "vue-chartjs";
-import { BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
+import {
+	BarController,
+	BarElement,
+	CategoryScale,
+	LinearScale,
+	Legend,
+	Tooltip,
+	type ChartData,
+	type TooltipModel,
+	type TooltipItem,
+} from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
-import { GROUPS, PERIODS } from "./types";
+import { GROUPS, PERIODS, type Session } from "./types";
+import type { Context } from "chartjs-plugin-datalabels";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "EnergyHistoryChart",
 	components: { Bar, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.NONE },
-		period: { type: String, default: PERIODS.TOTAL },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
+		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	computed: {
@@ -36,10 +48,10 @@ export default {
 			return new Date(this.sessions[0].created);
 		},
 		month() {
-			return this.firstDay?.getMonth() + 1;
+			return (this.firstDay?.getMonth() || 0) + 1;
 		},
 		year() {
-			return this.firstDay?.getFullYear();
+			return this.firstDay?.getFullYear() || 0;
 		},
 		lastDay() {
 			if (this.sessions.length === 0) {
@@ -47,12 +59,12 @@ export default {
 			}
 			return new Date(this.sessions[this.sessions.length - 1].created);
 		},
-		chartData() {
+		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update energy history data");
-			const result = {};
-			const groups = new Set();
+			const result: Record<number, Record<string, number>> = {};
+			const groups: Set<string> = new Set();
 
-			if (this.sessions.length > 0) {
+			if (this.firstDay && this.lastDay) {
 				//const lastDay = new Date(this.year, this.month, 0);
 				//const daysInMonth = this.lastDay.getDate();
 				let xFrom, xTo;
@@ -94,8 +106,8 @@ export default {
 						const charged = session.chargedEnergy;
 						const self = (charged / 100) * session.solarPercentage;
 						const grid = charged - self;
-						result[index].self = (result[index].self || 0) + self;
-						result[index].grid = (result[index].grid || 0) + grid;
+						result[index]["self"] = (result[index]["self"] || 0) + self;
+						result[index]["grid"] = (result[index]["grid"] || 0) + grid;
 					} else {
 						const groupKey = session[this.groupBy];
 						groups.add(groupKey);
@@ -115,16 +127,16 @@ export default {
 					backgroundColor,
 					label,
 					data: Object.values(result).map((day) => day[group] || 0),
-					borderRadius: (context) => {
+					borderRadius: (context: Context) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
-						const currentValue = context.dataset.data[dataIndex];
+						const currentValue = context.dataset.data[dataIndex] as number;
 						const previousValuesExist = context.chart.data.datasets
 							.slice(datasetIndex + 1)
-							.some((dataset) => (dataset?.data[dataIndex] || 0) > threshold);
+							.some((dataset: any) => (dataset?.data[dataIndex] || 0) > threshold);
 						return currentValue > threshold && !previousValuesExist
-							? { topLeft: 10, topRight: 10 }
-							: { topLeft: 0, topRight: 0 };
+							? { topLeft: 10, topRight: 10, bottomLeft: 0, bottomRight: 0 }
+							: { topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0 };
 					},
 				};
 			});
@@ -136,7 +148,7 @@ export default {
 		},
 		legends() {
 			return this.chartData.datasets.map((dataset) => ({
-				label: dataset.label,
+				label: dataset.label || "",
 				color: dataset.backgroundColor,
 				value: this.fmtWh(
 					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
@@ -160,34 +172,36 @@ export default {
 					tooltip: {
 						...commonOptions.plugins.tooltip,
 						axis: "x",
-						positioner: (context) => {
+						positioner: (context: TooltipModel<"bar">) => {
 							const { chart, tooltipPosition } = context;
 							const { tooltip } = chart;
-							const { width, height } = tooltip;
-							const { x, y } = tooltipPosition();
+							const { width, height } = tooltip || {};
+							const { x, y } = tooltipPosition(false);
 							const { innerWidth, innerHeight } = window;
 
 							return {
-								x: Math.min(x, innerWidth - width),
-								y: Math.min(y, innerHeight - height),
+								x: Math.min(x, innerWidth - (width || 0)),
+								y: Math.min(y, innerHeight - (height || 0)),
 							};
 						},
 						callbacks: {
-							title: (tooltipItem) => {
+							title: (tooltipItem: TooltipItem<"bar">[]) => {
 								const { label } = tooltipItem[0];
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {
-									const date = new Date(this.year, label - 1, 1);
-									return this.fmtMonth(date);
+									const date = new Date(this.year, Number(label) - 1, 1);
+									return this.fmtMonth(date, false);
 								} else {
-									const date = new Date(this.year, this.month - 1, label);
+									const date = new Date(this.year, this.month - 1, Number(label));
 									return this.fmtDayMonth(date);
 								}
 							},
-							label: (tooltipItem) => {
+							label: (tooltipItem: TooltipItem<"bar">) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.raw || 0;
+								const value =
+									(tooltipItem.dataset.data[tooltipItem.dataIndex] as number) ||
+									0;
 								return value
 									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
 									: null;
@@ -199,7 +213,7 @@ export default {
 								};
 							},
 						},
-						itemSort(a, b) {
+						itemSort(a: TooltipItem<"bar">, b: TooltipItem<"bar">) {
 							return b.datasetIndex - a.datasetIndex;
 						},
 					},
@@ -211,10 +225,10 @@ export default {
 						grid: { display: false },
 						ticks: {
 							color: colors.muted,
-							callback(value) {
+							callback(value: number) {
 								return vThis.period === PERIODS.YEAR
 									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
-									: this.getLabelForValue(value);
+									: (this as any).getLabelForValue(value);
 							},
 						},
 					},
@@ -228,7 +242,8 @@ export default {
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
+							callback: (value: number) =>
+								this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},
@@ -236,8 +251,8 @@ export default {
 						min: 0,
 					},
 				},
-			};
+			} as any;
 		},
 	},
-};
+});
 </script>

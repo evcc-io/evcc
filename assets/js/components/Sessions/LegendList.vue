@@ -28,21 +28,24 @@
 	</ul>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
+import type { Legend } from "./types";
+
+export default defineComponent({
 	name: "LegendList",
 	props: {
-		legends: Array,
+		legends: Array as PropType<Legend[]>,
 		grid: Boolean,
 		smallEqualWidths: Boolean,
 	},
 	methods: {
-		valueList(value) {
+		valueList(value: Legend["value"]) {
 			if (!value) return [];
 			return Array.isArray(value) ? value : [value];
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

@@ -206,6 +206,7 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS } from "../components/Sessions/types";
+
 export default {
 	name: "Sessions",
 	components: {
