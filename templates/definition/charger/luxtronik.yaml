@@ -35,6 +35,7 @@ params:
     choice: ["tcpip"]
   - name: wwoffset
     type: float
+    unit: K
     help:
       de: Anhebung der Warmwassertemperatur. Erhöht evtl. den Verschleiss des Kompressors.
       en: Temperature boost offset for hot water. Possibly increases wear on compressor.
@@ -43,6 +44,7 @@ params:
     advanced: true
   - name: heatoffset
     type: float
+    unit: K
     help:
       de: Anhebung der Heizwassertemperatur.
       en: Temperature boost offset for heating.
