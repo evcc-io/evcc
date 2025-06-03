@@ -78,7 +78,7 @@ import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type { Battery, CURRENCY, Forecast, Sponsor } from "@/types/evcc";
-import type { Grid } from "./types";
+import type { Auth, Grid } from "./types";
 
 export default defineComponent({
 	name: "Site",
@@ -118,7 +118,7 @@ export default defineComponent({
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: Object,
+		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
 
 		currency: String as PropType<CURRENCY>,
 		statistics: Object,
@@ -176,8 +176,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation) };
+			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
 		},
 		showParkingLot() {
 			// work in progess
