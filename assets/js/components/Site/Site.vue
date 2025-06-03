@@ -223,9 +223,6 @@ export default {
 	flex-grow: 1;
 	z-index: 1;
 }
-.fatal {
-}
-
 .configure-button:not(:active):not(:hover),
 .welcome-icons {
 	animation: colorTransition 10s infinite alternate;
