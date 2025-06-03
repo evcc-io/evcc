@@ -9,30 +9,38 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { Doughnut } from "vue-chartjs";
-import { DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
+import {
+	DoughnutController,
+	ArcElement,
+	LinearScale,
+	Legend,
+	Tooltip,
+	type TooltipItem,
+} from "chart.js";
 import LegendList from "./LegendList.vue";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
-import { GROUPS } from "./types";
+import { GROUPS, type Session } from "./types";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "EnergyGroupedChart",
 	components: { Doughnut, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.NONE },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
 	},
 	computed: {
 		chartData() {
 			console.log("update energy aggregate data");
-			const aggregatedData = {};
+			const aggregatedData: { [key: string]: number } = {};
 
 			if (this.groupBy === GROUPS.NONE) {
 				const total = this.sessions.reduce((acc, s) => acc + s.chargedEnergy, 0);
@@ -40,11 +48,11 @@ export default {
 					(acc, s) => acc + (s.chargedEnergy / 100) * s.solarPercentage,
 					0
 				);
-				aggregatedData.self = self;
-				aggregatedData.grid = total - self;
+				aggregatedData["self"] = self;
+				aggregatedData["grid"] = total - self;
 			} else {
 				this.sessions.forEach((session) => {
-					const groupKey = session[this.groupBy];
+					const groupKey = session[this.groupBy as "loadpoint" | "vehicle"];
 					if (!aggregatedData[groupKey]) {
 						aggregatedData[groupKey] = 0;
 					}
@@ -75,8 +83,8 @@ export default {
 			// sync energy units for label grid view
 			const unit =
 				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
-			const fmtShare = (value) => this.fmtPercentage((100 / total) * value, 1);
-			const fmtValue = (value) => this.fmtWh(value * 1e3, unit);
+			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
+			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit);
 			return this.chartData.labels.map((label, index) => ({
 				label: label,
 				color: this.chartData.datasets[0].backgroundColor[index],
@@ -105,18 +113,19 @@ export default {
 						axis: "r",
 						position: "center",
 						callbacks: {
-							label: (tooltipItem) => this.formatValue(tooltipItem.raw || 0),
+							label: (tooltipItem: TooltipItem<"doughnut">) =>
+								this.formatValue(tooltipItem.raw as number),
 							labelColor: tooltipLabelColor(false),
 						},
 					},
 				},
-			};
+			} as any;
 		},
 	},
 	methods: {
-		formatValue(value) {
+		formatValue(value: number) {
 			return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 		},
 	},
-};
+});
 </script>
