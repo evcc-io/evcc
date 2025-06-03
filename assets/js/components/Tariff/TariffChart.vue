@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/arrowright";
 import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
@@ -62,7 +62,7 @@ import type { Slot } from "@/types/evcc";
 
 const BAR_WIDTH = 20;
 
-export default {
+export default defineComponent({
 	name: "TariffChart",
 	components: {
 		PlanEndIcon,
@@ -169,7 +169,7 @@ export default {
 			return is12hFormat() ? hour % 12 : hour;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
