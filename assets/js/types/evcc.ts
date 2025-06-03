@@ -39,6 +39,10 @@ export interface LoadpointCompact {
 	chargePower: number;
 	connected: boolean;
 	index: number;
+	vehicleName: string;
+	chargerIcon?: string;
+	vehicleSoc: number;
+	chargerFeatureHeating: boolean;
 }
 
 export enum CURRENCY {
