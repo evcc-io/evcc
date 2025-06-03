@@ -52,8 +52,8 @@ params:
     example: 2.0
 render: |
   type: sgready
-  {{ $heatint := .heatoffset | int64 -}}
-  {{ $waterint := .wwoffset | int64 -}}
+  {{- $heatint := mulf .heatoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
+  {{- $waterint := mulf .wwoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
   getmode:
     source: go
     script: |
@@ -107,7 +107,7 @@ render: |
               address: 10040 # LPC mode
               type: writeholding
               encoding: uint16
-        {{ if ne $heatint 0 -}}
+        {{ if gt $heatint 0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -118,7 +118,7 @@ render: |
               type: writeholding
               encoding: uint16
         {{- end }}
-        {{ if ne $waterint 0 -}}
+        {{ if gt $waterint 0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -142,7 +142,7 @@ render: |
               address: 10040 # LPC mode
               type: writeholding
               encoding: uint16
-        {{ if ne $heatint 0 -}}
+        {{ if gt $heatint 0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -153,7 +153,7 @@ render: |
               type: writeholding
               encoding: uint16
         {{- end }}
-        {{ if ne $waterint 0 -}}
+        {{ if gt $waterint 0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -177,7 +177,7 @@ render: |
               address: 10040 # LPC mode
               type: writeholding
               encoding: uint16
-        {{ if ne $heatint 0 -}}
+        {{ if gt $heatint 0 -}}
         - source: const
           value: 2 # 2 = Heiz.Mode Offset
           set:
@@ -188,7 +188,7 @@ render: |
               type: writeholding
               encoding: uint16
         - source: const
-          value: {{ mulf .heatoffset 10.0 | int64 }}
+          value: {{ $heatint }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -197,7 +197,7 @@ render: |
               type: writeholding
               encoding: int16
         {{- end }}
-        {{ if ne $waterint 0 -}}
+        {{ if gt $waterint 0 -}}
         - source: const
           value: 2 # 2 = WW Mode Offset
           set:
@@ -208,7 +208,7 @@ render: |
               type: writeholding
               encoding: uint16
         - source: const
-          value: {{ mulf .wwoffset 10.0 | int64 }}
+          value: {{ $waterint }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -221,7 +221,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10101 # 10101 = Temp. x10 RL-Ist
+      address: {{ if gt $waterint 0 -}} 10120 {{ else }} 10101 {{- end }} # 10101 = Temp. x10 RL-Ist, 10120 = Temp x10 WW-Ist
       type: input
       encoding: uint16
     scale: 0.1
