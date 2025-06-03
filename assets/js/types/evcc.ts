@@ -11,6 +11,10 @@ declare global {
 	}
 }
 
+export interface Auth {
+	vehicles: Record<string, { authenticated: boolean; uri: string }>;
+}
+
 export interface FatalError {
 	error: any;
 	class?: any;

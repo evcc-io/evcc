@@ -77,8 +77,8 @@ import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, CURRENCY, Forecast, Sponsor } from "@/types/evcc";
-import type { Auth, Grid } from "./types";
+import type { Auth, Battery, CURRENCY, Forecast, Sponsor } from "@/types/evcc";
+import type { Grid } from "./types";
 
 export default defineComponent({
 	name: "Site",
