@@ -66,7 +66,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
@@ -76,8 +76,11 @@ import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
+import { defineComponent, type PropType } from "vue";
+import type { Battery, CURRENCY, Forecast, Sponsor } from "@/types/evcc";
+import type { Grid } from "./types";
 
-export default {
+export default defineComponent({
 	name: "Site",
 	components: {
 		Loadpoints,
@@ -89,7 +92,7 @@ export default {
 	},
 	mixins: [formatter, collector],
 	props: {
-		loadpoints: Array,
+		loadpoints: { type: Array, default: () => [] },
 		selectedLoadpointIndex: Number,
 
 		notifications: Array,
@@ -97,17 +100,17 @@ export default {
 
 		// details
 		gridConfigured: Boolean,
-		grid: Object,
+		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
-		pv: Array,
+		pv: { type: Array, default: () => [] },
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: Array,
+		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -117,7 +120,7 @@ export default {
 
 		auth: Object,
 
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -132,10 +135,10 @@ export default {
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
-		sponsor: { type: Object, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object, // as PropType<Forecast>,
+		forecast: Object as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {
@@ -205,14 +208,14 @@ export default {
 		},
 	},
 	methods: {
-		selectedLoadpointChanged(index) {
+		selectedLoadpointChanged(index: number) {
 			this.$router.push({ query: { lp: index + 1 } });
 		},
-		vehicleTitle(vehicleName) {
+		vehicleTitle(vehicleName: string) {
 			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .site {
