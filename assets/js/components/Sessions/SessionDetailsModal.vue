@@ -72,9 +72,9 @@
 										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
+										{{ fmtFullDateTime(session.created, false) }}
 										<br />
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
+										{{ fmtFullDateTime(session.finished, false) }}
 									</td>
 								</tr>
 								<tr>
@@ -112,7 +112,7 @@
 									<td>
 										{{ fmtMoney(session.price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}<br />
-										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+										{{ fmtPricePerKWh(session.pricePerKWh || 0, currency) }}
 									</td>
 								</tr>
 								<tr v-if="session.co2PerKWh != null">
@@ -194,7 +194,7 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "@/mixins/formatter";
@@ -202,16 +202,19 @@ import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit, distanceValue } from "@/units";
 import api from "@/api";
+import { defineComponent, type PropType } from "vue";
+import type { Session } from "./types";
+import type { CURRENCY, LoadpointCompact, SelectOption, Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "SessionDetailsModal",
 	components: { VehicleOptions: Options, CustomSelect },
 	mixins: [formatter],
 	props: {
-		session: Object,
-		currency: String,
-		vehicles: Array,
-		loadpoints: Array,
+		session: { type: Object as PropType<Session>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
+		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -231,37 +234,39 @@ export default {
 				title: v.title,
 			}));
 		},
-		loadpointOptions() {
+		loadpointOptions(): SelectOption<string>[] {
 			return this.loadpoints.map((loadpoint) => ({
-				value: loadpoint,
-				name: loadpoint,
+				value: loadpoint.title,
+				name: loadpoint.title,
 			}));
 		},
 	},
 	methods: {
 		openSessionDetailsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("sessionDetailsModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openRemoveConfirmationModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("deleteSessionConfirmationModal")
+				document.getElementById("deleteSessionConfirmationModal") as HTMLElement
 			);
 			modal.show();
 		},
-		formatKm(value) {
+		formatKm(value: number) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
-		async changeVehicle(title) {
+		async changeVehicle(title: string) {
 			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
 			await this.updateSession({ vehicle: null });
 		},
-		async changeLoadpoint(title) {
+		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
 		},
-		async updateSession(data) {
+		async updateSession(data: Partial<Session> | { vehicle: null }) {
 			try {
 				await api.put("session/" + this.session.id, data);
 				this.$emit("session-changed");
@@ -278,7 +283,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

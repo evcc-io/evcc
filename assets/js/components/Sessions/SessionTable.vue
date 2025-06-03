@@ -121,7 +121,7 @@
 						scope="col"
 						class="align-top text-end"
 					>
-						{{ column.format(column.total) }}
+						{{ column.format(column.total || 0) }}
 					</th>
 				</tr>
 			</tfoot>
@@ -148,7 +148,7 @@
 					</td>
 					<td v-for="column in columnsPerBreakpoint" :key="column.name" class="text-end">
 						<span v-if="column.value(session) === null" class="text-gray"> - </span>
-						<span v-else>{{ column.format(column.value(session)) }}</span>
+						<span v-else>{{ column.format(column.value(session) || 0) }}</span>
 					</td>
 				</tr>
 			</tbody>
@@ -156,11 +156,14 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import breakpoint from "@/mixins/breakpoint";
+import breakpoint from "@/mixins/breakpoint.ts";
 import settings from "@/settings";
+import type { CURRENCY } from "@/types/evcc";
+import type { Session, Column } from "./types";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -171,15 +174,15 @@ const COLUMNS_PER_BREAKPOINT = {
 	xxl: 6,
 };
 
-export default {
+export default defineComponent({
 	name: "SessionTable",
 	components: { CustomSelect },
 	mixins: [formatter, breakpoint],
 	props: {
-		sessions: { type: Array, default: () => [] },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		loadpointFilter: { type: String, default: "" },
 		vehicleFilter: { type: String, default: "" },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 	},
 	emits: ["show-session"],
 	data() {
@@ -192,13 +195,13 @@ export default {
 			return this.sessions
 				.filter(this.filterByLoadpoint)
 				.filter(this.filterByVehicle)
-				.sort((a, b) => new Date(b.created) - new Date(a.created));
+				.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 		},
 		maxColumns() {
 			return COLUMNS_PER_BREAKPOINT[this.breakpoint] || 1;
 		},
 		columns() {
-			const columns = [
+			const columns: Column[] = [
 				{
 					name: "energy",
 					unit: "kWh",
@@ -231,7 +234,7 @@ export default {
 					name: "co2",
 					unit: "g/kWh",
 					total: this.co2PerKWh,
-					value: (session) => session.co2PerKWh,
+					value: (session) => session.co2PerKWh || null,
 					format: (value) => this.fmtNumber(value, 0),
 				},
 				{
@@ -266,15 +269,17 @@ export default {
 		},
 		sortedColumns() {
 			const columns = [...this.columns];
-			const sorted = [];
+			const sorted = [] as Column[];
 			for (const name of this.selectedColumns) {
 				if (!name && columns.length) {
-					sorted.push(columns.shift());
+					sorted.push(columns.shift() as Column);
 				} else if (columns.some((c) => c.name === name)) {
 					const column = columns.find((c) => c.name === name);
-					sorted.push(column);
-					const index = columns.indexOf(column);
-					columns.splice(index, 1);
+					if (column) {
+						sorted.push(column);
+						const index = columns.indexOf(column);
+						columns.splice(index, 1);
+					}
 				}
 			}
 			return sorted.concat(columns);
@@ -287,7 +292,7 @@ export default {
 				return {
 					name: this.$t(`sessions.${column.name}`),
 					value: column.name,
-					disabled: this.columnsPerBreakpoint.find((c) => c.name === column.name),
+					disabled: this.columnsPerBreakpoint.some((c) => c.name === column.name),
 				};
 			});
 		},
@@ -296,7 +301,7 @@ export default {
 				{
 					name: this.$t("sessions.filter.allVehicles"),
 					value: "",
-					count: this.filterCountForVehicle(),
+					count: this.filterCountForVehicle(""),
 				},
 			];
 			this.vehicles.forEach((name) => {
@@ -310,7 +315,7 @@ export default {
 				{
 					name: this.$t("sessions.filter.allLoadpoints"),
 					value: "",
-					count: this.filterCountForLoadpoint(),
+					count: this.filterCountForLoadpoint(""),
 				},
 			];
 			this.loadpoints.forEach((name) => {
@@ -326,7 +331,7 @@ export default {
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
 		},
 		price() {
-			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
+			return this.filteredSessions.reduce((total, s) => total + (s.price || 0), 0);
 		},
 		avgPower() {
 			const { energy, hours } = this.filteredSessions
@@ -349,7 +354,7 @@ export default {
 				.filter((s) => s.price !== null)
 				.reduce(
 					(total, s) => ({
-						price: total.price + s.price,
+						price: total.price + (s.price || 0),
 						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
 					}),
 					{ price: 0, chargedEnergy: 0 }
@@ -361,7 +366,7 @@ export default {
 				.filter((s) => s.co2PerKWh !== null)
 				.reduce(
 					(total, s) => ({
-						emittedCo2: total.emittedCo2 + s.chargedEnergy * s.co2PerKWh,
+						emittedCo2: total.emittedCo2 + s.chargedEnergy * (s.co2PerKWh || 0),
 						chargedEnergy: total.chargedEnergy + s.chargedEnergy,
 					}),
 					{ emittedCo2: 0, chargedEnergy: 0 }
@@ -393,42 +398,42 @@ export default {
 		},
 	},
 	methods: {
-		nsToHours(ns) {
+		nsToHours(ns: number) {
 			return ns / 1e9 / 3600;
 		},
-		filterByLoadpoint(session) {
+		filterByLoadpoint(session: Session) {
 			return !this.loadpointFilter || session.loadpoint === this.loadpointFilter;
 		},
-		filterByVehicle(session) {
+		filterByVehicle(session: Session) {
 			return !this.vehicleFilter || session.vehicle === this.vehicleFilter;
 		},
-		filterCountForVehicle(vehicle) {
+		filterCountForVehicle(vehicle: string) {
 			return this.sessions
 				.filter(this.filterByLoadpoint)
 				.filter((s) => !vehicle || s.vehicle === vehicle).length;
 		},
-		filterCountForLoadpoint(loadpoint) {
+		filterCountForLoadpoint(loadpoint: string) {
 			return this.sessions
 				.filter(this.filterByVehicle)
 				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
 		},
-		selectColumnPosition(index, value) {
+		selectColumnPosition(index: number, value: Column) {
 			this.selectedColumns[index] = value;
 			settings.sessionColumns = [...this.selectedColumns];
 		},
-		changeLoadpointFilter(event) {
-			const loadpoint = event.target.value || undefined;
+		changeLoadpointFilter(event: Event) {
+			const loadpoint = (event.target as HTMLSelectElement).value || undefined;
 			this.$router.push({ query: { ...this.$route.query, loadpoint } });
 		},
-		changeVehicleFilter(event) {
-			const vehicle = event.target.value || undefined;
+		changeVehicleFilter(event: Event) {
+			const vehicle = (event.target as HTMLSelectElement).value || undefined;
 			this.$router.push({ query: { ...this.$route.query, vehicle } });
 		},
-		showDetails(sessionId) {
+		showDetails(sessionId: number) {
 			this.$emit("show-session", sessionId);
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .table {
