@@ -497,7 +497,7 @@ export default defineComponent({
 			return this.$t("main.vehicleStatus.welcome");
 		},
 		chargerStatus() {
-			const t = (key: string, data?: Object) => {
+			const t = (key: string, data: Record<string, unknown> = {}) => {
 				if (this.heating) {
 					// check for special heating status translation
 					const name = `main.heatingStatus.${key}`;

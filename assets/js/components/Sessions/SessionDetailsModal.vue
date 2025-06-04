@@ -51,7 +51,7 @@
 										<VehicleOptions
 											:id="session.vehicle"
 											class="options"
-											:vehicles="vehicleOptions"
+											:vehicleOptions="vehicleOptions"
 											connected
 											:selected="session.vehicle"
 											@change-vehicle="changeVehicle"
@@ -228,10 +228,10 @@ export default defineComponent({
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions() {
+		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
 				name: v.title,
-				title: v.title,
+				value: v.title,
 			}));
 		},
 		loadpointOptions(): SelectOption<string>[] {

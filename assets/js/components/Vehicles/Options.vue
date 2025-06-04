@@ -7,12 +7,12 @@
 	>
 		<select :id="dropdownId" :value="selected" class="custom-select" @change="change">
 			<option
-				v-for="{ name, title } in vehicles"
+				v-for="{ name, value } in vehicleOptions"
 				:key="name"
 				:value="name"
 				:selected="name === selected"
 			>
-				{{ title }}
+				{{ value }}
 			</option>
 			<hr />
 			<option value="" :selected="!selected">
@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import type { Vehicle } from "@/types/evcc";
+import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
@@ -32,7 +32,7 @@ export default defineComponent({
 	props: {
 		connected: Boolean,
 		id: [String, Number],
-		vehicles: Array as PropType<Vehicle[]>,
+		vehicleOptions: Array as PropType<SelectOption<string>[]>,
 		selected: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
