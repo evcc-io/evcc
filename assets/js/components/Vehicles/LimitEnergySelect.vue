@@ -33,13 +33,14 @@
 	</LabelAndValue>
 </template>
 
-<script>
+<script lang="ts">
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import formatter from "@/mixins/formatter";
 import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "LimitEnergySelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
@@ -69,17 +70,20 @@ export default {
 		},
 	},
 	methods: {
-		change(e) {
-			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
+		change(e: Event) {
+			return this.$emit(
+				"limit-energy-updated",
+				parseFloat((e.target as HTMLSelectElement).value)
+			);
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));
 		},
-		fmtSoc(value) {
+		fmtSoc(value: number) {
 			return `+${this.fmtPercentage(value)}`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

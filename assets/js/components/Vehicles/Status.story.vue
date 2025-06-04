@@ -1,7 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import Status from "./Status.vue";
 
-function getFutureTime(hours, minutes) {
+function getFutureTime(hours: number, minutes: number) {
 	const now = new Date();
 	now.setHours(now.getHours() + hours);
 	now.setMinutes(now.getMinutes() + minutes);

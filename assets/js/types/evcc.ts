@@ -76,6 +76,7 @@ export interface Vehicle {
 	title: string;
 	features?: string[];
 	capacity?: number;
+	icon?: string;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;
