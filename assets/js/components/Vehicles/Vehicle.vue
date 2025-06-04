@@ -249,11 +249,11 @@ export default defineComponent({
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
-			// @ts-ignore
+			// @ts-expect-error
 			this.$refs["chargingPlan"].openPlanModal();
 		},
 		openMinSocSettings() {
-			// @ts-ignore
+			// @ts-expect-error
 			this.$refs["chargingPlan"].openPlanModal(true);
 		},
 	},
