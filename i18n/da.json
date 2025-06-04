@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Definer strømstyrke interval.",
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Lader",
+      "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": "Opladningstilstand når køretøjet forbindes.",

@@ -215,15 +215,19 @@ func (c *Zaptec) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
-
 	req, _ := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	_, err := c.DoBody(req)
-	if err == nil {
+
+	var res struct {
+		Code int
+	}
+
+	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
+	if err := c.DoJSON(req, &res); err == nil || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
 	}
 
-	return err
+	return nil
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
