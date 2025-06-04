@@ -1568,7 +1568,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	if err != nil {
 		// phaseSwitching devices may announce voltages but doesn't deliver
 		if !errors.Is(err, api.ErrNotAvailable) {
-    		lp.log.ERROR.Printf("charge voltages: %v", err)
+			lp.log.ERROR.Printf("charge voltages: %v", err)
 		}
 		return
 	}
