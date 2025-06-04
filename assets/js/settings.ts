@@ -16,63 +16,83 @@ const SAVINGS_REGION = "savings_region";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
-function read(key) {
-  return window.localStorage[key];
+function read(key: string) {
+	return window.localStorage[key];
 }
 
-function save(key) {
-  return (value) => {
-    try {
-      if (value) {
-        window.localStorage[key] = value;
-      } else {
-        delete window.localStorage[key];
-      }
-    } catch (e) {
-      console.error("unable to write to localstorage", { key, value, e });
-    }
-  };
+function save(key: string) {
+	return (value: string) => {
+		try {
+			if (value) {
+				window.localStorage[key] = value;
+			} else {
+				delete window.localStorage[key];
+			}
+		} catch (e) {
+			console.error("unable to write to localstorage", { key, value, e });
+		}
+	};
 }
 
-function readBool(key) {
-  return read(key) === "true";
+function readBool(key: string) {
+	return read(key) === "true";
 }
 
-function saveBool(key) {
-  return (value) => {
-    save(key)(value ? "true" : "false");
-  };
+function saveBool(key: string) {
+	return (value: boolean) => {
+		save(key)(value ? "true" : "false");
+	};
 }
 
-function readArray(key) {
-  const value = read(key);
-  return value ? value.split(",") : [];
+function readArray(key: string) {
+	const value = read(key);
+	return value ? value.split(",") : [];
 }
 
-function saveArray(key) {
-  return (value) => {
-    save(key)(value.join(","));
-  };
+function saveArray(key: string) {
+	return (value: string[]) => {
+		save(key)(value.join(","));
+	};
 }
 
-const settings = reactive({
-  telemetry: null,
-  locale: read(SETTINGS_LOCALE),
-  theme: read(SETTINGS_THEME),
-  unit: read(SETTINGS_UNIT),
-  is12hFormat: readBool(SETTINGS_12H_FORMAT),
-  hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
-  energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
-  energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
-  energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
-  energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
-  sessionInfo: readArray(SESSION_INFO),
-  sessionColumns: readArray(SESSION_COLUMNS),
-  savingsPeriod: read(SAVINGS_PERIOD),
-  savingsRegion: read(SAVINGS_REGION),
-  sessionsGroup: read(SESSIONS_GROUP),
-  sessionsType: read(SESSIONS_TYPE),
-  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+export interface Settings {
+	telemetry: boolean;
+	locale: string;
+	theme: string;
+	unit: string;
+	is12hFormat: boolean;
+	hiddenFeatures: boolean;
+	energyflowDetails: boolean;
+	energyflowPv: boolean;
+	energyflowBattery: boolean;
+	energyflowLoadpoints: boolean;
+	sessionInfo: string[];
+	sessionColumns: string[];
+	savingsPeriod: string;
+	savingsRegion: string;
+	sessionsGroup: string;
+	sessionsType: string;
+	solarAdjusted: boolean;
+}
+
+const settings: Settings = reactive({
+	telemetry: false,
+	locale: read(SETTINGS_LOCALE),
+	theme: read(SETTINGS_THEME),
+	unit: read(SETTINGS_UNIT),
+	is12hFormat: readBool(SETTINGS_12H_FORMAT),
+	hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
+	energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
+	energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
+	energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
+	energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
+	sessionInfo: readArray(SESSION_INFO),
+	sessionColumns: readArray(SESSION_COLUMNS),
+	savingsPeriod: read(SAVINGS_PERIOD),
+	savingsRegion: read(SAVINGS_REGION),
+	sessionsGroup: read(SESSIONS_GROUP),
+	sessionsType: read(SESSIONS_TYPE),
+	solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));

@@ -71,7 +71,7 @@ export function getAndClearNextModal() {
 	return nextModal;
 }
 
-export function openLoginModal(nextUrl = null, nextModal = null) {
+export function openLoginModal(nextUrl = null, nextModal: Modal | null = null) {
 	auth.nextUrl = nextUrl;
 	auth.nextModal = nextModal;
 	const modal = Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement);
