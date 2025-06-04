@@ -54,7 +54,7 @@ export default {
 		names: { control: "object" },
 		size: {
 			control: "select",
-			options: ["sm", "md", "lg", "xl"],
+			options: ["s", "m", "l", "xl"],
 			defaultValue: "xl",
 		},
 	},
