@@ -221,7 +221,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if gt $waterint 0 -}} 10120 {{ else }} 10101 {{- end }} # 10101 = Temp. x10 RL-Ist, 10120 = Temp x10 WW-Ist
+      address: {{ if gt $waterint 0 -}} 10120 {{ else }} 10100 {{- end }} # 10100 = Temp. x10 RL-Ist, 10120 = Temp x10 WW-Ist
       type: input
       encoding: uint16
     scale: 0.1
