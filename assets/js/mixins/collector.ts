@@ -6,7 +6,7 @@ export default defineComponent({
 		// collect all target component properties from current instance
 		collectProps(component: any, state?: State) {
 			let data: Record<string, any> = {};
-			for (var prop in component.$props) {
+			for (var prop in component.props) {
 				const p = prop as keyof State;
 				// check in optional state
 				if (state && p in state) {

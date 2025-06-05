@@ -96,7 +96,7 @@ describe("fmtPricePerKWh", () => {
 		expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR)).eq("20,0 ct/kWh");
 		expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR, true)).eq("20,0 ct");
 		expect(fmt.fmtPricePerKWh(0.234, CURRENCY.USD)).eq("23,4 ¢/kWh");
-		expect(fmt.fmtPricePerKWh(1234, CURRENCY.SEK)).eq("1.234,0 SEK/kWh");
+		expect(fmt.fmtPricePerKWh(1234, CURRENCY.SEK)).eq("123.400,0 öre/kWh");
 		expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR, false, false)).eq("20,0");
 		expect(fmt.fmtPricePerKWh(0.123, CURRENCY.CHF)).eq("12,3 rp/kWh");
 	});
@@ -107,8 +107,8 @@ describe("pricePerKWhUnit", () => {
 		expect(fmt.pricePerKWhUnit(CURRENCY.EUR)).eq("ct/kWh");
 		expect(fmt.pricePerKWhUnit(CURRENCY.EUR, true)).eq("ct");
 		expect(fmt.pricePerKWhUnit(CURRENCY.USD)).eq("¢/kWh");
-		expect(fmt.pricePerKWhUnit(CURRENCY.SEK)).eq("SEK/kWh");
-		expect(fmt.pricePerKWhUnit(CURRENCY.SEK, true)).eq(CURRENCY.SEK);
+		expect(fmt.pricePerKWhUnit(CURRENCY.SEK)).eq("öre/kWh");
+		expect(fmt.pricePerKWhUnit(CURRENCY.SEK, true)).eq("öre");
 		expect(fmt.pricePerKWhUnit(CURRENCY.CHF)).eq("rp/kWh");
 	});
 });
