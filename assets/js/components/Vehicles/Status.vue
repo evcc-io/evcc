@@ -497,15 +497,15 @@ export default defineComponent({
 			return this.$t("main.vehicleStatus.welcome");
 		},
 		chargerStatus() {
-			const t = (key: string, data: Record<string, unknown> = {}) => {
+			const t = (key: string) => {
 				if (this.heating) {
 					// check for special heating status translation
 					const name = `main.heatingStatus.${key}`;
 					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name, data);
+						return this.$t(name);
 					}
 				}
-				return this.$t(`main.vehicleStatus.${key}`, data);
+				return this.$t(`main.vehicleStatus.${key}`);
 			};
 
 			if (!this.connected) {

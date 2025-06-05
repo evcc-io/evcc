@@ -278,7 +278,7 @@ describe("smart grid charging", () => {
 				smartCostLimit: 0.29,
 				currency: CURRENCY.EUR,
 			},
-			{ charger: "main.vehicleStatus.charging", smartcost: "≤ 29,0 rp" }
+			{ charger: "main.vehicleStatus.charging", smartcost: "≤ 29,0 ct" }
 		);
 	});
 	test("show cheap energy message if active", () => {
@@ -292,7 +292,7 @@ describe("smart grid charging", () => {
 				currency: CURRENCY.EUR,
 				smartCostActive: true,
 			},
-			{ charger: "main.vehicleStatus.charging", smartcost: "28,0 rp ≤ 29,0 rp" }
+			{ charger: "main.vehicleStatus.charging", smartcost: "28,0 ct ≤ 29,0 ct" }
 		);
 	});
 });
