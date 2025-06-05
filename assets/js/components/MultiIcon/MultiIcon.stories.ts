@@ -1,3 +1,4 @@
+import { SIZE } from "@/types/evcc";
 import MultiIcon from "./MultiIcon.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
@@ -41,5 +42,5 @@ export const AllCounts: StoryFn<typeof MultiIcon> = (args) => ({
 });
 
 AllCounts.args = {
-	size: "xl",
+	size: SIZE.xl,
 };
