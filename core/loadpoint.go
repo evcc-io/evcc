@@ -1474,7 +1474,6 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 // UpdateCharger updates charger status and charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargerStatusAndPowerAndCurrents() float64 {
-
 	// update charger status
 	status, err := lp.charger.Status()
 	if err == nil {
