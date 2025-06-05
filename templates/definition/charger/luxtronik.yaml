@@ -232,7 +232,7 @@ render: |
       address: 10301 # 10301 = kW x10 Power-In elektrisch
       type: input
       encoding: uint16
-    scale: 0.1
+    scale: 100
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
