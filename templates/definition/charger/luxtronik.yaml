@@ -70,7 +70,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 10040 # LPC mode
+          address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
           type: holding
           encoding: uint16
     - name: HEAT
@@ -104,7 +104,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
@@ -139,7 +139,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
@@ -174,7 +174,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
