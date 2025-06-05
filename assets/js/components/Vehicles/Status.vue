@@ -505,7 +505,7 @@ export default defineComponent({
 						return this.$t(name, data);
 					}
 				}
-				return t(`main.vehicleStatus.${key}`, data);
+				return this.$t(`main.vehicleStatus.${key}`, data);
 			};
 
 			if (!this.connected) {

@@ -61,7 +61,7 @@ import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
 import collector from "@/mixins/collector";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle } from "@/types/evcc";
+import type { SelectOption, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "VehicleTitle",
@@ -102,6 +102,12 @@ export default defineComponent({
 				return this.$t("main.vehicle.unknown");
 			}
 			return this.$t("main.vehicle.none");
+		},
+		vehicleOptions(): SelectOption<string>[] {
+			return this.vehicles.map((v) => ({
+				name: v.name,
+				value: v.title,
+			}));
 		},
 		vehicleKnown() {
 			return !!this.vehicleName;
