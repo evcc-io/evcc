@@ -4,7 +4,7 @@
   "author": "evcc-io",
   "scripts": {
     "build": "vite build",
-    "test": "cross-env TZ=Europe/Berlin && vitest",
+    "test": "cross-env TZ=Europe/Berlin vitest",
     "lint": "prettier assets ./**/*.{yml,yaml,sh} --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
     "tsc": "vue-tsc --noEmit",
     "dev": "vite",
