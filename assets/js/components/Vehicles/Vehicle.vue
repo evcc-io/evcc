@@ -204,7 +204,7 @@ export default defineComponent({
 			if (this.vehicleSoc > 10 && this.range) {
 				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
 			}
-			return;
+			return undefined;
 		},
 		socPerKwh() {
 			if (this.capacity > 0) {
@@ -249,12 +249,14 @@ export default defineComponent({
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
-			// @ts-expect-error
-			this.$refs["chargingPlan"].openPlanModal();
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal();
 		},
 		openMinSocSettings() {
-			// @ts-expect-error
-			this.$refs["chargingPlan"].openPlanModal(true);
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal();
 		},
 	},
 });
