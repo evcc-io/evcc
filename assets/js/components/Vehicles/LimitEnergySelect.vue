@@ -73,7 +73,7 @@ export default {
 			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
 		},
 		fmtEnergy(value) {
-			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));
+			return fmtEnergy(this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"), value);
 		},
 		fmtSoc(value) {
 			return `+${this.fmtPercentage(value)}`;
