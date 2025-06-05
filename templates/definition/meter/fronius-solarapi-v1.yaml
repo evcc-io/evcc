@@ -41,7 +41,7 @@ params:
     default: /config
     description:
       de: Firmware-Update macht eine Unterscheidung erforderlich.
-      en: Firmware update requires a distinction. 
+      en: Firmware update requires a distinction.
 render: |
   type: custom
   power:
