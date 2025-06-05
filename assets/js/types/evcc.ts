@@ -4,6 +4,7 @@ import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 declare global {
 	interface Window {
 		app: any;
+
 	}
 }
 
