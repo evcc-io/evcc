@@ -256,7 +256,7 @@ export default defineComponent({
 		openMinSocSettings() {
 			(
 				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
-			)?.openPlanModal();
+			)?.openPlanModal(true);
 		},
 	},
 });
