@@ -34,9 +34,28 @@ export interface LoadpointCompact {
 }
 
 export enum CURRENCY {
+	AUD = "AUD",
+	BGN = "BGN",
+	BRL = "BRL",
+	CAD = "CAD",
+	CHF = "CHF",
+	CNY = "CNY",
 	EUR = "EUR",
+	GBP = "GBP",
+	ILS = "ILS",
+	NZD = "NZD",
+	PLN = "PLN",
 	USD = "USD",
 	DKK = "DKK",
+	SEK = "SEK",
+}
+
+export enum SIZE {
+	"xs" = "xs",
+	"s" = "s",
+	"m" = "m",
+	"l" = "l",
+	"xl" = "xl",
 }
 
 export enum CHARGE_MODE {
