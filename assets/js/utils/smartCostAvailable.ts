@@ -1,5 +1,5 @@
-import { CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE } from "../units";
+import { SMART_COST_TYPE } from "@/types/evcc";
 
-export default function (smartCostType) {
-  return [CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE].includes(smartCostType);
+export default function (smartCostType?: SMART_COST_TYPE) {
+	return smartCostType && Object.values(SMART_COST_TYPE).includes(smartCostType);
 }

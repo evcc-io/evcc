@@ -55,10 +55,10 @@ export default {
 			return energyOptions(
 				this.chargedEnergy,
 				this.capacity || 100,
-				this.socPerKwh,
 				this.fmtWh,
 				this.fmtPercentage,
-				this.$t("main.targetEnergy.noLimit")
+				this.$t("main.targetEnergy.noLimit"),
+				this.socPerKwh
 			);
 		},
 		step() {

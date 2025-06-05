@@ -4,7 +4,6 @@ import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 declare global {
 	interface Window {
 		app: any;
-
 	}
 }
 
@@ -20,6 +19,17 @@ export interface State {
 	forecast?: Forecast;
 	currency?: CURRENCY;
 	fatal?: FatalError;
+}
+
+export enum SMART_COST_TYPE {
+	CO2 = "co2",
+	PRICE_DYNAMIC = "pricedynamic",
+	PRICE_FORECAST = "priceforecast",
+}
+
+export enum LENGTH_UNIT {
+	KM = "km",
+	MILES = "mi",
 }
 
 export interface LoadpointCompact {
