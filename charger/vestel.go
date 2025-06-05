@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -29,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/go-version"
+	"golang.org/x/text/encoding/unicode"
 )
 
 const (
@@ -121,7 +123,12 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("failed to read firmware version: %w", err)
 	}
 
-	fw := strings.TrimPrefix(bytesAsString(b), "v")
+	utf16BytesToString := func(b []byte) string {
+		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+		return s
+	}
+
+	fw, _, _ := strings.Cut(strings.TrimPrefix(utf16BytesToString(bytes.TrimRight(b, "\x00")), "v"), "-")
 	if v, err := version.NewSemver(fw); err == nil {
 		if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
 			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
