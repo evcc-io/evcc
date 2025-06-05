@@ -40,8 +40,8 @@ params:
     choice: ["/config", "/api/config"]
     default: /config
     description:
-      de: Firmware-Update macht eine Unterscheidung erforderlich.
-      en: Firmware update requires a distinction.
+      de: Firmware-Update (ab 1.36.5-1) macht eine Unterscheidung erforderlich.
+      en: Firmware update (from 1.36.5-1) requires a distinction.
 render: |
   type: custom
   power:
