@@ -46,7 +46,7 @@ import tool from "./Tool.vue";
 import tractor from "./Tractor.vue";
 import van from "./Van.vue";
 import waterheater from "./WaterHeater.vue";
-import type { Size } from "./types";
+import { SIZE } from "@/types/evcc";
 
 const icons: Record<string, Component | string> = {
 	airpurifier,
@@ -98,7 +98,7 @@ export default defineComponent({
 	props: {
 		name: { type: String, default: "car" },
 		names: { type: Array as PropType<string[]>, default: () => [] },
-		size: { type: String as PropType<Size>, default: "s" },
+		size: { type: String as PropType<SIZE>, default: SIZE.s },
 	},
 	computed: {
 		uniqueNames(): string[] {
