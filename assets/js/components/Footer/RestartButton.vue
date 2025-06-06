@@ -13,7 +13,7 @@
 			role="status"
 			aria-hidden="true"
 		></span>
-		<Sync v-else size="s" class="restart me-2" />
+		<Sync v-else :size="iconSize" class="restart me-2" />
 		{{ $t("offline.restart") }}
 	</button>
 </template>
@@ -21,6 +21,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Sync from "../MaterialIcon/Sync.vue";
+import { ICON_SIZE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "RestartButton",
@@ -38,6 +39,11 @@ export default defineComponent({
 		},
 	},
 	emits: ["restart"],
+	computed: {
+		iconSize() {
+			return ICON_SIZE.S;
+		},
+	},
 	methods: {
 		handleRestart() {
 			if (!this.restarting) {
