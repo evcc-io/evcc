@@ -61,7 +61,7 @@ func bytesAsString(b []byte) string {
 	return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00")))
 }
 
-// utf16BEBytesAsString converts a byte slice containing UTF-16 Big-Endian encoded text to a string and trimms white spaces
+// utf16BEBytesAsString converts a byte slice containing UTF-16 Big-Endian encoded text to a string and trims white spaces
 func utf16BEBytesAsString(b []byte) (string, error) {
 	s, err := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(bytes.TrimRight(b, "\x00")))
 	if err != nil {
