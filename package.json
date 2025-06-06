@@ -4,8 +4,8 @@
   "author": "evcc-io",
   "scripts": {
     "build": "vite build",
-    "test": "TZ=Europe/Berlin vitest",
-    "lint": "prettier assets './**/*.{yml,yaml,sh}' './i18n/*.json' --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
+    "test": "cross-env TZ=Europe/Berlin vitest",
+    "lint": "prettier assets ./**/*.{yml,yaml,sh} ./i18n/*.json --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
     "tsc": "vue-tsc --noEmit",
     "dev": "vite",
     "playwright": "playwright test --ui",
@@ -88,6 +88,7 @@
     "@storybook/test": "^8.6.4",
     "@storybook/vue3": "^8.6.4",
     "@storybook/vue3-vite": "^8.6.4",
+    "cross-env": "^7.0.3",
     "eslint-plugin-storybook": "^0.12.0",
     "prettier-plugin-sort-json": "^4.1.1",
     "storybook": "^8.6.4"
