@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/gosimple/slug"
 )
 
 const (
@@ -19,6 +20,8 @@ const (
 //go:generate go run main.go
 
 func main() {
+	slug.CustomSub = map[string]string{"+": "plus"}
+
 	for _, lang := range []string{"de", "en"} {
 		if err := generateDocs(lang); err != nil {
 			panic(err)

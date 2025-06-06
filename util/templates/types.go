@@ -267,7 +267,6 @@ func (p Product) Title(lang string) string {
 
 // Identifier returns a unique language-independent identifier for the product
 func (p Product) Identifier() string {
-	slug.CustomSub = map[string]string{"+": "plus"}
 	return slug.Make(p.Title("en"))
 }
 
