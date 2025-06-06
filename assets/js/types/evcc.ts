@@ -28,6 +28,17 @@ export interface State {
 	auth?: Auth;
 }
 
+export enum SMART_COST_TYPE {
+	CO2 = "co2",
+	PRICE_DYNAMIC = "pricedynamic",
+	PRICE_FORECAST = "priceforecast",
+}
+
+export enum LENGTH_UNIT {
+	KM = "km",
+	MILES = "mi",
+}
+
 export interface LoadpointCompact {
 	icon: string;
 	title: string;

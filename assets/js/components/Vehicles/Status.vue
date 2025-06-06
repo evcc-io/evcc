@@ -185,7 +185,6 @@ import "@h2d2/shopicons/es/regular/clock";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "@/i18n";
 import formatter from "@/mixins/formatter";
-import { CO2_TYPE } from "@/units";
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import PlanStartIcon from "../MaterialIcon/PlanStart.vue";
@@ -201,6 +200,7 @@ import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "../MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "../MaterialIcon/Welcome.vue";
 import BatteryBoostIcon from "../MaterialIcon/BatteryBoost.vue";
+import { SMART_COST_TYPE } from "@/types/evcc";
 const REASON_AUTH = "waitingforauthorization";
 const REASON_DISCONNECT = "disconnectrequired";
 
@@ -450,7 +450,7 @@ export default {
 			return this.$t(`${prefix}EnergySet`);
 		},
 		smartCostPrice() {
-			return this.smartCostType !== CO2_TYPE;
+			return this.smartCostType !== SMART_COST_TYPE.CO2;
 		},
 		smartCostNowVisible() {
 			if (this.smartCostPrice) {

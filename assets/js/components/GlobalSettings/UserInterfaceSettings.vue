@@ -97,11 +97,11 @@ import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "@/i18n";
 import { getThemePreference, setThemePreference, THEMES } from "@/theme";
-import { getUnits, setUnits, UNITS, is12hFormat, set12hFormat } from "@/units";
+import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import type { Sponsor } from "@/types/evcc";
+import { SMART_COST_TYPE, type Sponsor } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -121,7 +121,7 @@ export default defineComponent({
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
 			THEMES,
-			UNITS,
+			UNITS: Object.values(SMART_COST_TYPE),
 			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},
