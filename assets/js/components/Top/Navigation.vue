@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import Dropdown from "bootstrap/js/dist/dropdown";
 import "@h2d2/shopicons/es/regular/gift";
@@ -135,30 +135,34 @@ import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
 import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
+import { defineComponent, type PropType } from "vue";
+import type { FatalError, Sponsor, VehicleLogins } from "@/types/evcc";
+import type { Provider as Provider } from "./types";
 
-export default {
+export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
 		vehicleLogins: {
-			type: Object,
+			type: Object as PropType<VehicleLogins>,
 			default: () => {
 				return {};
 			},
 		},
 		sponsor: {
-			type: Object,
+			type: Object as PropType<Sponsor>,
 			default: () => {
 				return {};
 			},
 		},
 		forecast: Object,
 		battery: Array,
-		fatal: Object,
+		fatal: Object as PropType<FatalError>,
 	},
 	data() {
 		return {
 			isApp: isApp(),
+			dropdown: null as Dropdown | null,
 		};
 	},
 	computed: {
@@ -168,7 +172,7 @@ export default {
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
-		providerLogins() {
+		providerLogins(): Provider[] {
 			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
 				title: k,
 				loggedIn: v.authenticated,
@@ -205,13 +209,15 @@ export default {
 		if (!$el) {
 			return;
 		}
-		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
+		this.dropdown = new Dropdown(
+			document.getElementById("topNavigatonDropdown") as HTMLElement
+		);
 	},
 	unmounted() {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		async handleProviderAuthorization(provider) {
+		async handleProviderAuthorization(provider: Provider) {
 			if (!provider.loggedIn) {
 				baseAPI.post(provider.loginPath).then(function (response) {
 					window.location.href = response.data.loginUri;
@@ -221,21 +227,27 @@ export default {
 			}
 		},
 		openSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("globalSettingsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("globalSettingsModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal")
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("forecastModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openNativeSettings() {
@@ -249,7 +261,7 @@ export default {
 			this.$router.push({ path: "/" });
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .menu-button {
