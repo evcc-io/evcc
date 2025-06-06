@@ -55,8 +55,8 @@ export default {
 		names: { control: "object" },
 		size: {
 			control: "select",
-			options: ["s", "m", "l", "xl"],
-			defaultValue: "xl",
+			options: Object.values(ICON_SIZE),
+			defaultValue: ICON_SIZE.xl,
 		},
 	},
 } as Meta<typeof VehicleIcon>;
