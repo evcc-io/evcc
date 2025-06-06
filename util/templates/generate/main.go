@@ -15,6 +15,7 @@ import (
 const (
 	docsPath    = "../../../templates/docs"
 	websitePath = "../../../templates/evcc.io"
+	iconsPath   = "../../../templates/icons"
 )
 
 //go:generate go run main.go
@@ -29,6 +30,10 @@ func main() {
 	}
 
 	if err := generateBrandJSON(); err != nil {
+		panic(err)
+	}
+
+	if err := generateProductJSON(); err != nil {
 		panic(err)
 	}
 }
@@ -168,6 +173,42 @@ func generateBrandJSON() error {
 	file, err := json.MarshalIndent(brands, "", " ")
 	if err == nil {
 		err = os.WriteFile(websitePath+"/brands.json", file, 0o644)
+	}
+
+	return err
+}
+
+func generateProductJSON() error {
+	type ProductInfo struct {
+		Brand       string `json:"brand"`
+		Description string `json:"description"`
+	}
+
+	products := make(map[string]map[string]ProductInfo)
+
+	for _, class := range templates.ClassValues() {
+		classKey := strings.ToLower(class.String())
+		products[classKey] = make(map[string]ProductInfo)
+
+		for _, tmpl := range templates.ByClass(class) {
+			for _, product := range tmpl.Products {
+				products[classKey][product.Identifier()] = ProductInfo{
+					Brand:       product.Brand,
+					Description: product.Description.String("en"),
+				}
+			}
+		}
+	}
+
+	if _, err := os.Stat(iconsPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(iconsPath, 0o755); err != nil {
+			return err
+		}
+	}
+
+	file, err := json.MarshalIndent(products, "", "  ")
+	if err == nil {
+		err = os.WriteFile(iconsPath+"/products.json", file, 0o644)
 	}
 
 	return err
