@@ -57,7 +57,7 @@ func generateClass(class templates.Class, lang string) error {
 			return err
 		}
 
-		for index, product := range tmpl.Products {
+		for _, product := range tmpl.Products {
 			fmt.Println(tmpl.Template + ": " + product.Title(lang))
 
 			b, err := tmpl.RenderDocumentation(product, lang)
@@ -65,7 +65,12 @@ func generateClass(class templates.Class, lang string) error {
 				return err
 			}
 
-			filename := fmt.Sprintf("%s/%s/%s/%s_%d.yaml", docsPath, lang, strings.ToLower(class.String()), tmpl.Template, index)
+			filename := fmt.Sprintf("%s/%s/%s/%s.yaml", docsPath, lang, strings.ToLower(class.String()), product.Identifier())
+
+			if _, err := os.Stat(filename); err == nil {
+				return fmt.Errorf("file already exists: %s - product titles must be unique", filename)
+			}
+
 			if err := os.WriteFile(filename, b, 0o644); err != nil {
 				return err
 			}

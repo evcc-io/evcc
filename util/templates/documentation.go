@@ -91,6 +91,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 	data := map[string]interface{}{
 		"Template":               t.Template,
+		"ProductIdentifier":      product.Identifier(),
 		"ProductBrand":           product.Brand,
 		"ProductDescription":     product.Description.String(lang),
 		"ProductGroup":           t.GroupTitle(lang),
