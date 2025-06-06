@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Ange strömintervall.",
       "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Laddar",
+      "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
       "defaultModeHelp": "Laddningsläge vid anslutning till fordon.",

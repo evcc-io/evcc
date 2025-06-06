@@ -4,8 +4,18 @@ import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 declare global {
 	interface Window {
 		app: any;
+		evcc: {
+			version: string;
+			commit: string;
+		};
 	}
 }
+
+export interface Auth {
+	vehicles: VehicleLogins;
+}
+
+export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
 	error: any;
@@ -19,6 +29,7 @@ export interface State {
 	forecast?: Forecast;
 	currency?: CURRENCY;
 	fatal?: FatalError;
+	auth?: Auth;
 }
 
 export interface LoadpointCompact {
@@ -31,12 +42,24 @@ export interface LoadpointCompact {
 	chargePower: number;
 	connected: boolean;
 	index: number;
+	vehicleName: string;
+	chargerIcon?: string;
+	vehicleSoc: number;
+	chargerFeatureHeating: boolean;
 }
 
 export enum CURRENCY {
 	EUR = "EUR",
 	USD = "USD",
 	DKK = "DKK",
+}
+
+export enum ICON_SIZE {
+	XS = "xs",
+	S = "s",
+	M = "m",
+	L = "l",
+	XL = "xl",
 }
 
 export enum CHARGE_MODE {
@@ -57,6 +80,14 @@ export interface Sponsor {
 	name: string;
 	expiresAt: string;
 	expiresSoon: boolean;
+}
+
+export interface Notification {
+	message: string;
+	time: Date;
+	level: string;
+	lp: number;
+	count: number;
 }
 
 export interface Battery {
