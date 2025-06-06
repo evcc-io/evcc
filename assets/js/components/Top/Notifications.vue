@@ -90,8 +90,7 @@
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
 import formatter from "@/mixins/formatter";
 import { defineComponent, type PropType } from "vue";
-import type { Notification } from "./types";
-import type { Timeout } from "@/types/evcc";
+import type { Notification, Timeout } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Notifications",

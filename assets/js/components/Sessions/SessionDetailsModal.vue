@@ -6,6 +6,7 @@
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
+			data-testid="session-details"
 		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div v-if="session" class="modal-content">
@@ -21,7 +22,7 @@
 					<div class="modal-body">
 						<table class="table align-middle">
 							<tbody>
-								<tr>
+								<tr data-testid="session-details-loadpoint">
 									<th>
 										{{ $t("sessions.loadpoint") }}
 									</th>
@@ -43,7 +44,7 @@
 										</CustomSelect>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-vehicle">
 									<th>
 										{{ $t("sessions.vehicle") }}
 									</th>
@@ -51,7 +52,7 @@
 										<VehicleOptions
 											:id="session.vehicle"
 											class="options"
-											:vehicles="vehicleOptions"
+											:vehicleOptions="vehicleOptions"
 											connected
 											:selected="session.vehicle"
 											@change-vehicle="changeVehicle"
@@ -67,17 +68,21 @@
 										</VehicleOptions>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-date">
 									<th class="align-baseline">
 										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(session.created, false) }}
+										<template v-if="session.created">
+											{{ fmtFullDateTime(new Date(session.created), false) }}
+										</template>
 										<br />
-										{{ fmtFullDateTime(session.finished, false) }}
+										<template v-if="session.finished">
+											{{ fmtFullDateTime(new Date(session.finished), false) }}
+										</template>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-energy">
 									<th class="align-baseline">
 										{{ $t("sessions.energy") }}
 									</th>
@@ -96,7 +101,10 @@
 										</div>
 									</td>
 								</tr>
-								<tr v-if="session.solarPercentage != null">
+								<tr
+									v-if="session.solarPercentage != null"
+									data-testid="session-details-solar"
+								>
 									<th class="align-baseline">
 										{{ $t("sessions.solar") }}
 									</th>
@@ -105,7 +113,10 @@
 										({{ fmtWh(solarEnergy, POWER_UNIT.AUTO) }})
 									</td>
 								</tr>
-								<tr v-if="session.price != null">
+								<tr
+									v-if="session.price != null"
+									data-testid="session-details-price"
+								>
 									<th class="align-baseline">
 										{{ $t("session.price") }}
 									</th>
@@ -115,7 +126,10 @@
 										{{ fmtPricePerKWh(session.pricePerKWh || 0, currency) }}
 									</td>
 								</tr>
-								<tr v-if="session.co2PerKWh != null">
+								<tr
+									v-if="session.co2PerKWh != null"
+									data-testid="session-details-co2"
+								>
 									<th>
 										{{ $t("session.co2") }}
 									</th>
@@ -123,7 +137,7 @@
 										{{ fmtCo2Medium(session.co2PerKWh) }}
 									</td>
 								</tr>
-								<tr v-if="session.odometer">
+								<tr v-if="session.odometer" data-testid="session-details-odometer">
 									<th>
 										{{ $t("session.odometer") }}
 									</th>
@@ -131,7 +145,7 @@
 										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
-								<tr v-if="session.meterStart">
+								<tr v-if="session.meterStart" data-testid="session-details-meter">
 									<th class="align-baseline">
 										{{ $t("session.meter") }}
 									</th>
@@ -148,6 +162,7 @@
 							type="button"
 							class="btn btn-link text-danger"
 							data-bs-dismiss="modal"
+							data-testid="session-details-delete"
 							@click="openRemoveConfirmationModal"
 						>
 							{{ $t("session.delete") }}
@@ -228,10 +243,10 @@ export default defineComponent({
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions() {
+		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
 				name: v.title,
-				title: v.title,
+				value: v.title,
 			}));
 		},
 		loadpointOptions(): SelectOption<string>[] {

@@ -1,7 +1,7 @@
 export interface Session {
 	id: number;
-	created: Date;
-	finished: Date;
+	created: string;
+	finished: string;
 	loadpoint: string;
 	identifier: string;
 	vehicle: string;
