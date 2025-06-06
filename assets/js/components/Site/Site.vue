@@ -95,7 +95,7 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		selectedLoadpointIndex: Number,
 
-		notifications: Array,
+		notifications: { type: Array, default: () => [] },
 		offline: Boolean,
 
 		// details
@@ -120,7 +120,7 @@ export default defineComponent({
 
 		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
 
-		currency: String as PropType<CURRENCY>,
+		currency: { type: String as PropType<CURRENCY>, required: true },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
