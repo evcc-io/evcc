@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div data-testid="offline-indicator">
 		<div v-if="offline" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
@@ -8,19 +8,7 @@
 			data-testid="bottom-banner"
 		>
 			<div v-if="restarting" class="d-flex align-items-center">
-				<button
-					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
-					type="button"
-					disabled
-					tabindex="0"
-				>
-					<span
-						class="spinner-border spinner-border-sm m-1 me-2"
-						role="status"
-						aria-hidden="true"
-					></span>
-					{{ $t("offline.restart") }}
-				</button>
+				<RestartButton restarting @restart="restart" />
 				{{ $t("offline.restarting") }}
 			</div>
 			<div
@@ -28,15 +16,7 @@
 				class="d-flex align-items-center"
 				data-testid="restart-needed"
 			>
-				<button
-					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
-					type="button"
-					tabindex="0"
-					@click="restart"
-				>
-					<Sync class="restart me-2" />
-					{{ $t("offline.restart") }}
-				</button>
+				<RestartButton @restart="restart" />
 				{{ $t("offline.restartNeeded") }}
 			</div>
 			<div v-else-if="offline" class="d-flex align-items-center">
@@ -45,7 +25,7 @@
 			</div>
 			<div
 				v-else-if="showError"
-				class="d-flex align-items-start container px-4 justify-content-center"
+				class="d-flex align-items-center container px-4 justify-content-center"
 				data-testid="fatal-error"
 			>
 				<shopicon-regular-car1
@@ -60,13 +40,7 @@
 					</div>
 					<div v-if="fatalText" class="text-break">{{ fatalText }}</div>
 				</div>
-				<button
-					type="button"
-					class="btn-close mt-1"
-					aria-label="Close"
-					tabindex="0"
-					@click="dismissed = true"
-				></button>
+				<RestartButton error @restart="restart" />
 			</div>
 		</div>
 	</div>
@@ -76,7 +50,7 @@
 import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/car1";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
-import Sync from "../MaterialIcon/Sync.vue";
+import RestartButton from "./RestartButton.vue";
 import restart, { performRestart, restartComplete } from "@/restart";
 import type { FatalError } from "@/types/evcc";
 
@@ -84,7 +58,7 @@ export default defineComponent({
 	name: "OfflineIndicator",
 	components: {
 		CloudOffline,
-		Sync,
+		RestartButton,
 	},
 	props: {
 		offline: Boolean,
@@ -134,9 +108,6 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-.restart {
-	transform: scaleX(-1);
-}
 .alert {
 	opacity: 0;
 	transform: translateY(100%);
