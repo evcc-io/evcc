@@ -736,7 +736,7 @@ export default defineComponent({
 			);
 		},
 		updateDisconnectRequiredTooltip() {
-			this.updateTooltip(
+			this.disconnectRequiredTooltip = this.updateTooltip(
 				this.disconnectRequiredTooltip,
 				this.disconnectRequiredTooltipContent,
 				this.$refs["disconnectRequired"]
