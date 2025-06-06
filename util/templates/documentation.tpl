@@ -102,27 +102,21 @@ params:
   {{- range .Params }}
   {{- if and (not (eq .Name "usage")) (not .IsDeprecated) }}
   - name: {{ .Name | quote }}
-    {{- if .Example }}
     example: {{ .Example | quote }}
-    {{- end }}
-    {{- if .Default }}
     default: {{ .Default }}
-    {{- end }}
-    {{- if .Choice }}
     choice: [{{ join ", " .Choice }}]
-    {{- end }}
-    {{- if .Unit }}
     unit: {{ .Unit }}
-    {{- end }}
     {{- $description := localize .Description | replace "\n" " " }}
-    {{- if $description }}
     description: {{ $description | quote }}
-    {{- end }}
     {{- $help := localize .Help | replace "\n" " " }}
-    {{- if $help }}
     help: {{ $help | quote }}
-    {{- end }}
     advanced: {{ .IsAdvanced }}
     optional: {{ not .IsRequired }}
   {{- end }}
   {{- end }}
+{{- if .ModbusData }}
+modbus:
+{{- range $key, $value := .ModbusData }}
+  {{ $key }}: {{ $value }}
+{{- end }}
+{{- end }}
