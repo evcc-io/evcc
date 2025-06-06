@@ -24,14 +24,15 @@
 	</header>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
 import Navigation from "./Navigation.vue";
 import collector from "@/mixins/collector";
 import store from "@/store";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "TopHeader",
 	components: {
 		TopNavigation: Navigation,
@@ -47,7 +48,7 @@ export default {
 			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
