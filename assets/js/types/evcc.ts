@@ -54,6 +54,14 @@ export enum CURRENCY {
 	DKK = "DKK",
 }
 
+export enum ICON_SIZE {
+	XS = "xs",
+	S = "s",
+	M = "m",
+	L = "l",
+	XL = "xl",
+}
+
 export enum CHARGE_MODE {
 	OFF = "off",
 	NOW = "now",
