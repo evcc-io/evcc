@@ -12,8 +12,10 @@ declare global {
 }
 
 export interface Auth {
-	vehicles: Record<string, { authenticated: boolean; uri: string }>;
+	vehicles: VehicleLogins;
 }
+
+export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
 	error: any;
@@ -27,6 +29,7 @@ export interface State {
 	forecast?: Forecast;
 	currency?: CURRENCY;
 	fatal?: FatalError;
+	auth?: Auth;
 }
 
 export interface LoadpointCompact {
