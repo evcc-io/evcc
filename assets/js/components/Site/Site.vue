@@ -77,7 +77,15 @@ import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
-import type { Auth, Battery, CURRENCY, Forecast, LoadpointCompact, Sponsor } from "@/types/evcc";
+import type {
+	Auth,
+	Battery,
+	CURRENCY,
+	Forecast,
+	LoadpointCompact,
+	Notification,
+	Sponsor,
+} from "@/types/evcc";
 import type { Grid } from "./types";
 
 export default defineComponent({
@@ -95,7 +103,7 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		selectedLoadpointIndex: Number,
 
-		notifications: { type: Array, default: () => [] },
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
 
 		// details

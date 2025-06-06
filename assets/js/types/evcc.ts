@@ -74,6 +74,14 @@ export interface Sponsor {
 	expiresSoon: boolean;
 }
 
+export interface Notification {
+	message: string;
+	time: Date;
+	level: string;
+	lp: number;
+	count: number;
+}
+
 export interface Battery {
 	power: number;
 	soc: number;
