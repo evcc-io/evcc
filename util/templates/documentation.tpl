@@ -4,8 +4,8 @@
   - {{ . }}
   {{- end }}
   {{- $unit := .Unit -}}
-  {{- $description := localize .Description | replace "\n" " " -}}
-  {{- $help := localize .Help | replace "\n" " " -}}
+  {{- $description := localize .Description | replace "\n" " " | trim -}}
+  {{- $help := localize .Help | replace "\n" " " | trim -}}
   {{- $choices := join ", " .Choice -}}
   {{- $optional := not .IsRequired -}}
   {{- if or $help $choices $optional $description }} # {{end}}
@@ -106,9 +106,9 @@ params:
     default: {{ .Default }}
     choice: [{{ join ", " .Choice }}]
     unit: {{ .Unit }}
-    {{- $description := localize .Description | replace "\n" " " }}
+    {{- $description := localize .Description | replace "\n" " " | trim }}
     description: {{ $description | quote }}
-    {{- $help := localize .Help | replace "\n" " " }}
+    {{- $help := localize .Help | replace "\n" " " | trim }}
     help: {{ $help | quote }}
     advanced: {{ .IsAdvanced }}
     optional: {{ not .IsRequired }}
