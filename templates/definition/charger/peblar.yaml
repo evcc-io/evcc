@@ -2,7 +2,13 @@ template: peblar
 products:
   - brand: Peblar
     description:
-      generic: Home, Home Plus, Business
+      generic: Home
+  - brand: Peblar
+    description:
+      generic: Home Plus
+  - brand: Peblar
+    description:
+      generic: Business
 capabilities: ["1p3p", "mA"]
 requirements:
   evcc: ["sponsorship"]

@@ -2,28 +2,33 @@ template: luxtronik
 products:
   - brand: Buderus
     description:
-      generic: Luxtronik 2.1
+      generic: Logamatic HMC 20
+  - brand: Buderus
+    description:
+      generic: Logamatic HMC 20 Z
   - brand: alpha innotec
+  - brand: CTA All-In-One
     description:
-      generic: Luxtronik 2.1
-  - brand: CTA All-In-One (Aeroplus)
-    description:
-      generic: Luxtronik 2.1
+      generic: Aeroplus
   - brand: Elco
-    description:
-      generic: Luxtronik 2.1
   - brand: Nibe
     description:
-      generic: Luxtronik 2.1
-  - brand: Roth (ThermoAura, ThermoTerra)
+      generic: AP-AW10
+  - brand: Roth
     description:
-      generic: Luxtronik 2.1
+      generic: ThermoAura
+  - brand: Roth
+    description:
+      generic: ThermoTerra
   - brand: Novelan
     description:
-      generic: Luxtronik 2.1
-  - brand: Wolf (BWL/BWS)
+      generic: WPR NET
+  - brand: Wolf
     description:
-      generic: Luxtronik 2.1
+      generic: BWL
+  - brand: Wolf
+    description:
+      generic: BWS
 group: heating
 requirements:
   description:
