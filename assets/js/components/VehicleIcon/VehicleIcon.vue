@@ -98,7 +98,7 @@ export default defineComponent({
 	props: {
 		name: { type: String, default: "car" },
 		names: { type: Array as PropType<string[]>, default: () => [] },
-		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.s },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
 		uniqueNames(): string[] {

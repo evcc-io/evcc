@@ -32,7 +32,7 @@ export default defineComponent({
 	name: "MultiIcon",
 	props: {
 		count: { type: Number, default: 1 },
-		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.s },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
 		icon() {

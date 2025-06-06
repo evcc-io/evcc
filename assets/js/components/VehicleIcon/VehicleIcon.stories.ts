@@ -56,7 +56,7 @@ export default {
 		size: {
 			control: "select",
 			options: Object.values(ICON_SIZE),
-			defaultValue: ICON_SIZE.xl,
+			defaultValue: ICON_SIZE.XL,
 		},
 	},
 } as Meta<typeof VehicleIcon>;
@@ -73,20 +73,20 @@ const Template: StoryFn<typeof VehicleIcon> = (args) => ({
 export const SingleIcon = Template.bind({});
 SingleIcon.args = {
 	name: "car",
-	size: ICON_SIZE.xl,
+	size: ICON_SIZE.XL,
 };
 
 // Multiple icons stories
 export const TwoCars = Template.bind({});
 TwoCars.args = {
 	names: ["car", "car"],
-	size: ICON_SIZE.xl,
+	size: ICON_SIZE.XL,
 };
 
 export const CarAndThreeBikes = Template.bind({});
 CarAndThreeBikes.args = {
 	names: ["car", "bike", "bike", "bike"],
-	size: ICON_SIZE.xl,
+	size: ICON_SIZE.XL,
 };
 
 // Story showing all icons at once
