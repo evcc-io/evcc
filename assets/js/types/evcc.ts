@@ -50,12 +50,12 @@ export enum CURRENCY {
 	SEK = "SEK",
 }
 
-export enum SIZE {
-	"xs" = "xs",
-	"s" = "s",
-	"m" = "m",
-	"l" = "l",
-	"xl" = "xl",
+export enum ICON_SIZE {
+	XS = "xs",
+	S = "s",
+	M = "m",
+	L = "l",
+	XL = "xl",
 }
 
 export enum CHARGE_MODE {

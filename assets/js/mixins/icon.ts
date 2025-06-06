@@ -1,19 +1,19 @@
-import { SIZE } from "@/types/evcc";
+import { ICON_SIZE } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	props: {
 		size: {
-			type: String as PropType<SIZE>,
+			type: String as PropType<ICON_SIZE>,
 			validator(value: string) {
-				return Object.keys(SIZE).includes(value);
+				return Object.keys(ICON_SIZE).includes(value);
 			},
-			default: SIZE.s,
+			default: ICON_SIZE.S,
 		},
 	},
 	computed: {
 		svgStyle() {
-			const sizes: Record<SIZE, string> = {
+			const sizes: Record<ICON_SIZE, string> = {
 				xs: "16px",
 				s: "24px",
 				m: "32px",
