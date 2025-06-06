@@ -1,6 +1,6 @@
 template: nrgkick-connect
 products:
-  - brand: NRGKick
+  - brand: NRGkick
     description:
       generic: Connect
 requirements:
