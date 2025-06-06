@@ -1,6 +1,6 @@
+import type { Notification } from "@/types/evcc";
 import Notifications from "./Notifications.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
-import type { Notification } from "./types";
 
 const timeAgo = (hours = 0, minutes = 0, seconds = 0) => {
 	const date = new Date();
