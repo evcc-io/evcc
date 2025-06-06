@@ -107,6 +107,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 		failsafeDuration: limits.FailsafeDurationMinimum,
 	}
 
+	// simulate a received heartbeat
+	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
+	c.heartbeat.Set(struct{}{})
+
 	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
