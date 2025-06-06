@@ -11,7 +11,8 @@ export default {
 			description: "Number of icons to display",
 		},
 		size: {
-			control: { type: "select", options: ["sm", "md", "lg", "xl"] },
+			options: Object.values(ICON_SIZE),
+			control: { type: "select" },
 			description: "Size of the icons",
 		},
 	},
@@ -42,5 +43,5 @@ export const AllCounts: StoryFn<typeof MultiIcon> = (args) => ({
 });
 
 AllCounts.args = {
-	size: ICON_SIZE.xl,
+	size: ICON_SIZE.XL,
 };
