@@ -1,7 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import Status from "./Status.vue";
+import { CURRENCY } from "@/types/evcc";
 
-function getFutureTime(hours, minutes) {
+function getFutureTime(hours: number, minutes: number) {
 	const now = new Date();
 	now.setHours(now.getHours() + hours);
 	now.setMinutes(now.getMinutes() + minutes);
@@ -135,7 +136,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 				connected
 				enabled
 				charging
-				currency="CHF"
+				:currency="CURRENCY.EUR"
 				:tariffGrid="0.32"
 				:smartCostLimit="0.12"
 				smartCostType="price"
@@ -143,7 +144,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 		</Variant>
 		<Variant title="smart cost: cheap but not connected">
 			<Status
-				currency="EUR"
+				:currency="CURRENCY.EUR"
 				:tariffGrid="0.091"
 				:smartCostLimit="0.12"
 				smartCostType="price"
@@ -154,7 +155,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 				connected
 				enabled
 				charging
-				currency="CHF"
+				:currency="CURRENCY.EUR"
 				:smartCostLimit="0.12"
 				smartCostType="price"
 				:smartCostNextStart="planProjectedStart"
@@ -165,7 +166,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 				connected
 				enabled
 				charging
-				currency="CHF"
+				:currency="CURRENCY.EUR"
 				:tariffGrid="0.11"
 				:smartCostLimit="0.12"
 				smartCostType="price"
@@ -177,7 +178,7 @@ const planProjectedEnd = getFutureTime(5, 43);
 				connected
 				enabled
 				charging
-				currency="EUR"
+				:currency="CURRENCY.EUR"
 				:smartCostLimit="0.15"
 				smartCostType="price"
 				:minSoc="20"
