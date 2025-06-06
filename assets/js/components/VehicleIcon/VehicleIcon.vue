@@ -3,7 +3,8 @@
 	<MultiIcon v-else :count="count" :size="size"></MultiIcon>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type Component, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/car3";
 import MultiIcon from "../MultiIcon";
 
@@ -45,8 +46,9 @@ import tool from "./Tool.vue";
 import tractor from "./Tractor.vue";
 import van from "./Van.vue";
 import waterheater from "./WaterHeater.vue";
+import { ICON_SIZE } from "@/types/evcc";
 
-const icons = {
+const icons: Record<string, Component | string> = {
 	airpurifier,
 	battery,
 	bike,
@@ -90,20 +92,20 @@ const icons = {
 
 export const ICONS = Object.keys(icons);
 
-export default {
+export default defineComponent({
 	name: "VehicleIcon",
 	components: { MultiIcon },
 	props: {
 		name: { type: String, default: "car" },
-		names: { type: Array },
-		size: { type: String, default: "s" },
+		names: { type: Array as PropType<string[]>, default: () => [] },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
-		uniqueNames() {
-			return [...new Set(this.names || [this.name])];
+		uniqueNames(): string[] {
+			return [...new Set(this.names && this.names.length ? this.names : [this.name])];
 		},
 		count() {
-			return this.names?.length || 0;
+			return this.names.length;
 		},
 		single() {
 			return this.uniqueNames.length == 1;
@@ -112,7 +114,7 @@ export default {
 			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
