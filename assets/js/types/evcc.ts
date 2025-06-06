@@ -39,7 +39,7 @@ export enum CURRENCY {
 	DKK = "DKK",
 }
 
-export enum SIZE {
+export enum ICON_SIZE {
 	"xs" = "xs",
 	"s" = "s",
 	"m" = "m",

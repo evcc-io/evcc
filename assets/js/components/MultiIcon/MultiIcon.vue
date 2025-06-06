@@ -14,7 +14,7 @@ import _7 from "./7.vue";
 import _8 from "./8.vue";
 import _9 from "./9.vue";
 import Plus from "./Plus.vue";
-import { SIZE } from "@/types/evcc";
+import { ICON_SIZE } from "@/types/evcc";
 
 const icons = {
 	_1,
@@ -32,7 +32,7 @@ export default defineComponent({
 	name: "MultiIcon",
 	props: {
 		count: { type: Number, default: 1 },
-		size: { type: String as PropType<SIZE>, default: SIZE.s },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.s },
 	},
 	computed: {
 		icon() {

@@ -1,4 +1,4 @@
-import { SIZE } from "@/types/evcc";
+import { ICON_SIZE } from "@/types/evcc";
 import VehicleIcon from "./VehicleIcon.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
@@ -73,20 +73,20 @@ const Template: StoryFn<typeof VehicleIcon> = (args) => ({
 export const SingleIcon = Template.bind({});
 SingleIcon.args = {
 	name: "car",
-	size: SIZE.xl,
+	size: ICON_SIZE.xl,
 };
 
 // Multiple icons stories
 export const TwoCars = Template.bind({});
 TwoCars.args = {
 	names: ["car", "car"],
-	size: SIZE.xl,
+	size: ICON_SIZE.xl,
 };
 
 export const CarAndThreeBikes = Template.bind({});
 CarAndThreeBikes.args = {
 	names: ["car", "bike", "bike", "bike"],
-	size: SIZE.xl,
+	size: ICON_SIZE.xl,
 };
 
 // Story showing all icons at once
