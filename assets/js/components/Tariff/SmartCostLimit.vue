@@ -169,33 +169,34 @@ export default defineComponent({
 			return 1;
 		},
 		slots(): Slot[] {
-			const result: Slot[] = [];
-			if (!this.tariff?.rates || !this.startTime) return result;
+			if (!this.tariff?.rates || !this.startTime) return [];
 
 			const { rates } = this.tariff;
-			const oneHour = 60 * 60 * 1000;
+			const quarterHour = 15 * 60 * 1000;
+			const base = new Date(this.startTime);
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
 
-			for (let i = 0; i < 42; i++) {
-				const start = new Date(this.startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
-				// TODO: handle multiple matching time slots
+			return Array.from({ length: 42 * 4 }, (_, i) => {
+				// @ts-expect-error
+				const start = new Date(this.startTime.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
+
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const charging =
 					this.selectedSmartCostLimit !== null &&
 					value !== undefined &&
 					value <= this.selectedSmartCostLimit;
-				const selectable = value !== undefined;
-				result.push({ day, value, startHour, endHour, charging, selectable });
-			}
 
-			return result;
+				return {
+					day: this.weekdayShort(start),
+					value,
+					start,
+					end,
+					charging,
+					selectable: value !== undefined,
+				};
+			});
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -214,8 +215,8 @@ export default defineComponent({
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${start.getHours()}–${end.getHours()}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
