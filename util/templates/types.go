@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
+	"github.com/gosimple/slug"
 )
 
 const (
@@ -259,8 +260,14 @@ type Product struct {
 	Description TextLanguage `json:",omitempty"` // product name
 }
 
+// Title returns the product title in the given language
 func (p Product) Title(lang string) string {
 	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
+}
+
+// Identifier returns a unique language-independent identifier for the product
+func (p Product) Identifier() string {
+	return slug.Make(p.Title("en"))
 }
 
 type CountryCode string

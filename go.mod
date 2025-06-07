@@ -45,6 +45,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
+	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.3.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20250516072809-4b99c910e8e7
@@ -151,6 +152,7 @@ require (
 	github.com/google/pprof v0.0.0-20250317173921-a4b03ec1a45e // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
