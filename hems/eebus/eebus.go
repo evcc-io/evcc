@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 type EEBus struct {
@@ -70,6 +71,11 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 		return nil, err
 	}
 
+	// register LPC-Circuit for use in config, if not already registered
+	if _, err := config.Circuits().ByName("lpc"); err != nil {
+		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc"}, api.Circuit(lpc)))
+	}
+
 	// wrap old root with new pc parent
 	if err := root.Wrap(lpc); err != nil {
 		return nil, err
@@ -100,6 +106,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 		failsafeLimit:    limits.FailsafeConsumptionActivePowerLimit,
 		failsafeDuration: limits.FailsafeDurationMinimum,
 	}
+
+	// simulate a received heartbeat
+	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
+	c.heartbeat.Set(struct{}{})
 
 	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
 		return nil, err

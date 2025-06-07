@@ -7,6 +7,7 @@
 		:theme="theme"
 		:options="options"
 		:value="modelValue"
+		data-testid="yaml-editor"
 		@update:value="$emit('update:modelValue', $event)"
 		@mount="ready"
 	>
@@ -17,6 +18,7 @@
 				:rows="lines"
 				:value="modelValue"
 				:disabled="disabled"
+				data-testid="yaml-editor-fallback"
 				@input="$emit('update:modelValue', $event.target.value)"
 			/>
 		</template>
@@ -25,7 +27,10 @@
 
 <script>
 import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
-import { cleanYaml } from "../../utils/cleanYaml";
+import { cleanYaml } from "@/utils/cleanYaml.js";
+// don't bundle monaco-editor but ensure that it get updated regularly
+import { packages } from "../../../../package-lock.json";
+const monacoVersion = packages["node_modules/monaco-editor"].version;
 
 const $html = document.querySelector("html");
 export default {
@@ -51,6 +56,9 @@ export default {
 				wordWrap: "off",
 				wrappingStrategy: "advanced",
 				overviewRulerLanes: 0,
+				scrollbar: {
+					alwaysConsumeMouseWheel: false,
+				},
 			},
 			active: true,
 			pasteDisposable: null,
@@ -77,7 +85,7 @@ export default {
 	},
 	beforeMount() {
 		loader.config({
-			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" },
+			paths: { vs: `https://cdn.jsdelivr.net/npm/monaco-editor@${monacoVersion}/min/vs` },
 		});
 		loader.init();
 	},

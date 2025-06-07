@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/google/go-github/v32/github"
 )
@@ -24,7 +23,7 @@ func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 	httpd.Router().PathPrefix("/api/update").HandlerFunc(u.updateHandler)
 
 	c := make(chan *github.RepositoryRelease, 1)
-	go u.watchReleases(server.Version, c) // endless
+	go u.watchReleases(util.Version, c) // endless
 
 	// signal update support
 	u.Send("hasUpdater", true)

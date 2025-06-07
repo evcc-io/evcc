@@ -5,8 +5,9 @@ const (
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
 	DefaultMode      = "defaultMode" // default charge mode
-	Charger          = "charger"     //  charger ref
-	Meter            = "meter"       //  meter ref
+	Charger          = "charger"     // charger ref
+	Meter            = "meter"       // meter ref
+	Circuit          = "circuit"     // circuit ref
 	DefaultVehicle   = "vehicle"     // default vehicle ref
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
@@ -71,6 +72,7 @@ const (
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)

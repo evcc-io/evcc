@@ -20,6 +20,7 @@ type Octopus struct {
 	region        string
 	productCode   string
 	apikey        string
+	accountnumber string
 	paymentMethod string
 	data          *util.Monitor[api.Rates]
 }
@@ -32,11 +33,12 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region      string
-		Tariff      string // DEPRECATED: use ProductCode
-		ProductCode string
-		DirectDebit bool
-		ApiKey      string
+		Region        string
+		Tariff        string // DEPRECATED: use ProductCode
+		ProductCode   string
+		DirectDebit   bool
+		ApiKey        string
+		AccountNumber string
 	}
 
 	logger := util.NewLogger("octopus")
@@ -77,6 +79,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		region:        cc.Region,
 		productCode:   cc.ProductCode,
 		apikey:        cc.ApiKey,
+		accountnumber: cc.AccountNumber,
 		paymentMethod: paymentMethod,
 		data:          util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -96,7 +99,7 @@ func (t *Octopus) run(done chan error) {
 
 	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
 	if t.apikey != "" {
-		gqlCli, err := octoGql.NewClient(t.log, t.apikey)
+		gqlCli, err := octoGql.NewClient(t.log, t.apikey, t.accountnumber)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
@@ -129,7 +132,11 @@ func (t *Octopus) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
-			if t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
+			// This checks whether:
+			// - a Payment Method is set on the Result
+			// - a Payment Method filter is set
+			// - the Payment Method in the Result matches the Payment Method filter
+			if r.PaymentMethod != "" && t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
 				// A Payment Method filter is set, and this Tariff entry does not match our filter.
 				continue
 			}
@@ -137,7 +144,7 @@ func (t *Octopus) run(done chan error) {
 			// We need to catch that and set the date to something way in the future.
 			rateEnd := r.ValidityEnd
 			if rateEnd.IsZero() {
-				t.log.DEBUG.Printf("handling rate with indefinite length: %v", r.ValidityStart)
+				t.log.TRACE.Printf("handling rate with indefinite length: %v", r.ValidityStart)
 				// Currently adds a year from the start date
 				rateEnd = r.ValidityStart.AddDate(1, 0, 0)
 			}

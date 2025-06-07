@@ -125,14 +125,15 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
-import api from "../../api.js";
+import api from "@/api";
 import Logo from "./Logo.vue";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Version",
 	components: { Logo },
 	props: {
@@ -173,17 +174,19 @@ export default {
 				this.updateStatus = `${this.$t("footer.version.modalUpdateStatusStart")} ${e}`;
 			}
 		},
-		releaseNotesUrl(version) {
+		releaseNotesUrl(version?: string) {
 			return version == "0.0.0"
 				? `https://github.com/evcc-io/evcc/releases`
 				: `https://github.com/evcc-io/evcc/releases/tag/${version}`;
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("updateModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("updateModal") as HTMLElement
+			);
 			modal.show();
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

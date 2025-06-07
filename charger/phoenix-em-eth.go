@@ -9,17 +9,22 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 const (
-	phxEMEthRegStatus     = 100 // Input
-	phxEMEthRegChargeTime = 102 // Input
-	phxEMEthRegVoltages   = 108 // Input
-	phxEMEthRegCurrents   = 114 // Input
-	phxEMEthRegPower      = 120 // Input
-	phxEMEthRegEnergy     = 128 // Input
-	phxEMEthRegMaxCurrent = 300 // Holding
-	phxEMEthRegEnable     = 400 // Coil
+	phxEMEthRegStatus        = 100 // Input
+	phxEMEthRegChargeTime    = 102 // Input
+	phxEMEthRegVoltages      = 108 // Input
+	phxEMEthRegCurrents      = 114 // Input
+	phxEMEthRegPower         = 120 // Input
+	phxEMEthRegEnergy        = 128 // Input
+	phxEMEthRegMaxCurrent    = 300 // Holding
+	phxEMEthRegVoltagesScale = 352 // Holding
+	phxEMEthRegCurrentsScale = 358 // Holding
+	phxEMEthRegPowerScale    = 364 // Holding
+	phxEMEthRegEnergyScale   = 372 // Holding
+	phxEMEthRegEnable        = 400 // Coil
 )
 
 // PhoenixEMEth is an api.Charger implementation for Phoenix EM-CP-PP-ETH wallboxes.
@@ -35,7 +40,7 @@ func init() {
 //go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 180,
 	}
@@ -136,51 +141,77 @@ func (wb *PhoenixEMEth) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	// 2 words, least significant word first
-	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
-	return time.Duration(secs) * time.Second, nil
+	return time.Duration(encoding.Int32LswFirst(b)) * time.Second, nil
 }
 
 // CurrentPower implements the api.Meter interface
-func (wb *PhoenixEMEth) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEMEthRegPower, 2)
+func (wb *PhoenixEMEth) readScaledValue(regValue, regScale uint16) (int32, float64, error) {
+	bValue, err := wb.conn.ReadInputRegisters(regValue, 2)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
+	bScale, err := wb.conn.ReadHoldingRegisters(regScale, 2)
+	if err != nil {
+		return 0, 0, err
+	}
+	scale := 1000.0 * rs485.RTUIeee754ToFloat64Swapped(bScale)
 
-	return float64(encoding.Int32LswFirst(b)) * 10, err
+	return encoding.Int32LswFirst(bValue), scale, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
+func (wb *PhoenixEMEth) currentPower() (float64, error) {
+	value, scale, err := wb.readScaledValue(phxEMEthRegPower, phxEMEthRegPowerScale)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Int32LswFirst(b)) / 100, err
+	return float64(value) / scale, nil
+}
+
+func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
+	value, scale, err := wb.readScaledValue(phxEMEthRegEnergy, phxEMEthRegEnergyScale)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(value) / scale, nil
 }
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxEMEthRegCurrents)
+	return wb.getPhaseValues(phxEMEthRegCurrents, phxEMEthRegCurrentsScale)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEMEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxEMEthRegVoltages)
+	return wb.getPhaseValues(phxEMEthRegVoltages, phxEMEthRegVoltagesScale)
 }
 
-// getPhaseValues returns 3 sequential phase values
-func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+func (wb *PhoenixEMEth) readScaledValues(regValue, regScale uint16) ([]float64, error) {
+	const count = 3
+
+	bValue, err := wb.conn.ReadInputRegisters(regValue, uint16(2*count))
 	if err != nil {
-		return 0, 0, 0, err
+		return nil, err
+	}
+	bScale, err := wb.conn.ReadHoldingRegisters(regScale, uint16(2*count))
+	if err != nil {
+		return nil, err
 	}
 
-	var res [3]float64
-	for i := range res {
-		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) / 1e3
+	res := make([]float64, count)
+	for i := 0; i < count; i++ {
+		scale := 1000.0 * rs485.RTUIeee754ToFloat64Swapped(bScale[4*i:])
+		res[i] = float64(encoding.Int32LswFirst(bValue[4*i:])) / scale
+	}
+
+	return res, nil
+}
+
+func (wb *PhoenixEMEth) getPhaseValues(regValue, regScale uint16) (float64, float64, float64, error) {
+	res, err := wb.readScaledValues(regValue, regScale)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
 	return res[0], res[1], res[2], nil
@@ -189,11 +220,11 @@ func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 var _ api.CurrentGetter = (*PhoenixEMEth)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
-func (wb PhoenixEMEth) GetMaxCurrent() (float64, error) {
+func (wb *PhoenixEMEth) GetMaxCurrent() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(phxEMEthRegMaxCurrent, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)), err
+	return float64(encoding.Uint16(b)), nil
 }

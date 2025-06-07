@@ -37,7 +37,7 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler() http.HandlerFunc {
+func indexHandler(customCss bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -57,9 +57,10 @@ func indexHandler() http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version":     Version,
-			"Commit":      Commit,
+			"Version":     util.Version,
+			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
+			"CustomCss":   customCss,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}

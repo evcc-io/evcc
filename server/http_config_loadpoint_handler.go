@@ -27,7 +27,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 }
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
-	planTime, planEnergy := lp.GetPlanEnergy()
+	planTime, planPrecondition, planEnergy := lp.GetPlanEnergy()
 	return loadpoint.DynamicConfig{
 		Title:            lp.GetTitle(),
 		DefaultMode:      string(lp.GetDefaultMode()),
@@ -40,6 +40,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		Soc:              lp.GetSocConfig(),
 		PlanEnergy:       planEnergy,
 		PlanTime:         planTime,
+		PlanPrecondition: int64(planPrecondition.Seconds()),
 		LimitEnergy:      lp.GetLimitEnergy(),
 		LimitSoc:         lp.GetLimitSoc(),
 	}
@@ -205,7 +206,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		// merge here to maintain dynamic part of the config
 		other := configurable.Config().Other
-		if err := mergo.Merge(&other, static); err != nil {
+		if err := mergo.Merge(&other, static, mergo.WithOverride); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

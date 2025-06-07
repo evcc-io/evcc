@@ -28,14 +28,16 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import UserInterfaceSettings from "./UserInterfaceSettings.vue";
+import type { Sponsor } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "GlobalSettingsModal",
 	components: { UserInterfaceSettings },
 	props: {
-		sponsor: { type: Object, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 	},
-};
+});
 </script>

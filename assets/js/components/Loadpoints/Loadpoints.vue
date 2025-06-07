@@ -25,6 +25,7 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="goTo(index)"
@@ -53,31 +54,38 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/filled/circle";
 import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
+import { defineComponent, type PropType } from "vue";
+import type { LoadpointCompact, Timeout, Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Loadpoints",
 	components: { Loadpoint },
 	props: {
-		loadpoints: Array,
-		vehicles: Array,
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
-		selectedIndex: Number,
+		selectedIndex: { type: Number, default: 0 },
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["index-changed"],
 	data() {
-		return { snapTimeout: null, scrollTimeout: null, highlightedIndex: 0 };
+		return {
+			snapTimeout: null as Timeout,
+			scrollTimeout: null as Timeout,
+			highlightedIndex: 0,
+		};
 	},
 	watch: {
 		selectedIndex(newIndex) {
@@ -86,54 +94,60 @@ export default {
 	},
 	mounted() {
 		if (this.selectedIndex > 0) {
-			this.$refs.carousel.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
+			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
 		}
-		this.$refs.carousel.addEventListener("scroll", this.handleCarouselScroll);
+		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
 	},
 	unmounted() {
-		if (this.$refs.carousel) {
-			this.$refs.carousel.removeEventListener("scroll", this.handleCarouselScroll);
-		}
+		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
 	},
 	methods: {
 		handleCarouselScroll() {
-			const { scrollLeft } = this.$refs.carousel;
-			const { offsetWidth } = this.$refs.carousel.children[0];
+			const { scrollLeft } = this.$refs["carousel"] as HTMLElement;
+			const { offsetWidth } = this.$refs["carousel"]?.children[0] as HTMLElement;
 			this.highlightedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
 
 			// save scroll position to url if not changing for 2s
-			clearTimeout(this.scrollTimeout);
+			if (this.scrollTimeout) {
+				clearTimeout(this.scrollTimeout);
+			}
 			this.scrollTimeout = setTimeout(() => {
 				if (this.highlightedIndex !== this.selectedIndex) {
 					this.$emit("index-changed", this.highlightedIndex);
 				}
 			}, 2000);
 		},
-		goTo(index) {
+		goTo(index: number) {
 			this.$emit("index-changed", index);
 		},
-		isCharging(lp) {
+		isCharging(lp: LoadpointCompact) {
 			return lp.charging && lp.chargePower > 0;
 		},
-		selected(index) {
+		selected(index: number) {
 			return this.highlightedIndex === index;
 		},
-		left(index) {
-			return this.$refs.carousel.children[0].offsetWidth * index;
+		left(index: number) {
+			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
 		},
-		scrollTo(index) {
+		scrollTo(index: number) {
 			this.highlightedIndex = index;
-			const $carousel = this.$refs.carousel;
-			$carousel.style.scrollSnapType = "none";
-			$carousel.scrollTo({ top: 0, left: this.left(index), behavior: "smooth" });
+			const $carousel = this.$refs["carousel"];
+			if ($carousel) {
+				$carousel.style.scrollSnapType = "none";
+				$carousel?.scrollTo({ top: 0, left: this.left(index), behavior: "smooth" });
+			}
 
-			clearTimeout(this.snapTimeout);
+			if (this.snapTimeout) {
+				clearTimeout(this.snapTimeout);
+			}
 			this.snapTimeout = setTimeout(() => {
-				this.$refs.carousel.style.scrollSnapType = "x mandatory";
+				if (this.$refs["carousel"]) {
+					this.$refs["carousel"].style.scrollSnapType = "x mandatory";
+				}
 			}, 1000);
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .container--loadpoint {

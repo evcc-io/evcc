@@ -55,7 +55,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-solar")).toContainText("20 kWh grid");
 
     await expect(page.getByTestId("savings-tile-price")).toContainText("18.0rp/kWh");
-    await expect(page.getByTestId("savings-tile-price")).toContainText("6 CHF saved");
+    await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("8g/kWh");
     await expect(page.getByTestId("savings-tile-co2")).toContainText("19 kg saved");
@@ -75,7 +75,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-solar")).toContainText("70 kWh grid");
 
     await expect(page.getByTestId("savings-tile-price")).toContainText("24.0rp/kWh");
-    await expect(page.getByTestId("savings-tile-price")).toContainText("6 CHF saved");
+    await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("14g/kWh");
     await expect(page.getByTestId("savings-tile-co2")).toContainText("37 kg saved");

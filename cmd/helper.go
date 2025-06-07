@@ -12,6 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -111,4 +112,15 @@ func wrapFatalError(err error) error {
 	}
 
 	return &FatalError{err}
+}
+
+func customDevice(other map[string]any) (map[string]any, error) {
+	customYaml, ok := other["yaml"].(string)
+	if !ok {
+		return other, nil
+	}
+
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(customYaml), &res)
+	return res, err
 }

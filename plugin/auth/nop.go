@@ -22,6 +22,6 @@ func NewNopFromConfig(ctx context.Context, other map[string]any) (Authorizer, er
 	return new(nop), nil
 }
 
-func (p *nop) Transport(base http.RoundTripper) (http.RoundTripper, error) {
-	return base, nil
+func (p *nop) Transport(base http.RoundTripper) http.RoundTripper {
+	return base
 }

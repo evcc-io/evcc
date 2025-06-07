@@ -26,13 +26,15 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "../../mixins/formatter.ts";
-import { getSessionInfo, setSessionInfo } from "./session.ts";
+import formatter from "@/mixins/formatter";
+import { getSessionInfo, setSessionInfo } from "./session";
+import type { CURRENCY, SelectOption } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "LoadpointSessionInfo",
 	components: {
 		LabelAndValue,
@@ -40,13 +42,13 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		id: Number,
+		id: { type: Number, default: 0 },
 		sessionCo2PerKWh: { type: Number, default: 0 },
 		sessionPricePerKWh: { type: Number, default: 0 },
 		sessionPrice: { type: Number, default: 0 },
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		sessionSolarPercentage: { type: Number, default: 0 },
-		chargeRemainingDurationInterpolated: Number,
+		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
 		tariffCo2: Number,
 		tariffGrid: Number,
@@ -101,7 +103,7 @@ export default {
 		optionKeys() {
 			return this.options.map((option) => option.key);
 		},
-		selectOptions() {
+		selectOptions(): SelectOption<string>[] {
 			return this.optionKeys.map((key) => ({
 				name: this.$t(`main.loadpoint.${key}`),
 				value: key,
@@ -126,11 +128,11 @@ export default {
 		},
 		finishTime() {
 			const remainingSeconds = this.chargeRemainingDurationInterpolated;
+			const now = new Date();
 			if (remainingSeconds > 0) {
-				const now = new Date();
 				return new Date(now.getTime() + remainingSeconds * 1000);
 			}
-			return undefined;
+			return now;
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
@@ -142,10 +144,10 @@ export default {
 		},
 	},
 	methods: {
-		fmtAvgPrice(value) {
+		fmtAvgPrice(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, false);
 		},
-		fmtAvgPriceShort(value) {
+		fmtAvgPriceShort(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		nextSessionInfo() {
@@ -153,7 +155,7 @@ export default {
 			this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
 			this.presist();
 		},
-		selectOption(value) {
+		selectOption(value: string) {
 			this.selectedKey = value;
 			this.presist();
 		},
@@ -161,7 +163,7 @@ export default {
 			setSessionInfo(this.id, this.selectedKey);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

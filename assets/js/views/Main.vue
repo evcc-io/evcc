@@ -1,5 +1,6 @@
 <template>
 	<Site
+		v-if="state.startup"
 		:notifications="notifications"
 		v-bind="state"
 		:selected-loadpoint-index="selectedLoadpointIndex"
@@ -19,6 +20,14 @@ export default {
 	},
 	data() {
 		return store;
+	},
+	head() {
+		const title = store.state.siteTitle;
+		if (title) {
+			return { title };
+		}
+		// no custom title
+		return { title: "evcc", titleTemplate: null };
 	},
 };
 </script>

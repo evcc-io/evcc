@@ -1,7 +1,10 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
+			<div
+				class="d-flex justify-content-between align-items-center my-3 my-md-4"
+				data-testid="header"
+			>
 				<h1 class="d-block my-0">
 					<span v-if="!isInitialSetup">
 						{{ siteTitle || "evcc" }}
@@ -54,6 +57,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:forecast="forecast"
 				:selectedIndex="selectedLoadpointIndex"
 				@index-changed="selectedLoadpointChanged"
 			/>
@@ -62,18 +66,29 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
 import WelcomeIcons from "./WelcomeIcons.vue";
+import { defineComponent, type PropType } from "vue";
+import type {
+	Auth,
+	Battery,
+	CURRENCY,
+	Forecast,
+	LoadpointCompact,
+	Notification,
+	Sponsor,
+} from "@/types/evcc";
+import type { Grid } from "./types";
 
-export default {
+export default defineComponent({
 	name: "Site",
 	components: {
 		Loadpoints,
@@ -85,25 +100,25 @@ export default {
 	},
 	mixins: [formatter, collector],
 	props: {
-		loadpoints: Array,
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		selectedLoadpointIndex: Number,
 
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
 
 		// details
 		gridConfigured: Boolean,
-		grid: Object,
+		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
-		pv: Array,
+		pv: { type: Array, default: () => [] },
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: Array,
+		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -111,9 +126,9 @@ export default {
 		siteTitle: String,
 		vehicles: Object,
 
-		auth: Object,
+		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
 
-		currency: String,
+		currency: { type: String as PropType<CURRENCY>, required: true },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -128,10 +143,10 @@ export default {
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
-		sponsor: { type: Object, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String,
 		fatal: Object,
-		forecast: Object,
+		forecast: Object as PropType<Forecast>,
 	},
 	computed: {
 		batteryConfigured() {
@@ -150,7 +165,7 @@ export default {
 			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact() {
-			return this.loadpoints.map((lp) => {
+			return this.loadpoints.map((lp, index) => {
 				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
 				const icon = lp.chargerIcon || vehicleIcon || "car";
 				const title =
@@ -161,7 +176,7 @@ export default {
 				const soc = lp.vehicleSoc;
 				const power = lp.chargePower || 0;
 				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, power, soc, heating };
+				return { icon, title, charging, power, soc, heating, index };
 			});
 		},
 		vehicleList() {
@@ -169,8 +184,7 @@ export default {
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation) };
+			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
 		},
 		showParkingLot() {
 			// work in progess
@@ -201,14 +215,14 @@ export default {
 		},
 	},
 	methods: {
-		selectedLoadpointChanged(index) {
+		selectedLoadpointChanged(index: number) {
 			this.$router.push({ query: { lp: index + 1 } });
 		},
-		vehicleTitle(vehicleName) {
+		vehicleTitle(vehicleName: string) {
 			return this.vehicles?.[vehicleName]?.title;
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .site {
@@ -219,9 +233,6 @@ export default {
 	flex-grow: 1;
 	z-index: 1;
 }
-.fatal {
-}
-
 .configure-button:not(:active):not(:hover),
 .welcome-icons {
 	animation: colorTransition 10s infinite alternate;

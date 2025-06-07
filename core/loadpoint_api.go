@@ -66,6 +66,21 @@ func (lp *Loadpoint) GetCircuitRef() string {
 	return lp.CircuitRef
 }
 
+// SetCircuitRef sets the loadpoint circuit
+func (lp *Loadpoint) SetCircuitRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set circuit ref: not configurable")
+		return
+	}
+
+	lp.log.DEBUG.Println("set circuit ref:", ref)
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.CircuitRef = ref
+	lp.settings.SetString(keys.Circuit, ref)
+}
+
 // GetDefaultVehicleRef returns the loadpoint default vehicle
 func (lp *Loadpoint) GetDefaultVehicleRef() string {
 	lp.RLock()
@@ -79,6 +94,8 @@ func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
 		lp.log.ERROR.Println("cannot set default vehicle ref: not configurable")
 		return
 	}
+
+	lp.log.DEBUG.Println("set default vehicle ref:", ref)
 
 	lp.Lock()
 	defer lp.Unlock()
@@ -253,11 +270,6 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 
 	lp.Lock()
 	lp.setPhasesConfigured(phases)
-
-	// apply immediately if not 1p3p
-	if !lp.hasPhaseSwitching() {
-		lp.setPhases(phases)
-	}
 	lp.Unlock()
 
 	lp.requestUpdate()
@@ -327,19 +339,19 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
-	return lp.planTime, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
+	return lp.planTime, lp.planPrecondition, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -347,11 +359,15 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	// remove plan
 	if energy == 0 {
 		finishAt = time.Time{}
+		precondition = 0
 	}
 
 	lp.planTime = finishAt
+	lp.planPrecondition = precondition
 	lp.publish(keys.PlanTime, finishAt)
+	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
+	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -359,7 +375,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -370,8 +386,8 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, energy)
+	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(finishAt, precondition, energy)
 		lp.requestUpdate()
 	}
 
@@ -684,20 +700,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	}
 
 	return nil
-}
-
-// GetMinPower returns the min loadpoint power for a single phase
-func (lp *Loadpoint) GetMinPower() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return Voltage * lp.effectiveMinCurrent()
-}
-
-// GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
-func (lp *Loadpoint) GetMaxPower() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 
 // IsFastChargingActive indicates if fast charging with maximum power is active
