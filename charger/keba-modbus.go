@@ -268,12 +268,14 @@ func (wb *Keba) statusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Keba) Enabled() (bool, error) {
-	s, err := wb.getChargingState()
+	b, err := wb.conn.ReadHoldingRegisters(wb.regEnable, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return !(s == 5 || s == 1), nil
+	u := binary.BigEndian.Uint16(b)
+
+	return u != 0, nil
 }
 
 // Enable implements the api.Charger interface
