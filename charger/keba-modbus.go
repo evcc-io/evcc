@@ -273,9 +273,7 @@ func (wb *Keba) Enabled() (bool, error) {
 		return false, err
 	}
 
-	u := binary.BigEndian.Uint16(b)
-
-	return u != 0, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
