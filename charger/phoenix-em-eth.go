@@ -151,7 +151,7 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(value), nil
+	return value, nil
 }
 
 func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
@@ -160,7 +160,7 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(value), nil
+	return value, nil
 }
 
 // currents implements the api.PhaseCurrents interface

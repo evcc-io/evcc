@@ -194,7 +194,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(value), nil
+	return value, nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -213,7 +213,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(value), nil
+	return value, nil
 }
 
 // currents implements the api.PhaseCurrents interface
