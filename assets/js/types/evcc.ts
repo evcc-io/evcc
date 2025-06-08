@@ -30,6 +30,7 @@ export interface State {
 	currency?: CURRENCY;
 	fatal?: FatalError;
 	auth?: Auth;
+	vehicles: Vehicle[];
 }
 
 export interface LoadpointCompact {

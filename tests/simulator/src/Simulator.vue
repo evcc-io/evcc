@@ -1,4 +1,5 @@
 <template>
+	{{ state }}
 	<form
 		v-if="state"
 		class="container"
@@ -239,14 +240,28 @@
 	</form>
 </template>
 
-<script>
+<script lang="ts">
 import axios from "axios";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Simulator",
 	data() {
 		return {
-			state: null,
+			state: {} as {
+				site: {
+					grid: { power: number };
+					pv: { power: number; energy: number };
+					battery: { power: number; soc: number };
+				};
+				loadpoints: {
+					power: number;
+					energy: number;
+					enabled: boolean;
+					status: string;
+				}[];
+				vehicles: { soc: number; range: number }[];
+			},
 		};
 	},
 	mounted() {
@@ -266,7 +281,7 @@ export default {
 				...this.state.vehicles[this.state.vehicles.length - 1],
 			});
 		},
-		removeVehicle(index) {
+		removeVehicle(index: number) {
 			this.state.vehicles.splice(index, 1);
 		},
 		addLoadpoint() {
@@ -275,11 +290,11 @@ export default {
 				...this.state.loadpoints[this.state.loadpoints.length - 1],
 			});
 		},
-		removeLoadpoint(index) {
+		removeLoadpoint(index: number) {
 			this.state.loadpoints.splice(index, 1);
 		},
 	},
-};
+});
 </script>
 
 <style>

@@ -43,7 +43,7 @@ test.describe("battery meter", async () => {
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
-    await expect(page.getByTestId("battery")).toBeVisible(1);
+    await expect(page.getByTestId("battery")).toBeVisible({timeout: 1});
     await expect(page.getByTestId("battery")).toContainText("Battery Basement");
 
     // edit #1
@@ -54,7 +54,7 @@ test.describe("battery meter", async () => {
     await expectModalHidden(meterModal);
 
     const battery = page.getByTestId("battery");
-    await expect(battery).toBeVisible(1);
+    await expect(battery).toBeVisible({timeout: 1});
     await expect(battery).toContainText("Battery Basement");
     await expect(battery.getByTestId("device-tag-soc")).toContainText("75.0%");
     await expect(battery.getByTestId("device-tag-power")).toContainText("-2.5 kW");
