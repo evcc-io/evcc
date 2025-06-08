@@ -121,14 +121,19 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("failed to read firmware version: %w", err)
 	}
 
-	fw := strings.TrimPrefix(bytesAsString(b), "v")
-	if v, err := version.NewSemver(fw); err == nil {
-		if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
-			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
-			identify = wb.identify
+	fw, err := utf16BEBytesAsString(b)
+	if err == nil {
+		fw, _, _ = strings.Cut(strings.TrimPrefix(fw, "v"), "-")
+		if v, err := version.NewSemver(fw); err == nil {
+			if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
+				// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
+				identify = wb.identify
+			}
+		} else {
+			log.WARN.Printf("failed to parse firmware version %q: %v", string(b), err)
 		}
 	} else {
-		log.WARN.Printf("failed to parse firmware version %q: %v", string(b), err)
+		log.WARN.Printf("failed to decode firmware version %q: %v", b, err)
 	}
 
 	// get failsafe timeout from charger
@@ -324,8 +329,7 @@ func (wb *Vestel) identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	return bytesAsString(b), nil
+	return utf16BEBytesAsString(b)
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)
@@ -333,16 +337,20 @@ var _ api.Diagnosis = (*Vestel)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Vestel) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(vestelRegBrand, 10); err == nil {
-		fmt.Printf("Brand:\t%s\n", b)
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("Brand:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadInputRegisters(vestelRegModel, 5); err == nil {
-		fmt.Printf("Model:\t%s\n", b)
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("Model:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadInputRegisters(vestelRegSerial, 25); err == nil {
-		fmt.Printf("Serial:\t%s\n", b)
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("Serial:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
-		fmt.Printf("Firmware:\t%s\n", b)
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("Firmware:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1); err == nil {
 		fmt.Printf("Failsafe timeout:\t%#x\n", binary.BigEndian.Uint16(b))
@@ -352,5 +360,9 @@ func (wb *Vestel) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(vestelRegPhasesSwitch, 1); err == nil {
 		fmt.Printf("Phase switch:\t%#x\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15); err == nil {
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("RFID:\t%s\n", s)
 	}
 }

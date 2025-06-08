@@ -2,10 +2,19 @@ template: keba-modbus
 products:
   - brand: KEBA
     description:
-      generic: KeContact P20, P30, C/X Series
+      generic: KeContact P20
   - brand: KEBA
     description:
-      generic: KeContact P40, P40 Pro
+      generic: KeContact P30 C-Series
+  - brand: KEBA
+    description:
+      generic: KeContact P30 X-Series
+  - brand: KEBA
+    description:
+      generic: KeContact P40
+  - brand: KEBA
+    description:
+      generic: KeContact P40 Pro
   - brand: BMW
     description:
       generic: i Wallbox

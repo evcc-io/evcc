@@ -94,9 +94,9 @@ test.describe("tariffs", async () => {
         "Currency",
         "SEK",
         "Grid price",
-        "0.3 SEK",
+        "30.0 öre",
         "Feed-in price",
-        "-0.1 SEK",
+        "-10.0 öre",
         "Grid CO₂",
         "300 g",
       ].join("")
