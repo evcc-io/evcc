@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) 2023-2025 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 type PhoenixEVEth struct {
@@ -49,6 +50,10 @@ const (
 	phxRegEnergy          = 128  // Input
 	phxRegChargedEnergy   = 132  // Input
 	phxRegFirmwareWallbe  = 149  // Input
+	phxRegVoltagesScale   = 352  // Holding
+	phxRegCurrentsScale   = 358  // Holding
+	phxRegPowerScale      = 364  // Holding
+	phxRegEnergyScale     = 372  // Holding
 	phxRegEnable          = 400  // Coil
 	phxRegCardEnabled     = 419  // Coil
 	phxRegMaxCurrent      = 528  // Holding
@@ -184,12 +189,12 @@ func (wb *PhoenixEVEth) maxCurrentMillis(current float64) error {
 
 // currentPower implements the api.Meter interface
 func (wb *PhoenixEVEth) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phxRegPower, 2)
+	value, err := wb.readScaledValue(phxRegPower, phxRegPowerScale)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Int32LswFirst(b)), nil
+	return value, nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -203,34 +208,64 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return float64(encoding.Uint64LswFirst(b)) / 1e3, nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWh, 2)
+	value, err := wb.readScaledValue(phxRegEnergy, phxRegEnergyScale)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32LswFirst(b)) / 1e3, nil
+	return value, nil
 }
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxRegCurrents)
+	return wb.getPhaseValues(phxRegCurrents, phxRegCurrentsScale)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxRegVoltages)
+	return wb.getPhaseValues(phxRegVoltages, phxRegVoltagesScale)
+}
+
+func (wb *PhoenixEVEth) readScaledValue(regValue, regScale uint16) (float64, error) {
+	bValue, err := wb.conn.ReadInputRegisters(regValue, 2)
+	if err != nil {
+		return 0, err
+	}
+	bScale, err := wb.conn.ReadHoldingRegisters(regScale, 2)
+	if err != nil {
+		return 0, err
+	}
+	scale := rs485.RTUIeee754ToFloat64Swapped(bScale) / 1000.0
+
+	return float64(encoding.Int32LswFirst(bValue)) * scale, nil
+}
+
+func (wb *PhoenixEVEth) readScaledValues(regValue, regScale uint16) ([]float64, error) {
+	const count = 3
+
+	bValue, err := wb.conn.ReadInputRegisters(regValue, uint16(2*count))
+	if err != nil {
+		return nil, err
+	}
+	bScale, err := wb.conn.ReadHoldingRegisters(regScale, uint16(2*count))
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]float64, count)
+	for i := 0; i < count; i++ {
+		scale := rs485.RTUIeee754ToFloat64Swapped(bScale[4*i:]) / 1000.0
+		res[i] = float64(encoding.Int32LswFirst(bValue[4*i:])) * scale
+	}
+
+	return res, nil
 }
 
 // getPhaseValues returns 3 sequential phase values
-func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+func (wb *PhoenixEVEth) getPhaseValues(regValue, regScale uint16) (float64, float64, float64, error) {
+	res, err := wb.readScaledValues(regValue, regScale)
 	if err != nil {
 		return 0, 0, 0, err
-	}
-
-	var res [3]float64
-	for i := range res {
-		res[i] = float64(encoding.Int32LswFirst(b[4*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
