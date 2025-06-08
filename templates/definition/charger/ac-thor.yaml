@@ -2,7 +2,10 @@ template: ac-thor
 products:
   - brand: my-PV
     description:
-      generic: AC THOR, AC THOR 9s
+      generic: AC•THOR
+  - brand: my-PV
+    description:
+      generic: AC•THOR 9s
 group: heating
 requirements:
   evcc: ["sponsorship"]

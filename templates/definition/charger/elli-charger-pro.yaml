@@ -14,7 +14,7 @@ products:
       generic: Charger Pro
   - brand: Audi
     description:
-      generic: Audi Wallbox pro
+      generic: Wallbox pro
 capabilities: ["mA"]
 requirements:
   evcc: ["eebus"]
