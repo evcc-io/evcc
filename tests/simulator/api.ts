@@ -114,7 +114,7 @@ const shellyMiddleware = (
 
 export default () => ({
 	name: "api",
-	pre: "pre",
+	enforce: "pre",
 	configureServer(server: ViteDevServer) {
 		console.log("[simulator] configured");
 		return () => {
