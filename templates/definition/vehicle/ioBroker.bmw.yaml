@@ -13,12 +13,12 @@ params:
     example: WBMW...
   - name: uri
     required: true
-    help:
+    description:
       generic: ioBroker URL
   - name: id
     default: 0
     type: int
-    help:
+    description:
       de: Instanz-ID
       en: Instance ID
     advanced: true
