@@ -95,18 +95,13 @@
 import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
-import {
-	getLocalePreference,
-	setLocalePreference,
-	LOCALES,
-	removeLocalePreference,
-} from "@/i18n.ts";
-import { getThemePreference, setThemePreference } from "@/theme.ts";
+import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "@/i18n";
+import { getThemePreference, setThemePreference, THEMES } from "@/theme";
 import { getUnits, setUnits, UNITS, is12hFormat, set12hFormat } from "@/units";
-import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
+import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { THEME, type Sponsor } from "@/types/evcc";
+import type { Sponsor } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -125,7 +120,7 @@ export default defineComponent({
 			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
-			THEMES: Object.values(THEME),
+			THEMES,
 			UNITS,
 			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
@@ -162,8 +157,7 @@ export default defineComponent({
 		},
 		language(value) {
 			const i18n = this.$root?.$i18n;
-			if (!i18n) return;
-			else if (value) {
+			if (value) {
 				setLocalePreference(i18n, value);
 			} else {
 				removeLocalePreference(i18n);
