@@ -54,7 +54,7 @@ export interface State {
 	modbusproxy?: [];
 	messaging?: any;
 	interval?: number;
-	circuits?: Record<string, Curcuit>;
+	circuits?: Record<string, Circuit>;
 	siteTitle?: string;
 	vehicles: Record<string, Vehicle>;
 }
@@ -66,7 +66,7 @@ export interface Config {
 	[key: string]: number | string | undefined;
 }
 
-export interface Curcuit {
+export interface Circuit {
 	name: string;
 	maxPower: number;
 	power?: number;

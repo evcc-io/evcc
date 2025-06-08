@@ -434,7 +434,7 @@ import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
-import type { Charger, ConfigVehicle, Curcuit, Loadpoint, Meter, Timeout } from "@/types/evcc";
+import type { Charger, ConfigVehicle, Circuit, Loadpoint, Meter, Timeout } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Config",
@@ -480,7 +480,7 @@ export default defineComponent({
 			meters: [] as Meter[],
 			loadpoints: [] as Loadpoint[],
 			chargers: [] as Charger[],
-			circuits: [] as Curcuit[],
+			circuits: [] as Circuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
 			selectedMeterType: undefined as string | undefined,
@@ -959,7 +959,7 @@ export default defineComponent({
 				console.error(`modal ${id} not found`);
 			}
 		},
-		circuitTags(circuit: Curcuit) {
+		circuitTags(circuit: Circuit) {
 			const circuits = store.state?.circuits || {};
 			const data = circuits[circuit.name] || {};
 			const result = { powerRange: {}, currentRange: {}, power: {} };
