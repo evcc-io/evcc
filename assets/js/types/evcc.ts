@@ -55,6 +55,8 @@ export interface State {
 	messaging?: any;
 	interval?: number;
 	circuits?: Record<string, Curcuit>;
+	siteTitle?: string;
+	vehicles: Record<string, Vehicle>;
 }
 
 export interface Config {
