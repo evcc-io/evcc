@@ -4,8 +4,8 @@
   - {{ . }}
   {{- end }}
   {{- $unit := .Unit -}}
-  {{- $description := localize .Description | replace "\n" " " -}}
-  {{- $help := localize .Help | replace "\n" " " -}}
+  {{- $description := localize .Description | replace "\n" " " | trim -}}
+  {{- $help := localize .Help | replace "\n" " " | trim -}}
   {{- $choices := join ", " .Choice -}}
   {{- $optional := not .IsRequired -}}
   {{- if or $help $choices $optional $description }} # {{end}}
@@ -52,7 +52,9 @@
   {{- end }}
 {{- end -}}
 
+template: {{ .Template }}
 product:
+  identifier: {{ .ProductIdentifier }}
 {{- if .ProductBrand }}
   brand: {{ .ProductBrand }}
 {{- end }}
@@ -95,4 +97,26 @@ render:
     advanced: |
     {{- include "advanced" . | indent 4 }}
     {{- end }}
+{{- end }}
+params:
+  {{- range .Params }}
+  {{- if and (not (eq .Name "usage")) (not .IsDeprecated) }}
+  - name: {{ .Name | quote }}
+    example: {{ .Example | quote }}
+    default: {{ .Default }}
+    choice: [{{ join ", " .Choice }}]
+    unit: {{ .Unit }}
+    {{- $description := localize .Description | replace "\n" " " | trim }}
+    description: {{ $description | quote }}
+    {{- $help := localize .Help | replace "\n" " " | trim }}
+    help: {{ $help | quote }}
+    advanced: {{ .IsAdvanced }}
+    optional: {{ not .IsRequired }}
+  {{- end }}
+  {{- end }}
+{{- if .ModbusData }}
+modbus:
+{{- range $key, $value := .ModbusData }}
+  {{ $key }}: {{ $value }}
+{{- end }}
 {{- end }}

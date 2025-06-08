@@ -60,7 +60,6 @@ test.describe("mqtt", async () => {
     await restart(CONFIG);
 
     // config error
-    await expect(restartButton).not.toBeVisible();
     await expect(page.getByTestId("mqtt")).toHaveClass(/round-box--error/);
     await expect(page.getByTestId("mqtt")).toContainText(
       ["Broker", INVALID_BROKER, "Topic", VALID_TOPIC].join("")

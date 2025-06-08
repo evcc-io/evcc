@@ -5,8 +5,8 @@ export default defineComponent({
 	props: {
 		size: {
 			type: String as PropType<ICON_SIZE>,
-			validator(value: string) {
-				return Object.keys(ICON_SIZE).includes(value);
+			validator(value: ICON_SIZE) {
+				return Object.values(ICON_SIZE).includes(value);
 			},
 			default: ICON_SIZE.S,
 		},
