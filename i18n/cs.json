@@ -8,18 +8,18 @@
     },
     "capacity": "{energy} z {total}",
     "control": "Ovládání baterie",
-    "discharge": "Zabránit vybití v rychlém režimu a plánovaném nabíjení.",
+    "discharge": "Zabrání vybití baterie FVE v okamžitém režimu a během naplánovaného nabíjení.",
     "disclaimerHint": "Poznámka:",
-    "disclaimerText": "Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno.",
-    "gridChargeTab": "Nabíjení ze sítě",
-    "legendBottomName": "Upřednostnit nabíjení domácí baterie",
+    "disclaimerText": "Tato nastavení jsou platná pouze v solárním režimu. Chování dobíjení se upraví dle potřeby.",
+    "gridChargeTab": "Nabíjení z distribuční sítě",
+    "legendBottomName": "Upřednostnit nabíjení baterie FVE",
     "legendBottomSubline": "dokud nedosáhne hodnoty {soc}.",
     "legendMiddleName": "Upřednostnit nabíjení vozidla",
-    "legendMiddleSubline": "když je domácí baterie nad hodnotou {soc}.",
-    "legendTopAutostart": "Spustit automaticky",
-    "legendTopName": "Nabíjení vozidla s podporou baterie",
-    "legendTopSubline": "pokud je domácí baterie nad hodnotou {soc}.",
-    "modalTitle": "Domácí baterie",
+    "legendMiddleSubline": "když je baterie domu nad {soc}.",
+    "legendTopAutostart": "Spustí se automaticky",
+    "legendTopName": "Nabíjení vozidla s využitím baterie domu",
+    "legendTopSubline": "když je baterie domu nad {soc}.",
+    "modalTitle": "Nastavení baterie",
     "usageTab": "Využití baterie"
   },
   "config": {
@@ -40,7 +40,7 @@
       "chargers": "EV nabíječky",
       "generic": "Obecné integrace",
       "heatingdevices": "Topná zařízení",
-      "ocppHelp": "Zkopíruj tuto adresu do nastavení nabíječky",
+      "ocppHelp": "Zkopíruj tuto adresu do konfiguračního nástroje wallboxu.",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",
@@ -52,12 +52,12 @@
       "title": "Řízení zátěže"
     },
     "control": {
-      "description": "Obvykle jsou přednastavené hodnoty správné. Změňte jen pokud víte, co děláte.",
+      "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
       "descriptionInterval": "Aktualizační cyklus regulační smyčky v sekundách. Určuje, jak často evcc čte data z měřičů, upravuje nabíjecí výkon a aktualizuje uživatelské rozhraní. Krátké intervaly (< 30s) mohou způsobit oscilace a nežádoucí chování.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
       "labelResidualPower": "Zbytkový výkon",
-      "title": "Chování řízení"
+      "title": "Chování systému"
     },
     "deviceValue": {
       "amount": "Množství",
@@ -67,7 +67,7 @@
       "chargeStatus": "Stav",
       "chargeStatusA": "nepřipojeno",
       "chargeStatusB": "připojeno",
-      "chargeStatusC": "nabíjení",
+      "chargeStatusC": "Nabíjení",
       "chargeStatusE": "žádný výkon",
       "chargeStatusF": "chyba",
       "chargedEnergy": "Nabito",
@@ -95,7 +95,7 @@
       "powerRange": "Výkon",
       "range": "Rozsah",
       "singlePhase": "Jednofázové",
-      "soc": "Nabití",
+      "soc": "Úroveň nabití",
       "solarForecast": "Solární předpověď",
       "temp": "Teplota",
       "topic": "Téma",
@@ -112,6 +112,9 @@
       "auxMeter": "Chytrý spotřebič",
       "batteryStorage": "Bateriové úložiště",
       "solarSystem": "Fotovoltaický systém"
+    },
+    "editor": {
+      "loading": "Načítám editor YAML…"
     },
     "eebus": {
       "description": "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními.",
@@ -130,9 +133,11 @@
     },
     "general": {
       "cancel": "Zrušit",
+      "customHelp": "Vytvořit zařízení definované uživatelem s použitím EVCC plugin rozhraní.",
+      "customOption": "Zařízení nastavené uživatelem",
       "delete": "Smazat",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
-      "experimental": "Experimentální",
+      "experimental": "Experimentální nastavení",
       "hideAdvancedSettings": "Skrýt pokročilá nastavení",
       "off": "vypnuto",
       "on": "zapnuto",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Umožňuje propojení evcc s dalším systémem pro správu energie v domácnosti.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "Změnit"
     },
     "influx": {
       "description": "Zapisuje údaje o nabíjení a další metriky do InfluxDB. K vizualizaci dat použijte Grafanu nebo jiné nástroje.",
@@ -191,11 +199,11 @@
       "defaultModeHelpKeep": "Zachová naposledy zvolený režim nabíjení.",
       "defaultModeLabel": "Výchozí režim",
       "delete": "Smazat",
-      "electricalSubtitle": "Pokud si nejste jisti, poraďte se se svým elektrikářem.",
+      "electricalSubtitle": "Pokud váháte, konzultujte se svým elektrikářem.",
       "electricalTitle": "Elektrické",
       "energyMeterHelp": "Doplňkový měřič, pokud nabíječka nemá integrovaný.",
       "energyMeterLabel": "Elektroměr",
-      "estimateLabel": "Interpolovat úroveň nabití mezi aktualizacemi z API",
+      "estimateLabel": "Odhadovat úroveň nabití vozu mezi aktualizacemi z API",
       "maxCurrentHelp": "Musí být větší než minimální proud.",
       "maxCurrentLabel": "Maximální proud",
       "minCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
@@ -204,7 +212,7 @@
       "phases1p": "1 fáze",
       "phases3p": "3 fáze",
       "phasesAutomatic": "Automatické přepínání fází",
-      "phasesAutomaticHelp": "Vaše nabíječka podporuje automatické přepínání mezi 1fázovým a 3fázovým nabíjením. Na hlavní obrazovce můžete během nabíjení upravit chování fází.",
+      "phasesAutomaticHelp": "Váš wallbox podporuje automatické přepínání mezi 1-fázovým a 3-fázovým nabíjením. Na hlavní obrazovce můžete během nabíjení upravit chování fází.",
       "phasesHelp": "Počet fází připojených k nabíječce.",
       "phasesLabel": "Fáze",
       "pollIntervalDanger": "Pravidelné dotazování na stav vozidla může vybíjet jeho baterii. Někteří výrobci vozidel mohou v takovém případě aktivně bránit nabíjení. Nedoporučuje se! Použijte pouze tehdy, pokud si jste vědomi rizik.",
@@ -213,7 +221,7 @@
       "pollModeAlways": "vždy",
       "pollModeAlwaysHelp": "Vždy požadovat aktualizace stavu v pravidelných intervalech.",
       "pollModeCharging": "nabíjení",
-      "pollModeChargingHelp": "Požadovat aktualizace stavu vozidla pouze během nabíjení.",
+      "pollModeChargingHelp": "Požadovat aktualizace stavu vozidla ze serveru pouze během nabíjení.",
       "pollModeConnected": "připojeno",
       "pollModeConnectedHelp": "Aktualizovat stav vozidla v pravidelných intervalech, pokud je připojeno.",
       "pollModeLabel": "Chování aktualizace",
@@ -255,6 +263,7 @@
       "addVehicle": "Přidat vozidlo",
       "configured": "nastaveno",
       "edit": "editace",
+      "loadpointRequired": "Musíte nastavit alespoň jeden dobíjecí bod.",
       "name": "Jméno",
       "title": "Konfigurace",
       "unconfigured": "není konfigurováno",
@@ -262,12 +271,13 @@
       "yaml": "Zařízení z evcc.yaml nelze upravovat."
     },
     "messaging": {
-      "description": "Dostávejte upozornění o průběhu nabíjení.",
+      "description": "Dostávejte notifikace o průběhu nabíjení.",
       "title": "Oznámení"
     },
     "meter": {
       "cancel": "Zrušit",
       "delete": "Smazat",
+      "generic": "Obecné integrace",
       "option": {
         "aux": "Přidat samoregulační spotřebič",
         "battery": "Přidat měřič baterie",
@@ -275,6 +285,7 @@
         "pv": "Přidat měřič solární energie"
       },
       "save": "Uložit",
+      "specific": "Specifické integrace",
       "template": "Výrobce",
       "titleChoice": "Co chcete přidat?",
       "validateSave": "Zkontrolovat a uložit"
@@ -360,7 +371,7 @@
       "integrations": "Integrace",
       "loadpoints": "Nabíjecí body",
       "meter": "Solár a baterie",
-      "system": "System",
+      "system": "Systém",
       "vehicles": "Vozidla"
     },
     "sponsor": {
@@ -376,9 +387,9 @@
       "trialToken": "Zkušební token"
     },
     "system": {
-      "logs": "Protokoly",
+      "logs": "Logy",
       "restart": "Restartovat",
-      "restartRequiredDescription": "Pro zobrazení změn prosím restartujte.",
+      "restartRequiredDescription": "Aby se změny projevily, je třeba restartovat systém.",
       "restartRequiredMessage": "Konfigurace byla změněna.",
       "restartingDescription": "Prosím čekejte…",
       "restartingMessage": "Restartování evcc."
@@ -395,7 +406,7 @@
     "validation": {
       "failed": "selhalo",
       "label": "Stav",
-      "running": "Ověřuji...",
+      "running": "Ověřování…",
       "success": "úspěch",
       "unknown": "neznámý",
       "validate": "ověřit"
@@ -416,6 +427,7 @@
       "minimumCurrent": "Minimální proud",
       "minimumCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
       "online": "Vozidlo s online API",
+      "primary": "Obecné integrace",
       "priority": "Priorita",
       "priorityHelp": "Vyšší priorita znamená, že toto vozidlo má přednostní přístup k solárnímu přebytku.",
       "save": "Uložit",
@@ -432,17 +444,17 @@
       "greenEnergySub1": "nabito s evcc",
       "greenEnergySub2": "od října 2022",
       "greenShare": "Solární sdílení",
-      "greenShareSub1": "energie dodaná",
+      "greenShareSub1": "energie poskytnuta",
       "greenShareSub2": "solární, a bateriové úložiště",
       "power": "Dobíjecí energie",
       "powerSub1": "{activeClients} z {totalClients} účastníků",
-      "powerSub2": "dobíjení...",
+      "powerSub2": "právě nabíjí",
       "tabTitle": "Komunita Live"
     },
     "savings": {
       "co2Saved": "{value} uložena",
       "co2Title": "CO₂ emise",
-      "configurePriceCo2": "Zjistit jak nastavit cenu a CO₂ data",
+      "configurePriceCo2": "Zjistit jak nastavit cenu a data CO₂.",
       "footerLong": "{percent} solární energie",
       "footerShort": "{percent} solár",
       "modalTitle": "Přehled energie",
@@ -481,7 +493,7 @@
       "optIn": "Chci přispět svými daty.",
       "optInMoreDetails": "Více informací {0}.",
       "optInMoreDetailsLink": "zde",
-      "optInSponsorship": "Sponzorování vyžadováno"
+      "optInSponsorship": "Vyžadován sponzorský token."
     },
     "version": {
       "availableLong": "nová verze je k dispozici",
@@ -492,7 +504,7 @@
       "modalTitle": "Nová verze nalezena",
       "modalUpdate": "Instalovat",
       "modalUpdateNow": "Instalovat nyní",
-      "modalUpdateStarted": "Spouštím novou verzi evcc...",
+      "modalUpdateStarted": "Spouštění nové verze EVCC…",
       "modalUpdateStatusStart": "Instalace spuštěna:"
     }
   },
@@ -546,7 +558,7 @@
       "cancel": "Zrušit",
       "confirm": "Ano, restartovat!",
       "description": "Za normálních okolností by restartování nemělo být nutné. Pokud musíte pravidelně restartovat evcc, zvažte prosím nahlášení chyby.",
-      "disclaimer": "Poznámka: evcc se ukončí a spoléhá na to, že operační systém restartuje službu.",
+      "disclaimer": "Poznámka: evcc se ukončí a spoléhá na to, že operační systém restartuje službu evcc automaticky.",
       "modalTitle": "Opravdu chcete restartovat?"
     },
     "restartButton": "Restartovat",
@@ -572,10 +584,10 @@
     "iframeHint": "Otevřít evcc v novém panelu.",
     "iframeIssue": "Vaše heslo je správné, ale zdá se, že váš prohlížeč ztratil autentifikační cookie. K tomu může dojít, pokud spouštíte evcc v iframe přes HTTP.",
     "invalid": "Heslo je neplatné.",
-    "login": "Přihlášení",
+    "login": "Přihlásit",
     "password": "Heslo",
     "reset": "Obnovit heslo?",
-    "title": "Autentifikace"
+    "title": "Přihlášení"
   },
   "main": {
     "chargingPlan": {
@@ -606,28 +618,28 @@
       "weekdays": "Dny"
     },
     "energyflow": {
-      "battery": "Baterie",
+      "battery": "Baterie domu",
       "batteryCharge": "Nabíjení baterie",
       "batteryDischarge": "Vybíjení baterie",
-      "batteryGridChargeActive": "nabíjení ze sítě je aktivní",
+      "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
-      "batteryHold": "Baterie (zamknuto)",
+      "batteryHold": "Baterie (udržování stavu nabití)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecastTooltip": "předpověď: zbývající solární výroba dnes",
-      "gridImport": "Používaní sítě",
-      "homePower": "Spotřeba",
+      "gridImport": "Odběr ze sítě",
+      "homePower": "Spotřeba domu",
       "loadpoints": "Nabíječka | Nabíječka | {count} nabíječek",
-      "noEnergy": "Žádné data měřiče",
-      "pv": "Fotovoltaický systém",
+      "noEnergy": "Žádná data z měřiče",
+      "pv": "FVE",
       "pvExport": "Export do sítě",
-      "pvProduction": "Produkce",
-      "selfConsumption": "Vlastní spotřeba"
+      "pvProduction": "Výroba",
+      "selfConsumption": "Vlastní výroba"
     },
     "heatingStatus": {
-      "charging": "Vyhřívání...",
+      "charging": "Ohřívání…",
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
-      "waitForVehicle": "Připraveno. Čekání na topení..."
+      "waitForVehicle": "Připraven. Čekám na odpověď topidla…"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -645,18 +657,18 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Rychlé nabíjení z domácí baterie.",
-        "label": "Battery Boost",
+        "description": "Povolí využití energie uložené v baterii domu pro nabíjení.",
+        "label": "Rychlé dobití",
         "mode": "Dostupné pouze v solárním režimu a režimu min+solar.",
-        "once": "Zvýšení výkonu aktivováno pro tuto nabíjecí relaci."
+        "once": "Rychlé dobití je aktivováno pro tuto nabíjecí relaci."
       },
       "batteryUsage": "Domácí baterie",
       "currents": "Nabíjecí proud",
       "default": "výchozí",
       "disclaimerHint": "Poznámka:",
       "limitSoc": {
-        "description": "Nabíjecí strop, který je použit, když je vozidlo připojeno.",
-        "label": "Výchozí strop"
+        "description": "Nabíjecí limit, který je použit, když je připojeno toto vozidlo.",
+        "label": "Výchozí limit nabití"
       },
       "maxCurrent": {
         "label": "Max. Proud"
@@ -666,11 +678,11 @@
       },
       "minSoc": {
         "description": "Vozidlo bude rychle nabito na {0} v solárním režimu. Poté bude pokračovat nabíjení z přebytku solární energie. Užitečné pro zajištění minimálního dojezdu i během zatažených dnů.",
-        "label": "Min. nabití v %"
+        "label": "Minimální úroveň nabití"
       },
       "onlyForSocBasedCharging": "Tyto volby jsou povolené pouze pro vozidla se známou nabíjecí úrovní.",
       "phasesConfigured": {
-        "label": "Fází",
+        "label": "Připojení fází",
         "no1p3pSupport": "Jak je vaše nabíječka připojena?",
         "phases_0": "automatické přepínání",
         "phases_1": "jednofázové",
@@ -688,7 +700,7 @@
       "now": "Rychlé",
       "off": "Vypnuto",
       "pv": "Solár",
-      "smart": "Smart"
+      "smart": "Chytrý"
     },
     "provider": {
       "login": "přihlásit",
@@ -697,16 +709,16 @@
     "startConfiguration": "Začněme s konfigurací",
     "targetCharge": {
       "activate": "Aktivovat",
-      "co2Limit": "CO₂ strop z {co2}",
-      "costLimitIgnore": "Nastavených {limit} bude během opakování ignorováno",
+      "co2Limit": "CO₂ limit z {co2}",
+      "costLimitIgnore": "Nastavený {limit} nebude během tohoto nabíjení brán v potaz.",
       "currentPlan": "Aktivní plán",
       "descriptionEnergy": "Dokud nebude {targetEnergy} nabito do vozidla?",
       "descriptionSoc": "Kdy by mělo být vozidlo nabito na {targetSoc}?",
       "goalReached": "Cíl dosažen",
       "inactiveLabel": "Cílový čas",
       "nextPlan": "Další plán",
-      "notReachableInTime": "Cíle bude dosaženo o {overrun} později.",
-      "onlyInPvMode": "Nabíjecí plán funguje pouze v solárním režimu",
+      "notReachableInTime": "Požadovaná hodnota nabití bude dosažena o {overrun} později.",
+      "onlyInPvMode": "Nabíjecí plány fungují pouze v solárním režimu.",
       "planDuration": "Nabíjecí čas",
       "planPeriodLabel": "Opakování",
       "planPeriodValue": "{start} do {end}",
@@ -715,10 +727,10 @@
       "priceLimit": "cenový strop z {price}",
       "remove": "Odebrat",
       "setTargetTime": "žádný",
-      "targetIsAboveLimit": "Nastavený nabíjecí strop {limit} bude během tohoto opakování ignorován",
+      "targetIsAboveLimit": "Nastavení obecného limitu {limit} bude během této nabíjecí relace ignorováno.",
       "targetIsAboveVehicleLimit": "Limit vozidla je nižší než cíl nabíjení.",
-      "targetIsInThePast": "Nastav čas v budoucnosti, Márty ;)",
-      "targetIsTooFarInTheFuture": "Upravíme plán, jakmile budeme znát více o budoucnosti",
+      "targetIsInThePast": "Vyber čas v budoucnu, Márty.",
+      "targetIsTooFarInTheFuture": "Plán bude upřesněn, jakmile bude k dispozici predikce.",
       "title": "Cílový čas",
       "today": "dnes",
       "tomorrow": "zítra",
@@ -734,27 +746,27 @@
       "unknownPrice": "stále neznámo"
     },
     "targetEnergy": {
-      "label": "Strop",
+      "label": "Limit dobitých kWh",
       "noLimit": "žádný"
     },
     "vehicle": {
       "addVehicle": "Přidat vozidlo",
       "changeVehicle": "Změnit vozidlo",
-      "detectionActive": "Detekuji vozidlo...",
+      "detectionActive": "Probíhá detekce vozidla…",
       "fallbackName": "Vozidlo",
       "moreActions": "Více akcí",
       "none": "Žádné vozidlo",
       "notReachable": "K vozidlu se nedalo připojit. Zkuste restarovat evcc.",
-      "targetSoc": "Strop",
+      "targetSoc": "Maximální úroveň nabití",
       "temp": "Teplota",
-      "tempLimit": "Teplotní strop",
+      "tempLimit": "Cílová teplota",
       "unknown": "Vozidlo hosta",
-      "vehicleSoc": "Nabití"
+      "vehicleSoc": "Úroveň nabití"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Čeká se na autorizaci.",
-      "batteryBoost": "Battery boost je aktivní.",
-      "charging": "Nabíjení...",
+      "batteryBoost": "Rychlé dobití je aktivní.",
+      "charging": "Nabíjení…",
       "cheapEnergyCharging": "Levná energie je k dispozici.",
       "cheapEnergyNextStart": "Levná energie za {duration}.",
       "cheapEnergySet": "Cenový limit nastaven.",
@@ -766,17 +778,17 @@
       "disconnectRequired": "Relace byla ukončena. Prosím, připojte se znovu.",
       "disconnected": "Odpojeno.",
       "finished": "Dokončeno.",
-      "minCharge": "Minimální nabití na {soc}.",
+      "minCharge": "Okamžité nabíjení na {soc}.",
       "pvDisable": "Nedostatečný přebytek. Nabíjení bude brzy pozastaveno.",
       "pvEnable": "Přebytky jsou k dispozici. Nabíjení začne brzy.",
       "scale1p": "Brzy dojde ke snížení na 1fázové nabíjení.",
-      "scale3p": "Brzy dojde ke zvýšení na 3fázové nabíjení.",
+      "scale3p": "Brzy dojde k přechodu na třífázové nabíjení.",
       "targetChargeActive": "Plán nabíjení je aktivní. Odhadovaný čas dokončení: {duration}.",
       "targetChargePlanned": "Plán nabíjení začne za {duration}.",
       "targetChargeWaitForVehicle": "Plán nabíjení připraven. Čeká se na vozidlo…",
       "vehicleLimit": "Limit vozidla",
       "vehicleLimitReached": "Limit vozidla dosažen.",
-      "waitForVehicle": "Připraveno. Čekám na vozidlo...",
+      "waitForVehicle": "Připraveno. Čekám na vozidlo…",
       "welcome": "Krátké počáteční nabíjení pro potvrzení připojení."
     },
     "vehicles": "Parkoviště",
@@ -795,8 +807,8 @@
     "restarting": "Server bude brzy opět k dispozici."
   },
   "passwordModal": {
-    "description": "Nastavte heslo pro ochranu konfiguračních nastavení. Použití hlavní obrazovky je stále možné bez přihlášení.",
-    "empty": "Heslo nesmí být prázdné.",
+    "description": "Nastavte heslo pro zabezpečení konfiguračního menu. Obrazovka přehledu bude stále dostupná i bez ověření heslem.",
+    "empty": "Heslo nesmí být prázdné",
     "error": "Chyba: ",
     "labelCurrent": "Současné heslo",
     "labelNew": "Nové heslo",
@@ -861,10 +873,9 @@
       "solarpercentage": "Solární energie (%)",
       "vehicle": "Vozidlo"
     },
-    "csvMonth": "Stažení {month} CSV",
+    "csvPeriod": "Stažení {period} CSV",
     "csvTotal": "Stažení celkového CSV",
     "date": "Start",
-    "downloadCsv": "Stáhnout jako CSV",
     "energy": "Nabito",
     "filter": {
       "allLoadpoints": "všechny nabíjecí body",
@@ -883,7 +894,7 @@
       "vehicle": "Vozidlo"
     },
     "loadpoint": "Nabíjecí bod",
-    "noData": "Tento měsíc žádná nabíjecí relace",
+    "noData": "Tento měsíc neproběhlo žádné nabíjení.",
     "overview": "Přehled",
     "period": {
       "month": "Měsíc",
@@ -910,8 +921,8 @@
       "label": "Celá obrazovka"
     },
     "hiddenFeatures": {
-      "label": "Experimentální",
-      "value": "Ukaž experimentální vlastnosti UI"
+      "label": "Experimentální nastavení",
+      "value": "Zobrazit experimentální nastavení."
     },
     "language": {
       "auto": "Automaticky",
@@ -931,7 +942,12 @@
       "label": "Design",
       "light": "světlý"
     },
-    "title": "Uživatelské rozhraní",
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Formát času"
+    },
+    "title": "Nastavení rozhraní",
     "unit": {
       "km": "km",
       "label": "Jednotky",
@@ -942,12 +958,12 @@
     "activeHours": "{charging} z {total}",
     "activeHoursLabel": "Aktivních hodin",
     "applyToAll": "Aplikovat všude?",
-    "batteryDescription": "Nabíjení domácí baterie ze sítě",
+    "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",
     "cheapTitle": "Levné nabíjení ze sítě",
     "cleanTitle": "Čisté nabíjení ze sítě",
     "co2Label": "CO₂ emise",
-    "co2Limit": "CO₂ strop",
-    "loadpointDescription": "Umožňuje dočasné rychlé dobíjení v solárním režimu",
+    "co2Limit": "Limit CO₂",
+    "loadpointDescription": "Umožňuje dočasné okamžité nabíjení i v solárním režimu.",
     "modalTitle": "Smart Grid Nabíjení",
     "none": "žádné",
     "priceLabel": "Cena energie",
@@ -958,13 +974,13 @@
   },
   "startupError": {
     "configFile": "Konfigurační soubor užívá:",
-    "configuration": "Config",
+    "configuration": "Konfigurace",
     "description": "Zkontrolujte prosím konfigurační soubor. Pokud chybová hláška nepomáhá, zkontroluj {0}.",
     "discussions": "GitHub diskuze",
     "fixAndRestart": "Opravte prosím problém a restartujte server.",
     "hint": "Poznámka: Může to být také způsobeno vadným zařízením (invertor, měřič, ...). Zkontrolujte síťové připojení.",
     "lineError": "Chyba v {0}.",
-    "lineErrorLink": "řádek {0}.",
+    "lineErrorLink": "řádek {0}",
     "restartButton": "Restart",
     "title": "Chyba při spuštění"
   }

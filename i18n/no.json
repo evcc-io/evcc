@@ -298,10 +298,9 @@
       "odometer": "Kilometerstand",
       "vehicle": "Kjøretøy"
     },
-    "csvMonth": "Last ned (måned) CSV",
+    "csvPeriod": "Last ned (måned) CSV",
     "csvTotal": "Last ned total CSV",
     "date": "Start",
-    "downloadCsv": "Last ned som CSV",
     "energy": "Oppladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",

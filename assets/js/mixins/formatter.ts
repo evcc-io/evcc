@@ -2,8 +2,25 @@ import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
 
+const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
+	AUD: "$",
+	BGN: "лв",
+	BRL: "R$",
+	CAD: "$",
+	CHF: "Fr.",
+	CNY: "¥",
+	EUR: "€",
+	GBP: "£",
+	ILS: "₪",
+	NZD: "$",
+	PLN: "zł",
+	USD: "$",
+	DKK: "kr",
+	SEK: "kr",
+};
+
 // list of currencies where energy price should be displayed in subunits (factor 100)
-const ENERGY_PRICE_IN_SUBUNIT = {
+const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
 	AUD: "c", // Australian cent
 	BGN: "st", // Bulgarian stotinka
 	BRL: "¢", // Brazilian centavo
@@ -15,8 +32,9 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 	ILS: "ag", // Israeli agora
 	NZD: "c", // New Zealand cent
 	PLN: "gr", // Polish grosz
-	USD: "¢", // US cent,
+	USD: "¢", // US cent
 	DKK: "øre", // Danish øre
+	SEK: "öre", // Swedish öre
 };
 
 export enum POWER_UNIT {
@@ -283,8 +301,7 @@ export default defineComponent({
 			return withSymbol ? result : result.replace(currency, "").trim();
 		},
 		fmtCurrencySymbol(currency = CURRENCY.EUR) {
-			const symbols = { EUR: "€", USD: "$", DKK: "dkr." };
-			return symbols[currency] || currency;
+			return CURRENCY_SYMBOLS[currency] || currency;
 		},
 		fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
 			let value = amout;

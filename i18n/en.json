@@ -113,6 +113,9 @@
       "batteryStorage": "Battery storage",
       "solarSystem": "Solar system"
     },
+    "editor": {
+      "loading": "Loading YAML editor…"
+    },
     "eebus": {
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Cancel",
+      "customHelp": "Create a user-defined device using evcc's plugin system.",
+      "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
       "experimental": "Experimental",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Connect evcc to another home energy management system.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "change"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "Define a custom current range.",
       "chargerTypeLabel": "Charger type",
       "chargingTitle": "Charging",
+      "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
       "defaultModeHelp": "Charging mode when connecting the vehicle.",
@@ -269,6 +278,7 @@
     "meter": {
       "cancel": "Cancel",
       "delete": "Delete",
+      "generic": "Generic integrations",
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
@@ -276,6 +286,7 @@
         "pv": "Add solar meter"
       },
       "save": "Save",
+      "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
       "validateSave": "Validate & save"
@@ -417,6 +428,7 @@
       "minimumCurrent": "Minimum current",
       "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
+      "primary": "Generic integrations",
       "priority": "Priority",
       "priorityHelp": "Higher priority means this vehicle gets preferred access to solar surplus.",
       "save": "Save",
@@ -862,10 +874,9 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download as CSV",
     "energy": "Charged",
     "filter": {
       "allLoadpoints": "all charging points",

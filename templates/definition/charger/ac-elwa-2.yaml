@@ -9,6 +9,13 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: scale
+    type: float
+    default: 1
+    description:
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
 render: |
   type: ac-elwa-2
   {{- include "modbus" . }}
+  scale: {{ .scale }}

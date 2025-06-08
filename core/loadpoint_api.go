@@ -66,6 +66,21 @@ func (lp *Loadpoint) GetCircuitRef() string {
 	return lp.CircuitRef
 }
 
+// SetCircuitRef sets the loadpoint circuit
+func (lp *Loadpoint) SetCircuitRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set circuit ref: not configurable")
+		return
+	}
+
+	lp.log.DEBUG.Println("set circuit ref:", ref)
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.CircuitRef = ref
+	lp.settings.SetString(keys.Circuit, ref)
+}
+
 // GetDefaultVehicleRef returns the loadpoint default vehicle
 func (lp *Loadpoint) GetDefaultVehicleRef() string {
 	lp.RLock()

@@ -6,6 +6,7 @@
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
+			data-testid="session-details"
 		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div v-if="session" class="modal-content">
@@ -21,7 +22,7 @@
 					<div class="modal-body">
 						<table class="table align-middle">
 							<tbody>
-								<tr>
+								<tr data-testid="session-details-loadpoint">
 									<th>
 										{{ $t("sessions.loadpoint") }}
 									</th>
@@ -43,7 +44,7 @@
 										</CustomSelect>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-vehicle">
 									<th>
 										{{ $t("sessions.vehicle") }}
 									</th>
@@ -51,7 +52,7 @@
 										<VehicleOptions
 											:id="session.vehicle"
 											class="options"
-											:vehicles="vehicleOptions"
+											:vehicleOptions="vehicleOptions"
 											connected
 											:selected="session.vehicle"
 											@change-vehicle="changeVehicle"
@@ -67,17 +68,21 @@
 										</VehicleOptions>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-date">
 									<th class="align-baseline">
 										{{ $t("session.date") }}
 									</th>
 									<td>
-										{{ fmtFullDateTime(new Date(session.created), false) }}
+										<template v-if="session.created">
+											{{ fmtFullDateTime(new Date(session.created), false) }}
+										</template>
 										<br />
-										{{ fmtFullDateTime(new Date(session.finished), false) }}
+										<template v-if="session.finished">
+											{{ fmtFullDateTime(new Date(session.finished), false) }}
+										</template>
 									</td>
 								</tr>
-								<tr>
+								<tr data-testid="session-details-energy">
 									<th class="align-baseline">
 										{{ $t("sessions.energy") }}
 									</th>
@@ -96,7 +101,10 @@
 										</div>
 									</td>
 								</tr>
-								<tr v-if="session.solarPercentage != null">
+								<tr
+									v-if="session.solarPercentage != null"
+									data-testid="session-details-solar"
+								>
 									<th class="align-baseline">
 										{{ $t("sessions.solar") }}
 									</th>
@@ -105,17 +113,23 @@
 										({{ fmtWh(solarEnergy, POWER_UNIT.AUTO) }})
 									</td>
 								</tr>
-								<tr v-if="session.price != null">
+								<tr
+									v-if="session.price != null"
+									data-testid="session-details-price"
+								>
 									<th class="align-baseline">
 										{{ $t("session.price") }}
 									</th>
 									<td>
 										{{ fmtMoney(session.price, currency) }}
 										{{ fmtCurrencySymbol(currency) }}<br />
-										{{ fmtPricePerKWh(session.pricePerKWh, currency) }}
+										{{ fmtPricePerKWh(session.pricePerKWh || 0, currency) }}
 									</td>
 								</tr>
-								<tr v-if="session.co2PerKWh != null">
+								<tr
+									v-if="session.co2PerKWh != null"
+									data-testid="session-details-co2"
+								>
 									<th>
 										{{ $t("session.co2") }}
 									</th>
@@ -123,7 +137,7 @@
 										{{ fmtCo2Medium(session.co2PerKWh) }}
 									</td>
 								</tr>
-								<tr v-if="session.odometer">
+								<tr v-if="session.odometer" data-testid="session-details-odometer">
 									<th>
 										{{ $t("session.odometer") }}
 									</th>
@@ -131,7 +145,7 @@
 										{{ formatKm(session.odometer) }}
 									</td>
 								</tr>
-								<tr v-if="session.meterStart">
+								<tr v-if="session.meterStart" data-testid="session-details-meter">
 									<th class="align-baseline">
 										{{ $t("session.meter") }}
 									</th>
@@ -148,6 +162,7 @@
 							type="button"
 							class="btn btn-link text-danger"
 							data-bs-dismiss="modal"
+							data-testid="session-details-delete"
 							@click="openRemoveConfirmationModal"
 						>
 							{{ $t("session.delete") }}
@@ -194,7 +209,7 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/checkmark";
 import Modal from "bootstrap/js/dist/modal";
 import formatter from "@/mixins/formatter";
@@ -202,16 +217,19 @@ import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit, distanceValue } from "@/units";
 import api from "@/api";
+import { defineComponent, type PropType } from "vue";
+import type { Session } from "./types";
+import type { CURRENCY, LoadpointCompact, SelectOption, Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "SessionDetailsModal",
 	components: { VehicleOptions: Options, CustomSelect },
 	mixins: [formatter],
 	props: {
-		session: Object,
-		currency: String,
-		vehicles: Array,
-		loadpoints: Array,
+		session: { type: Object as PropType<Session>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
+		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -225,43 +243,45 @@ export default {
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
-		vehicleOptions() {
+		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
 				name: v.title,
-				title: v.title,
+				value: v.title,
 			}));
 		},
-		loadpointOptions() {
+		loadpointOptions(): SelectOption<string>[] {
 			return this.loadpoints.map((loadpoint) => ({
-				value: loadpoint,
-				name: loadpoint,
+				value: loadpoint.title,
+				name: loadpoint.title,
 			}));
 		},
 	},
 	methods: {
 		openSessionDetailsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("sessionDetailsModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openRemoveConfirmationModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("deleteSessionConfirmationModal")
+				document.getElementById("deleteSessionConfirmationModal") as HTMLElement
 			);
 			modal.show();
 		},
-		formatKm(value) {
+		formatKm(value: number) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
-		async changeVehicle(title) {
+		async changeVehicle(title: string) {
 			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
 			await this.updateSession({ vehicle: null });
 		},
-		async changeLoadpoint(title) {
+		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
 		},
-		async updateSession(data) {
+		async updateSession(data: Partial<Session> | { vehicle: null }) {
 			try {
 				await api.put("session/" + this.session.id, data);
 				this.$emit("session-changed");
@@ -278,7 +298,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

@@ -13,8 +13,8 @@ params:
     allinone: true
   - name: uri
     description:
-      en: IP address of the GoodWe inverter.
-      de: IP-Adresse des GoodWe Wechselrichters.
+      en: IP address or hostname
+      de: IP-Adresse des Hostname
 render: |
   type: goodwe-wifi
   usage: {{ .usage }}

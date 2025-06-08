@@ -1,0 +1,256 @@
+template: luxtronik
+products:
+  - brand: Buderus
+    description:
+      generic: Logamatic HMC 20
+  - brand: Buderus
+    description:
+      generic: Logamatic HMC 20 Z
+  - brand: alpha innotec
+  - brand: CTA All-In-One
+    description:
+      generic: Aeroplus
+  - brand: Elco
+  - brand: Nibe
+    description:
+      generic: AP-AW10
+  - brand: Roth
+    description:
+      generic: ThermoAura
+  - brand: Roth
+    description:
+      generic: ThermoTerra
+  - brand: Novelan
+    description:
+      generic: WPR NET
+  - brand: Wolf
+    description:
+      generic: BWL
+  - brand: Wolf
+    description:
+      generic: BWS
+group: heating
+requirements:
+  description:
+    de: Für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
+    en: For heatpumps with Luxtronik 2.1 controller. Uses modbus-tcp. Requires software v3.90.3 or later. Enable via SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
+#  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: wwoffset
+    type: float
+    unit: K
+    help:
+      de: Anhebung der Warmwassertemperatur. Erhöht evtl. den Verschleiss des Kompressors.
+      en: Temperature boost offset for hot water. Possibly increases wear on compressor.
+    default: 0.0
+    example: 8.5
+    advanced: true
+  - name: heatoffset
+    type: float
+    unit: K
+    help:
+      de: Anhebung der Heizwassertemperatur.
+      en: Temperature boost offset for heating.
+    default: 0.0
+    example: 2.0
+render: |
+  type: sgready
+  {{- $heatint := mulf .heatoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
+  {{- $waterint := mulf .wwoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
+  getmode:
+    source: go
+    script: |
+      res := 2 // SGReady Normal (2)
+      switch {
+      case LPC == 2: res = 1 // LPC 2 (Lux hard limit) == SGReady 1 (dimm)
+      case HEAT > 0 || WW > 0: res = 3 // if any boost mode set (offset(2) or setpoint(1)) --> SGReady 3 (boost)
+      }
+      res
+    in:
+    - name: LPC
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
+          type: holding
+          encoding: uint16
+    - name: HEAT
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+          type: holding
+          encoding: uint16
+    - name: WW
+      type: int
+      config: 
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
+          type: holding
+          encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # dimm (reduzierte Leistung)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Lux Hard-Limit (2)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
+              type: writeholding
+              encoding: uint16
+        {{ if gt $heatint 0 -}}
+        - source: const
+          value: 0 # 0 = Heiz.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        {{- end }}
+        {{ if gt $waterint 0 -}}
+        - source: const
+          value: 0 # 0 = WW.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        {{- end }}
+    - case: 2 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Lux No-Limit (0)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
+              type: writeholding
+              encoding: uint16
+        {{ if gt $heatint 0 -}}
+        - source: const
+          value: 0 # 0 = Heiz.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        {{- end }}
+        {{ if gt $waterint 0 -}}
+        - source: const
+          value: 0 # 0 = WW.Mode Aus
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        {{- end }}
+    - case: 3 # boost
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Lux No-Limit (0)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
+              type: writeholding
+              encoding: uint16
+        {{ if gt $heatint 0 -}}
+        - source: const
+          value: 2 # 2 = Heiz.Mode Offset
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        - source: const
+          value: {{ $heatint }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10002 # Heiz. Offset [0.1 K]
+              type: writeholding
+              encoding: int16
+        {{- end }}
+        {{ if gt $waterint 0 -}}
+        - source: const
+          value: 2 # 2 = WW Mode Offset
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
+              type: writeholding
+              encoding: uint16
+        - source: const
+          value: {{ $waterint }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10007 # WW Offset [0.1 K]
+              type: writeholding
+              encoding: int16
+        {{- end }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if gt $waterint 0 -}} 10120 {{ else }} 10100 {{- end }} # 10100 = Temp. x10 RL-Ist, 10120 = Temp x10 WW-Ist
+      type: input
+      encoding: uint16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if gt $waterint 0 -}} 10121 {{ else }} 10101 {{- end }} # 10101 = Temp. x10 RL-Soll, 10121 = Temp x10 WW-Soll, 10123 = Temp x10 Tdi_solltemp
+      type: input
+      encoding: int16
+    scale: 0.1
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10301 # 10301 = kW x0.01 Power-In elektrisch
+      type: input
+      encoding: uint16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10311 # 10311 = kWh x10 kumulierter Stromverbrauch
+      type: input
+      decode: uint16
+    scale: 0.1

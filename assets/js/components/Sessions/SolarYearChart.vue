@@ -9,23 +9,32 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { Radar } from "vue-chartjs";
-import { RadialLinearScale, PointElement, LineElement, Filler, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+import {
+	RadialLinearScale,
+	PointElement,
+	LineElement,
+	Filler,
+	Tooltip,
+	type TooltipItem,
+} from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
+import type { Legend, PERIODS, Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "SolarYearChart",
 	components: { Radar, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		period: { type: String, default: "total" },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		period: { type: String as PropType<PERIODS>, default: "total" },
 	},
 	computed: {
 		firstDay() {
@@ -43,14 +52,16 @@ export default {
 		chartData() {
 			console.log("update solar month data");
 
-			if (!this.sessions.length > 0) return { labels: [], datasets: [] };
+			if (!this.firstDay || !this.lastDay) {
+				return { labels: [], datasets: [] };
+			}
 
 			const firstYear = this.firstDay.getFullYear();
 			const lastYear = this.lastDay.getFullYear();
 
-			const result = {};
+			const result: Record<string, Record<string, { self: number; grid: number }>> = {};
 
-			const years = [];
+			const years: string[] = [];
 
 			// initialize result for years and months
 			for (let year = lastYear; year >= firstYear; year--) {
@@ -60,7 +71,7 @@ export default {
 				console.log("year", yearString);
 
 				for (let month = 1; month <= 12; month++) {
-					result[yearString][month] = {};
+					result[yearString][month] = { self: 0, grid: 0 };
 				}
 			}
 
@@ -73,8 +84,8 @@ export default {
 				const charged = session.chargedEnergy;
 				const self = (charged / 100) * session.solarPercentage;
 				const grid = charged - self;
-				result[year][month].self = (result[year][month].self || 0) + self;
-				result[year][month].grid = (result[year][month].grid || 0) + grid;
+				result[year][month].self += self;
+				result[year][month].grid += grid;
 			});
 
 			const datasets = years.map((year) => {
@@ -99,7 +110,7 @@ export default {
 			});
 
 			const labels = Object.keys(result[firstYear]).map((month) =>
-				this.fmtMonth(new Date(firstYear, month - 1, 1), true)
+				this.fmtMonth(new Date(firstYear, parseInt(month) - 1, 1), true)
 			);
 
 			return {
@@ -107,7 +118,7 @@ export default {
 				datasets,
 			};
 		},
-		legends() {
+		legends(): Legend[] {
 			if (this.period === "total") {
 				return this.chartData.datasets.map((dataset) => {
 					const label = dataset.label;
@@ -125,10 +136,14 @@ export default {
 					const value = this.chartData.datasets[0].data[index];
 					return {
 						label,
+						color: null,
 						value:
 							value === null
 								? "- %"
-								: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
+								: this.fmtPercentage(
+										this.chartData.datasets[0].data[index] || 0,
+										1
+									),
 					};
 				});
 			}
@@ -139,7 +154,7 @@ export default {
 				locale: this.$i18n?.locale,
 				aspectRatio: 1,
 				borderWidth: 4,
-				color: colors.text,
+				color: colors.text || "",
 				spacing: 0,
 				radius: "100%",
 				elements: { line: { tension: 0.05 } },
@@ -150,14 +165,14 @@ export default {
 						axis: "xy",
 						position: "topBottomCenter",
 						callbacks: {
-							label: (tooltipItem) => {
-								const value = tooltipItem.raw || 0;
+							label: (tooltipItem: TooltipItem<"radar">) => {
+								const value = tooltipItem.dataset.data[tooltipItem.dataIndex] || 0;
 								const datasetLabel = tooltipItem.dataset.label || "";
 								return datasetLabel + ": " + this.fmtPercentage(value, 1);
 							},
 							labelColor: tooltipLabelColor(true),
 						},
-					},
+					} as any,
 				},
 				scales: {
 					r: {
@@ -169,14 +184,14 @@ export default {
 							color: colors.muted,
 							backdropColor: colors.background,
 							font: { size: 10 },
-							callback: (value) => this.fmtPercentage(value, 0),
+							callback: (value: number) => this.fmtPercentage(value, 0),
 						},
 						angleLines: { display: false },
 						grid: { color: colors.border },
 					},
 				},
-			};
+			} as any;
 		},
 	},
-};
+});
 </script>

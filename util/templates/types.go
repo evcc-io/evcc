@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
+	"github.com/gosimple/slug"
 )
 
 const (
@@ -186,6 +187,7 @@ type Param struct {
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
+	Unit          string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
@@ -258,8 +260,14 @@ type Product struct {
 	Description TextLanguage `json:",omitempty"` // product name
 }
 
+// Title returns the product title in the given language
 func (p Product) Title(lang string) string {
 	return strings.TrimSpace(fmt.Sprintf("%s %s", p.Brand, p.Description.String(lang)))
+}
+
+// Identifier returns a unique language-independent identifier for the product
+func (p Product) Identifier() string {
+	return slug.Make(p.Title("en"))
 }
 
 type CountryCode string

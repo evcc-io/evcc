@@ -102,8 +102,7 @@ loadpoints:
 
 	// circuit without device
 	err = validateCircuits(lps)
-	suite.Require().Error(err)
-	suite.Require().Equal("circuit slave has no meter and no loadpoint assigned", err.Error())
+	suite.Require().NoError(err)
 }
 
 func (suite *circuitsTestSuite) TestMissingRootCircuit() {
