@@ -67,7 +67,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import collector from "@/mixins/collector";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -78,8 +78,10 @@ import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "@/units";
+import { defineComponent, type PropType } from "vue";
+import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Vehicle",
 	components: {
 		VehicleTitle: Title,
@@ -92,7 +94,7 @@ export default {
 	},
 	mixins: [collector, formatter],
 	props: {
-		chargedEnergy: Number,
+		chargedEnergy: { type: Number, default: 0 },
 		charging: Boolean,
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
@@ -107,11 +109,11 @@ export default {
 		id: [String, Number],
 		integratedDevice: Boolean,
 		limitEnergy: Number,
-		mode: String,
+		mode: String as PropType<CHARGE_MODE>,
 		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
-		forecast: Object, // as PropType<Forecast>,
+		forecast: Object as PropType<Forecast>,
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,
@@ -131,12 +133,12 @@ export default {
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
-		vehicle: Object,
+		vehicle: Object as PropType<Vehicle>,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
 		vehicleRange: Number,
 		vehicles: Array,
-		vehicleSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 	},
@@ -202,23 +204,23 @@ export default {
 			if (this.vehicleSoc > 10 && this.range) {
 				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
 			}
-			return null;
+			return undefined;
 		},
 		socPerKwh() {
 			if (this.capacity > 0) {
 				return 100 / this.capacity;
 			}
-			return null;
+			return 0;
 		},
 		chargedSoc() {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
 		chargingPlanDisabled() {
-			return ["off", "now"].includes(this.mode);
+			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
 		smartCostDisabled() {
-			return ["off", "now"].includes(this.mode);
+			return this.chargingPlanDisabled;
 		},
 	},
 	watch: {
@@ -227,33 +229,37 @@ export default {
 		},
 	},
 	methods: {
-		limitSocDrag(limitSoc) {
+		limitSocDrag(limitSoc: number) {
 			this.displayLimitSoc = limitSoc;
 		},
-		limitSocUpdated(limitSoc) {
+		limitSocUpdated(limitSoc: number) {
 			this.displayLimitSoc = limitSoc;
 			this.$emit("limit-soc-updated", limitSoc);
 		},
-		limitEnergyUpdated(limitEnergy) {
+		limitEnergyUpdated(limitEnergy: number) {
 			this.$emit("limit-energy-updated", limitEnergy);
 		},
-		changeVehicle(name) {
+		changeVehicle(name: string) {
 			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
-			this.$refs.chargingPlan.openPlanModal();
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal();
 		},
 		openMinSocSettings() {
-			this.$refs.chargingPlan.openPlanModal(true);
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal(true);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

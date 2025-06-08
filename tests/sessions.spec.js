@@ -245,28 +245,88 @@ test.describe("columns desktop", async () => {
   });
 });
 
+const date = new Date();
+const YEAR = date.getFullYear();
+const MONTH = date.getMonth() + 1;
+const MONTH_YEAR = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date);
+
 test.describe("csv export", async () => {
   test("total export", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=5");
-    await expect(page.getByRole("link", { name: "Download total CSV" })).toHaveAttribute(
-      "href",
-      "./api/sessions?format=csv&lang=en"
-    );
-
-    await page.goto("/#/sessions?year=2023&month=6");
+    await page.goto("/#/sessions?period=total");
     await expect(page.getByRole("link", { name: "Download total CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?format=csv&lang=en"
     );
   });
+  test("year export", async ({ page }) => {
+    // fixed year
+    await page.goto("/#/sessions?period=year&year=2023");
+    await expect(page.getByRole("link", { name: "Download 2023 CSV" })).toHaveAttribute(
+      "href",
+      "./api/sessions?format=csv&lang=en&year=2023"
+    );
+
+    // current year
+    await page.goto(`/#/sessions?period=year`);
+    await expect(page.getByRole("link", { name: `Download ${YEAR} CSV` })).toHaveAttribute(
+      "href",
+      `./api/sessions?format=csv&lang=en&year=${YEAR}`
+    );
+  });
   test("monthly export", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=5");
+    await page.goto("/#/sessions?&year=2023&month=5");
     await expect(page.getByRole("link", { name: "Download May 2023 CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?format=csv&lang=en&year=2023&month=5"
     );
 
-    await page.goto("/#/sessions?year=2023&month=6");
-    await expect(page.getByRole("link", { name: "Download June 2023 CSV" })).toHaveCount(0);
+    // current month
+    await page.goto(`/#/sessions`);
+    await expect(page.getByRole("link", { name: `Download ${MONTH_YEAR} CSV` })).toHaveAttribute(
+      "href",
+      `./api/sessions?format=csv&lang=en&year=${YEAR}&month=${MONTH}`
+    );
+  });
+});
+
+test.describe("session details", async () => {
+  test("show session details (session 5)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expect(page.getByTestId("session-details")).toBeVisible();
+
+    await expect(
+      page.getByTestId("session-details").getByRole("heading", { name: "Charging Session" })
+    ).toBeVisible();
+    await expect(page.getByTestId("session-details-loadpoint")).toContainText("Garage");
+    await expect(page.getByTestId("session-details-vehicle")).toContainText("weißes Model 3");
+    await expect(page.getByTestId("session-details-date")).toContainText(
+      ["Thu, May 4, 22:00", "Fri, May 5, 06:00"].join("")
+    );
+    await expect(page.getByTestId("session-details-energy")).toContainText("5.0 kWh");
+    await expect(page.getByTestId("session-details-energy")).toContainText("1:00");
+    await expect(page.getByTestId("session-details-solar")).toContainText("0.0% (0.0 kWh)");
+    await expect(page.getByTestId("session-details-price")).toContainText("2.50 € 50.0 ct/kWh");
+    await expect(page.getByTestId("session-details-co2")).toHaveCount(0);
+    await expect(page.getByTestId("session-details-odometer")).toHaveCount(0);
+    await expect(page.getByTestId("session-details-meter")).toHaveCount(0);
+    await expect(page.getByTestId("session-details-delete")).toContainText("Delete");
+  });
+
+  test("show session details with CO2 data (session 1)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expect(page.getByTestId("session-details")).toBeVisible();
+
+    await expect(page.getByTestId("session-details-loadpoint")).toContainText("Carport");
+    await expect(page.getByTestId("session-details-vehicle")).toContainText("blauer e-Golf");
+    await expect(page.getByTestId("session-details-date")).toContainText(
+      ["Wed, Mar 1, 07:00", "Tue, May 2, 12:00"].join("")
+    );
+    await expect(page.getByTestId("session-details-energy")).toContainText("10.0 kWh");
+    await expect(page.getByTestId("session-details-energy")).toContainText("1:00");
+    await expect(page.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
+    await expect(page.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
+    await expect(page.getByTestId("session-details-co2")).toContainText("300 g/kWh");
   });
 });

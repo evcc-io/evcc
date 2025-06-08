@@ -3,10 +3,16 @@ deprecated: true
 products:
   - brand: KEBA
     description:
-      generic: KeContact P20, P30, C/X Series (legacy UDP protocol)
+      generic: KeContact P20 (legacy UDP)
+  - brand: KEBA
+    description:
+      generic: KeContact P30 C-Series (legacy UDP)
+  - brand: KEBA
+    description:
+      generic: KeContact P30 X-Series (legacy UDP)
   - brand: BMW
     description:
-      generic: i Wallbox (legacy UDP protocol)
+      generic: i Wallbox (legacy UDP)
 capabilities: ["mA", "rfid"]
 requirements:
   description:
