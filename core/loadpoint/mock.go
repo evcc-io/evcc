@@ -134,7 +134,7 @@ func (m *MockAPI) GetEffectivePausedUntil() time.Time {
 }
 
 // GetEffectivePausedUntil indicates an expected call of GetEffectivePausedUntil.
-func (mr *MockAPIMockRecorder) IsEffectivelGetEffectivePausedUntilyPaused() *gomock.Call {
+func (mr *MockAPIMockRecorder) GetEffectivePausedUntil() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectivePausedUntil", reflect.TypeOf((*MockAPI)(nil).GetEffectivePausedUntil))
 }

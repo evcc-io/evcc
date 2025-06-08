@@ -36,7 +36,6 @@ export default defineConfig({
       template: {
         compilerOptions: {
           isCustomElement: (tag) => tag.startsWith("shopicon-"),
-          "moduleResolution": "node",
         },
       },
     }),
