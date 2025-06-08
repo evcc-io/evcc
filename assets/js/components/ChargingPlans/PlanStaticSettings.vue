@@ -206,6 +206,7 @@ export default defineComponent({
 		socBasedPlanning: Boolean,
 		multiplePlans: Boolean,
 		precondition: Number,
+		paused: { type: Boolean, default: false },
 		showPrecondition: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
@@ -217,6 +218,7 @@ export default defineComponent({
 			selectedEnergy: this.energy,
 			active: false,
 			selectedPrecondition: this.precondition,
+			selectedPaused: this.paused,
 		};
 	},
 	computed: {
@@ -252,6 +254,7 @@ export default defineComponent({
 				day: this.fmtDayString(t),
 				time: this.fmtTimeString(t),
 				precondition: this.precondition,
+				paused: this.paused,
 			};
 		},
 		dataChanged() {
@@ -262,7 +265,8 @@ export default defineComponent({
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
 			const preconditionChanged = this.originalData.precondition != this.selectedPrecondition;
-			return dateChanged || goalChanged || preconditionChanged;
+			const pausedChanged = this.originalData.paused != this.selectedPaused;
+			return dateChanged || goalChanged || preconditionChanged || pausedChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -294,6 +298,9 @@ export default defineComponent({
 		},
 		selectedPrecondition() {
 			this.preview();
+		},
+		paused(newValue: boolean) {
+			this.selectedPaused = newValue;
 		},
 	},
 	mounted() {
@@ -370,6 +377,7 @@ export default defineComponent({
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
+				paused: this.selectedPaused,
 			});
 		},
 		preview(force = false) {
@@ -419,5 +427,10 @@ export default defineComponent({
 .plan-id {
 	width: 2.5rem;
 	color: var(--evcc-gray);
+}
+
+.icon-size {
+	height: 24px;
+	width: 24px;
 }
 </style>

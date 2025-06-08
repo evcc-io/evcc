@@ -60,6 +60,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Precondition int64     `json:"precondition"`
 			Plan         api.Rates `json:"plan"`
 			Power        float64   `json:"power"`
+			Paused       bool      `json:"paused"`
+			PausedUntil  time.Time `json:"pausedUntil,omitempty"`
 		}{
 			PlanId:       id,
 			PlanTime:     planTime,
@@ -67,6 +69,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Precondition: int64(precondition.Seconds()),
 			Plan:         plan,
 			Power:        maxPower,
+			Paused:       lp.IsEffectivelyPaused(),
+			PausedUntil:  lp.GetEffectivePausedUntil(),
 		}
 
 		jsonResult(w, res)
@@ -159,7 +163,13 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
+		loc, err := time.LoadLocation(tz)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz, time.Now().In(loc))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

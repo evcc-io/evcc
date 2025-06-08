@@ -111,6 +111,34 @@ func (mr *MockAPIMockRecorder) EffectivePlanTime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePlanTime", reflect.TypeOf((*MockAPI)(nil).EffectivePlanTime))
 }
 
+// IsEffectivelyPaused mocks base method.
+func (m *MockAPI) IsEffectivelyPaused() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsEffectivelyPaused")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsEffectivelyPaused indicates an expected call of IsEffectivelyPaused.
+func (mr *MockAPIMockRecorder) IsEffectivelyPaused() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEffectivelyPaused", reflect.TypeOf((*MockAPI)(nil).IsEffectivelyPaused))
+}
+
+// GetEffectivePausedUntil mocks base method.
+func (m *MockAPI) GetEffectivePausedUntil() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEffectivePausedUntil")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// GetEffectivePausedUntil indicates an expected call of GetEffectivePausedUntil.
+func (mr *MockAPIMockRecorder) IsEffectivelGetEffectivePausedUntilyPaused() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectivePausedUntil", reflect.TypeOf((*MockAPI)(nil).GetEffectivePausedUntil))
+}
+
 // EffectivePriority mocks base method.
 func (m *MockAPI) EffectivePriority() int {
 	m.ctrl.T.Helper()

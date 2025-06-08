@@ -65,6 +65,7 @@ export default defineComponent({
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				precondition: 0,
+				paused: false,
 				active: false,
 				tz: this.timezone(),
 			};

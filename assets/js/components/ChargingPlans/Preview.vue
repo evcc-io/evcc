@@ -14,6 +14,17 @@
 					</div>
 				</div>
 			</div>
+			<div class="d-flex justify-content-between align-items-center">
+				<button
+					v-if="canPause"
+					class="btn btn-link"
+					data-testid="pause-plan"
+					@click="pausePlan"
+				>
+					<PausePlanIcon class="icon-size" />
+					<span class="ms-2">{{ $t(`main.chargingPlan.pauseThis`) }}</span>
+				</button>
+			</div>
 			<div v-if="hasTariff" class="text-end">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
@@ -40,10 +51,11 @@ import formatter from "@/mixins/formatter";
 import { CO2_TYPE } from "@/units";
 import TariffChart from "../Tariff/TariffChart.vue";
 import type { CURRENCY, Rate, Slot } from "@/types/evcc";
+import PausePlanIcon from "../MaterialIcon/PausePlan.vue";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
-	components: { TariffChart },
+	components: { TariffChart, PausePlanIcon },
 	mixins: [formatter],
 	props: {
 		duration: Number,
@@ -53,7 +65,9 @@ export default defineComponent({
 		smartCostType: String,
 		targetTime: [Date, null],
 		currency: String as PropType<CURRENCY>,
+		canPause: Boolean,
 	},
+	emits: ["pause-plan"],
 	data() {
 		return { activeIndex: null as number | null, startTime: new Date() };
 	},
@@ -205,6 +219,9 @@ export default defineComponent({
 		slotHovered(index: number): void {
 			this.activeIndex = index;
 		},
+		pausePlan(): void {
+			this.$emit("pause-plan");
+		},
 	},
 });
 </script>
@@ -221,5 +238,10 @@ export default defineComponent({
 .label {
 	color: var(--evcc-gray);
 	text-transform: uppercase;
+}
+
+.icon-size {
+	height: 24px;
+	width: 24px;
 }
 </style>

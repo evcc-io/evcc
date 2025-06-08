@@ -111,17 +111,35 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 }
 
 func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
-	for _, plan := range plans {
+	for i, plan := range plans {
 		for _, day := range plan.Weekdays {
 			if day < 0 || day > 6 {
 				return fmt.Errorf("weekday out of range: %v", day)
 			}
 		}
-		if _, err := time.LoadLocation(plan.Tz); err != nil {
+		loc, err := time.LoadLocation(plan.Tz)
+		if err != nil {
 			return fmt.Errorf("invalid timezone: %v", err)
 		}
 		if _, err := time.Parse("15:04", plan.Time); err != nil {
 			return fmt.Errorf("invalid time: %v", err)
+		}
+
+		if plan.Paused {
+			var pausedUntil time.Time
+			if plan.PausedUntil != "" {
+				var err error
+				pausedUntil, err = time.ParseInLocation(time.RFC3339, plan.PausedUntil, loc)
+				if err != nil {
+					return fmt.Errorf("invalid pausedUntil: %v", err)
+				}
+			} else {
+				pausedUntil, err = util.GetNextOccurrence(plan.Weekdays, plan.Time, plan.Tz, time.Now().In(loc))
+				if err != nil {
+					return fmt.Errorf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", plan.Weekdays, plan.Time, plan.Tz, err)
+				}
+			}
+			plans[i].PausedUntil = pausedUntil.Format(time.RFC3339)
 		}
 	}
 

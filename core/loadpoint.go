@@ -959,7 +959,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, _, id := lp.NextVehiclePlan()
+	_, _, _, id, _, _ := lp.NextVehiclePlan()
 	return id > 1
 }
 
