@@ -1,5 +1,4 @@
 <template>
-	{{ state }}
 	<form
 		v-if="state"
 		class="container"
@@ -248,7 +247,7 @@ export default defineComponent({
 	name: "Simulator",
 	data() {
 		return {
-			state: {} as {
+			state: null as {
 				site: {
 					grid: { power: number };
 					pv: { power: number; energy: number };
@@ -261,7 +260,7 @@ export default defineComponent({
 					status: string;
 				}[];
 				vehicles: { soc: number; range: number }[];
-			},
+			} | null,
 		};
 	},
 	mounted() {
@@ -277,21 +276,21 @@ export default defineComponent({
 		},
 		addVehicle() {
 			// push a duplacate of the last entry
-			this.state.vehicles.push({
+			this.state?.vehicles.push({
 				...this.state.vehicles[this.state.vehicles.length - 1],
 			});
 		},
 		removeVehicle(index: number) {
-			this.state.vehicles.splice(index, 1);
+			this.state?.vehicles.splice(index, 1);
 		},
 		addLoadpoint() {
 			// push a duplacate of the last entry
-			this.state.loadpoints.push({
+			this.state?.loadpoints.push({
 				...this.state.loadpoints[this.state.loadpoints.length - 1],
 			});
 		},
 		removeLoadpoint(index: number) {
-			this.state.loadpoints.splice(index, 1);
+			this.state?.loadpoints.splice(index, 1);
 		},
 	},
 });
