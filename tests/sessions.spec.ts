@@ -56,33 +56,33 @@ test.describe("basics", async () => {
 		await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(9);
 
 		await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
-		await expect(page.getByTestId("sessions-foot-energy")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-energy")).toHaveText("20.0");
 
 		await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
-		await expect(page.getByTestId("sessions-foot-solar")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-solar")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-solar")).toHaveText("67.3");
 
 		await expect(page.getByTestId("sessions-head-price")).toContainText("Cost€");
-		await expect(page.getByTestId("sessions-foot-price")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-price")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-price")).toHaveText("5.50");
 
 		await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
-		await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-avgPrice")).toHaveText("27.5");
 
 		await expect(page.getByTestId("sessions-head-chargeDuration")).toContainText(
 			"Durationh:mm"
 		);
-		await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible({ timeout: 1 });
-    await expect(page.getByTestId("sessions-foot-chargeDuration")).toHaveText("1:30");
+		await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible();
+		await expect(page.getByTestId("sessions-foot-chargeDuration")).toHaveText("1:30");
 
 		await page
 			.getByTestId("sessions-head-chargeDuration")
 			.getByRole("combobox")
 			.selectOption("⌀ Power");
 		await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
-		await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("1:30");
 
 		await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
@@ -97,22 +97,22 @@ test.describe("mobile basics", async () => {
 		await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(5);
 
 		await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
-		await expect(page.getByTestId("sessions-foot-energy")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-energy")).toHaveText("20.0");
 
 		await page.getByTestId("sessions-head-energy").getByRole("combobox").selectOption("Solar");
 		await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
-		await expect(page.getByTestId("sessions-foot-solar")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-solar")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-solar")).toHaveText("67.3");
 
 		await page.getByTestId("sessions-head-solar").getByRole("combobox").selectOption("Cost");
 		await expect(page.getByTestId("sessions-head-price")).toContainText("Cost€");
-		await expect(page.getByTestId("sessions-foot-price")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-price")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-price")).toHaveText("5.50");
 
 		await page.getByTestId("sessions-head-price").getByRole("combobox").selectOption("⌀ Price");
 		await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
-		await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible();
 		await expect(page.getByTestId("sessions-foot-avgPrice")).toHaveText("27.5");
 	});
 

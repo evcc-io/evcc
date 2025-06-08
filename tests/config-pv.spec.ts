@@ -34,7 +34,7 @@ test.describe("pv meter", async () => {
 		await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
 		await meterModal.getByRole("button", { name: "Save" }).click();
 		await expectModalHidden(meterModal);
-		await expect(page.getByTestId("pv")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("pv")).toBeVisible();
 		await expect(page.getByTestId("pv")).toContainText("PV North");
 
 		// edit #1
@@ -45,7 +45,7 @@ test.describe("pv meter", async () => {
 		await expectModalHidden(meterModal);
 
 		const pv = page.getByTestId("pv");
-		await expect(pv).toBeVisible({ timeout: 1 });
+		await expect(pv).toBeVisible();
 		await expect(pv).toContainText("PV North");
 		await expect(pv.getByTestId("device-tag-power")).toContainText("6.0 kW");
 
@@ -85,7 +85,7 @@ test.describe("pv meter", async () => {
 		await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
 		await meterModal.getByRole("button", { name: "Validate & save" }).click();
 		await expectModalHidden(meterModal);
-		await expect(page.getByTestId("pv")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("pv")).toBeVisible();
 		await expect(page.getByTestId("pv")).toContainText("North Roof");
 
 		// break meter
@@ -95,7 +95,7 @@ test.describe("pv meter", async () => {
 
 		// remove meter
 		await expect(page.getByTestId("fatal-error")).toBeVisible();
-		await expect(page.getByTestId("pv")).toBeVisible({ timeout: 1 });
+		await expect(page.getByTestId("pv")).toBeVisible();
 		await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
 		await expectModalVisible(meterModal);
 		await meterModal.getByRole("button", { name: "Delete" }).click();
