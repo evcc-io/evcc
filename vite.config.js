@@ -22,9 +22,9 @@ export default defineConfig({
   server: {
     port: 7071,
     proxy: {
-      "/api": "http://192.168.178.69:7070",
-      "/i18n": "http://192.168.178.69:7070",
-      "/ws": { target: "ws://192.168.178.69:7070", ws: true },
+      "/api": "http://localhost:7070",
+      "/i18n": "http://localhost:7070",
+      "/ws": { target: "ws://localhost:7070", ws: true },
     },
   },
   plugins: [
