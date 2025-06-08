@@ -40,8 +40,8 @@ params:
     choice: ["/config", "/api/config"]
     default: /config
     description:
-      de: Firmware-Update (ab 1.36.5-1) macht /api/config Einstellung erforderlich.
-      en: Firmware update (from 1.36.5-1) requires /api/config setting.
+      de: Firmware Versionen ab 1.36.5-1 erfordern /api/config.
+      en: Firmware starting with 1.36.5-1 require /api/config.
 render: |
   type: custom
   power:
