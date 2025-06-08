@@ -284,10 +284,10 @@ params:
       de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
   - name: coarsecurrent
     type: bool
-    help:
+    description:
       en: 1A current control
       de: 1A Ladestromvorgabe
-    description:
+    help:
       en: Vehicle supports 1A current steps only
       de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
   - name: welcomecharge
