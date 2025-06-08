@@ -100,25 +100,25 @@ export default defineComponent({
 	},
 	unmounted() {
 		this.disconnect();
-		this.clearTimeout();
+		this.clearReconnectTimeout();
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
 	methods: {
-		clearTimeout() {
+		clearReconnectTimeout() {
 			if (this.reconnectTimeout) {
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
 		pageVisibilityChanged() {
 			if (document.hidden) {
-				this.clearTimeout();
+				this.clearReconnectTimeout();
 				this.disconnect();
 			} else {
 				this.connect();
 			}
 		},
 		reconnect() {
-			this.clearTimeout();
+			this.clearReconnectTimeout();
 			this.reconnectTimeout = window.setTimeout(() => {
 				this.disconnect();
 				this.connect();
