@@ -9,16 +9,20 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/gosimple/slug"
 )
 
 const (
 	docsPath    = "../../../templates/docs"
 	websitePath = "../../../templates/evcc.io"
+	iconsPath   = "../../../templates/icons"
 )
 
 //go:generate go run main.go
 
 func main() {
+	slug.CustomSub = map[string]string{"+": "plus"}
+
 	for _, lang := range []string{"de", "en"} {
 		if err := generateDocs(lang); err != nil {
 			panic(err)
@@ -26,6 +30,10 @@ func main() {
 	}
 
 	if err := generateBrandJSON(); err != nil {
+		panic(err)
+	}
+
+	if err := generateProductJSON(); err != nil {
 		panic(err)
 	}
 }
@@ -57,7 +65,7 @@ func generateClass(class templates.Class, lang string) error {
 			return err
 		}
 
-		for index, product := range tmpl.Products {
+		for _, product := range tmpl.Products {
 			fmt.Println(tmpl.Template + ": " + product.Title(lang))
 
 			b, err := tmpl.RenderDocumentation(product, lang)
@@ -65,7 +73,12 @@ func generateClass(class templates.Class, lang string) error {
 				return err
 			}
 
-			filename := fmt.Sprintf("%s/%s/%s/%s_%d.yaml", docsPath, lang, strings.ToLower(class.String()), tmpl.Template, index)
+			filename := fmt.Sprintf("%s/%s/%s/%s.yaml", docsPath, lang, strings.ToLower(class.String()), product.Identifier())
+
+			if _, err := os.Stat(filename); err == nil {
+				return fmt.Errorf("file already exists: %s - product titles must be unique", filename)
+			}
+
 			if err := os.WriteFile(filename, b, 0o644); err != nil {
 				return err
 			}
@@ -160,6 +173,42 @@ func generateBrandJSON() error {
 	file, err := json.MarshalIndent(brands, "", " ")
 	if err == nil {
 		err = os.WriteFile(websitePath+"/brands.json", file, 0o644)
+	}
+
+	return err
+}
+
+func generateProductJSON() error {
+	type ProductInfo struct {
+		Brand       string `json:"brand"`
+		Description string `json:"description"`
+	}
+
+	products := make(map[string]map[string]ProductInfo)
+
+	for _, class := range templates.ClassValues() {
+		classKey := strings.ToLower(class.String())
+		products[classKey] = make(map[string]ProductInfo)
+
+		for _, tmpl := range templates.ByClass(class) {
+			for _, product := range tmpl.Products {
+				products[classKey][product.Identifier()] = ProductInfo{
+					Brand:       product.Brand,
+					Description: product.Description.String("en"),
+				}
+			}
+		}
+	}
+
+	if _, err := os.Stat(iconsPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(iconsPath, 0o755); err != nil {
+			return err
+		}
+	}
+
+	file, err := json.MarshalIndent(products, "", "  ")
+	if err == nil {
+		err = os.WriteFile(iconsPath+"/products.json", file, 0o644)
 	}
 
 	return err
