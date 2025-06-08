@@ -2,7 +2,16 @@ template: shelly-1pm
 products:
   - brand: Shelly
     description:
-      generic: 1PM, EM, Plug S, Pro 3EM in monophase mode
+      generic: 1PM
+  - brand: Shelly
+    description:
+      generic: EM
+  - brand: Shelly
+    description:
+      generic: Plug S
+  - brand: Shelly
+    description:
+      generic: Pro 3EM in monophase mode
 group: switchsockets
 params:
   - name: usage

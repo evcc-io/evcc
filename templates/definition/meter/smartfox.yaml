@@ -2,7 +2,13 @@ template: smartfox
 products:
   - brand: Smartfox
     description:
-      generic: Box, Reg, Reg extended
+      generic: Box
+  - brand: Smartfox
+    description:
+      generic: Reg
+  - brand: Smartfox
+    description:
+      generic: Reg extended
 requirements:
   description:
     de: |
