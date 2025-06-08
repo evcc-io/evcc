@@ -145,36 +145,22 @@ func (wb *PhoenixEMEth) ChargeDuration() (time.Duration, error) {
 }
 
 // CurrentPower implements the api.Meter interface
-func (wb *PhoenixEMEth) readScaledValue(regValue, regScale uint16) (int32, float64, error) {
-	bValue, err := wb.conn.ReadInputRegisters(regValue, 2)
-	if err != nil {
-		return 0, 0, err
-	}
-	bScale, err := wb.conn.ReadHoldingRegisters(regScale, 2)
-	if err != nil {
-		return 0, 0, err
-	}
-	scale := 1000.0 * rs485.RTUIeee754ToFloat64Swapped(bScale)
-
-	return encoding.Int32LswFirst(bValue), scale, nil
-}
-
 func (wb *PhoenixEMEth) currentPower() (float64, error) {
-	value, scale, err := wb.readScaledValue(phxEMEthRegPower, phxEMEthRegPowerScale)
+	value, err := wb.readScaledValue(phxEMEthRegPower, phxEMEthRegPowerScale)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(value) / scale, nil
+	return float64(value), nil
 }
 
 func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
-	value, scale, err := wb.readScaledValue(phxEMEthRegEnergy, phxEMEthRegEnergyScale)
+	value, err := wb.readScaledValue(phxEMEthRegEnergy, phxEMEthRegEnergyScale)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(value) / scale, nil
+	return float64(value), nil
 }
 
 // currents implements the api.PhaseCurrents interface
@@ -185,6 +171,20 @@ func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEMEth) voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(phxEMEthRegVoltages, phxEMEthRegVoltagesScale)
+}
+
+func (wb *PhoenixEMEth) readScaledValue(regValue, regScale uint16) (float64, error) {
+	bValue, err := wb.conn.ReadInputRegisters(regValue, 2)
+	if err != nil {
+		return 0, err
+	}
+	bScale, err := wb.conn.ReadHoldingRegisters(regScale, 2)
+	if err != nil {
+		return 0, err
+	}
+	scale := rs485.RTUIeee754ToFloat64Swapped(bScale) / 1000.0
+
+	return float64(encoding.Int32LswFirst(bValue)) * scale, nil
 }
 
 func (wb *PhoenixEMEth) readScaledValues(regValue, regScale uint16) ([]float64, error) {
@@ -201,8 +201,8 @@ func (wb *PhoenixEMEth) readScaledValues(regValue, regScale uint16) ([]float64, 
 
 	res := make([]float64, count)
 	for i := 0; i < count; i++ {
-		scale := 1000.0 * rs485.RTUIeee754ToFloat64Swapped(bScale[4*i:])
-		res[i] = float64(encoding.Int32LswFirst(bValue[4*i:])) / scale
+		scale := rs485.RTUIeee754ToFloat64Swapped(bScale[4*i:]) / 1000.0
+		res[i] = float64(encoding.Int32LswFirst(bValue[4*i:])) * scale
 	}
 
 	return res, nil
