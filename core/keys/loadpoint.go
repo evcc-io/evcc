@@ -5,8 +5,9 @@ const (
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
 	DefaultMode      = "defaultMode" // default charge mode
-	Charger          = "charger"     //  charger ref
-	Meter            = "meter"       //  meter ref
+	Charger          = "charger"     // charger ref
+	Meter            = "meter"       // meter ref
+	Circuit          = "circuit"     // circuit ref
 	DefaultVehicle   = "vehicle"     // default vehicle ref
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
@@ -23,7 +24,7 @@ const (
 	BatteryBoost     = "batteryBoost"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
@@ -70,6 +71,7 @@ const (
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
@@ -84,6 +86,7 @@ const (
 
 	// vehicle
 	VehicleName            = "vehicleName"            // vehicle name
+	VehicleTitle           = "vehicleTitle"           // vehicle title
 	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
 	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer

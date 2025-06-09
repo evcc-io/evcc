@@ -1,8 +1,8 @@
 template: ocpp
 products:
   - description:
-      de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
-      en: OCPP 1.6J compatible charger with Smart Charging Profile
+      de: OCPP 1.6J kompatibel (Smart Charging)
+      en: OCPP 1.6J compatible (Smart Charging)
 group: generic
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:
@@ -12,28 +12,28 @@ requirements:
       Die Wallbox muss daher evcc via Hostname (funktionierende DNS-Auflösung erforderlich!) oder über die IP-Adresse auf Port 8887 erreichen können.
       Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
       Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
-      Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`.
+      Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies manuell geschehen `ws://<evcc>:8887/<stationid>`.
       Für Zählermesswerte sollte in der Wallbox wenn möglich ein kurzes Zeitintervall (< 10s) konfiguriert werden.
-      Nutzen Sie Ihre RFID-Tags (dies ermöglicht z.B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die jeweils für die Ladefreigabe benötigte Transaktion zu erzeugen.
+      Nutzen Sie Ihre RFID-Tags (dies ermöglicht z. B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die für die Ladefreigabe benötigte Transaktion zu erzeugen.
 
-      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die erweiterte Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
+      Falls die Wallbox keine Möglichkeit bietet die Transaktionen lokal zu starten, kann die erweiterte Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
       Dies sollte nur in Ausnahmefällen erforderlich sein.
 
       Voraussetzungen:
       * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
-      * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://[evcc-adresse]:8887/` (evtl noch um `stationid` erweitern)
+      * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://[evcc-adresse]:8887/` (eventuell noch um `stationid` erweitern)
       * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
       * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
       * Verbindung über das lokale Netzwerk
 
-      Die konkrete Konfiguration und der tatsächliche nutzbare Funktionsumfang hängen vom Wallbox-Modell und dessen Software ab.
+      Die konkrete Konfiguration und der tatsächlich nutzbare Funktionsumfang hängen vom Wallbox-Modell und dessen Software ab.
     en: |
       With OCPP the connection will be established from charger (client) to evcc (server).
       The charger needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8887.
       By default, the first incoming connection with any station identifier is used.
       In order to be able to clearly assign several charging points, the respective station identifier (`stationid: `) and connector number (`connector: `) must be configured.
       Many wallboxes automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc>:8887/<stationid>`.
-      If the charger supports sending metering values try to adjust the interval to a short time span (< 10s) .
+      If the charger supports sending metering values, try to adjust the interval to a short time span (< 10s) .
       Use your RFID tags (this allows e.g. vehicle identification) or set your charger to "free charging" or "autostart" to generate the transaction required for charging release.
 
       If the charger does not offer any option to start transactions locally, the `remotestart` advanced option can be used to automatically start a transaction as soon as a vehicle is connected.

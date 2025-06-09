@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -40,7 +41,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	log := util.NewLogger("httpd")
@@ -72,10 +73,25 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		})
 	})
 
-	static.HandleFunc("/", indexHandler())
+	if customCssFile != "" {
+		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
+		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
+		}
+		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
+			// disable caching
+			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			http.ServeFile(w, r, customCssFile)
+		})
+	}
+
+	static.HandleFunc("/", indexHandler(customCssFile != ""))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
+
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{

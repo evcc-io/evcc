@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -37,13 +36,13 @@ const (
 )
 
 var (
-	log         = util.NewLogger("main")
-	cfgFile     string
-	cfgDatabase string
-
-	ignoreEmpty = ""                                      // ignore empty keys
-	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+	log           = util.NewLogger("main")
+	cfgFile       string
+	cfgDatabase   string
+	customCssFile string
+	ignoreEmpty   = ""                                      // ignore empty keys
+	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
 	viper *vpr.Viper
 
@@ -54,7 +53,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "evcc - open source solar charging",
-	Version: server.FormattedVersion(),
+	Version: util.FormattedVersion(),
 	Run:     runRoot,
 }
 
@@ -71,6 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
 	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
+	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -112,7 +112,7 @@ func initConfig() {
 
 	// print version
 	util.LogLevel("info", nil)
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -160,7 +160,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -230,7 +230,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Startup, Val: true}
 
 	// setup mqtt publisher
-	if err == nil && conf.Mqtt.Broker != "" {
+	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
 		var mqtt *server.MQTT
 		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
 		if err == nil {
@@ -293,7 +293,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}()
 
 	// allow web access for vehicles
-	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
+	configureAuth(httpd.Router())
 
 	auth := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
@@ -308,8 +308,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	})
 
 	// show and check version, reduce api load during development
-	if server.Version != server.DevVersion {
-		valueChan <- util.Param{Key: keys.Version, Val: server.FormattedVersion()}
+	if util.Version != util.DevVersion {
+		valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 		go updater.Run(log, httpd, valueChan)
 	}
 

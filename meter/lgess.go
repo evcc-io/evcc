@@ -35,13 +35,13 @@ func NewLgEss15FromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.Meter, error) {
 	cc := struct {
-		capacity               `mapstructure:",squash"`
+		batteryCapacity        `mapstructure:",squash"`
+		batterySocLimits       `mapstructure:",squash"`
 		URI, Usage             string
 		Registration, Password string
-		battery                `mapstructure:",squash"`
 		Cache                  time.Duration
 	}{
-		battery: battery{
+		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
@@ -56,11 +56,11 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator(), cc.battery, essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, battery battery, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, essType lgpcs.Model) (api.Meter, error) {
 	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
@@ -77,13 +77,13 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate api.BatterySoc
+	// decorate battery
 	var batterySoc func() (float64, error)
 	var setBatteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
 		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7433 {
-			setBatteryMode = m.batteryMode(battery)
+			setBatteryMode = m.batteryMode(batterySocLimits)
 		}
 	}
 
@@ -135,7 +135,7 @@ func (m *LgEss) batterySoc() (float64, error) {
 }
 
 // batteryMode implements the api.BatteryController interface
-func (m *LgEss) batteryMode(battery battery) func(api.BatteryMode) error {
+func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		switch mode {
 		case api.BatteryNormal:
@@ -144,7 +144,7 @@ func (m *LgEss) batteryMode(battery battery) func(api.BatteryMode) error {
 			m.conn.BatteryMode("on", 100, true)
 			time.Sleep(10 * time.Second)
 			// now turn Battery discharge on
-			return m.conn.BatteryMode("on", int(battery.MinSoc), true)
+			return m.conn.BatteryMode("on", int(batterySocLimits.MinSoc), true)
 		case api.BatteryHold:
 			soc, err := m.batterySoc()
 			if err != nil {
@@ -157,7 +157,7 @@ func (m *LgEss) batteryMode(battery battery) func(api.BatteryMode) error {
 			}
 			return m.conn.BatteryMode("on", int(soc), true)
 		case api.BatteryCharge:
-			return m.conn.BatteryMode("on", int(battery.MaxSoc), true)
+			return m.conn.BatteryMode("on", int(batterySocLimits.MaxSoc), true)
 		default:
 			return api.ErrNotAvailable
 		}

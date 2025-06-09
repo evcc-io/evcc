@@ -2,7 +2,10 @@ template: hesotec
 products:
   - brand: Hesotec
     description:
-      generic: eSat, eBox
+      generic: eSat
+  - brand: Hesotec
+    description:
+      generic: eBox
 requirements:
   evcc: ["sponsorship"]
 params:

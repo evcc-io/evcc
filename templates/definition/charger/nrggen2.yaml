@@ -1,6 +1,6 @@
 template: nrggen2
 products:
-  - brand: NRGKick
+  - brand: NRGkick
     description:
       generic: Gen2
 requirements:

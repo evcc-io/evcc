@@ -1,14 +1,15 @@
-import type { RateRaw, Rate } from "../types/evcc";
+import type { Rate } from "../types/evcc";
+import type { ForecastSlot } from "../components/Forecast/types";
 
-function convertRate(rate: RateRaw): Rate {
+function convertRate(slot: ForecastSlot): Rate {
 	return {
-		start: new Date(rate.start),
-		end: new Date(rate.end),
-		value: rate.value,
+		start: new Date(slot.start),
+		end: new Date(slot.end),
+		value: slot.value,
 	};
 }
 
-export default function convertRates(rates: RateRaw[] | null): Rate[] {
-	if (!rates) return [];
-	return rates.map(convertRate);
+export default function convertRates(slots: ForecastSlot[] | null): Rate[] {
+	if (!slots) return [];
+	return slots.map(convertRate);
 }

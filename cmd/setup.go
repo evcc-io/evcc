@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"regexp"
 	"slices"
@@ -171,7 +170,13 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(context.TODO(), log, cc.Other)
+
+		props, err := customDevice(cc.Other)
+		if err != nil {
+			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
+		}
+
+		instance, err := circuit.NewFromConfig(context.TODO(), log, props)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -261,9 +266,17 @@ func configureMeters(static []config.Named, names ...string) error {
 
 			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
+			props, err := customDevice(cc.Other)
 			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom meter '%s': %w", cc.Name, err)}
+			}
+
+			var instance api.Meter
+			if err == nil {
+				instance, err = meter.NewFromConfig(ctx, cc.Type, props)
+				if err != nil {
+					err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+				}
 			}
 
 			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
@@ -325,9 +338,17 @@ func configureChargers(static []config.Named, names ...string) error {
 
 			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
+			props, err := customDevice(cc.Other)
 			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom charger '%s': %w", cc.Name, err)}
+			}
+
+			var instance api.Charger
+			if err == nil {
+				instance, err = charger.NewFromConfig(ctx, cc.Type, props)
+				if err != nil {
+					err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
+				}
 			}
 
 			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
@@ -344,7 +365,13 @@ func configureChargers(static []config.Named, names ...string) error {
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-	instance, err := vehicle.NewFromConfig(ctx, cc.Type, cc.Other)
+	props, err := customDevice(cc.Other)
+
+	var instance api.Vehicle
+	if err == nil {
+		instance, err = vehicle.NewFromConfig(ctx, cc.Type, props)
+	}
+
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
@@ -611,7 +638,7 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
-		if !runAsService {
+		if !runAsService || conf.Topic == "" {
 			return
 		}
 
@@ -666,7 +693,12 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd
 		return nil
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, conf.Other, site, httpd)
+	props, err := customDevice(conf.Other)
+	if err != nil {
+		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+	}
+
+	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site, httpd)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
 	}
@@ -741,10 +773,15 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
-	for _, service := range conf.Services {
-		impl, err := push.NewFromConfig(context.TODO(), service.Type, service.Other)
+	for _, conf := range conf.Services {
+		props, err := customDevice(conf.Other)
 		if err != nil {
-			return messageChan, fmt.Errorf("failed configuring push service %s: %w", service.Type, err)
+			return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+		}
+
+		impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
+		if err != nil {
+			return messageChan, fmt.Errorf("failed configuring push service %s: %w", conf.Type, err)
 		}
 		messageHub.Add(impl)
 	}
@@ -757,7 +794,12 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, conf.Other)
+	props, err := customDevice(conf.Other)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
+	}
+
+	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
@@ -965,7 +1007,7 @@ CONTINUE:
 		}
 
 		if !isRoot && !instance.HasMeter() {
-			return fmt.Errorf("circuit %s has no meter and no loadpoint assigned", dev.Config().Name)
+			log.INFO.Printf("circuit %s has no meter and no loadpoint assigned", dev.Config().Name)
 		}
 	}
 
@@ -1049,7 +1091,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1058,38 +1100,4 @@ func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mu
 
 	// wire the handler
 	oauth2redirect.SetupRouter(auth)
-
-	// initialize
-	authCollection := util.NewAuthCollection(paramC)
-
-	baseURI := conf.URI()
-	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
-
-	var id int
-	for _, v := range vehicles {
-		if provider, ok := v.(api.AuthProvider); ok {
-			id += 1
-
-			basePath := fmt.Sprintf("vehicles/%d", id)
-			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
-
-			// register vehicle
-			ap := authCollection.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
-
-			provider.SetCallbackParams(baseURI, callbackURI, ap.Handler())
-
-			auth.
-				Methods(http.MethodPost).
-				Path(fmt.Sprintf("/%s/login", basePath)).
-				HandlerFunc(provider.LoginHandler())
-			auth.
-				Methods(http.MethodPost).
-				Path(fmt.Sprintf("/%s/logout", basePath)).
-				HandlerFunc(provider.LogoutHandler())
-
-			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
-		}
-	}
-
-	authCollection.Publish()
 }

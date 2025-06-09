@@ -12,21 +12,24 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import type { PHASES } from "@/types/evcc";
+import { defineComponent, type PropType } from "vue";
 const MIN_ACTIVE_CURRENT = 1;
 
-export default {
+export default defineComponent({
 	name: "Phases",
 	props: {
-		offeredCurrent: { type: Number },
-		chargeCurrents: { type: Array },
-		phasesActive: { type: Number },
-		minCurrent: { type: Number },
-		maxCurrent: { type: Number },
+		offeredCurrent: { type: Number, default: 0 },
+		chargeCurrents: { type: Array as PropType<number[]> },
+		phasesActive: { type: Number as PropType<PHASES> },
+		minCurrent: { type: Number, default: 6 },
+		maxCurrent: { type: Number, default: 16 },
 	},
 	computed: {
 		chargeCurrentsActive() {
-			return this.chargeCurrents?.filter((c) => c >= MIN_ACTIVE_CURRENT).length > 0;
+			if (!this.chargeCurrents) return false;
+			return this.chargeCurrents.filter((c) => c >= MIN_ACTIVE_CURRENT).length > 0;
 		},
 	},
 	methods: {
@@ -37,21 +40,21 @@ export default {
 			);
 			return (100 / this.maxCurrent) * current;
 		},
-		realWidth(num) {
+		realWidth(num: number) {
 			if (this.chargeCurrents) {
 				const current = this.chargeCurrents[num - 1] || 0;
 				return (100 / this.maxCurrent) * current;
 			}
 			return this.targetWidth();
 		},
-		isPhaseActive(num) {
-			if (this.chargeCurrentsActive) {
+		isPhaseActive(num: number) {
+			if (this.chargeCurrentsActive && this.chargeCurrents) {
 				return this.chargeCurrents[num - 1] >= MIN_ACTIVE_CURRENT;
 			}
-			return num <= this.phasesActive;
+			return num <= (this.phasesActive || 0);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

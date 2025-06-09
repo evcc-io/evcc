@@ -39,9 +39,6 @@ jobs:
       - name: Docs
         run: make docs
 
-      - name: Toml
-        run: make toml
-
       - name: Porcelain
         run: make porcelain
 
@@ -127,7 +124,7 @@ jobs:
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --timeout 5m
@@ -205,6 +202,8 @@ jobs:
 
       - name: Run tests
         run: npx playwright test
+        env:
+          TZ: Europe/Berlin
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

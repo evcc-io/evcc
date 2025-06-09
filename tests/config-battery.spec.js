@@ -49,7 +49,7 @@ test.describe("battery meter", async () => {
     // edit #1
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Battery capacity in kWh").fill("20");
+    await meterModal.getByLabel("Battery capacity").fill("20");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
 

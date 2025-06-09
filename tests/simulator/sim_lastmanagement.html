@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Entscheidungsbaum - Lastmanagement</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        svg { width: 100%; height: 800px; border: 1px solid #ccc; }
+        text { font-size: 14px; fill: black; white-space: pre-line; text-anchor: middle; }
+        .header { font-weight: bold; font-size: 16px; fill: black; }
+        .maxText { font-weight: bold; font-size: 14px; fill: black; }
+        .valueText { font-size: 14px; }
+        .slider-container { margin-top: 10px; }
+        .overLimit { fill: red; }
+        .withinLimit { fill: green; }
+    </style>
+</head>
+<body>
+    <h2>Interaktiver Entscheidungsbaum: Lastmanagement</h2>
+    <svg></svg>
+    <div id="controls"></div>
+    <script>
+        const treeData = {
+            name: "Hauptstromkreis",
+            maxCurrent: 100,
+            maxPower: 50,
+            children: [
+                { name: "Unterstromkreis 1", maxCurrent: 40, maxPower: 20,
+                    children: [
+                        { name: "Wallbox 1", maxCurrent: 16, maxPower: 11, current: 0, power: 0 },
+                        { name: "Wallbox 2", maxCurrent: 32, maxPower: 7.4, current: 0, power: 0 }
+                    ]
+                },
+                { name: "Unterstromkreis 2", maxCurrent: 60, maxPower: 30,
+                    children: [
+                        { name: "Wallbox 3", maxCurrent: 32, maxPower: 22, current: 0, power: 0 },
+                        { name: "Wallbox 4", maxCurrent: 16, maxPower: 11, current: 0, power: 0 }
+                    ]
+                },
+                { name: "Unterstromkreis 3", maxCurrent: 30, maxPower: 15,
+                    children: [
+                        { name: "Wallbox 5", maxCurrent: 16, maxPower: 7.4, current: 0, power: 0 },
+                        { name: "Wallbox 6", maxCurrent: 16, maxPower: 3.7, current: 0, power: 0 }
+                    ]
+                }
+            ]
+        };
+
+        const width = window.innerWidth, height = 800;
+        const svg = d3.select("svg"),
+              g = svg.append("g").attr("transform", "translate(50,50)");
+
+        const treeLayout = d3.tree().size([width - 100, height - 100]);
+        const root = d3.hierarchy(treeData, d => d.children);
+        treeLayout(root);
+
+        const links = g.selectAll("line")
+            .data(root.links())
+            .enter()
+            .append("line")
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y)
+            .attr("stroke", "black");
+
+        g.selectAll("circle")
+            .data(root.descendants())
+            .enter()
+            .append("circle")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 5)
+            .attr("fill", "blue");
+
+        g.selectAll(".header")
+            .data(root.descendants())
+            .enter()
+            .append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y - 30)
+            .attr("class", "header")
+            .text(d => d.data.name);
+
+        const maxTexts = g.selectAll(".maxText")
+            .data(root.descendants())
+            .enter()
+            .append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y - 15)
+            .attr("class", "maxText")
+            .text(d => `Max: ${d.data.maxCurrent}A, ${d.data.maxPower}kW`);
+
+        const valueTexts = g.selectAll(".valueText")
+            .data(root.descendants())
+            .enter()
+            .append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("class", "valueText")
+            .text(d => `Aktuell: ${d.data.current || 0}A, ${d.data.power || 0}kW`);
+
+        const controls = d3.select("#controls");
+        root.leaves().forEach(d => {
+            if (d.data.name.startsWith("Wallbox")) {
+                const container = controls.append("div").attr("class", "slider-container");
+                container.append("label").text(d.data.name);
+                
+                container.append("input")
+                    .attr("type", "range")
+                    .attr("min", "0")
+                    .attr("max", d.data.maxCurrent)
+                    .attr("value", "0")
+                    .on("input", function() {
+                        d.data.current = +this.value;
+                        updateTree();
+                    });
+                
+                container.append("input")
+                    .attr("type", "range")
+                    .attr("min", "0")
+                    .attr("max", d.data.maxPower)
+                    .attr("value", "0")
+                    .on("input", function() {
+                        d.data.power = +this.value;
+                        updateTree();
+                    });
+            }
+        });
+
+        function updateTree() {
+            function calculateCurrentPower(node) {
+                if (!node.children) return;
+                node.data.current = node.children.reduce((sum, child) => sum + (child.data.current || 0), 0);
+                node.data.power = node.children.reduce((sum, child) => sum + (child.data.power || 0), 0);
+                node.children.forEach(calculateCurrentPower);
+            }
+            calculateCurrentPower(root);
+
+            valueTexts.text(d => `Aktuell: ${d.data.current || 0}A, ${d.data.power || 0}kW`)
+                .attr("class", d => (d.data.current > d.data.maxCurrent || d.data.power > d.data.maxPower) ? "valueText overLimit" : "valueText withinLimit");
+
+            links.attr("stroke", d => d.target.data.current > d.target.data.maxCurrent ? "red" : "green");
+        }
+
+        // Simulation zur Änderung der aktuellen Werte
+        function simulateValues() {
+            root.descendants().forEach(d => {
+                if (d.data.name.startsWith("Wallbox")) {
+                    d.data.current = Math.random() * d.data.maxCurrent;
+                    d.data.power = Math.random() * d.data.maxPower;
+                }
+            });
+            updateTree();
+        }
+
+        // Simulation starten
+        let simulationInterval = setInterval(simulateValues, 1000); // Werte alle 1 Sekunde aktualisieren
+
+        // Stoppen, wenn Überschreitung erkannt wird
+        function checkForOverload() {
+            root.descendants().forEach(d => {
+                if (d.data.current > d.data.maxCurrent || d.data.power > d.data.maxPower) {
+                    console.log(`Überschreitung erkannt bei: ${d.data.name}`);
+                    clearInterval(simulationInterval);
+                }
+            });
+        }
+
+        // Die Simulation automatisch stoppen, wenn eine Überschreitung erkannt wird
+        setInterval(checkForOverload, 1000); // Überprüft jede Sekunde, ob eine Überschreitung vorliegt
+
+    </script>
+</body>
+</html>

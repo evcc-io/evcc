@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -74,8 +75,9 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock       // mockable time
-	bus      evbus.Bus         // event bus
+	clock    clock.Clock // mockable time
+	bus      evbus.Bus   // event bus
+	site     site.API
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
 	lpChan   chan<- *Loadpoint // update requests
@@ -140,11 +142,12 @@ type Loadpoint struct {
 	socEstimator   *soc.Estimator
 
 	// charge planning
-	planner     *planner.Planner
-	planTime    time.Time // time goal
-	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
-	planSlotEnd time.Time // current plan slot end time
-	planActive  bool      // charge plan exists and has a currently active slot
+	planner          *planner.Planner
+	planTime         time.Time     // time goal
+	planPrecondition time.Duration // precondition duration
+	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
+	planSlotEnd      time.Time     // current plan slot end time
+	planActive       bool          // charge plan exists and has a currently active slot
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
@@ -342,8 +345,9 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, v)
+		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
 	}
 }
 
@@ -586,7 +590,8 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
@@ -643,8 +648,8 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// vehicle
-	lp.publish(keys.VehicleName, "")
-	lp.publish(keys.VehicleOdometer, 0.0)
+	lp.unpublishVehicleIdentity()
+	lp.unpublishVehicle()
 
 	// assign and publish default vehicle
 	if lp.defaultVehicle != nil {
@@ -657,6 +662,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
+	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -953,7 +959,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, id := lp.NextVehiclePlan()
+	_, _, _, id := lp.NextVehiclePlan()
 	return id > 1
 }
 
@@ -1080,7 +1086,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 
 					// Enable charging on connect if any available vehicle requires it.
 					// We're using the PV timer to disable after the welcome
-					if !welcomeCharge {
+					if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
 						for _, v := range lp.availableVehicles() {
 							if slices.Contains(v.Features(), api.WelcomeCharge) {
 								welcomeCharge = true
@@ -1322,8 +1328,16 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		return 0
 	}
 
-	// push demand to drain battery
-	delta := lp.EffectiveStepPower()
+	// push demand to drain battery (at least 100W)
+	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
+
+	if lp.coarseCurrent() {
+		// add effective step power to delta to make sure to step up to the next full amp
+		// just using lp.EffectiveStepPower() as delta is not enough because this will result
+		// in a too low current when there is a bit remaining grid consumption due to the accuracy
+		// of the battery controller
+		delta += lp.EffectiveStepPower()
+	}
 
 	// start boosting by setting maximum power
 	if boost == boostStart {
@@ -1338,7 +1352,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	res := batteryBoostPower + delta
+	res := batteryBoostPower + delta + lp.site.GetResidualPower()
 	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
 
 	return res
@@ -1545,10 +1559,6 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	if lp.hasPhaseSwitching() {
-		return // we don't need the voltages
-	}
-
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
@@ -1556,7 +1566,10 @@ func (lp *Loadpoint) updateChargeVoltages() {
 
 	u1, u2, u3, err := phaseMeter.Voltages()
 	if err != nil {
-		lp.log.ERROR.Printf("charge voltages: %v", err)
+		// phaseSwitching devices may announce voltages but doesn't deliver
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charge voltages: %v", err)
+		}
 		return
 	}
 
@@ -1564,16 +1577,22 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	lp.log.DEBUG.Printf("charge voltages: %.3gV", chargeVoltages)
 	lp.publish(keys.ChargeVoltages, chargeVoltages)
 
+	if lp.hasPhaseSwitching() {
+		return // we don't need the voltages, but publish
+	}
+
+	a1, a2, a3 := u1 >= minActiveVoltage, u2 >= minActiveVoltage, u3 >= minActiveVoltage
+
 	// Quine-McCluskey for (¬L1∧L2∧¬L3) ∨ (L1∧L2∧¬L3) ∨ (¬L1∧¬L2∧L3) ∨ (L1∧¬L2∧L3) ∨ (¬L1∧L2∧L3) -> ¬L1 ∧ L3 ∨ L2 ∧ ¬L3 ∨ ¬L2 ∧ L3
-	if !(u1 >= minActiveVoltage) && (u3 >= minActiveVoltage) || (u2 >= minActiveVoltage) && !(u3 >= minActiveVoltage) || !(u2 >= minActiveVoltage) && (u3 >= minActiveVoltage) {
+	if !a1 && a3 || a2 && !a3 || !a2 && a3 {
 		lp.log.WARN.Printf("invalid phase wiring between charge meter and charger")
 	}
 
 	var phases int
-	if (u1 >= minActiveVoltage) || (u2 >= minActiveVoltage) || (u3 >= minActiveVoltage) {
+	if a1 || a2 || a3 {
 		phases = 3
 	}
-	if (u1 >= minActiveVoltage) && (u2 < minActiveVoltage) && (u3 < minActiveVoltage) {
+	if a1 && !a2 && !a3 {
 		phases = 1
 	}
 

@@ -533,11 +533,11 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
-import api from "../../api";
+import api from "@/api";
 import GenericModal from "../Helper/GenericModal.vue";
-import deepClone from "../../utils/deepClone";
-import deepEqual from "../../utils/deepEqual";
-import formatter, { POWER_UNIT } from "../../mixins/formatter";
+import deepClone from "@/utils/deepClone";
+import deepEqual from "@/utils/deepEqual";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 
 const nsPerMin = 60 * 1e9;
@@ -554,7 +554,7 @@ const defaultValues = {
 	},
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
-		estimate: false,
+		estimate: true,
 	},
 	vehicle: "",
 	charger: "",
@@ -614,7 +614,10 @@ export default {
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
-			const title = this.charger.deviceProduct || this.charger.config?.template || "unknown";
+			const title =
+				this.charger.deviceProduct ||
+				this.charger.config?.template ||
+				this.$t("config.general.customOption");
 			return `${title} [${this.values.charger}]`;
 		},
 		chargerStatus() {

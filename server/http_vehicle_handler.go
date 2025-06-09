@@ -73,6 +73,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
@@ -92,19 +93,27 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, soc); err != nil {
+		precondition, err := parseDuration(query.Get("precondition"))
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, soc = v.GetPlanSoc()
+		if err := v.SetPlanSoc(ts, precondition, soc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, precondition, soc = v.GetPlanSoc()
 
 		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
+			Soc          int       `json:"soc"`
+			Precondition int64     `json:"precondition"`
+			Time         time.Time `json:"time"`
 		}{
-			Soc:  soc,
-			Time: ts,
+			Soc:          soc,
+			Precondition: int64(precondition.Seconds()),
+			Time:         ts,
 		}
 
 		jsonResult(w, res)
@@ -152,7 +161,7 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

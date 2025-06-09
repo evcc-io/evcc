@@ -27,7 +27,7 @@
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						slot.startHour
+						formatHour(slot.startHour)
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -53,15 +53,16 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/arrowright";
+import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
-import formatter from "../../mixins/formatter.js";
-import type { Slot } from "../../types/evcc.ts";
+import formatter from "@/mixins/formatter";
+import type { Slot } from "@/types/evcc";
 
 const BAR_WIDTH = 20;
 
-export default {
+export default defineComponent({
 	name: "TariffChart",
 	components: {
 		PlanEndIcon,
@@ -116,9 +117,6 @@ export default {
 			});
 			return sum / count;
 		},
-		activeSlot() {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
-		},
 	},
 	methods: {
 		hoverSlot(index: number | null) {
@@ -167,8 +165,11 @@ export default {
 			clearTimeout(this.longPressTimer);
 			this.hoverSlot(null);
 		},
+		formatHour(hour: number) {
+			return is12hFormat() ? hour % 12 : hour;
+		},
 	},
-};
+});
 </script>
 
 <style scoped>

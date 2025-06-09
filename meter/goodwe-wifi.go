@@ -18,15 +18,15 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // TODO deprecated remove
 
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		URI, Usage string
-		Timeout    time.Duration
+		batteryCapacity `mapstructure:",squash"`
+		URI, Usage      string
+		Timeout         time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -35,10 +35,10 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.Timeout)
+	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Timeout)
 }
 
-func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
+func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Duration) (api.Meter, error) {
 	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
 	if err != nil {
 		return nil, err
@@ -54,13 +54,17 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 		inverter: inverter,
 	}
 
-	// decorate api.BatterySoc
-	var batterySoc func() (float64, error)
+	// decorate battery
+	var (
+		batterySoc      func() (float64, error)
+		batteryCapacity func() float64
+	)
 	if usage == "battery" {
 		batterySoc = res.batterySoc
+		batteryCapacity = capacity
 	}
 
-	return decorateGoodWeWifi(res, batterySoc), nil
+	return decorateGoodWeWifi(res, batterySoc, batteryCapacity), nil
 }
 
 func (m *goodWeWiFi) CurrentPower() (float64, error) {

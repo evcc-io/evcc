@@ -33,7 +33,7 @@ params:
     default: 20s
     help:
       de: Spezifisches Timeout für Easee API Interaktionen. Kann Warnungen und Fehler bei träger Easee API reduzieren.
-      en: Timout specifically for Easee API interactions. Can reduce warnings and errors in case of lagging Easee API.
+      en: Timeout specifically for Easee API interactions. Can reduce warnings and errors in case of lagging Easee API.
   - name: authorize
     type: bool
     help:
