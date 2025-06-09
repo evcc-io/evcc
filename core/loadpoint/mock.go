@@ -696,6 +696,18 @@ func (mr *MockAPIMockRecorder) SetChargerRef(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetChargerRef", reflect.TypeOf((*MockAPI)(nil).SetChargerRef), arg0)
 }
 
+// SetCircuitRef mocks base method.
+func (m *MockAPI) SetCircuitRef(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCircuitRef", arg0)
+}
+
+// SetCircuitRef indicates an expected call of SetCircuitRef.
+func (mr *MockAPIMockRecorder) SetCircuitRef(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCircuitRef", reflect.TypeOf((*MockAPI)(nil).SetCircuitRef), arg0)
+}
+
 // SetDefaultMode mocks base method.
 func (m *MockAPI) SetDefaultMode(arg0 api.ChargeMode) {
 	m.ctrl.T.Helper()

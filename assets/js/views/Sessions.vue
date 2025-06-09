@@ -144,40 +144,26 @@
 					</div>
 				</div>
 
-				<div v-if="showTable">
-					<SessionTable
-						:sessions="currentSessions"
-						:vehicleFilter="vehicleFilter"
-						:loadpointFilter="loadpointFilter"
-						:currency="currency"
-						@show-session="showDetails"
-					/>
-					<div class="d-grid gap-2 d-md-block mt-3 mb-5">
-						<a
-							v-if="currentSessions.length"
-							class="btn btn-sm btn-outline-secondary text-nowrap me-md-2"
-							:href="csvLink"
-							download
-						>
-							{{ $t("sessions.csvMonth", { month: headline }) }}
-						</a>
-						<a
-							v-if="sessions.length"
-							class="btn btn-sm btn-outline-secondary text-nowrap"
-							:href="csvTotalLink"
-							download
-						>
-							{{ $t("sessions.csvTotal") }}
-						</a>
-					</div>
+				<SessionTable
+					v-if="showTable"
+					:sessions="currentSessions"
+					:vehicleFilter="vehicleFilter"
+					:loadpointFilter="loadpointFilter"
+					:currency="currency"
+					@show-session="showDetails"
+				/>
+				<div class="d-flex gap-2 mt-1 mb-5">
+					<a class="btn btn-outline-secondary" tabindex="0" :href="csvLink" download>
+						{{ csvLinkLabel }}
+					</a>
+					<button
+						v-if="!showTable"
+						class="btn btn-link text-muted"
+						@click="changePeriod(periods.MONTH)"
+					>
+						{{ $t("sessions.showIndividualEntries") }}
+					</button>
 				</div>
-				<button
-					v-else
-					class="btn btn-link text-muted mb-5"
-					@click="changePeriod(periods.MONTH)"
-				>
-					{{ $t("sessions.showIndividualEntries") }}
-				</button>
 			</main>
 			<SessionDetailsModal
 				:session="selectedSession"
@@ -220,6 +206,7 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS } from "../components/Sessions/types";
+
 export default {
 	name: "Sessions",
 	components: {
@@ -483,16 +470,26 @@ export default {
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date);
 		},
-		headline() {
-			const date = new Date();
-			date.setMonth(this.month - 1, 1);
-			date.setFullYear(this.year);
-			return this.fmtMonthYear(date);
+		csvLinkLabel() {
+			if (this.period === PERIODS.MONTH) {
+				const date = new Date();
+				date.setMonth(this.month - 1, 1);
+				date.setFullYear(this.year);
+				const period = this.fmtMonthYear(date);
+				return this.$t("sessions.csvPeriod", { period });
+			} else if (this.period === PERIODS.YEAR) {
+				const period = this.year;
+				return this.$t("sessions.csvPeriod", { period });
+			} else {
+				return this.$t("sessions.csvTotal");
+			}
 		},
 		csvLink() {
-			return this.csvHrefLink(this.year, this.month);
-		},
-		csvTotalLink() {
+			if (this.period === PERIODS.MONTH) {
+				return this.csvHrefLink(this.year, this.month);
+			} else if (this.period === PERIODS.YEAR) {
+				return this.csvHrefLink(this.year);
+			}
 			return this.csvHrefLink();
 		},
 		colorMappings() {
@@ -691,10 +688,8 @@ export default {
 				format: "csv",
 				lang: this.$i18n?.locale,
 			});
-			if (year && month) {
-				params.append("year", year);
-				params.append("month", month);
-			}
+			if (year) params.append("year", year);
+			if (month) params.append("month", month);
 			return `./api/sessions?${params.toString()}`;
 		},
 		updateType(type) {

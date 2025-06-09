@@ -113,6 +113,9 @@
       "batteryStorage": "“Batarya”",
       "solarSystem": "“Güneş Enerji Sistemi”"
     },
+    "editor": {
+      "loading": "YAML düzenleyici yükleniyor…"
+    },
     "eebus": {
       "description": "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "İptal",
+      "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
+      "customOption": "Kullanıcı tanımlı cihaz",
       "delete": "“Sil”",
       "docsLink": "Belgelere bak.",
       "experimental": "Deneysel",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "evcc'yi başka bir ev enerji yönetim sistemine bağla.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "değiştir"
     },
     "influx": {
       "description": "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan.",
@@ -255,6 +263,7 @@
       "addVehicle": "Araç ekle",
       "configured": "yapılandırıldı",
       "edit": "düzenle",
+      "loadpointRequired": "En az bir doldurma noktası yapılandırılmalı.",
       "name": "“İsim”",
       "title": "Yapılandırma",
       "unconfigured": "yapılandırılmadı",
@@ -268,6 +277,7 @@
     "meter": {
       "cancel": "İptal",
       "delete": "Sil",
+      "generic": "Genel bütünleşmeler",
       "option": {
         "aux": "Kendi kendini düzenleyen tüketici ekle",
         "battery": "Pil ölçer ekle",
@@ -275,6 +285,7 @@
         "pv": "Güneş ölçer ekle"
       },
       "save": "Kaydet",
+      "specific": "Özel bütünleşmeler",
       "template": "Üretici",
       "titleChoice": "Ne Eklemek İstersin?",
       "validateSave": "Doğrula ve kaydet"
@@ -416,6 +427,7 @@
       "minimumCurrent": "“Asgari akım”",
       "minimumCurrentHelp": "Yalnızca ne yaptığını biliyorsan 6A'in altına in.",
       "online": "Çevrimiçi API'ye sahip araçlar",
+      "primary": "Genel bütünleşmeler",
       "priority": "“Öncelik”",
       "priorityHelp": "Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.",
       "save": "Kaydet",
@@ -861,10 +873,9 @@
       "solarpercentage": "Güneş (%)",
       "vehicle": "Araç"
     },
-    "csvMonth": "{month} CSV olarak indir",
+    "csvPeriod": "{period} CSV olarak indir",
     "csvTotal": "CSV'nin tamamını indir",
     "date": "Başlangıç",
-    "downloadCsv": "CSV olarak indir",
     "energy": "Doldurulan",
     "filter": {
       "allLoadpoints": "tüm doldurma noktaları",
@@ -930,6 +941,11 @@
       "dark": "Karanlık",
       "label": "Görünüm",
       "light": "Aydınlık"
+    },
+    "time": {
+      "12h": "12saat",
+      "24h": "24saat",
+      "label": "Saat biçimi"
     },
     "title": "Genel Ayarlar",
     "unit": {

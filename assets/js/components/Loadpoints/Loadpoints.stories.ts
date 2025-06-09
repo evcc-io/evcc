@@ -24,6 +24,7 @@ function loadpoint(opts = {}) {
 		title: "Garage",
 		power: 2100,
 		index: 0,
+		chargerFeatureHeating: false,
 	};
 	return { ...base, ...opts };
 }

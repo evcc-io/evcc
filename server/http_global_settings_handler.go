@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -54,7 +53,7 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 			return
 		}
 
-		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil && err != io.EOF {
+		if err := yaml.Unmarshal(b, &other); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
