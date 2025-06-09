@@ -2,7 +2,19 @@ template: smartfox-em2
 products:
   - brand: Smartfox
     description:
-      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light (EM2 firmware)
+      generic: Pro
+  - brand: Smartfox
+    description:
+      generic: Pro 2
+  - brand: Smartfox
+    description:
+      generic: Pro Light
+  - brand: Smartfox
+    description:
+      generic: Pro Light 2
+  - brand: Smartfox
+    description:
+      generic: Light (EM2 firmware)
 requirements:
   description:
     de: |
