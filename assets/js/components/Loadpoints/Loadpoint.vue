@@ -371,7 +371,7 @@ export default defineComponent({
 		setPhasesConfigured(phases: PHASES) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		priorityUpdated(prio) {
+		priorityUpdated(prio: number) {
 			api.post(this.apiPath("priority") + "/" + prio);
 		},
 		changeVehicle(name: string) {

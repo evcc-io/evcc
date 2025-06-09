@@ -656,15 +656,15 @@
       "remoteDisabledSoft": "{source}: turned off adaptive solar-charging",
       "solar": "Solar"
     },
-    "loadpointPrio":{
-      "high" : "high",
-      "higher" : "higher",
-      "low" : "low",
-      "lower" : "lower",
-      "normal" : "normal",
-      "prioTooltip" : "Vehicle overrides Loadpoint Priority",
-      "veryHigh" : "very high",
-      "veryLow" : "very low"
+    "loadpointPrio": {
+      "high": "high",
+      "higher": "higher",
+      "low": "low",
+      "lower": "lower",
+      "normal": "normal",
+      "prioTooltip": "Vehicle overrides Loadpoint Priority",
+      "veryHigh": "very high",
+      "veryLow": "very low"
     },
     "loadpointSettings": {
       "batteryBoost": {

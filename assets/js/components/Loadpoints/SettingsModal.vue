@@ -315,7 +315,7 @@ export default defineComponent({
 			// Aktuellen Wert einfügen, wenn nicht enthalten
 			if (!options.some((opt) => opt.value === this.selectedPriority)) {
 				options.unshift({
-					value: this.selectedPriority,
+					value: this.selectedPriority ?? 0,
 					name: `${this.selectedPriority} (current)`,
 				});
 			}
