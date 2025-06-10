@@ -7,19 +7,19 @@ const base = protocol + "//" + hostname + (port ? ":" + port : "") + pathname;
 
 // override the way axios serializes arrays in query parameters (a=1&a=2&a=3 instead of a[]=1&a[]=2&a[]=3)
 function customParamsSerializer(params: { [key: string]: any }) {
-	const queryString = Object.keys(params)
-		.filter((key) => params[key] !== null)
-		.map((key) => {
-			const value = params[key];
-			if (Array.isArray(value)) {
-				return value
-					.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
-					.join("&");
-			}
-			return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-		})
-		.join("&");
-	return queryString;
+	return Object.keys(params)
+ 		.filter((key) => params[key] !== null)
+ 		.map((key) => {
+ 			const value = params[key];
+ 			if (Array.isArray(value)) {
+ 				return value
+ 					.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
+ 					.join("&");
+ 			}
+ 			return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+ 		})
+ 		.join("&");
+
 }
 
 const api = axios.create({
