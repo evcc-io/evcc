@@ -11,7 +11,7 @@ params:
   - preset: vehicle-common
   - name: vin
     required: true
-    example: WBMW...
+    example: WBA8E9G50GM091234
     help:
       en: BMW VehicleIdentificationNumber
       de: BMW Fahrzeugidentifikationsnummer
