@@ -10,11 +10,16 @@ requirements:
 params:
   - preset: vehicle-common
   - name: vin
-    example: WBMW...
+    required: true
+    example: WBA8E9G50GM091234
+    help:
+      en: BMW VehicleIdentificationNumber
+      de: BMW Fahrzeugidentifikationsnummer
   - name: uri
     required: true
     description:
-      generic: ioBroker URL
+      en: ioBroker URL inlcuding ioBroker.simple-api Port
+      de: ioBroker URL einschliesslich ioBroker.simple-api Port
   - name: id
     default: 0
     type: int
