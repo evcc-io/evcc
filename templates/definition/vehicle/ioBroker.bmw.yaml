@@ -19,8 +19,8 @@ params:
     required: true
     example: 192...:8087
     description:
-      en: ioBroker URL and ioBroker.simple-api-Port (URL:Port)
-      de: ioBroker URL und ioBroker.simple-api-Port (URL:Port)
+      en: ioBroker URL inlcuding ioBroker.simple-api Port
+      de: ioBroker URL einschl. ioBroker.simple-api Port
   - name: id
     default: 0
     type: int
