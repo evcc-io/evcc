@@ -82,6 +82,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.5",
+    "@jest/types": "^29.6.3",
     "@storybook/addon-essentials": "^8.6.4",
     "@storybook/addon-interactions": "^8.6.4",
     "@storybook/blocks": "^8.6.4",

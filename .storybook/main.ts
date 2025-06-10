@@ -1,5 +1,6 @@
-/** @type { import('@storybook/vue3-vite').StorybookConfig } */
-const config = {
+import { StorybookConfig } from "@storybook/vue3-vite";
+
+const config: StorybookConfig = {
   stories: ["../assets/js/**/*.stories.@(js|ts)"],
   addons: [
     "@storybook/addon-essentials",
