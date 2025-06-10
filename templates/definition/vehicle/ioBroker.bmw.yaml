@@ -17,7 +17,6 @@ params:
       de: BMW Fahrzeugidentifikationsnummer
   - name: uri
     required: true
-    example: 192...:8087
     description:
       en: ioBroker URL inlcuding ioBroker.simple-api Port
       de: ioBroker URL einschl. ioBroker.simple-api Port
