@@ -39,7 +39,7 @@ func NewValidFromConfig(ctx context.Context, other map[string]interface{}) (Plug
 	return o, nil
 }
 
-// NewValidPlugin creates provider for OpenWB status converted from MQTT topics
+// NewValidPlugin creates valid provider
 func NewValidPlugin(ctx context.Context, valid func() (bool, error), value Config) *validPlugin {
 	return &validPlugin{
 		ctx:   ctx,
