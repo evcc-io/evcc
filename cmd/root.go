@@ -130,13 +130,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
-		log.INFO.Println("Switching into demo mode as requested through the --demo flag")
+		log.INFO.Println("switching into demo mode as requested through the --demo flag")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
 		}
 	} else {
 		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-			log.INFO.Println("Config file missing, create configuration using config UI")
+			log.INFO.Println("config file missing, create configuration using config UI")
+			viper.UnmarshalExact(&conf)
 		} else {
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 		}
