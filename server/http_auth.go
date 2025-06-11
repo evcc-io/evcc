@@ -78,8 +78,8 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if authObject.GetAuthMode() == auth.DemoMode {
-			http.Error(w, "Authentication not supported in demo mode", http.StatusForbidden)
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
 			return
 		}
 
@@ -100,14 +100,14 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 
 func loginHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
 			return
 		}
 
-		if authObject.GetAuthMode() == auth.DemoMode {
-			http.Error(w, "Login not supported in demo mode", http.StatusForbidden)
+		var req loginRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -150,7 +150,7 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 				return
 			}
 
-			if authObject.GetAuthMode() == auth.DemoMode {
+			if authObject.GetAuthMode() == auth.Locked {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

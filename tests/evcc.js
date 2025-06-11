@@ -78,7 +78,7 @@ async function _restoreDatabase(sqlDumps) {
 }
 
 async function _start(config, flags = []) {
-  const configFile = config.includes("/") ? config : `tests/${config}`;
+  const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
@@ -86,7 +86,7 @@ async function _start(config, flags = []) {
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
-  const instance = spawn(BINARY, ["--config", configFile, ...additionalFlags], {
+  const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });

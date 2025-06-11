@@ -2,19 +2,15 @@
 	<GenericModal
 		id="loginModal"
 		:title="$t('loginModal.title')"
-		size="sm"
+		:size="modalSize"
 		data-testid="login-modal"
 		@open="open"
 		@closed="closed"
 	>
-		<form v-if="demoVisible">
-			<label class="col-form-label">
-				<div class="w-150">
-					<span class="label">{{ $t("loginModal.demoMode") }}</span>
-				</div>
-			</label>
-		</form>
-		<form v-if="loginVisible" @submit.prevent="login">
+		<div v-if="demoMode" class="alert alert-warning" role="alert">
+			{{ $t("loginModal.demoMode") }}
+		</div>
+		<form v-else-if="modalVisible" @submit.prevent="login">
 			<div class="mb-4">
 				<label for="loginPassword" class="col-form-label">
 					<div class="w-100">
@@ -68,23 +64,19 @@
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
-import {
-	updateAuthStatus,
-	getAndClearNextUrl,
-	getAndClearNextModal,
-	isLoggedIn,
-	isDemoMode,
-} from "./auth";
+import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
 import { docsPrefix } from "@/i18n";
 import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "LoginModal",
 	components: { GenericModal },
+	props: {
+		demoMode: Boolean,
+	},
 	data: () => {
 		return {
-			loginVisible: false,
-			demoVisible: false,
+			modalVisible: false,
 			password: "",
 			loading: false,
 			resetHint: false,
@@ -99,18 +91,16 @@ export default defineComponent({
 		evccUrl() {
 			return window.location.href;
 		},
+		modalSize() {
+			return this.demoMode ? "md" : "sm";
+		},
 	},
 	methods: {
 		open() {
-			if (isDemoMode()) {
-				this.demoVisible = true;
-			} else {
-				this.loginVisible = true;
-			}
+			this.modalVisible = true;
 		},
 		closed() {
-			this.loginVisible = false;
-			this.demoVisible = false;
+			this.modalVisible = false;
 			this.password = "";
 			this.loading = false;
 			this.error = "";
