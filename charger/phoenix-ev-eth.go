@@ -223,13 +223,14 @@ func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	const count = 3
+	b, err := wb.conn.ReadInputRegisters(reg, 2*count)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var res [3]float64
-	for i := range res {
+	res := make([]float64, count)
+	for i := range count {
 		res[i] = float64(encoding.Int32LswFirst(b[4*i:]))
 	}
 
