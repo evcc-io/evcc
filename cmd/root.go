@@ -129,7 +129,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// load config and re-configure logging after reading config file
 	var err error
-	if cmd.Flag(flagDemoMode).Changed {
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
 		log.INFO.Println("Switching into demo mode as requested through the --demo flag")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
