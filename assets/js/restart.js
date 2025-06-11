@@ -1,5 +1,5 @@
-import api from "./api";
 import { reactive } from "vue";
+import api from "./api";
 
 const restart = reactive({
   restartNeeded: false,

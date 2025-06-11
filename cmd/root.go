@@ -137,8 +137,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	} else {
 		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 			log.INFO.Println("config file missing, create configuration using config UI")
+			// evcc.yaml not found, use default configuration
 			viper.UnmarshalExact(&conf)
 		} else {
+			// evcc.yaml found, might have errors
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 		}
 	}
@@ -308,8 +310,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
-		log.WARN.Println(" Authentication is disabled because of demo mode.")
-		authObject.SetAuthMode(auth.DemoMode)
+		log.WARN.Println("Authentication is locked in demo mode. Login-features are disabled.")
+		authObject.SetAuthMode(auth.Locked)
+		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
 	}
 
 	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {

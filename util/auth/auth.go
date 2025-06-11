@@ -18,9 +18,9 @@ const admin = "admin"
 type AuthMode int
 
 const (
-	Disabled AuthMode = iota
-	Enabled
-	DemoMode
+	Enabled  AuthMode = iota // normal operation
+	Disabled                 // auth checks are skipped (free for all)
+	Locked                   // auth features are blocked (demo mode)
 )
 
 // Auth is the Auth api
