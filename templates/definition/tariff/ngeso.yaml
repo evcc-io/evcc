@@ -8,6 +8,9 @@ params:
     type: string
     required: false
     example: 1
+    description:
+      en: Region
+      de: Region
     help:
       de: "Ungenauer als die Verwendung eines Postleitzahl. Siehe https://carbon-intensity.github.io/api-definitions/#region-list"
       en: "Coarser than using a postcode. See https://carbon-intensity.github.io/api-definitions/#region-list"
@@ -15,6 +18,9 @@ params:
     type: string
     example: "SW1"
     required: false
+    description:
+      en: Postcode
+      de: Postleitzahl
     help:
       de: "Postleitzahl z.B. RG41 oder SW1 oder TF8. Nicht die vollständige Postleitzahl, nur die ersten Stellen."
       en: "Outward postcode i.e. RG41 or SW1 or TF8. Do not include full postcode, outward postcode only."

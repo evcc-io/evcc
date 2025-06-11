@@ -6,6 +6,8 @@ countries: ["AU"]
 params:
   - name: token
   - name: siteid
+    description:
+      generic: Site ID
   - name: channel
   - preset: tariff-base
 render: |

@@ -31,15 +31,17 @@ params:
       en: API Token
   - name: identity
     required: true
-    help:
-      de: Identity des Ladepunkts (z.B. AA123456)
-      en: Charger identity (e.g. AA123456)
+    description:
+      de: Identity des Ladepunkts
+      en: Charger identity
+    example: AA123456
   - name: connector
     required: true
     default: 1
-    help:
-      de: Anschluss-ID (üblicherweise 1)
-      en: Connector ID (usually 1)
+    description:
+      de: Anschluss-ID
+      en: Connector ID
+    example: 1
 render: |
   type: plugchoice
   token: {{ .token }}

@@ -11,6 +11,9 @@ params:
     required: true
   - name: meter
     required: true
+    description:
+      en: Meter ID
+      de: Zählernummer
     example: 1ESY1161229886
 render: |
   type: discovergy

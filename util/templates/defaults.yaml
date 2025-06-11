@@ -6,6 +6,14 @@ params:
     help:
       de: Wird in der Benutzeroberfläche angezeigt
       en: Will be displayed in the user interface
+  - name: usage
+    description:
+      de: Verwendung
+      en: Usage
+  - name: modbus
+    description:
+      en: Modbus Type
+      de: Modbus Typ
   - name: modbusid
     description:
       generic: Modbus ID
@@ -273,6 +281,9 @@ params:
     help:
       en: HTTP(S) address
       de: HTTP(S) Adresse
+  - name: url
+    description:
+      generic: URL
   - name: ain
     mask: true
     example: "307788992233"
@@ -318,6 +329,11 @@ params:
       en: For forced charging of the battery.
       de: Für erzwungenes Laden des Speichers.
     advanced: true
+  - name: chargepower
+    description:
+      en: Maximum charge power
+      de: Maximale Ladeleistung
+    deprecated: true
   - name: maxchargerate
     unit: "%"
     type: int
@@ -330,7 +346,73 @@ params:
       de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
     advanced: true
-
+  - name: accessToken
+    description:
+      generic: Access token
+  - name: refreshToken
+    description:
+      generic: Refresh token
+  - name: server
+    description:
+      en: Server
+      de: Server
+  - name: serial
+    description:
+      en: Serial
+      de: Seriennummer
+  - name: region
+    description:
+      en: Region
+      de: Region
+  - name: channel
+    description:
+      en: Channel
+      de: Kanal
+  - name: clientid
+    description:
+      generic: Client ID
+  - name: clientsecret
+    description:
+      generic: Client Secret
+  - name: token
+    description:
+      generic: Token
+  - name: interval
+    description:
+      de: Intervall
+      en: Interval
+  - name: mac
+    description:
+      en: MAC Address
+      de: MAC Adresse
+  - name: pin
+    description:
+      generic: PIN
+  - name: serial_number
+    description:
+      en: Serial Number
+      de: Seriennummer
+  - name: watchdog
+    description:
+      generic: Watchdog
+  - name: uuid
+    description:
+      generic: UUID
+  - name: zip
+    description:
+      en: ZIP code
+      de: Postleitzahl
+  - name: storageunit
+    description:
+      en: Battery storage unit index
+      de: Nummer des Batteriespeichers
+  - name: delay
+    description:
+      en: Delay
+      de: Verzögerung
+  - name: id
+    description:
+      generic: ID
 presets:
   vehicle-base:
     params:

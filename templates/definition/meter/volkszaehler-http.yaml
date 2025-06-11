@@ -9,11 +9,12 @@ params:
     choice: ["grid"]
   - name: url
     description:
+      en: URL
+      de: URL
+    help:
       de: URL des "data" Kontexts der Volkszähler Middleware
       en: URL of the middleware's "data" context
-    help:
-      de: "Beispiel: http://zaehler.network.local:8080/api/data"
-      en: "Example: http://zaehler.network.local:8080/api/data"
+    example: "http://zaehler.network.local:8080/api/data"
   - name: uuid
     required: true
 render: |
