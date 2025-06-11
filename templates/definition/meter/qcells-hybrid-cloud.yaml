@@ -1,17 +1,17 @@
 template: qcells-hybrid-cloud
 products:
-  - brand: QCells
+  - brand: Qcells
     description:
       de: Hybrid-Wechselrichter (Cloud)
       en: Hybrid-Inverter (Cloud)
 requirements:
   description:
     de: |
-      Der QCells Hybrid-Wechselrichter muss in der QCellsCloud angemeldet sein.
+      Der Qcells Hybrid-Wechselrichter muss in der QcellsCloud angemeldet sein.
 
       **Achtung**: Die Werte können nur alle 150s abgerufen werden und dann auch 5 Minuten alt sein. Die Laderegelung nach PV kann hiermit nicht optimal gesteuert werden! Nur als Notfalloption nutzen wenn kein lokaler Zugriff möglich ist.
     en: |
-      The QCells hybrid inverter has to be registered in the QCellsCloud.
+      The Qcells hybrid inverter has to be registered in the QcellsCloud.
 
       **Attention**: Values can only be fetched every 150s and then also can be 5 minutes old. Charging by PV will not be optimal because of this! Only use as fallback if no local access is available.
 params:
@@ -21,7 +21,7 @@ params:
   - name: tokenid
     required: true
     description:
-      generic: QCellsCloud TokenID
+      generic: QcellsCloud TokenID
     help:
       de: Von https://qhome-ess-g3.q-cells.eu/#/api/ den Wert von "ObtaintokenID" hier eintragen.
       en: Go to https://qhome-ess-g3.q-cells.eu/#/api/ and take the value of "ObtaintokenID".

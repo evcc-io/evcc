@@ -111,7 +111,7 @@ func sorted(keys []string) []string {
 }
 
 func generateBrandJSON() error {
-	var chargers, smartPlugs []string
+	var chargers, smartswitches, heating []string
 	for _, tmpl := range templates.ByClass(templates.Charger) {
 		for _, product := range tmpl.Products {
 			if product.Brand == "" {
@@ -119,7 +119,9 @@ func generateBrandJSON() error {
 			}
 
 			if tmpl.Group == "switchsockets" {
-				smartPlugs = append(smartPlugs, product.Brand)
+				smartswitches = append(smartswitches, product.Brand)
+			} else if tmpl.Group == "heating" {
+				heating = append(heating, product.Brand)
 			} else {
 				chargers = append(chargers, product.Brand)
 			}
@@ -161,13 +163,14 @@ func generateBrandJSON() error {
 	}
 
 	brands := struct {
-		Chargers, SmartPlugs, Meters, PVBattery, Vehicles []string
+		Chargers, SmartSwitches, Heating, Meters, PVBattery, Vehicles []string
 	}{
-		Chargers:   sorted(chargers),
-		SmartPlugs: sorted(smartPlugs),
-		Meters:     sorted(meters),
-		PVBattery:  sorted(pvBattery),
-		Vehicles:   sorted(vehicles),
+		Chargers:      sorted(chargers),
+		SmartSwitches: sorted(smartswitches),
+		Heating:       sorted(heating),
+		Meters:        sorted(meters),
+		PVBattery:     sorted(pvBattery),
+		Vehicles:      sorted(vehicles),
 	}
 
 	file, err := json.MarshalIndent(brands, "", " ")
@@ -179,20 +182,46 @@ func generateBrandJSON() error {
 }
 
 func generateProductJSON() error {
+	type Category string
+
+	const (
+		charger     Category = "charger"
+		smartswitch Category = "smartswitch"
+		heating     Category = "heating"
+		meter       Category = "meter"
+		vehicle     Category = "vehicle"
+	)
+
 	type ProductInfo struct {
 		Brand       string `json:"brand"`
 		Description string `json:"description"`
 	}
 
 	products := make(map[string]map[string]ProductInfo)
+	for _, key := range []Category{charger, smartswitch, heating, meter, vehicle} {
+		products[string(key)] = make(map[string]ProductInfo)
+	}
 
-	for _, class := range templates.ClassValues() {
-		classKey := strings.ToLower(class.String())
-		products[classKey] = make(map[string]ProductInfo)
-
+	for _, class := range []templates.Class{templates.Charger, templates.Meter, templates.Vehicle} {
 		for _, tmpl := range templates.ByClass(class) {
 			for _, product := range tmpl.Products {
-				products[classKey][product.Identifier()] = ProductInfo{
+				var category Category
+				switch class {
+				case templates.Charger:
+					if tmpl.Group == "switchsockets" {
+						category = smartswitch
+					} else if tmpl.Group == "heating" {
+						category = heating
+					} else {
+						category = charger
+					}
+				case templates.Meter:
+					category = meter
+				case templates.Vehicle:
+					category = vehicle
+				}
+
+				products[string(category)][product.Identifier()] = ProductInfo{
 					Brand:       product.Brand,
 					Description: product.Description.String("en"),
 				}
