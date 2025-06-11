@@ -1650,7 +1650,20 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 	// capacity not available
 	if socEstimator == nil || !lp.vehicleHasSoc() {
-		if soc, err := lp.chargerSoc(); err == nil {
+		var soc float64
+		var err error
+
+		// For heating devices, prioritize meter SoC over charger SoC
+		if lp.chargerHasFeature(api.Heating) {
+			if soc, err = lp.meterSoc(); err != nil {
+				soc, err = lp.chargerSoc()
+			}
+		} else {
+			// For vehicles and other devices: charger first
+			soc, err = lp.chargerSoc()
+		}
+
+		if err == nil {
 			lp.vehicleSoc = soc
 			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
@@ -1664,7 +1677,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 				}
 			}
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("charger soc: %v", err)
+			if lp.chargerHasFeature(api.Heating) {
+				lp.log.ERROR.Printf("heating device soc: %v", err)
+			} else {
+				lp.log.ERROR.Printf("charger soc: %v", err)
+			}
 		}
 
 		return
