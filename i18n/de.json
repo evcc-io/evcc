@@ -388,6 +388,7 @@
       "trialToken": "Testtoken"
     },
     "system": {
+      "backupAndRecovery": "Datensicherung und -wiederherstellung",
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",

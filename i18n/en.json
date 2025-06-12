@@ -388,6 +388,7 @@
       "trialToken": "Trial token"
     },
     "system": {
+      "backupAndRecovery": "Data backup & recovery",
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",

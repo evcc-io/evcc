@@ -335,6 +335,12 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<button
+						class="btn btn-outline-secondary"
+						@click="openModal('backupRecoveryModal')"
+					>
+						{{ $t("config.system.backupAndRecovery") }}
+					</button>
 					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
 					</button>
@@ -388,6 +394,7 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
+				<BackupRecoveryModal />
 			</div>
 		</div>
 	</div>
@@ -433,11 +440,13 @@ import TariffsModal from "../components/Config/TariffsModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import BackupRecoveryModal from "@/components/Config/BackupRecoveryModal.vue";
 
 export default {
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		BackupRecoveryModal,
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
