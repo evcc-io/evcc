@@ -636,6 +636,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartConsumptionLimit, lp.smartConsumptionLimit)
+	lp.publish(keys.SmartFeedinLimit, lp.smartFeedinLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -1785,17 +1786,15 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartConsumptionLimit := lp.GetSmartConsumptionLimit()
-	smartCostActive := lp.smartCostActive(smartConsumptionLimit, consumption)
-	lp.publish(keys.SmartConsumptionActive, smartCostActive)
-
-	var smartConsumptionNextStart time.Time
-	if !smartCostActive {
-		smartConsumptionNextStart = lp.smartCostNextStart(smartConsumptionLimit, consumption)
-	}
+	smartConsumptionActive, smartConsumptionNextStart := lp.updateSmartCost(lp.GetSmartConsumptionLimit(), consumption)
+	lp.publish(keys.SmartConsumptionActive, smartConsumptionActive)
 	lp.publish(keys.SmartConsumptionNextStart, smartConsumptionNextStart)
+
+	smartFeedinActive, smartFeedinNextStart := lp.updateSmartCost(lp.GetSmartFeedinLimit(), feedin)
+	lp.publish(keys.SmartFeedinActive, smartFeedinActive)
+	lp.publish(keys.SmartFeedinNextStart, smartFeedinNextStart)
 
 	// long-running tasks
 	lp.processTasks()
@@ -1904,7 +1903,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption ap
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if smartCostActive {
+		if smartConsumptionActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Value)
 			err = lp.fastCharging()
