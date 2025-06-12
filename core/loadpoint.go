@@ -1905,8 +1905,24 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		// cheap tariff
 		if smartConsumptionActive {
 			rate, _ := consumption.At(time.Now())
-			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Value)
+			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
+			lp.resetPhaseTimer()
+			lp.elapsePVTimer() // let PV mode disable immediately afterwards
+			break
+		}
+
+		// attractive feedin
+		if smartFeedinActive {
+			rate, _ := feedin.At(time.Now())
+			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
+
+			var targetCurrent float64
+			if mode == api.ModeMinPV {
+				targetCurrent = lp.GetMinCurrent()
+			}
+			err = lp.setLimit(targetCurrent)
+
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
