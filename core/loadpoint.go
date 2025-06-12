@@ -107,15 +107,16 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title            string   // UI title
-	priority         int      // Priority
-	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
-	phasesConfigured int      // Charger configured phase mode 0/1/3
-	limitSoc         int      // Session limit for soc
-	limitEnergy      float64  // Session limit for energy
-	smartCostLimit   *float64 // always charge if cost is below this value
-	batteryBoost     int      // battery boost state
+	title                 string   // UI title
+	priority              int      // Priority
+	minCurrent            float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent            float64  // Max allowed current. Physically ensured by the charger
+	phasesConfigured      int      // Charger configured phase mode 0/1/3
+	limitSoc              int      // Session limit for soc
+	limitEnergy           float64  // Session limit for energy
+	smartConsumptionLimit *float64 // always charge if cost is below this value
+	smartFeedinLimit      *float64 // always charge if cost is below this value
+	batteryBoost          int      // battery boost state
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -329,8 +330,11 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
 		lp.setLimitEnergy(v)
 	}
-	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(&v)
+	if v, err := lp.settings.Float(keys.SmartConsumptionLimit); err == nil {
+		lp.SetSmartConsumptionLimit(&v)
+	}
+	if v, err := lp.settings.Float(keys.SmartFeedinLimit); err == nil {
+		lp.SetSmartFeedinLimit(&v)
 	}
 
 	var thresholds loadpoint.ThresholdsConfig
@@ -631,7 +635,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+	lp.publish(keys.SmartConsumptionLimit, lp.smartCostLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -1781,16 +1785,16 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartCostActive := lp.smartCostActive(rates)
-	lp.publish(keys.SmartCostActive, smartCostActive)
+	smartCostActive := lp.smartCostActive(consumption)
+	lp.publish(keys.SmartConsumptionActive, smartCostActive)
 
-	var smartCostNextStart time.Time
+	var smartConsumptionNextStart time.Time
 	if !smartCostActive {
-		smartCostNextStart = lp.smartCostNextStart(rates)
+		smartConsumptionNextStart = lp.smartCostNextStart(consumption)
 	}
-	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+	lp.publish(keys.SmartConsumptionNextStart, smartConsumptionNextStart)
 
 	// long-running tasks
 	lp.processTasks()
@@ -1900,7 +1904,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, rates api.Rate
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
 		if smartCostActive {
-			rate, _ := rates.At(time.Now())
+			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart cost active: %.2f", rate.Value)
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()

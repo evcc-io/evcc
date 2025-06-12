@@ -785,25 +785,47 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	lp.startVehicleDetection()
 }
 
-// GetSmartCostLimit gets the smart cost limit
-func (lp *Loadpoint) GetSmartCostLimit() *float64 {
+// GetSmartConsumptionLimit gets the smart cost limit
+func (lp *Loadpoint) GetSmartConsumptionLimit() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.smartCostLimit
+	return lp.smartConsumptionLimit
 }
 
-// SetSmartCostLimit sets the smart cost limit
-func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
+// SetSmartConsumptionLimit sets the smart consumption limit
+func (lp *Loadpoint) SetSmartConsumptionLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart consumption limit:", printPtr("%.1f", val))
 
-	if !ptrValueEqual(lp.smartCostLimit, val) {
-		lp.smartCostLimit = val
+	if !ptrValueEqual(lp.smartConsumptionLimit, val) {
+		lp.smartConsumptionLimit = val
 
-		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
-		lp.publish(keys.SmartCostLimit, val)
+		lp.settings.SetFloatPtr(keys.SmartConsumptionLimit, val)
+		lp.publish(keys.SmartConsumptionLimit, val)
+	}
+}
+
+// GetSmartFeedinLimit gets the smart feed-in limit
+func (lp *Loadpoint) GetSmartFeedinLimit() *float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartFeedinLimit
+}
+
+// SetSmartFeedinLimit sets the smart cost feed-in
+func (lp *Loadpoint) SetSmartFeedinLimit(val *float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+
+	if !ptrValueEqual(lp.smartFeedinLimit, val) {
+		lp.smartFeedinLimit = val
+
+		lp.settings.SetFloatPtr(keys.SmartFeedinLimit, val)
+		lp.publish(keys.SmartFeedinLimit, val)
 	}
 }
 
