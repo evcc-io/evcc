@@ -16,7 +16,7 @@ func init() {
 }
 
 // NewSleepFromConfig creates sleep provider
-func NewSleepFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewSleepFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Duration time.Duration
 	}

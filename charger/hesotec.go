@@ -60,7 +60,7 @@ func init() {
 }
 
 // NewHesotecFromConfig creates a Hesotec charger from generic config
-func NewHesotecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewHesotecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}

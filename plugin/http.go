@@ -33,7 +33,7 @@ func init() {
 var mc = httpcache.NewMemoryCache()
 
 // NewHTTPPluginFromConfig creates a HTTP provider
-func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string

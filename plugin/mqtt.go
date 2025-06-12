@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewMqttPluginFromConfig creates Mqtt provider
-func NewMqttPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters

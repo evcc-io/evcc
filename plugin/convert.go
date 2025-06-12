@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewConvertFromConfig creates type conversion provider
-func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewConvertFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := convertPlugin{
 		ctx: ctx,
 	}

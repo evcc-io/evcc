@@ -46,7 +46,7 @@ type Vaillant struct {
 //go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
-func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed           `mapstructure:",squash"`
 		User, Password  string

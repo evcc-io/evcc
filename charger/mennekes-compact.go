@@ -68,7 +68,7 @@ func init() {
 }
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
-func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration

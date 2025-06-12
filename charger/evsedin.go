@@ -29,7 +29,7 @@ func init() {
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
 
 // NewEvseDINFromConfig creates an EVSE DIN charger from generic config
-func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEvseDINFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 9600,
 		Comset:   "8N1",

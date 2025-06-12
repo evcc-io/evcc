@@ -62,7 +62,7 @@ func init() {
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
