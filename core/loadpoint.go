@@ -118,7 +118,7 @@ type Loadpoint struct {
 	_todo            *float64 // TODO move up after diff review
 
 	smartConsumptionLimit *float64 // always charge if consumption is below this threshold
-	smartFeedinLimit      *float64 // always charge if cost is below this value
+	smartFeedinLimit      *float64 // always charge if feed-in is above this value
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
