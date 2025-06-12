@@ -1,7 +1,7 @@
 <template>
 	<GenericModal
-		id="backupRecoveryModal"
-		:title="$t('config.system.backupAndRecovery')"
+		id="dataManagementModal"
+		:title="$t('config.system.dataManagement')"
 		data-testid="backup-restore-modal"
 	>
 		<form ref="form" class="container mx-0 px-0">
@@ -17,7 +17,7 @@ import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 
 export default defineComponent({
-	name: "BackupRecoveryModal",
+	name: "DataManagementModal",
 	components: { GenericModal },
 	data() {
 		return {
