@@ -179,8 +179,8 @@ func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 		return 0, 0, 0, err
 	}
 
-	res := make([]float64, count)
-	for i := range count {
+	var res [count]float64
+	for i := range res {
 		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) * phxEMEthSF
 	}
 
