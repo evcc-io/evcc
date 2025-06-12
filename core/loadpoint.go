@@ -635,7 +635,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.publish(keys.SmartConsumptionLimit, lp.smartCostLimit)
+	lp.publish(keys.SmartConsumptionLimit, lp.smartConsumptionLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -1787,12 +1787,13 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartCostActive := lp.smartCostActive(consumption)
+	smartConsumptionLimit := lp.GetSmartConsumptionLimit()
+	smartCostActive := lp.smartCostActive(smartConsumptionLimit, consumption)
 	lp.publish(keys.SmartConsumptionActive, smartCostActive)
 
 	var smartConsumptionNextStart time.Time
 	if !smartCostActive {
-		smartConsumptionNextStart = lp.smartCostNextStart(consumption)
+		smartConsumptionNextStart = lp.smartCostNextStart(smartConsumptionLimit, consumption)
 	}
 	lp.publish(keys.SmartConsumptionNextStart, smartConsumptionNextStart)
 
