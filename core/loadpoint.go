@@ -107,16 +107,16 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title            string  // UI title
-	priority         int     // Priority
-	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
-	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
-	phasesConfigured int     // Charger configured phase mode 0/1/3
-	limitSoc         int     // Session limit for soc
-	limitEnergy      float64 // Session limit for energy
-	batteryBoost     int     // battery boost state
+	title            string   // UI title
+	priority         int      // Priority
+	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
+	phasesConfigured int      // Charger configured phase mode 0/1/3
+	limitSoc         int      // Session limit for soc
+	limitEnergy      float64  // Session limit for energy
+	batteryBoost     int      // battery boost state
+	_todo            *float64 // TODO move up after diff review
 
-	// TODO move up after diff review
 	smartConsumptionLimit *float64 // always charge if cost is below this value
 	smartFeedinLimit      *float64 // always charge if cost is below this value
 
