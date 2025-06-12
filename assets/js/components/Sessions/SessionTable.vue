@@ -161,7 +161,7 @@ import { defineComponent, type PropType } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import breakpoint from "@/mixins/breakpoint.ts";
-import settings from "@/settings";
+import settings from "@/settings.ts";
 import type { CURRENCY } from "@/types/evcc";
 import type { Session, Column } from "./types";
 
@@ -270,11 +270,11 @@ export default defineComponent({
 		sortedColumns() {
 			const columns = [...this.columns];
 			const sorted = [] as Column[];
-			for (const name of this.selectedColumns) {
-				if (!name && columns.length) {
+			for (const sc of this.selectedColumns) {
+				if (!sc && columns.length) {
 					sorted.push(columns.shift() as Column);
-				} else if (columns.some((c) => c.name === name)) {
-					const column = columns.find((c) => c.name === name);
+				} else if (columns.some((c) => c.name === sc.name)) {
+					const column = columns.find((c) => c.name === sc.name);
 					if (column) {
 						sorted.push(column);
 						const index = columns.indexOf(column);

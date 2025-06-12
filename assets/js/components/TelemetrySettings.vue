@@ -30,12 +30,14 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import api from "../api";
 import { docsPrefix } from "../i18n";
-import settings from "../settings";
+import settings from "@/settings.ts";
+import type { AxiosError } from "axios";
 
-function parseMarkdown(markdownText) {
+function parseMarkdown(markdownText: string) {
 	const htmlText = markdownText
 		.replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
 		.replace(/\*(.*)\*/gim, "<i>$1</i>")
@@ -43,12 +45,12 @@ function parseMarkdown(markdownText) {
 	return htmlText.trim();
 }
 
-export default {
+export default defineComponent({
 	name: "TelemetrySettings",
 	props: { sponsorActive: Boolean },
 	data() {
 		return {
-			error: null,
+			error: null as string | null,
 		};
 	},
 	computed: {
@@ -63,14 +65,17 @@ export default {
 		await this.update();
 	},
 	methods: {
-		async change(e) {
+		async change(e: Event) {
 			try {
 				this.error = null;
-				const response = await api.post(`settings/telemetry/${e.target.checked}`);
+				const response = await api.post(
+					`settings/telemetry/${(e.target as HTMLInputElement).checked}`
+				);
 				settings.telemetry = response.data.result;
 			} catch (err) {
-				if (err.response) {
-					this.error = parseMarkdown("**Error:** " + err.response.data.error);
+				const e = err as AxiosError<{ error: string }>;
+				if (e.response) {
+					this.error = parseMarkdown("**Error:** " + e.response.data.error);
 					settings.telemetry = false;
 				}
 			}
@@ -91,7 +96,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .form-check {
