@@ -117,7 +117,7 @@ type Loadpoint struct {
 	batteryBoost     int      // battery boost state
 	_todo            *float64 // TODO move up after diff review
 
-	smartConsumptionLimit *float64 // always charge if cost is below this value
+	smartConsumptionLimit *float64 // always charge if consumption is below this threshold
 	smartFeedinLimit      *float64 // always charge if cost is below this value
 
 	mode                api.ChargeMode
