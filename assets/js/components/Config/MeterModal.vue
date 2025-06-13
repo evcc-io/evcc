@@ -262,7 +262,13 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = (this.template?.Params || [])
-				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
+				.filter(
+					(p) =>
+						!CUSTOM_FIELDS.includes(p.Name) &&
+						(p.Usages && this.templateType
+							? p.Usages.includes(this.templateType)
+							: true)
+				)
 				.map((p) => {
 					if (this.meterType === "battery" && p.Name === "capacity") {
 						p.Advanced = false;
@@ -272,19 +278,10 @@ export default defineComponent({
 			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter(
-				(p) =>
-					!p.Advanced &&
-					!p.Deprecated &&
-					(p.Usages && this.templateType ? p.Usages.includes(this.templateType) : true)
-			);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter(
-				(p) =>
-					(p.Advanced || p.Deprecated) &&
-					(p.Usages && this.templateType ? p.Usages.includes(this.templateType) : true)
-			);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
