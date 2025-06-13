@@ -37,7 +37,6 @@ test.describe("battery meter", async () => {
     await meterModal.getByLabel("Title").fill("Battery Basement");
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
-
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
