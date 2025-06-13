@@ -148,6 +148,7 @@ params:
       en: Lower limit when discharging the battery in normal operation
     example: 25
     type: int
+    usages: ["battery"]
   - name: maxsoc
     unit: "%"
     description:
@@ -158,6 +159,7 @@ params:
       en: Upper limit when charging the battery from the grid
     example: 95
     type: int
+    usages: ["battery"]
   - name: mincurrent
     unit: A
     description:
