@@ -975,6 +975,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {
