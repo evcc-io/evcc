@@ -27,8 +27,6 @@
 				:error-line="test.errorLine"
 			/>
 			<div v-else>
-				{{ normalParams }}
-				{{ advancedParams }}
 				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<SponsorTokenRequired v-if="sponsorTokenRequired" />
 				<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -216,14 +214,12 @@ export default defineComponent({
 		},
 		normalParams() {
 			return this.templateParams.filter(
-				(p) => !p.Advanced
-				// && (p.Usages ? p.Usages.includes("charger") : true)
+				(p) => !p.Advanced && (p.Usages ? p.Usages.includes("charger") : true)
 			);
 		},
 		advancedParams() {
 			return this.templateParams.filter(
-				(p) => p.Advanced
-				// && (p.Usages ? p.Usages.includes("charger") : true)
+				(p) => p.Advanced && (p.Usages ? p.Usages.includes("charger") : true)
 			);
 		},
 		modbus() {

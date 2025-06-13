@@ -87,8 +87,6 @@
 						:defaultPort="modbus.Port"
 						:capabilities="modbusCapabilities"
 					/>
-					{{ templateType }}
-					<!-- {{ advancedParams }} -->
 					<PropertyEntry
 						v-for="param in normalParams"
 						:id="`meterParam${param.Name}`"
