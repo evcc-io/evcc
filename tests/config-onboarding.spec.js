@@ -2,12 +2,10 @@ import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
-const CONFIG = "config-empty.evcc.yaml";
-
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG, null, "");
+  await start(null, null, "");
 });
 test.afterAll(async () => {
   await stop();
@@ -85,7 +83,7 @@ test.describe("onboarding", async () => {
       .getByTestId("bottom-banner")
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG);
+    await restart();
     await expect(restartButton).not.toBeVisible();
 
     // navigate to main screen
