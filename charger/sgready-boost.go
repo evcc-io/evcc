@@ -10,11 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
-// SgReadyBoost charger implementation
-type SgReadyBoost struct {
-	*embed
-}
-
 func init() {
 	registry.AddCtx("sgready-boost", NewSgReadyBoostFromConfig)
 }
