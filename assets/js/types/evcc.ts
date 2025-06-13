@@ -7,6 +7,7 @@ declare global {
 		evcc: {
 			version: string;
 			commit: string;
+			customCss: string;
 		};
 	}
 }
@@ -46,6 +47,12 @@ export interface LoadpointCompact {
 	chargerIcon?: string;
 	vehicleSoc: number;
 	chargerFeatureHeating: boolean;
+}
+
+export enum THEME {
+	AUTO = "auto",
+	LIGHT = "light",
+	DARK = "dark",
 }
 
 export enum CURRENCY {
