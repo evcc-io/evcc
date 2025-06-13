@@ -40,7 +40,7 @@ func init() {
 func NewSgReadyBoostFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
-		Config                  config.Typed
+		Charger                 config.Typed
 		measurement.Temperature `mapstructure:",squash"`
 	}{
 		embed: embed{
@@ -53,7 +53,7 @@ func NewSgReadyBoostFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	charger, err := NewFromConfig(ctx, cc.Config.Type, cc.Config.Other)
+	charger, err := NewFromConfig(ctx, cc.Charger.Type, cc.Charger.Other)
 	if err != nil {
 		return nil, err
 	}
