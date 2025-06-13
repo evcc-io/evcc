@@ -29,6 +29,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("5000");
+    await expect(meterModal.getByLabel("Maximum charge power")).toHaveCount(0);
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
@@ -36,7 +37,6 @@ test.describe("pv meter", async () => {
     await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await expect(page.getByTestId("pv")).toContainText("PV North");
-    await expect(meterModal.locator("#meterParamwatchdog")).toHaveCount(0);
 
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();

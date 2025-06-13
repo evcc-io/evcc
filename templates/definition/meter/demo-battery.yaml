@@ -17,6 +17,14 @@ params:
       en: Power
     unit: W
     type: int
+  - name: maxacpower
+    unit: W
+    description:
+      de: Maximale AC Leistung des Hybrid-Wechselrichters
+      en: Maximum AC power of the hybrid inverter
+    type: float
+    usages: ["pv"]
+    advanced: true
   - name: soc
     description:
       de: Ladestand
