@@ -167,10 +167,10 @@ type API interface {
 	// smart grid charging
 	//
 
-	// GetSmartConsumptionLimit return the smart consumption limit
-	GetSmartConsumptionLimit() *float64
-	// SetSmartConsumptionLimit sets the smart consumption limit
-	SetSmartConsumptionLimit(limit *float64)
+	// GetSmartCostLimit return the smart consumption limit
+	GetSmartCostLimit() *float64
+	// SetSmartCostLimit sets the smart consumption limit
+	SetSmartCostLimit(limit *float64)
 	// GetSmartFeedinLimit return the smart feed-in limit
 	GetSmartFeedinLimit() *float64
 	// SetSmartFeedinLimit sets the smart feed-in limit

@@ -116,7 +116,7 @@ func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
 }
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
-	limit := lp.GetSmartConsumptionLimit()
+	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 

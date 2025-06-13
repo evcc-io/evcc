@@ -609,7 +609,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
 	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
-		lp.smartCostActive(lp.GetSmartConsumptionLimit(), rates) {
+		lp.smartCostActive(lp.GetSmartCostLimit(), rates) {
 		return 0
 	}
 
@@ -786,25 +786,25 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	lp.startVehicleDetection()
 }
 
-// GetSmartConsumptionLimit gets the smart cost limit
-func (lp *Loadpoint) GetSmartConsumptionLimit() *float64 {
+// GetSmartCostLimit gets the smart cost limit
+func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.smartConsumptionLimit
+	return lp.smartCostLimit
 }
 
-// SetSmartConsumptionLimit sets the smart consumption limit
-func (lp *Loadpoint) SetSmartConsumptionLimit(val *float64) {
+// SetSmartCostLimit sets the smart consumption limit
+func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set smart consumption limit:", printPtr("%.1f", val))
 
-	if !ptrValueEqual(lp.smartConsumptionLimit, val) {
-		lp.smartConsumptionLimit = val
+	if !ptrValueEqual(lp.smartCostLimit, val) {
+		lp.smartCostLimit = val
 
-		lp.settings.SetFloatPtr(keys.SmartConsumptionLimit, val)
-		lp.publish(keys.SmartConsumptionLimit, val)
+		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
+		lp.publish(keys.SmartCostLimit, val)
 	}
 }
 

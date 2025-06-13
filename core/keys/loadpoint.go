@@ -41,12 +41,12 @@ const (
 	OfferedCurrent = "offeredCurrent" // offered current
 
 	// smart charging
-	SmartConsumptionActive    = "smartConsumptionActive"    // smart consumption active
-	SmartConsumptionLimit     = "smartConsumptionLimit"     // smart consumption limit
-	SmartConsumptionNextStart = "smartConsumptionNextStart" // smart consumption next start
-	SmartFeedinActive         = "smartFeedinActive"         // smart feed-in active
-	SmartFeedinLimit          = "smartFeedinLimit"          // smart feed-in limit
-	SmartFeedinNextStart      = "smartFeedinNextStart"      // smart feed-in next start
+	SmartCostActive      = "smartCostActive"      // smart consumption active
+	SmartCostLimit       = "smartCostLimit"       // smart consumption limit
+	SmartCostNextStart   = "smartCostNextStart"   // smart consumption next start
+	SmartFeedinActive    = "smartFeedinActive"    // smart feed-in active
+	SmartFeedinLimit     = "smartFeedinLimit"     // smart feed-in limit
+	SmartFeedinNextStart = "smartFeedinNextStart" // smart feed-in next start
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority

@@ -534,18 +534,18 @@ func (mr *MockAPIMockRecorder) GetRemainingEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemainingEnergy", reflect.TypeOf((*MockAPI)(nil).GetRemainingEnergy))
 }
 
-// GetSmartConsumptionLimit mocks base method.
-func (m *MockAPI) GetSmartConsumptionLimit() *float64 {
+// GetSmartCostLimit mocks base method.
+func (m *MockAPI) GetSmartCostLimit() *float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSmartConsumptionLimit")
+	ret := m.ctrl.Call(m, "GetSmartCostLimit")
 	ret0, _ := ret[0].(*float64)
 	return ret0
 }
 
-// GetSmartConsumptionLimit indicates an expected call of GetSmartConsumptionLimit.
-func (mr *MockAPIMockRecorder) GetSmartConsumptionLimit() *gomock.Call {
+// GetSmartCostLimit indicates an expected call of GetSmartCostLimit.
+func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartConsumptionLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartConsumptionLimit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartCostLimit))
 }
 
 // GetSmartFeedinLimit mocks base method.
@@ -910,16 +910,16 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
 
-// SetSmartConsumptionLimit mocks base method.
-func (m *MockAPI) SetSmartConsumptionLimit(limit *float64) {
+// SetSmartCostLimit mocks base method.
+func (m *MockAPI) SetSmartCostLimit(limit *float64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartConsumptionLimit", limit)
+	m.ctrl.Call(m, "SetSmartCostLimit", limit)
 }
 
-// SetSmartConsumptionLimit indicates an expected call of SetSmartConsumptionLimit.
-func (mr *MockAPIMockRecorder) SetSmartConsumptionLimit(limit any) *gomock.Call {
+// SetSmartCostLimit indicates an expected call of SetSmartCostLimit.
+func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartConsumptionLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartConsumptionLimit), limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), limit)
 }
 
 // SetSmartFeedinLimit mocks base method.
