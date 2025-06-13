@@ -77,7 +77,7 @@ test.describe("battery meter", async () => {
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Title").fill("Demo Battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
-    // advanced fields initially hidden
+
     await expect(meterModal.getByLabel("Meter reading")).not.toBeVisible();
     await expect(meterModal.getByLabel("L1 current")).not.toBeVisible();
     await expect(meterModal.getByLabel("L2 current")).not.toBeVisible();
