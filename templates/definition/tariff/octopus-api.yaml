@@ -13,8 +13,6 @@ params:
   - name: apiKey
     type: string
     required: true
-    description:
-      generic: API Key
   - name: accountNumber
     type: string
     required: false

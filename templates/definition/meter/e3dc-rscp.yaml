@@ -29,8 +29,7 @@ params:
     required: true
   - name: battery
     description:
-      en: Batterie
-      de: Batterie
+      generic: Battery
     deprecated: true
   - name: dischargelimit
     description:

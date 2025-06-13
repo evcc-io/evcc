@@ -45,16 +45,12 @@ params:
       de: von [Tesla Developer App](https://developer.tesla.com/dashboard).
     required: true
   - name: accessToken
-    description:
-      generic: Access Token
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
     required: true
     mask: true
   - name: refreshToken
-    description:
-      generic: Refresh Token
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).

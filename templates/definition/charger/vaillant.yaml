@@ -21,7 +21,7 @@ params:
       en: Region
   - name: zone
     type: int
-    help:
+    description:
       de: ID der Boostzone
       en: Boost zone ID
   - name: setpoint

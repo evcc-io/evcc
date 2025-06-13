@@ -14,6 +14,8 @@ params:
   - name: password
     required: true
   - name: vehicleid
+    description:
+      generic: Vehicle ID
     required: true
   - name: server
     default: dexters-web.de
