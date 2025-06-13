@@ -54,7 +54,6 @@
 					:defaultPort="modbus.Port"
 					:capabilities="modbusCapabilities"
 				/>
-
 				<PropertyEntry
 					v-for="param in normalParams"
 					:id="`chargerParam${param.Name}`"
