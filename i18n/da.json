@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Definer strømstyrke interval.",
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Lader",
+      "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": "Opladningstilstand når køretøjet forbindes.",
@@ -873,10 +874,9 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download som CSV",
     "energy": "Opladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",

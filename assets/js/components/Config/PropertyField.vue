@@ -63,7 +63,7 @@
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
@@ -162,9 +162,6 @@ export default {
 			}
 			if (this.unit) {
 				return this.unit;
-			}
-			if (this.property === "capacity") {
-				return "kWh";
 			}
 			return null;
 		},

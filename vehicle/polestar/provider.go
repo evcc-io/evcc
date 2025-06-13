@@ -27,7 +27,7 @@ func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Dur
 // SOC via car telemetry
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.telemetryG()
-	return float64(res.Battery[0].BatteryChargeLevelPercentage), err
+	return res.Battery[0].BatteryChargeLevelPercentage, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)

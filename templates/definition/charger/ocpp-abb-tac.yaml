@@ -3,7 +3,7 @@ covers: ["ocpp-abb"]
 products:
   - brand: ABB
     description:
-      generic: Terra AC
+      generic: Terra AC (OCPP)
 capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]

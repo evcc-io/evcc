@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/samber/lo"
+	"golang.org/x/text/encoding/unicode"
 )
 
 // TODO remove when used
@@ -58,6 +59,15 @@ func ensureChargerEx[T any](
 // bytesAsString normalises a string by stripping leading 0x00 and trimming white space
 func bytesAsString(b []byte) string {
 	return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00")))
+}
+
+// utf16BEBytesAsString converts a byte slice containing UTF-16 Big-Endian encoded text to a string and trims white spaces
+func utf16BEBytesAsString(b []byte) (string, error) {
+	s, err := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(bytes.TrimRight(b, "\x00")))
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(s), nil
 }
 
 // verifyEnabled validates the enabled state against the charger status

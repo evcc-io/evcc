@@ -113,6 +113,9 @@
       "batteryStorage": "Batterie",
       "solarSystem": "PV-Anlag"
     },
+    "editor": {
+      "loading": "YAML-Editeur gëtt gelueden …"
+    },
     "eebus": {
       "description": "Konfiguratioun déi et evcc erméiglecht fir mat aneren EEBus-Geräter ze kommunizéieren.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Ofbriechen",
+      "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
+      "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
       "docsLink": "D'Dokumentatioun kucken.",
       "experimental": "Experimentell",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "evcc mat engem aneren Heem Energiemanagement System verbannen.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "änneren"
     },
     "influx": {
       "description": "Schreift Lueddaten an aner Moossen an InfluxDB. Benotzt Grafana oder aner Tools fir d'Donnéeën ze visualiséieren.",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "Een eegenen Stroumberäich definéieren.",
       "chargerTypeLabel": "Luedleeschtung",
       "chargingTitle": "Luet",
+      "circuitHelp": "Laaschtmanagement-Zouweisung, fir sécher ze goen, dass d'Leeschtung a Stroumlimitten net iwwerschratt ginn.",
       "circuitLabel": "Stroumkrees",
       "circuitUnassigned": "net zougewisen",
       "defaultModeHelp": "Luedmodus beim Uschléisse vum Gefier.",
@@ -269,6 +278,7 @@
     "meter": {
       "cancel": "Ofbriechen",
       "delete": "Läschen",
+      "generic": "Allgemeng Integratiounen",
       "option": {
         "aux": "Intelligente Verbraucher derbäi fügen",
         "battery": "Hausbatterie derbäi fügen",
@@ -276,6 +286,7 @@
         "pv": "Sonnen-Zieler derbäi fügen"
       },
       "save": "Späicheren",
+      "specific": "Spezifesch Integratiounen",
       "template": "Hiersteller",
       "titleChoice": "Wat wëlls du derbäi setzen?",
       "validateSave": "Iwwerpréiwen & späicheren"
@@ -413,10 +424,11 @@
       "maximumCurrent": "Maximale Stroum",
       "maximumCurrentHelp": "Muss méi grouss wéi de minimale Stroum sinn.",
       "maximumPhases": "Maximal Phasen",
-      "maximumPhasesHelp": "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss an an der Planung verwennt.",
+      "maximumPhasesHelp": "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss a fir d'Planung benotzt.",
       "minimumCurrent": "Minimale Stroum",
       "minimumCurrentHelp": "Nëmmen ënner 6A goen, wann s du weess, wat s du mëss.",
       "online": "Autoe mat online API",
+      "primary": "Allgemeng Integratiounen",
       "priority": "Prioritéit",
       "priorityHelp": "Méi héich Prioritéit bedeit, datt dëst Gefier Prioritéit zu anere Gefierer huet .",
       "save": "Späicheren",
@@ -862,10 +874,9 @@
       "solarpercentage": "Sonn (%)",
       "vehicle": "Gefier"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "{period} CSV eroflueden",
     "csvTotal": "Gesamt CSV eroflueden",
     "date": "Ufank",
-    "downloadCsv": "Als CSV eroflueden",
     "energy": "Opgelueden",
     "filter": {
       "allLoadpoints": "All Luedstatiounen",

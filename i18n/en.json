@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Define a custom current range.",
       "chargerTypeLabel": "Charger type",
       "chargingTitle": "Charging",
+      "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
       "defaultModeHelp": "Charging mode when connecting the vehicle.",
@@ -873,10 +874,9 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download as CSV",
     "energy": "Charged",
     "filter": {
       "allLoadpoints": "all charging points",

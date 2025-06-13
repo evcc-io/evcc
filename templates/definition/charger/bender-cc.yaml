@@ -1,9 +1,6 @@
 template: bender-cc
 covers: ["bender"]
 products:
-  - brand: Ampure
-    description:
-      generic: Live
   - brand: Bender
     description:
       generic: CC612
@@ -19,7 +16,6 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON ChargeControl
-
   - brand: Webasto
     description:
       generic: Live
@@ -37,7 +33,16 @@ products:
       generic: Mobility One
   - brand: Garo
     description:
-      generic: GLB, GLB+, LS4, LS4 compact
+      generic: GLB
+  - brand: Garo
+    description:
+      generic: GLB+
+  - brand: Garo
+    description:
+      generic: LS4
+  - brand: Garo
+    description:
+      generic: LS4 compact
   - brand: Ensto
     description:
       generic: Chago Wallbox
@@ -46,7 +51,10 @@ products:
       generic: Heinz
   - brand: CUBOS
     description:
-      generic: C11E, C22E
+      generic: C11E
+  - brand: CUBOS
+    description:
+      generic: C22E
   - brand: Spelsberg
     description:
       generic: Wallbox Smart Pro

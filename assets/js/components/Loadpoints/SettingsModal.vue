@@ -163,7 +163,7 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import smartCostAvailable from "@/utils/smartCostAvailable";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES } from "@/types/evcc";
+import { CURRENCY, PHASES } from "@/types/evcc";
 
 const V = 230;
 
@@ -200,7 +200,7 @@ export default defineComponent({
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String,
 		tariffGrid: Number,
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 	},
 	emits: [

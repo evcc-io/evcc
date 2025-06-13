@@ -2,7 +2,10 @@ template: ocpp-huawei
 products:
   - brand: Huawei
     description:
-      generic: SCharger-7KS-S0 / 22KT-S0
+      generic: SCharger-7KS-S0
+  - brand: Huawei
+    description:
+      generic: SCharger-22KT-S0
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
