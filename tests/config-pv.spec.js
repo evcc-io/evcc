@@ -36,6 +36,7 @@ test.describe("pv meter", async () => {
     await expectModalHidden(meterModal);
     await expect(page.getByTestId("pv")).toBeVisible(1);
     await expect(page.getByTestId("pv")).toContainText("PV North");
+    await expect(meterModal.locator("#meterParamwatchdog")).toHaveCount(0);
 
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
