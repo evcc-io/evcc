@@ -148,7 +148,7 @@ params:
       en: Lower limit when discharging the battery in normal operation
     example: 25
     type: int
-    usages: ["battery"]
+    usages: ["battery", "vehicle"]
   - name: maxsoc
     unit: "%"
     description:
