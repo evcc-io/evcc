@@ -2,9 +2,9 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -64,7 +64,7 @@ func validGetter[T any](o *validPlugin, valuer func(ctx context.Context) (func()
 			return zero, err
 		}
 		if !valid {
-			return zero, api.ErrNotAvailable
+			return zero, errors.New("invalid")
 		}
 
 		return value()
