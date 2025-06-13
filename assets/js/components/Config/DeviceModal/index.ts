@@ -14,7 +14,7 @@ export type Template = {
 	};
 };
 
-export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux";
+export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
 export type TemplateParam = {
 	Name: string;
