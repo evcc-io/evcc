@@ -206,13 +206,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"enableDelay":          {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
 			"disableThreshold":     {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"disableDelay":         {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
+			"smartCost":            {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostDelete":      {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartFeedin":          {"POST", "/smartfeedinlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
+			"smartFeedinDelete":    {"DELETE", "/smartfeedinlimit", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
 			"priority":             {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":         {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
-
-			"smartCost":         {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartCostDelete":   {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartFeedin":       {"POST", "/smartfeedinlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
-			"smartFeedinDelete": {"DELETE", "/smartfeedinlimit", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
 		}
 
 		for _, r := range routes {
