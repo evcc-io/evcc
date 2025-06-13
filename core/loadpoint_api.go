@@ -793,12 +793,12 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	return lp.smartCostLimit
 }
 
-// SetSmartCostLimit sets the smart consumption limit
+// SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart consumption limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
