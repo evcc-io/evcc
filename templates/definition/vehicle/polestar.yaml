@@ -7,6 +7,7 @@ params:
   - preset: vehicle-base
   - name: vin
     example: LPSVS...
+# immediately start charging to trigger API status C    
   - name: welcomecharge
     advanced: true
 render: |

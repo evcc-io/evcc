@@ -42,7 +42,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	// Status B currently not possible to read from the API
 
 	// Actually charging -> Status C
-	if status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
+	if len(status.Battery) > 0 && status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
 		res = api.StatusC
 	}
 	return res, err
