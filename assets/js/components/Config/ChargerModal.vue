@@ -27,6 +27,8 @@
 				:error-line="test.errorLine"
 			/>
 			<div v-else>
+				{{ normalParams }}
+				{{ advancedParams }}
 				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 				<SponsorTokenRequired v-if="sponsorTokenRequired" />
 				<Markdown v-if="description" :markdown="description" class="my-4" />
@@ -54,6 +56,7 @@
 					:defaultPort="modbus.Port"
 					:capabilities="modbusCapabilities"
 				/>
+
 				<PropertyEntry
 					v-for="param in normalParams"
 					:id="`chargerParam${param.Name}`"
@@ -212,10 +215,16 @@ export default defineComponent({
 			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter(
+				(p) => !p.Advanced
+				// && (p.Usages ? p.Usages.includes("charger") : true)
+			);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter(
+				(p) => p.Advanced
+				// && (p.Usages ? p.Usages.includes("charger") : true)
+			);
 		},
 		modbus() {
 			const params = this.template?.Params || [];

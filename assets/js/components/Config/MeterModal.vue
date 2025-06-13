@@ -87,6 +87,8 @@
 						:defaultPort="modbus.Port"
 						:capabilities="modbusCapabilities"
 					/>
+					{{ templateType }}
+					<!-- {{ advancedParams }} -->
 					<PropertyEntry
 						v-for="param in normalParams"
 						:id="`meterParam${param.Name}`"
@@ -196,7 +198,7 @@ export default defineComponent({
 		id: Number,
 		name: String,
 		type: {
-			type: String as () => string | undefined,
+			type: String as () => "grid" | "pv" | "battery" | undefined,
 			default: undefined,
 		},
 		typeChoices: {
@@ -222,6 +224,10 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		templateType(): "grid" | "pv" | "battery" | "aux" {
+			// @ts-expect-error either this.type or this.selectedType is given
+			return this.type || this.selectedType;
+		},
 		modalTitle() {
 			if (this.isNew) {
 				if (this.meterType) {
@@ -268,10 +274,19 @@ export default defineComponent({
 			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
+			return this.templateParams.filter(
+				(p) =>
+					!p.Advanced &&
+					!p.Deprecated &&
+					(p.Usages && this.templateType ? p.Usages.includes(this.templateType) : true)
+			);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
+			return this.templateParams.filter(
+				(p) =>
+					(p.Advanced || p.Deprecated) &&
+					(p.Usages && this.templateType ? p.Usages.includes(this.templateType) : true)
+			);
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
