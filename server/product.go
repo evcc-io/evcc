@@ -4,6 +4,7 @@ type product struct {
 	Name     string `json:"name"`
 	Template string `json:"template"`
 	Group    string `json:"group,omitempty"`
+	IsOAuth  bool   `json:"isOAuth,omitempty"`
 }
 
 type products []product
