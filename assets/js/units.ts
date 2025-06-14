@@ -1,5 +1,5 @@
 import settings from "./settings";
-import { LENGTH_UNIT, type SMART_COST_TYPE } from "./types/evcc";
+import { LENGTH_UNIT } from "./types/evcc";
 
 const MILES_FACTOR = 0.6213711922;
 
@@ -19,7 +19,7 @@ export function getUnits() {
 	return isMiles() ? LENGTH_UNIT.MILES : LENGTH_UNIT.KM;
 }
 
-export function setUnits(value: SMART_COST_TYPE) {
+export function setUnits(value: LENGTH_UNIT) {
 	settings.unit = value;
 }
 

@@ -101,7 +101,7 @@ import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE, type Sponsor } from "@/types/evcc";
+import { LENGTH_UNIT, type Sponsor } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -121,7 +121,7 @@ export default defineComponent({
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
 			THEMES,
-			UNITS: Object.values(SMART_COST_TYPE),
+			UNITS: Object.values(LENGTH_UNIT),
 			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},
