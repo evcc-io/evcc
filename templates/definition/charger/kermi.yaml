@@ -14,9 +14,6 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
   - name: watchdog
     type: duration
     default: 60s

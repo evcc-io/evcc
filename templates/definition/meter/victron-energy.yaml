@@ -19,11 +19,14 @@ params:
     advanced: true
   - name: maxacpower
   - name: meterid # grid meter VRM instance
+    description:
+      en: Grid meter VRM instance
+      de: Grid-Energiezähler VRM Instanz
     type: int
     usages: ["grid"]
     help:
-      de: "Grid-Energiezähler VRM instance- kann im VRM Portal oder im RemoteUI ausgelesen werden."
-      en: "Grid meter VRM instance- can be read out in VRM portal or via remoteUI."
+      de: "Kann im VRM Portal oder im RemoteUI ausgelesen werden."
+      en: "Can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
     type: int
