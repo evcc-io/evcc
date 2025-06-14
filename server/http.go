@@ -157,8 +157,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"telemetry":               {"GET", "/settings/telemetry", getHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 
-		"smartFeedinDisable":       {"POST", "/smartfeedindisablelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetSmartFeedinDisableLimit), site.GetSmartFeedinDisableLimit)},
-		"smartFeedinDisableDelete": {"DELETE", "/smartfeedindisablelimit", floatPtrHandler(pass(site.SetSmartFeedinDisableLimit), site.GetSmartFeedinDisableLimit)},
+		"smartfeedindisable":       {"POST", "/smartfeedindisablelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetSmartFeedinDisableLimit), site.GetSmartFeedinDisableLimit)},
+		"smartfeedindisabledelete": {"DELETE", "/smartfeedindisablelimit", floatPtrHandler(pass(site.SetSmartFeedinDisableLimit), site.GetSmartFeedinDisableLimit)},
 	}
 
 	for _, r := range routes {
