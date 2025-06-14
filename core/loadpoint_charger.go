@@ -26,3 +26,11 @@ func (lp *Loadpoint) chargerSoc() (float64, error) {
 	}
 	return 0, api.ErrNotAvailable
 }
+
+// meterSoc returns meter soc if available
+func (lp *Loadpoint) meterSoc() (float64, error) {
+	if m, ok := lp.chargeMeter.(api.Battery); ok {
+		return soc.Guard(m.Soc())
+	}
+	return 0, api.ErrNotAvailable
+}
