@@ -9,21 +9,26 @@ requirements:
 group: solar
 params:
   - name: site
-    help:
-      en: ressource ID of your site
+    description:
+      en: Ressource ID of your site
       de: Ressource ID deiner Anlage
     required: true
   - name: token
-    help:
-      en: Solcast API Token
-      de: Solcast API Token
+    description:
+      generic: API Token
     required: true
   - name: from
+    description:
+      en: Start time
+      de: Startzeit
     help:
       en: Start time of data retrieval, specified in full hours, e.g. "6"
       de: Startzeit der Datenabrufe, Angabe in vollen Stunden, z.B "6"
     advanced: true
   - name: to
+    description:
+      en: End time
+      de: Endzeit
     help:
       en: End time of data retrieval, specified in full hours, e.g. "20"
       de: Endzeit der Datenabrufe, Angabe in vollen Stunden, z.B "20"

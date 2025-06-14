@@ -25,24 +25,28 @@ params:
   - preset: vehicle-common
   - name: vccapikey
     required: true
+    description:
+      generic: VCC API Key
     help:
-      en: "VCC API Key of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "VCC API Key deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientId
     required: true
     help:
-      en: "Client ID of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "Client ID deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientSecret
     required: true
     help:
-      en: "Client Secret of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "Client Secret deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: redirectUri
     required: true
+    description:
+      generic: Redirect URI
     help:
-      en: "Redirect URI of your EVCC instance, format: `http://evcc.local:7070/oauth/callback`. Must match the redirect URI set in your Volvo Developer App."
-      de: "Redirect-URI deiner EVCC-Instanz, Format: http://evcc.local:7070/oauth/callback. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
+      en: "Redirect URI of your evcc instance, format: `http://evcc.local:7070/oauth/callback`. Must match the redirect URI set in your Volvo Developer App."
+      de: "Redirect-URI deiner evcc-Instanz, Format: http://evcc.local:7070/oauth/callback. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
   - name: vin
     example: WF0FXX...
   - name: accessToken

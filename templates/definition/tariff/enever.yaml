@@ -9,6 +9,9 @@ params:
   - name: token
     required: true
   - name: provider
+    description:
+      en: Provider
+      de: Anbieter
     type: choice
     choice:
       [
