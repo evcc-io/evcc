@@ -54,6 +54,8 @@ func init() {
 	registry.Add("zaptec", NewZaptecFromConfig)
 }
 
+//go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -141,11 +143,13 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return nil, err
 	}
 
-	c.maxCurrent, err = c.getMaxCurrent()
-	if err != nil {
-		return nil, err
+	var phases1p3p func(int) error
+	if maxCurrent, err := c.getInstallationMaxCurrent(); err == nil {
+		phases1p3p = c.phases1p3p
+		c.maxCurrent = maxCurrent
 	}
-	return c, nil
+
+	return decorateZaptec(c, phases1p3p), nil
 }
 
 func (c *Zaptec) detectVersion() (int, error) {
@@ -307,10 +311,8 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 	return f[0], f[1], f[2], err
 }
 
-var _ api.PhaseSwitcher = (*Zaptec)(nil)
-
-// Phases1p3p implements the api.ChargePhases interface
-func (c *Zaptec) Phases1p3p(phases int) error {
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
 	if err != nil || !c.priority {
 		return err
@@ -374,7 +376,7 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) getMaxCurrent() (int, error) {
+func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
@@ -399,7 +401,7 @@ func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
 
 var _ api.Diagnosis = (*Zaptec)(nil)
 
-// Diagnosis implements the api.ChargePhases interface
+// Diagnosis implements the api.Diagnosis interface
 func (c *Zaptec) Diagnose() {
 	res, _ := c.statusG.Get()
 

@@ -2,7 +2,22 @@ template: Kathrein
 products:
   - brand: Kathrein
     description:
-      generic: KWB-AC20, KWB-AC40, KWB-AC60, KWB-AC40E, KWB-AC60E
+      generic: KWB-AC20
+  - brand: Kathrein
+    description:
+      generic: KWB-AC35
+  - brand: Kathrein
+    description:
+      generic: KWB-AC40
+  - brand: Kathrein
+    description:
+      generic: KWB-AC60
+  - brand: Kathrein
+    description:
+      generic: KWB-AC40 E
+  - brand: Kathrein
+    description:
+      generic: KWB-AC60 E
 capabilities: ["1p3p", "mA"]
 requirements:
   description:

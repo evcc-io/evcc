@@ -85,9 +85,9 @@
 <script lang="ts">
 import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
-import api, { allowClientError } from "@/api";
+import api, { allowClientError } from "@/api.ts";
 import convertRates from "@/utils/convertRates";
-import type { PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import {
 	type Tariff,
 	type CURRENCY,
@@ -97,7 +97,7 @@ import {
 	SMART_COST_TYPE,
 } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "SmartCostLimit",
 	components: { TariffChart },
 	mixins: [formatter],
@@ -364,7 +364,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

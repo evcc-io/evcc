@@ -71,6 +71,7 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^build"
       - "^Translations"
 
 nfpms:

@@ -141,6 +141,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleTitle, v.Title())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -151,9 +152,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
-		lp.publish(keys.VehicleSoc, 0)
-		lp.publish(keys.VehicleName, "")
-		lp.publish(keys.VehicleOdometer, 0.0)
+		lp.unpublishVehicleIdentity()
 	}
 
 	// re-publish vehicle settings
@@ -198,6 +197,12 @@ func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string)
 	}
 }
 
+// unpublishVehicleIdentity resets published vehicle identification
+func (lp *Loadpoint) unpublishVehicleIdentity() {
+	lp.publish(keys.VehicleName, "")
+	lp.publish(keys.VehicleTitle, "")
+}
+
 // unpublishVehicle resets published vehicle data
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
@@ -206,6 +211,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 	lp.publish(keys.VehicleSoc, 0.0)
 	lp.publish(keys.VehicleRange, int64(0))
 	lp.publish(keys.VehicleLimitSoc, 0.0)
+	lp.publish(keys.VehicleOdometer, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)

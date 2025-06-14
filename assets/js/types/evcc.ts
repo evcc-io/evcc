@@ -4,8 +4,19 @@ import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 declare global {
 	interface Window {
 		app: any;
+		evcc: {
+			version: string;
+			commit: string;
+			customCss: string;
+		};
 	}
 }
+
+export interface Auth {
+	vehicles: VehicleLogins;
+}
+
+export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
 	error: any;
@@ -19,6 +30,7 @@ export interface State {
 	forecast?: Forecast;
 	currency?: CURRENCY;
 	fatal?: FatalError;
+	auth?: Auth;
 }
 
 export enum SMART_COST_TYPE {
@@ -42,12 +54,41 @@ export interface LoadpointCompact {
 	chargePower: number;
 	connected: boolean;
 	index: number;
+	vehicleName: string;
+	chargerIcon?: string;
+	vehicleSoc: number;
+	chargerFeatureHeating: boolean;
+}
+
+export enum THEME {
+	AUTO = "auto",
+	LIGHT = "light",
+	DARK = "dark",
 }
 
 export enum CURRENCY {
+	AUD = "AUD",
+	BGN = "BGN",
+	BRL = "BRL",
+	CAD = "CAD",
+	CHF = "CHF",
+	CNY = "CNY",
 	EUR = "EUR",
+	GBP = "GBP",
+	ILS = "ILS",
+	NZD = "NZD",
+	PLN = "PLN",
 	USD = "USD",
 	DKK = "DKK",
+	SEK = "SEK",
+}
+
+export enum ICON_SIZE {
+	XS = "xs",
+	S = "s",
+	M = "m",
+	L = "l",
+	XL = "xl",
 }
 
 export enum CHARGE_MODE {
@@ -70,6 +111,14 @@ export interface Sponsor {
 	expiresSoon: boolean;
 }
 
+export interface Notification {
+	message: string;
+	time: Date;
+	level: string;
+	lp: number;
+	count: number;
+}
+
 export interface Battery {
 	power: number;
 	soc: number;
@@ -87,6 +136,7 @@ export interface Vehicle {
 	title: string;
 	features?: string[];
 	capacity?: number;
+	icon?: string;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;

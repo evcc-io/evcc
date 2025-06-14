@@ -66,6 +66,8 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^build"
+      - "^Translations"
 
 nfpms:
   - id: default

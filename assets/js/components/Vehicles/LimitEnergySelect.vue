@@ -33,20 +33,21 @@
 	</LabelAndValue>
 </template>
 
-<script>
+<script lang="ts">
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import formatter from "@/mixins/formatter";
 import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "LimitEnergySelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		limitEnergy: Number,
+		limitEnergy: { type: Number, required: true },
 		socPerKwh: Number,
-		chargedEnergy: Number,
+		chargedEnergy: { type: Number, required: true },
 		capacity: Number,
 	},
 	emits: ["limit-energy-updated"],
@@ -69,17 +70,20 @@ export default {
 		},
 	},
 	methods: {
-		change(e) {
-			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
+		change(e: Event) {
+			return this.$emit(
+				"limit-energy-updated",
+				parseFloat((e.target as HTMLSelectElement).value)
+			);
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return fmtEnergy(this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"), value);
 		},
-		fmtSoc(value) {
+		fmtSoc(value: number) {
 			return `+${this.fmtPercentage(value)}`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
