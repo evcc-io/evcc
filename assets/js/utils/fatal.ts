@@ -2,11 +2,11 @@ import type { FatalError } from "@/types/evcc";
 
 const FATALS = ["configfile", "database"];
 
-function isError(fatal: FatalError) {
+function isError(fatal?: FatalError) {
 	return !!fatal?.error;
 }
 
-export function isUserConfigError(fatal: FatalError) {
+export function isUserConfigError(fatal?: FatalError) {
 	if (!isError(fatal)) {
 		return false;
 	}
@@ -18,6 +18,6 @@ export function isUserConfigError(fatal: FatalError) {
 	return true;
 }
 
-export function isSystemError(fatal: FatalError) {
+export function isSystemError(fatal?: FatalError) {
 	return isError(fatal) && !isUserConfigError(fatal);
 }
