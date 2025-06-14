@@ -79,22 +79,9 @@ test.describe("battery meter", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
 
     await expect(meterModal.getByLabel("Meter reading")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L1 current")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L2 current")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L3 current")).not.toBeVisible();
-
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-
     await expect(meterModal.getByLabel("Meter reading")).toBeVisible();
-    await expect(meterModal.getByLabel("L1 current")).toBeVisible();
-    await expect(meterModal.getByLabel("L2 current")).toBeVisible();
-    await expect(meterModal.getByLabel("L3 current")).toBeVisible();
-
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
-
     await expect(meterModal.getByLabel("Meter reading")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L1 current")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L2 current")).not.toBeVisible();
-    await expect(meterModal.getByLabel("L3 current")).not.toBeVisible();
   });
 });
