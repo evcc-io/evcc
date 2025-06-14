@@ -1,8 +1,11 @@
 template: orno
 products:
-  - brand: Orno
+  - brand: ORNO
     description:
-      generic: OR-WE-516, OR-WE-517
+      generic: OR-WE-516
+  - brand: ORNO
+    description:
+      generic: OR-WE-517
 params:
   - name: usage
     choice: ["grid", "charge"]
