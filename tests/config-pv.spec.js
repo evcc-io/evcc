@@ -29,7 +29,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("5000");
-    await expect(meterModal.getByLabel("Maximum charge power")).toHaveCount(0);
+    await expect(meterModal.getByLabel("Minimum charge")).toHaveCount(0);
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");

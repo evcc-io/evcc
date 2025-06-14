@@ -24,7 +24,7 @@ params:
     unit: kWh
     type: int
     advanced: true
-  - name: maxchargepower
+  - name: minsoc
   - name: currentL1
     description:
       de: L1 Stromstärke
